@@ -85,9 +85,9 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       */
     private case class GeneratedQueryVariable(variable: QueryVariable, useInOrderBy: Boolean)
 
-    // variables that are created when processing filter statements
+    // variables that are created when processing filter statements or for a value object var used as a sort criterion
     // they represent the value of a literal pointed to by a value object
-    private val valueVariablesGeneratedInFilters = mutable.Map.empty[QueryVariable, Set[GeneratedQueryVariable]]
+    private val valueVariablesAutomaticallyGenerated = mutable.Map.empty[QueryVariable, Set[GeneratedQueryVariable]]
 
     /**
       * Saves a generated variable representing a value literal, if it hasn't been saved already.
@@ -98,10 +98,10 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       * @return `true` if the generated variable was saved, `false` if it had already been saved.
       */
     protected def addGeneratedVariableForValueLiteral(valueVar: QueryVariable, generatedVar: QueryVariable, useInOrderBy: Boolean = true): Boolean = {
-        val currentGeneratedVars = valueVariablesGeneratedInFilters.getOrElse(valueVar, Set.empty[GeneratedQueryVariable])
+        val currentGeneratedVars = valueVariablesAutomaticallyGenerated.getOrElse(valueVar, Set.empty[GeneratedQueryVariable])
 
         if (!currentGeneratedVars.exists(currentGeneratedVar => currentGeneratedVar.variable == generatedVar)) {
-            valueVariablesGeneratedInFilters.put(valueVar, currentGeneratedVars + GeneratedQueryVariable(generatedVar, useInOrderBy))
+            valueVariablesAutomaticallyGenerated.put(valueVar, currentGeneratedVars + GeneratedQueryVariable(generatedVar, useInOrderBy))
             true
         } else {
             false
@@ -115,7 +115,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       * @return a generated variable that represents a value literal and can be used in ORDER BY, or `None` if no such variable has been saved.
       */
     protected def getGeneratedVariableForValueLiteralInOrderBy(valueVar: QueryVariable): Option[QueryVariable] = {
-        valueVariablesGeneratedInFilters.get(valueVar) match {
+        valueVariablesAutomaticallyGenerated.get(valueVar) match {
             case Some(generatedVars: Set[GeneratedQueryVariable]) =>
                 val generatedVarsForOrderBy: Set[QueryVariable] = generatedVars.filter(_.useInOrderBy).map(_.variable)
 
@@ -345,8 +345,6 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                         val criterion = objectVarAsSortCriterionMaybe.get
 
-                        // TODO: put the generated variable in a collection like `valueVariablesGeneratedInFilters` so it can be reused by `NonTriplestoreSpecificGravsearchToPrequeryGenerator.getOrderBy`
-
                         val propertyIri: SmartIri = typeInspectionResult.getTypeOfEntity(criterion.queryVariable) match {
                             case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) =>
                                 valueTypesToValuePredsForOrderBy.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw GravsearchException(s"${criterion.queryVariable.toSparql} cannot be used in ORDER BY")).toSmartIri
@@ -358,6 +356,9 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                         // Generate the variable name.
                         val variableForLiteral: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
+
+                        // put the generated variable into a collection so it can be reused in `NonTriplestoreSpecificGravsearchToPrequeryGenerator.getOrderBy`
+                        addGeneratedVariableForValueLiteral(criterion.queryVariable, variableForLiteral)
 
                         // Generate a statement to get the literal value.
                         val statementPatternForSortCriterion = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
