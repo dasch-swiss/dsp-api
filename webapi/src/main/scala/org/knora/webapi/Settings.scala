@@ -21,7 +21,6 @@ package org.knora.webapi
 
 import java.io.File
 import java.nio.file.{Files, Paths}
-import java.util
 
 import akka.ConfigurationException
 import akka.actor.{ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
@@ -29,7 +28,6 @@ import com.typesafe.config.{Config, ConfigValue}
 import org.knora.webapi.util.CacheUtil.KnoraCacheConfig
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.concurrent.duration._
 
 /**

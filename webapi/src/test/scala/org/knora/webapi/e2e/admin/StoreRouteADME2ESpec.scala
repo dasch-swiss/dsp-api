@@ -20,12 +20,14 @@
 package org.knora.webapi.e2e.admin
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.E2ESpec
+import org.knora.webapi.{E2ESpec, SharedTestDataV1}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import spray.json._
 
 import scala.concurrent.duration._
@@ -46,6 +48,13 @@ object StoreRouteADME2ESpec {
 class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with TriplestoreJsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(120.seconds)
+
+
+    val rootCreds = CredentialsV1(
+        SharedTestDataV1.rootUser.userData.user_id.get,
+        SharedTestDataV1.rootUser.userData.email.get,
+        "test"
+    )
 
 	/**
       * The marshaling to Json is done automatically by spray, hence the import of the 'TriplestoreJsonProtocol'.
@@ -92,6 +101,7 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
         }
     }
 
+    /*
     "The ResetTriplestoreContentWithData Command ('admin/triplestore/command/ResetTriplestoreContentWithData')" should {
         "succeed with resetting if user has the necessary permissions" in {
 
@@ -107,7 +117,7 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
                         Map("filename" -> "primesB.csv")))
 
 
-            val request = Post(baseApiUrl + "/admin/triplestore/command/ResetTriplestoreContentWithData", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+            val request = Post(baseApiUrl + "/admin/triplestore/command/ResetTriplestoreContentWithData", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
             val response = singleAwaitingRequest(request, 300.seconds)
             // log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)
@@ -119,4 +129,5 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
         }
 
     }
+    */
 }

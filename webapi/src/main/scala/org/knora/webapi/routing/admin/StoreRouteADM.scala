@@ -27,6 +27,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsGetRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, StoresADMJsonProtocol}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
@@ -71,7 +72,9 @@ class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
                         val dataWithPrependedDefaultData = prependDefaultData(apiRequest, settings)
 
-                        val requestMessage = Future.successful(ResetTriplestoreContentRequestADM(dataWithPrependedDefaultData))
+                        val requestMessage: Future[ResetTriplestoreContentRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield ResetTriplestoreContentRequestADM(rdfDataObjects = dataWithPrependedDefaultData, prependDefaultData = true, requestingUser = requestingUser)
 
                         RouteUtilADM.runJsonRoute(
                             requestMessage,
@@ -94,7 +97,7 @@ class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     // TODO: Implement some simple return
                     requestContext.complete("Hello World")
             }
-        } ~ path("admin" / "triplestore" / "command" / "ResetTriplestoreContent") {
+        } ~ path("admin" / "triplestore" / "command" / "ResetTriplestoreContentWithData") {
             post {
                 /* ResetTriplestoreContent */
                 storeUploadedFiles("ResetTriplestoreContentData", tempDestination) { files =>

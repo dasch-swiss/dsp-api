@@ -22,6 +22,7 @@ package org.knora.webapi.store.triplestore
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.store.triplestore.util.TriplestoreDataUtil
 import org.knora.webapi.{CoreSpec, TriplestoreTypes}
 
 import scala.concurrent.duration._
@@ -47,7 +48,7 @@ object AllTriplestoreSpec {
  *
  * to execute, type 'test' in sbt
  */
-class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with ImplicitSender {
+class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with TriplestoreDataUtil with ImplicitSender {
 
     private val timeout = 30.seconds
     private val tsType = settings.triplestoreType
@@ -220,7 +221,10 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         "receiving a 'ResetTriplestoreContent' request " should {
             "reset the data " in {
                 //println("==>> Reset test case start")
-                storeManager ! ResetTriplestoreContent(rdfDataObjects)
+
+                val dataWithPrependedDefaultData = prependDefaultData(rdfDataObjects, settings)
+
+                storeManager ! ResetTriplestoreContent(dataWithPrependedDefaultData)
                 expectMsg(5 minutes, ResetTriplestoreContentACK())
                 //println("==>> Reset test case end")
 

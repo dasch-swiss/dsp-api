@@ -22,11 +22,13 @@ package org.knora.webapi.responders.admin
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM, StoreResponderRequestADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
+import org.knora.webapi.store.triplestore.util.TriplestoreDataUtil
 
 import scala.concurrent.Future
 
@@ -34,7 +36,7 @@ import scala.concurrent.Future
   * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the
   * 'Store Module'
   */
-class StoresResponderADM(responderData: ResponderData) extends Responder(responderData) {
+class StoresResponderADM(responderData: ResponderData) extends Responder(responderData) with TriplestoreDataUtil {
 
 
     /**
@@ -46,7 +48,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
       * Receives a message extending [[StoreResponderRequestADM]], and returns an appropriate response message.
       */
     def receive(msg: StoreResponderRequestADM) = msg match {
-        case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject]) => resetTriplestoreContent(rdfDataObjects)
+        case ResetTriplestoreContentRequestADM(rdfDataObjects, prependDefaultData, requestingUser) => resetTriplestoreContent(rdfDataObjects, prependDefaultData, requestingUser)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -56,17 +58,23 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
       * @param rdfDataObjects the payload consisting of a list of [[RdfDataObject]] send inside the message.
       * @return a future containing a [[ResetTriplestoreContentResponseADM]].
       */
-    private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentResponseADM] = {
+    private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject], prependData: Boolean, requestingUser: UserADM): Future[ResetTriplestoreContentResponseADM] = {
 
         log.debug(s"resetTriplestoreContent - called")
 
         for {
             value: Boolean <- (applicationStateActor ? GetAllowReloadOverHTTPState()).mapTo[Boolean]
-            _ = if (!value) {
+            _ = if (!value && !requestingUser.isSystemAdmin) {
                 throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
             }
 
-            resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
+            dataToLoad = if (prependData) {
+                prependDefaultData(rdfDataObjects, settings)
+            } else {
+                rdfDataObjects
+            }
+
+            resetResponse <- (storeManager ? ResetTriplestoreContent(dataToLoad)).mapTo[ResetTriplestoreContentACK]
             _ = log.debug(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
             loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(systemUser)).mapTo[LoadOntologiesResponse]

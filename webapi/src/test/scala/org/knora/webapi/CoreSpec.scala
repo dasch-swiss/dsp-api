@@ -85,7 +85,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Trip
 
     final override def beforeAll() {
         CacheUtil.createCaches(settings.caches)
-        loadTestData(rdfDataObjects)
+        loadTestData(rdfDataObjects, settings)
         // memusage()
     }
 
@@ -113,7 +113,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Trip
       * Initiates resetting of the triplestore data. The supplied data is prepended with
       * a default set configurable in 'application.conf' with 'app.triplestore.default-rdf-data'.
       */
-    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject], settings: SettingsImpl): Unit = {
 
         val dataWithPrependedDefaultData = prependDefaultData(rdfDataObjects, settings)
 

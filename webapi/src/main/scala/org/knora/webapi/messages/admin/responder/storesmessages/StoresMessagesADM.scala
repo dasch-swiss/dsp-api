@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.admin.responder.storesmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import spray.json._
@@ -34,11 +35,17 @@ sealed trait StoreResponderRequestADM extends KnoraRequestADM
   * Requests to load the triplestore with data referenced inside [[RdfDataObject]]. Any data contained inside the
   * triplestore will be deleted first.
   *
-  * @param rdfDataObjects a sequence of [[RdfDataObject]] objects containing the path to the data and the name of
-  *                       the named graph into which the data should be loaded.
+  * @param rdfDataObjects     a sequence of [[RdfDataObject]] objects containing the path to the data and the name of
+  *                           the named graph into which the data should be loaded.
+  * @param prependDefaultData the flag denotes if the data defined in application.conf's 'app.triplestore.default-rdf-data'
+  *                           property should be prepended to the supplied data.
+  * @param requestingUser     the user making the request.
   */
-case class ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject]) extends StoreResponderRequestADM
+case class ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject], prependDefaultData: Boolean, requestingUser: UserADM) extends StoreResponderRequestADM
 
+/**
+  * Response to [[ResetTriplestoreContentRequestADM]].
+  */
 case class ResetTriplestoreContentResponseADM(message: String) extends KnoraResponseADM with StoresADMJsonProtocol {
     def toJsValue = resetTriplestoreContentResponseADMFormat.write(this)
 }

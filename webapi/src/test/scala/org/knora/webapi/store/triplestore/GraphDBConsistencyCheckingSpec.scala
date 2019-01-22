@@ -2,7 +2,7 @@ package org.knora.webapi.store.triplestore
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, SparqlUpdateRequest}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SparqlUpdateRequest}
 import org.knora.webapi.{CoreSpec, TriplestoreResponseException}
 
 import scala.concurrent.duration._
@@ -20,11 +20,6 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
         RdfDataObject(path = "_test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
-
-    override def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(5 minutes, ResetTriplestoreContentACK())
-    }
 
     if (settings.triplestoreType.startsWith("graphdb")) {
 

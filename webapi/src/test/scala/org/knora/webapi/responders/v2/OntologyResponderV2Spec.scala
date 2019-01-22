@@ -28,6 +28,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.store.triplestore.util.TriplestoreDataUtil
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
 
@@ -36,7 +37,7 @@ import scala.language.postfixOps
 /**
   * Tests [[OntologyResponderV2]].
   */
-class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
+class OntologyResponderV2Spec extends CoreSpec() with TriplestoreDataUtil with ImplicitSender {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -69,7 +70,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     override lazy val rdfDataObjects: Seq[RdfDataObject] = List(exampleSharedOntology, anythingData)
 
     private def customLoadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
-        storeManager ! ResetTriplestoreContent(rdfDataObjs)
+
+        val dataToLoad = prependDefaultData(rdfDataObjs, settings)
+
+        storeManager ! ResetTriplestoreContent(dataToLoad)
         expectMsg(5 minutes, ResetTriplestoreContentACK())
 
         responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
