@@ -222,7 +222,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 icontitle = Some("Buch"),
                 iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
                 preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
-                obj_id = "http://rdfh.ch/c5058f3a"
+                obj_id = "http://rdfh.ch/0803/c5058f3a"
             ),
             SearchResultRowV1(
                 rights = Some(6),
@@ -244,7 +244,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 icontitle = Some("Buch"),
                 iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
                 preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
-                obj_id = "http://rdfh.ch/ff17e5ef9601"
+                obj_id = "http://rdfh.ch/0803/ff17e5ef9601"
             )
         )
     )
@@ -252,7 +252,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
     val bertholdResponse = SearchGetResponseV1(
         subjects = Vector(
             SearchResultRowV1(
-                obj_id = "http://rdfh.ch/c5058f3a",
+                obj_id = "http://rdfh.ch/0803/c5058f3a",
                 preview_path = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
                 iconsrc = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
                 icontitle = Some("Buch"),
@@ -265,7 +265,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                 rights = Some(6)
             ),
             SearchResultRowV1(
-                obj_id = "http://rdfh.ch/ff17e5ef9601",
+                obj_id = "http://rdfh.ch/0803/ff17e5ef9601",
                 preview_path = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
                 iconsrc = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
                 icontitle = Some("Buch"),
@@ -617,7 +617,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://0.0.0.0:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Frdfh.ch%2Fc5058f3a
             responderManager ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://rdfh.ch/c5058f3a"),
+                searchValue = Vector("http://rdfh.ch/0803/c5058f3a"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf"),
                 filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
@@ -667,7 +667,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // http://0.0.0.0:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Frdfh.ch%2Fc5058f3a&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=EXISTS&searchval=
             responderManager ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://rdfh.ch/c5058f3a", ""),
+                searchValue = Vector("http://rdfh.ch/0803/c5058f3a", ""),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
                 propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf", "http://www.knora.org/ontology/0803/incunabula#seqnum"),
                 filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
@@ -684,7 +684,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return all the representations that are part of Zeitglöcklein des Lebens and have a seqnum (using base properties from knora-base)" in {
             responderManager ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://rdfh.ch/c5058f3a", ""),
+                searchValue = Vector("http://rdfh.ch/0803/c5058f3a", ""),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
                 propertyIri = Vector("http://www.knora.org/ontology/knora-base#isPartOf", "http://www.knora.org/ontology/knora-base#seqnum"),
                 filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
@@ -701,7 +701,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return all the pages that are part of Zeitglöcklein des Lebens, have a seqnum less than or equal to 200, and have a page number that is not 'a1r, Titelblatt'" in {
             responderManager ! ExtendedSearchGetRequestV1(
                 userProfile = incunabulaUser,
-                searchValue = Vector("http://rdfh.ch/c5058f3a", "200", "a1r, Titelblatt"),
+                searchValue = Vector("http://rdfh.ch/0803/c5058f3a", "200", "a1r, Titelblatt"),
                 compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.LT_EQ, SearchComparisonOperatorV1.NOT_EQ),
                 propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf", "http://www.knora.org/ontology/0803/incunabula#seqnum", "http://www.knora.org/ontology/0803/incunabula#pagenum"),
                 filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),

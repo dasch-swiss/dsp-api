@@ -87,7 +87,7 @@ filename = 'myimage.tif'
 # a tuple containing the file's name, its binaries and its mimetype
 files = {'file': (filename, open(filename, 'rb'), "image/tiff")}
 
-resIri = urllib.parse.quote_plus('http://data.knora.org/xy')
+resIri = urllib.parse.quote_plus('http://rdfh.ch/xy')
 
 r = requests.put("http://host/filevalue/" + resIri,
                  files=files)

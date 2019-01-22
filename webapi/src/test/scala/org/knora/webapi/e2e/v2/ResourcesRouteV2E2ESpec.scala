@@ -64,7 +64,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     "The resources v2 endpoint" should {
 
         "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
-            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}")
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}")
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
@@ -80,7 +80,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                 MediaRange.One(RdfMediaTypes.`application/rdf+xml`, 0.2F)
             )
 
-            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").addHeader(acceptHeader)
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}").addHeader(acceptHeader)
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
@@ -89,7 +89,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in RDF/XML" in {
-            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`application/rdf+xml`))
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`application/rdf+xml`))
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
@@ -98,7 +98,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "perform a resource preview request for the book 'Reise ins Heilige Land' using the complex schema" in {
-            val request = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}")
+            val request = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}")
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
@@ -107,7 +107,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
-            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}").addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
@@ -116,7 +116,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in Turtle" in {
-            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}").
                 addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)).
                 addHeader(Accept(RdfMediaTypes.`text/turtle`))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -127,7 +127,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in RDF/XML" in {
-            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}").
                 addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)).
                 addHeader(Accept(RdfMediaTypes.`application/rdf+xml`))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -138,7 +138,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "perform a resource preview request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header)" in {
-            val request = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+            val request = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}").addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
@@ -147,7 +147,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by a URL parameter)" in {
-            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}?${RouteUtilV2.SCHEMA_PARAM}=${RouteUtilV2.SIMPLE_SCHEMA_NAME}")
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}?${RouteUtilV2.SCHEMA_PARAM}=${RouteUtilV2.SIMPLE_SCHEMA_NAME}")
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)

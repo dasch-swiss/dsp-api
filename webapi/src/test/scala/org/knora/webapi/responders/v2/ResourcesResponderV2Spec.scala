@@ -52,7 +52,7 @@ object ResourcesResponderV2Spec {
     private val defaultAnythingValuePermissions = defaultAnythingResourcePermissions
     private val defaultStillImageFileValuePermissions = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
 
-    private val zeitglöckleinIri = "http://rdfh.ch/c5058f3a"
+    private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
 
     private val aThingIri = "http://rdfh.ch/0001/a-thing"
     private var aThingLastModificationDate = Instant.now
@@ -508,7 +508,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "The resources responder v2" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -519,7 +519,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-            responderManager ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/c5058f3a"), incunabulaUserProfile)
+            responderManager ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -530,7 +530,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -541,7 +541,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -552,7 +552,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            responderManager ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -563,7 +563,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
 
-            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701", "http://rdfh.ch/c5058f3a"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -574,7 +574,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
 
-            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
 
             // the redundant Iri should be ignored (distinct)
             expectMsgPF(timeout) {

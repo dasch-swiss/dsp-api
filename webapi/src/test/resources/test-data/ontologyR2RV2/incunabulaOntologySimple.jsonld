@@ -10,6 +10,12 @@
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:creationDate"
       }
     }, {
@@ -69,6 +75,12 @@
     "rdfs:label" : "Book",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Resource"
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
     }, {
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
@@ -285,6 +297,12 @@
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:creationDate"
       }
     }, {
@@ -405,6 +423,12 @@
     "rdfs:label" : "Page",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:StillImageRepresentation"
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
     }, {
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,

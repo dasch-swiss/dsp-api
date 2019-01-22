@@ -41,6 +41,7 @@ import spray.json._
 
 import scala.util.control.Exception._
 import scala.util.matching.Regex
+import scala.util.{Failure, Success, Try}
 
 /**
   * Provides instances of [[StringFormatter]], as well as string formatting constants.
@@ -53,10 +54,10 @@ object StringFormatter {
     // A non-printing delimiter character, Unicode INFORMATION SEPARATOR TWO, that should never occur in data.
     val INFORMATION_SEPARATOR_TWO = '\u001E'
 
-    // A non-printing delimiter character, Unicode INFORMATION SEPARATOR TWO, that should never occur in data.
+    // A non-printing delimiter character, Unicode INFORMATION SEPARATOR THREE, that should never occur in data.
     val INFORMATION_SEPARATOR_THREE = '\u001D'
 
-    // A non-printing delimiter character, Unicode INFORMATION SEPARATOR TWO, that should never occur in data.
+    // A non-printing delimiter character, Unicode INFORMATION SEPARATOR FOUR, that should never occur in data.
     val INFORMATION_SEPARATOR_FOUR = '\u001C'
 
     // a separator to be inserted in the XML to separate nodes from one another
@@ -128,6 +129,11 @@ object StringFormatter {
       * String representation of year precision in a date.
       */
     val PrecisionYear: String = "YEAR"
+
+    /**
+      * The version number of the current version of Knora's ARK URL format.
+      */
+    val ArkVersion: String = "1"
 
     /**
       * A container for an XML import namespace and its prefix label.
@@ -262,7 +268,7 @@ object StringFormatter {
         this.synchronized {
             generalInstance match {
                 case Some(_) => ()
-                case None => generalInstance = Some(new StringFormatter(Some(settings.externalKnoraApiHostPort)))
+                case None => generalInstance = Some(new StringFormatter(Some(settings)))
             }
         }
     }
@@ -274,7 +280,7 @@ object StringFormatter {
         this.synchronized {
             generalInstance match {
                 case Some(_) => ()
-                case None => generalInstance = Some(new StringFormatter(Some("0.0.0.0:3333")))
+                case None => generalInstance = Some(new StringFormatter(maybeSettings = None, initForTest = true))
             }
         }
     }
@@ -500,10 +506,17 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     /**
       * If this is the IRI of a link property, returns the IRI of the corresponding link value property. Throws
       * [[DataConversionException]] if this IRI is not a Knora entity IRI.
-      *
-      * @return
       */
     def fromLinkPropToLinkValueProp: SmartIri
+
+    /**
+      * If this is a Knora data IRI representing a resource, returns the corresponding ARK URL. Throws
+      * [[DataConversionException]] if this IRI is not a Knora resource IRI.
+      *
+      * @param maybeTimestamp an optional timestamp indicating the point in the resource's version history that the ARK URL should
+      *                       cite.
+      */
+    def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String
 
     override def equals(obj: scala.Any): Boolean = {
         // See the comment at the top of the SmartIri trait.
@@ -553,9 +566,31 @@ object IriConversions {
 /**
   * Handles string parsing, formatting, conversion, and validation.
   */
-class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
+class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTest: Boolean = false) {
 
     import StringFormatter._
+
+    // The host and port number that this Knora server is running on, and that should be used
+    // when constructing IRIs for project-specific ontologies.
+    private val knoraApiHostAndPort: Option[String] = if (initForTest) {
+        Some("0.0.0.0:3333")
+    } else {
+        maybeSettings.map(_.externalKnoraApiHostPort)
+    }
+
+    // The host that the ARK resolver is running on.
+    private val arkResolverHost: Option[String] = if (initForTest) {
+        Some("ark.dasch.swiss")
+    } else {
+        maybeSettings.map(_.arkResolverHost)
+    }
+
+    // The DaSCH's ARK assigned number.
+    private val arkAssignedNumber: Option[Int] = if (initForTest) {
+        Some(72163)
+    } else {
+        maybeSettings.map(_.arkAssignedNumber)
+    }
 
     // Valid URL schemes.
     private val schemes = Array("http", "https")
@@ -571,8 +606,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // The strings that Knora data IRIs can start with.
     private val DataIriStarts: Set[String] = Set(
-        "http://" + KnoraIdUtil.IriDomain + "/",
-        "http://data.knora.org/"
+        "http://" + KnoraIdUtil.IriDomain + "/"
     )
 
     // The project code of the default shared ontologies project.
@@ -700,7 +734,22 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         """^(\p{L}+)=(.+)$""".r
 
     // A regex for matching a string containing an email address.
-    private val EmailAddressRegex: Regex = """^.+@.+$""".r
+    private val EmailAddressRegex: Regex =
+        """^.+@.+$""".r
+
+    // A regex sub-pattern matching the random IDs generated by KnoraIdUtil, which are Base64-encoded
+    // using the "URL and Filename safe" Base 64 alphabet, without padding, as specified in Table 2 of
+    // RFC 4648.
+    private val Base64UrlPattern = "[A-Za-z0-9_-]+"
+
+    // Calculates check digits for resource IDs in ARK URLs.
+    private val base64UrlCheckDigit = new Base64UrlCheckDigit
+
+    // A regex that matches a Knora resource IRI.
+    private val ResourceIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")").r
+
+    // A DateTimeFormatter that parses and formats Knora ARK timestamps.
+    private val ArkTimestampFormat = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss[nnnnnnnnn]X").withZone(ZoneId.of("UTC"))
 
     /**
       * The information that is stored about non-Knora IRIs.
@@ -1252,6 +1301,30 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         }
 
         override def fromLinkPropToLinkValueProp: SmartIri = asLinkValueProp
+
+        override def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String = {
+            if (!isKnoraDataIri) {
+                throw DataConversionException(s"IRI $iri is not a Knora data IRI, so it cannot be a resource IRI")
+            }
+
+            iri match {
+                case ResourceIriRegex(projectID: String, resourceID: String) =>
+                    val arkUrlTry = Try {
+                        makeArkUrl(
+                            projectID = projectID,
+                            resourceID = resourceID,
+                            maybeTimestamp = maybeTimestamp
+                        )
+                    }
+
+                    arkUrlTry match {
+                        case Success(arkUrl) => arkUrl
+                        case Failure(ex) => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
+                    }
+
+                case _ => throw DataConversionException(s"IRI $iri is not a Knora resource IRI")
+            }
+        }
     }
 
     /**
@@ -1643,16 +1716,22 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def toInstant(s: String, errorFun: => Nothing): Instant = {
         try {
-            // Try parsing it as an ISO 8601 date in UTC.
+            // Try parsing it as an ISO 8601 UTC date.
             Instant.parse(s)
         } catch {
             case _: Exception =>
-                // Try parsing it as an ISO 8601 date with an offset.
+                // Try parsing it as a Knora ARK timestamp.
                 try {
-                    val creationAccessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
-                    Instant.from(creationAccessor)
+                    OffsetDateTime.parse(s, ArkTimestampFormat).toInstant
                 } catch {
-                    case _: Exception => errorFun
+                    case _: Exception =>
+                        // Try parsing it as an ISO 8601 date with an offset.
+                        try {
+                            val creationAccessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
+                            Instant.from(creationAccessor)
+                        } catch {
+                            case _: Exception => errorFun
+                        }
                 }
         }
     }
@@ -1988,7 +2067,13 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             case PropertyFromOtherOntologyInXmlImportRegex(_, Optional(maybeProjectID), prefixLabel, localName) =>
                 maybeProjectID match {
                     case Some(projectID) =>
-                        Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$projectID/$prefixLabel#$localName")
+                        // Is this ia shared ontology?
+                        // TODO: when multiple shared project ontologies are supported, this will need to be done differently.
+                        if (projectID == DefaultSharedOntologiesProjectCode) {
+                            Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/shared/$prefixLabel#$localName")
+                        } else {
+                            Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$projectID/$prefixLabel#$localName")
+                        }
 
                     case None =>
                         if (prefixLabel == OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel) {
@@ -2088,5 +2173,48 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def validateEmail(email: String): Option[String] = {
         EmailAddressRegex.findFirstIn(email)
+    }
+
+    /**
+      * Generates an ARK URL for a resource as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
+      *
+      * @param projectID      the shortcode of the project that the resource belongs to.
+      * @param resourceID     the resource's ID (the last component of its IRI).
+      * @param maybeTimestamp a timestamp indicating the point in the resource's version history that the ARK URL should
+      *                       cite.
+      * @return an ARK URL that can be resolved to obtain the resource.
+      */
+    private def makeArkUrl(projectID: String, resourceID: String, maybeTimestamp: Option[Instant] = None): String = {
+        val (host: String, assignedNumber: Int) = (arkResolverHost, arkAssignedNumber) match {
+            case (Some(definedHost: String), Some(definedAssignedNumber: Int)) => (definedHost, definedAssignedNumber)
+            case _ => throw AssertionException(s"StringFormatter has not been initialised with system settings")
+        }
+
+        // Calculate a check digit for the resource ID.
+
+        val checkDigitTry: Try[String] = Try {
+            base64UrlCheckDigit.calculate(resourceID)
+        }
+
+        val checkDigit: String = checkDigitTry match {
+            case Success(digit) => digit
+            case Failure(ex) => throw DataConversionException(ex.getMessage)
+        }
+
+        val resourceIDWithCheckDigit = resourceID + checkDigit
+
+        // Escape '-' as '=' in the resource ID and check digit, because '-' can be ignored in ARK URLs.
+        val escapedResourceIDWithCheckDigit = resourceIDWithCheckDigit.replace('-', '=')
+
+        val arkUrlWithoutTimestamp = s"http://$host/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit"
+
+        maybeTimestamp match {
+            case Some(timestamp) =>
+                // Format the timestamp and append it to the URL as an ARK object variant.
+                arkUrlWithoutTimestamp + "." + ArkTimestampFormat.format(timestamp)
+
+            case None =>
+                arkUrlWithoutTimestamp
+        }
     }
 }
