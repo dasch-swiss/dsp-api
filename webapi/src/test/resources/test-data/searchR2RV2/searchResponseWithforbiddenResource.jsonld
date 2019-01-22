@@ -4,7 +4,7 @@
     "@type" : "knora-api:ForbiddenResource",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0000/forbiddenResourceV"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
@@ -23,7 +23,7 @@
     "@type" : "anything:Thing",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
@@ -51,7 +51,7 @@
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/6ad3e2c47501O"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/6ad3e2c47501O"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -79,7 +79,7 @@
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/7e4cfc5417g"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/7e4cfc5417g"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -107,7 +107,7 @@
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/ad88963d2703="
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ad88963d2703="
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -135,7 +135,7 @@
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b603c6886d01T"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b603c6886d01T"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
