@@ -53,7 +53,7 @@ object ResourcesResponderV1Spec {
 
     val ReiseInsHeiligelandThreeValues = ResourceSearchResponseV1(
         resources = Vector(ResourceSearchResultRowV1(
-            id = "http://rdfh.ch/2a6221216701",
+            id = "http://rdfh.ch/0803/2a6221216701",
             value = Vector("Reise ins Heilige Land", "Reysen und wanderschafften durch das Gelobte Land", "Itinerarius"),
             rights = Some(6)
         ))
@@ -61,7 +61,7 @@ object ResourcesResponderV1Spec {
 
     val ReiseInsHeiligelandOneValueRestrictedToBook = ResourceSearchResponseV1(
         resources = Vector(ResourceSearchResultRowV1(
-            id = "http://rdfh.ch/2a6221216701",
+            id = "http://rdfh.ch/0803/2a6221216701",
             value = Vector("Reise ins Heilige Land"),
             rights = Some(6)
         ))
@@ -84,7 +84,7 @@ object ResourcesResponderV1Spec {
                             None,
                             "Siehe Seite c5v",
                             TextValueSimpleV1("Siehe Seite c5v"),
-                            "http://rdfh.ch/021ec18f1735/values/8a96c303338201",
+                            "http://rdfh.ch/0803/021ec18f1735/values/8a96c303338201",
                             None,
                             None))),
                 PropertyGetV1(
@@ -102,7 +102,7 @@ object ResourcesResponderV1Spec {
                             None,
                             "#ff3333",
                             ColorValueV1("#ff3333"),
-                            "http://rdfh.ch/021ec18f1735/values/10ea6976338201",
+                            "http://rdfh.ch/0803/021ec18f1735/values/10ea6976338201",
                             None,
                             None))),
                 PropertyGetV1(
@@ -119,7 +119,7 @@ object ResourcesResponderV1Spec {
                             None,
                             "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}",
                             GeomValueV1("{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}"),
-                            "http://rdfh.ch/021ec18f1735/values/4dc0163d338201",
+                            "http://rdfh.ch/0803/021ec18f1735/values/4dc0163d338201",
                             None,
                             None))),
                 PropertyGetV1(
@@ -134,15 +134,15 @@ object ResourcesResponderV1Spec {
                         PropertyGetValueV1(
                             None,
                             None,
-                            "http://rdfh.ch/9d626dc76c03",
+                            "http://rdfh.ch/0803/9d626dc76c03",
                             LinkV1(
-                                "http://rdfh.ch/9d626dc76c03",
+                                "http://rdfh.ch/0803/9d626dc76c03",
                                 Some("u1r"),
                                 Some(
                                     "http://www.knora.org/ontology/0803/incunabula#page"),
                                 None,
                                 None),
-                            "http://rdfh.ch/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
+                            "http://rdfh.ch/0803/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
                             None,
                             None))))))
 
@@ -799,16 +799,16 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         val regions: Seq[PropsGetForRegionV1] = received.resource_context.resinfo.get.regions.get
 
         val region1 = regions.filter {
-            region => region.res_id == "http://rdfh.ch/021ec18f1735"
+            region => region.res_id == "http://rdfh.ch/0803/021ec18f1735"
         }
 
         val region2 = regions.filter {
-            region => region.res_id == "http://rdfh.ch/b6b64a62b006"
+            region => region.res_id == "http://rdfh.ch/0803/b6b64a62b006"
         }
 
-        assert(region1.length == 1, "No region found with Iri 'http://rdfh.ch/021ec18f1735'")
+        assert(region1.length == 1, "No region found with Iri 'http://rdfh.ch/0803/021ec18f1735'")
 
-        assert(region2.length == 1, "No region found with Iri 'http://rdfh.ch/b6b64a62b006'")
+        assert(region2.length == 1, "No region found with Iri 'http://rdfh.ch/0803/b6b64a62b006'")
 
     }
 
@@ -848,8 +848,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
     "The resources responder" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a
-            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/c5058f3a", userADM = SharedTestDataADM.incunabulaMemberUser)
+            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0803/c5058f3a", userADM = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse)
@@ -857,8 +857,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return a full description of the first page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75
-            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", userADM = SharedTestDataADM.incunabulaMemberUser)
+            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F8a0b1e75
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0803/8a0b1e75", userADM = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse)
@@ -866,8 +866,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return the context (describing 402 pages) of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a?reqtype=context&resinfo=true
-            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a?reqtype=context&resinfo=true
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0803/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             val response: JsValue = expectMsgType[ResourceContextResponseV1](timeout).toJsValue
 
@@ -875,8 +875,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return the context of a page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75?reqtype=context&resinfo=true
-            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F8a0b1e75?reqtype=context&resinfo=true
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0803/8a0b1e75", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 => compareResourcePartOfContextResponses(received = response, expected = ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse)
@@ -1050,7 +1050,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "not create a resource containing a text value with a standoff reference to a nonexistent resource" in {
-            val nonexistentIri = "http://rdfh.ch/nonexistent"
+            val nonexistentIri = "http://rdfh.ch/0803/nonexistent"
 
             val title1 = TextValueSimpleV1("A beautiful book")
 
@@ -1121,7 +1121,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         startPosition = 32,
                         endPosition = 40,
-                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/c5058f3a")),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/0803/c5058f3a")),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None,
                         startIndex = 0
@@ -1129,7 +1129,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 ),
                 mapping = ResourcesResponderV1SpecFullData.dummyMapping,
                 mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                resource_reference = Set("http://rdfh.ch/c5058f3a")
+                resource_reference = Set("http://rdfh.ch/0803/c5058f3a")
             )
             val citation3 = TextValueSimpleV1("und noch eines")
             val citation4 = TextValueSimpleV1("noch ein letztes")
@@ -1221,7 +1221,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val book = newBookResourceIri.get
 
             val valuesToBeCreated = Map(
-                "http://www.knora.org/ontology/0803/incunabula#hasRightSideband" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/482a33d65c36"))),
+                "http://www.knora.org/ontology/0803/incunabula#hasRightSideband" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/0803/482a33d65c36"))),
                 "http://www.knora.org/ontology/0803/incunabula#pagenum" -> Vector(CreateValueV1WithComment(recto)),
                 "http://www.knora.org/ontology/0803/incunabula#partOf" -> Vector(CreateValueV1WithComment(LinkUpdateV1(book))),
                 "http://www.knora.org/ontology/0803/incunabula#origname" -> Vector(CreateValueV1WithComment(origname)),
@@ -1229,7 +1229,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             )
 
             val expected = Map(
-                "http://www.knora.org/ontology/0803/incunabula#hasRightSideband" -> Vector(LinkV1(targetResourceIri = "http://rdfh.ch/482a33d65c36", valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#Sideband"))),
+                "http://www.knora.org/ontology/0803/incunabula#hasRightSideband" -> Vector(LinkV1(targetResourceIri = "http://rdfh.ch/0803/482a33d65c36", valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#Sideband"))),
                 "http://www.knora.org/ontology/0803/incunabula#pagenum" -> Vector(recto),
                 "http://www.knora.org/ontology/0803/incunabula#partOf" -> Vector(LinkV1(book)),
                 "http://www.knora.org/ontology/0803/incunabula#origname" -> Vector(origname),
@@ -1310,7 +1310,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "get the properties of a resource" in {
 
             val propertiesGetRequest = PropertiesGetRequestV1(
-                "http://rdfh.ch/021ec18f1735",
+                "http://rdfh.ch/0803/021ec18f1735",
                 SharedTestDataADM.incunabulaProjectAdminUser
             )
 
@@ -1323,7 +1323,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "get the regions of a page pointed to by regions" in {
 
-            val resourceContextPage = ResourceContextGetRequestV1(iri = "http://rdfh.ch/9d626dc76c03", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            val resourceContextPage = ResourceContextGetRequestV1(iri = "http://rdfh.ch/0803/9d626dc76c03", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             responderManager ! resourceContextPage
 
@@ -1472,7 +1472,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val myNewLabel = "my new beautiful label"
 
             responderManager ! ChangeResourceLabelRequestV1(
-                resourceIri = "http://rdfh.ch/c5058f3a",
+                resourceIri = "http://rdfh.ch/0803/c5058f3a",
                 label = myNewLabel,
                 userADM = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID

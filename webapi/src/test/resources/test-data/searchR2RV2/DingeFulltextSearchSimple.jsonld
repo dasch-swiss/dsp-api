@@ -2,6 +2,10 @@
   "@id" : "http://rdfh.ch/0001/a-thing-with-text-values",
   "@type" : "anything:Thing",
   "anything:hasText" : [ "Ich liebe die Dinge, sie sind alles für mich.", "Na ja, die Dinge sind OK." ],
+  "knora-api:arkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv"
+  },
   "rdfs:label" : "Ein Ding für jemanden, dem die Dinge gefallen",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

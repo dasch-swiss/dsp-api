@@ -34,5 +34,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Editing Values](editing-values.md)
 - [Querying, Creating, and Updating Ontologies](ontology-information.md)
 - [TEI/XML](tei-xml.md)
+- [Resource Permalinks](resource-permalinks.md)
 
 @@@

@@ -34,7 +34,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
                     (msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_less_any_object") &&
-                        msg.trim.endsWith("http://rdfh.ch/missingPartOf http://www.knora.org/ontology/0803/incunabula#partOf *")) should ===(true)
+                        msg.trim.endsWith("http://rdfh.ch/0803/missingPartOf http://www.knora.org/ontology/0803/incunabula#partOf *")) should ===(true)
             }
         }
 
@@ -44,7 +44,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
             expectMsgPF(timeout) {
                 case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
                     (msg.contains(s"$CONSISTENCY_CHECK_ERROR min_cardinality_1_any_object") &&
-                        msg.trim.endsWith("http://rdfh.ch/missingFileValue http://www.knora.org/ontology/knora-base#hasStillImageFileValue *")) should ===(true)
+                        msg.trim.endsWith("http://rdfh.ch/0803/missingFileValue http://www.knora.org/ontology/knora-base#hasStillImageFileValue *")) should ===(true)
             }
         }
 
@@ -355,7 +355,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/missingPartOf") AS ?resource0)
+          |    BIND(IRI("http://rdfh.ch/0803/missingPartOf") AS ?resource0)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#page") AS ?resourceClass0)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0803") AS ?projectIri)
@@ -368,7 +368,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#pagenum
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#pagenum") AS ?property0_1)
-          |    BIND(IRI("http://rdfh.ch/missingPartOf/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue0_1)
+          |    BIND(IRI("http://rdfh.ch/0803/missingPartOf/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue0_1)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0_1)
           |
           |
@@ -396,7 +396,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/knora-base#hasStillImageFileValue
           |
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#hasStillImageFileValue") AS ?property0_2)
-          |    BIND(IRI("http://rdfh.ch/missingPartOf/values/GVE754RbT1CykpMnwR3Csw") AS ?newValue0_2)
+          |    BIND(IRI("http://rdfh.ch/0803/missingPartOf/values/GVE754RbT1CykpMnwR3Csw") AS ?newValue0_2)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#StillImageFileValue") AS ?valueType0_2)
           |
           |
@@ -424,7 +424,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/knora-base#hasStillImageFileValue
           |
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#hasStillImageFileValue") AS ?property0_3)
-          |    BIND(IRI("http://rdfh.ch/missingPartOf/values/LOT71U6hSQu7shi76oRxWQ") AS ?newValue0_3)
+          |    BIND(IRI("http://rdfh.ch/0803/missingPartOf/values/LOT71U6hSQu7shi76oRxWQ") AS ?newValue0_3)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#StillImageFileValue") AS ?valueType0_3)
           |
           |
@@ -453,8 +453,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#hasRightSideband") AS ?linkProperty0_4)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#hasRightSidebandValue") AS ?linkValueProperty0_4)
-          |    BIND(IRI("http://rdfh.ch/missingPartOf/values/i5tE5i-RRLOH631soexPFw") AS ?newLinkValue0_4)
-          |    BIND(IRI("http://rdfh.ch/482a33d65c36") AS ?linkTarget0_4)
+          |    BIND(IRI("http://rdfh.ch/0803/missingPartOf/values/i5tE5i-RRLOH631soexPFw") AS ?newLinkValue0_4)
+          |    BIND(IRI("http://rdfh.ch/0803/482a33d65c36") AS ?linkTarget0_4)
           |
           |
           |
@@ -492,7 +492,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#origname
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#origname") AS ?property0_5)
-          |    BIND(IRI("http://rdfh.ch/missingPartOf/values/MLWWT-F8SlKsZmRo4JMLHw") AS ?newValue0_5)
+          |    BIND(IRI("http://rdfh.ch/0803/missingPartOf/values/MLWWT-F8SlKsZmRo4JMLHw") AS ?newValue0_5)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0_5)
           |
           |
@@ -520,7 +520,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#seqnum
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#seqnum") AS ?property0_6)
-          |    BIND(IRI("http://rdfh.ch/missingPartOf/values/uWQtW_X3RxKjFyGrsQwbpQ") AS ?newValue0_6)
+          |    BIND(IRI("http://rdfh.ch/0803/missingPartOf/values/uWQtW_X3RxKjFyGrsQwbpQ") AS ?newValue0_6)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#IntValue") AS ?valueType0_6)
           |
           |
@@ -546,7 +546,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#pagenum
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#pagenum") AS ?property0_7)
-          |    BIND(IRI("http://rdfh.ch/missingPartOf/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue0_7)
+          |    BIND(IRI("http://rdfh.ch/0803/missingPartOf/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue0_7)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0_7)
           |
           |
@@ -732,7 +732,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/missingFileValue") AS ?resource)
+          |    BIND(IRI("http://rdfh.ch/0803/missingFileValue") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#page") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0803") AS ?projectIri)
@@ -746,8 +746,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#partOf") AS ?linkProperty0)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#partOfValue") AS ?linkValueProperty0)
-          |    BIND(IRI("http://rdfh.ch/missingFileValue/values/RFzfHLk1R-mU66NAFrVTYQ") AS ?newLinkValue0)
-          |    BIND(IRI("http://rdfh.ch/c5058f3a") AS ?linkTarget0)
+          |    BIND(IRI("http://rdfh.ch/0803/missingFileValue/values/RFzfHLk1R-mU66NAFrVTYQ") AS ?newLinkValue0)
+          |    BIND(IRI("http://rdfh.ch/0803/c5058f3a") AS ?linkTarget0)
           |
           |
           |
@@ -783,7 +783,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#pagenum
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#pagenum") AS ?property1)
-          |    BIND(IRI("http://rdfh.ch/missingFileValue/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue1)
+          |    BIND(IRI("http://rdfh.ch/0803/missingFileValue/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue1)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType1)
           |
           |
@@ -810,8 +810,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#hasRightSideband") AS ?linkProperty4)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#hasRightSidebandValue") AS ?linkValueProperty4)
-          |    BIND(IRI("http://rdfh.ch/missingFileValue/values/i5tE5i-RRLOH631soexPFw") AS ?newLinkValue4)
-          |    BIND(IRI("http://rdfh.ch/482a33d65c36") AS ?linkTarget4)
+          |    BIND(IRI("http://rdfh.ch/0803/missingFileValue/values/i5tE5i-RRLOH631soexPFw") AS ?newLinkValue4)
+          |    BIND(IRI("http://rdfh.ch/0803/482a33d65c36") AS ?linkTarget4)
           |
           |
           |
@@ -848,7 +848,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#origname
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#origname") AS ?property5)
-          |    BIND(IRI("http://rdfh.ch/missingFileValue/values/MLWWT-F8SlKsZmRo4JMLHw") AS ?newValue5)
+          |    BIND(IRI("http://rdfh.ch/0803/missingFileValue/values/MLWWT-F8SlKsZmRo4JMLHw") AS ?newValue5)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType5)
           |
           |
@@ -874,7 +874,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#seqnum
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#seqnum") AS ?property6)
-          |    BIND(IRI("http://rdfh.ch/missingFileValue/values/uWQtW_X3RxKjFyGrsQwbpQ") AS ?newValue6)
+          |    BIND(IRI("http://rdfh.ch/0803/missingFileValue/values/uWQtW_X3RxKjFyGrsQwbpQ") AS ?newValue6)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#IntValue") AS ?valueType6)
           |
           |
@@ -1090,7 +1090,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |                                    rdf:type knora-base:StandoffLink ;
           |                                    knora-base:standoffHasAttribute "_link" ;
-          |                                    knora-base:standoffHasLink <http://rdfh.ch/c5058f3a> ;
+          |                                    knora-base:standoffHasLink <http://rdfh.ch/0803/c5058f3a> ;
           |
           |
           |                            knora-base:standoffHasStart 32 ;
@@ -1175,7 +1175,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/tooManyPublocs") AS ?resource)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyPublocs") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0803") AS ?projectIri)
@@ -1188,7 +1188,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#title
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#title") AS ?property0)
-          |    BIND(IRI("http://rdfh.ch/tooManyPublocs/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyPublocs/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0)
           |
           |
@@ -1216,7 +1216,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#pubdate
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#pubdate") AS ?property1)
-          |    BIND(IRI("http://rdfh.ch/tooManyPublocs/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyPublocs/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#DateValue") AS ?valueType1)
           |
           |
@@ -1243,7 +1243,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#citation
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#citation") AS ?property2)
-          |    BIND(IRI("http://rdfh.ch/tooManyPublocs/values/oTvvcMRgR_CC-Os-61I-Qw") AS ?newValue2)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyPublocs/values/oTvvcMRgR_CC-Os-61I-Qw") AS ?newValue2)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType2)
           |
           |
@@ -1270,7 +1270,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#citation
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#citation") AS ?property3)
-          |    BIND(IRI("http://rdfh.ch/tooManyPublocs/values/Jvcncu3iSr2_fWdWdOfn-w") AS ?newValue3)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyPublocs/values/Jvcncu3iSr2_fWdWdOfn-w") AS ?newValue3)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType3)
           |
           |
@@ -1297,7 +1297,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#citation
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#citation") AS ?property4)
-          |    BIND(IRI("http://rdfh.ch/tooManyPublocs/values/7wJJcQLtS2mG_tyPKCe1Ig") AS ?newValue4)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyPublocs/values/7wJJcQLtS2mG_tyPKCe1Ig") AS ?newValue4)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType4)
           |
           |
@@ -1323,7 +1323,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#citation
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#citation") AS ?property5)
-          |    BIND(IRI("http://rdfh.ch/tooManyPublocs/values/y7zDf5oNSE6-9GNNgXSbwA") AS ?newValue5)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyPublocs/values/y7zDf5oNSE6-9GNNgXSbwA") AS ?newValue5)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType5)
           |
           |
@@ -1350,7 +1350,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#publoc
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#publoc") AS ?property6)
-          |    BIND(IRI("http://rdfh.ch/tooManyPublocs/values/1ryBgY4MSn2Y8K8QAPiJBw0") AS ?newValue6)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyPublocs/values/1ryBgY4MSn2Y8K8QAPiJBw0") AS ?newValue6)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType6)
           |
           |
@@ -1373,7 +1373,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#publoc
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#publoc") AS ?property7)
-          |    BIND(IRI("http://rdfh.ch/tooManyPublocs/values/1ryBgY4MSn2Y8K8QAPiJBw1") AS ?newValue7)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyPublocs/values/1ryBgY4MSn2Y8K8QAPiJBw1") AS ?newValue7)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType7)
           |
           |
@@ -1510,7 +1510,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/tooManyLastModificationDates") AS ?resource)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyLastModificationDates") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0803") AS ?projectIri)
@@ -1523,7 +1523,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#title
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#title") AS ?property0)
-          |    BIND(IRI("http://rdfh.ch/tooManyLastModificationDates/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyLastModificationDates/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0)
           |
           |
@@ -1550,7 +1550,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#pubdate
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#pubdate") AS ?property1)
-          |    BIND(IRI("http://rdfh.ch/tooManyLastModificationDates/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyLastModificationDates/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#DateValue") AS ?valueType1)
           |
           |
@@ -1576,7 +1576,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#publoc
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#publoc") AS ?property6)
-          |    BIND(IRI("http://rdfh.ch/tooManyLastModificationDates/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
+          |    BIND(IRI("http://rdfh.ch/0803/tooManyLastModificationDates/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType6)
           |
           |
@@ -1715,7 +1715,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/wrongSubjectClass") AS ?resource)
+          |    BIND(IRI("http://rdfh.ch/0803/wrongSubjectClass") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0803") AS ?projectIri)
@@ -1728,7 +1728,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#title
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#title") AS ?property0)
-          |    BIND(IRI("http://rdfh.ch/wrongSubjectClass/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
+          |    BIND(IRI("http://rdfh.ch/0803/wrongSubjectClass/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0)
           |
           |
@@ -1755,7 +1755,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#pubdate
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#pubdate") AS ?property1)
-          |    BIND(IRI("http://rdfh.ch/wrongSubjectClass/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
+          |    BIND(IRI("http://rdfh.ch/0803/wrongSubjectClass/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#DateValue") AS ?valueType1)
           |
           |
@@ -1781,7 +1781,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#publoc
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#publoc") AS ?property6)
-          |    BIND(IRI("http://rdfh.ch/wrongSubjectClass/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
+          |    BIND(IRI("http://rdfh.ch/0803/wrongSubjectClass/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType6)
           |
           |
@@ -1915,7 +1915,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/wrongObjectClass") AS ?resource)
+          |    BIND(IRI("http://rdfh.ch/0803/wrongObjectClass") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0803") AS ?projectIri)
@@ -1928,7 +1928,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#title
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#title") AS ?property0)
-          |    BIND(IRI("http://rdfh.ch/wrongObjectClass/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
+          |    BIND(IRI("http://rdfh.ch/0803/wrongObjectClass/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0)
           |
           |
@@ -1955,7 +1955,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#pubdate
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#pubdate") AS ?property1)
-          |    BIND(IRI("http://rdfh.ch/wrongObjectClass/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
+          |    BIND(IRI("http://rdfh.ch/0803/wrongObjectClass/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#DateValue") AS ?valueType1)
           |
           |
@@ -1981,7 +1981,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#publoc
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#publoc") AS ?property6)
-          |    BIND(IRI("http://rdfh.ch/wrongObjectClass/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
+          |    BIND(IRI("http://rdfh.ch/0803/wrongObjectClass/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType6)
           |
           |
@@ -2164,7 +2164,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/resourcePropWithNoCardinality") AS ?resource)
+          |    BIND(IRI("http://rdfh.ch/0803/resourcePropWithNoCardinality") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0803") AS ?projectIri)
@@ -2177,7 +2177,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#title
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#title") AS ?property0)
-          |    BIND(IRI("http://rdfh.ch/resourcePropWithNoCardinality/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
+          |    BIND(IRI("http://rdfh.ch/0803/resourcePropWithNoCardinality/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0)
           |
           |
@@ -2205,7 +2205,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#pubdate
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#pubdate") AS ?property1)
-          |    BIND(IRI("http://rdfh.ch/resourcePropWithNoCardinality/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
+          |    BIND(IRI("http://rdfh.ch/0803/resourcePropWithNoCardinality/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#DateValue") AS ?valueType1)
           |
           |
@@ -2232,7 +2232,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#publoc
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#publoc") AS ?property6)
-          |    BIND(IRI("http://rdfh.ch/resourcePropWithNoCardinality/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
+          |    BIND(IRI("http://rdfh.ch/0803/resourcePropWithNoCardinality/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType6)
           |
           |
@@ -2258,7 +2258,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#unused
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#unused") AS ?property7)
-          |    BIND(IRI("http://rdfh.ch/resourcePropWithNoCardinality/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue7)
+          |    BIND(IRI("http://rdfh.ch/0803/resourcePropWithNoCardinality/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue7)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType7)
           |
           |
@@ -2389,7 +2389,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/valuePropWithNoCardinality") AS ?resource)
+          |    BIND(IRI("http://rdfh.ch/0803/valuePropWithNoCardinality") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0803") AS ?projectIri)
@@ -2402,7 +2402,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#title
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#title") AS ?property0)
-          |    BIND(IRI("http://rdfh.ch/valuePropWithNoCardinality/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
+          |    BIND(IRI("http://rdfh.ch/0803/valuePropWithNoCardinality/values/IKVNJVSWTryEtK4i9OCSIQ") AS ?newValue0)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0)
           |
           |
@@ -2430,7 +2430,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#pubdate
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#pubdate") AS ?property1)
-          |    BIND(IRI("http://rdfh.ch/valuePropWithNoCardinality/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
+          |    BIND(IRI("http://rdfh.ch/0803/valuePropWithNoCardinality/values/L4YSL2SeSkKVt-J9OQAMog") AS ?newValue1)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#DateValue") AS ?valueType1)
           |
           |
@@ -2457,7 +2457,7 @@ object GraphDBConsistencyCheckingSpec {
           |    # Property: http://www.knora.org/ontology/0803/incunabula#publoc
           |
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#publoc") AS ?property6)
-          |    BIND(IRI("http://rdfh.ch/valuePropWithNoCardinality/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
+          |    BIND(IRI("http://rdfh.ch/0803/valuePropWithNoCardinality/values/1ryBgY4MSn2Y8K8QAPiJBw") AS ?newValue6)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType6)
           |
           |
@@ -2511,7 +2511,7 @@ object GraphDBConsistencyCheckingSpec {
           |            rdf:subject ?resource0 ;
           |            rdf:predicate ?linkProperty0_0 ;
           |            rdf:object ?linkTarget0_0 ;
-          |            knora-base:valueHasString "http://rdfh.ch/a-thing" ;
+          |            knora-base:valueHasString "http://rdfh.ch/0001/a-thing" ;
           |            knora-base:valueHasRefCount 1 ;
           |
           |            knora-base:valueHasOrder ?nextOrder0_0 ;
@@ -2537,7 +2537,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0001/anything") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/wrongTargetClass") AS ?resource0)
+          |    BIND(IRI("http://rdfh.ch/0001/wrongTargetClass") AS ?resource0)
           |    BIND(IRI("http://www.knora.org/ontology/0001/anything#BlueThing") AS ?resourceClass0)
           |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0001") AS ?projectIri)
@@ -2551,8 +2551,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |    BIND(IRI("http://www.knora.org/ontology/0001/anything#hasBlueThing") AS ?linkProperty0_0)
           |    BIND(IRI("http://www.knora.org/ontology/0001/anything#hasBlueThingValue") AS ?linkValueProperty0_0)
-          |    BIND(IRI("http://rdfh.ch/wrongTargetClass/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0_0)
-          |    BIND(IRI("http://rdfh.ch/a-thing") AS ?linkTarget0)
+          |    BIND(IRI("http://rdfh.ch/0001/wrongTargetClass/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0_0)
+          |    BIND(IRI("http://rdfh.ch/0001/a-thing") AS ?linkTarget0)
           |
           |
           |
@@ -2608,7 +2608,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0001/anything") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/twoLabels") AS ?resource)
+          |    BIND(IRI("http://rdfh.ch/0001/twoLabels") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0001/anything#BlueThing") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0001") AS ?projectIri)
@@ -2673,7 +2673,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0001/anything") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/missingValuePermissions") AS ?resource)
+          |    BIND(IRI("http://rdfh.ch/0001/missingValuePermissions") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0001/anything#Thing") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0001") AS ?projectIri)

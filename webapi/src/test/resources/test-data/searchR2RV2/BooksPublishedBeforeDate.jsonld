@@ -1,9 +1,9 @@
 {
   "@graph" : [ {
-    "@id" : "http://rdfh.ch/cf0892760104",
+    "@id" : "http://rdfh.ch/0803/cf0892760104",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/cf0892760104/values/75e20a21fd0f",
+      "@id" : "http://rdfh.ch/0803/cf0892760104/values/75e20a21fd0f",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -21,13 +21,17 @@
       "knora-api:valueAsString" : "JULIAN:1471-03-21 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/cf0892760104/values/2c651175fc0f",
+      "@id" : "http://rdfh.ch/0803/cf0892760104/values/2c651175fc0f",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:valueAsString" : "Geschichte von der schönen Melusine"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cf0892760104a"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -42,10 +46,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Geschichte von der schönen Melusine"
   }, {
-    "@id" : "http://rdfh.ch/2a6221216701",
+    "@id" : "http://rdfh.ch/0803/2a6221216701",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/2a6221216701/values/63fc012e9205",
+      "@id" : "http://rdfh.ch/0803/2a6221216701/values/63fc012e9205",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -59,7 +63,7 @@
       "knora-api:valueAsString" : "JULIAN:1481 CE"
     },
     "incunabula:title" : [ {
-      "@id" : "http://rdfh.ch/2a6221216701/values/d1010fd69005",
+      "@id" : "http://rdfh.ch/0803/2a6221216701/values/d1010fd69005",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -67,7 +71,7 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Reise ins Heilige Land"
     }, {
-      "@id" : "http://rdfh.ch/2a6221216701/values/942b620f9105",
+      "@id" : "http://rdfh.ch/0803/2a6221216701/values/942b620f9105",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -75,7 +79,7 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Reysen und wanderschafften durch das Gelobte Land"
     }, {
-      "@id" : "http://rdfh.ch/2a6221216701/values/5755b5489105",
+      "@id" : "http://rdfh.ch/0803/2a6221216701/values/5755b5489105",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -83,6 +87,10 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Itinerarius"
     } ],
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
     },
@@ -96,10 +104,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Reise ins Heilige Land"
   }, {
-    "@id" : "http://rdfh.ch/c3f913666f",
+    "@id" : "http://rdfh.ch/0803/c3f913666f",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/c3f913666f/values/59884a5bb901",
+      "@id" : "http://rdfh.ch/0803/c3f913666f/values/59884a5bb901",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -113,7 +121,7 @@
       "knora-api:valueAsString" : "JULIAN:1487 CE:1490 CE"
     },
     "incunabula:title" : [ {
-      "@id" : "http://rdfh.ch/c3f913666f/values/8ab7aa3cb801",
+      "@id" : "http://rdfh.ch/0803/c3f913666f/values/8ab7aa3cb801",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -121,7 +129,7 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "De generatione Christi"
     }, {
-      "@id" : "http://rdfh.ch/c3f913666f/values/4de1fd75b801",
+      "@id" : "http://rdfh.ch/0803/c3f913666f/values/4de1fd75b801",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -129,6 +137,10 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae"
     } ],
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c3f913666f0"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
     },
@@ -142,10 +154,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "De generatione Christi"
   }, {
-    "@id" : "http://rdfh.ch/1967a9933401",
+    "@id" : "http://rdfh.ch/0803/1967a9933401",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/1967a9933401/values/8eada9f9c704",
+      "@id" : "http://rdfh.ch/0803/1967a9933401/values/8eada9f9c704",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -159,13 +171,17 @@
       "knora-api:valueAsString" : "GREGORIAN:1489 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/1967a9933401/values/4530b04dc704",
+      "@id" : "http://rdfh.ch/0803/1967a9933401/values/4530b04dc704",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1967a9933401n"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -180,10 +196,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
   }, {
-    "@id" : "http://rdfh.ch/41d01bd9fb",
+    "@id" : "http://rdfh.ch/0803/41d01bd9fb",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/41d01bd9fb/values/07bb2eeee603",
+      "@id" : "http://rdfh.ch/0803/41d01bd9fb/values/07bb2eeee603",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -197,13 +213,17 @@
       "knora-api:valueAsString" : "JULIAN:1489 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/41d01bd9fb/values/be3d3542e603",
+      "@id" : "http://rdfh.ch/0803/41d01bd9fb/values/be3d3542e603",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/41d01bd9fb0"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -218,10 +238,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
   }, {
-    "@id" : "http://rdfh.ch/9311a421b501",
+    "@id" : "http://rdfh.ch/0803/9311a421b501",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/9311a421b501/values/ef53b45cce06",
+      "@id" : "http://rdfh.ch/0803/9311a421b501/values/ef53b45cce06",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -235,13 +255,17 @@
       "knora-api:valueAsString" : "JULIAN:1489 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/9311a421b501/values/2083143ecd06",
+      "@id" : "http://rdfh.ch/0803/9311a421b501/values/2083143ecd06",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Bereitung zu dem Heiligen Sakrament"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9311a421b501n"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -256,10 +280,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Bereitung zu dem Heiligen Sakrament"
   }, {
-    "@id" : "http://rdfh.ch/ff17e5ef9601",
+    "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/ff17e5ef9601/values/a876c2a25106",
+      "@id" : "http://rdfh.ch/0803/ff17e5ef9601/values/a876c2a25106",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -273,7 +297,7 @@
       "knora-api:valueAsString" : "JULIAN:1490 CE"
     },
     "incunabula:title" : [ {
-      "@id" : "http://rdfh.ch/ff17e5ef9601/values/d9a522845006",
+      "@id" : "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -281,7 +305,7 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
     }, {
-      "@id" : "http://rdfh.ch/ff17e5ef9601/values/9ccf75bd5006",
+      "@id" : "http://rdfh.ch/0803/ff17e5ef9601/values/9ccf75bd5006",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -289,6 +313,10 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Horologium devotionis circa vitam Christi"
     } ],
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
     },
@@ -302,10 +330,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
-    "@id" : "http://rdfh.ch/3341c4984004",
+    "@id" : "http://rdfh.ch/0803/3341c4984004",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/3341c4984004/values/eb4e55caf410",
+      "@id" : "http://rdfh.ch/0803/3341c4984004/values/eb4e55caf410",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -323,13 +351,17 @@
       "knora-api:valueAsString" : "JULIAN:1491-02-19 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/3341c4984004/values/dfa708e5f310",
+      "@id" : "http://rdfh.ch/0803/3341c4984004/values/dfa708e5f310",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:valueAsString" : "Die wunderbare Meerfahrt des hl. Brandan"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/3341c4984004k"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -344,10 +376,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Die wunderbare Meerfahrt des hl. Brandan"
   }, {
-    "@id" : "http://rdfh.ch/939baf3f2a02",
+    "@id" : "http://rdfh.ch/0803/939baf3f2a02",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/939baf3f2a02/values/68852e379d08",
+      "@id" : "http://rdfh.ch/0803/939baf3f2a02/values/68852e379d08",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -365,13 +397,17 @@
       "knora-api:valueAsString" : "JULIAN:1491-07-28 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/939baf3f2a02/values/5cdee1519c08",
+      "@id" : "http://rdfh.ch/0803/939baf3f2a02/values/5cdee1519c08",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Postilla super epistolas et evangelia"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/939baf3f2a02L"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -386,10 +422,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Postilla super epistolas et evangelia"
   }, {
-    "@id" : "http://rdfh.ch/21abac2162",
+    "@id" : "http://rdfh.ch/0803/21abac2162",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/21abac2162/values/030ead2a8301",
+      "@id" : "http://rdfh.ch/0803/21abac2162/values/030ead2a8301",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -403,13 +439,17 @@
       "knora-api:valueAsString" : "GREGORIAN:1492 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/21abac2162/values/f76660458201",
+      "@id" : "http://rdfh.ch/0803/21abac2162/values/f76660458201",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Lob der Glieder Mariens"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/21abac2162A"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -424,10 +464,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Lob der Glieder Mariens"
   }, {
-    "@id" : "http://rdfh.ch/c5058f3a",
+    "@id" : "http://rdfh.ch/0803/c5058f3a",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/c5058f3a/values/cfd09f1e01",
+      "@id" : "http://rdfh.ch/0803/c5058f3a/values/cfd09f1e01",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -441,13 +481,17 @@
       "knora-api:valueAsString" : "JULIAN:1492 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/c5058f3a/values/c3295339",
+      "@id" : "http://rdfh.ch/0803/c5058f3a/values/c3295339",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -462,10 +506,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
-    "@id" : "http://rdfh.ch/e41ab5695c",
+    "@id" : "http://rdfh.ch/0803/e41ab5695c",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/e41ab5695c/values/08ed90a76b01",
+      "@id" : "http://rdfh.ch/0803/e41ab5695c/values/08ed90a76b01",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -479,7 +523,7 @@
       "knora-api:valueAsString" : "JULIAN:1492 CE"
     },
     "incunabula:title" : [ {
-      "@id" : "http://rdfh.ch/e41ab5695c/values/391cf1886a01",
+      "@id" : "http://rdfh.ch/0803/e41ab5695c/values/391cf1886a01",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -487,7 +531,7 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Orationes"
     }, {
-      "@id" : "http://rdfh.ch/e41ab5695c/values/fc4544c26a01",
+      "@id" : "http://rdfh.ch/0803/e41ab5695c/values/fc4544c26a01",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -495,6 +539,10 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:valueAsString" : "Sant Brigitten gebettly"
     } ],
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/e41ab5695cN"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
     },
@@ -508,10 +556,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Orationes"
   }, {
-    "@id" : "http://rdfh.ch/861b5644b302",
+    "@id" : "http://rdfh.ch/0803/861b5644b302",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/861b5644b302/values/d0f3a102bc0a",
+      "@id" : "http://rdfh.ch/0803/861b5644b302/values/d0f3a102bc0a",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -525,13 +573,17 @@
       "knora-api:valueAsString" : "JULIAN:1495 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/861b5644b302/values/c44c551dbb0a",
+      "@id" : "http://rdfh.ch/0803/861b5644b302/values/c44c551dbb0a",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Quadragesimale de filio prodigo"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/861b5644b302T"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -546,10 +598,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Quadragesimale de filio prodigo"
   }, {
-    "@id" : "http://rdfh.ch/5e77e98d2603",
+    "@id" : "http://rdfh.ch/0803/5e77e98d2603",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/5e77e98d2603/values/304455c68d0c",
+      "@id" : "http://rdfh.ch/0803/5e77e98d2603/values/304455c68d0c",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -567,13 +619,17 @@
       "knora-api:valueAsString" : "JULIAN:1495-03-03 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/5e77e98d2603/values/249d08e18c0c",
+      "@id" : "http://rdfh.ch/0803/5e77e98d2603/values/249d08e18c0c",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "[Das] Narrenschiff (dt.)"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -588,10 +644,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "[Das] Narrenschiff (dt.)"
   }, {
-    "@id" : "http://rdfh.ch/6fad5b8c1e03",
+    "@id" : "http://rdfh.ch/0803/6fad5b8c1e03",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/6fad5b8c1e03/values/44830e0d690c",
+      "@id" : "http://rdfh.ch/0803/6fad5b8c1e03/values/44830e0d690c",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -609,13 +665,17 @@
       "knora-api:valueAsString" : "JULIAN:1496-09-20 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/6fad5b8c1e03/values/75b26eee670c",
+      "@id" : "http://rdfh.ch/0803/6fad5b8c1e03/values/75b26eee670c",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:valueAsString" : "Passio sancti Meynrhadi martyris et heremite"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/6fad5b8c1e03q"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"

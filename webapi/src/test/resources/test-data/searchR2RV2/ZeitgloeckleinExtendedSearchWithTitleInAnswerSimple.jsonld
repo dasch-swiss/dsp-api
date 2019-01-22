@@ -1,13 +1,21 @@
 {
   "@graph" : [ {
-    "@id" : "http://rdfh.ch/c5058f3a",
+    "@id" : "http://rdfh.ch/0803/c5058f3a",
     "@type" : "incunabula:book",
     "incunabula:title" : "Zeitglöcklein des Lebens und Leidens Christi",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
+    },
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
-    "@id" : "http://rdfh.ch/ff17e5ef9601",
+    "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
     "@type" : "incunabula:book",
     "incunabula:title" : "Zeitglöcklein des Lebens und Leidens Christi",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j"
+    },
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   } ],
   "@context" : {

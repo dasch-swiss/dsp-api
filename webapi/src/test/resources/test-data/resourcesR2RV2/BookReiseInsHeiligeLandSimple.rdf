@@ -5,7 +5,7 @@
 	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 	xmlns:incunabula="http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#"
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
-<incunabula:book rdf:about="http://rdfh.ch/2a6221216701">
+<incunabula:book rdf:about="http://rdfh.ch/0803/2a6221216701">
 	<incunabula:book_comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Katalogaufnahme anhand ISTC und v.d.Haegen</incunabula:book_comment>
 	<incunabula:citation rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Van der Haegen I: 9,14</incunabula:citation>
 	<incunabula:citation rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Goff M165</incunabula:citation>
@@ -30,6 +30,7 @@
 	<incunabula:title rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reysen und wanderschafften durch das Gelobte Land</incunabula:title>
 	<incunabula:title rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Itinerarius</incunabula:title>
 	<incunabula:url rdf:datatype="http://www.w3.org/2001/XMLSchema#string">http://aleph.unibas.ch/F/?local_base=DSV01&amp;con_lng=GER&amp;func=find-b&amp;find_code=SYS&amp;request=002610320</incunabula:url>
+	<knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W</knora-api:arkUrl>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reise ins Heilige Land</rdfs:label>
 </incunabula:book>
 

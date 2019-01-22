@@ -60,6 +60,26 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         objectType = Some(OntologyConstants.Xsd.String)
     )
 
+    private val ArkUrl: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "ARK URL",
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides the ARK URL of a resource."
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Uri)
+    )
+
     private val IsShared: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsShared,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1177,7 +1197,8 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
     )
 
     private val ResourceCardinalities = Map(
-        OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLinkValue -> Cardinality.MayHaveMany
+        OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLinkValue -> Cardinality.MayHaveMany,
+        OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl -> Cardinality.MustHaveOne
     )
 
     private val DateBaseCardinalities = Map(
@@ -1426,6 +1447,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
       */
     override val knoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Result,
+        ArkUrl,
         IsShared,
         IsBuiltIn,
         IsResourceClass,
