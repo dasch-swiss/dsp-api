@@ -10,7 +10,7 @@
 @prefix beol: <http://www.knora.org/ontology/0801/beol#> .
 
 ### page resource for R2R standoff tests
-<http://rdfh.ch/beol/page_resource> a <http://www.knora.org/ontology/0801/beol#facsimile> ;
+<http://rdfh.ch/0801/page_resource> a <http://www.knora.org/ontology/0801/beol#facsimile> ;
                                     rdfs:label "Test page" ;
                                     <http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
                                     <http://www.knora.org/ontology/knora-base#creationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
@@ -18,9 +18,9 @@
                                     <http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
                                     <http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
-<http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> <http://rdfh.ch/beol/page_resource/values/DX6m0TSuRGesYXA0iQyA9A> .
+<http://rdfh.ch/0801/page_resource> <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> <http://rdfh.ch/0801/page_resource/values/DX6m0TSuRGesYXA0iQyA9A> .
 
-<http://rdfh.ch/beol/page_resource/values/DX6m0TSuRGesYXA0iQyA9A> a <http://www.knora.org/ontology/knora-base#StillImageFileValue> ;
+<http://rdfh.ch/0801/page_resource/values/DX6m0TSuRGesYXA0iQyA9A> a <http://www.knora.org/ontology/knora-base#StillImageFileValue> ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
 	<http://www.knora.org/ontology/knora-base#dimX> "2157"^^xsd:integer ;
 	<http://www.knora.org/ontology/knora-base#dimY> "2806"^^xsd:integer ;
@@ -36,9 +36,9 @@
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
 	<http://www.knora.org/ontology/knora-base#valueHasQname> "full" .
 
-<http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> <http://rdfh.ch/beol/page_resource/values/Rgsx1hL2Te6NGwep8IdL_Q> .
+<http://rdfh.ch/0801/page_resource> <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> <http://rdfh.ch/0801/page_resource/values/Rgsx1hL2Te6NGwep8IdL_Q> .
 
-<http://rdfh.ch/beol/page_resource/values/Rgsx1hL2Te6NGwep8IdL_Q> a <http://www.knora.org/ontology/knora-base#StillImageFileValue> ;
+<http://rdfh.ch/0801/page_resource/values/Rgsx1hL2Te6NGwep8IdL_Q> a <http://www.knora.org/ontology/knora-base#StillImageFileValue> ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
 	<http://www.knora.org/ontology/knora-base#dimX> "99"^^xsd:integer ;
 	<http://www.knora.org/ontology/knora-base#dimY> "128"^^xsd:integer ;
@@ -55,25 +55,25 @@
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
 	<http://www.knora.org/ontology/knora-base#valueHasQname> "thumbnail" .
 
-<http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/0801/beol#partOf> <http://rdfh.ch/beol/letter_resource> .
+<http://rdfh.ch/0801/page_resource> <http://www.knora.org/ontology/0801/beol#partOf> <http://rdfh.ch/0801/letter_resource> .
 
-<http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/0801/beol#partOfValue> <http://rdfh.ch/beol/page_resource/values/dn2rUCg8TNq_qz6i62e51g> .
+<http://rdfh.ch/0801/page_resource> <http://www.knora.org/ontology/0801/beol#partOfValue> <http://rdfh.ch/0801/page_resource/values/dn2rUCg8TNq_qz6i62e51g> .
 
-<http://rdfh.ch/beol/page_resource/values/dn2rUCg8TNq_qz6i62e51g> a <http://www.knora.org/ontology/knora-base#LinkValue> ;
+<http://rdfh.ch/0801/page_resource/values/dn2rUCg8TNq_qz6i62e51g> a <http://www.knora.org/ontology/knora-base#LinkValue> ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
-	rdf:subject <http://rdfh.ch/beol/page_resource> ;
+	rdf:subject <http://rdfh.ch/0801/page_resource> ;
 	rdf:predicate <http://www.knora.org/ontology/0801/beol#partOf> ;
-	rdf:object <http://rdfh.ch/beol/letter_resource> ;
+	rdf:object <http://rdfh.ch/0801/letter_resource> ;
 	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#valueHasOrder> "0"^^xsd:integer ;
 	<http://www.knora.org/ontology/knora-base#valueHasRefCount> "1"^^xsd:integer ;
-	<http://www.knora.org/ontology/knora-base#valueHasString> "http://rdfh.ch/beol/letter_resource" ;
+	<http://www.knora.org/ontology/knora-base#valueHasString> "http://rdfh.ch/0801/letter_resource" ;
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
-<http://rdfh.ch/beol/page_resource> <http://www.knora.org/ontology/0801/beol#seqnum> <http://rdfh.ch/beol/page_resource/values/f45WI-rpQTigeaJ84KZoBA> .
+<http://rdfh.ch/0801/page_resource> <http://www.knora.org/ontology/0801/beol#seqnum> <http://rdfh.ch/0801/page_resource/values/f45WI-rpQTigeaJ84KZoBA> .
 
-<http://rdfh.ch/beol/page_resource/values/f45WI-rpQTigeaJ84KZoBA> a <http://www.knora.org/ontology/knora-base#IntValue> ;
+<http://rdfh.ch/0801/page_resource/values/f45WI-rpQTigeaJ84KZoBA> a <http://www.knora.org/ontology/knora-base#IntValue> ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
 	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#valueHasInteger> "0"^^xsd:integer ;
@@ -82,8 +82,8 @@
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
-### letter resource for R2R standoff tests, referred to by <http://rdfh.ch/beol/page_resource>
-<http://rdfh.ch/beol/letter_resource> a <http://www.knora.org/ontology/0801/beol#letter> ;
+### letter resource for R2R standoff tests, referred to by <http://rdfh.ch/0801/page_resource>
+<http://rdfh.ch/0801/letter_resource> a <http://www.knora.org/ontology/0801/beol#letter> ;
 	rdfs:label "Test letter" ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
 	<http://www.knora.org/ontology/knora-base#creationDate> "2017-09-01T14:15:04.846+02:00"^^xsd:dateTimeStamp ;
@@ -91,9 +91,9 @@
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	<http://www.knora.org/ontology/knora-base#attachedToProject> <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
-	<http://www.knora.org/ontology/0801/beol#title> <http://rdfh.ch/beol/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> .
+	<http://www.knora.org/ontology/0801/beol#title> <http://rdfh.ch/0801/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> .
 
-<http://rdfh.ch/beol/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> a <http://www.knora.org/ontology/knora-base#TextValue> ;
+<http://rdfh.ch/0801/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> a <http://www.knora.org/ontology/knora-base#TextValue> ;
 	<http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
 	<http://www.knora.org/ontology/knora-base#valueCreationDate> "2017-09-01T14:15:04.846+02:00"^^xsd:dateTimeStamp ;
 	<http://www.knora.org/ontology/knora-base#valueHasOrder> "0"^^xsd:integer ;
