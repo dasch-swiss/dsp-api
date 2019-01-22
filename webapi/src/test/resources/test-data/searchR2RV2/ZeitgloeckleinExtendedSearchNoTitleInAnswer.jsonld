@@ -4,7 +4,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/c5058f3a5"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -23,7 +23,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/ff17e5ef9601j"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"

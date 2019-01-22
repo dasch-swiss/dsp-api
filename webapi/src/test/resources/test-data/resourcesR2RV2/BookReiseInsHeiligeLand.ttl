@@ -22,7 +22,7 @@
   incunabula:title <http://rdfh.ch/0803/2a6221216701/values/5755b5489105>, <http://rdfh.ch/0803/2a6221216701/values/942b620f9105>,
     <http://rdfh.ch/0803/2a6221216701/values/d1010fd69005>;
   incunabula:url <http://rdfh.ch/0803/2a6221216701/values/f89173afca2704>;
-  knora-api:arkUrl "http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W"^^xsd:anyURI;
+  knora-api:arkUrl "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W"^^xsd:anyURI;
   knora-api:attachedToProject <http://rdfh.ch/projects/0803>;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:creationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp;

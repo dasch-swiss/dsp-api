@@ -6,7 +6,7 @@
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY"
   },
   "rdfs:label" : "Sierra",
   "@context" : {

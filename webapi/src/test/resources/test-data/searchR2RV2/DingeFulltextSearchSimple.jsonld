@@ -4,7 +4,7 @@
   "anything:hasText" : [ "Ich liebe die Dinge, sie sind alles für mich.", "Na ja, die Dinge sind OK." ],
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/a=thing=with=text=valuesv"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv"
   },
   "rdfs:label" : "Ein Ding für jemanden, dem die Dinge gefallen",
   "@context" : {
