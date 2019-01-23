@@ -358,12 +358,17 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                         val variableForLiteral: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
 
                         // put the generated variable into a collection so it can be reused in `NonTriplestoreSpecificGravsearchToPrequeryGenerator.getOrderBy`
-                        addGeneratedVariableForValueLiteral(criterion.queryVariable, variableForLiteral)
+                        // set to true when the variable already exists
+                        val variableForLiteralExists = !addGeneratedVariableForValueLiteral(criterion.queryVariable, variableForLiteral)
 
-                        // Generate a statement to get the literal value.
-                        val statementPatternForSortCriterion = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
-
-                        Some(statementPatternForSortCriterion)
+                        if (!variableForLiteralExists) {
+                            // Generate a statement to get the literal value
+                            val statementPatternForSortCriterion = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
+                            Some(statementPatternForSortCriterion)
+                        } else {
+                            // statement has already been created
+                            None
+                        }
                     } else {
                         // it is not a sort criterion
                         None
@@ -653,13 +658,19 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         val dateValueHasStartVar = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN)
 
         // sort dates by their period's start (in the prequery)
-        addGeneratedVariableForValueLiteral(queryVar, dateValueHasStartVar)
+        // is set to `true` if the date value object var is a sort criterion and has been handled already
+        val dateValVarExists: Boolean = !addGeneratedVariableForValueLiteral(queryVar, dateValueHasStartVar)
 
         // Generate a variable name representing the period's end
         val dateValueHasEndVar = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN)
 
         // connects the value object with the periods start variable
-        val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar)
+        // only generate a new statement if it has not already been created when handling the sort criteria
+        val dateValStartStatementOption: Option[StatementPattern] = if (!dateValVarExists) {
+            Some(StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar))
+        } else {
+           None
+        }
 
         // connects the value object with the periods end variable
         val dateValEndStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri), obj = dateValueHasEndVar)
@@ -676,7 +687,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                 val filter = AndExpression(leftArgFilter, rightArgFilter)
 
-                val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement))
+                val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement))
                 generatedDateStatements ++= statementsToAdd
 
                 TransformedFilterPattern(
@@ -693,7 +704,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                 val filter = OrExpression(leftArgFilter, rightArgFilter)
 
-                val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement))
+                val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement))
                 generatedDateStatements ++= statementsToAdd
 
                 TransformedFilterPattern(
@@ -706,7 +717,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 // period ends before indicated period
                 val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
-                val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
+                val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
                 generatedDateStatements ++= statementsToAdd
 
                 TransformedFilterPattern(
@@ -719,9 +730,9 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 // period ends before indicated period or equals it (any overlap)
                 val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
-                val statementToAdd = if (!generatedDateStatements.contains(dateValStartStatement)) {
-                    generatedDateStatements += dateValStartStatement
-                    Seq(dateValStartStatement)
+                val statementToAdd = if (dateValStartStatementOption.nonEmpty && !generatedDateStatements.contains(dateValStartStatementOption.get)) {
+                    generatedDateStatements += dateValStartStatementOption.get
+                    Seq(dateValStartStatementOption.get)
                 } else {
                     Seq.empty[StatementPattern]
                 }
@@ -736,9 +747,9 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 // period starts after end of indicated period
                 val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
-                val statementToAdd = if (!generatedDateStatements.contains(dateValStartStatement)) {
-                    generatedDateStatements += dateValStartStatement
-                    Seq(dateValStartStatement)
+                val statementToAdd = if (dateValStartStatementOption.nonEmpty && !generatedDateStatements.contains(dateValStartStatementOption.get)) {
+                    generatedDateStatements += dateValStartStatementOption.get
+                    Seq(dateValStartStatementOption.get)
                 } else {
                     Seq.empty[StatementPattern]
                 }
@@ -753,7 +764,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 // period starts after indicated period or equals it (any overlap)
                 val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
-                val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
+                val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
                 generatedDateStatements ++= statementsToAdd
 
                 TransformedFilterPattern(
