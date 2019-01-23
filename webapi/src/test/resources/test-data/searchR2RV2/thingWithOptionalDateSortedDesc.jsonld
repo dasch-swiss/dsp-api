@@ -20,6 +20,10 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
       "knora-api:valueAsString" : "GREGORIAN:2018-05-13 CE"
     },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -52,6 +56,10 @@
       "knora-api:dateValueHasStartYear" : 10,
       "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
       "knora-api:valueAsString" : "JULIAN:0010-01-10 BCE:0010-01-10 CE"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
@@ -86,6 +94,10 @@
       "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
       "knora-api:valueAsString" : "JULIAN:0044-03-15 BCE"
     },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_dateb"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -101,6 +113,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -116,6 +132,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/5IEswyQFQp2bxXDrOyEfEAr"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -131,6 +151,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/7uuGcnFcQJq08dMOralyCQY"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -146,6 +170,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/9eSuQ_J7T0aOqoImTkwPxA",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/9eSuQ_J7T0aOqoImTkwPxAX"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -161,6 +189,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/A67ka6UQRHWf313tbhQBjwu"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -176,6 +208,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/CNhWoNGGT7iWOrIwxsEqvAO"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -191,6 +227,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/L5xU7Qe5QUu6Wz3cDaCxbAU"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -206,6 +246,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/LOV=6aLYQFW15jwdyS51YwF"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -221,6 +265,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/Lz7WEqJETJqqsUZQYexBQgy"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -236,6 +284,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/MiBwAFcxQZGHNL=WfgFAPQb"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -251,6 +303,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/WLSHxQUgTOmG1T0lBU2r5wb"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -266,6 +322,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/YgL4JhwfSQq-1davjrp8Ow",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/YgL4JhwfSQq=1davjrp8Owz"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -281,6 +341,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/ZYNUiHtsTROWblui9xHEuw",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/ZYNUiHtsTROWblui9xHEuwP"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -296,6 +360,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/a-blue-thing",
     "@type" : "anything:BlueThing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=blue=thing7"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -311,6 +379,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/a-thing",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thingO"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -326,6 +398,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/a-thing-with-picture",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=pictureE"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -339,8 +415,12 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
     "rdfs:label" : "A thing with a picture"
   }, {
-    "@id" : "http://rdfh.ch/permissions/forbiddenResource",
+    "@id" : "http://rdfh.ch/0000/forbiddenResource",
     "@type" : "knora-api:ForbiddenResource",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
     },
@@ -356,6 +436,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -371,6 +455,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/another-thing",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/another=thing4"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -386,6 +474,10 @@
   }, {
     "@id" : "http://rdfh.ch/0001/cL5AwEioRLOm6Vrqwl1RmQ",
     "@type" : "anything:Thing",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/cL5AwEioRLOm6Vrqwl1RmQ8"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -399,8 +491,12 @@
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
     "rdfs:label" : "Oscar"
   }, {
-    "@id" : "http://rdfh.ch/permissions/forbiddenResource",
+    "@id" : "http://rdfh.ch/0000/forbiddenResource",
     "@type" : "knora-api:ForbiddenResource",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
     },
@@ -414,8 +510,12 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|V knora-base:UnknownUser",
     "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)"
   }, {
-    "@id" : "http://rdfh.ch/permissions/forbiddenResource",
+    "@id" : "http://rdfh.ch/0000/forbiddenResource",
     "@type" : "knora-api:ForbiddenResource",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
     },
