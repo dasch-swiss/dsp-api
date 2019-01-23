@@ -61,41 +61,41 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
 
     "The NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
 
-        "transform an input query with a non optional sort criterion" in {
+        "transform an input query with a date as a non optional sort criterion" in {
 
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithNonOptionalSortCriterion, responderData, settings)
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterion, responderData, settings)
 
-            assert(transformedQuery === transformedQueryWithNonOptionalSortCriterion)
-
-        }
-
-        "transform an input query with a non optional sort criterion and a filter" in {
-
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithNonOptionalSortCriterionAndFilter, responderData, settings)
-
-            assert(transformedQuery === transformedQueryWithNonOptionalSortCriterionAndFilter)
+            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
 
         }
 
-        "transform an input query with an optional sort criterion" in {
+        "transform an input query with a date as non optional sort criterion and a filter" in {
 
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithOptionalSortCriterion, responderData, settings)
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilter, responderData, settings)
 
-            assert(transformedQuery === transformedQueryWithOptionalSortCriterion)
+            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
 
         }
 
-        "transform an input query with an optional sort criterion and a filter" in {
+        "transform an input query with a date as an optional sort criterion" in {
 
-            val transformedQuery = QueryHandler.transformQuery(inputQueryWithOptionalSortCriterionAndFilter, responderData, settings)
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterion, responderData, settings)
 
-            assert(transformedQuery === transformedQueryWithOptionalSortCriterionAndFilter)
+            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
+
+        }
+
+        "transform an input query with a date as an optional sort criterion and a filter" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterionAndFilter, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
 
         }
 
     }
 
-    val inputQueryWithNonOptionalSortCriterion: String =
+    val inputQueryWithDateNonOptionalSortCriterion: String =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |PREFIX onto: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -116,7 +116,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |ORDER BY DESC(?date)
         """.stripMargin
 
-    val transformedQueryWithNonOptionalSortCriterion =
+    val transformedQueryWithDateNonOptionalSortCriterion =
         SelectQuery(
             variables = Vector(
                 QueryVariable(variableName = "thing"),
@@ -226,7 +226,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
             useDistinct = true
         )
 
-    val inputQueryWithNonOptionalSortCriterionAndFilter: String =
+    val inputQueryWithDateNonOptionalSortCriterionAndFilter: String =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |PREFIX onto: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -249,7 +249,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |ORDER BY DESC(?date)
         """.stripMargin
 
-    val transformedQueryWithNonOptionalSortCriterionAndFilter: SelectQuery =
+    val transformedQueryWithDateNonOptionalSortCriterionAndFilter: SelectQuery =
         SelectQuery(
             variables = Vector(
                 QueryVariable(variableName = "thing"),
@@ -367,7 +367,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
             useDistinct = true
         )
 
-    val inputQueryWithOptionalSortCriterion: String =
+    val inputQueryWithDateOptionalSortCriterion: String =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |PREFIX onto: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -392,7 +392,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |ORDER BY DESC(?date)
         """.stripMargin
 
-    val transformedQueryWithOptionalSortCriterion: SelectQuery =
+    val transformedQueryWithDateOptionalSortCriterion: SelectQuery =
         SelectQuery(
             variables = Vector(
                 QueryVariable(variableName = "thing"),
@@ -504,7 +504,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
             useDistinct = true
         )
 
-    val inputQueryWithOptionalSortCriterionAndFilter: String =
+    val inputQueryWithDateOptionalSortCriterionAndFilter: String =
         """
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |PREFIX onto: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -530,7 +530,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |ORDER BY DESC(?date)
         """.stripMargin
 
-    val transformedQueryWithOptionalSortCriterionAndFilter =
+    val transformedQueryWithDateOptionalSortCriterionAndFilter =
     SelectQuery(
         variables = Vector(
             QueryVariable(variableName = "thing"),
