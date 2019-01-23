@@ -86,7 +86,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
         }
 
         "transform an input query with an optional sort criterion and a filter" in {
-            
+
             val transformedQuery = QueryHandler.transformQuery(inputQueryWithOptionalSortCriterionAndFilter, responderData, settings)
 
             assert(transformedQuery === transformedQueryWithOptionalSortCriterionAndFilter)
