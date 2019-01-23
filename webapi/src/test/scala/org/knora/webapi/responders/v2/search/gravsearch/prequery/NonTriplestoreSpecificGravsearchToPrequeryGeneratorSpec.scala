@@ -59,7 +59,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    "The  NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
+    "The NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
 
         "transform an input query with a non optional sort criterion" in {
 
@@ -77,13 +77,19 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
 
         }
 
-
-
         "transform an input query with an optional sort criterion" in {
 
             val transformedQuery = QueryHandler.transformQuery(inputQueryWithOptionalSortCriterion, responderData, settings)
 
             assert(transformedQuery === transformedQueryWithOptionalSortCriterion)
+
+        }
+
+        "transform an input query with an optional sort criterion and a filter" in {
+            
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithOptionalSortCriterionAndFilter, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithOptionalSortCriterionAndFilter)
 
         }
 
@@ -497,5 +503,151 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
             limit = Some(25),
             useDistinct = true
         )
+
+    val inputQueryWithOptionalSortCriterionAndFilter: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX onto: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |  ?thing onto:hasDate ?date .
+          |} WHERE {
+          |
+          |  ?thing a knora-api:Resource .
+          |  ?thing a onto:Thing .
+          |
+          |  OPTIONAL {
+          |
+          |    ?thing onto:hasDate ?date .
+          |    onto:hasDate knora-api:objectType knora-api:Date .
+          |    ?date a knora-api:Date .
+          |
+          |    FILTER(?date > "GREGORIAN:2012-01-01"^^knora-api:Date)
+          |  }
+          |
+          |}
+          |ORDER BY DESC(?date)
+        """.stripMargin
+
+    val transformedQueryWithOptionalSortCriterionAndFilter =
+    SelectQuery(
+        variables = Vector(
+            QueryVariable(variableName = "thing"),
+            GroupConcat(
+                inputVariable = QueryVariable(variableName = "date"),
+                separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
+                outputVariableName = "date__Concat",
+            )
+        ),
+        offset = 0,
+        groupBy = Vector(
+            QueryVariable(variableName = "thing"),
+            QueryVariable(variableName = "date__valueHasStartJDN")
+        ),
+        orderBy = Vector(
+            OrderCriterion(
+                queryVariable = QueryVariable(variableName = "date__valueHasStartJDN"),
+                isAscending = false
+            ),
+            OrderCriterion(
+                queryVariable = QueryVariable(variableName = "thing"),
+                isAscending = true
+            )
+        ),
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    subj = QueryVariable(variableName = "thing"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "thing"),
+                    pred = IriRef(
+                        iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = XsdLiteral(
+                        value = "false",
+                        datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                    ),
+                    namedGraph = Some(IriRef(
+                        iri = "http://www.knora.org/explicit".toSmartIri,
+                        propertyPathOperator = None
+                    ))
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "thing"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                OptionalPattern(patterns = Vector(
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "thing"),
+                        pred = IriRef(
+                            iri = "http://www.knora.org/ontology/0001/anything#hasDate".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = QueryVariable(variableName = "date"),
+                        namedGraph = None
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "date"),
+                        pred = IriRef(
+                            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = XsdLiteral(
+                            value = "false",
+                            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                        ),
+                        namedGraph = Some(IriRef(
+                            iri = "http://www.knora.org/explicit".toSmartIri,
+                            propertyPathOperator = None
+                        ))
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "date"),
+                        pred = IriRef(
+                            iri = "http://www.knora.org/ontology/knora-base#valueHasStartJDN".toSmartIri,
+                            propertyPathOperator = None
+                        ),
+                        obj = QueryVariable(variableName = "date__valueHasStartJDN"),
+                        namedGraph = Some(IriRef(
+                            iri = "http://www.knora.org/explicit".toSmartIri,
+                            propertyPathOperator = None
+                        ))
+                    ),
+                    FilterPattern(expression = CompareExpression(
+                        leftArg = QueryVariable(variableName = "date__valueHasStartJDN"),
+                        operator = CompareExpressionOperator.GREATER_THAN,
+                        rightArg = XsdLiteral(
+                            value = "2455928",
+                            datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
+                        )
+                    ))
+                ))
+            ),
+            positiveEntities = Set(),
+            querySchema = None
+        ),
+        limit = Some(25),
+        useDistinct = true
+    )
 
 }
