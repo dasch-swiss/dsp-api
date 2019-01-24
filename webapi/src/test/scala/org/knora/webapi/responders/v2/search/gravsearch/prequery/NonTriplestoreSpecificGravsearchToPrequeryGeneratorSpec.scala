@@ -117,9 +117,25 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
 
         }
 
+        "transform an input query with a date as an optional sort criterion and a filter (submitted in complex schema)" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterionAndFilterComplex, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
+
+        }
+
+
         "transform an input query with a decimal as an optional sort criterion" in {
 
             val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterion, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
+        }
+
+        "transform an input query with a decimal as an optional sort criterion (submitted in complex schema)" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionComplex, responderData, settings)
 
             assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
         }
@@ -129,6 +145,17 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
             val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter, responderData, settings)
             
             assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
+        }
+
+        "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" ignore {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex, responderData, settings)
+
+            println(transformedQuery.toSparql)
+
+            println(MessageUtil.toSource(transformedQuery))
+
+            // assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
         }
 
     }
@@ -632,6 +659,31 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |ORDER BY DESC(?date)
         """.stripMargin
 
+    val inputQueryWithDateOptionalSortCriterionAndFilterComplex: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX onto: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |  ?thing onto:hasDate ?date .
+          |} WHERE {
+          |
+          |  ?thing a knora-api:Resource .
+          |  ?thing a onto:Thing .
+          |
+          |  OPTIONAL {
+          |
+          |    ?thing onto:hasDate ?date .
+          |
+          |    FILTER(knora-api:toSimpleDate(?date) > "GREGORIAN:2012-01-01"^^knora-api-simple:Date)
+          |  }
+          |
+          |}
+          |ORDER BY DESC(?date)
+        """.stripMargin
+
     val transformedQueryWithDateOptionalSortCriterionAndFilter =
     SelectQuery(
         variables = Vector(
@@ -775,6 +827,26 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |} ORDER BY ASC(?decimal)
         """.stripMargin
 
+    val inputQueryWithDecimalOptionalSortCriterionComplex =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |     ?thing a knora-api:Resource .
+          |
+          |     OPTIONAL {
+          |        ?thing anything:hasDecimal ?decimal .
+          |     }
+          |} ORDER BY ASC(?decimal)
+        """.stripMargin
+
     val transformedQueryWithDecimalOptionalSortCriterion =
         SelectQuery(
             variables = Vector(
@@ -908,6 +980,30 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |        ?decimal a xsd:decimal .
           |
           |        FILTER(?decimal > "2"^^xsd:decimal)
+          |     }
+          |} ORDER BY ASC(?decimal)
+        """.stripMargin
+
+    val inputQueryWithDecimalOptionalSortCriterionAndFilterComplex =
+        """
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |
+          |     ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |
+          |     ?thing a anything:Thing .
+          |     ?thing a knora-api:Resource .
+          |
+          |     OPTIONAL {
+          |        ?thing anything:hasDecimal ?decimal .
+          |
+          |        ?decimal knora-api:decimalValueAsDecimal ?decimalVal .
+          |
+          |        FILTER(?decimalVal > "2"^^xsd:decimal)
           |     }
           |} ORDER BY ASC(?decimal)
         """.stripMargin
