@@ -69,6 +69,14 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
 
         }
 
+        "transform an input query with a date as a non optional sort criterion (submitted in complex schema)" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterionComplex, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
+
+        }
+
         "transform an input query with a date as non optional sort criterion and a filter" in {
 
             val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilter, responderData, settings)
@@ -77,9 +85,25 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
 
         }
 
+        "transform an input query with a date as non optional sort criterion and a filter (submitted in complex schema)" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateNonOptionalSortCriterionAndFilterComplex, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
+
+        }
+
         "transform an input query with a date as an optional sort criterion" in {
 
             val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterion, responderData, settings)
+
+            assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
+
+        }
+
+        "transform an input query with a date as an optional sort criterion (submitted in complex schema)" in {
+
+            val transformedQuery = QueryHandler.transformQuery(inputQueryWithDateOptionalSortCriterionComplex, responderData, settings)
 
             assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
 
@@ -125,6 +149,25 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |  ?thing onto:hasDate ?date .
           |  onto:hasDate knora-api:objectType knora-api:Date .
           |  ?date a knora-api:Date .
+          |
+          |}
+          |ORDER BY DESC(?date)
+        """.stripMargin
+
+    val inputQueryWithDateNonOptionalSortCriterionComplex: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX onto: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |  ?thing onto:hasDate ?date .
+          |} WHERE {
+          |
+          |  ?thing a knora-api:Resource .
+          |  ?thing a onto:Thing .
+          |
+          |  ?thing onto:hasDate ?date .
           |
           |}
           |ORDER BY DESC(?date)
@@ -258,6 +301,28 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |  ?date a knora-api:Date .
           |
           |  FILTER(?date > "GREGORIAN:2012-01-01"^^knora-api:Date)
+          |
+          |}
+          |ORDER BY DESC(?date)
+        """.stripMargin
+
+    val inputQueryWithDateNonOptionalSortCriterionAndFilterComplex: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX onto: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |  ?thing onto:hasDate ?date .
+          |} WHERE {
+          |
+          |  ?thing a knora-api:Resource .
+          |  ?thing a onto:Thing .
+          |
+          |  ?thing onto:hasDate ?date .
+          |
+          |  FILTER(knora-api:toSimpleDate(?date) > "GREGORIAN:2012-01-01"^^knora-api-simple:Date)
           |
           |}
           |ORDER BY DESC(?date)
@@ -399,6 +464,29 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
           |    ?thing onto:hasDate ?date .
           |    onto:hasDate knora-api:objectType knora-api:Date .
           |    ?date a knora-api:Date .
+          |
+          |  }
+          |
+          |}
+          |ORDER BY DESC(?date)
+        """.stripMargin
+
+    val inputQueryWithDateOptionalSortCriterionComplex: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX onto: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |
+          |CONSTRUCT {
+          |  ?thing knora-api:isMainResource true .
+          |  ?thing onto:hasDate ?date .
+          |} WHERE {
+          |
+          |  ?thing a knora-api:Resource .
+          |  ?thing a onto:Thing .
+          |
+          |  OPTIONAL {
+          |
+          |    ?thing onto:hasDate ?date .
           |
           |  }
           |
