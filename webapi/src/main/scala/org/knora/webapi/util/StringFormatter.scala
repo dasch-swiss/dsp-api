@@ -578,11 +578,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         maybeSettings.map(_.externalKnoraApiHostPort)
     }
 
-    // The host that the ARK resolver is running on.
-    private val arkResolverHost: Option[String] = if (initForTest) {
-        Some("ark.dasch.swiss")
+    // The protocol and host that the ARK resolver is running on.
+    private val arkResolver: Option[String] = if (initForTest) {
+        Some("http://0.0.0.0:3336")
     } else {
-        maybeSettings.map(_.arkResolverHost)
+        maybeSettings.map(_.arkResolver)
     }
 
     // The DaSCH's ARK assigned number.
@@ -2067,7 +2067,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             case PropertyFromOtherOntologyInXmlImportRegex(_, Optional(maybeProjectID), prefixLabel, localName) =>
                 maybeProjectID match {
                     case Some(projectID) =>
-                        Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$projectID/$prefixLabel#$localName")
+                        // Is this ia shared ontology?
+                        // TODO: when multiple shared project ontologies are supported, this will need to be done differently.
+                        if (projectID == DefaultSharedOntologiesProjectCode) {
+                            Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/shared/$prefixLabel#$localName")
+                        } else {
+                            Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$projectID/$prefixLabel#$localName")
+                        }
 
                     case None =>
                         if (prefixLabel == OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel) {
@@ -2179,7 +2185,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @return an ARK URL that can be resolved to obtain the resource.
       */
     private def makeArkUrl(projectID: String, resourceID: String, maybeTimestamp: Option[Instant] = None): String = {
-        val (host: String, assignedNumber: Int) = (arkResolverHost, arkAssignedNumber) match {
+        val (resolver: String, assignedNumber: Int) = (arkResolver, arkAssignedNumber) match {
             case (Some(definedHost: String), Some(definedAssignedNumber: Int)) => (definedHost, definedAssignedNumber)
             case _ => throw AssertionException(s"StringFormatter has not been initialised with system settings")
         }
@@ -2200,7 +2206,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         // Escape '-' as '=' in the resource ID and check digit, because '-' can be ignored in ARK URLs.
         val escapedResourceIDWithCheckDigit = resourceIDWithCheckDigit.replace('-', '=')
 
-        val arkUrlWithoutTimestamp = s"http://$host/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit"
+        val arkUrlWithoutTimestamp = s"$resolver/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit"
 
         maybeTimestamp match {
             case Some(timestamp) =>
