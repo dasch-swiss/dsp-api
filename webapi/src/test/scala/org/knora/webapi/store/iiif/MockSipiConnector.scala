@@ -71,7 +71,6 @@ class MockSipiConnector extends Actor with ActorLogging {
     val settings = Settings(system)
 
 
-
     def receive = {
         case sipiResponderConversionFileRequest: SipiConversionFileRequestV1 => future2Message(sender(), imageConversionResponse(sipiResponderConversionFileRequest), log)
         case sipiResponderConversionPathRequest: SipiConversionPathRequestV1 => future2Message(sender(), imageConversionResponse(sipiResponderConversionPathRequest), log)
@@ -95,27 +94,31 @@ class MockSipiConnector extends Actor with ActorLogging {
             // we expect original mimetype to be "image/jpeg"
             if (originalMimeType != "image/jpeg") throw BadRequestException("Wrong mimetype for jpg file")
 
-            val fileValuesV1 = Vector(StillImageFileValueV1(// full representation
-                internalMimeType = "image/jp2",
-                originalFilename = originalFilename,
-                originalMimeType = Some(originalMimeType),
-                dimX = 800,
-                dimY = 800,
-                internalFilename = "full.jp2",
-                qualityLevel = 100,
-                qualityName = Some("full")
-            ),
+            val fileValuesV1 = Vector(
+                StillImageFileValueV1(// full representation
+                    internalMimeType = "image/jp2",
+                    originalFilename = originalFilename,
+                    originalMimeType = Some(originalMimeType),
+                    projectShortcode = conversionRequest.projectShortcode,
+                    dimX = 800,
+                    dimY = 800,
+                    internalFilename = "full.jp2",
+                    qualityLevel = 100,
+                    qualityName = Some("full")
+                ),
                 StillImageFileValueV1(// thumbnail representation
                     internalMimeType = "image/jpeg",
                     originalFilename = originalFilename,
                     originalMimeType = Some(originalMimeType),
+                    projectShortcode = conversionRequest.projectShortcode,
                     dimX = 80,
                     dimY = 80,
                     internalFilename = "thumb.jpg",
                     qualityLevel = 10,
                     qualityName = Some("thumbnail"),
                     isPreview = true
-                ))
+                )
+            )
 
             // Whenever Knora had to create a temporary file, store its path
             // the calling test context can then make sure that is has actually been deleted after the test is done

@@ -50,6 +50,7 @@ sealed trait SipiRequestV1 extends IIIFRequest
 sealed trait SipiConversionRequestV1 extends SipiRequestV1 {
     val originalFilename: String
     val originalMimeType: String
+    val projectShortcode: String
     val userProfile: UserProfileV1
 
     /**
@@ -77,6 +78,7 @@ sealed trait SipiConversionRequestV1 extends SipiRequestV1 {
   */
 case class SipiConversionPathRequestV1(originalFilename: String,
                                        originalMimeType: String,
+                                       projectShortcode: String,
                                        source: File,
                                        userProfile: UserProfileV1) extends SipiConversionRequestV1 {
 
@@ -94,7 +96,8 @@ case class SipiConversionPathRequestV1(originalFilename: String,
         Map(
             "originalFilename" -> originalFilename,
             "originalMimeType" -> originalMimeType,
-            "source" -> source.toString
+            "source" -> source.toString,
+            "prefix" -> projectShortcode
         )
     }
 
@@ -115,6 +118,7 @@ case class SipiConversionPathRequestV1(originalFilename: String,
 
 case class SipiConversionFileRequestV1(originalFilename: String,
                                        originalMimeType: String,
+                                       projectShortcode: String,
                                        filename: String,
                                        userProfile: UserProfileV1) extends SipiConversionRequestV1 {
 
@@ -132,7 +136,8 @@ case class SipiConversionFileRequestV1(originalFilename: String,
         Map(
             "originalFilename" -> originalFilename,
             "originalMimeType" -> originalMimeType,
-            "filename" -> filename
+            "filename" -> filename,
+            "prefix" -> projectShortcode
         )
     }
 
@@ -346,9 +351,11 @@ object GetImageMetadataResponseV2JsonProtocol extends SprayJsonSupport with Defa
   * Asks Sipi to move a file from temporary to permanent storage.
   *
   * @param internalFilename the name of the file.
+  * @param prefix           the prefix under which the file should be stored.
   * @param requestingUser   the user making the request.
   */
 case class MoveTemporaryFileToPermanentStorageRequestV2(internalFilename: String,
+                                                        prefix: String,
                                                         requestingUser: UserADM) extends SipiRequestV2
 
 /**

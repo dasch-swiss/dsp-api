@@ -21,9 +21,6 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.ActorMaterializer
@@ -33,16 +30,16 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetReq
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.{IriLocker, ResponderData}
+import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
+import org.knora.webapi.responders.{IriLocker, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
@@ -51,7 +48,6 @@ import org.knora.webapi.util._
 import org.knora.webapi.util.date.CalendarNameGregorian
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
@@ -831,7 +827,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param createResources the resources that were supposed to be created.
       * @param requestingUser  the user making the request.
       */
-    private def doSipiPostUpdateForResources[T](updateFuture: Future[T], createResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[T] = {
+    private def doSipiPostUpdateForResources[T <: UpdateResultInProject](updateFuture: Future[T],
+                                                                         createResources: Seq[CreateResourceV2],
+                                                                         requestingUser: UserADM): Future[T] = {
         val allValues: Seq[ValueContentV2] = createResources.flatMap(_.flatValues).map(_.valueContent)
 
         val resultFutures: Seq[Future[T]] = allValues.map {

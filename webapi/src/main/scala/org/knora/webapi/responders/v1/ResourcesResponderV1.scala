@@ -27,6 +27,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -460,6 +461,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         }
 
         for {
+            // Get the resource info (minus ontology-based information) and the user's permissions on it.
+            (permissions, resInfoWithoutQueryingOntology: ResourceInfoV1) <- resourceInfoFuture
+
             groupedPropsByType: GroupedPropertiesByType <- groupedPropsByTypeFuture
 
             // Get the types of all the resources that this resource links to.
@@ -520,7 +524,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                                 // Convert the resulting ValueProps into a LinkValueV1 so we can check its rdf:predicate.
 
                                                 for {
-                                                    apiValueV1 <- valueUtilV1.makeValueV1(linkValueProps, responderManager, userProfile)
+                                                    apiValueV1 <- valueUtilV1.makeValueV1(
+                                                        valueProps = linkValueProps,
+                                                        projectShortcode = resInfoWithoutQueryingOntology.project_shortcode,
+                                                        responderManager = responderManager,
+                                                        userProfile = userProfile
+                                                    )
 
                                                     linkValueV1: LinkValueV1 = apiValueV1 match {
                                                         case linkValueV1: LinkValueV1 => linkValueV1
@@ -577,9 +586,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             // Get the resource types of the incoming resources.
             incomingTypes: Set[IRI] = incomingRefsWithoutQueryingOntology.map(_.resinfo.restype_id).toSet
-
-            // Get the resource info (minus ontology-based information) and the user's permissions on it.
-            (permissions, resInfoWithoutQueryingOntology: ResourceInfoV1) <- resourceInfoFuture
 
             // Ask the ontology responder for information about the ontology entities that we need information about.
             entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
@@ -641,6 +647,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             // Construct PropertyV1 objects for the properties that have data for this resource.
             propertiesWithData <- queryResults2PropertyV1s(
                 containingResourceIri = resourceIri,
+                projectShortcode = resInfoWithoutQueryingOntology.project_shortcode,
                 groupedPropertiesByType = groupedPropsByType,
                 propertyInfoMap = entityInfoResponse.propertyInfoMap,
                 resourceEntityInfoMap = entityInfoResponse.resourceClassInfoMap,
@@ -751,6 +758,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                 firstprop: Option[String],
                                 seqnum: Option[Int],
                                 permissionCode: Option[Int],
+                                projectShortcode: String,
                                 fileValues: Vector[StillImageFileValue] = Vector.empty[StillImageFileValue])
 
         /**
@@ -772,7 +780,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           * @param row a [[VariableResultsRow]] representing a [[StillImageFileValueV1]].
           * @return a [[StillImageFileValue]].
           */
-        def createStillImageFileValueFromResultRow(row: VariableResultsRow): Option[StillImageFileValue] = {
+        def createStillImageFileValueFromResultRow(projectShortcode: String, row: VariableResultsRow): Option[StillImageFileValue] = {
             // if the file value has no project, get the project from the source object
             val fileValueProject = row.rowMap("sourceObjectAttachedToProject")
 
@@ -794,6 +802,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             internalMimeType = row.rowMap("internalMimeType"),
                             internalFilename = row.rowMap("internalFilename"),
                             originalFilename = row.rowMap("originalFilename"),
+                            projectShortcode = projectShortcode,
                             dimX = row.rowMap("dimX").toInt,
                             dimY = row.rowMap("dimY").toInt,
                             qualityLevel = row.rowMap("qualityLevel").toInt,
@@ -811,7 +820,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           * @param row a [[VariableResultsRow]] representing a [[SourceObject]].
           * @return a [[SourceObject]].
           */
-        def createSourceObjectFromResultRow(row: VariableResultsRow): SourceObject = {
+        def createSourceObjectFromResultRow(projectShortcode: String, row: VariableResultsRow): SourceObject = {
             val sourceObjectIri = row.rowMap("sourceObject")
             val sourceObjectOwner = row.rowMap("sourceObjectAttachedToUser")
             val sourceObjectProject = row.rowMap("sourceObjectAttachedToProject")
@@ -843,7 +852,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 firstprop = row.rowMap.get("firstprop"),
                 seqnum = row.rowMap.get("seqnum").map(_.toInt),
                 permissionCode = permissionCode,
-                fileValues = createStillImageFileValueFromResultRow(row).toVector
+                projectShortcode = projectShortcode,
+                fileValues = createStillImageFileValueFromResultRow(projectShortcode, row).toVector
             )
         }
 
@@ -915,14 +925,31 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     contextQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(contextSparqlQuery)).mapTo[SparqlSelectResponse]
                     rows = contextQueryResponse.results.bindings
 
+                    projectIris: Set[IRI] = rows.foldLeft(Set.empty[IRI]) {
+                        case (acc, row) => acc + row.rowMap("sourceObjectAttachedToProject")
+                    }
+
+                    projectShortcodeFutures: Map[IRI, Future[String]] = projectIris.foldLeft(Map.empty[IRI, Future[String]]) {
+                        case (acc, projectIri) =>
+                            val projectShortcodeFuture = for {
+                                projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(projectIri), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
+                            } yield projectResponse.project.shortcode
+
+                            acc + (projectIri -> projectShortcodeFuture)
+                    }
+
+                    projectShortcodes: Map[IRI, String] <- ActorUtil.sequenceFuturesInMap(projectShortcodeFutures)
+
                     // The results consist of one or more rows per source object. If there is more than one row per source object,
                     // each row provides a different file value. For each source object, create a SourceObject containing a Vector
                     // of file values.
                     sourceObjects: Vector[SourceObject] = rows.foldLeft(Vector.empty[SourceObject]) {
                         case (acc: Vector[SourceObject], row) =>
+                            val projectShortcode = projectShortcodes(row.rowMap("sourceObjectAttachedToProject"))
+
                             if (acc.isEmpty) {
                                 // This is the first row, so create the first SourceObject containing the first file value, if any.
-                                acc :+ createSourceObjectFromResultRow(row)
+                                acc :+ createSourceObjectFromResultRow(projectShortcode, row)
                             } else {
                                 // Get the current SourceObject.
                                 val currentSourceObj = acc.last
@@ -930,10 +957,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                 // Does the current row refer to the current SourceObject?
                                 if (currentSourceObj.id == row.rowMap("sourceObject")) {
                                     // Yes. Add the additional file value to the existing SourceObject.
-                                    acc.dropRight(1) :+ currentSourceObj.copy(fileValues = currentSourceObj.fileValues ++ createStillImageFileValueFromResultRow(row))
+                                    acc.dropRight(1) :+ currentSourceObj.copy(fileValues = currentSourceObj.fileValues ++ createStillImageFileValueFromResultRow(projectShortcode, row))
                                 } else {
                                     // No. Make a new SourceObject.
-                                    acc :+ createSourceObjectFromResultRow(row)
+                                    acc :+ createSourceObjectFromResultRow(projectShortcode, row)
                                 }
                             }
                     }
@@ -1000,13 +1027,21 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             val regionIri = regionRow.rowMap("region")
                             val resClass = regionRow.rowMap("resclass") // possibly we deal with a subclass of knora-base:Region
 
+
                             // get the properties for each region
                             for {
-                                propsV1: Seq[PropertyV1] <- getResourceProperties(resourceIri = regionIri, Some(resClass), userProfile = userProfile)
+                                projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(regionRow.rowMap("project")), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
+
+                                propsV1: Seq[PropertyV1] <- getResourceProperties(
+                                    resourceIri = regionIri,
+                                    projectShortcode = projectResponse.project.shortcode,
+                                    maybeResourceTypeIri = Some(resClass),
+                                    userProfile = userProfile
+                                )
 
                                 propsGetV1 = propsV1.map {
                                     // convert each PropertyV1 in a PropertyGetV1
-                                    (propV1: PropertyV1) => convertPropertyV1toPropertyGetV1(propV1)
+                                    propV1: PropertyV1 => convertPropertyV1toPropertyGetV1(propV1)
                                 }
 
                                 // get the icon for this region's resource class
@@ -2202,16 +2237,20 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     private def getPropertiesV1(resourceIri: IRI, userProfile: UserADM): Future[PropertiesGetResponseV1] = {
 
         for {
+            (maybePermissionCode, resInfo) <- getResourceInfoV1(
+                resourceIri = resourceIri,
+                userProfile = userProfile,
+                queryOntology = false
+            )
 
-            // get resource class of the specified resource
-            resclassSparqlQuery <- Future(queries.sparql.v1.txt.getResourceClass(
-                triplestore = settings.triplestoreType,
-                resourceIri = resourceIri
-            ).toString())
-            resclassQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resclassSparqlQuery)).mapTo[SparqlSelectResponse]
-            resclass = resclassQueryResponse.results.bindings.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"No resource class given for $resourceIri"))
+            _ = maybePermissionCode.getOrElse(throw ForbiddenException(s"User <${userProfile.username}> does not have permission to view resource $resourceIri"))
 
-            properties: Seq[PropertyV1] <- getResourceProperties(resourceIri = resourceIri, maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")), userProfile = userProfile)
+            properties: Seq[PropertyV1] <- getResourceProperties(
+                resourceIri = resourceIri,
+                projectShortcode = resInfo.project_shortcode,
+                maybeResourceTypeIri = Some(resInfo.restype_id),
+                userProfile = userProfile
+            )
 
             propertiesGetV1: Seq[PropertyGetV1] = properties.map {
 
@@ -2235,7 +2274,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       * @param userProfile          the profile of the user making the request.
       * @return a [[Seq]] of [[PropertyV1]] objects representing the properties that have values for the resource.
       */
-    private def getResourceProperties(resourceIri: IRI, maybeResourceTypeIri: Option[IRI], userProfile: UserADM): Future[Seq[PropertyV1]] = {
+    private def getResourceProperties(resourceIri: IRI, projectShortcode: String, maybeResourceTypeIri: Option[IRI], userProfile: UserADM): Future[Seq[PropertyV1]] = {
         for {
 
             groupedPropsByType: GroupedPropertiesByType <- getGroupedProperties(resourceIri)
@@ -2266,6 +2305,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             queryResult <- queryResults2PropertyV1s(
                 containingResourceIri = resourceIri,
+                projectShortcode = projectShortcode,
                 groupedPropertiesByType = groupedPropsByType,
                 propertyInfoMap = propertyInfoMap,
                 resourceEntityInfoMap = resourceEntityInfoMap,
@@ -2304,6 +2344,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                 resourceProject = maybeResourceProjectStatement.getOrElse(throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject"))._2
 
+                projectShortcode: String <- for {
+                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceProject), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
+                } yield projectResponse.project.shortcode
+
                 // Get the rows describing file values from the query results, grouped by file value IRI.
                 fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isFileValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"))).groupBy(row => row.rowMap("obj")).toVector
 
@@ -2325,7 +2369,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 fileValuesWithFuture: Seq[Future[FileValueV1]] = valuePropsForFileValues.map {
                     case (fileValueIri, fileValueProps) =>
                         for {
-                            valueV1 <- valueUtilV1.makeValueV1(fileValueProps, responderManager, userProfile)
+                            valueV1 <- valueUtilV1.makeValueV1(
+                                valueProps = fileValueProps,
+                                projectShortcode = projectShortcode,
+                                responderManager = responderManager,
+                                userProfile = userProfile
+                            )
 
                         } yield valueV1 match {
                             case fileValueV1: FileValueV1 => fileValueV1
@@ -2393,6 +2442,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     locdata = locations.lastOption,
                     person_id = groupedByPredicate(OntologyConstants.KnoraBase.AttachedToUser).head("obj"),
                     project_id = groupedByPredicate(OntologyConstants.KnoraBase.AttachedToProject).head("obj"),
+                    project_shortcode = projectShortcode,
                     restype_label = restype_label,
                     restype_name = Some(groupedByPredicate(OntologyConstants.Rdf.Type).head("obj")),
                     restype_description = restype_description,
@@ -2446,6 +2496,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       * @return a [[Seq]] of [[PropertyV1]] objects.
       */
     private def queryResults2PropertyV1s(containingResourceIri: IRI,
+                                         projectShortcode: String,
                                          groupedPropertiesByType: GroupedPropertiesByType,
                                          propertyInfoMap: Map[IRI, PropertyInfoV1],
                                          resourceEntityInfoMap: Map[IRI, ClassInfoV1],
@@ -2523,7 +2574,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                         for {
                             // Convert the SPARQL query results to a ValueV1.
-                            valueV1 <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
+                            valueV1 <- valueUtilV1.makeValueV1(
+                                valueProps = valueProps,
+                                projectShortcode = projectShortcode,
+                                responderManager = responderManager,
+                                userProfile = userProfile
+                            )
 
                             valPermission = PermissionUtilADM.getUserPermissionWithValuePropsV1(
                                 valueIri = valObjIri,
@@ -2636,7 +2692,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             }
 
                             for {
-                                apiValueV1ForLinkValue <- valueUtilV1.makeValueV1(linkValueProps, responderManager, userProfile)
+                                apiValueV1ForLinkValue <- valueUtilV1.makeValueV1(
+                                    valueProps = linkValueProps,
+                                    projectShortcode = projectShortcode,
+                                    responderManager = responderManager,
+                                    userProfile = userProfile
+                                )
 
                                 linkValueV1: LinkValueV1 = apiValueV1ForLinkValue match {
                                     case linkValueV1: LinkValueV1 => linkValueV1

@@ -21,7 +21,6 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
-import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -248,7 +247,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 )
             } yield CreateValueResponseV2(
                 valueIri = verifiedValue.newValueIri,
-                valueType = verifiedValue.value.valueType
+                valueType = verifiedValue.value.valueType,
+                projectADM = projectInfo.project
             )
         }
 
@@ -834,7 +834,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 )
             } yield UpdateValueResponseV2(
                 valueIri = unverifiedValue.newValueIri,
-                valueType = unverifiedValue.valueContent.valueType
+                valueType = unverifiedValue.valueContent.valueType,
+                projectADM = projectInfo.project
             )
         }
 

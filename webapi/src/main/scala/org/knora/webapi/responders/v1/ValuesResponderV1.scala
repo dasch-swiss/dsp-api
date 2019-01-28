@@ -25,6 +25,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM, PermissionADM, PermissionType}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiConstants, SipiConversionPathRequestV1, SipiConversionRequestV1, SipiConversionResponseV1}
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -648,7 +649,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                 // get the property Iris, file value Iris and qualities attached to the resource
                 fileValues: Seq[CurrentFileValue] = getFileValuesResponse.results.bindings.map {
-                    (row: VariableResultsRow) =>
+                    row: VariableResultsRow =>
 
                         CurrentFileValue(
                             property = row.rowMap("p"),
@@ -1621,17 +1622,24 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             // Convert the query results to a ApiValueV1.
             val valueProps = valueUtilV1.createValueProps(valueIri, rows)
 
+            // Get the value's project IRI.
+            val projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $valueIri has no knora-base:attachedToProject"))
+
             for {
-                value <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
+                projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(projectIri), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
+
+                value <- valueUtilV1.makeValueV1(
+                    valueProps = valueProps,
+                    projectShortcode = projectResponse.project.shortcode,
+                    responderManager = responderManager,
+                    userProfile = userProfile
+                )
 
                 // Get the value's class IRI.
                 valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
 
                 // Get the IRI of the value's creator.
                 creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no knora-base:attachedToUser"))
-
-                // Get the value's project IRI.
-                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $valueIri has no knora-base:attachedToProject"))
 
                 // Get the value's creation date.
                 creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no valueCreationDate"))
@@ -1704,8 +1712,18 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             // Convert the query results into a LinkValueV1.
             val valueProps = valueUtilV1.createValueProps(linkValueIri, rows)
 
+            // Get the value's project IRI.
+            val projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $linkValueIri has no knora-base:attachedToProject"))
+
             for {
-                linkValueMaybe <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
+                projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(projectIri), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
+
+                linkValueMaybe <- valueUtilV1.makeValueV1(
+                    valueProps = valueProps,
+                    projectShortcode = projectResponse.project.shortcode,
+                    responderManager = responderManager,
+                    userProfile = userProfile
+                )
 
                 linkValueV1: LinkValueV1 = linkValueMaybe match {
                     case linkValue: LinkValueV1 => linkValue
@@ -1714,9 +1732,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                 // Get the IRI of the value's owner.
                 creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no knora-base:attachedToUser"))
-
-                // Get the value's project IRI.
-                projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"The resource containing value $linkValueIri has no knora-base:attachedToProject"))
 
                 // Get the value's creation date.
                 creationDate = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueCreationDate, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $linkValueIri has no valueCreationDate"))

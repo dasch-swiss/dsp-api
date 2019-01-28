@@ -95,13 +95,12 @@ class SettingsImpl(config: Config) extends Extension {
     val externalSipiBaseUrl: String = externalSipiProtocol + "://" + externalSipiHost + (if (externalSipiPort != 80) ":" + externalSipiPort else "")
 
 
-    val sipiPrefix: String = config.getString("app.sipi.prefix")
     val sipiFileServerPrefix: String = config.getString("app.sipi.file-server-path")
 
-    val externalSipiIIIFGetUrl: String = s"$externalSipiBaseUrl/$sipiPrefix"
+    val externalSipiIIIFGetUrl: String = externalSipiBaseUrl
 
-    val internalSipiFileServerGetUrl: String = s"$internalSipiBaseUrl/$sipiFileServerPrefix/$sipiPrefix"
-    val externalSipiFileServerGetUrl: String = s"$externalSipiBaseUrl/$sipiFileServerPrefix/$sipiPrefix"
+    val internalSipiFileServerGetUrl: String = s"$internalSipiBaseUrl/$sipiFileServerPrefix"
+    val externalSipiFileServerGetUrl: String = s"$externalSipiBaseUrl/$sipiFileServerPrefix"
 
     val internalSipiImageConversionUrlV1: String = s"$internalSipiBaseUrl"
     val sipiPathConversionRouteV1: String = config.getString("app.sipi.v1.path-conversion-route")
