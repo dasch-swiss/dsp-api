@@ -20,20 +20,6 @@
 
 require "send_response"
 
-
---
--- check if knora directory is available. needs to be created before sipi is started,
--- so that sipi can create the directory sublevels on startup.
---
-knoraDir = config.imgroot .. '/knora/'
-local success, exists = server.fs.exists(knoraDir)
-if not exists then
-    local errorMsg = "Directory " .. knoraDir .. " not found. Please make sure it exists before starting sipi."
-    send_error(500, errorMsg)
-    server.log(errorMsg, server.loglevel.LOG_ERR)
-    return -1
-end
-
 success, errmsg = server.setBuffer()
 if not success then
     server.log("server.setBuffer() failed: " .. errmsg, server.loglevel.LOG_ERR)
@@ -42,15 +28,28 @@ end
 
 if server.post == nil then
     send_error(400, PARAMETERS_INCORRECT)
-
     return
+end
+
+--
+-- check if the project directory is available. it needs to be created before sipi is started,
+-- so that sipi can create the directory sublevels on startup.
+--
+
+prefix = server.post['prefix']
+projectDir = config.imgroot .. '/' .. prefix .. '/'
+
+local success, exists = server.fs.exists(projectDir)
+if not exists then
+    local errorMsg = "Directory " .. projectDir .. " not found. Please make sure it exists before starting Sipi."
+    send_error(500, errorMsg)
+    server.log(errorMsg, server.loglevel.LOG_ERR)
+    return -1
 end
 
 originalFilename = server.post['originalfilename']
 originalMimetype = server.post['originalmimetype']
-
 filename = server.post['filename']
-
 
 -- check if all the expected params are set
 if originalFilename == nil or originalMimetype == nil or filename == nil then
@@ -132,7 +131,7 @@ if not success then
     server.log("fullImg:dims() failed: " .. fullDIms, server.loglevel.LOG_ERR)
     return
 end
-fullImg:write(knoraDir .. newFilePath)
+fullImg:write(projectDir .. newFilePath)
 
 -- create thumbnail (jpg)
 success, thumbImg = SipiImage.new(sourcePath, { size = config.thumb_size })
@@ -160,7 +159,7 @@ if not success then
     return false
 end
 
-success, errmsg = thumbImg:write(knoraDir .. newThumbPath)
+success, errmsg = thumbImg:write(projectDir .. newThumbPath)
 if not success then
     server.log("thumbImg:write failed: " .. errmsg, server.loglevel.LOG_ERR)
     return
