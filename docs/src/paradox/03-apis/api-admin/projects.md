@@ -21,10 +21,22 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Endpoint Overview
 
-- GET: /admin/projects
+**Old style:**
+- `GET:  /admin/projects` : return all projects
+- `POST: /admin/projects` : create a new project
+- `GET: /admin/projects/[identifier]` : returns a single project identified either through iri, shortname, or shortcode
+- `PUT: /admin/projects/[identifier]` : update a project identified by iri
+- `DELETE: /admin/projects/[identifier]` : update project status to false
+- `GET: /admin/projects/members/[identifier]` : returns all members part of a project identified through iri, shortname or shortcode
+- `GET: /admin/projects/admin-members/[identifier]` : returns all admin members part of a project identified through iri, shortname or shortcode
+- `GET: /admin/projects/keywords` : returns all unique keywords for all projects as a list
+- `GET: /admin/projects/keywords/[identifier]` : returns all keywords for a single project
+
+**New style:**
+- `GET: /admin/projects/[identifier]/commands/`
 
 
-  - **Create project**:
+### Create a new project:
 
       - Required permission: SystemAdmin
       - Required information: shortname (unique; used for named graphs),
@@ -36,7 +48,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
         (2) basic project information: shortname, longname, description,
         keywords, logo, institution, status, selfjoin
       - TypeScript Docs: projectFormats - CreateProjectApiRequestV1
-      - POST: `/v1/projects/`
+      - POST: `/admin/projects/`
       - BODY:
 
 ```
@@ -51,13 +63,13 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 }
 ```
 
-  - **Update project information**:
+### Update project information:
 
       - Required permission: SystemAdmin / ProjectAdmin
       - Changeable information: shortname, longname, description,
         keywords, logo, status, selfjoin
       - TypeScript Docs: projectFormats - ChangeProjectApiRequestV1
-      - PUT: `/v1/projects/<projectIri>`
+      - PUT: `/admin/projects/<projectIri>`
       - BODY:
 
 ```
@@ -72,21 +84,25 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 }
 ```
 
-  - **Get project members**
+### Get project members:
 
       - Required permission: SystemAdmin / ProjectAdmin
       - Required information: project IRI
-      - GET: `/v1/projects/members/<projectIri>`
+      - GET: `/admin/projects/members/<projectIri>`
 
-  - **Delete project (-\update project)**:
+
+### Delete project (update project status):
 
       - Required permission: SystemAdmin / ProjectAdmin
       - Remark: The same as updating a project and changing `status` to
         `false`. To un-delete, set `status` to `true`.
-      - DELETE: `/v1/projects/<projectIri>`
+      - DELETE: `/admin/projects/<projectIri>`
       - BODY: empty
 
-Example Project Information stored in admin named graph: :
+
+## Example Data
+
+The following is an example for project information stored in admin named graph:
 
 ```
 <http://rdfh.ch/projects/[shortcode]>
@@ -98,11 +114,4 @@ Example Project Information stored in admin named graph: :
      knora-base:isActiveProject "true"^^xsd:boolean ;
      knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 ```
-
-Migration Notes:
-
-The `knora-base:projectOntologyGraph` was renamed to
-`knora-base:projectOntology`. Also before it was a `xsd:string`, where
-now it needs to be an IRI. The `knora-base:projectDataGraph` is removed.
-The `knora-base:projectShortcode` property was added.
 

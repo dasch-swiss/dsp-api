@@ -51,8 +51,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     responderManager,
                     log
                 )
-        } ~
-            post {
+        } ~ post {
                 /* create a new project */
                 entity(as[CreateProjectApiRequestADM]) { apiRequest =>
                     requestContext =>
