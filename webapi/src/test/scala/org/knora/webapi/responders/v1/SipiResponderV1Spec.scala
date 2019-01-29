@@ -21,28 +21,25 @@ package org.knora.webapi.responders.v1
 
 
 import akka.testkit._
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiFileInfoGetRequestV1, SipiFileInfoGetResponseV1}
-import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProfileV1}
 
 import scala.concurrent.duration._
 
 object SipiResponderV1Spec {
-
-    // A test UserProfileV1.
-    private val userProfile: UserProfileV1 = SharedTestDataV1.incunabulaMemberUser
-
-    // A test UserDataV1.
-    private val userData: UserDataV1 = userProfile.userData
-
-    private val fileValueResponseFull = SipiFileInfoGetResponseV1(permissionCode = 6)
+    val config: Config = ConfigFactory.parseString(
+        """
+         akka.loglevel = "DEBUG"
+         akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
 }
 
 /**
   * Tests [[SipiResponderV1]].
   */
-class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
+class SipiResponderV1Spec extends CoreSpec(SipiResponderV1Spec.config) with ImplicitSender {
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.v1.SipiResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
@@ -55,11 +52,21 @@ class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return details of a full quality file value" in {
             // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
             responderManager ! SipiFileInfoGetRequestV1(
-                userProfile = SipiResponderV1Spec.userProfile,
+                userProfile = SharedTestDataV1.incunabulaMemberUser,
                 filename = "incunabula_0000000002.jp2"
             )
 
-            expectMsg(timeout, SipiResponderV1Spec.fileValueResponseFull)
+            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 6))
+        }
+
+        "return details of a restricted view file value" in {
+            // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
+            responderManager ! SipiFileInfoGetRequestV1(
+                userProfile = SharedTestDataV1.anonymousUser,
+                filename = "incunabula_0000000002.jp2"
+            )
+
+            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 1))
         }
     }
 }

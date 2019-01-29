@@ -232,7 +232,6 @@ case class ProjectsKeywordsGetRequestADM(requestingUser: UserADM) extends Projec
 case class ProjectKeywordsGetRequestADM(projectIri: IRI,
                                         requestingUser: UserADM) extends ProjectsResponderRequestADM
 
-
 /**
   * Requests the creation of a new project.
   *

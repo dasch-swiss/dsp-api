@@ -119,6 +119,10 @@
                                 knora-base:projectKeyword "images"^^xsd:string,
                                                           "collection"^^xsd:string ;
 
+                                knora-base:projectRestrictedViewResolutionX "512"^^xsd:integer ;
+
+                                knora-base:projectRestrictedViewResolutionY "512"^^xsd:integer ;
+
                                 knora-base:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
 
                                 knora-base:status "true"^^xsd:boolean ;
