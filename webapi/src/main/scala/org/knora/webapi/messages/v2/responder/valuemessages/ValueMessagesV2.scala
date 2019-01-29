@@ -2216,7 +2216,7 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX -> JsonLDInt(dimX),
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY -> JsonLDInt(dimY),
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
-                        value = settings.externalSipiIIIFGetUrl,
+                        value = s"${settings.externalSipiIIIFGetUrl}/${projectADM.shortcode}",
                         datatype = OntologyConstants.Xsd.Uri.toSmartIri
                     )
                 ))

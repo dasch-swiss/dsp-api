@@ -80,7 +80,7 @@
     "knora-api:stillImageFileValueHasDimY" : 5251,
     "knora-api:stillImageFileValueHasIIIFBaseUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://localhost:1024/knora"
+      "@value" : "http://localhost:1024/0803"
     }
   }, {
     "@id" : "http://rdfh.ch/7bbb8e59b703/reps/6396ec373f07",
@@ -99,7 +99,7 @@
     "knora-api:stillImageFileValueHasDimY" : 128,
     "knora-api:stillImageFileValueHasIIIFBaseUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://localhost:1024/knora"
+      "@value" : "http://localhost:1024/0803"
     }
   } ],
   "rdfs:label" : "Vorsatzblatt, recto",
