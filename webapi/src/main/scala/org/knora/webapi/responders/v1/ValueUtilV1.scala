@@ -23,7 +23,6 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.ontologymessages._

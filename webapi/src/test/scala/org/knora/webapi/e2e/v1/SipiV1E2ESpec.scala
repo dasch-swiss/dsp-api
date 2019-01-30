@@ -81,7 +81,7 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol 
 
         "return CR (8) permission code" in {
             /* anything image */
-            val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$anythingAdminEmailEnc&password=$testPass")
+            val request = Get(baseApiUrl + s"/v1/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$anythingAdminEmailEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
 
             // println(response.toString)
@@ -95,7 +95,7 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol 
 
         "return RV (1) permission code" in {
             /* anything image */
-            val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$normalUserEmailEnc&password=$testPass")
+            val request = Get(baseApiUrl + s"/v1/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$normalUserEmailEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
 
             // println(response.toString)
@@ -115,7 +115,7 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol 
             val sessionId = sessionLogin(anythingAdminEmailEnc, testPass)
 
             /* anything image */
-            val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
+            val request = Get(baseApiUrl + s"/v1/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
             val response: HttpResponse = singleAwaitingRequest(request)
 
             println(response.toString)
@@ -135,7 +135,7 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol 
             val sessionId = sessionLogin(normalUserEmailEnc, testPass)
 
             /* anything image */
-            val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2")~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
+            val request = Get(baseApiUrl + s"/v1/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2")~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
             val response: HttpResponse = singleAwaitingRequest(request)
 
             println(response.toString)

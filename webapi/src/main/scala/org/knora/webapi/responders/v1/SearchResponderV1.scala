@@ -21,7 +21,6 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1, _}
 import org.knora.webapi.messages.v1.responder.searchmessages._
@@ -29,7 +28,8 @@ import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.twirl.SearchCriterion
-import org.knora.webapi.util.{ActorUtil, DateUtilV1, PermissionUtilADM}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{DateUtilV1, PermissionUtilADM}
 
 import scala.concurrent.Future
 
@@ -178,20 +178,6 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
             // Group the search results by resource IRI.
             groupedByResourceIri: Map[IRI, Seq[VariableResultsRow]] = searchResponse.results.bindings.groupBy(_.rowMap("resource"))
 
-            projectShortcodeFutures: Map[IRI, Future[String]] = groupedByResourceIri.foldLeft(Map.empty[IRI, Future[String]]) {
-                case (acc, (_, rows)) =>
-                    val firstRowMap = rows.head.rowMap
-                    val resourceProject = firstRowMap("resourceProject")
-
-                    val projectShortcodeFuture = for {
-                        projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceProject), requestingUser = searchGetRequest.userProfile)).mapTo[ProjectGetResponseADM]
-                    } yield projectResponse.project.shortcode
-
-                    acc + (resourceProject -> projectShortcodeFuture)
-            }
-
-            projectShortcodes: Map[IRI, String] <- ActorUtil.sequenceFuturesInMap(projectShortcodeFutures)
-
             // Convert the query result rows into SearchResultRowV1 objects.
 
             subjects: Vector[SearchResultRowV1] = groupedByResourceIri.foldLeft(Vector.empty[SearchResultRowV1]) {
@@ -202,7 +188,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
                     val resourceCreator = firstRowMap("resourceCreator")
                     val resourceProject = firstRowMap("resourceProject")
-                    val resourceProjectShortcode = projectShortcodes(resourceProject)
+                    val resourceProjectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI: $resourceIri"))
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
                     val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(
@@ -523,20 +509,6 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
             // Convert the query result rows into SearchResultRowV1 objects.
 
-            projectShortcodeFutures: Map[IRI, Future[String]] = groupedByResourceIri.foldLeft(Map.empty[IRI, Future[String]]) {
-                case (acc, (_, rows)) =>
-                    val firstRowMap = rows.head.rowMap
-                    val resourceProject = firstRowMap("resourceProject")
-
-                    val projectShortcodeFuture = for {
-                        projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceProject), requestingUser = searchGetRequest.userProfile)).mapTo[ProjectGetResponseADM]
-                    } yield projectResponse.project.shortcode
-
-                    acc + (resourceProject -> projectShortcodeFuture)
-            }
-
-            projectShortcodes: Map[IRI, String] <- ActorUtil.sequenceFuturesInMap(projectShortcodeFutures)
-
             subjects: Vector[SearchResultRowV1] = groupedByResourceIri.foldLeft(Vector.empty[SearchResultRowV1]) {
                 case (subjectsAcc, (resourceIri, rows)) =>
                     val firstRowMap = rows.head.rowMap
@@ -545,7 +517,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
                     val resourceCreator = firstRowMap("resourceCreator")
                     val resourceProject = firstRowMap("resourceProject")
-                    val resourceProjectShortcode = projectShortcodes(resourceProject)
+                    val resourceProjectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI: $resourceIri"))
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
                     val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(

@@ -40,27 +40,11 @@ function pre_flight(prefix,identifier,cookie)
     -- allowing to also access images that are not inside Knora
     --
 
-    if config.prefix_as_path then
-        filepath = config.imgroot .. '/' .. prefix .. '/' .. 'Leaves.jp2'
-    else
-        filepath = config.imgroot .. '/' .. 'Leaves.jp2'
-    end
-
-    if prefix == "thumbs" then
-        -- always allow thumbnails
-        return 'allow', filepath
-    end
-
-    if prefix == "tmp" then
-        -- always allow access to tmp folder
-        return 'allow', filepath
-    end
-
-
-    if prefix == "knora" then
-        -- skip authorization and allways allow access
-        return 'allow', filepath
-    end
+    filepath = config.imgroot .. '/knora/Leaves.jp2'
+    
+    server.log("Returning test file " .. filepath, server.loglevel.LOG_INFO)
+    
+    return 'allow', filepath
 
 end
 -------------------------------------------------------------------------------

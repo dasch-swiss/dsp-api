@@ -29,11 +29,11 @@
 	images:copyright <http://rdfh.ch/00FF/df1260ad43d5> ;
 	images:copyrightValue <http://rdfh.ch/00FF/0cb8286054d5/values/7d9e429c-4ef4-4708-bef1-e89c842f5f55> ;
 	rdfs:label "1 Alpinismus" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/0cb8286054d5/reps/073ce085942f01> , <http://rdfh.ch/00FF/0cb8286054d5/reps/c66133bf942f01> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/0cb8286054d5/values/073ce085942f01> , <http://rdfh.ch/00FF/0cb8286054d5/values/c66133bf942f01> ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/0cb8286054d5/reps/073ce085942f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/0cb8286054d5/values/073ce085942f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_1_013540.tif" ;
 	knora-base:originalFilename "9SPO_8_1_013540.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -48,7 +48,7 @@
 	knora-base:isPreview true ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/0cb8286054d5/reps/c66133bf942f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/0cb8286054d5/values/c66133bf942f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_1_013540.tif" ;
 	knora-base:originalFilename "9SPO_8_1_013540.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -265,11 +265,11 @@
 	images:copyright <http://rdfh.ch/00FF/df1260ad43d5> ;
 	images:copyrightValue <http://rdfh.ch/00FF/20cf644a55d5/values/35e52652-459f-4d19-8913-4e57c5f9d805> ;
 	rdfs:label "5 Spazieren" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/20cf644a55d5/reps/03d32c6b952f01> , <http://rdfh.ch/00FF/20cf644a55d5/reps/c2f87fa4952f01> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/20cf644a55d5/values/03d32c6b952f01> , <http://rdfh.ch/00FF/20cf644a55d5/values/c2f87fa4952f01> ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/20cf644a55d5/reps/03d32c6b952f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/20cf644a55d5/values/03d32c6b952f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_5_013542.tif" ;
 	knora-base:originalFilename "9SPO_8_5_013542.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -284,7 +284,7 @@
 	knora-base:isPreview true ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/20cf644a55d5/reps/c2f87fa4952f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/20cf644a55d5/values/c2f87fa4952f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_5_013542.tif" ;
 	knora-base:originalFilename "9SPO_8_5_013542.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -449,11 +449,11 @@
 	images:copyright <http://rdfh.ch/00FF/df1260ad43d5> ;
 	images:copyrightValue <http://rdfh.ch/00FF/34e6a03456d5/values/d48adffa-cfd8-4104-8ec3-a53b1482e98f> ;
 	rdfs:label "1 Ballon" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/34e6a03456d5/reps/ff697950962f01> , <http://rdfh.ch/00FF/34e6a03456d5/reps/be8fcc89962f01> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/34e6a03456d5/values/ff697950962f01> , <http://rdfh.ch/00FF/34e6a03456d5/values/be8fcc89962f01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/34e6a03456d5/reps/be8fcc89962f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/34e6a03456d5/values/be8fcc89962f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_1_013544.tif" ;
 	knora-base:originalFilename "9SPO_9_1_013544.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -467,7 +467,7 @@
 	knora-base:qualityLevel 100 ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/34e6a03456d5/reps/ff697950962f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/34e6a03456d5/values/ff697950962f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_1_013544.tif" ;
 	knora-base:originalFilename "9SPO_9_1_013544.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -725,11 +725,11 @@
 	images:copyright <http://rdfh.ch/00FF/df1260ad43d5> ;
 	images:copyrightValue <http://rdfh.ch/00FF/48fddc1e57d5/values/b8eafae2-78ca-4576-8d9c-6c5f915ac250> ;
 	rdfs:label "2 Delta" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/48fddc1e57d5/reps/fb00c635972f01> , <http://rdfh.ch/00FF/48fddc1e57d5/reps/ba26196f972f01> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/48fddc1e57d5/values/fb00c635972f01> , <http://rdfh.ch/00FF/48fddc1e57d5/values/ba26196f972f01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/48fddc1e57d5/reps/ba26196f972f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/48fddc1e57d5/values/ba26196f972f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_2_013546.tif" ;
 	knora-base:originalFilename "9SPO_9_2_013546.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -743,7 +743,7 @@
 	knora-base:qualityLevel 100 ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/48fddc1e57d5/reps/fb00c635972f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/48fddc1e57d5/values/fb00c635972f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_2_013546.tif" ;
 	knora-base:originalFilename "9SPO_9_2_013546.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -983,11 +983,11 @@
 	images:copyright <http://rdfh.ch/00FF/df1260ad43d5> ;
 	images:copyrightValue <http://rdfh.ch/00FF/691e7e2244d5/values/34990a93-26fd-4b78-a650-92523d48e442> ;
 	rdfs:label "6 Skikjöring" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/691e7e2244d5/reps/47cc1631862f01> , <http://rdfh.ch/00FF/691e7e2244d5/reps/06f2696a862f01> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/691e7e2244d5/values/47cc1631862f01> , <http://rdfh.ch/00FF/691e7e2244d5/values/06f2696a862f01> ;
 	knora-base:creationDate "2016-03-02T15:05:58Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/691e7e2244d5/reps/06f2696a862f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/691e7e2244d5/values/06f2696a862f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_6_6_013508.tif" ;
 	knora-base:originalFilename "9SPO_6_6_013508.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -1001,7 +1001,7 @@
 	knora-base:qualityLevel 100 ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/691e7e2244d5/reps/47cc1631862f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/691e7e2244d5/values/47cc1631862f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_6_6_013508.tif" ;
 	knora-base:originalFilename "9SPO_6_6_013508.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -1241,11 +1241,11 @@
 	images:copyright <http://rdfh.ch/00FF/df1260ad43d5> ;
 	images:copyrightValue <http://rdfh.ch/00FF/82ac0aeb53d5/values/70f35e46-6835-404c-9a64-be1829f10f64> ;
 	rdfs:label "3 Trecking mit Tieren" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/82ac0aeb53d5/reps/89f03913942f01> , <http://rdfh.ch/00FF/82ac0aeb53d5/reps/48168d4c942f01> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/82ac0aeb53d5/values/89f03913942f01> , <http://rdfh.ch/00FF/82ac0aeb53d5/values/48168d4c942f01> ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/82ac0aeb53d5/reps/48168d4c942f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/82ac0aeb53d5/values/48168d4c942f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_013539.tif" ;
 	knora-base:originalFilename "9SPO_8_013539.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -1259,7 +1259,7 @@
 	knora-base:qualityLevel 100 ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/82ac0aeb53d5/reps/89f03913942f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/82ac0aeb53d5/values/89f03913942f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_013539.tif" ;
 	knora-base:originalFilename "9SPO_8_013539.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -1499,11 +1499,11 @@
 	images:copyright <http://rdfh.ch/00FF/df1260ad43d5> ;
 	images:copyrightValue <http://rdfh.ch/00FF/96c346d554d5/values/88b8df0c-52d8-4e7c-a939-4d40b4e10ec9> ;
 	rdfs:label "1 Alpinismus" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/96c346d554d5/reps/858786f8942f01> , <http://rdfh.ch/00FF/96c346d554d5/reps/44add931952f01> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/96c346d554d5/values/858786f8942f01> , <http://rdfh.ch/00FF/96c346d554d5/values/44add931952f01> ;
 	knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/96c346d554d5/reps/44add931952f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/96c346d554d5/values/44add931952f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_1_013541.tif" ;
 	knora-base:originalFilename "9SPO_8_1_013541.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -1517,7 +1517,7 @@
 	knora-base:qualityLevel 100 ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/96c346d554d5/reps/858786f8942f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/96c346d554d5/values/858786f8942f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_8_1_013541.tif" ;
 	knora-base:originalFilename "9SPO_8_1_013541.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -1757,11 +1757,11 @@
 	images:copyright <http://rdfh.ch/00FF/df1260ad43d5> ;
 	images:copyrightValue <http://rdfh.ch/00FF/aada82bf55d5/values/92a8e7d3-2e8f-4442-8b0b-1a5f044989e1> ;
 	rdfs:label "1 Ballon" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/aada82bf55d5/reps/811ed3dd952f01> , <http://rdfh.ch/00FF/aada82bf55d5/reps/40442617962f01> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/aada82bf55d5/values/811ed3dd952f01> , <http://rdfh.ch/00FF/aada82bf55d5/values/40442617962f01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/aada82bf55d5/reps/40442617962f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/aada82bf55d5/values/40442617962f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_1_013543.tif" ;
 	knora-base:originalFilename "9SPO_9_1_013543.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -1775,7 +1775,7 @@
 	knora-base:qualityLevel 100 ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/aada82bf55d5/reps/811ed3dd952f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/aada82bf55d5/values/811ed3dd952f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_1_013543.tif" ;
 	knora-base:originalFilename "9SPO_9_1_013543.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -1991,11 +1991,11 @@
 	images:copyright <http://rdfh.ch/00FF/df1260ad43d5> ;
 	images:copyrightValue <http://rdfh.ch/00FF/bef1bea956d5/values/2af7867e-9466-433e-8902-8231f23df5f4> ;
 	rdfs:label "2 Delta" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/bef1bea956d5/reps/7db51fc3962f01> , <http://rdfh.ch/00FF/bef1bea956d5/reps/3cdb72fc962f01> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/bef1bea956d5/values/7db51fc3962f01> , <http://rdfh.ch/00FF/bef1bea956d5/values/3cdb72fc962f01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/bef1bea956d5/reps/3cdb72fc962f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/bef1bea956d5/values/3cdb72fc962f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_2_013545.tif" ;
 	knora-base:originalFilename "9SPO_9_2_013545.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -2009,7 +2009,7 @@
 	knora-base:qualityLevel 100 ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/bef1bea956d5/reps/7db51fc3962f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/bef1bea956d5/values/7db51fc3962f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_2_013545.tif" ;
 	knora-base:originalFilename "9SPO_9_2_013545.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -2249,11 +2249,11 @@
 	images:copyright <http://rdfh.ch/00FF/df1260ad43d5> ;
 	images:copyrightValue <http://rdfh.ch/00FF/d208fb9357d5/values/0b57e340-6a0d-47a6-bd74-a0f57aafd0ac> ;
 	rdfs:label "3 Flugzeuge" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/d208fb9357d5/reps/794c6ca8972f01> , <http://rdfh.ch/00FF/d208fb9357d5/reps/3872bfe1972f01> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/d208fb9357d5/values/794c6ca8972f01> , <http://rdfh.ch/00FF/d208fb9357d5/values/3872bfe1972f01> ;
 	knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/d208fb9357d5/reps/3872bfe1972f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/d208fb9357d5/values/3872bfe1972f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_3_013547.tif" ;
 	knora-base:originalFilename "9SPO_9_3_013547.tif" ;
 	knora-base:originalMimeType "image/tiff" ;
@@ -2267,7 +2267,7 @@
 	knora-base:qualityLevel 100 ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" .
 
-<http://rdfh.ch/00FF/d208fb9357d5/reps/794c6ca8972f01> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/00FF/d208fb9357d5/values/794c6ca8972f01> a knora-base:StillImageFileValue ;
 	knora-base:valueHasString "9SPO_9_3_013547.tif" ;
 	knora-base:originalFilename "9SPO_9_3_013547.tif" ;
 	knora-base:originalMimeType "image/tiff" ;

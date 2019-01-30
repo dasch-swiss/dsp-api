@@ -53,9 +53,10 @@ class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     "The Sipi responder" should {
         "return details of a full quality file value" in {
-            // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
+            // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F0803%2F8a0b1e75%2Fvalues%2F7e4ba672
             responderManager ! SipiFileInfoGetRequestV1(
                 userProfile = SipiResponderV1Spec.userProfile,
+                prefix = "0803",
                 filename = "incunabula_0000000002.jp2"
             )
 

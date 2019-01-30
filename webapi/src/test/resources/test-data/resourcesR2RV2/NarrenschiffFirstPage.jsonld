@@ -64,7 +64,7 @@
   },
   "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
   "knora-api:hasStillImageFileValue" : [ {
-    "@id" : "http://rdfh.ch/7bbb8e59b703/reps/22bc3f713f07",
+    "@id" : "http://rdfh.ch/7bbb8e59b703/values/22bc3f713f07",
     "@type" : "knora-api:StillImageFileValue",
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -83,7 +83,7 @@
       "@value" : "http://localhost:1024/0803"
     }
   }, {
-    "@id" : "http://rdfh.ch/7bbb8e59b703/reps/6396ec373f07",
+    "@id" : "http://rdfh.ch/7bbb8e59b703/values/6396ec373f07",
     "@type" : "knora-api:StillImageFileValue",
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"

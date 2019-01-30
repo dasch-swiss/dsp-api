@@ -22,12 +22,10 @@ package org.knora.webapi.responders.v1
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -929,23 +927,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                         case (acc, row) => acc + row.rowMap("sourceObjectAttachedToProject")
                     }
 
-                    projectShortcodeFutures: Map[IRI, Future[String]] = projectIris.foldLeft(Map.empty[IRI, Future[String]]) {
-                        case (acc, projectIri) =>
-                            val projectShortcodeFuture = for {
-                                projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(projectIri), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
-                            } yield projectResponse.project.shortcode
-
-                            acc + (projectIri -> projectShortcodeFuture)
-                    }
-
-                    projectShortcodes: Map[IRI, String] <- ActorUtil.sequenceFuturesInMap(projectShortcodeFutures)
-
                     // The results consist of one or more rows per source object. If there is more than one row per source object,
                     // each row provides a different file value. For each source object, create a SourceObject containing a Vector
                     // of file values.
                     sourceObjects: Vector[SourceObject] = rows.foldLeft(Vector.empty[SourceObject]) {
                         case (acc: Vector[SourceObject], row) =>
-                            val projectShortcode = projectShortcodes(row.rowMap("sourceObjectAttachedToProject"))
+                            val sourceObject: IRI = row.rowMap("sourceObject")
+                            val projectShortcode: String = sourceObject.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI: $sourceObject"))
 
                             if (acc.isEmpty) {
                                 // This is the first row, so create the first SourceObject containing the first file value, if any.
@@ -1030,11 +1018,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                             // get the properties for each region
                             for {
-                                projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(regionRow.rowMap("project")), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
-
                                 propsV1: Seq[PropertyV1] <- getResourceProperties(
                                     resourceIri = regionIri,
-                                    projectShortcode = projectResponse.project.shortcode,
                                     maybeResourceTypeIri = Some(resClass),
                                     userProfile = userProfile
                                 )
@@ -2237,26 +2222,20 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     private def getPropertiesV1(resourceIri: IRI, userProfile: UserADM): Future[PropertiesGetResponseV1] = {
 
         for {
-            (maybePermissionCode, resInfo) <- getResourceInfoV1(
-                resourceIri = resourceIri,
-                userProfile = userProfile,
-                queryOntology = false
-            )
+            // get resource class of the specified resource
 
-            _ = maybePermissionCode.getOrElse(throw ForbiddenException(s"User <${userProfile.username}> does not have permission to view resource $resourceIri"))
+            resclassSparqlQuery <- Future(queries.sparql.v1.txt.getResourceClass(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceIri
+            ).toString())
 
-            properties: Seq[PropertyV1] <- getResourceProperties(
-                resourceIri = resourceIri,
-                projectShortcode = resInfo.project_shortcode,
-                maybeResourceTypeIri = Some(resInfo.restype_id),
-                userProfile = userProfile
-            )
+            resclassQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resclassSparqlQuery)).mapTo[SparqlSelectResponse]
+            resclass = resclassQueryResponse.results.bindings.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"No resource class given for $resourceIri"))
+
+            properties: Seq[PropertyV1] <- getResourceProperties(resourceIri = resourceIri, maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")), userProfile = userProfile)
 
             propertiesGetV1: Seq[PropertyGetV1] = properties.map {
-
-                prop =>
-                    convertPropertyV1toPropertyGetV1(prop)
-
+                prop => convertPropertyV1toPropertyGetV1(prop)
             }
 
         } yield PropertiesGetResponseV1(PropsGetV1(propertiesGetV1))
@@ -2274,7 +2253,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       * @param userProfile          the profile of the user making the request.
       * @return a [[Seq]] of [[PropertyV1]] objects representing the properties that have values for the resource.
       */
-    private def getResourceProperties(resourceIri: IRI, projectShortcode: String, maybeResourceTypeIri: Option[IRI], userProfile: UserADM): Future[Seq[PropertyV1]] = {
+    private def getResourceProperties(resourceIri: IRI, maybeResourceTypeIri: Option[IRI], userProfile: UserADM): Future[Seq[PropertyV1]] = {
         for {
 
             groupedPropsByType: GroupedPropertiesByType <- getGroupedProperties(resourceIri)
@@ -2302,6 +2281,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 case None =>
                     Future((Map.empty[IRI, PropertyInfoV1], Map.empty[IRI, ClassInfoV1], Map.empty[IRI, KnoraCardinalityInfo]))
             }
+
+            projectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI: $resourceIri"))
 
             queryResult <- queryResults2PropertyV1s(
                 containingResourceIri = resourceIri,
@@ -2343,10 +2324,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 }
 
                 resourceProject = maybeResourceProjectStatement.getOrElse(throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject"))._2
-
-                projectShortcode: String <- for {
-                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceProject), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
-                } yield projectResponse.project.shortcode
+                projectShortcode: String = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI $resourceIri"))
 
                 // Get the rows describing file values from the query results, grouped by file value IRI.
                 fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isFileValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"))).groupBy(row => row.rowMap("obj")).toVector

@@ -21,11 +21,11 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "0000-00-00T00:00:00"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/0803/8a0b1e75/reps/7e4ba672> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/0803/8a0b1e75/values/7e4ba672> ;
 	knora-base:isDeleted false ;
 	rdfs:label "a1r, Titelblatt" .
 
-<http://rdfh.ch/0803/8a0b1e75/reps/7e4ba672> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/0803/8a0b1e75/values/7e4ba672> a knora-base:StillImageFileValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:dimX 2613 ;
 	knora-base:dimY 3505 ;

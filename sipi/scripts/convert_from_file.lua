@@ -37,6 +37,12 @@ end
 --
 
 prefix = server.post['prefix']
+
+if prefix == nil then
+    send_error(400, PARAMETERS_INCORRECT)
+    return
+end
+
 projectDir = config.imgroot .. '/' .. prefix .. '/'
 
 local success, exists = server.fs.exists(projectDir)
@@ -122,7 +128,7 @@ fullImgName = baseName .. '.jpx'
 success, newFilePath = helper.filename_hash(fullImgName);
 if not success then
     server.sendStatus(500)
-    server.log(gaga, server.loglevel.error)
+    server.log(gaga, server.loglevel.LOG_ERR)
     return false
 end
 
@@ -155,13 +161,14 @@ thumbImgName = baseName .. '.jpg'
 success, newThumbPath = helper.filename_hash(thumbImgName);
 if not success then
     server.sendStatus(500)
-    server.log(gaga, server.loglevel.error)
+    server.log("Unable to generate filename hash for " .. thumbImgName, server.loglevel.LOG_ERR)
     return false
 end
 
-success, errmsg = thumbImg:write(projectDir .. newThumbPath)
+fullThumbPath = projectDir .. newThumbPath
+success, errmsg = thumbImg:write(fullThumbPath)
 if not success then
-    server.log("thumbImg:write failed: " .. errmsg, server.loglevel.LOG_ERR)
+    server.log("Unable to write " .. fullThumbPath, server.loglevel.LOG_ERR)
     return
 end
 
