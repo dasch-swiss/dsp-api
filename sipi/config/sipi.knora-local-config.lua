@@ -53,7 +53,7 @@ sipi = {
     -- expected to be urlencoded. Both will be decoded. That is, "/" will be recoignized and expanded
     -- in the final path the image file!
     --
-    imgroot = '../../Sipi/images', -- make sure that this directory exists
+    imgroot = './images', -- make sure that this directory exists
 
     --
     -- If FALSE, the prefix is not used to build the path to the image files
@@ -77,7 +77,7 @@ sipi = {
     -- for certain prefixes *not* to use subdirs. A list of these prefix-directories
     -- can be given with this configuration parameter.
     --
-    subdir_excludes = { "thumbs" },
+    subdir_excludes = { "knora", "thumbs" },
 
     --
     -- Lua script which is executed on initialization of the Lua interpreter
@@ -87,7 +87,7 @@ sipi = {
     --
     -- path to the caching directory
     --
-    cachedir = '../../Sipi/cache',
+    cachedir = './cache',
 
     --
     -- maximal size of the cache
@@ -148,7 +148,7 @@ fileserver = {
     --
     -- directory where the documents for the normal webserver are located
     --
-    docroot = '../../Sipi/server',
+    docroot = './server',
 
     --
     -- route under which the normal webserver shouöd respond to requests

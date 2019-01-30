@@ -57,73 +57,68 @@ function pre_flight(prefix,identifier,cookie)
         return 'allow', filepath
     end
 
+    knora_cookie_header = nil
 
-    if prefix == "knora" then
+    if cookie ~='' then
 
-        knora_cookie_header = nil
+        -- tries to extract the Knora session id from the cookie:
+        -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
+        -- returns nil if it cannot find it
+        session_id = get_session_id(cookie)
 
-        if cookie ~='' then
-
-            -- tries to extract the Knora session id from the cookie:
-            -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
-            -- returns nil if it cannot find it
-            session_id = get_session_id(cookie)
-
-            if session_id == nil then
-                -- no session_id could be extracted
-                print("cookie key is invalid: " .. cookie)
-            else
-                knora_cookie_header = { Cookie = "KnoraAuthentication=" .. session_id }
-            end
-        end
-
-        knora_url = 'http://' .. config.knora_path .. ':' .. config.knora_port .. '/v1/files/' .. identifier
-
-        --print("knora_url: " .. knora_url)
-
-        success, result = server.http("GET", knora_url, knora_cookie_header, 5000)
-
-        -- check HTTP request was successful
-        if not success then
-            server.log("Server.http() failed: " .. result, server.loglevel.LOG_ERR)
-            return 'deny'
-        end
-
-        if result.status_code ~= 200 then
-            server.log("Knora returned HTTP status code " .. result.status_code)
-            server.log(result.body)
-            return 'deny'
-        end
-
-        success, response_json = server.json_to_table(result.body)
-        if not success then
-            server.log("Server.http() failed: " .. response_json, server.loglevel.LOG_ERR)
-            return 'deny'
-        end
-
-        --print("status: " .. response_json.status)
-        --print("permission code: " .. response_json.permissionCode)
-
-        if response_json.status ~= 0 then
-            -- something went wrong with the request, Knora returned a non zero status
-            return 'deny'
-        end
-
-        if response_json.permissionCode == 0 then
-            -- no view permission on file
-            return 'deny'
-        elseif response_json.permissionCode == 1 then
-            -- restricted view permission on file
-            -- either watermark or size (depends on project, should be returned with permission code by Sipi responder)
-            return 'restrict:size=' .. config.thumb_size, filepath
-        elseif response_json.permissionCode >= 2 then
-            -- full view permissions on file
-            return 'allow', filepath
+        if session_id == nil then
+            -- no session_id could be extracted
+            print("cookie key is invalid: " .. cookie)
         else
-            -- invalid permission code
-            return 'deny'
+            knora_cookie_header = { Cookie = "KnoraAuthentication=" .. session_id }
         end
     end
 
+    knora_url = 'http://' .. config.knora_path .. ':' .. config.knora_port .. '/v1/files/' .. identifier
+
+    --print("knora_url: " .. knora_url)
+
+    success, result = server.http("GET", knora_url, knora_cookie_header, 5000)
+
+    -- check HTTP request was successful
+    if not success then
+        server.log("Server.http() failed: " .. result, server.loglevel.LOG_ERR)
+        return 'deny'
+    end
+
+    if result.status_code ~= 200 then
+        server.log("Knora returned HTTP status code " .. result.status_code)
+        server.log(result.body)
+        return 'deny'
+    end
+
+    success, response_json = server.json_to_table(result.body)
+    if not success then
+        server.log("Server.http() failed: " .. response_json, server.loglevel.LOG_ERR)
+        return 'deny'
+    end
+
+    --print("status: " .. response_json.status)
+    --print("permission code: " .. response_json.permissionCode)
+
+    if response_json.status ~= 0 then
+        -- something went wrong with the request, Knora returned a non zero status
+        return 'deny'
+    end
+
+    if response_json.permissionCode == 0 then
+        -- no view permission on file
+        return 'deny'
+    elseif response_json.permissionCode == 1 then
+        -- restricted view permission on file
+        -- either watermark or size (depends on project, should be returned with permission code by Sipi responder)
+        return 'restrict:size=' .. config.thumb_size, filepath
+    elseif response_json.permissionCode >= 2 then
+        -- full view permissions on file
+        return 'allow', filepath
+    else
+        -- invalid permission code
+        return 'deny'
+    end
 end
 -------------------------------------------------------------------------------
