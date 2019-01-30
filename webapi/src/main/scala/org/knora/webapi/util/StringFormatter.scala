@@ -2166,6 +2166,19 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
+      * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
+      *
+      * @param shortcode the project's shortcode.
+      * @return the shortcode in upper case.
+      */
+    def validateProjectShortcodeOption(shortcode: String): Option[String] = {
+        ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
+            case Some(value) => Some(value)
+            case None => None
+        }
+    }
+
+    /**
       * Given an email address, checks if it is in a valid format.
       *
       * @param email the email.

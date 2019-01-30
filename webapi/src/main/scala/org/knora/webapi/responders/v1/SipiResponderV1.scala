@@ -20,14 +20,21 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.Status
+import akka.http.scaladsl.util
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import org.knora
+import org.knora.webapi
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectRestrictedViewSettingsADM, ProjectRestrictedViewSettingsGetADM, ProjectRestrictedViewSettingsGetRequestADM}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.v1.GroupedProps.ValueProps
 import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.util.PermissionUtilADM
-import org.knora.webapi.{BadRequestException, InconsistentTriplestoreDataException}
+import org.knora.webapi.util.PermissionUtilADM.filterPermissionRelevantAssertionsFromValueProps
+import org.knora.webapi.{BadRequestException, IRI, InconsistentTriplestoreDataException, OntologyConstants}
 
 import scala.concurrent.Future
 
@@ -94,12 +101,30 @@ class SipiResponderV1(responderData: ResponderData) extends Responder(responderD
 
             permissionCode: Int = maybePermissionCode.getOrElse(0) // Sipi expects a permission code from 0 to 8
 
-        } yield SipiFileInfoGetResponseV1(
-            permissionCode = permissionCode
-        )
+            response <- permissionCode match {
+
+                case 1 => {
+                    for {
+                        maybeRVSettings <- getRestrictedViewSettingsForValue(valueIri = filename, valueProps = valueProps)
+
+                    } yield SipiFileInfoGetResponseV1(permissionCode = permissionCode, maybeRVSettings)
+                }
+                case other => FastFuture.successful(SipiFileInfoGetResponseV1(permissionCode = permissionCode, None))
+            }
+
+        } yield response
     }
 
+    private def getRestrictedViewSettingsForValue(valueIri: IRI, valueProps: ValueProps): Future[Option[ProjectRestrictedViewSettingsADM]] = {
 
+        val valuePropsAssertions: Vector[(IRI, IRI)] = filterPermissionRelevantAssertionsFromValueProps(valueProps)
+        val maybeProject: Option[IRI] = valuePropsAssertions.find(_._1 == OntologyConstants.KnoraBase.AttachedToProject).map(_._2)
 
+        val projectIri: IRI = maybeProject.getOrElse(throw InconsistentTriplestoreDataException(s"No knora-base:attachedToProject was NOT provided for entity $valueIri"))
 
+        for {
+            projectRestrictedViewSettings <- (responderManager ? ProjectRestrictedViewSettingsGetADM).mapTo[Option[ProjectRestrictedViewSettingsADM]]
+
+        } yield projectRestrictedViewSettings
+    }
 }

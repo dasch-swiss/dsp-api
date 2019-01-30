@@ -56,7 +56,7 @@ class SipiResponderV1Spec extends CoreSpec(SipiResponderV1Spec.config) with Impl
                 filename = "incunabula_0000000002.jp2"
             )
 
-            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 6))
+            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 6, None, None))
         }
 
         "return details of a restricted view file value" in {
@@ -66,7 +66,7 @@ class SipiResponderV1Spec extends CoreSpec(SipiResponderV1Spec.config) with Impl
                 filename = "incunabula_0000000002.jp2"
             )
 
-            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 1))
+            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 1, None, None))
         }
     }
 }

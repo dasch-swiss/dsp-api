@@ -23,58 +23,95 @@ package org.knora.webapi.routing.admin
 import java.util.UUID
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import io.swagger.annotations.Api
+import akka.http.scaladsl.server.{PathMatcher, Route}
+import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.BadRequestException
+import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import scala.concurrent.Future
 
+object ProjectsRouteADM {
+    val ProjectsBasePath = PathMatcher("admin" / "projects")
+}
 
 @Api(value = "projects", produces = "application/json")
 @Path("/admin/projects")
 class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ProjectsADMJsonProtocol {
 
-    override def knoraApiPath: Route = path("admin" / "projects") {
-        get {
-            /* returns all projects */
-            requestContext =>
-                val requestMessage: Future[ProjectsGetRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield ProjectsGetRequestADM(requestingUser = requestingUser)
-                RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
-                )
-        } ~ post {
-                /* create a new project */
-                entity(as[CreateProjectApiRequestADM]) { apiRequest =>
-                    requestContext =>
-                        val requestMessage: Future[ProjectCreateRequestADM] = for {
-                            requestingUser <- getUserADM(requestContext)
-                        } yield ProjectCreateRequestADM(
-                            createRequest = apiRequest,
-                            requestingUser = requestingUser,
-                            apiRequestID = UUID.randomUUID()
-                        )
+    import ProjectsRouteADM.ProjectsBasePath
 
-                        RouteUtilADM.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                }
+    override def knoraApiPath: Route =
+                getProjects ~
+                addProject ~
+                getKeywords ~
+                getProjectKeywords ~
+                getProject ~
+                changeProject ~
+                deleteProject ~
+                getProjectMembers ~
+                getProjectAdminMembers ~
+                getProjectRestrictedViewSettings
+
+
+    /* return all projects */
+    @ApiOperation(value = "Get projects", nickname = "getProjects", httpMethod = "GET", response = classOf[ProjectsGetResponseADM])
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
+    private def getProjects: Route = path(ProjectsBasePath) {
+        get {requestContext =>
+            val requestMessage: Future[ProjectsGetRequestADM] = for {
+                requestingUser <- getUserADM(requestContext)
+            } yield ProjectsGetRequestADM(requestingUser = requestingUser)
+            RouteUtilADM.runJsonRoute(
+                requestMessage,
+                requestContext,
+                settings,
+                responderManager,
+                log
+            )
+        }
+
+    }
+
+    /* create a new project */
+    @ApiOperation(value = "Add new project", nickname = "addProject", httpMethod = "POST", response = classOf[ProjectOperationResponseADM])
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "body", value = "\"project\" to create", required = true,
+            dataTypeClass = classOf[CreateProjectApiRequestADM], paramType = "body")
+    ))
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
+    private def addProject: Route = path(ProjectsBasePath) {
+        post {
+            entity(as[CreateProjectApiRequestADM]) { apiRequest =>
+                requestContext =>
+                    val requestMessage: Future[ProjectCreateRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ProjectCreateRequestADM(
+                        createRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
             }
-    } ~ path("admin" / "projects" / "keywords") {
+        }
+    }
+
+    /* returns all unique keywords for all projects as a list */
+    private def getKeywords: Route = path(ProjectsBasePath / "keywords") {
         get {
-            /* returns all unique keywords for all projects as a list */
             requestContext =>
                 val requestMessage: Future[ProjectsKeywordsGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
@@ -88,9 +125,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     log
                 )
         }
-    } ~ path("admin" / "projects" / "keywords" / Segment) { value =>
+    }
+
+
+    /* returns all keywords for a single project */
+    private def getProjectKeywords: Route = path(ProjectsBasePath / "keywords" / Segment) { value =>
         get {
-            /* returns all keywords for a single project */
             requestContext =>
                 val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
@@ -106,9 +146,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     log
                 )
         }
-    } ~ path("admin" / "projects" / Segment) { value =>
+    }
+
+    /* returns a single project identified either through iri, shortname, or shortcode */
+    private def getProject: Route = path(ProjectsBasePath / Segment) { value =>
         get {
-            /* returns a single project identified either through iri, shortname, or shortcode */
             parameters("identifier" ? "iri") { identifier: String =>
                 requestContext =>
                     val requestMessage: Future[ProjectGetRequestADM] = for {
@@ -132,43 +174,23 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         log
                     )
             }
-        } ~
-            put {
-                /* update a project identified by iri */
-                entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
-                    requestContext =>
-                        val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+        }
+    }
 
-                        /* the api request is already checked at time of creation. see case class. */
-
-                        val requestMessage: Future[ProjectChangeRequestADM] = for {
-                            requestingUser <- getUserADM(requestContext)
-                        } yield ProjectChangeRequestADM(
-                            projectIri = checkedProjectIri,
-                            changeProjectRequest = apiRequest,
-                            requestingUser = requestingUser,
-                            apiRequestID = UUID.randomUUID()
-                        )
-
-                        RouteUtilADM.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                }
-            } ~
-            delete {
-                /* update project status to false */
+    /* update a project identified by iri */
+    private def changeProject: Route = path(ProjectsBasePath / Segment) { value =>
+        put {
+            entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
                 requestContext =>
                     val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+
+                    /* the api request is already checked at time of creation. see case class. */
 
                     val requestMessage: Future[ProjectChangeRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ProjectChangeRequestADM(
                         projectIri = checkedProjectIri,
-                        changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
+                        changeProjectRequest = apiRequest,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
@@ -181,9 +203,38 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         log
                     )
             }
-    } ~ path("admin" / "projects" / "members" / Segment) { value =>
+        }
+    }
+
+    /* update project status to false */
+    private def deleteProject: Route =  path(ProjectsBasePath / Segment) { value =>
+        delete {
+            requestContext =>
+                val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+
+                val requestMessage: Future[ProjectChangeRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield ProjectChangeRequestADM(
+                    projectIri = checkedProjectIri,
+                    changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    }
+
+    /* returns all members part of a project identified through iri, shortname or shortcode */
+    private def getProjectMembers: Route = path(ProjectsBasePath / "members" / Segment) { value =>
         get {
-            /* returns all members part of a project identified through iri, shortname or shortcode */
+
             parameters("identifier" ? "iri") { identifier: String =>
                 requestContext =>
                     val requestMessage: Future[ProjectMembersGetRequestADM] = for {
@@ -210,9 +261,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     )
             }
         }
-    } ~ path("admin" / "projects" / "admin-members" / Segment) { value =>
+    }
+
+    /* returns all admin members part of a project identified through iri, shortname or shortcode */
+    private def getProjectAdminMembers: Route = path(ProjectsBasePath / "admin-members" / Segment) { value =>
         get {
-            /* returns all admin members part of a project identified through iri, shortname or shortcode */
+
             parameters("identifier" ? "iri") { identifier: String =>
                 requestContext =>
                     val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
@@ -238,6 +292,28 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         log
                     )
             }
+        }
+    }
+
+
+    /**
+      * Returns the project's restricted view settings.
+      */
+    @ApiMayChange
+    private def getProjectRestrictedViewSettings: Route = path(ProjectsBasePath / Segment / "RestrictedViewSettings") { identifier: String =>
+        get {
+            requestContext =>
+                val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(identifier), requestingUser)
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
         }
     }
 }

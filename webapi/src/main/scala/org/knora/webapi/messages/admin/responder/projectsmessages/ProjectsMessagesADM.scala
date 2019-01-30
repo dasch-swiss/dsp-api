@@ -23,12 +23,14 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.builder.HashCodeBuilder
+import org.knora.webapi.annotation.{ApiMayChange, ServerUnique}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.responders.admin.ProjectsResponderADM
-import org.knora.webapi.{BadRequestException, IRI, OntologyConstraintException}
+import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.{BadRequestException, DataConversionException, IRI, OntologyConstraintException}
 import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -232,6 +234,26 @@ case class ProjectsKeywordsGetRequestADM(requestingUser: UserADM) extends Projec
 case class ProjectKeywordsGetRequestADM(projectIri: IRI,
                                         requestingUser: UserADM) extends ProjectsResponderRequestADM
 
+
+/**
+  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
+  *
+  * @param projectIri     the IRI of the project.
+  * @param requestingUser the user making the request.
+  */
+@ApiMayChange
+case class ProjectRestrictedViewSettingsGetADM(identifier: ProjectIdentifierADM, requestingUser: UserADM) extends ProjectsResponderRequestADM
+
+/**
+  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
+  *
+  * @param projectIri     the IRI of the project.
+  * @param requestingUser the user making the request.
+  */
+@ApiMayChange
+case class ProjectRestrictedViewSettingsGetRequestADM(identifier: ProjectIdentifierADM,
+                                                      requestingUser: UserADM) extends ProjectsResponderRequestADM
+
 /**
   * Requests the creation of a new project.
   *
@@ -255,7 +277,6 @@ case class ProjectChangeRequestADM(projectIri: IRI,
                                    changeProjectRequest: ChangeProjectApiRequestADM,
                                    requestingUser: UserADM,
                                    apiRequestID: UUID) extends ProjectsResponderRequestADM
-
 
 // Responses
 /**
@@ -315,6 +336,16 @@ case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraRes
 }
 
 /**
+  * API MAY CHANGE: Represents a response to a request for the project's restricted view settings.
+  *
+  * @param settings the restricted view settings.
+  */
+@ApiMayChange
+case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrictedViewSettingsADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
+    def toJsValue: JsValue = projectRestricedViewGetResponseADMFormat.write(this)
+}
+
+/**
   * Represents an answer to a project creating/modifying operation.
   *
   * @param project the new project info of the created/modified project.
@@ -331,8 +362,8 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
   * Represents basic information about a project.
   *
   * @param id          The project's IRI.
-  * @param shortname   The project's shortname. Needs to be system wide unique.
-  * @param shortcode   The project's shortcode. Needs to be system wide unique.
+  * @param shortname   The project's shortname. [[ServerUnique]].
+  * @param shortcode   The project's shortcode. [[ServerUnique]].
   * @param longname    The project's long name.
   * @param description The project's description.
   * @param keywords    The project's keywords.
@@ -342,8 +373,8 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
   * @param selfjoin    The project's self-join status.
   */
 case class ProjectADM(id: IRI,
-                      shortname: String,
-                      shortcode: String,
+                      @ServerUnique shortname: String,
+                      @ServerUnique shortcode: String,
                       longname: Option[String],
                       description: Seq[StringLiteralV2],
                       keywords: Seq[String],
@@ -396,15 +427,15 @@ case class ProjectADM(id: IRI,
         that match {
             case otherProj: ProjectADM =>
                 id == otherProj.id &&
-                    shortname == otherProj.shortname &&
-                    shortcode == otherProj.shortcode &&
-                    longname == otherProj.longname &&
-                    description.toSet == otherProj.description.toSet &&
-                    keywords.toSet == otherProj.keywords.toSet &&
-                    logo == otherProj.logo &&
-                    ontologies.toSet == otherProj.ontologies.toSet &&
-                    status == otherProj.status &&
-                    selfjoin == otherProj.selfjoin
+                        shortname == otherProj.shortname &&
+                        shortcode == otherProj.shortcode &&
+                        longname == otherProj.longname &&
+                        description.toSet == otherProj.description.toSet &&
+                        keywords.toSet == otherProj.keywords.toSet &&
+                        logo == otherProj.logo &&
+                        ontologies.toSet == otherProj.ontologies.toSet &&
+                        status == otherProj.status &&
+                        selfjoin == otherProj.selfjoin
 
             case _ => false
         }
@@ -413,18 +444,120 @@ case class ProjectADM(id: IRI,
     override def hashCode(): Int = {
         // Ignore the order of sequences when generating hash codes for this class.
         new HashCodeBuilder(19, 39).
-            append(id).
-            append(shortname).
-            append(shortcode).
-            append(longname).
-            append(description.toSet).
-            append(keywords.toSet).
-            append(logo).
-            append(ontologies.toSet).
-            append(status).
-            append(selfjoin).hashCode()
+                append(id).
+                append(shortname).
+                append(shortcode).
+                append(longname).
+                append(description.toSet).
+                append(keywords.toSet).
+                append(logo).
+                append(ontologies.toSet).
+                append(status).
+                append(selfjoin).hashCode()
     }
 }
+
+/**
+  * Represents the project's identifier. It can be an IRI, shortcode or shortname.
+  * @param value the user's identifier.
+  */
+case class ProjectIdentifierADM(value: String)(implicit stringFormatter: StringFormatter) {
+
+    // throws an exception if an empty string is used as an identifier value
+    if (value.isEmpty) {
+        throw BadRequestException("Empty project identifier is not allowed.")
+    }
+
+    def nonEmpty: Boolean = value.nonEmpty
+
+    def isEmpty: Boolean = value.isEmpty
+
+    def hasType: ProjectIdentifierType.Value = {
+
+        if (stringFormatter.isKnoraProjectIriStr(value)) {
+            ProjectIdentifierType.IRI
+        } else if (stringFormatter.validateProjectShortcodeOption(value).isDefined) {
+            ProjectIdentifierType.SHORTCODE
+        } else {
+            ProjectIdentifierType.SHORTNAME
+        }
+    }
+
+    /**
+      * Tries to return the value as an IRI.
+      */
+    def toIri: IRI = {
+        if (this.hasType == ProjectIdentifierType.IRI) {
+            stringFormatter.validateAndEscapeIri(value, throw DataConversionException(s"Could not convert $value to an IRI."))
+        } else {
+            throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.IRI' type.")
+        }
+    }
+
+    /**
+      * Returns an optional value of the identifier.
+      */
+    def toIriOption: Option[IRI] = {
+        if (this.hasType == ProjectIdentifierType.IRI) {
+            Some(stringFormatter.validateAndEscapeIri(value, throw DataConversionException(s"Could not convert $value to an IRI.")))
+        } else {
+            None
+        }
+    }
+
+    /**
+      * Returns an optional value of the identifier.
+      */
+    def toShortcodeOption: Option[String] = {
+        if (this.hasType == ProjectIdentifierType.SHORTCODE) {
+            stringFormatter.validateProjectShortcodeOption(value)
+        } else {
+            None
+        }
+    }
+
+    /**
+      * Returns an optional value of the identifier.
+      */
+    def toShortnameOption: Option[String] = {
+        if (this.hasType == ProjectIdentifierType.SHORTNAME) {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+}
+
+
+/**
+  * Project identifier types:
+  *  - IRI
+  *  - Shortcode
+  *  - Shortname
+  */
+object ProjectIdentifierType extends Enumeration {
+
+    type ProjectIdentifierType
+
+    val IRI = Value(0, "iri")
+    val SHORTCODE = Value(1, "shortcode")
+    val SHORTNAME = Value(2, "shortname")
+}
+
+
+
+/**
+  * API MAY CHANGE: Represents the project's restricted view settings.
+  *
+  * @param sizeX     the x size.
+  * @param sizeY     the y size.
+  * @param watermark the watermark file.
+  */
+@ApiMayChange
+case class ProjectRestrictedViewSettingsADM(sizeX: Option[Int] = None,
+                                            sizeY: Option[Int] = None,
+                                            watermark: Option[String] = None)
 
 /**
   * Payload used for updating of an existing project.
@@ -458,6 +591,8 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(jsonFormat10(ProjectADM))
     implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects")))
     implicit val projectResponseADMFormat: RootJsonFormat[ProjectGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectGetResponseADM, "project")))
+    implicit val projectRestrictedViewSettingsADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsADM] = jsonFormat3(ProjectRestrictedViewSettingsADM)
+
 
     implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members")))
     implicit val projectMembersGetResponseADMFormat: RootJsonFormat[ProjectMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectMembersGetResponseADM, "members")))
@@ -465,6 +600,8 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestADM, "shortname", "longname", "description", "keywords", "logo", "status", "selfjoin")))
     implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] = jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")
     implicit val projectKeywordsGetResponseADMFormat: RootJsonFormat[ProjectKeywordsGetResponseADM] = jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
+    implicit val projectRestricedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsGetResponseADM] = jsonFormat1(ProjectRestrictedViewSettingsGetResponseADM)
+
     implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectOperationResponseADM, "project")))
 
 }

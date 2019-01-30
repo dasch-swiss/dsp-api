@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.v1.responder.sipimessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectRestrictedViewSettingsADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
@@ -40,9 +41,12 @@ case class SipiFileInfoGetRequestV1(filename: String, userProfile: UserProfileV1
 /**
   * Represents the Knora API v1 JSON response to a request for a information about a `FileValue`.
   *
-  * @param permissionCode a code representing the user's maximum permission on the file.
+  * @param permissionCode         a code representing the user's maximum permission on the file.
+  * @param restrictedViewSettings the project's restricted view settings.
   */
-case class SipiFileInfoGetResponseV1(permissionCode: Int) extends KnoraResponseV1 {
+case class SipiFileInfoGetResponseV1(permissionCode: Int,
+                                     restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM]
+                                    ) extends KnoraResponseV1 {
     def toJsValue = RepresentationV1JsonProtocol.sipiFileInfoGetResponseV1Format.write(this)
 }
 
@@ -52,7 +56,7 @@ case class SipiFileInfoGetResponseV1(permissionCode: Int) extends KnoraResponseV
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
-object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectsADMJsonProtocol {
 
-    implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat1(SipiFileInfoGetResponseV1)
+    implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat2(SipiFileInfoGetResponseV1)
 }

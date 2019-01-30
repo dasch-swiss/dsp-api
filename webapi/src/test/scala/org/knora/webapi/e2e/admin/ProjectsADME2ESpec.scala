@@ -99,6 +99,13 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
+
+            "return the project's restricted view settings" in {
+                val request = Get(baseApiUrl + s"/admin/projects/$projectIriEnc/RestrictedViewSettings") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+            }
         }
 
         "used to modify project information" should {
