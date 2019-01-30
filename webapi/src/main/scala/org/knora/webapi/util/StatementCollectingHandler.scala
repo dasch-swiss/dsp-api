@@ -1,7 +1,7 @@
 package org.knora.webapi.util
 
-import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
+import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.{RDFHandler, RDFWriter}
 import org.knora.webapi.{IRI, OntologyConstants}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -21,6 +21,7 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.util.FastFuture
@@ -28,28 +29,34 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.{IriLocker, ResponderData}
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.v2.search.ConstructQuery
+import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
-import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.PermissionUtilADM.ModifyPermission
 import org.knora.webapi.util._
 import org.knora.webapi.util.date.CalendarNameGregorian
-import org.knora.webapi.util.search.ConstructQuery
-import org.knora.webapi.util.search.gravsearch.GravsearchParser
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
-class ResourcesResponderV2 extends ResponderWithStandoffV2 {
+class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
+    /* actor materializer needed for http requests */
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     /**
@@ -59,16 +66,20 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       *                                       the resource.
       * @param values                         the resource's values for verification.
       */
-    case class ResourceReadyToCreate(sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
-                                     values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]])
+    private case class ResourceReadyToCreate(sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
+                                             values: Map[SmartIri, Seq[UnverifiedValueV2]])
 
-    override def receive: Receive = {
-        case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
-        case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
-        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser), log)
-        case createResourceRequestV2: CreateResourceRequestV2 => future2Message(sender(), createResourceV2(createResourceRequestV2), log)
-        case graphDataGetRequest: GraphDataGetRequestV2 => future2Message(sender(), getGraphDataResponseV2(graphDataGetRequest), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    /**
+      * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
+      */
+    def receive(msg: ResourcesResponderRequestV2) = msg match {
+        case ResourcesGetRequestV2(resIris, requestingUser) => getResources(resIris, requestingUser)
+        case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreview(resIris, requestingUser)
+        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
+        case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
+        case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
+        case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**
@@ -82,7 +93,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         def makeTaskFuture: Future[ReadResourcesSequenceV2] = {
             for {
                 // Convert the resource to the internal ontology schema.
-                internalCreateResource <- Future(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
+                internalCreateResource: CreateResourceV2 <- Future(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
 
                 // Check standoff link targets and list nodes that should exist.
 
@@ -136,7 +147,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(internalCreateResource.resourceClassIri)
 
                 // Make a timestamp for the resource and its values.
-                currentTime: Instant = Instant.now
+                creationDate: Instant = internalCreateResource.creationDate.getOrElse(Instant.now)
 
                 // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
                 // for creating the resource.
@@ -147,7 +158,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     clientResourceIDs = Map.empty[IRI, String],
                     defaultResourcePermissions = defaultResourcePermissions,
                     defaultPropertyPermissions = defaultPropertyPermissions,
-                    currentTime = currentTime,
+                    creationDate = creationDate,
                     requestingUser = createResourceRequestV2.requestingUser
                 )
 
@@ -160,8 +171,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     triplestore = settings.triplestoreType,
                     resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
                     projectIri = createResourceRequestV2.createResource.projectADM.id,
-                    creatorIri = createResourceRequestV2.requestingUser.id,
-                    currentTime = currentTime
+                    creatorIri = createResourceRequestV2.requestingUser.id
                 ).toString()
 
                 // Do the update.
@@ -176,7 +186,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             } yield previewOfCreatedResource
         }
 
-        for {
+        val triplestoreUpdateFuture: Future[ReadResourcesSequenceV2] = for {
             // Don't allow anonymous users to create resources.
             _ <- Future {
                 if (createResourceRequestV2.requestingUser.isAnonymousUser) {
@@ -207,14 +217,141 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
             // create a new resource in the given project.
-            _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(createResourceRequestV2.createResource.resourceClassIri.toString), projectIri, None)) {
-                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.email} does not have permissions to create a resource in project <$projectIri>")
+
+            internalResourceClassIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.toOntologySchema(InternalSchema)
+
+            _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri, None)) {
+                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.email} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
             taskResult <- IriLocker.runWithIriLock(
                 createResourceRequestV2.apiRequestID,
                 createResourceRequestV2.createResource.resourceIri,
+                () => makeTaskFuture
+            )
+        } yield taskResult
+
+
+        // If the request includes file values, tell Sipi to move the files to permanent storage if the update
+        // succeeded, or to delete the temporary files if the update failed.
+        doSipiPostUpdateForResources(
+            updateFuture = triplestoreUpdateFuture,
+            createResources = Seq(createResourceRequestV2.createResource),
+            requestingUser = createResourceRequestV2.requestingUser
+        )
+    }
+
+    /**
+      * Updates a resources metadata.
+      *
+      * @param updateResourceMetadataRequestV2 the update request.
+      * @return a [[SuccessResponseV2]].
+      */
+    def updateResourceMetadataV2(updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2): Future[SuccessResponseV2] = {
+        def makeTaskFuture: Future[SuccessResponseV2] = {
+            for {
+                // Get the metadata of the resource to be updated.
+                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
+
+                _ = if (resourcesSeq.numberOfResources != 1) {
+                    throw AssertionException(s"Expected one resource, got ${resourcesSeq.numberOfResources}")
+                }
+
+                resource: ReadResourceV2 = resourcesSeq.resources.head
+
+                internalResourceClassIri = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
+
+                // Make sure that the resource's class is what the client thinks it is.
+                _ = if (resource.resourceClassIri != internalResourceClassIri) {
+                    throw BadRequestException(s"Resource <${resource.resourceIri}> is not a member of class <${updateResourceMetadataRequestV2.resourceClassIri}>")
+                }
+
+                // Make sure that the resource hasn't been updated since the client got its last modification date.
+                _ = if (resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate) {
+                    throw EditConflictException(s"Resource <${resource.resourceIri}> has been modified since you last read it")
+                }
+
+                // Get information about the project that the resource is in.
+                projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+                    maybeIri = Some(resource.projectADM.id),
+                    requestingUser = updateResourceMetadataRequestV2.requestingUser
+                )).mapTo[ProjectGetResponseADM]
+
+                // Check that the user has permission to modify the resource.
+                _ = ResourceUtilV2.checkResourcePermission(
+                    resourceInfo = resource,
+                    permissionNeeded = ModifyPermission,
+                    requestingUser = updateResourceMetadataRequestV2.requestingUser
+                )
+
+                // Get the IRI of the named graph in which the resource is stored.
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfoResponse.project)
+
+                newModificationDate: Instant = updateResourceMetadataRequestV2.maybeNewModificationDate match {
+                    case Some(submittedNewModificationDate) =>
+                        if (resource.lastModificationDate.exists(_.isAfter(submittedNewModificationDate))) {
+                            throw BadRequestException(s"Submitted knora-api:newModificationDate is before the resource's current knora-api:lastModificationDate")
+                        } else {
+                            submittedNewModificationDate
+                        }
+                    case None => Instant.now
+                }
+
+                // Generate SPARQL for updating the resource.
+                sparqlUpdate = queries.sparql.v2.txt.changeResourceMetadata(
+                    triplestore = settings.triplestoreType,
+                    dataNamedGraph = dataNamedGraph,
+                    resourceIri = updateResourceMetadataRequestV2.resourceIri,
+                    resourceClassIri = internalResourceClassIri,
+                    maybeLastModificationDate = updateResourceMetadataRequestV2.maybeLastModificationDate,
+                    newModificationDate = newModificationDate,
+                    maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
+                    maybePermissions = updateResourceMetadataRequestV2.maybePermissions
+                ).toString()
+
+                // Do the update.
+                _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+
+                // Verify that the resource was updated correctly.
+
+                updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
+
+                _ = if (updatedResourcesSeq.numberOfResources != 1) {
+                    throw AssertionException(s"Expected one resource, got ${resourcesSeq.numberOfResources}")
+                }
+
+                updatedResource: ReadResourceV2 = updatedResourcesSeq.resources.head
+
+                _ = if (!updatedResource.lastModificationDate.contains(newModificationDate)) {
+                    throw UpdateNotPerformedException(s"Updated resource has last modification date ${updatedResource.lastModificationDate}, expected $newModificationDate")
+                }
+
+                _ = updateResourceMetadataRequestV2.maybeLabel match {
+                    case Some(newLabel) =>
+                        if (!updatedResource.label.contains(stringFormatter.fromSparqlEncodedString(newLabel))) {
+                            throw UpdateNotPerformedException()
+                        }
+
+                    case None => ()
+                }
+
+                _ = updateResourceMetadataRequestV2.maybePermissions match {
+                    case Some(newPermissions) =>
+                        if (PermissionUtilADM.parsePermissions(updatedResource.permissions) != PermissionUtilADM.parsePermissions(newPermissions)) {
+                            throw UpdateNotPerformedException()
+                        }
+
+                    case None => ()
+                }
+            } yield SuccessResponseV2("Resource metadata updated")
+        }
+
+        for {
+            // Do the remaining pre-update checks and the update while holding an update lock on the resource.
+            taskResult <- IriLocker.runWithIriLock(
+                updateResourceMetadataRequestV2.apiRequestID,
+                updateResourceMetadataRequestV2.resourceIri,
                 () => makeTaskFuture
             )
         } yield taskResult
@@ -234,7 +371,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * @param defaultResourcePermissions the default permissions to be given to the resource, if it does not have custom permissions.
       * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
       *                                   have custom permissions. This is a map of property IRIs to permission strings.
-      * @param currentTime                the timestamp to be attached to the resource and its values.
+      * @param creationDate               the timestamp to be attached to the resource and its values.
       * @param requestingUser             the user making the request.
       * @return a [[ResourceReadyToCreate]].
       */
@@ -244,7 +381,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                                               clientResourceIDs: Map[IRI, String],
                                               defaultResourcePermissions: String,
                                               defaultPropertyPermissions: Map[SmartIri, String],
-                                              currentTime: Instant,
+                                              creationDate: Instant,
                                               requestingUser: UserADM): Future[ResourceReadyToCreate] = {
         val resourceIDForErrorMsg: String = clientResourceIDs.get(internalCreateResource.resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
 
@@ -313,18 +450,19 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 GenerateSparqlToCreateMultipleValuesRequestV2(
                     resourceIri = internalCreateResource.resourceIri,
                     values = valuesWithValidatedPermissions,
-                    currentTime = currentTime,
-                    requestingUser = requestingUser)
-                ).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
+                    creationDate = creationDate,
+                    requestingUser = requestingUser
+                )).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
         } yield ResourceReadyToCreate(
             sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
                 resourceIri = internalCreateResource.resourceIri,
                 permissions = resourcePermissions,
                 sparqlForValues = sparqlForValuesResponse.insertSparql,
                 resourceClassIri = internalCreateResource.resourceClassIri.toString,
-                resourceLabel = internalCreateResource.label
+                resourceLabel = internalCreateResource.label,
+                resourceCreationDate = creationDate
             ),
-            values = valuesWithValidatedPermissions
+            values = sparqlForValuesResponse.unverifiedValues
         )
     }
 
@@ -510,7 +648,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 }
         }
 
-        Future.sequence(listNodesThatShouldExist.map(listNodeIri => ValueUtilV2.checkListNodeExists(listNodeIri, storeManager)).toSeq).map(_ => ())
+        Future.sequence(listNodesThatShouldExist.map(listNodeIri => ResourceUtilV2.checkListNodeExists(listNodeIri, storeManager)).toSeq).map(_ => ())
     }
 
     /**
@@ -564,7 +702,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * Gets the default permissions for resource classs in a project.
       *
       * @param projectIri        the IRI of the project.
-      * @param resourceClassIris the IRIs of the resource classes.
+      * @param resourceClassIris the internal IRIs of the resource classes.
       * @param requestingUser    the user making the request.
       * @return a map of resource class IRIs to default permission strings.
       */
@@ -588,16 +726,16 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * Gets the default permissions for properties in a resource class in a project.
       *
       * @param projectIri              the IRI of the project.
-      * @param resourceClassProperties a map of resource class IRIs to sets of property IRIs.
+      * @param resourceClassProperties a map of internal resource class IRIs to sets of internal property IRIs.
       * @param requestingUser          the user making the request.
-      * @return a map of resource class IRIs to maps of property IRIs to default permission strings.
+      * @return a map of internal resource class IRIs to maps of property IRIs to default permission strings.
       */
     private def getDefaultPropertyPermissions(projectIri: IRI, resourceClassProperties: Map[SmartIri, Set[SmartIri]], requestingUser: UserADM): Future[Map[SmartIri, Map[SmartIri, String]]] = {
         val permissionsFutures: Map[SmartIri, Future[Map[SmartIri, String]]] = resourceClassProperties.map {
             case (resourceClassIri, propertyIris) =>
                 val propertyPermissionsFutures: Map[SmartIri, Future[String]] = propertyIris.toSeq.map {
                     propertyIri =>
-                        propertyIri -> ValueUtilV2.getDefaultValuePermissions(
+                        propertyIri -> ResourceUtilV2.getDefaultValuePermissions(
                             projectIri = projectIri,
                             resourceClassIri = resourceClassIri,
                             propertyIri = propertyIri,
@@ -645,7 +783,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
             }
 
-            _ = if (resource.attachedToProject != projectIri) {
+            _ = if (resource.projectADM.id != projectIri) {
                 throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
             }
 
@@ -663,7 +801,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             _ = resource.values.foreach {
                 case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
-                    val expectedValues: Seq[GenerateSparqlForValueInNewResourceV2] = resourceReadyToCreate.values(propertyIri)
+                    val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
 
                     if (expectedValues.size != savedValues.size) {
                         throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values")
@@ -671,7 +809,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
                     savedValues.zip(expectedValues).foreach {
                         case (savedValue, expectedValue) =>
-                            if (!(savedValue.valueContent.wouldDuplicateCurrentVersion(expectedValue.valueContent) &&
+                            if (!(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
                                 savedValue.permissions == expectedValue.permissions &&
                                 savedValue.attachedToUser == requestingUser.id)) {
                                 throw AssertionException(s"Resource <$resourceIri> was saved, but one or more of its values are not correct")
@@ -682,6 +820,36 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             numberOfResources = 1,
             resources = Seq(resource.copy(values = Map.empty))
         )
+    }
+
+    /**
+      * After the attempted creation of one or more resources, looks for file values among the values that were supposed
+      * to be created, and tells Sipi to move those files to permanent storage if the update succeeded, or to delete the
+      * temporary files if the update failed.
+      *
+      * @param updateFuture    the operation that was supposed to create the resources.
+      * @param createResources the resources that were supposed to be created.
+      * @param requestingUser  the user making the request.
+      */
+    private def doSipiPostUpdateForResources[T](updateFuture: Future[T], createResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[T] = {
+        val allValues: Seq[ValueContentV2] = createResources.flatMap(_.flatValues).map(_.valueContent)
+
+        val resultFutures: Seq[Future[T]] = allValues.map {
+            valueContent =>
+                ResourceUtilV2.doSipiPostUpdate(
+                    updateFuture = updateFuture,
+                    valueContent = valueContent,
+                    requestingUser = requestingUser,
+                    responderManager = responderManager,
+                    storeManager = storeManager,
+                    log = log
+                )
+        }
+
+        Future.sequence(resultFutures).transformWith {
+            case Success(_) => updateFuture
+            case Failure(e) => Future.failed(e)
+        }
     }
 
     /**
@@ -738,10 +906,18 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
 
-            resourcesResponse: Vector[ReadResourceV2] = resourceIrisDistinct.map {
+            resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
-                    ConstructResponseUtilV2.createFullResourceResponse(resIri, queryResultsSeparated(resIri), mappings = mappingsAsMap)
+                    ConstructResponseUtilV2.createFullResourceResponse(
+                        resourceIri = resIri,
+                        resourceRdfData = queryResultsSeparated(resIri),
+                        mappings = mappingsAsMap,
+                        responderManager = responderManager,
+                        requestingUser = requestingUser
+                    )
             }.toVector
+
+            resourcesResponse <- Future.sequence(resourcesResponseFutures)
 
         } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
 
@@ -762,10 +938,18 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         for {
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = true, requestingUser = requestingUser)
 
-            resourcesResponse: Vector[ReadResourceV2] = resourceIrisDistinct.map {
+            resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
-                    ConstructResponseUtilV2.createFullResourceResponse(resIri, queryResultsSeparated(resIri), mappings = Map.empty[IRI, MappingAndXSLTransformation])
+                    ConstructResponseUtilV2.createFullResourceResponse(
+                        resourceIri = resIri,
+                        resourceRdfData = queryResultsSeparated(resIri),
+                        mappings = Map.empty[IRI, MappingAndXSLTransformation],
+                        responderManager = responderManager,
+                        requestingUser = requestingUser
+                    )
             }.toVector
+
+            resourcesResponse: Vector[ReadResourceV2] <- Future.sequence(resourcesResponseFutures)
 
         } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
 
@@ -783,7 +967,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         val gravsearchUrlFuture = for {
             gravsearchResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
 
-            gravsearchFileValue: TextFileValueContentV2 = gravsearchResponseV2.resources.headOption match {
+            gravsearchFileValueContent: TextFileValueContentV2 = gravsearchResponseV2.resources.headOption match {
                 case Some(resource: ReadResourceV2) if resource.resourceClassIri.toString == OntologyConstants.KnoraBase.TextRepresentation =>
                     resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
                         case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
@@ -800,11 +984,11 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // check if `xsltFileValue` represents an XSL transformation
-            _ = if (!(gravsearchFileValue.internalMimeType == "text/plain" && gravsearchFileValue.originalFilename.endsWith(".txt"))) {
+            _ = if (!(gravsearchFileValueContent.fileValue.internalMimeType == "text/plain" && gravsearchFileValueContent.fileValue.originalFilename.endsWith(".txt"))) {
                 throw BadRequestException(s"$gravsearchTemplateIri does not have a file value referring to an XSL transformation")
             }
 
-            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${gravsearchFileValue.internalFilename}"
+            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${gravsearchFileValueContent.fileValue.internalFilename}"
 
         } yield gravSearchUrl
 
@@ -814,43 +998,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
         for {
             gravsearchTemplateUrl <- recoveredGravsearchUrlFuture
-
-            sipiResponseFuture: Future[HttpResponse] = for {
-
-                // ask Sipi to return the XSL transformation file
-                response: HttpResponse <- Http().singleRequest(
-                    HttpRequest(
-                        method = HttpMethods.GET,
-                        uri = gravsearchTemplateUrl
-                    )
-                )
-
-            } yield response
-
-            sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
-
-                case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
-                    // this problem is hardly the user's fault. Create a SipiException
-                    throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
-
-
-                // TODO: what other exceptions have to be handled here?
-                // if Exception is used, also previous errors are caught here
-
-            }
-
-            sipiResponseRecovered: HttpResponse <- sipiResponseFutureRecovered
-
-            httpStatusCode: StatusCode = sipiResponseRecovered.status
-
-            messageBody <- sipiResponseRecovered.entity.toStrict(5.seconds)
-
-            _ = if (httpStatusCode != StatusCodes.OK) {
-                throw SipiException(s"Sipi returned status code ${httpStatusCode.intValue} with msg '${messageBody.data.decodeString("UTF-8")}'")
-            }
-
-            // get the XSL transformation
-            gravsearchTemplate: String = messageBody.data.decodeString("UTF-8")
+            response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(fileUrl = gravsearchTemplateUrl, KnoraSystemInstances.Users.SystemUser)).mapTo[SipiGetTextFileResponse]
+            gravsearchTemplate: String = response.content
 
         } yield gravsearchTemplate
 
@@ -908,21 +1057,28 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
                         // convert all dates to Gregorian calendar dates (standardization)
                         valueObj: ReadValueV2 =>
-                            valueObj.valueContent match {
-                                case dateContent: DateValueContentV2 =>
-                                    // date value
+                            valueObj match {
+                                case readNonLinkValueV2: ReadNonLinkValueV2 =>
+                                    readNonLinkValueV2.valueContent match {
+                                        case dateContent: DateValueContentV2 =>
+                                            // date value
 
-                                    valueObj.copy(
-                                        valueContent = dateContent.copy(
-                                            // act as if this was a Gregorian date
-                                            valueHasCalendar = CalendarNameGregorian
-                                        )
-                                    )
+                                            readNonLinkValueV2.copy(
+                                                valueContent = dateContent.copy(
+                                                    // act as if this was a Gregorian date
+                                                    valueHasCalendar = CalendarNameGregorian
+                                                )
+                                            )
 
-                                case linkContent: LinkValueContentV2 if linkContent.nestedResource.nonEmpty =>
+                                        case _ => valueObj
+                                    }
+
+                                case readLinkValueV2: ReadLinkValueV2 if readLinkValueV2.valueContent.nestedResource.nonEmpty =>
                                     // recursively process the values of the nested resource
 
-                                    valueObj.copy(
+                                    val linkContent = readLinkValueV2.valueContent
+
+                                    readLinkValueV2.copy(
                                         valueContent = linkContent.copy(
                                             nestedResource = Some(
                                                 linkContent.nestedResource.get.copy(
@@ -936,7 +1092,6 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                                 case _ => valueObj
                             }
                     }
-
             }
         }
 

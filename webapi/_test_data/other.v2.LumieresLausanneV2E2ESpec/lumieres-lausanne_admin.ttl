@@ -1,0 +1,191 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix lumieres-lausanne: <http://www.knora.org/ontology/0113/lumieres-lausanne#> .
+
+
+# --- Project ---
+
+<http://rdfh.ch/projects/0113> a knora-base:knoraProject ;
+        knora-base:projectLongname "Lumières.Lausanne"^^xsd:string ;
+        knora-base:projectShortname "lumieres-lausanne"^^xsd:string ;
+        knora-base:projectShortcode "0113"^^xsd:string ;
+		knora-base:projectDescription "Lumières.Lausanne est une plateforme qui met à la disposition des chercheurs et de toute personne intéressée par le riche passé culturel de la Suisse francophone à l'époque des Lumières des sources inédites, de la littérature secondaire et des fiches biographiques sur des personnalités qui l’ont marqué (lien vers la recherche avancée). Cet instrument de recherche est également un support de publication et un outil d'enseignement académique."^^xsd:string ;
+		knora-base:projectKeywords "Lumières, Lausanne, Suisse francophone, sources, littérature secondaire, personnalités"^^xsd:string ;
+		knora-base:projectOntology <http://www.knora.org/ontology/0113/lumieres-lausanne> ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+# --- Groups ---
+
+
+<http://rdfh.ch/groups/0113/lumieres-lausanne-user> rdf:type knora-base:UserGroup ;
+                                               knora-base:groupName "Utilisateur"^^xsd:string ;
+                                               knora-base:groupDescription """Statut permanent. Attribué à toute personne désireuse de s'enregistrer. N'est membre d'aucun autre groupe (étudiant, chercheur). Par rapport au visiteur anonyme sans login, accès supplémentaire à la gestion des collections, aux transcriptions/documents joints/projets slmt si autorisation."""^^xsd:string ;
+                                               knora-base:belongsToProject <http://rdfh.ch/projects/0113> ;
+                                               knora-base:status "true"^^xsd:boolean ;
+                                               knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+<http://rdfh.ch/groups/0113/lumieres-lausanne-student> rdf:type knora-base:UserGroup ;
+                                               knora-base:groupName "Etudiant"^^xsd:string ;
+                                               knora-base:groupDescription """Statut temporaire. Uniquement les étudiants UNIL liés à un séminaire donné dans le cadre du projet Lumières.Lausanne. Ont reçu les consignes ainsi qu'une initiation (obligatoire). A la fin du séminaire, leur statut est changé en statut "Utilisateur", sauf demande particulière."""^^xsd:string ;
+                                               knora-base:belongsToProject <http://rdfh.ch/projects/0113> ;
+                                               knora-base:status "true"^^xsd:boolean ;
+                                               knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+<http://rdfh.ch/groups/0113/lumieres-lausanne-researcher> rdf:type knora-base:UserGroup ;
+                                               knora-base:groupName "Chercheur"^^xsd:string ;
+                                               knora-base:groupDescription "Statut permanent. Doctorants, professeurs, autres chercheurs qui ont reçu préalablement l'autorisation d'un directeur. Ont reçu les consignes (obligatoire), et si possible une initiation."^^xsd:string ;
+                                               knora-base:belongsToProject <http://rdfh.ch/projects/0113> ;
+                                               knora-base:status "true"^^xsd:boolean ;
+                                               knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+<http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent> rdf:type knora-base:UserGroup ;
+                                               knora-base:groupName "Doctorant"^^xsd:string ;
+                                               knora-base:groupDescription "Statut temporaire. Doctorants et étudiants-assistants directement liés au Projet Lumières.Lausanne. Ont reçu les consignes ainsi qu'une initiation (obligatoire). Une fois leur mandat terminé, passent en statut Chercheur."^^xsd:string ;
+                                               knora-base:belongsToProject <http://rdfh.ch/projects/0113> ;
+                                               knora-base:status "true"^^xsd:boolean ;
+                                               knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+<http://rdfh.ch/groups/0113/lumieres-lausanne-director> rdf:type knora-base:UserGroup ;
+                                               knora-base:groupName "Directeur"^^xsd:string ;
+                                               knora-base:groupDescription "Béla Kapossy, Béatrice Lovis."^^xsd:string ;
+                                               knora-base:belongsToProject <http://rdfh.ch/projects/0113> ;
+                                               knora-base:status "true"^^xsd:boolean ;
+                                               knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+<http://rdfh.ch/groups/0113/lumieres-lausanne-administrator> rdf:type knora-base:UserGroup ;
+                                               knora-base:groupName "Administrateur"^^xsd:string ;
+                                               knora-base:groupDescription "Béatrice Lovis."^^xsd:string ;
+                                               knora-base:belongsToProject <http://rdfh.ch/projects/0113> ;
+                                               knora-base:status "true"^^xsd:boolean ;
+                                               knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+# --- Users ---
+
+
+
+
+# <http://rdfh.ch/users/lumieres-lausanne-test-user1> a knora-base:User ;
+#         knora-base:username "lumieres"^^xsd:string ;
+#         knora-base:givenName "lumieres"^^xsd:string ;
+#         knora-base:familyName "lumieres"^^xsd:string ;
+#         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+#         knora-base:email "lumieres@unil.ch"^^xsd:string ;
+#         knora-base:preferredLanguage "fr"^^xsd:string ;
+#         knora-base:status "true"^^xsd:boolean ;
+#         knora-base:isInProject <http://rdfh.ch/projects/0113> ; 
+#         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/lumieres-lausanne-user_test> a knora-base:User ;
+        knora-base:username "user_test"^^xsd:string ;
+        knora-base:givenName "user_test"^^xsd:string ;
+        knora-base:familyName "user_test"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "user_test@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://rdfh.ch/projects/0113> ; 
+        knora-base:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-user> ;
+        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/lumieres-lausanne-etu_test> a knora-base:User ;
+        knora-base:username "etu_test"^^xsd:string ;
+        knora-base:givenName "etu_test"^^xsd:string ;
+        knora-base:familyName "etu_test"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "etu_test@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://rdfh.ch/projects/0113> ; 
+        knora-base:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-student> ;
+        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/lumieres-lausanne-etu_test2> a knora-base:User ;
+        knora-base:username "etu_test2"^^xsd:string ;
+        knora-base:givenName "etu_test2"^^xsd:string ;
+        knora-base:familyName "etu_test2"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "etu_test2@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://rdfh.ch/projects/0113> ; 
+        knora-base:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-student> ;
+        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/lumieres-lausanne-cherch_test> a knora-base:User ;
+        knora-base:username "cherch_test"^^xsd:string ;
+        knora-base:givenName "cherch_test"^^xsd:string ;
+        knora-base:familyName "cherch_test"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "cherch_test@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://rdfh.ch/projects/0113> ; 
+        knora-base:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-researcher> ;
+        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/lumieres-lausanne-doct_test> a knora-base:User ;
+        knora-base:username "doct_test"^^xsd:string ;
+        knora-base:givenName "doct_test"^^xsd:string ;
+        knora-base:familyName "doct_test"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "doct_test@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://rdfh.ch/projects/0113> ; 
+		knora-base:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent> ;
+        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/lumieres-lausanne-dir_test> a knora-base:User ;
+        knora-base:username "dir_test"^^xsd:string ;
+        knora-base:givenName "dir_test"^^xsd:string ;
+        knora-base:familyName "dir_test"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "dir_test@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://rdfh.ch/projects/0113> ; 
+        knora-base:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-director> ;
+        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/lumieres-lausanne-admin_test> a knora-base:User ;
+        knora-base:username "admin_test"^^xsd:string ;
+        knora-base:givenName "admin_test"^^xsd:string ;
+        knora-base:familyName "admin_test"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "admin_test@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://rdfh.ch/projects/0113> ; 
+        knora-base:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-administrator> ;
+        knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
+
+
+<http://rdfh.ch/users/lumieres-lausanne-blovis> a knora-base:User ;
+        knora-base:username "blovis"^^xsd:string ;
+        knora-base:givenName "Béatrice"^^xsd:string ;
+        knora-base:familyName "Lovis"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "Beatrice.Lovis@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://rdfh.ch/projects/0113> ; 
+        knora-base:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-administrator> ;
+        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/users/lumieres-lausanne-gfaucherand> a knora-base:User ;
+        knora-base:username "gfaucherand"^^xsd:string ;
+        knora-base:givenName "Gilles"^^xsd:string ;
+        knora-base:familyName "Faucherand"^^xsd:string ;
+        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+        knora-base:email "gilles.faucherand@unil.ch"^^xsd:string ;
+        knora-base:preferredLanguage "fr"^^xsd:string ;
+        knora-base:status "true"^^xsd:boolean ;
+        knora-base:isInProject <http://rdfh.ch/projects/0113> ; 
+        knora-base:isInGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-administrator> ;
+        knora-base:isInSystemAdminGroup "false"^^xsd:boolean .

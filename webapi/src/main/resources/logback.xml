@@ -50,6 +50,7 @@
     <logger name="org.knora.webapi.responders.v1.PermissionsResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ResourcesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
+    <logger name="org.knora.webapi.responders.v1.SipiResponderV1" level="DEBUG"/>
     <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>

@@ -18,11 +18,15 @@ incunabula:Sideband a owl:Class;
   rdfs:subClassOf knora-api:StillImageRepresentation, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
-      owl:onProperty knora-api:attachedToProject
+      owl:onProperty knora-api:arkUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
-      owl:onProperty knora-api:attachedToUser
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasStillImageFileValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -50,6 +54,10 @@ incunabula:Sideband a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:creationDate
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -62,7 +70,7 @@ incunabula:Sideband a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -75,10 +83,6 @@ incunabula:Sideband a owl:Class;
       knora-api:isInherited true;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasStandoffLinkToValue
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:minCardinality 1;
-      owl:onProperty knora-api:hasStillImageFileValue
     ] .
 
 incunabula:sbTitle a owl:ObjectProperty;
@@ -120,6 +124,10 @@ incunabula:book a owl:Class;
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -140,7 +148,7 @@ incunabula:book a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -356,6 +364,10 @@ incunabula:page a owl:Class;
   rdfs:subClassOf knora-api:StillImageRepresentation, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -376,7 +388,7 @@ incunabula:page a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -501,6 +513,10 @@ incunabula:misc a owl:Class;
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -521,7 +537,7 @@ incunabula:misc a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -171,8 +171,6 @@ class DateUtilV1Spec extends WordSpec with Matchers {
             ))
 
             val reverseConvertedDateValueV1 = DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayCountValueV1)
-            println(reverseConvertedDateValueV1)
-            println(dateValueV1)
             reverseConvertedDateValueV1 should be(dateValueV1)
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -19,7 +19,7 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.ActorSelection
+import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
@@ -51,7 +51,7 @@ object RouteUtilADM {
     def runJsonRoute(requestMessageF: Future[KnoraRequestADM],
                      requestContext: RequestContext,
                      settings: SettingsImpl,
-                     responderManager: ActorSelection,
+                     responderManager: ActorRef,
                      log: LoggingAdapter)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
 

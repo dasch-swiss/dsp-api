@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -21,26 +21,21 @@ package org.knora.webapi.routing.v2
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 /**
   * Provides a routing function for API v2 routes that deal with resources.
   */
-object ResourcesRouteV2 extends Authenticator {
+class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
     private val Text_Property = "textProperty"
     private val Mapping_Iri = "mappingIri"
     private val GravsearchTemplate_Iri = "gravsearchTemplateIri"
@@ -131,13 +126,7 @@ object ResourcesRouteV2 extends Authenticator {
     }
 
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val storeManager = system.actorSelection(STORE_MANAGER_ACTOR_PATH)
+    def knoraApiPath: Route = {
 
         path("v2" / "resources") {
             post {
@@ -153,6 +142,35 @@ object ResourcesRouteV2 extends Authenticator {
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                settings = settings,
+                                log = log
+                            )
+                        } yield requestMessage
+
+                        RouteUtilV2.runRdfRouteWithFuture(
+                            requestMessageFuture,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            ApiV2WithValueObjects
+                        )
+                    }
+                }
+            } ~ put {
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessageFuture: Future[UpdateResourceMetadataRequestV2] = for {
+                            requestingUser <- getUserADM(requestContext)
+                            requestMessage: UpdateResourceMetadataRequestV2 <- UpdateResourceMetadataRequestV2.fromJsonLD(
+                                requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                storeManager = storeManager,
+                                settings = settings,
                                 log = log
                             )
                         } yield requestMessage
@@ -179,18 +197,20 @@ object ResourcesRouteV2 extends Authenticator {
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
                     }
 
-                    val requestMessage: Future[ResourcesGetRequestV2] = for {
+                    val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ResourcesGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
 
+                    // #use-requested-schema
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
                         log,
                         RouteUtilV2.getOntologySchema(requestContext)
                     )
+                    // #use-requested-schema
                 }
             }
         } ~ path("v2" / "resourcespreview" / Segments) { resIris: Seq[String] =>
@@ -203,12 +223,12 @@ object ResourcesRouteV2 extends Authenticator {
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
                     }
 
-                    val requestMessage: Future[ResourcesPreviewGetRequestV2] = for {
+                    val requestMessageFuture: Future[ResourcesPreviewGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ResourcesPreviewGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -235,7 +255,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val headerXSLTIri = getHeaderXSLTIriFromParams(params)
 
-                    val requestMessage: Future[ResourceTEIGetRequestV2] = for {
+                    val requestMessageFuture: Future[ResourceTEIGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ResourceTEIGetRequestV2(
                         resourceIri = resourceIri,
@@ -247,7 +267,7 @@ object ResourcesRouteV2 extends Authenticator {
                     )
 
                     RouteUtilV2.runTEIXMLRoute(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -282,7 +302,7 @@ object ResourcesRouteV2 extends Authenticator {
                         case other => throw BadRequestException(s"Invalid direction: $other")
                     }
 
-                    val requestMessage: Future[GraphDataGetRequestV2] = for {
+                    val requestMessageFuture: Future[GraphDataGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield GraphDataGetRequestV2(
                         resourceIri = resourceIri,
@@ -294,7 +314,7 @@ object ResourcesRouteV2 extends Authenticator {
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,

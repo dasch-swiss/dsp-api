@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -19,18 +19,14 @@
 
 package org.knora.webapi.routing.v1
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.searchmessages.{ExtendedSearchGetRequestV1, FulltextSearchGetRequestV1, SearchComparisonOperatorV1}
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, IRI, KnoraDispatchers, SettingsImpl}
+import org.knora.webapi.{BadRequestException, IRI}
 
-import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 
 // slash after path without following segment
@@ -38,7 +34,7 @@ import scala.language.postfixOps
 /**
   * Provides a spray-routing function for API routes that deal with search.
   */
-object SearchRouteV1 extends Authenticator {
+class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
     /**
       * The default number of rows to show in search results.
@@ -184,11 +180,7 @@ object SearchRouteV1 extends Authenticator {
         )
     }
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
+    def knoraApiPath: Route = {
 
         path("v1" / "search" /) {
             // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"

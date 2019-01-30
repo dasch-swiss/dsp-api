@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -21,40 +21,32 @@ package org.knora.webapi.routing.v2
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.Future
 
 /**
   * Provides a routing function for API v2 routes that deal with values.
   */
-object ValuesRouteV2 extends Authenticator {
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-        implicit val timeout: Timeout = settings.defaultTimeout
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val storeManager = system.actorSelection(STORE_MANAGER_ACTOR_PATH)
+class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
+    def knoraApiPath: Route = {
+
+        // #post-value-parse-jsonld
         path("v2" / "values") {
             post {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
                         val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                        // #post-value-parse-jsonld
 
+                        // #post-value-create-message
                         val requestMessageFuture: Future[CreateValueRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                             requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
@@ -63,10 +55,13 @@ object ValuesRouteV2 extends Authenticator {
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                settings = settings,
                                 log = log
                             )
                         } yield requestMessage
+                        // #post-value-create-message
 
+                        // #specify-response-schema
                         RouteUtilV2.runRdfRouteWithFuture(
                             requestMessageFuture,
                             requestContext,
@@ -75,6 +70,7 @@ object ValuesRouteV2 extends Authenticator {
                             log,
                             ApiV2WithValueObjects
                         )
+                        // #specify-response-schema
                     }
                 }
             } ~ put {
@@ -90,6 +86,7 @@ object ValuesRouteV2 extends Authenticator {
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                settings = settings,
                                 log = log
                             )
                         } yield requestMessage

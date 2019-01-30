@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -32,10 +32,8 @@ function getUrlVars()
 }
 
 
-var API_URL = 'http://localhost:3333';
-var SIPI_URL = 'http://localhost:1024';
-var SIPI_LOGIN_ROUTE = '/Knora_login';
-var SIPI_LOGOUT_ROUTE = '/Knora_logout';
+var API_URL = 'http://0.0.0.0:3333';
+var SIPI_URL = 'http://0.0.0.0:1024';
 
 /*
  * let's find the SITE_URL...
@@ -323,4 +321,4 @@ var SALSAH_API_LEGACY = {
  */
 SALSAH.vocabularyId2shortName = function(ontologyid) {
 	return ontologyid.substr(ontologyid.lastIndexOf('/') + 1)
-}
+};

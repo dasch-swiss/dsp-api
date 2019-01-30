@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -27,6 +27,6 @@ let getDateValue: valueResponseFormats.valueResponse = {"valuetype":"http://www.
 
 let getIntervalValue: valueResponseFormats.valueResponse = {"valuetype":"http://www.knora.org/ontology/knora-base#IntervalValue","valuecreatorname":"Administrator-alt Admin-alt","valuecreationdate":"2016-03-02T15:05:10Z","valuecreator":"root-alt@example.com","status":0,"comment":null,"rights":8,"value":{"timeval1":0,"timeval2":0}};
 
-let valueVersionResponse: valueResponseFormats.valueVersionsResponse = {"valueVersions":[{"valueObjectIri":"http://data.knora.org/v_3QOWcDTeu2mgPW8DRzUg/values/ox6hH8abS7u3l50hMzoZlQ","valueCreationDate":"2016-07-15T10:15:08.131+02:00","previousValue":"http://data.knora.org/v_3QOWcDTeu2mgPW8DRzUg/values/2nEUilUVTROmuEoTkOhfNg"},{"valueObjectIri":"http://data.knora.org/v_3QOWcDTeu2mgPW8DRzUg/values/2nEUilUVTROmuEoTkOhfNg","valueCreationDate":"2016-07-15T09:19:19.304+02:00","previousValue":null}],"status":0};
+let valueVersionResponse: valueResponseFormats.valueVersionsResponse = {"valueVersions":[{"valueObjectIri":"http://rdfh.ch/v_3QOWcDTeu2mgPW8DRzUg/values/ox6hH8abS7u3l50hMzoZlQ","valueCreationDate":"2016-07-15T10:15:08.131+02:00","previousValue":"http://rdfh.ch/v_3QOWcDTeu2mgPW8DRzUg/values/2nEUilUVTROmuEoTkOhfNg"},{"valueObjectIri":"http://rdfh.ch/v_3QOWcDTeu2mgPW8DRzUg/values/2nEUilUVTROmuEoTkOhfNg","valueCreationDate":"2016-07-15T09:19:19.304+02:00","previousValue":null}],"status":0};
 
-let linkResponse: valueResponseFormats.linkResponse = {"valuetype":"http://www.knora.org/ontology/knora-base#LinkValue","valuecreatorname":"Administrator-alt Admin-alt","valuecreationdate":"2016-03-02T15:05:10Z","valuecreator":"root-alt@example.com","status":0,"comment":null,"rights":2,"value":{"subjectIri":"http://data.knora.org/8a0b1e75","predicateIri":"http://www.knora.org/ontology/0803/incunabula#partOf","objectIri":"http://data.knora.org/c5058f3a","referenceCount":1}};
+let linkResponse: valueResponseFormats.linkResponse = {"valuetype":"http://www.knora.org/ontology/knora-base#LinkValue","valuecreatorname":"Administrator-alt Admin-alt","valuecreationdate":"2016-03-02T15:05:10Z","valuecreator":"root-alt@example.com","status":0,"comment":null,"rights":2,"value":{"subjectIri":"http://rdfh.ch/8a0b1e75","predicateIri":"http://www.knora.org/ontology/0803/incunabula#partOf","objectIri":"http://rdfh.ch/c5058f3a","referenceCount":1}};

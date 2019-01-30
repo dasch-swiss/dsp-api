@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -21,7 +21,7 @@ package org.knora.webapi.routing
 
 import java.io.{StringReader, StringWriter}
 
-import akka.actor.ActorSelection
+import akka.actor.{ActorRef}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
@@ -29,11 +29,11 @@ import akka.pattern._
 import akka.util.Timeout
 import org.eclipse.rdf4j.rio._
 import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
+import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.jsonld.JsonLDDocument
-import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.Exception.catching
@@ -108,7 +108,7 @@ object RouteUtilV2 {
     private def runRdfRoute(requestMessage: KnoraRequestV2,
                     requestContext: RequestContext,
                     settings: SettingsImpl,
-                    responderManager: ActorSelection,
+                    responderManager: ActorRef,
                     log: LoggingAdapter,
                     responseSchema: ApiV2Schema)
                    (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
@@ -166,7 +166,7 @@ object RouteUtilV2 {
     def runTEIXMLRoute(requestMessageF: Future[KnoraRequestV2],
                        requestContext: RequestContext,
                        settings: SettingsImpl,
-                       responderManager: ActorSelection,
+                       responderManager: ActorRef,
                        log: LoggingAdapter,
                        responseSchema: ApiV2Schema)
                       (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
@@ -214,7 +214,7 @@ object RouteUtilV2 {
     def runRdfRouteWithFuture(requestMessageF: Future[KnoraRequestV2],
                               requestContext: RequestContext,
                               settings: SettingsImpl,
-                              responderManager: ActorSelection,
+                              responderManager: ActorRef,
                               log: LoggingAdapter,
                               responseSchema: ApiV2Schema)
                              (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -29,12 +29,13 @@ import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.{StartupUtils, StringFormatter}
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.json.{JsObject, _}
 
 import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
 
 object ITKnoraLiveSpec {
@@ -45,7 +46,7 @@ object ITKnoraLiveSpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol  {
+class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol  {
 
     implicit lazy val settings: SettingsImpl = Settings(system)
 
@@ -67,7 +68,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     implicit lazy val system: ActorSystem = _system
 
     /* needed by the core trait */
-    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
+    override implicit lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
     protected val baseSipiUrl: String = settings.internalSipiBaseUrl
@@ -107,14 +108,8 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
 
     protected def getResponseString(request: HttpRequest): String = {
         val response = singleAwaitingRequest(request)
-
-        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $response")
-
-        //log.debug("REQUEST: {}", request)
-        //log.debug("RESPONSE: {}", response.toString())
-
         val responseBodyStr = Await.result(Unmarshal(response.entity).to[String], 6.seconds)
-
+        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
         responseBodyStr
     }
 
@@ -152,4 +147,8 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         Await.result(responseFuture, duration)
     }
 
+    protected def getResponseJsonLD(request: HttpRequest): JsonLDDocument = {
+        val responseBodyStr = getResponseString(request)
+        JsonLDUtil.parseJsonLD(responseBodyStr)
+    }
 }

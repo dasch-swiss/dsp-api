@@ -1,5 +1,5 @@
 <!---
-Copyright © 2015-2018 the contributors (see Contributors.md).
+Copyright © 2015-2019 the contributors (see Contributors.md).
 
 This file is part of Knora.
 
@@ -44,7 +44,7 @@ that are stored in the triplestore (see @ref:[Knora IRIs](../api-v2/knora-iris.m
 ## V1 Path Segment
 
 Every request to API V1 includes `v1` as a path segment, e.g.
-`http://host/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a`.
+`http://host/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a`.
 Accordingly, requests to another version of the API will require another
 path segment.
 
@@ -77,7 +77,7 @@ API server can authenticate the user making the request. When using the
 SALSAH web interface, after logging in a session is established (cookie
 based). When using the API with another client application, credentials
 can be sent as a part of the HTTP header or as parts of the URL (see
-@ref:[Authentication in Knora](../../05-internals/design/authentication.md)).
+@ref:[Authentication in Knora](../../05-internals/design/principles/authentication.md)).
 
 Also when reading resources authentication my be needed as resources and
 their values may have restricted view permissions.

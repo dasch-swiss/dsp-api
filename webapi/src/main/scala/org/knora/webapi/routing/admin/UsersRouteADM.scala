@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -21,21 +21,16 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.{ActorSelection, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import io.swagger.annotations._
 import javax.ws.rs.Path
-import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.{BadRequestException, KnoraSystemInstances}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 /**
   * Provides a spray-routing function for API routes that deal with users.
@@ -43,13 +38,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Api(value = "users", produces = "application/json")
 @Path("/admin/users")
-class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator {
-
-    implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-    implicit val timeout: Timeout = settings.defaultTimeout
-    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
     @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
     @ApiResponses(Array(
@@ -133,7 +122,7 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     }
 
     /* concatenate paths in the CORRECT order and return */
-    def knoraApiPath: Route = getUsers ~ postUser ~ getUser ~
+    override def knoraApiPath: Route = getUsers ~ postUser ~ getUser ~
         path("admin" / "users" / Segment) { value =>
             put {
                 /* update a user identified by iri */

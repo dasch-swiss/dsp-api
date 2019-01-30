@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -42,7 +42,7 @@ class SearchV1R2RSpec extends R2RSpec {
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val searchPath = SearchRouteV1.knoraApiPath(system, settings, log)
+    private val searchPath = new SearchRouteV1(routeData).knoraApiPath
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
@@ -79,7 +79,7 @@ class SearchV1R2RSpec extends R2RSpec {
     "The Search Endpoint" should {
         "perform an extended search for the pages of a book whose seqnum is lower than or equals 10" in {
 
-            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0803%2Fincunabula%23partOf&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0803%2Fincunabula%23seqnum&compop=EQ&compop=LT_EQ&searchval=http%3A%2F%2Frdfh.ch%2F5e77e98d2603&searchval=10"
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0803%2Fincunabula%23partOf&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0803%2Fincunabula%23seqnum&compop=EQ&compop=LT_EQ&searchval=http%3A%2F%2Frdfh.ch%2F0803%2F5e77e98d2603&searchval=10"
             val filter = "&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2F0803%2Fincunabula%23page"
 
             Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {

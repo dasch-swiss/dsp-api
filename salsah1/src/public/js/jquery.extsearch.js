@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -403,7 +403,7 @@
 							compop.append($('<option>', {'value': 'EXISTS', 'title': 'Exists'}).append('&exist;'));
 
 							var hlist_id;
-							var attrs = properties[prop_id].attributes; // "hlist=<http://data.knora.org/lists/73d0ec0302>" -> hlist's root node
+							var attrs = properties[prop_id].attributes; // "hlist=<http://rdfh.ch/lists/73d0ec0302>" -> hlist's root node
 							hlist_id = attrs.split("=")[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 
 							/*var attrs = properties[prop_id].attributes.split(';');

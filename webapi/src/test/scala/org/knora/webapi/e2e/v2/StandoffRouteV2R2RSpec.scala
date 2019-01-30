@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -48,7 +48,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val standoffPath = StandoffRouteV2.knoraApiPath(system, settings, log)
+    private val standoffPath = new StandoffRouteV2(routeData).knoraApiPath
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
@@ -96,7 +96,9 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |    "knora-api:mappingHasName": "LetterMapping",
-                   |    "knora-api:attachedToProject": "$ANYTHING_PROJECT_IRI",
+                   |    "knora-api:attachedToProject": {
+                   |      "@id": "$ANYTHING_PROJECT_IRI"
+                   |    },
                    |    "rdfs:label": "letter mapping",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",

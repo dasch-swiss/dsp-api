@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -19,10 +19,10 @@
 
 package org.knora.webapi
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 
 object SettingsSpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
         akka {
             akka.loglevel = "DEBUG"
@@ -47,24 +47,24 @@ class SettingsSpec extends CoreSpec("SettingsActorTestSystem", SettingsSpec.conf
             settings.externalKnoraApiBaseUrl should be ("http://0.0.0.0:3333")
 
             settings.internalSipiProtocol should be ("http")
-            settings.internalSipiHost should be ("localhost")
+            settings.internalSipiHost should be ("0.0.0.0")
             settings.internalSipiPort should be (1024)
-            settings.internalSipiBaseUrl should be ("http://localhost:1024")
+            settings.internalSipiBaseUrl should be ("http://0.0.0.0:1024")
 
             settings.externalSipiProtocol should be ("http")
-            settings.externalSipiHost should be ("localhost")
+            settings.externalSipiHost should be ("0.0.0.0")
             settings.externalSipiPort should be (1024)
-            settings.externalSipiBaseUrl should be ("http://localhost:1024")
+            settings.externalSipiBaseUrl should be ("http://0.0.0.0:1024")
 
             settings.sipiPrefix should be ("knora")
             settings.sipiFileServerPrefix should be ("server")
 
-            settings.externalSipiIIIFGetUrl should be ("http://localhost:1024/knora")
+            settings.externalSipiIIIFGetUrl should be ("http://0.0.0.0:1024/knora")
 
-            settings.internalSipiFileServerGetUrl should be ("http://localhost:1024/server/knora")
-            settings.externalSipiFileServerGetUrl should be ("http://localhost:1024/server/knora")
+            settings.internalSipiFileServerGetUrl should be ("http://0.0.0.0:1024/server/knora")
+            settings.externalSipiFileServerGetUrl should be ("http://0.0.0.0:1024/server/knora")
 
-            settings.internalSipiImageConversionUrl should be ("http://localhost:1024")
+            settings.internalSipiImageConversionUrlV1 should be ("http://0.0.0.0:1024")
 
             settings.prometheusReporter should be (false)
             settings.zipkinReporter should be (false)

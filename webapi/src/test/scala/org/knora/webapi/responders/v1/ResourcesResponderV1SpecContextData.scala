@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -40,12 +40,7 @@ object ResourcesResponderV1SpecContextData {
     in a file, and load that at runtime.
 
     */
-
-    // The file contains a placeholder, RESTYPE_ICONSRC, which we replace here with the correct value.
-    private val expectedBookResourceContextResponseStr = FileUtil.readTextFile(new File("src/test/resources/test-data/v1/expectedBookContextResponse.json")).replace(
-        "RESTYPE_ICONSRC",
-        settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"
-    )
+    private val expectedBookResourceContextResponseStr = FileUtil.readTextFile(new File("src/test/resources/test-data/v1/expectedBookContextResponse.json"))
 
     val expectedBookResourceContextResponse: JsValue = JsonParser(expectedBookResourceContextResponseStr)
 
@@ -68,7 +63,7 @@ object ResourcesResponderV1SpecContextData {
                 person_id = "http://rdfh.ch/users/91e19f1e01",
                 project_id = "http://rdfh.ch/projects/0803"
             )),
-            parent_res_id = Some("http://rdfh.ch/c5058f3a"),
+            parent_res_id = Some("http://rdfh.ch/0803/c5058f3a"),
             resinfo = Some(ResourceInfoV1(
                 firstproperty = Some("a1r, Titelblatt"),
                 value_of = 0,
@@ -79,7 +74,7 @@ object ResourcesResponderV1SpecContextData {
                     protocol = "file",
                     duration = 0,
                     fps = 0,
-                    path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
+                    path = "http://0.0.0.0:1024/knora/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
                     ny = Some(3505),
                     nx = Some(2613),
                     origname = "ad+s167_druck1=0001.tif",
@@ -90,17 +85,17 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://localhost:1024/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+                        path = "http://0.0.0.0:1024/knora/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                         ny = Some(128),
                         nx = Some(95),
                         origname = "ad+s167_druck1=0001.tif",
-                        format_name = "JPEG"
+                        format_name = "JPEG2000"
                     ),
                     LocationV1(
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
+                        path = "http://0.0.0.0:1024/knora/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
                         ny = Some(110),
                         nx = Some(82),
                         origname = "ad+s167_druck1=0001.tif",
@@ -110,7 +105,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
+                        path = "http://0.0.0.0:1024/knora/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
                         ny = Some(219),
                         nx = Some(163),
                         origname = "ad+s167_druck1=0001.tif",
@@ -120,7 +115,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
+                        path = "http://0.0.0.0:1024/knora/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
                         ny = Some(438),
                         nx = Some(327),
                         origname = "ad+s167_druck1=0001.tif",
@@ -130,7 +125,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
+                        path = "http://0.0.0.0:1024/knora/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
                         ny = Some(876),
                         nx = Some(653),
                         origname = "ad+s167_druck1=0001.tif",
@@ -140,7 +135,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
+                        path = "http://0.0.0.0:1024/knora/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
                         ny = Some(1753),
                         nx = Some(1307),
                         origname = "ad+s167_druck1=0001.tif",
@@ -150,7 +145,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
+                        path = "http://0.0.0.0:1024/knora/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
                         ny = Some(3505),
                         nx = Some(2613),
                         origname = "ad+s167_druck1=0001.tif",
@@ -161,11 +156,11 @@ object ResourcesResponderV1SpecContextData {
                     protocol = "file",
                     duration = 0,
                     fps = 0,
-                    path = "http://localhost:1024/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+                    path = "http://0.0.0.0:1024/knora/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                     ny = Some(128),
                     nx = Some(95),
                     origname = "ad+s167_druck1=0001.tif",
-                    format_name = "JPEG"
+                    format_name = "JPEG2000"
                 )),
                 restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
                 restype_description = Some("Eine Seite ist ein Teil eines Buchs"),
@@ -175,7 +170,7 @@ object ResourcesResponderV1SpecContextData {
                 person_id = "http://rdfh.ch/users/91e19f1e01",
                 project_id = "http://rdfh.ch/projects/0803"
             )),
-            canonical_res_id = "http://rdfh.ch/8a0b1e75",
+            canonical_res_id = "http://rdfh.ch/0803/8a0b1e75",
             context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_PARTOF,
             region = None,
             firstprop = None,

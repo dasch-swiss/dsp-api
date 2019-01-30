@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -18,6 +18,8 @@
  */
 
 package org.knora.webapi.util
+
+import java.time.Instant
 
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
@@ -1044,6 +1046,12 @@ class StringFormatterSpec extends CoreSpec() {
                     unparsedString = wrapDef
                 )
             )
+        }
+
+        "generate an ARK URL for a resource IRI without a timestamp" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl()
+            assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn")
         }
     }
 }

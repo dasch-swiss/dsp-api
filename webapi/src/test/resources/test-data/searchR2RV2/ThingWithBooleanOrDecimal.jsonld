@@ -11,6 +11,10 @@
       "knora-api:booleanValueAsBoolean" : true,
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
     },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
@@ -46,6 +50,10 @@
         "@value" : "2.1"
       },
       "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/uqmMo72OQ2K2xe7mkIytlgf"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"

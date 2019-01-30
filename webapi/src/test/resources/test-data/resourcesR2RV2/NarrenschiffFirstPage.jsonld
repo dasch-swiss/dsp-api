@@ -69,26 +69,38 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000004159.jp2/full/3625,5251/0/default.jpg",
+    "knora-api:fileValueAsUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://localhost:1024/knora/incunabula_0000004159.jp2/full/3625,5251/0/default.jpg"
+    },
     "knora-api:fileValueHasFilename" : "incunabula_0000004159.jp2",
     "knora-api:fileValueIsPreview" : false,
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:stillImageFileValueHasDimX" : 3625,
     "knora-api:stillImageFileValueHasDimY" : 5251,
-    "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
+    "knora-api:stillImageFileValueHasIIIFBaseUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://localhost:1024/knora"
+    }
   }, {
     "@id" : "http://rdfh.ch/7bbb8e59b703/reps/6396ec373f07",
     "@type" : "knora-api:StillImageFileValue",
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000004159.jpg/full/88,128/0/default.jpg",
+    "knora-api:fileValueAsUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://localhost:1024/knora/incunabula_0000004159.jpg/full/88,128/0/default.jpg"
+    },
     "knora-api:fileValueHasFilename" : "incunabula_0000004159.jpg",
     "knora-api:fileValueIsPreview" : true,
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:stillImageFileValueHasDimX" : 88,
     "knora-api:stillImageFileValueHasDimY" : 128,
-    "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
+    "knora-api:stillImageFileValueHasIIIFBaseUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://localhost:1024/knora"
+    }
   } ],
   "rdfs:label" : "Vorsatzblatt, recto",
   "@context" : {

@@ -1,5 +1,5 @@
 <!---
-Copyright © 2015-2018 the contributors (see Contributors.md).
+Copyright © 2015-2019 the contributors (see Contributors.md).
 
 This file is part of Knora.
 
@@ -53,6 +53,9 @@ JSON-LD specification).
 
 In the complex schema, dependent resources, i.e. resources that are referred
 to by other resources on the top level, are nested in link value objects.
+If resources on the top level are referred to by other resources and 
+these links are part of the response, virtual incoming links are generated,
+see @ref:[Gravsearch: Virtual Graph Search](query-language.md)) 
 
 See the interfaces `Resource` and `ResourcesSequence` in module
 `ResourcesResponse` (exists for both API schemas: `ApiV2Simple` and
@@ -66,14 +69,14 @@ A full representation of resource can be obtained by making a GET
 request to the API providing its IRI. Because a Knora IRI has the format
 of a URL, its IRI has to be URL-encoded.
 
-To get the resource with the IRI `http://data.knora.org/c5058f3a` (a
+To get the resource with the IRI `http://rdfh.ch/c5058f3a` (a
 book from the sample Incunabula project, which is included in the Knora
 API server's test data), make a HTTP GET request to the `resources`
 route (path segment `resources` in the API call) and append the
 URL-encoded IRI:
 
 ```
-HTTP GET to http://host/v2/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a
+HTTP GET to http://host/v2/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a
 ```
 
 If necessary, several resources can be queried at the same time, their

@@ -18,9 +18,9 @@ package org.knora.webapi.http
 
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.headers.Server
+import akka.http.scaladsl.server.Directives.respondWithHeader
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.BuildInfo
-import akka.http.scaladsl.server.Directives.respondWithHeader
 
 /**
   * This object provides methods that can be used to add the [[Server]] header to an [[HttpResponse]].

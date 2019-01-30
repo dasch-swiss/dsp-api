@@ -271,10 +271,10 @@
 
        rdfs:subPropertyOf knora-base:hasValue ;
 
-       rdfs:label "Geometrie"@de ,
-                  "Géométrie"@fr ,
-                  "Geometria"@it ,
-                  "Geometry"@en ;
+       rdfs:label "Geoname"@de ,
+                  "Geoname"@fr ,
+                  "Geoname"@it ,
+                  "Geoname"@en ;
 
        knora-base:subjectClassConstraint :Thing ;
 
@@ -623,6 +623,21 @@
                "Trivial thing"@en ;
 
     rdfs:comment """Diese Resource-Klasse beschreibt ein unbedeutendes Ding"""@de .
+
+
+:ThingWithRepresentation rdf:type owl:Class ;
+  rdfs:subClassOf knora-base:Resource ;
+  rdfs:label "Thing with representation"@en ;
+  rdfs:comment "A thing with a representation"@en ;
+  rdfs:subClassOf [
+    a owl:Restriction ;
+    owl:onProperty knora-base:hasRepresentation ;
+    owl:minCardinality "0"^^xsd:nonNegativeInteger
+  ], [
+    a owl:Restriction ;
+    owl:onProperty knora-base:hasRepresentationValue ;
+    owl:minCardinality "0"^^xsd:nonNegativeInteger
+  ] .
 
 
 #################################################################

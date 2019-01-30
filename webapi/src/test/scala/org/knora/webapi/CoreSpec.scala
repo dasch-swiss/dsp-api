@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -25,10 +25,11 @@ import akka.pattern._
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.app.{APPLICATION_STATE_ACTOR_NAME, ApplicationStateActor}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME, ResponderData}
+import org.knora.webapi.store.{MockableStoreManager, StoreManagerActorName}
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
@@ -72,9 +73,14 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     val log = akka.event.Logging(system, this.getClass)
 
     lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
+    lazy val mockStoreConnectors: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
-    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders)), name = RESPONDER_MANAGER_ACTOR_NAME)
-    val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
+    val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
+    val storeManager: ActorRef = system.actorOf(Props(new MockableStoreManager(mockStoreConnectors) with LiveActorMaker), name = StoreManagerActorName)
+    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders, applicationStateActor, storeManager)), name = RESPONDER_MANAGER_ACTOR_NAME)
+
+    val responderData: ResponderData = ResponderData(system, applicationStateActor, responderManager, storeManager)
 
     final override def beforeAll() {
         CacheUtil.createCaches(settings.caches)

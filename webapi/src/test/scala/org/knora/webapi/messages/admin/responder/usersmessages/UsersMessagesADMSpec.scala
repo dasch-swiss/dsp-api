@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -19,9 +19,6 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import java.util.UUID
-
-import akka.actor.Status.Failure
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
 import org.knora.webapi.util.StringFormatter

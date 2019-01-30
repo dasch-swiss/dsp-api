@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -19,29 +19,79 @@
 
 package org.knora.webapi.responders
 
-import akka.actor.{Actor, ActorLogging, ActorSelection, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem}
+import akka.event.LoggingAdapter
+import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
-import org.knora.webapi.app._
-import org.knora.webapi.store._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{KnoraDispatchers, Settings}
+import org.knora.webapi.{KnoraDispatchers, Settings, UnexpectedMessageException}
 
 import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 
 /**
-  * A trait providing values that are commonly used in Knora responders.
+  * Responder helper methods.
   */
-trait Responder extends Actor with ActorLogging {
+object Responder {
+
     /**
-      * The responder's Akka actor system.
+      * An responder use this method to handle unexpected request messages in a consistent way.
+      *
+      * @param message the message that was received.
+      * @param log     a [[LoggingAdapter]].
+      * @param who     the responder receiving the message.
       */
-    protected implicit val system: ActorSystem = context.system
+    def handleUnexpectedMessage(message: Any, log: LoggingAdapter, who: String) = {
+        val unexpectedMessageException = UnexpectedMessageException(s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}")
+        FastFuture.failed(unexpectedMessageException)
+    }
+
+}
+
+/**
+  * Data needed to be passed to each responder.
+  *
+  * @param system the actor system.
+  * @param applicationStateActor the application state actor ActorRef.
+  * @param responderManager the responder manager ActorRef.
+  * @param storeManager the store manager ActorRef.
+  */
+case class ResponderData(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef)
+
+/**
+  * An abstract class providing values that are commonly used in Knora responders.
+  */
+abstract class Responder(responderData: ResponderData) {
+
+    /**
+      * The actor system.
+      */
+    protected implicit val system: ActorSystem = responderData.system
+
+    /**
+      * The execution context for futures created in Knora actors.
+      */
+    protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     /**
       * The application settings.
       */
     protected val settings = Settings(system)
+
+    /**
+      * The reference to the responder manager.
+      */
+    protected val responderManager: ActorRef = responderData.responderManager
+
+    /**
+      * The reference to the store manager.
+      */
+    protected val storeManager = responderData.storeManager
+
+    /**
+      * The reference to the application state actor
+      */
+    protected val applicationStateActor = responderData.applicationStateActor
 
     /**
       * A string formatter.
@@ -54,22 +104,9 @@ trait Responder extends Actor with ActorLogging {
     protected implicit val timeout: Timeout = settings.defaultTimeout
 
     /**
-      * The Akka actor system's execution context for futures.
+      * Provides logging
       */
-    protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-
-    /**
-      * A reference to the application state actor.
-      */
-    protected val applicationStateActor: ActorSelection = context.actorSelection(APPLICATION_STATE_ACTOR_PATH)
-
-    /**
-      * A reference to the Knora API responder manager.
-      */
-    protected val responderManager: ActorSelection = context.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-
-    /**
-      * A reference to the store manager.
-      */
-    protected val storeManager: ActorSelection = context.actorSelection(STORE_MANAGER_ACTOR_PATH)
+    val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 }
+
+

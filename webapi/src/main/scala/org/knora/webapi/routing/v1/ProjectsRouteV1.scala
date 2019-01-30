@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -20,31 +20,19 @@
 
 package org.knora.webapi.routing.v1
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import org.apache.commons.validator.routines.UrlValidator
+import org.knora.webapi.BadRequestException
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, KnoraDispatchers, SettingsImpl}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
-import scala.concurrent.ExecutionContext
-
-object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
+class ProjectsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ProjectV1JsonProtocol {
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getGeneralInstance
+    def knoraApiPath: Route = {
 
         path("v1" / "projects") {
             get {

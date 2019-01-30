@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -19,19 +19,14 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{CoreSpec, KnoraSystemInstances, LiveActorMaker, SharedTestDataADM}
+import org.knora.webapi.{CoreSpec, SharedTestDataADM}
 
 import scala.concurrent.duration._
 
@@ -40,8 +35,6 @@ import scala.concurrent.duration._
   */
 class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
-    // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[SearchResponderV2]
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
 
@@ -58,7 +51,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a fulltext search for 'Narr'" in {
 
-            actorUnderTest ! FulltextSearchRequestV2(searchValue = "Narr", offset = 0, limitToProject = None, limitToResourceClass = None, limitToStandoffClass = None, SharedTestDataADM.anonymousUser)
+            responderManager ! FulltextSearchRequestV2(searchValue = "Narr", offset = 0, limitToProject = None, limitToResourceClass = None, limitToStandoffClass = None, SharedTestDataADM.anonymousUser)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -72,7 +65,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a fulltext search for 'Dinge'" in {
 
-            actorUnderTest ! FulltextSearchRequestV2(searchValue = "Dinge", offset = 0, limitToProject = None, limitToResourceClass = None, limitToStandoffClass = None, SharedTestDataADM.anythingUser1)
+            responderManager ! FulltextSearchRequestV2(searchValue = "Dinge", offset = 0, limitToProject = None, limitToResourceClass = None, limitToStandoffClass = None, SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -84,7 +77,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens'" in {
 
 
-            actorUnderTest ! GravsearchRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
+            responderManager ! GravsearchRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
 
             // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
@@ -96,7 +89,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
 
-            actorUnderTest ! GravsearchRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
+            responderManager ! GravsearchRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
 
             // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
@@ -109,7 +102,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a search by label for incunabula:book that contain 'Narrenschiff'" in {
 
-            actorUnderTest ! SearchResourceByLabelRequestV2(
+            responderManager ! SearchResourceByLabelRequestV2(
                 searchValue = "Narrenschiff",
                 offset = 0,
                 limitToProject = None,

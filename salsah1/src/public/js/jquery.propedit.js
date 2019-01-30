@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -1748,7 +1748,7 @@
 					$.each(attrs, function() {
 						var attr = this.split('=');
 						if (attr[0] == 'hlist') {
-							//hlist_id = attr[1]; // "<http://data.knora.org/lists/d4f8e79ce2>"
+							//hlist_id = attr[1]; // "<http://rdfh.ch/lists/d4f8e79ce2>"
 							hlist_id = attr[1].replace("<", "").replace(">", ""); // remove brackets from Iri to make it a valid URL
 						}
 					});

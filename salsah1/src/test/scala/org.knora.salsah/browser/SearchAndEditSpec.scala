@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -428,7 +428,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val pubdateField = editFields(6)
+            val pubdateField = editFields(7)
 
             page.clickEditButton(pubdateField)
 

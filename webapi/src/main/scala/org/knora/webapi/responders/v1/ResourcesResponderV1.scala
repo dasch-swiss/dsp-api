@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,26 +22,26 @@ package org.knora.webapi.responders.v1
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.Status
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResourceCreateResponseV1, _}
-import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, OntologyMetadataGetByIriRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, OntologyMetadataGetByIriRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v1.GroupedProps._
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
-import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util._
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util._
 
 import scala.collection.immutable
 import scala.concurrent.Future
@@ -50,7 +50,7 @@ import scala.util.Try
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
   */
-class ResourcesResponderV1 extends Responder {
+class ResourcesResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
@@ -59,26 +59,24 @@ class ResourcesResponderV1 extends Responder {
     val knoraIdUtil = new KnoraIdUtil
 
     /**
-      * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message.
       */
-    def receive = {
-        case ResourceInfoGetRequestV1(resourceIri, userProfile) => future2Message(sender(), getResourceInfoResponseV1(resourceIri, userProfile), log)
-        case ResourceFullGetRequestV1(resourceIri, userProfile, getIncoming) => future2Message(sender(), getFullResponseV1(resourceIri, userProfile, getIncoming), log)
-        case ResourceContextGetRequestV1(resourceIri, userProfile, resinfo) => future2Message(sender(), getContextResponseV1(resourceIri, userProfile, resinfo), log)
-        case ResourceRightsGetRequestV1(resourceIri, userProfile) => future2Message(sender(), getRightsResponseV1(resourceIri, userProfile), log)
-        case graphDataGetRequest: GraphDataGetRequestV1 => future2Message(sender(), getGraphDataResponseV1(graphDataGetRequest), log)
-        case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserADM) => future2Message(sender(), getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile), log)
-        case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => future2Message(sender(), createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID), log)
-        case MultipleResourceCreateRequestV1(resourcesToCreate, projectIri, userProfile, apiRequestID) => future2Message(sender(), createMultipleNewResources(resourcesToCreate, projectIri, userProfile, apiRequestID), log)
-        case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserADM) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
-        case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserADM) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
-        case resourceDeleteRequest: ResourceDeleteRequestV1 => future2Message(sender(), deleteResourceV1(resourceDeleteRequest), log)
-        case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => future2Message(sender(), changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile), log)
-        case UnexpectedMessageRequest() => future2Message(sender(), makeFutureOfUnit, log)
-        case InternalServerExceptionMessageRequest() => future2Message(sender, makeInternalServerException, log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: ResourcesResponderRequestV1) = msg match {
+        case ResourceInfoGetRequestV1(resourceIri, userProfile) => getResourceInfoResponseV1(resourceIri, userProfile)
+        case ResourceFullGetRequestV1(resourceIri, userProfile, getIncoming) => getFullResponseV1(resourceIri, userProfile, getIncoming)
+        case ResourceContextGetRequestV1(resourceIri, userProfile, resinfo) => getContextResponseV1(resourceIri, userProfile, resinfo)
+        case ResourceRightsGetRequestV1(resourceIri, userProfile) => getRightsResponseV1(resourceIri, userProfile)
+        case graphDataGetRequest: GraphDataGetRequestV1 => getGraphDataResponseV1(graphDataGetRequest)
+        case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserADM) => getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile)
+        case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID)
+        case MultipleResourceCreateRequestV1(resourcesToCreate, projectIri, userProfile, apiRequestID) => createMultipleNewResources(resourcesToCreate, projectIri, userProfile, apiRequestID)
+        case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserADM) => checkResourceClass(resourceIri, owlClass, userProfile)
+        case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserADM) => getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile)
+        case resourceDeleteRequest: ResourceDeleteRequestV1 => deleteResourceV1(resourceDeleteRequest)
+        case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile)
+        case UnexpectedMessageRequest() => makeFutureOfUnit
+        case InternalServerExceptionMessageRequest() => makeInternalServerException
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -758,12 +756,12 @@ class ResourcesResponderV1 extends Responder {
         /**
           * Represents a still image file value belonging to a source object (e.g., an image representation of a page).
           *
-          * @param id            the file value IRI
-          * @param permissioCode the current user's permission code on the file value.
-          * @param image         a [[StillImageFileValueV1]]
+          * @param id             the file value IRI
+          * @param permissionCode the current user's permission code on the file value.
+          * @param image          a [[StillImageFileValueV1]]
           */
         case class StillImageFileValue(id: IRI,
-                                       permissioCode: Option[Int],
+                                       permissionCode: Option[Int],
                                        image: StillImageFileValueV1)
 
 
@@ -791,7 +789,7 @@ class ResourcesResponderV1 extends Responder {
 
                     Some(StillImageFileValue(
                         id = fileValueIri,
-                        permissioCode = fileValuePermission,
+                        permissionCode = fileValuePermission,
                         image = StillImageFileValueV1(
                             internalMimeType = row.rowMap("internalMimeType"),
                             internalFilename = row.rowMap("internalFilename"),
@@ -943,23 +941,19 @@ class ResourcesResponderV1 extends Responder {
                     // Filter the source objects by eliminating the ones that the user doesn't have permission to see.
                     sourceObjectsWithPermissions = sourceObjects.filter(sourceObj => sourceObj.permissionCode.nonEmpty)
 
-                    //_ = println(ScalaPrettyPrinter.prettyPrint(sourceObjectsWithPermissions))
-
                     contextItems = sourceObjectsWithPermissions.map {
-                        (sourceObj: SourceObject) =>
+                        sourceObj: SourceObject =>
 
-                            val preview: Option[LocationV1] = sourceObj.fileValues.find(fileVal => fileVal.permissioCode.nonEmpty && fileVal.image.isPreview) match {
-                                case Some(preview: StillImageFileValue) =>
-                                    Some(valueUtilV1.fileValueV12LocationV1(preview.image))
-                                case None => None
-                            }
+                            // Because of #1068, we ignore file values representing preview images. Instead, we generate
+                            // a IIIF preview URL from the full-size image.
 
-                            val locations: Option[Seq[LocationV1]] = sourceObj.fileValues.find(fileVal => fileVal.permissioCode.nonEmpty && !fileVal.image.isPreview) match {
+                            val (preview: Option[LocationV1], locations: Option[Seq[LocationV1]]): (Option[LocationV1], Option[Seq[LocationV1]]) = sourceObj.fileValues.find(fileVal => fileVal.permissionCode.nonEmpty && !fileVal.image.isPreview) match {
                                 case Some(full: StillImageFileValue) =>
-                                    val fileVals = createMultipleImageResolutions(full.image)
-                                    Some(preview.toVector ++ fileVals.map(valueUtilV1.fileValueV12LocationV1))
+                                    val preview: LocationV1 = valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(full.image))
+                                    val fileVals: Seq[LocationV1] = createMultipleImageResolutions(full.image).map(valueUtilV1.fileValueV12LocationV1)
+                                    (Some(preview), Some(Vector(preview) ++ fileVals))
 
-                                case None => None
+                                case None => (None, None)
                             }
 
                             ResourceContextItemV1(
@@ -969,9 +963,6 @@ class ResourcesResponderV1 extends Responder {
                                 firstprop = sourceObj.firstprop
                             )
                     }
-
-                    //_ = println(ScalaPrettyPrinter.prettyPrint(contextItems))
-
 
                 } yield contextItems
             } else {
@@ -1188,10 +1179,11 @@ class ResourcesResponderV1 extends Responder {
                             val valueOrders = row.rowMap("valueOrders").split(StringFormatter.INFORMATION_SEPARATOR_ONE).map(_.toInt)
 
                             val guiOrders: Array[Int] = properties.map {
-                                propertyIri => cardinalities(propertyIri).guiOrder match {
-                                    case Some(order) => order
-                                    case None => -1
-                                }
+                                propertyIri =>
+                                    cardinalities(propertyIri).guiOrder match {
+                                        case Some(order) => order
+                                        case None => -1
+                                    }
                             }
 
                             // create a list of three tuples, sort it by guiOrder and valueOrder and return only string values
@@ -1385,11 +1377,10 @@ class ResourcesResponderV1 extends Responder {
 
             defaultPropertyAccessPermissionsMap: Map[IRI, Map[IRI, String]] = new ErrorHandlingMap(defaultPropertyAccessPermissions.toMap, { key: IRI => s"No default property access permissions found for resource class $key" })
 
-            // Make a timestamp for the new resources and their values.
-            currentTime: String = Instant.now.toString
-
             resourceCreationFutures: Seq[Future[SparqlTemplateResourceToCreate]] = resourcesToCreate.map {
                 resourceCreateRequest: OneOfMultipleResourceCreateRequestV1 =>
+                    val creationDate: Instant = resourceCreateRequest.creationDate.getOrElse(Instant.now)
+
                     for {
                         // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
                         // create a new resource in the given project.
@@ -1443,7 +1434,7 @@ class ResourcesResponderV1 extends Responder {
                             defaultPropertyAccessPermissions = defaultPropertyAccessPermissionsMap(resourceCreateRequest.resourceTypeIri),
                             values = resourceValuesWithLinkTargetIris,
                             clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
-                            currentTime = currentTime,
+                            creationDate = creationDate,
                             fileValues = fileValues,
                             userProfile = userProfile,
                             apiRequestID = apiRequestID
@@ -1454,7 +1445,8 @@ class ResourcesResponderV1 extends Responder {
                         permissions = defaultObjectAccessPermissions,
                         sparqlForValues = generateSparqlForValuesResponse.insertSparql,
                         resourceClassIri = resourceCreateRequest.resourceTypeIri,
-                        resourceLabel = resourceCreateRequest.label
+                        resourceLabel = resourceCreateRequest.label,
+                        resourceCreationDate = creationDate
                     )
             }
 
@@ -1466,8 +1458,7 @@ class ResourcesResponderV1 extends Responder {
                 resourcesToCreate = sparqlTemplateResourcesToCreate,
                 projectIri = projectIri,
                 namedGraph = namedGraph,
-                creatorIri = userIri,
-                currentTime = currentTime
+                creatorIri = userIri
             )
 
             // Do the update.
@@ -1506,7 +1497,7 @@ class ResourcesResponderV1 extends Responder {
                               resourceClassInfo: ClassInfoV1,
                               propertyInfoMap: Map[IRI, PropertyInfoV1],
                               values: Map[IRI, Seq[CreateValueV1WithComment]],
-                              sipiConversionRequest: Option[SipiResponderConversionRequestV1],
+                              sipiConversionRequest: Option[SipiConversionRequestV1],
                               clientResourceIDsToResourceClasses: Map[String, IRI] = new ErrorHandlingMap[IRI, IRI](
                                   toWrap = Map.empty[IRI, IRI],
                                   errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
@@ -1610,7 +1601,7 @@ class ResourcesResponderV1 extends Responder {
             fileValues: Option[(IRI, Vector[CreateValueV1WithComment])] <- if (resourceClassInfo.fileValueProperties.nonEmpty) {
                 // call sipi responder
                 for {
-                    sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? sipiConversionRequest.getOrElse(throw OntologyConstraintException(s"No file (required) given for resource type $resourceClassIri"))).mapTo[SipiResponderConversionResponseV1]
+                    sipiResponse: SipiConversionResponseV1 <- (storeManager ? sipiConversionRequest.getOrElse(throw OntologyConstraintException(s"No file (required) given for resource type $resourceClassIri"))).mapTo[SipiConversionResponseV1]
 
                     // check if the file type returned by Sipi corresponds to the expected fileValue property in resourceClassInfo.fileValueProperties.head
                     _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != resourceClassInfo.fileValueProperties.head) {
@@ -1628,9 +1619,9 @@ class ResourcesResponderV1 extends Responder {
                 // TODO: in all cases of an error, the tmp file has to be deleted
                 sipiConversionRequest match {
                     case None => Future(None) // expected behaviour
-                    case Some(_: SipiResponderConversionFileRequestV1) =>
+                    case Some(_: SipiConversionFileRequestV1) =>
                         throw BadRequestException(s"File params (GUI-case) are given but resource class $resourceClassIri does not allow any representation")
-                    case Some(_: SipiResponderConversionPathRequestV1) =>
+                    case Some(_: SipiConversionPathRequestV1) =>
                         throw BadRequestException(s"A binary file was provided (non GUI-case) but resource class $resourceClassIri does not have any binary representation")
                 }
             }
@@ -1661,7 +1652,7 @@ class ResourcesResponderV1 extends Responder {
                                              values: Map[IRI, Seq[CreateValueV1WithComment]],
                                              fileValues: Option[(IRI, Vector[CreateValueV1WithComment])],
                                              clientResourceIDsToResourceIris: Map[String, IRI],
-                                             currentTime: String,
+                                             creationDate: Instant,
                                              userProfile: UserADM,
                                              apiRequestID: UUID): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
         for {
@@ -1673,7 +1664,7 @@ class ResourcesResponderV1 extends Responder {
                 defaultPropertyAccessPermissions = defaultPropertyAccessPermissions,
                 values = values ++ fileValues,
                 clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
-                currentTime = currentTime,
+                creationDate = creationDate,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             ))
@@ -1687,19 +1678,18 @@ class ResourcesResponderV1 extends Responder {
       *
       * @param resourcesToCreate Collection of the resources to be created .
       * @param projectIri        IRI of the project .
-      * @param creatorIri        the creator of the resources to be created.
       * @param namedGraph        the named graph the resources belongs to.
+      * @param creatorIri        the creator of the resources to be created.
       * @return a [String] returns a Sparql query for creating the resources and their values .
       */
-    def generateSparqlForNewResources(resourcesToCreate: Seq[SparqlTemplateResourceToCreate], projectIri: IRI, namedGraph: IRI, creatorIri: IRI, currentTime: String): String = {
+    def generateSparqlForNewResources(resourcesToCreate: Seq[SparqlTemplateResourceToCreate], projectIri: IRI, namedGraph: IRI, creatorIri: IRI): String = {
         // Generate SPARQL for creating the resources, and include the SPARQL for creating the values of every resource.
         queries.sparql.v1.txt.createNewResources(
             dataNamedGraph = namedGraph,
             triplestore = settings.triplestoreType,
             resourcesToCreate = resourcesToCreate,
             projectIri = projectIri,
-            creatorIri = creatorIri,
-            currentTime = currentTime
+            creatorIri = creatorIri
         ).toString()
     }
 
@@ -1718,8 +1708,6 @@ class ResourcesResponderV1 extends Responder {
                               createNewResourceSparql: String,
                               generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1,
                               userProfile: UserADM): Future[ResourceCreateResponseV1] = {
-        val userProfileV1 = userProfile.asUserProfileV1
-
         // Verify that the resource was created.
         for {
             createdResourcesSparql <- Future(queries.sparql.v1.txt.getCreatedResource(
@@ -1747,7 +1735,7 @@ class ResourcesResponderV1 extends Responder {
             resourceCreateValueResponses: Map[IRI, Seq[ResourceCreateValueResponseV1]] = verifyMultipleValueCreationResponse.verifiedValues.map {
                 case (propIri: IRI, values: Seq[CreateValueResponseV1]) => (propIri, values.map {
                     valueResponse: CreateValueResponseV1 =>
-                        MessageUtil.convertCreateValueResponseV1ToResourceCreateValueResponseV1(creatorIri = creatorIri,
+                        valueUtilV1.convertCreateValueResponseV1ToResourceCreateValueResponseV1(creatorIri = creatorIri,
                             propertyIri = propIri,
                             resourceIri = resourceIri,
                             valueResponse = valueResponse)
@@ -1774,7 +1762,7 @@ class ResourcesResponderV1 extends Responder {
                                label: String,
                                resourceIri: IRI,
                                values: Map[IRI, Seq[CreateValueV1WithComment]],
-                               sipiConversionRequest: Option[SipiResponderConversionRequestV1],
+                               sipiConversionRequest: Option[SipiConversionRequestV1],
                                creatorIri: IRI,
                                namedGraph: IRI,
                                userProfile: UserADM,
@@ -1840,7 +1828,7 @@ class ResourcesResponderV1 extends Responder {
             // Everything looks OK, so we can create the resource and its values.
 
             // Make a timestamp for the resource and its values.
-            currentTime: String = Instant.now.toString
+            creationDate: Instant = Instant.now
 
             generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- generateSparqlForValuesOfNewResource(
                 projectIri = projectIri,
@@ -1850,25 +1838,27 @@ class ResourcesResponderV1 extends Responder {
                 values = values,
                 fileValues = fileValues,
                 clientResourceIDsToResourceIris = Map.empty[String, IRI],
-                currentTime = currentTime,
+                creationDate = creationDate,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             )
 
-            resourcesToCreate: Seq[SparqlTemplateResourceToCreate] = Seq(SparqlTemplateResourceToCreate(
-                resourceIri = resourceIri,
-                permissions = defaultResourceClassAccessPermissions,
-                sparqlForValues = generateSparqlForValuesResponse.insertSparql,
-                resourceClassIri = resourceClassIri,
-                resourceLabel = label)
+            resourcesToCreate: Seq[SparqlTemplateResourceToCreate] = Seq(
+                SparqlTemplateResourceToCreate(
+                    resourceIri = resourceIri,
+                    permissions = defaultResourceClassAccessPermissions,
+                    sparqlForValues = generateSparqlForValuesResponse.insertSparql,
+                    resourceClassIri = resourceClassIri,
+                    resourceLabel = label,
+                    resourceCreationDate = creationDate
+                )
             )
 
             createNewResourceSparql = generateSparqlForNewResources(
                 resourcesToCreate = resourcesToCreate,
                 projectIri = projectIri,
                 namedGraph = namedGraph,
-                creatorIri = creatorIri,
-                currentTime = currentTime
+                creatorIri = creatorIri
             )
 
             // Do the update.
@@ -1895,7 +1885,13 @@ class ResourcesResponderV1 extends Responder {
       * @param apiRequestID          the ID of this API request.
       * @return a [[ResourceCreateResponseV1]] informing the client about the new resource.
       */
-    private def createNewResource(resourceClassIri: IRI, label: String, values: Map[IRI, Seq[CreateValueV1WithComment]], sipiConversionRequest: Option[SipiResponderConversionRequestV1] = None, projectIri: IRI, userProfile: UserADM, apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
+    private def createNewResource(resourceClassIri: IRI,
+                                  label: String,
+                                  values: Map[IRI, Seq[CreateValueV1WithComment]],
+                                  sipiConversionRequest: Option[SipiConversionRequestV1] = None,
+                                  projectIri: IRI,
+                                  userProfile: UserADM,
+                                  apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
         val userProfileV1 = userProfile.asUserProfileV1
 
         val resultFuture = for {
@@ -1951,16 +1947,18 @@ class ResourcesResponderV1 extends Responder {
             result: ResourceCreateResponseV1 <- IriLocker.runWithIriLock(
                 apiRequestID,
                 resourceIri,
-                () => createResourceAndCheck(resourceClassIri,
-                    resourceProjectIri,
-                    label,
-                    resourceIri,
-                    values,
-                    sipiConversionRequest,
+                () => createResourceAndCheck(
+                    resourceClassIri = resourceClassIri,
+                    projectIri = resourceProjectIri,
+                    label = label,
+                    resourceIri = resourceIri,
+                    values = values,
+                    sipiConversionRequest = sipiConversionRequest,
                     creatorIri = userIri,
-                    namedGraph,
-                    userProfile,
-                    apiRequestID)
+                    namedGraph = namedGraph,
+                    userProfile = userProfile,
+                    apiRequestID = apiRequestID
+                )
             )
         } yield result
 
@@ -1970,7 +1968,7 @@ class ResourcesResponderV1 extends Responder {
                 sipiConversionRequest match {
                     case Some(conversionRequest) =>
                         conversionRequest match {
-                            case conversionPathRequest: SipiResponderConversionPathRequestV1 =>
+                            case conversionPathRequest: SipiConversionPathRequestV1 =>
                                 // a tmp file has been created by the resources route (non GUI-case), delete it
                                 FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                             case _ => ()
@@ -2337,16 +2335,20 @@ class ResourcesResponderV1 extends Responder {
 
                 fileValues: Seq[FileValueV1] <- Future.sequence(fileValuesWithFuture)
 
-                (previewFileValues, fullFileValues) = fileValues.partition {
-                    case fileValue: StillImageFileValueV1 => fileValue.isPreview
-                    case _ => false
+                // Because of #1068, we ignore file values representing preview images. Instead, we generate
+                // a IIIF preview URL from the full-size image.
+
+                fullSizeImageFileValues: Seq[StillImageFileValueV1] = fileValues.collect {
+                    case fileValue: StillImageFileValueV1 if !fileValue.isPreview => fileValue
                 }
 
-                // Convert the preview file value into a LocationV1 as required by Knora API v1.
-                preview: Option[LocationV1] = previewFileValues.headOption.map(fileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1))
+                preview: Option[LocationV1] = fullSizeImageFileValues.headOption.map {
+                    fullSizeImageFileValue: StillImageFileValueV1 =>
+                        valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(fullSizeImageFileValue))
+                }
 
                 // Convert the full-resolution file values into LocationV1 objects as required by Knora API v1.
-                locations: Seq[LocationV1] = preview.toVector ++ fullFileValues.flatMap {
+                locations: Seq[LocationV1] = preview.toVector ++ fullSizeImageFileValues.flatMap {
                     fileValueV1 => createMultipleImageResolutions(fileValueV1).map(oneResolution => valueUtilV1.fileValueV12LocationV1(oneResolution))
                 }
 
@@ -2713,7 +2715,7 @@ class ResourcesResponderV1 extends Responder {
                     comment = comment) // TODO: person_id and lastmod are not handled yet. Probably these are never used by the GUI.
         }
 
-        // TODO: try to unify this with MessageUtil's convertCreateValueResponseV1ToResourceCreateValueResponseV1
+        // TODO: try to unify this with ValueUtilV1's convertCreateValueResponseV1ToResourceCreateValueResponseV1
         PropertyGetV1(
             pid = propertyV1.pid,
             label = propertyV1.label,
@@ -2766,5 +2768,25 @@ class ResourcesResponderV1 extends Responder {
 
             case otherFileValueV1 => Vector(otherFileValueV1)
         }
+    }
+
+    /**
+      * Converts a full-size still image file value to a preview image.
+      *
+      * @param fullSizeImageFileValue the full-size image.
+      * @return a corresponding preview image.
+      */
+    private def fullSizeImageFileValueToPreview(fullSizeImageFileValue: StillImageFileValueV1): StillImageFileValueV1 = {
+        val proportion = fullSizeImageFileValue.dimY.toDouble / 128.0
+        val previewHeight = 128
+        val previewWidth = (fullSizeImageFileValue.dimX.toDouble / proportion).round.toInt
+
+        fullSizeImageFileValue.copy(
+            dimX = previewWidth,
+            dimY = previewHeight,
+            qualityLevel = 10,
+            isPreview = true,
+            qualityName = Some(SipiConstants.StillImage.thumbnailQuality)
+        )
     }
 }

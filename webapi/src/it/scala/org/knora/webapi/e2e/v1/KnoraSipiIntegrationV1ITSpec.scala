@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -123,23 +123,18 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
       */
     private def getResourceIriFromBulkResponse(bulkResponse: JsObject, clientID: String): String = {
         val resIriOption: Option[JsValue] = bulkResponse.fields.get("createdResources") match {
-            case (Some(createdResources: JsArray)) =>
+            case Some(createdResources: JsArray) =>
                 createdResources.elements.find {
-                    case createdRes: JsValue =>
+                    case res: JsObject =>
+                        res.fields.get("clientResourceID") match {
+                            case Some(JsString(id)) if id == clientID => true
 
-                        createdRes match {
-                            case res: JsObject =>
-                                res.fields.get("clientResourceID") match {
-                                    case Some(JsString(id)) if id == clientID => true
-
-                                    case other => false
-                                }
                             case other => false
                         }
-
+                    case _ => false
                 }
 
-            case other => throw InvalidApiJsonException("bulk import response should have memeber 'createdResources'")
+            case _ => throw InvalidApiJsonException("bulk import response should have memeber 'createdResources'")
         }
 
         if (resIriOption.nonEmpty) {
@@ -187,7 +182,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |         ],
                    |         "http://www.knora.org/ontology/0803/incunabula#partOf": [
                    |             {
-                   |                 "link_value": "http://rdfh.ch/5e77e98d2603"
+                   |                 "link_value": "http://rdfh.ch/0803/5e77e98d2603"
                    |             }
                    |         ],
                    |         "http://www.knora.org/ontology/0803/incunabula#seqnum": [
@@ -317,7 +312,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |            {"richtext_value": {"utf8str": "Chlaus"}}
                    |        ],
                    |        "http://www.knora.org/ontology/0803/incunabula#partOf": [
-                   |            {"link_value": "http://rdfh.ch/5e77e98d2603"}
+                   |            {"link_value": "http://rdfh.ch/0803/5e77e98d2603"}
                    |        ],
                    |        "http://www.knora.org/ontology/0803/incunabula#seqnum": [{"int_value": 99999999}]
                    |    },
@@ -386,7 +381,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val standoffXml =
                 """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>
-                  |    <u><strong>Wild thing</strong></u>, <u>you make my</u> <a class="salsah-link" href="http://rdfh.ch/9935159f67">heart</a> sing
+                  |    <u><strong>Wild thing</strong></u>, <u>you make my</u> <a class="salsah-link" href="http://rdfh.ch/0803/9935159f67">heart</a> sing
                   |</text>
                 """.stripMargin
 

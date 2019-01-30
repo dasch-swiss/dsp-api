@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -24,8 +24,8 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.responders.Responder
-import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.{Responder, ResponderData}
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
@@ -34,13 +34,16 @@ import scala.concurrent.Future
 /**
   * A responder that returns information about hierarchical lists.
   */
-class ListsResponderV1 extends Responder {
+class ListsResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
-    def receive = {
-        case HListGetRequestV1(listIri, userProfile) => future2Message(sender(), listGetRequestV1(listIri, userProfile, PathType.HList), log)
-        case SelectionGetRequestV1(listIri, userProfile) => future2Message(sender(), listGetRequestV1(listIri, userProfile, PathType.Selection), log)
-        case NodePathGetRequestV1(iri: IRI, userProfile: UserProfileV1) => future2Message(sender(), getNodePathResponseV1(iri, userProfile), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    /**
+      * Receives a message of type [[ListsResponderRequestV1]], and returns an appropriate response message.
+      */
+    def receive(msg: ListsResponderRequestV1) = msg match {
+        case HListGetRequestV1(listIri, userProfile) => listGetRequestV1(listIri, userProfile, PathType.HList)
+        case SelectionGetRequestV1(listIri, userProfile) => listGetRequestV1(listIri, userProfile, PathType.Selection)
+        case NodePathGetRequestV1(iri: IRI, userProfile: UserProfileV1) => getNodePathResponseV1(iri, userProfile)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**

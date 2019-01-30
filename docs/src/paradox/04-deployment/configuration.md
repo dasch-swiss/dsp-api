@@ -1,5 +1,5 @@
 <!---
-Copyright © 2015-2018 the contributors (see Contributors.md).
+Copyright © 2015-2019 the contributors (see Contributors.md).
 
 This file is part of Knora.
 
@@ -48,6 +48,9 @@ The relevant sections for tuning are:
 | app.print-extended-config                | KNORA_WEBAPI_PRINT_EXTENDED_CONFIG                | false                |
 | app.jwt-secret-key                       | KNORA_WEBAPI_JWT_SECRET_KEY                       | super-secret-key     |
 | app.jwt-longevity                        | KNORA_WEBAPI_JWT_LONGEVITY                        | 30 days              |
+| app.cookie-domain                        | KNORA_WEBAPI_COOKIE_DOMAIN                        | localhost            |
+| app.ark.resolver                         | KNORA_WEBAPI_ARK_RESOLVER_URL                     | http://0.0.0.0:3336  |
+| app.ark.assigned-number                  | KNORA_WEBAPI_ARK_NAAN                             | 72163                |
 | app.knora-api.internal-host              | KNORA_WEBAPI_KNORA_API_INTERNAL_HOST              | 0.0.0.0              |
 | app.knora-api.internal-port              | KNORA_WEBAPI_KNORA_API_INTERNAL_PORT              | 3333                 |
 | app.knora-api.external-protocol          | KNORA_WEBAPI_KNORA_API_EXTERNAL_PROTOCOL          | http                 |

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  * This file is part of Knora.
  * Knora is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -15,19 +15,16 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.{ActorSelection, ActorSystem}
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.SettingsImpl
-import org.knora.webapi.app.APPLICATION_STATE_ACTOR_PATH
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 
@@ -37,7 +34,7 @@ import scala.util.{Failure, Success}
 trait AppStateAccess {
     this: RejectingRoute =>
 
-    implicit private val timeout: Timeout = 1.second
+    override implicit val timeout: Timeout = 1.second
 
     protected def getAppState(): Future[AppState] = for {
 
@@ -54,15 +51,9 @@ trait AppStateAccess {
   * If the current state of the application is [[AppState.Running]], then reject requests to paths as defined
   * in 'application.conf'.
   */
-class RejectingRoute(_system: ActorSystem, settings: SettingsImpl) extends AppStateAccess {
+class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with AppStateAccess {
 
-    implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
-    protected val applicationStateActor: ActorSelection = system.actorSelection(APPLICATION_STATE_ACTOR_PATH)
-
-    val log = akka.event.Logging(_system, this.getClass)
-
-    def knoraApiPath(): Route = {
+    def knoraApiPath: Route = {
 
         path(Remaining) { wholepath =>
 

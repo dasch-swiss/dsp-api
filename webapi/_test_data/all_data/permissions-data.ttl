@@ -297,6 +297,19 @@
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
 
+### Default Object Access Permissions on knora-base:hasStillImageFileValue property
+
+<http://rdfh.ch/permissions/0801/006-d4>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+
+                      knora-base:forProperty knora-base:hasStillImageFileValue ;
+
+                      knora-base:hasPermissions "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+                      
+
 ##########################################################
 #
 # WEBERN Project Permissions

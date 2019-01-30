@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -53,8 +53,8 @@ class StandoffV1R2RSpec extends R2RSpec {
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val standoffPath = StandoffRouteV1.knoraApiPath(system, settings, log)
-    private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
+    private val standoffPath = new StandoffRouteV1(routeData).knoraApiPath
+    private val valuesPath = new ValuesRouteV1(routeData).knoraApiPath
 
     private val anythingUser = SharedTestDataV1.anythingUser1
     private val anythingUserEmail = anythingUser.userData.email.get

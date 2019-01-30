@@ -1,14 +1,18 @@
 {
-  "@id" : "http://rdfh.ch/68ef9568b903",
+  "@id" : "http://rdfh.ch/0803/68ef9568b903",
   "@type" : "incunabula:page",
   "incunabula:seqnum" : {
-    "@id" : "http://rdfh.ch/68ef9568b903/values/ee2c66c2e20e",
+    "@id" : "http://rdfh.ch/0803/68ef9568b903/values/ee2c66c2e20e",
     "@type" : "knora-api:IntValue",
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
     "knora-api:intValueAsInt" : 10
+  },
+  "knora-api:arkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/68ef9568b903O"
   },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0803"

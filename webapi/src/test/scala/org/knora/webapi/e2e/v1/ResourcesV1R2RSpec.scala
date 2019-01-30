@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -35,7 +35,8 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
-import org.knora.webapi.util.{AkkaHttpUtils, FileUtil, MutableTestIri}
+import org.knora.webapi.routing.v2.ResourcesRouteV2
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import resource._
@@ -58,8 +59,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
-    private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
+    private val resourcesPathV1 = new ResourcesRouteV1(routeData).knoraApiPath
+    private val resourcesPathV2 = new ResourcesRouteV2(routeData).knoraApiPath
+    private val valuesPathV1 = new ValuesRouteV1(routeData).knoraApiPath
 
     private val superUser = SharedTestDataADM.superUser
     private val superUserEmail = superUser.email
@@ -90,6 +92,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
+        RdfDataObject(path = "_test_data/ontologies/example-ibox.ttl", name = "http://www.knora.org/ontology/shared/example-ibox"),
         RdfDataObject(path = "_test_data/ontologies/empty-thing-onto.ttl", name = "http://www.knora.org/ontology/0001/empty-thing"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -109,12 +112,14 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val mathIntelligencerIri = new MutableTestIri
     private val deutschesDingIri = new MutableTestIri
     private val standoffLangDingIri = new MutableTestIri
+    private val thingWithString = new MutableTestIri
+    private val thingWithCreationDate = new MutableTestIri
 
     // incunabula book with title "Eyn biechlin ..."
-    private val incunabulaBookBiechlin = "http://rdfh.ch/9935159f67"
+    private val incunabulaBookBiechlin = "http://rdfh.ch/0803/9935159f67"
 
     // incunabula book with title Quadragesimale
-    private val incunabulaBookQuadra = "http://rdfh.ch/861b5644b302"
+    private val incunabulaBookQuadra = "http://rdfh.ch/0803/861b5644b302"
 
     private val notTheMostBoringComment = "This is not the most boring comment I have seen."
 
@@ -238,7 +243,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             /* Incunabula resources*/
 
             /* A Book without a preview image */
-            Get("/v1/resources.html/http%3A%2F%2Frdfh.ch%2Fc5058f3a?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
+            Get("/v1/resources.html/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a?noresedit=true&reqtype=properties") ~> resourcesPathV1 ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
                 assert(responseAs[String] contains "Phyiscal description")
@@ -252,7 +257,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
 
             /* A Page with a preview image */
-            Get("/v1/resources.html/http%3A%2F%2Frdfh.ch%2Fde6c38ce3401?noresedit=true&reqtype=properties") ~> resourcesPath ~> check {
+            Get("/v1/resources.html/http%3A%2F%2Frdfh.ch%2F0803%2Fde6c38ce3401?noresedit=true&reqtype=properties") ~> resourcesPathV1 ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
                 assert(responseAs[String] contains "preview")
@@ -263,7 +268,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the regions of a page when doing a context query with resinfo set to true" in {
 
-            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F9d626dc76c03?resinfo=true&reqtype=context") ~> resourcesPath ~> check {
+            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F9d626dc76c03?resinfo=true&reqtype=context") ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -276,16 +281,16 @@ class ResourcesV1R2RSpec extends R2RSpec {
                         val regions: Vector[PropsGetForRegionV1] = regionsVector.map(_.convertTo[PropsGetForRegionV1])
 
                         val region1 = regions.filter {
-                            region => region.res_id == "http://rdfh.ch/021ec18f1735"
+                            region => region.res_id == "http://rdfh.ch/0803/021ec18f1735"
                         }
 
                         val region2 = regions.filter {
-                            region => region.res_id == "http://rdfh.ch/b6b64a62b006"
+                            region => region.res_id == "http://rdfh.ch/0803/b6b64a62b006"
                         }
 
-                        assert(region1.length == 1, "No region found with Iri 'http://rdfh.ch/021ec18f1735'")
+                        assert(region1.length == 1, "No region found with Iri 'http://rdfh.ch/0803/021ec18f1735'")
 
-                        assert(region2.length == 1, "No region found with Iri 'http://rdfh.ch/b6b64a62b006'")
+                        assert(region2.length == 1, "No region found with Iri 'http://rdfh.ch/0803/b6b64a62b006'")
 
                     case None => assert(false, "No regions given, but 2 were expected")
                     case _ => assert(false, "No valid regions given")
@@ -308,7 +313,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
         }
@@ -317,10 +322,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val expectedXML =
                 """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text><p>Derselbe Holzschnitt wird auf Seite <a href="http://rdfh.ch/c9824353ae06" class="salsah-link">c7r</a> der lateinischen Ausgabe des Narrenschiffs verwendet.</p></text>
+                  |<text><p>Derselbe Holzschnitt wird auf Seite <a href="http://rdfh.ch/0803/c9824353ae06" class="salsah-link">c7r</a> der lateinischen Ausgabe des Narrenschiffs verwendet.</p></text>
                 """.stripMargin
 
-            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F047db418ae06") ~> resourcesPath ~> check {
+            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F047db418ae06") ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -356,7 +361,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 """.stripMargin
 
 
-            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0001%2Fa-thing-with-text-values") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0001%2Fa-thing-with-text-values") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -426,7 +431,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             // "http://www.knora.org/ontology/0001/anything#hasGeoname": [{"geoname_value": "2661602"}]
             // "http://www.knora.org/ontology/0001/anything#hasGeometry": [{"geom_value":"{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"}],
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val resId = getResIriFromJsonResponse(response)
@@ -437,7 +442,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the created resource and check its standoff in the response" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -475,7 +480,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -516,7 +521,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Put("/v1/values/" + URLEncoder.encode(firstTextValueIRI.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+            Put("/v1/values/" + URLEncoder.encode(firstTextValueIRI.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -591,7 +596,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -603,7 +608,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the second resource of type anything:Thing, containing the correct standoff link" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(secondThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(secondThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
@@ -633,7 +638,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the first thing resource that is referred to by the second thing resource" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -704,7 +709,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 // the route should reject the request because `trong` is not a tag name supported by the standard mapping
                 assert(status == StatusCodes.BadRequest, response.toString)
@@ -715,7 +720,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val xml =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookQuadra">links</a> to <a class="salsah-link" href="http://rdfh.ch/9935159f">two</a> things</text>
+                   |<text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookQuadra">links</a> to <a class="salsah-link" href="http://rdfh.ch/0803/9935159f">two</a> things</text>
                  """.stripMargin
 
             val params =
@@ -738,7 +743,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 //println(response)
 
@@ -779,7 +784,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -845,7 +850,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "mark a resource as deleted" in {
 
-            Delete("/v1/resources/http%3A%2F%2Frdfh.ch%2F9d626dc76c03?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail2, password)) ~> resourcesPath ~> check {
+            Delete("/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F9d626dc76c03?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail2, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
             }
         }
@@ -877,7 +882,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -889,7 +894,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the fourth resource of type anything:Thing, containing the hyperlink in standoff" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(fourthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(fourthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
@@ -941,7 +946,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -953,7 +958,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the fifth resource of type anything:Thing, containing various standoff markup" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(fifthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(fifthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
@@ -970,6 +975,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 // make sure that the correct standoff links and references
                 // xml3 contains a link to google.ch and to incunabulaBookBiechlin
+
                 val xml = XML.loadString(xmlString)
 
                 val links: NodeSeq = xml \ "a"
@@ -977,10 +983,12 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 // there should be two links
                 assert(links.length == 2)
 
+                assert(links.head.attributes.asAttrMap.keySet.size == 1) // The URL has no class attribute
                 val linkToGoogle: Seq[Node] = links.head.attributes("href")
 
                 assert(linkToGoogle.nonEmpty && linkToGoogle.head.text == "http://www.google.ch")
 
+                assert(links(1).attributes.asAttrMap("class") == "salsah-link") // The link to a resource IRI has class="salsah-link"
                 val linkKnoraResource: Seq[Node] = links(1).attributes("href")
 
                 assert(linkKnoraResource.nonEmpty && linkKnoraResource.head.text == incunabulaBookBiechlin)
@@ -1015,7 +1023,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1027,7 +1035,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the sixth resource of type anything:Thing with internal links to two different resources" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(sixthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(sixthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
 
@@ -1082,7 +1090,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Put("/v1/resources/label/" + URLEncoder.encode("http://rdfh.ch/c5058f3a", "UTF-8"), HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPath ~> check {
+            Put("/v1/resources/label/" + URLEncoder.encode("http://rdfh.ch/0803/c5058f3a", "UTF-8"), HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val label = AkkaHttpUtils.httpResponseToJson(response).fields.get("label") match {
@@ -1110,7 +1118,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    }
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val resId = getResIriFromJsonResponse(response)
@@ -1121,7 +1129,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the created resource and check the comment on the link value" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(seventhThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(seventhThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1159,7 +1167,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1189,7 +1197,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    }
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val resId = getResIriFromJsonResponse(response)
@@ -1200,7 +1208,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the eighth resource and check its date" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(eighthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(eighthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1303,7 +1311,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
                 val responseStr: String = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 responseStr should include("createdResources")
@@ -1363,7 +1371,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.BadRequest, response.toString)
                 val responseStr = responseAs[String]
                 responseStr should include("org.xml.sax.SAXParseException")
@@ -1401,7 +1409,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 responseStr should include("createdResources")
@@ -1435,7 +1443,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 responseStr should include("createdResources")
@@ -1458,7 +1466,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.BadRequest, response.toString)
                 val responseStr = responseAs[String]
                 responseStr should include("not shared")
@@ -1481,7 +1489,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIri = URLEncoder.encode("http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(superUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(superUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.BadRequest, response.toString)
                 val responseStr = responseAs[String]
                 responseStr should include("Resources cannot be created in project")
@@ -1504,7 +1512,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPathV1 ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 responseStr should include("createdResources")
@@ -1527,7 +1535,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 responseStr should include("createdResources")
@@ -1537,7 +1545,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "serve a Zip file containing XML schemas for validating an XML import" in {
             val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0801/biblio", "UTF-8")
 
-            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
+            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
                 val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
                 val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
                 val zippedFilenames = collection.mutable.Set.empty[String]
@@ -1560,7 +1568,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "consider inherited cardinalities when generating XML schemas for referenced ontologies in an XML import" in {
             val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0001/something", "UTF-8")
 
-            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
+            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
                 val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
                 val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
                 val zippedFilenames = collection.mutable.Set.empty[String]
@@ -1583,7 +1591,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "follow rdfs:subClassOf when generating XML schemas for referenced ontologies in an XML import" in {
             val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0001/empty-thing", "UTF-8")
 
-            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
+            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
                 val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
                 val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
                 val zippedFilenames = collection.mutable.Set.empty[String]
@@ -1706,7 +1714,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlStringBuilder.toString)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlStringBuilder.toString)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 responseStr should include("createdResources")
@@ -1727,7 +1735,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    }
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val resId = getResIriFromJsonResponse(response)
@@ -1738,7 +1746,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the deutschesDing Resource and check its textValue" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(deutschesDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(deutschesDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1764,14 +1772,13 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 }
 
 
-
             }
 
         }
 
         "get the resource created by bulk import and check language of its textValue" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(abelAuthorIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(abelAuthorIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1819,7 +1826,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                  """.stripMargin
 
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val resId = getResIriFromJsonResponse(response)
@@ -1829,7 +1836,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "get the Resource with standoff and language and check its textValue" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(standoffLangDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+            Get("/v1/resources/" + URLEncoder.encode(standoffLangDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1853,7 +1860,122 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         }
 
+        "create a string value with chars encoded as entities but without markup in a bulk import" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
+                   |    xmlns:p0001-anything="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <p0001-anything:Thing id="thing_with_string">
+                   |        <knoraXmlImport:label>Thing with string</knoraXmlImport:label>
+                   |        <p0001-anything:hasText knoraType="richtext_value">test &amp; &apos; &gt; &lt; test</p0001-anything:hasText>
+                   |    </p0001-anything:Thing>
+                   |</knoraXmlImport:resources>""".stripMargin
 
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+                val responseStr = responseAs[String]
+
+                assert(status == StatusCodes.OK, responseStr)
+                responseStr should include("createdResources")
+
+                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
+                thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+
+            }
+        }
+
+        "get the resource created by bulk import and check for entities in string value" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(thingWithString.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val stringVal = responseJson.fields("props")
+                    .asInstanceOf[JsObject].fields("http://www.knora.org/ontology/0001/anything#hasText")
+                    .asInstanceOf[JsObject].fields("values")
+                    .asInstanceOf[JsArray].elements.head
+                    .asInstanceOf[JsObject].fields("utf8str")
+
+                assert(!(responseAs[String] contains "&amp;"))
+                assert(responseAs[String] contains "&")
+
+                assert(!(responseAs[String] contains "&lt;"))
+                assert(responseAs[String] contains "<")
+
+                assert(!(responseAs[String] contains "&gt;"))
+                assert(responseAs[String] contains ">")
+
+                assert(!(responseAs[String] contains "&apos;"))
+                assert(responseAs[String] contains "'")
+
+
+            }
+        }
+
+        "create a resource with a custom creation date in a bulk import" in {
+            val creationDateStr = "2019-01-09T15:45:54.502951Z"
+
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
+                   |    xmlns:p0001-anything="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <p0001-anything:Thing id="thing_with_creation_date" creationDate="$creationDateStr">
+                   |        <knoraXmlImport:label>Thing with creation date</knoraXmlImport:label>
+                   |        <p0001-anything:hasText knoraType="richtext_value">test</p0001-anything:hasText>
+                   |    </p0001-anything:Thing>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseStr = responseAs[String]
+                responseStr should include("createdResources")
+                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
+                thingWithCreationDate.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+            }
+
+            Get("/v2/resourcespreview/" + URLEncoder.encode(thingWithCreationDate.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV2 ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseStr = responseAs[String]
+                responseStr should include(creationDateStr)
+            }
+        }
+
+        "create a resource belonging to a class in a shared ontology that refers to a property in another shared ontology" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |  <knoraXmlImport:resources xmlns="http://api.knora.org/ontology/shared/example-ibox/xml-import/v1#"
+                   |  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |  xsi:schemaLocation="http://api.knora.org/ontology/004D/kuno-raeber/xml-import/v1#"
+                   |  xmlns:p0000-example-box="http://api.knora.org/ontology/shared/example-box/xml-import/v1#"
+                   |  xmlns:p0000-example-ibox="http://api.knora.org/ontology/shared/example-ibox/xml-import/v1#"
+                   |  xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |  <p0000-example-ibox:iBox id="test_box">
+                   |    <knoraXmlImport:label>test box 2</knoraXmlImport:label>
+                   |    <p0000-example-box__hasName knoraType="richtext_value">This is a test.</p0000-example-box__hasName>
+                   |  </p0000-example-ibox:iBox>
+                   |</knoraXmlImport:resources>
+                 """.stripMargin
+
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseStr = responseAs[String]
+                responseStr should include("createdResources")
+            }
+
+        }
     }
-
 }

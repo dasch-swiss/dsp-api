@@ -1,5 +1,5 @@
 <!---
-Copyright © 2015-2018 the contributors (see Contributors.md).
+Copyright © 2015-2019 the contributors (see Contributors.md).
 
 This file is part of Knora.
 
@@ -22,7 +22,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ## Overview
 
 The SALSAH GUI ontology provides entities that can be used in
-project-specific ontologies to indicate to SALSAH (or to another GUI)
+user-created ontologies to indicate to SALSAH (or to another GUI)
 how data should be entered and displayed.
 
 The SALSAH GUI ontology is identified by the IRI

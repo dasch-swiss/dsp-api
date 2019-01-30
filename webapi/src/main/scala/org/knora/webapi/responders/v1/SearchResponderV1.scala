@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -25,9 +25,9 @@ import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest,
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1, _}
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.twirl.SearchCriterion
-import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{DateUtilV1, PermissionUtilADM}
 
 import scala.concurrent.Future
@@ -37,7 +37,8 @@ import scala.concurrent.Future
   * Responds to requests for user search queries and returns responses in Knora API
   * v1 format.
   */
-class SearchResponderV1 extends Responder {
+class SearchResponderV1(responderData: ResponderData) extends Responder(responderData) {
+
     // Valid combinations of value types and comparison operators, for determining whether a requested search
     // criterion is valid. The valid comparison operators for search criteria involving link properties can be
     // found in this Map under OntologyConstants.KnoraBase.Resource.
@@ -117,10 +118,13 @@ class SearchResponderV1 extends Responder {
 
     val valueUtilV1 = new ValueUtilV1(settings)
 
-    def receive = {
-        case searchGetRequest: FulltextSearchGetRequestV1 => future2Message(sender(), fulltextSearchV1(searchGetRequest), log)
-        case searchGetRequest: ExtendedSearchGetRequestV1 => future2Message(sender(), extendedSearchV1(searchGetRequest), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    /**
+      * Receives a message of type [[SearchResponderRequestV1]], and returns an appropriate response message.
+      */
+    def receive(msg: SearchResponderRequestV1) = msg match {
+        case searchGetRequest: FulltextSearchGetRequestV1 => fulltextSearchV1(searchGetRequest)
+        case searchGetRequest: ExtendedSearchGetRequestV1 => extendedSearchV1(searchGetRequest)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**

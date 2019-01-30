@@ -1,0 +1,2490 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix lumieres-lausanne: <http://www.knora.org/ontology/0113/lumieres-lausanne#> .
+@base <http://www.knora.org/ontology/0113/lumieres-lausanne> .
+
+<http://www.knora.org/ontology/0113/lumieres-lausanne> a owl:Ontology ;
+    rdfs:label "The Lumières.Lausanne ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0113> .
+
+##########################################################
+#
+# PROPERTIES
+#
+##########################################################
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#title
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasTitle
+
+lumieres-lausanne:hasTitle rdf:type owl:ObjectProperty ;
+       rdfs:subPropertyOf knora-base:hasValue ;
+       rdfs:label """Titel"""@de ,
+                  """Titre"""@fr ,
+                  """Title"""@en ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#title_document
+### http://www.knora.org/ontology/0113/lumieres-lausanne#additionalResourceHasTitle
+
+lumieres-lausanne:additionalResourceHasTitle rdf:type owl:ObjectProperty ;
+       rdfs:label """Titre (document)"""@fr ,
+                  """Title (document)"""@en ;
+       rdfs:subPropertyOf lumieres-lausanne:hasTitle ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       knora-base:subjectClassConstraint lumieres-lausanne:AdditionalResource ;
+       salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#dc:title
+### http://www.knora.org/ontology/0113/lumieres-lausanne#bibliographicNoticeHasTitle
+
+lumieres-lausanne:bibliographicNoticeHasTitle rdf:type owl:ObjectProperty ;
+       rdfs:label """Titre du document"""@fr ,
+                  """Titre du document"""@en ;
+       rdfs:subPropertyOf lumieres-lausanne:hasTitle ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+       salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#webContentHasTitle
+
+lumieres-lausanne:webContentHasTitle rdf:type owl:ObjectProperty ;
+       rdfs:label """Titre (contenu web)"""@fr ,
+                  """Title (contenu web)"""@en ;
+       rdfs:subPropertyOf lumieres-lausanne:hasTitle ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       knora-base:subjectClassConstraint lumieres-lausanne:WebContent ;
+       salsah-gui:guiElement salsah-gui:SimpleText .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#disseminationGroupHasTitle
+
+lumieres-lausanne:disseminationGroupHasTitle rdf:type owl:ObjectProperty ;
+       rdfs:label """Titre (Etudes ou Actes de colloque)"""@fr ,
+                  """Title pour un groupe de Dissémination (Etudes ou Actes de colloque)"""@en ;
+       rdfs:subPropertyOf lumieres-lausanne:hasTitle ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       knora-base:subjectClassConstraint lumieres-lausanne:DisseminationGroup ;
+       salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#disseminationHasTitle
+
+lumieres-lausanne:disseminationHasTitle rdf:type owl:ObjectProperty ;
+       rdfs:label """Titre (pour une Etude ou un Acte de colloque)"""@fr ,
+                  """Title pour une Dissémination (Etudes ou Actes de colloque)"""@en ;
+       rdfs:subPropertyOf lumieres-lausanne:hasTitle ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       knora-base:subjectClassConstraint lumieres-lausanne:Dissemination ;
+       salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#title_freecontent
+### http://www.knora.org/ontology/0113/lumieres-lausanne#freeContentHasName
+
+lumieres-lausanne:freeContentHasName rdf:type owl:ObjectProperty ;
+       rdfs:label """Nom (contenu libre)"""@fr ,
+                  """Nom (freecontent)"""@en ;
+       rdfs:subPropertyOf knora-base:hasValue ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       knora-base:subjectClassConstraint lumieres-lausanne:FreeContent ;
+       salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#short_title
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasShortTitle
+
+lumieres-lausanne:hasShortTitle rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf lumieres-lausanne:hasTitle ;
+             rdfs:label """Titre court"""@fr ;
+             rdfs:comment """Titre court (littérature primaire uniquement): orthographe modernisée.
+Dans le cas d’un titre d’origine très long, l’écourter."""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+             knora-base:objectClassConstraint knora-base:TextValue ;
+             salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#literature_type
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasLiteratureType
+
+lumieres-lausanne:hasLiteratureType rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf knora-base:hasValue ;
+                 rdfs:label """Type de littérature"""@fr ;
+                 rdfs:comment """Littérature primaire ou littérature secondaire"""@fr ;
+                 knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                 knora-base:objectClassConstraint knora-base:ListValue ;
+                 salsah-gui:guiElement salsah-gui:Pulldown ;
+                 salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/310e60d607>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#document_type
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasDocumentType
+
+lumieres-lausanne:hasDocumentType rdf:type owl:ObjectProperty ;
+               rdfs:subPropertyOf knora-base:hasValue ;
+               rdfs:label """Type de document"""@fr ;
+               rdfs:comment """Type de document (parmi une liste de choix)"""@fr ;
+               knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+               knora-base:objectClassConstraint knora-base:ListValue ;
+               salsah-gui:guiElement salsah-gui:Pulldown ;
+               salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/a4de4cda09>" .
+
+
+# ### ###########################################
+# ### http://www.knora.org/ontology/0113/lumieres-lausanne#first_author_rpValue
+# ### http://www.knora.org/ontology/0113/lumieres-lausanne#hasFirstAuthorValue
+
+# lumieres-lausanne:hasFirstAuthorValue rdf:type owl:ObjectProperty ;
+#                       rdfs:subPropertyOf knora-base:hasLinkToValue ;
+#                       knora-base:objectClassConstraint knora-base:LinkValue ;
+#                       rdfs:label """Auteurs"""@fr ;
+#                       rdfs:comment """Notice de l'auteur."""@fr ;
+#                       knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+#                       salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+# ### ###########################################
+# ### http://www.knora.org/ontology/0113/lumieres-lausanne#first_author_rp
+# ### http://www.knora.org/ontology/0113/lumieres-lausanne#hasFirstAuthor
+# ### propriété redondante par rapport aux informations de la classe `lumieres-lausanne:Contribution`. Remplacée par la propriété `lumieres-lausanne:contributionHasSeqnum`
+
+# lumieres-lausanne:hasFirstAuthor rdf:type owl:ObjectProperty ;
+#                  rdfs:subPropertyOf knora-base:hasLinkTo ;
+#                  rdfs:label """Auteurs"""@fr ;
+#                  rdfs:comment """Notice de l'auteur."""@fr ;
+#                  knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+#                  knora-base:objectClassConstraint lumieres-lausanne:Person ;
+#                  salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#contribution_rpValue
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasContributionValue
+
+lumieres-lausanne:hasContributionValue rdf:type owl:ObjectProperty ;
+                      rdfs:subPropertyOf lumieres-lausanne:hasCompositeLinkToValue ;
+                      knora-base:objectClassConstraint knora-base:LinkValue ;
+                      rdfs:label """Contributions"""@fr ;
+                      rdfs:comment """Contributions"""@fr ;
+                      knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#contribution_rp
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasContribution
+
+lumieres-lausanne:hasContribution rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf lumieres-lausanne:hasCompositeLinkTo ;
+                 rdfs:label """Contributions"""@fr ;
+                 rdfs:comment """Contributions"""@fr ;
+                 knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                 knora-base:objectClassConstraint lumieres-lausanne:Contribution ;
+                 salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#keywords
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasSubjectKeyword
+
+lumieres-lausanne:hasSubjectKeyword rdf:type owl:ObjectProperty ;
+          rdfs:subPropertyOf knora-base:hasValue ;
+          rdfs:label """Sujets (mots-clés)"""@fr ;
+          rdfs:comment """Sujets (mots-clés)"""@fr ;
+          knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+          knora-base:objectClassConstraint knora-base:ListValue ;
+          salsah-gui:guiElement salsah-gui:List ;
+          salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/b039339503>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#deposit
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasArchive
+
+lumieres-lausanne:hasArchive rdf:type owl:ObjectProperty ;
+         rdfs:subPropertyOf knora-base:hasValue ;
+         rdfs:label """Lieu de dépôt"""@fr ;
+         rdfs:comment """Si l'option ne figure pas parmi la liste de choix, demander de l’ajouter."""@fr ;
+         knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+         knora-base:objectClassConstraint knora-base:ListValue ;
+         salsah-gui:guiElement salsah-gui:Pulldown ;
+         salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/9ddcacbb08>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#shelf_number
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasShelfNumber
+
+lumieres-lausanne:hasShelfNumber rdf:type owl:ObjectProperty ;
+              rdfs:subPropertyOf knora-base:hasValue ;
+              rdfs:label """Cote"""@fr ;
+              rdfs:comment """Cote du livre ou du manuscrit. 
+Indiquer l’abréviation de l’institution, puis le fonds puis la côte sous laquelle le document est classé. 
+Ex: BCUL 2S 1386/1
+Ex: ACV P Charrière de Sévery Ci 14"""@fr ;
+              knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+              knora-base:objectClassConstraint knora-base:TextValue ;
+              salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasPlace
+
+lumieres-lausanne:hasPlace rdf:type owl:ObjectProperty ;
+       rdfs:subPropertyOf knora-base:hasValue ;
+       rdfs:label """[Lieu]"""@fr ,
+                  """[Place]"""@en ;
+       rdfs:comment """Un lieu."""@fr ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       salsah-gui:guiElement salsah-gui:SimpleText .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasWritingPlace
+
+lumieres-lausanne:hasWritingPlace rdf:type owl:ObjectProperty ;
+       rdfs:subPropertyOf lumieres-lausanne:hasPlace ;
+       rdfs:label """Lieu d'édition ou de rédaction"""@fr ;
+       rdfs:comment """Lieu d'édition ou de rédaction.
+Entre crochets si le lieu est connu mais pas noté explicitement.
+Si le lieu indiqué est fictif, noter par ex. : Berlin [i.e. Lausanne]
+Les noms de ville sont à mettre dans la langue de la publication."""@fr ;
+       knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#person_subject_rpValue
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasSubjectPersonValue
+
+lumieres-lausanne:hasSubjectPersonValue rdf:type owl:ObjectProperty ;
+                        rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                        knora-base:objectClassConstraint knora-base:LinkValue ;
+                        rdfs:label """Sujets (personnes)"""@fr ;
+                   	    rdfs:comment """Personnes du XVIIIe siècle mentionnées dans le texte"""@fr ;
+                        knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                        salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#person_subject_rp
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasSubjectPerson
+
+lumieres-lausanne:hasSubjectPerson rdf:type owl:ObjectProperty ;
+                   rdfs:subPropertyOf knora-base:hasLinkTo ;
+                   rdfs:label """Sujets (personnes)"""@fr ;
+                   rdfs:comment """Personnes du XVIIIe siècle mentionnées dans le texte"""@fr ;
+                   knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                   knora-base:objectClassConstraint lumieres-lausanne:Person ;
+                   salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasDisseminationValue
+
+lumieres-lausanne:hasDisseminationValue rdf:type owl:ObjectProperty ;
+                        rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                        knora-base:objectClassConstraint knora-base:LinkValue ;
+                        rdfs:label """Dissémination(s) associée(s)"""@fr ;
+                   	   rdfs:comment """Dissémination(s) associée(s)"""@fr ;
+                        knora-base:subjectClassConstraint lumieres-lausanne:DisseminationGroup ;
+                        salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasDissemination
+
+lumieres-lausanne:hasDissemination rdf:type owl:ObjectProperty ;
+                   rdfs:subPropertyOf knora-base:hasLinkTo ;
+                   rdfs:label """Dissémination(s) associée(s)"""@fr ;
+                   rdfs:comment """Dissémination(s) associée(s)"""@fr ;
+                   knora-base:subjectClassConstraint lumieres-lausanne:DisseminationGroup ;
+                   knora-base:objectClassConstraint lumieres-lausanne:Dissemination ;
+                   salsah-gui:guiElement salsah-gui:Searchbox .                   
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasLinkToBibliographicNoticeValue
+
+lumieres-lausanne:hasLinkToBibliographicNoticeValue rdf:type owl:ObjectProperty ;
+                        rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                        knora-base:objectClassConstraint knora-base:LinkValue ;
+                        rdfs:label """Fiche bibliographique associée"""@fr ;
+                   	   rdfs:comment """Fiche bibliographique associée à la dissémination"""@fr ;
+                        knora-base:subjectClassConstraint lumieres-lausanne:Dissemination ;
+                        salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasLinkToBibliographicNotice
+
+lumieres-lausanne:hasLinkToBibliographicNotice rdf:type owl:ObjectProperty ;
+                   rdfs:subPropertyOf knora-base:hasLinkTo ;
+                   rdfs:label """Fiche bibliographique associée"""@fr ;
+                   rdfs:comment """Fiche bibliographique associée à la dissémination"""@fr ;
+                   knora-base:subjectClassConstraint lumieres-lausanne:Dissemination ;
+                   knora-base:objectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                   salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasAdditionalResourceValue
+
+lumieres-lausanne:hasAdditionalResourceValue rdf:type owl:ObjectProperty ;
+                        rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                        knora-base:objectClassConstraint knora-base:LinkValue ;
+                        rdfs:label """Document(s) ou image(s) associé(e)s"""@fr ;
+                   	rdfs:comment """Document(s) ou image(s) associé(e)s"""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasAdditionalResource
+
+lumieres-lausanne:hasAdditionalResource rdf:type owl:ObjectProperty ;
+                   rdfs:subPropertyOf knora-base:hasLinkTo ;
+                   rdfs:label """Document(s) ou image(s) associé(e)s"""@fr ;
+                   rdfs:comment """Document(s) ou image(s) associé(e)s"""@fr ;
+                   knora-base:objectClassConstraint lumieres-lausanne:AdditionalResource ;
+                   salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasTranscriptionValue
+
+lumieres-lausanne:hasTranscriptionValue rdf:type owl:ObjectProperty ;
+                        rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                        knora-base:objectClassConstraint knora-base:LinkValue ;
+                        rdfs:label """Transcription associée"""@fr ;
+                   	rdfs:comment """Transcription associée à un manuscrit"""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasTranscription
+
+lumieres-lausanne:hasTranscription rdf:type owl:ObjectProperty ;
+                   rdfs:subPropertyOf knora-base:hasLinkTo ;
+                   rdfs:label """Transcription associée"""@fr ;
+                   rdfs:comment """Transcription associée à un manuscrit"""@fr ;
+                   knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                   knora-base:objectClassConstraint lumieres-lausanne:Transcription ;
+                   salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#societe_subject
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasSubjectSociety
+
+lumieres-lausanne:hasSubjectSociety rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf knora-base:hasValue ;
+                 rdfs:label """Sujets (societés)"""@fr ;
+                 rdfs:comment """Sociétés ou académies mentionnées dans le texte."""@fr ;
+                 knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                 knora-base:objectClassConstraint knora-base:ListValue ;
+                 salsah-gui:guiElement salsah-gui:Pulldown ;
+                 salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/6e77a66709>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#date_writing
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasWritingDate
+
+lumieres-lausanne:hasWritingDate rdf:type owl:ObjectProperty ;
+              rdfs:subPropertyOf lumieres-lausanne:hasDate ;
+              rdfs:label """Date de rédaction"""@fr ;
+              rdfs:comment """Date de rédaction (indiquer la date de début et la date de fin)"""@fr ;
+              knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+              knora-base:objectClassConstraint knora-base:DateValue ;
+              salsah-gui:guiElement salsah-gui:Date .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#pages
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasPages
+
+lumieres-lausanne:hasPages rdf:type owl:ObjectProperty ;
+       rdfs:subPropertyOf knora-base:hasValue ;
+       rdfs:label """Pages"""@fr ;
+       rdfs:comment """Livre: le nombre de pages total de l'ouvrage, par ex: 220
+Chapitre de livre, article de revue et article de dictionnaire: page de début - page de fin, par ex: 123-138
+Manuscrit: indiquer le nombre de folios (qui ne correspond pas forcément au nombre de pages). Dans le cas d’un cahier qui présente plusieurs folios sans écriture, ne mentionner que les folios rédigés."""@fr ;
+       knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       salsah-gui:guiElement salsah-gui:SimpleText  .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#language
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasLanguage
+
+lumieres-lausanne:hasLanguage rdf:type owl:ObjectProperty ;
+          rdfs:subPropertyOf knora-base:hasValue ;
+          rdfs:label """Langue(s)"""@fr ;
+          rdfs:comment """Langue de rédaction du document. Plusieurs choix possibles, par ordre d'importance."""@fr ;
+          knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+          knora-base:objectClassConstraint knora-base:ListValue ;
+          salsah-gui:guiElement salsah-gui:Pulldown ;
+          salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/02a9598208>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#abstract
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasAbstract
+
+lumieres-lausanne:hasAbstract rdf:type owl:ObjectProperty ;
+          rdfs:subPropertyOf knora-base:hasValue ;
+          rdfs:label """Résumé"""@fr ;
+          rdfs:comment """Résumé neutre et succinct du contenu du document.
+Pour un cas d’un ouvrage publié en plusieurs volumes, détailler le contenu par volume avec un retour à la ligne pour chaque nouveau volume."""@fr ;
+          knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+          knora-base:objectClassConstraint knora-base:TextValue ;
+          salsah-gui:guiElement salsah-gui:Richtext .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#url
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasReference
+
+lumieres-lausanne:hasReference rdf:type owl:ObjectProperty ;
+     rdfs:subPropertyOf knora-base:hasValue ;
+     rdfs:label """URL"""@fr ;
+     rdfs:comment """Lien vers une page internet"""@fr ;
+     knora-base:objectClassConstraint knora-base:UriValue ;
+     salsah-gui:guiElement salsah-gui:SimpleText .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#projectHasUrlElement
+
+lumieres-lausanne:projectHasUrlElement rdf:type owl:ObjectProperty ;
+     rdfs:subPropertyOf knora-base:hasValue ;
+     rdfs:label """Elément d'URL"""@fr ;
+     rdfs:comment """ATTENTION, doit être unique. Uniquement caractères non-accentués, tiret et chiffres. Pas d'espaces ni de ponctuation."""@fr ;
+     knora-base:subjectClassConstraint lumieres-lausanne:Project ;
+     knora-base:objectClassConstraint knora-base:TextValue ;
+     salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasPublisher
+
+lumieres-lausanne:hasPublisher rdf:type owl:ObjectProperty ;
+           rdfs:subPropertyOf knora-base:hasValue ;
+           rdfs:label """Editeur"""@fr ;
+           rdfs:comment """S'applique à "livre", "chapitre de livre" et "article de dictionnaire".
+Mettre entre crochets si l'éditeur est connu mais pas noté explicitement dans l'ouvrage. Ne rien noter s'il est inconnu."""@fr ;
+           knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+           knora-base:objectClassConstraint knora-base:TextValue ;
+           salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#edition_first
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasFirstEdition
+
+lumieres-lausanne:hasFirstEdition rdf:type owl:ObjectProperty ;
+               rdfs:subPropertyOf knora-base:hasValue ;
+               rdfs:label """Première édition"""@fr ;
+               rdfs:comment """Uniquement si l’édition du livre introduit est une réédition."""@fr ;
+               knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+               knora-base:objectClassConstraint knora-base:TextValue ;
+               salsah-gui:guiElement salsah-gui:SimpleText .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasDate
+
+lumieres-lausanne:hasDate rdf:type owl:ObjectProperty ;
+               rdfs:subPropertyOf knora-base:hasValue ;
+               rdfs:label """[Date]"""@fr , """[Date]"""@en ;
+               rdfs:comment """Une date."""@fr , """A date."""@en ;
+               knora-base:objectClassConstraint knora-base:DateValue ;
+               salsah-gui:guiElement salsah-gui:Date .
+
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#volume
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasVolumeSequenceNumber
+
+lumieres-lausanne:hasVolumeSequenceNumber rdf:type owl:ObjectProperty ;
+        rdfs:subPropertyOf knora-base:hasValue ;
+        rdfs:label """N° de volume"""@fr ;
+        rdfs:comment """A remplir si le volume fait partie d'une série.
+S'applique à "livre", "chapitre de livre", "article de revue", "article de dictionnaire"."""@fr ;
+        knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+        knora-base:objectClassConstraint knora-base:IntValue ;
+        salsah-gui:guiElement salsah-gui:Spinbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#volume_nb
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasVolumeNumber
+
+lumieres-lausanne:hasVolumeNumber rdf:type owl:ObjectProperty ;
+           rdfs:subPropertyOf knora-base:hasValue ;
+           rdfs:label """Nombre de volumes"""@fr ;
+           rdfs:comment """Uniquement si l'ouvrage est constitué de plus d'un volume ou fait partie d'une série.
+S'applique à "livre", "chapitre de livre", "article de revue", "article de dictionnaire"."""@fr ;
+           knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+           knora-base:objectClassConstraint knora-base:IntValue ;
+           salsah-gui:guiElement salsah-gui:Spinbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#related_project_rpValue
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isInProjectValue
+
+lumieres-lausanne:isInProjectValue rdf:type owl:ObjectProperty ;
+                         rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                         knora-base:objectClassConstraint knora-base:LinkValue ;
+                         rdfs:label """Projet associé"""@fr ;
+                         rdfs:comment """Contenu associé à un projet"""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#related_project_rp
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isInProject
+
+lumieres-lausanne:isInProject rdf:type owl:ObjectProperty ;
+                    rdfs:subPropertyOf knora-base:hasLinkTo ;
+                    rdfs:label """Projet associé"""@fr ;
+                    rdfs:comment """Contenu associé à un projet"""@fr ;
+                    knora-base:objectClassConstraint lumieres-lausanne:Project ;
+                    salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#contentHasAuthor
+
+lumieres-lausanne:contentHasAuthor rdf:type owl:ObjectProperty ;
+            rdfs:subPropertyOf knora-base:hasValue ;
+            rdfs:label """Auteur du contenu ou intervenant"""@fr ;
+            rdfs:comment """Auteur du contenu ou intervenant."""@fr ;
+            knora-base:subjectClassConstraint lumieres-lausanne:WebContent ;
+            knora-base:objectClassConstraint knora-base:TextValue ;
+            salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasOwnerValue
+
+lumieres-lausanne:hasOwnerValue rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                 knora-base:objectClassConstraint knora-base:LinkValue ;
+                 knora-base:subjectClassConstraint lumieres-lausanne:Collection ;
+                 rdfs:label """Propriétaire"""@fr ;
+                 rdfs:comment """Propriétaire de la collection."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasOwner
+
+lumieres-lausanne:hasOwner rdf:type owl:ObjectProperty ;
+            rdfs:subPropertyOf knora-base:hasLinkTo ;
+            rdfs:label """Propriétaire"""@fr ;
+            rdfs:comment """Propriétaire de la collection."""@fr ;
+            knora-base:objectClassConstraint lumieres-lausanne:User ;
+            knora-base:subjectClassConstraint lumieres-lausanne:Collection ;
+            salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#secondary_title
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasBookTitle
+
+lumieres-lausanne:hasBookTitle rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf lumieres-lausanne:hasTitle ;
+                 rdfs:label """Titre du livre"""@fr ;
+                 rdfs:comment """Indiquer le titre du livre s'il s'agit d'un chapitre d'ouvrage."""@fr ;
+                 knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                 knora-base:objectClassConstraint knora-base:TextValue ;
+                 salsah-gui:guiElement salsah-gui:SimpleText .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#secondary_title
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasDictionnaryTitle
+
+lumieres-lausanne:hasDictionnaryTitle rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf lumieres-lausanne:hasTitle ;
+                 rdfs:label """Titre du dictionnaire"""@fr ;
+                 rdfs:comment """Indiquer le titre du dictionnaire dans le cas d'une entrée de dictionnaire."""@fr ;
+                 knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                 knora-base:objectClassConstraint knora-base:TextValue ;
+                 salsah-gui:guiElement salsah-gui:SimpleText .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasJournalTitle
+
+lumieres-lausanne:hasJournalTitle rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf lumieres-lausanne:hasTitle ;
+                 rdfs:label """Titre de la revue"""@fr ;
+                 rdfs:comment """Titre de la revue."""@fr ;
+                 knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                 knora-base:objectClassConstraint knora-base:TextValue ;
+                 salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#book_collection
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasCollection
+
+lumieres-lausanne:hasCollection rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf knora-base:hasValue ;
+                 rdfs:label """Collection et n° de volume"""@fr ;
+                 rdfs:comment """Faire suivre directement le numéro après la collection (ex: Bibliothèque historique vaudoise 34)."""@fr ;
+                 knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                 knora-base:objectClassConstraint knora-base:TextValue ;
+                 salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#manuscript_type
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasManuscriptType
+
+lumieres-lausanne:hasManuscriptType rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf knora-base:hasValue ;
+                 rdfs:label """Type d'écrit"""@fr ;
+                 rdfs:comment """Catégorie du document (liste de valeur)"""@fr ;
+                 knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                 knora-base:objectClassConstraint knora-base:ListValue ;
+                 salsah-gui:guiElement salsah-gui:Pulldown ;
+                 salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/6775064908>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#journal_abbr
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasJournalAbbreviation
+
+lumieres-lausanne:hasJournalAbbreviation rdf:type owl:ObjectProperty ;
+              rdfs:subPropertyOf knora-base:hasValue ;
+              rdfs:label """Abréviation"""@fr ;
+              rdfs:comment """Titre de la revue abrégé."""@fr ;
+              knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+              knora-base:objectClassConstraint knora-base:TextValue ;
+              salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#journal_num
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasJournalNumber
+
+lumieres-lausanne:hasJournalNumber rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasValue ;
+             rdfs:label """Numéro de la revue"""@fr ;
+             rdfs:comment """Numéro de la revue"""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+             knora-base:objectClassConstraint knora-base:TextValue ;
+             salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#journalseries_title
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasJournalSeriesTitle
+
+lumieres-lausanne:hasJournalSeriesTitle rdf:type owl:ObjectProperty ;
+                     rdfs:subPropertyOf knora-base:hasValue ;
+                     rdfs:label """Titre du numéro"""@fr ;
+                     rdfs:comment """Titre du numéro de la revue."""@fr ;
+                     knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
+                     knora-base:objectClassConstraint knora-base:TextValue ;
+                     salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#name
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasName
+
+lumieres-lausanne:hasName rdf:type owl:ObjectProperty ;
+      rdfs:subPropertyOf knora-base:hasValue ;
+      rdfs:label """Nom"""@fr ;
+      rdfs:comment """Nom de la personne"""@fr ;
+      knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+      knora-base:objectClassConstraint knora-base:TextValue ;
+      salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasOldId
+
+lumieres-lausanne:hasOldId rdf:type owl:ObjectProperty ;
+      rdfs:subPropertyOf knora-base:hasValue ;
+      rdfs:label """ID"""@fr ;
+      rdfs:comment """ID"""@fr ;
+      knora-base:objectClassConstraint knora-base:TextValue ;
+      salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#modern
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isModern
+
+lumieres-lausanne:isModern rdf:type owl:ObjectProperty ;
+        rdfs:subPropertyOf knora-base:hasValue ;
+        rdfs:label """Personne littérature secondaire"""@fr ;
+        rdfs:comment """Personnalité moderne, associée à la littérature secondaire."""@fr ;
+        knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+        knora-base:objectClassConstraint knora-base:BooleanValue ;
+        salsah-gui:guiElement salsah-gui:Checkbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#valid
+### http://www.knora.org/ontology/0113/lumieres-lausanne#noticeIsValid
+
+lumieres-lausanne:noticeIsValid rdf:type owl:ObjectProperty ;
+       rdfs:subPropertyOf knora-base:hasValue ;
+       rdfs:label """Fiche valide"""@fr ;
+       rdfs:comment """Validité de la fiche biographie."""@fr ;
+       knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+       knora-base:objectClassConstraint knora-base:BooleanValue ;
+       salsah-gui:guiElement salsah-gui:Checkbox .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#valid
+### http://www.knora.org/ontology/0113/lumieres-lausanne#noticeIsCreated
+
+lumieres-lausanne:noticeIsCreated rdf:type owl:ObjectProperty ;
+       rdfs:subPropertyOf knora-base:hasValue ;
+       rdfs:label """Fiche créée"""@fr ;
+       rdfs:comment """Fiche créée."""@fr ;
+       knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+       knora-base:objectClassConstraint knora-base:BooleanValue ;
+       salsah-gui:guiElement salsah-gui:Checkbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#circa1
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isApproximateBeginDate
+
+lumieres-lausanne:isApproximateBeginDate rdf:type owl:ObjectProperty ;
+        rdfs:subPropertyOf knora-base:hasValue ;
+        rdfs:label """Date de début approximative"""@fr ;
+        rdfs:comment """Date de début approximative."""@fr ;
+        knora-base:objectClassConstraint knora-base:BooleanValue ;
+        salsah-gui:guiElement salsah-gui:Checkbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#circa2
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isApproximateEndDate
+
+lumieres-lausanne:isApproximateEndDate rdf:type owl:ObjectProperty ;
+        rdfs:subPropertyOf knora-base:hasValue ;
+        rdfs:label """Date de fin approximative"""@fr ;
+        rdfs:comment """Date de fin approximative."""@fr ;
+        knora-base:objectClassConstraint knora-base:BooleanValue ;
+        salsah-gui:guiElement salsah-gui:Checkbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#place_birth
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasPlaceBirth
+
+lumieres-lausanne:hasPlaceBirth rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf lumieres-lausanne:hasPlace ;
+             rdfs:label """Lieu de naissance"""@fr ;
+             rdfs:comment """Lieu de naissance."""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+             knora-base:objectClassConstraint knora-base:TextValue ;
+             salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#place_death
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasPlaceDeath
+
+lumieres-lausanne:hasPlaceDeath rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf lumieres-lausanne:hasPlace ;
+             rdfs:label """Lieu de décès"""@fr ;
+             rdfs:comment """Lieu de décès"""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+             knora-base:objectClassConstraint knora-base:TextValue ;
+             salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#religion
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasReligion
+
+lumieres-lausanne:hasReligion rdf:type owl:ObjectProperty ;
+          rdfs:subPropertyOf knora-base:hasValue ;
+          rdfs:label """Confession"""@fr ;
+          rdfs:comment """Religion de l'auteur."""@fr ;
+          knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+          knora-base:objectClassConstraint knora-base:ListValue ;
+          salsah-gui:guiElement salsah-gui:Pulldown ;
+          salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/381000f508>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#place_origin
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasPlaceOrigin
+
+lumieres-lausanne:hasPlaceOrigin rdf:type owl:ObjectProperty ;
+              rdfs:subPropertyOf lumieres-lausanne:hasPlace ;
+              rdfs:label """Lieu d'origine"""@fr ;
+              rdfs:comment """Lieu d'origine de l'auteur."""@fr ;
+              knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+              knora-base:objectClassConstraint knora-base:TextValue ;
+              salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#biography
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasBiography
+
+lumieres-lausanne:hasBiography rdf:type owl:ObjectProperty ;
+           rdfs:subPropertyOf knora-base:hasValue ;
+           rdfs:label """Biographie"""@fr ;
+           rdfs:comment """Informations  sur  la  formation,  les  activités  publiques  et  privées  de  la  personne,  ses séjours  à  l’étranger."""@fr ;
+           knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+           knora-base:objectClassConstraint knora-base:TextValue ;
+		   salsah-gui:guiElement salsah-gui:Richtext .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasCommentWork
+
+lumieres-lausanne:hasCommentWork rdf:type owl:ObjectProperty ;
+           rdfs:subPropertyOf knora-base:hasValue ;
+           rdfs:label """Commentaires sur son oeuvre/ses écrits"""@fr ;
+           rdfs:comment """Texte  suivi,  rédigé  au  présent historique.  Mentionner  uniquement  le  titre des  œuvres en  italique  suivi  de  l’année  de publication  entre  parenthèses."""@fr ;
+           knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+           knora-base:objectClassConstraint knora-base:TextValue ;
+		   salsah-gui:guiElement salsah-gui:Richtext .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#civil_state
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasCivilStatus
+
+lumieres-lausanne:hasCivilStatus rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasValue ;
+             rdfs:label """Etat civil"""@fr ;
+             rdfs:comment """Ensemble  des  prénoms  de  baptême,  variantes du  nom,  noms  des géniteurs avec  dates  et profession du père, nom du conjoint avec date de mariage si connue, noms des enfants avec dates, fratrie, seconde nationalité, etc."""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+             knora-base:objectClassConstraint knora-base:TextValue ;
+             salsah-gui:guiElement salsah-gui:Textarea ;
+          	 salsah-gui:guiAttribute "cols=60" ,
+                                  	"rows=4" ,
+                                  	"wrap=soft" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#archive
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isInArchive
+
+lumieres-lausanne:isInArchive rdf:type owl:ObjectProperty ;
+         rdfs:subPropertyOf knora-base:hasValue ;
+         rdfs:label """Fonds d'archives"""@fr ;
+         rdfs:comment """Fonds d'archives"""@fr ;
+         knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+         knora-base:objectClassConstraint knora-base:TextValue ;
+         salsah-gui:guiElement salsah-gui:Richtext .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#society_rpValue
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isInSocietyValue
+
+lumieres-lausanne:isInSocietyValue rdf:type owl:ObjectProperty ;
+                 rdfs:subPropertyOf lumieres-lausanne:hasCompositeLinkToValue ;
+                 knora-base:objectClassConstraint knora-base:LinkValue ;
+                 rdfs:label """Sociétés/académies"""@fr ;
+                 rdfs:comment """Sociétés/académies dont a été membre une personne."""@fr ;
+                 knora-base:subjectClassConstraint lumieres-lausanne:Person .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#society_rp
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isInSociety
+
+lumieres-lausanne:isInSociety rdf:type owl:ObjectProperty ;
+            rdfs:subPropertyOf lumieres-lausanne:hasCompositeLinkTo ;
+            rdfs:label """Sociétés/académies"""@fr ;
+            rdfs:comment """Sociétés/académies dont a été membre une personne."""@fr ;
+            knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+            knora-base:objectClassConstraint lumieres-lausanne:SocietyMembership ;
+            salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#position_rpValue
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasPositionValue
+
+lumieres-lausanne:hasPositionValue rdf:type owl:ObjectProperty ;
+                  rdfs:subPropertyOf lumieres-lausanne:hasCompositeLinkToValue ;
+                  knora-base:objectClassConstraint knora-base:LinkValue ;
+                  rdfs:label """Fonctions publiques et privées associées"""@fr ;
+                  rdfs:comment """Fonctions publiques et privées associées."""@fr ;
+                  knora-base:subjectClassConstraint lumieres-lausanne:Person .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#position_rp
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasPosition
+
+lumieres-lausanne:hasPosition rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf lumieres-lausanne:hasCompositeLinkTo ;
+             rdfs:label """Fonctions publiques et privées associées"""@fr ;
+             rdfs:comment """Fonctions publiques et privées associées."""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+             knora-base:objectClassConstraint lumieres-lausanne:Position ;
+             salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasCompositeLinkToValue
+
+lumieres-lausanne:hasCompositeLinkToValue rdf:type owl:ObjectProperty ;
+                  rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                  knora-base:objectClassConstraint knora-base:LinkValue ;
+                  rdfs:label """[Link to a dependant resource]"""@en , """[Lien vers une ressource dépendante]"""@en ;
+                  rdfs:comment """[Application Lumières.Lausanne] Denotes a link to a dependant resource. When the target resource is created/updated, then the metadata of the source resource should be updated accordingly (with the knora-base:lastModificationDate and knora-base:attachedToUser values of the target resource)"""@en , 
+                  """[Application Lumières.Lausanne] Indique un lien vers une ressource dépendante. Quand la ressource cible est créée/modifiées, les métadonnées de la ressource source doivent être mises à jour (avec les valeurs des propriétés knora-base:lastModificationDate and knora-base:attachedToUser de la ressource cible)."""@fr ;
+                  knora-base:subjectClassConstraint knora-base:Resource .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasCompositeLinkTo
+
+lumieres-lausanne:hasCompositeLinkTo rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasLinkTo ;
+             rdfs:label """[Link to a dependant resource]"""@en , """[Lien vers une ressource dépendante]"""@en ;
+             rdfs:comment """[Application Lumières.Lausanne] Denotes a link to a dependant resource. When the target resource is created/updated, then the metadata of the source resource should be updated accordingly (with the knora-base:lastModificationDate and knora-base:attachedToUser values of the target resource)"""@en , 
+             """[Application Lumières.Lausanne] Indique un lien vers une ressource dépendante. Quand la ressource cible est créée/modifiées, les métadonnées de la ressource source doivent être mises à jour (avec les valeurs des propriétés knora-base:lastModificationDate and knora-base:attachedToUser de la ressource cible)."""@fr ;
+             knora-base:subjectClassConstraint knora-base:Resource ;
+             knora-base:objectClassConstraint knora-base:Resource ;
+             salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isDraftOfValue
+
+lumieres-lausanne:isDraftOfValue rdf:type owl:ObjectProperty ;
+                  rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                  knora-base:objectClassConstraint knora-base:LinkValue ;
+                  rdfs:label """Published version"""@en , """Version publiée"""@en ;
+                  rdfs:comment """Link to the published version of a draft."""@en ,
+                  """Lien vers la version publiée d'une ébauche."""@fr ;   
+                  knora-base:subjectClassConstraint lumieres-lausanne:Draft .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isDraftOf
+
+lumieres-lausanne:isDraftOf rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasLinkTo ;
+             rdfs:label """Published version"""@en , """Version publiée"""@en ;
+             rdfs:comment """Link to the published version of a draft."""@en , 
+             """Lien vers la version publiée d'une ébauche."""@fr ;   
+            	 knora-base:subjectClassConstraint lumieres-lausanne:Draft ;
+             knora-base:objectClassConstraint knora-base:Resource ;
+             salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#date_birth
+### http://www.knora.org/ontology/0113/lumieres-lausanne#personHasDate
+
+lumieres-lausanne:personHasDate rdf:type owl:ObjectProperty ;
+            rdfs:subPropertyOf lumieres-lausanne:hasDate ;
+            rdfs:label """Dates de naissance et de décès"""@fr ;
+            rdfs:comment """Dates de naissance et de décès"""@fr ;
+            knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+            knora-base:objectClassConstraint knora-base:DateValue ;
+            salsah-gui:guiElement salsah-gui:Date .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#nationality
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasNationality
+
+lumieres-lausanne:hasNationality rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasValue ;
+             rdfs:label """Nationalité"""@fr ;
+             rdfs:comment """Nationalité"""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+             knora-base:objectClassConstraint knora-base:ListValue ;
+             salsah-gui:guiElement salsah-gui:Pulldown ;
+             salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/3ab9597711>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasNoteValue
+
+lumieres-lausanne:hasNoteValue rdf:type owl:ObjectProperty ;
+                rdfs:subPropertyOf lumieres-lausanne:hasCompositeLinkToValue ;
+                knora-base:objectClassConstraint knora-base:LinkValue ;
+                salsah-gui:guiElement salsah-gui:Searchbox ;
+                rdfs:label """Note associée"""@fr ;
+                rdfs:comment """Note associée."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasNote
+
+lumieres-lausanne:hasNote rdf:type owl:ObjectProperty ;
+           rdfs:subPropertyOf lumieres-lausanne:hasCompositeLinkTo ;
+           rdfs:label """Note associée"""@fr ;
+           rdfs:comment """Note associée."""@fr ;
+           knora-base:objectClassConstraint lumieres-lausanne:Note ;
+           salsah-gui:guiElement salsah-gui:Searchbox.
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#status
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasStatus
+
+lumieres-lausanne:hasStatus rdf:type owl:ObjectProperty ;
+        rdfs:subPropertyOf knora-base:hasValue ;
+        rdfs:label """Etat"""@fr ;
+        rdfs:comment """Etat d'avancée de la transcription"""@fr ;
+        knora-base:subjectClassConstraint lumieres-lausanne:Transcription ;
+        knora-base:objectClassConstraint knora-base:ListValue ;
+        salsah-gui:guiElement salsah-gui:Pulldown ;
+        salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/3f12a0130a>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#scope
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasScope
+
+lumieres-lausanne:hasScope rdf:type owl:ObjectProperty ;
+       rdfs:subPropertyOf knora-base:hasValue ;
+       rdfs:label """Etendue"""@fr ;
+       rdfs:comment """Etendue de la transcription"""@fr ;
+       knora-base:subjectClassConstraint lumieres-lausanne:Transcription ;
+       knora-base:objectClassConstraint knora-base:ListValue ;
+       salsah-gui:guiElement salsah-gui:Pulldown ;
+       salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/da45f34c0a>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#transcription_text
+### http://www.knora.org/ontology/0113/lumieres-lausanne#transcriptionHasText
+
+lumieres-lausanne:transcriptionHasText rdf:type owl:ObjectProperty ;
+                    rdfs:subPropertyOf knora-base:hasValue ;
+                    rdfs:label """Texte"""@fr ;
+                    rdfs:comment """Texte de la transcription diplomatique"""@fr ;
+                    knora-base:subjectClassConstraint lumieres-lausanne:Transcription ;
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+                    salsah-gui:guiElement salsah-gui:Richtext .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#transcription_envelope
+### http://www.knora.org/ontology/0113/lumieres-lausanne#transcriptionHasEnvelope
+
+lumieres-lausanne:transcriptionHasEnvelope rdf:type owl:ObjectProperty ;
+                        rdfs:subPropertyOf knora-base:hasValue ;
+                        rdfs:label """Enveloppe"""@fr ;
+                        rdfs:comment """Texte de l'enveloppe"""@fr ;
+                        knora-base:subjectClassConstraint lumieres-lausanne:Transcription ;
+                        knora-base:objectClassConstraint knora-base:TextValue ;
+                        salsah-gui:guiElement salsah-gui:Richtext .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#reviewer_rpValue
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasReviewerValue
+
+lumieres-lausanne:hasReviewerValue rdf:type owl:ObjectProperty ;
+                  rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                  knora-base:objectClassConstraint knora-base:LinkValue ;
+                  rdfs:label """Relecteur"""@fr ;
+                  rdfs:comment """Relecteur d'une transcription."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#reviewer_rp
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasReviewer
+
+lumieres-lausanne:hasReviewer rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasLinkTo ;
+             rdfs:label """Relecteur"""@fr ;
+             rdfs:comment """Relecteur d'une transcription."""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:Transcription ;
+             knora-base:objectClassConstraint lumieres-lausanne:User ;
+             salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#diffusion
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasDiffusionType
+
+lumieres-lausanne:hasDiffusionType rdf:type owl:ObjectProperty ;
+           rdfs:subPropertyOf knora-base:hasValue ;
+           rdfs:label """Diffusion publique"""@fr ;
+           rdfs:comment """Statut public ou privé d'une ressource. Public lorsque la case est cochée."""@fr ;
+           knora-base:objectClassConstraint knora-base:BooleanValue ;
+           salsah-gui:guiElement salsah-gui:Checkbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#society_membership
+### http://www.knora.org/ontology/0113/lumieres-lausanne#societyHasName
+
+lumieres-lausanne:societyHasName rdf:type owl:ObjectProperty ;
+                    rdfs:subPropertyOf knora-base:hasValue ;
+                    rdfs:label """Société ou académie"""@fr ;
+                    rdfs:comment """Liste des sociétés et académies. """@fr ;
+                    knora-base:subjectClassConstraint lumieres-lausanne:SocietyMembership ;
+                    knora-base:objectClassConstraint knora-base:ListValue ;
+                    salsah-gui:guiElement salsah-gui:Pulldown ;
+                    salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/6e77a66709>" .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#date_society_beginning
+### http://www.knora.org/ontology/0113/lumieres-lausanne#societyMembershipHasDate
+
+lumieres-lausanne:societyMembershipHasDate rdf:type owl:ObjectProperty ;
+                        rdfs:subPropertyOf lumieres-lausanne:hasDate ;
+                        rdfs:label """Date d'appartenance à une société ou académie"""@fr ;
+                        rdfs:comment """Période au cours de laquelle une personne a été membre d'une société."""@fr ;
+                        knora-base:subjectClassConstraint lumieres-lausanne:SocietyMembership ;
+                        knora-base:objectClassConstraint knora-base:DateValue ;
+                        salsah-gui:guiElement salsah-gui:Date .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#position
+### http://www.knora.org/ontology/0113/lumieres-lausanne#positionHasName
+
+lumieres-lausanne:positionHasName rdf:type owl:ObjectProperty ;
+          rdfs:subPropertyOf knora-base:hasValue ;
+          rdfs:label """Poste"""@fr ;
+          rdfs:comment """Poste"""@fr ;
+          knora-base:subjectClassConstraint lumieres-lausanne:Position ;
+          knora-base:objectClassConstraint knora-base:TextValue ;
+          salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#date_position_beginning
+### http://www.knora.org/ontology/0113/lumieres-lausanne#positionHasDate
+
+lumieres-lausanne:positionHasDate rdf:type owl:ObjectProperty ;
+                         rdfs:subPropertyOf lumieres-lausanne:hasDate ;
+                         rdfs:label """Dates d'exercice d'une profession."""@fr ;
+                         rdfs:comment """Dates d'exercice d'une profession."""@fr ;
+                         knora-base:subjectClassConstraint lumieres-lausanne:Position ;
+                         knora-base:objectClassConstraint knora-base:DateValue ;
+                         salsah-gui:guiElement salsah-gui:Date .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#place_position
+### http://www.knora.org/ontology/0113/lumieres-lausanne#positionHasPlace
+
+lumieres-lausanne:positionHasPlace rdf:type owl:ObjectProperty ;
+                rdfs:subPropertyOf lumieres-lausanne:hasPlace ;
+                rdfs:label """Lieu d'exercice"""@fr ;
+                rdfs:comment """Lieu d'exercice"""@fr ;
+                knora-base:subjectClassConstraint lumieres-lausanne:Position ;
+                knora-base:objectClassConstraint knora-base:TextValue ;
+                salsah-gui:guiElement salsah-gui:SimpleText .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#societyHasPlace
+
+lumieres-lausanne:societyHasPlace rdf:type owl:ObjectProperty ;
+                rdfs:subPropertyOf lumieres-lausanne:hasPlace ;
+                rdfs:label """Siège"""@fr ;
+                rdfs:comment """Siège de la société"""@fr ;
+                knora-base:subjectClassConstraint lumieres-lausanne:SocietyMembership ;
+                knora-base:objectClassConstraint knora-base:TextValue ;
+                salsah-gui:guiElement salsah-gui:SimpleText .
+ 
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#person_rpValue
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasLinkToPersonValue
+
+lumieres-lausanne:hasLinkToPersonValue rdf:type owl:ObjectProperty ;
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                knora-base:objectClassConstraint knora-base:LinkValue ;
+                rdfs:label """Personne liée"""@fr ;
+                rdfs:comment """Lien vers la ressource Personne correspondante."""@fr ;
+                salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#person_rp
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasLinkToPerson
+
+lumieres-lausanne:hasLinkToPerson rdf:type owl:ObjectProperty ;
+           rdfs:subPropertyOf knora-base:hasLinkTo ;
+           rdfs:label """[Lien vers une personne]"""@fr ;
+           rdfs:comment """Lien vers une personne."""@fr ;
+           knora-base:objectClassConstraint lumieres-lausanne:Person ;
+           salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#relation_type
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasRelationType
+
+lumieres-lausanne:hasRelationType rdf:type owl:ObjectProperty ;
+               rdfs:subPropertyOf knora-base:hasValue ;
+               rdfs:label """Type de relation"""@fr ;
+               rdfs:comment """Type de relation"""@fr ;
+               knora-base:subjectClassConstraint lumieres-lausanne:Relationship ;
+               knora-base:objectClassConstraint knora-base:ListValue ;
+               salsah-gui:guiElement salsah-gui:Pulldown ;
+               salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/d343532e09>" .
+
+
+### ###########################################
+###  http://www.knora.org/ontology/0113/lumieres-lausanne#mayHaveBiography
+lumieres-lausanne:mayHaveBiography rdf:type owl:ObjectProperty ;
+                     rdfs:subPropertyOf knora-base:hasValue ;
+                     knora-base:objectClassConstraint knora-base:BooleanValue ;
+              		 knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+                     rdfs:label "Peut avoir une biographie"@fr ;
+					 rdfs:comment "Une personne peut avoir une biographie"@fr ;
+	       		     salsah-gui:guiElement salsah-gui:Checkbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#related_person_rpValue
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isRelationshipTargetValue
+
+lumieres-lausanne:isRelationshipTargetValue rdf:type owl:ObjectProperty ;
+                        rdfs:subPropertyOf lumieres-lausanne:hasLinkToPersonValue ;
+                        knora-base:objectClassConstraint knora-base:LinkValue ;
+                        rdfs:label """Personne en relation"""@fr ;
+                        rdfs:comment """Personne en relation"""@fr ;
+                        knora-base:subjectClassConstraint lumieres-lausanne:Relationship .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#related_person_rp
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isRelationshipTarget
+
+lumieres-lausanne:isRelationshipTarget rdf:type owl:ObjectProperty ;
+                   rdfs:subPropertyOf lumieres-lausanne:hasLinkToPerson ;
+                   rdfs:label """Personne en relation"""@fr ;
+                   rdfs:comment """Personne en relation"""@fr ;
+                   knora-base:subjectClassConstraint lumieres-lausanne:Relationship ;
+                   knora-base:objectClassConstraint lumieres-lausanne:Person ;
+                   salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#person_rpValue
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasRelationshipValue
+
+lumieres-lausanne:hasRelationshipValue rdf:type owl:ObjectProperty ;
+                        rdfs:subPropertyOf lumieres-lausanne:hasCompositeLinkToValue ;
+                        knora-base:objectClassConstraint knora-base:LinkValue ;
+                        rdfs:label """Relations et contacts"""@fr ;
+                        rdfs:comment """Relations et contacts"""@fr ;
+                        knora-base:subjectClassConstraint lumieres-lausanne:Person .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#person_rp
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasRelationship
+
+lumieres-lausanne:hasRelationship rdf:type owl:ObjectProperty ;
+                   rdfs:subPropertyOf lumieres-lausanne:hasCompositeLinkTo ;
+                   rdfs:label """Relations et contacts"""@fr ;
+                   rdfs:comment """Relations et contacts"""@fr ;
+                   knora-base:subjectClassConstraint lumieres-lausanne:Person ;
+                   knora-base:objectClassConstraint lumieres-lausanne:Relationship ;
+                   salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#note
+### http://www.knora.org/ontology/0113/lumieres-lausanne#noteHasText
+
+lumieres-lausanne:noteHasText rdf:type owl:ObjectProperty ;
+      rdfs:subPropertyOf knora-base:hasValue ;
+      rdfs:label """Texte de la note"""@fr ;
+      rdfs:comment """Note/commentaire de l'utilisateur."""@fr ;
+      knora-base:subjectClassConstraint lumieres-lausanne:Note ;
+      knora-base:objectClassConstraint knora-base:TextValue ;
+      salsah-gui:guiElement salsah-gui:Richtext .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#contributor_rpValue
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isContributorValue
+
+lumieres-lausanne:isContributorValue rdf:type owl:ObjectProperty ;
+                     rdfs:subPropertyOf lumieres-lausanne:hasLinkToPersonValue ;
+                     knora-base:objectClassConstraint knora-base:LinkValue ;
+                     rdfs:label """Lien contributeur"""@fr ;
+                     rdfs:comment """Pointe vers la fiche Personne correspondante."""@fr ;
+                     knora-base:subjectClassConstraint lumieres-lausanne:Contribution ;
+                     salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#contributor_rp
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isContributor
+
+lumieres-lausanne:isContributor rdf:type owl:ObjectProperty ;
+                rdfs:subPropertyOf lumieres-lausanne:hasLinkToPerson ;
+                rdfs:label """Lien contributeur"""@fr ;
+                rdfs:comment """Pointe vers la fiche Personne correspondante."""@fr ;
+                knora-base:subjectClassConstraint lumieres-lausanne:Contribution ;
+                knora-base:objectClassConstraint lumieres-lausanne:Person ;
+                salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#contribution_type
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasContributionType
+
+lumieres-lausanne:hasContributionType rdf:type owl:ObjectProperty ;
+                   rdfs:subPropertyOf knora-base:hasValue ;
+                   rdfs:label """Type de contribution"""@fr ;
+                   rdfs:comment """Type de contribution d'une personne à une entrée bibliographique."""@fr ;
+                   knora-base:subjectClassConstraint lumieres-lausanne:Contribution ;
+                   knora-base:objectClassConstraint knora-base:ListValue ;
+                   salsah-gui:guiElement salsah-gui:Pulldown ;
+                   salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/6073662a07>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#collectionHasTitle
+
+lumieres-lausanne:collectionHasTitle rdf:type owl:ObjectProperty ;
+       rdfs:label """Nom de la collection"""@fr ;
+       rdfs:comment """Nom de la collection"""@fr ;
+       rdfs:subPropertyOf lumieres-lausanne:hasTitle ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       knora-base:subjectClassConstraint lumieres-lausanne:Collection ;
+       salsah-gui:guiElement salsah-gui:SimpleText .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#collectionHasDescription
+
+lumieres-lausanne:collectionHasDescription rdf:type owl:ObjectProperty ;
+       rdfs:subPropertyOf knora-base:hasValue ;
+       rdfs:label """Description de la collection"""@fr ;
+       rdfs:comment """Description de la collection"""@fr ;
+       knora-base:objectClassConstraint knora-base:TextValue ;
+       knora-base:subjectClassConstraint lumieres-lausanne:Collection ;
+       salsah-gui:guiElement salsah-gui:SimpleText .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#collectionHasUrlElement
+
+lumieres-lausanne:collectionHasUrlElement rdf:type owl:ObjectProperty ;
+     rdfs:subPropertyOf knora-base:hasValue ;
+     rdfs:label """Elément d'URL"""@fr ;
+     rdfs:comment """ATTENTION, doit être unique. Uniquement caractères non-accentués, tiret et chiffres. Pas d'espaces ni de ponctuation."""@fr ;
+     knora-base:subjectClassConstraint lumieres-lausanne:Collection ;
+     knora-base:objectClassConstraint knora-base:TextValue ;
+     salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#collection_includes_rp
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isInCollection
+
+lumieres-lausanne:isInCollection rdf:type owl:ObjectProperty ;
+           rdfs:subPropertyOf knora-base:hasLinkTo ;
+           rdfs:label """Collection associée"""@fr ;
+           rdfs:comment """Collection associée (pour une notice bibliographie, une transcription, une notice biographique)."""@fr ;
+           knora-base:objectClassConstraint lumieres-lausanne:Collection ;
+           salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#collection_includes_rpValue
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isInCollectionValue
+
+lumieres-lausanne:isInCollectionValue rdf:type owl:ObjectProperty ;
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
+                knora-base:objectClassConstraint knora-base:LinkValue ;
+          	rdfs:label """Collection associée"""@fr ;
+           	rdfs:comment """Collection associée (pour une notice bibliographie, une transcription, une notice biographique)."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#content
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasContent
+
+lumieres-lausanne:hasContent rdf:type owl:ObjectProperty ;
+                    rdfs:subPropertyOf knora-base:hasValue ;
+                    rdfs:label """Contenu"""@fr ;
+                    rdfs:comment """Contenu"""@fr ;
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+                    salsah-gui:guiElement salsah-gui:Richtext .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#caption
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasCaption
+
+lumieres-lausanne:hasCaption rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasValue , lumieres-lausanne:additionalResourceHasTitle ;
+             rdfs:label """Légende"""@fr ;
+             rdfs:comment """Légende de l'image."""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:Image ;
+             knora-base:objectClassConstraint knora-base:TextValue ;
+             salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#image_position
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasSequenceNumber
+
+lumieres-lausanne:hasSequenceNumber rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasValue ;
+             rdfs:label """Position de l'image"""@fr ;
+             rdfs:comment """Position de l'image dans un carrousel"""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:Image ;
+             knora-base:objectClassConstraint knora-base:IntValue ;
+             salsah-gui:guiElement salsah-gui:Spinbox .
+
+# ### ###########################################
+# ### http://www.knora.org/ontology/0113/lumieres-lausanne#disseminationHasDate
+
+# lumieres-lausanne:disseminationHasDate rdf:type owl:ObjectProperty ;
+#              rdfs:subPropertyOf lumieres-lausanne:hasDate ;
+#              rdfs:label """Date de publication (études)"""@fr ;
+#              rdfs:comment """Date de publication ou date d'un évènement (études)"""@fr ;
+#              knora-base:subjectClassConstraint lumieres-lausanne:DisseminationGroup ;
+#              knora-base:objectClassConstraint knora-base:DateValue ;
+#              salsah-gui:guiElement salsah-gui:Date .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#hasReleaseDate
+
+lumieres-lausanne:hasReleaseDate rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf lumieres-lausanne:hasDate ;
+             rdfs:label """Date de mise en ligne"""@fr ;
+             rdfs:comment """Date de mise en ligne d'une transcription ou d'un contenu web."""@fr ;
+             knora-base:objectClassConstraint knora-base:DateValue ;
+             salsah-gui:guiElement salsah-gui:Date .
+
+
+# ### ###########################################
+# ### http://www.knora.org/ontology/0113/lumieres-lausanne#disseminationHasPlace
+
+# lumieres-lausanne:disseminationHasPlace rdf:type owl:ObjectProperty ;
+#              rdfs:subPropertyOf lumieres-lausanne:hasPlace ;
+#              rdfs:label """Lieu (études)"""@fr ;
+#              rdfs:comment """Lieu (études)"""@fr ;
+#              knora-base:subjectClassConstraint lumieres-lausanne:DisseminationGroup ;
+# 			 knora-base:objectClassConstraint knora-base:TextValue ;
+# 	         salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#disseminationHasSubtitle
+
+lumieres-lausanne:disseminationHasSubtitle rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf lumieres-lausanne:hasTitle ;
+             rdfs:label """Sous-titre (Etudes)"""@fr ;
+             rdfs:comment """Sous-titre (Etudes)"""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:Dissemination ;
+			 knora-base:objectClassConstraint knora-base:TextValue ;
+	         salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#disseminationGroupHasType
+
+lumieres-lausanne:disseminationGroupHasType rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasValue ;
+             rdfs:label """Type de dissémination"""@fr ;
+             rdfs:comment """Type de dissémination"""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:DisseminationGroup ;
+			 knora-base:objectClassConstraint knora-base:ListValue ;
+	         salsah-gui:guiElement salsah-gui:Pulldown ;
+             salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/disseminationGroupHasType>" .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#disseminationGroupHasSequenceNumber
+
+lumieres-lausanne:disseminationGroupHasSequenceNumber rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasValue ;
+             rdfs:label """Numéro du volume (Etudes ou Actes de colloque)"""@fr ;
+             rdfs:comment """Numéro pour Etudes ou Actes de colloque"""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:DisseminationGroup ;
+             knora-base:objectClassConstraint knora-base:IntValue ;
+             salsah-gui:guiElement salsah-gui:Spinbox .
+
+             ### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#disseminationHasSequenceNumber
+
+lumieres-lausanne:disseminationHasSequenceNumber rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasValue ;
+             rdfs:label """Numéro (Etudes)"""@fr ;
+             rdfs:comment """Numéro (Etudes)"""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:Dissemination ;
+             knora-base:objectClassConstraint knora-base:IntValue ;
+             salsah-gui:guiElement salsah-gui:Spinbox .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#contributionHasSequenceNumber
+
+lumieres-lausanne:contributionHasSequenceNumber rdf:type owl:ObjectProperty ;
+             rdfs:subPropertyOf knora-base:hasValue ;
+             rdfs:label """Numéro d'ordre des auteurs"""@fr ;
+             rdfs:comment """Numéro d'ordre des auteurs"""@fr ;
+             knora-base:subjectClassConstraint lumieres-lausanne:Contribution ;
+             knora-base:objectClassConstraint knora-base:IntValue ;
+             salsah-gui:guiElement salsah-gui:Spinbox .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#disseminationGroupHasDescription
+
+lumieres-lausanne:disseminationGroupHasDescription rdf:type owl:ObjectProperty ;
+          rdfs:subPropertyOf knora-base:hasValue ;
+          rdfs:label """Descriptif"""@fr ;
+          rdfs:comment """Descriptif (Etudes, Actes)"""@fr ;
+          knora-base:subjectClassConstraint lumieres-lausanne:DisseminationGroup ;
+          knora-base:objectClassConstraint knora-base:TextValue ;
+          salsah-gui:guiElement salsah-gui:Richtext .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#isKnoraUser
+
+lumieres-lausanne:isKnoraUser rdf:type owl:ObjectProperty ;
+            rdfs:subPropertyOf knora-base:hasValue ;
+            rdfs:label """Utilisateur Knora"""@fr ;
+            rdfs:comment """Utilisateur connu de Knora."""@fr ;
+            knora-base:objectClassConstraint knora-base:UriValue ;
+            knora-base:subjectClassConstraint lumieres-lausanne:User ;
+            salsah-gui:guiElement salsah-gui:SimpleText .
+
+
+##########################################################
+#
+# RESOURCES
+#
+##########################################################
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#BibliographicNotice
+
+lumieres-lausanne:BibliographicNotice rdf:type owl:Class ;
+        rdfs:subClassOf knora-base:Resource ,
+        					[
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasOldId ;
+                           salsah-gui:guiOrder "1"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:bibliographicNoticeHasTitle ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasShortTitle ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasLiteratureType ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasDocumentType ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasJournalTitle ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        # [
+                        #    rdf:type owl:Restriction ;
+                        #    owl:onProperty lumieres-lausanne:hasFirstAuthorValue ;
+                        #    owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        # [
+                        #    rdf:type owl:Restriction ;
+                        #    owl:onProperty lumieres-lausanne:hasFirstAuthor ;
+                        #    owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasContributionValue ;
+                           owl:minCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasContribution ;
+                           owl:minCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasSubjectKeyword ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasArchive ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,   
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasShelfNumber ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasWritingPlace ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasSubjectPersonValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasSubjectPerson ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasSubjectSociety ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasWritingDate ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasPages ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasLanguage ;
+                           owl:minCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasAbstract ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasPublisher ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasFirstEdition ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasVolumeSequenceNumber ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasVolumeNumber ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isInProjectValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isInProject ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasBookTitle ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasCollection ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+# poursuivre la vérification des cardinalités à partir d'ici.                        
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasManuscriptType ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasJournalAbbreviation ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasJournalNumber ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasJournalSeriesTitle ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasDictionnaryTitle ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasAdditionalResource ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasAdditionalResourceValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasNote ;
+                           salsah-gui:guiOrder "4"^^xsd:integer ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      	[
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasNoteValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                         [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isInCollection ;
+                           salsah-gui:guiOrder "42"^^xsd:integer ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      	[
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isInCollectionValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                         [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasTranscription ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      	[
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasTranscriptionValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ;
+        rdfs:label """Notice bibliographique"""@fr ;
+        rdfs:comment """Notice bibliographique"""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Person
+
+lumieres-lausanne:Person rdf:type owl:Class ;
+        rdfs:subClassOf knora-base:Resource ,
+        					[
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasOldId ;
+                           salsah-gui:guiOrder "1"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasName ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isModern ;
+                           salsah-gui:guiOrder "2"^^xsd:integer ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:noticeIsValid ;
+                           salsah-gui:guiOrder "4"^^xsd:integer ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:noticeIsCreated ;
+                           salsah-gui:guiOrder "5"^^xsd:integer ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:mayHaveBiography ;
+                           salsah-gui:guiOrder "16"^^xsd:integer ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isApproximateBeginDate ;
+                           salsah-gui:guiOrder "5"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isApproximateEndDate ;
+                           salsah-gui:guiOrder "6"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasPlaceBirth ;
+                           salsah-gui:guiOrder "7"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasPlaceDeath ;
+                           salsah-gui:guiOrder "8"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasReligion ;
+                           salsah-gui:guiOrder "9"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasPlaceOrigin ;
+                           salsah-gui:guiOrder "10"^^xsd:integer ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasBiography ;
+                           salsah-gui:guiOrder "13"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasCivilStatus ;
+                           salsah-gui:guiOrder "14"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isInArchive ;
+                           salsah-gui:guiOrder "16"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isInSociety ;
+                           salsah-gui:guiOrder "17"^^xsd:integer ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isInSocietyValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasPosition ;
+                           salsah-gui:guiOrder "18"^^xsd:integer ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasPositionValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:personHasDate ;
+                           salsah-gui:guiOrder "20"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasNationality ;
+                           salsah-gui:guiOrder "22"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasCommentWork ;
+                           salsah-gui:guiOrder "13"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasNote ;
+                           salsah-gui:guiOrder "4"^^xsd:integer ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      	[
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasNoteValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isInCollection ;
+                           salsah-gui:guiOrder "42"^^xsd:integer ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                      	[
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isInCollectionValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasRelationship ;
+                           salsah-gui:guiOrder "3"^^xsd:integer ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasRelationshipValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isInProjectValue ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:isInProject ;
+                           owl:minCardinality "0"^^xsd:nonNegativeInteger                        ] ;
+        rdfs:label """Personne"""@fr ;
+        rdfs:comment """Personne."""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Transcription
+
+lumieres-lausanne:Transcription rdf:type owl:Class ;
+               rdfs:subClassOf knora-base:Resource ,
+              				  [
+	                           	rdf:type owl:Restriction ;
+	                           	owl:onProperty lumieres-lausanne:hasOldId ;
+                                        salsah-gui:guiOrder "1"^^xsd:integer ;
+	                           	owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                               [
+                                  rdf:type owl:Restriction ;
+                                  owl:onProperty lumieres-lausanne:hasStatus ;
+                                  salsah-gui:guiOrder "2"^^xsd:integer ;
+                                  owl:cardinality "1"^^xsd:nonNegativeInteger                               ] ,
+                               [
+                                  rdf:type owl:Restriction ;
+                                  owl:onProperty lumieres-lausanne:hasScope ;
+                                  salsah-gui:guiOrder "3"^^xsd:integer ;
+                                  owl:cardinality "1"^^xsd:nonNegativeInteger                               ] ,
+                             [
+                                  rdf:type owl:Restriction ;
+                                  owl:onProperty lumieres-lausanne:transcriptionHasText ;
+                                  salsah-gui:guiOrder "4"^^xsd:integer ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger                               ] ,
+                               [
+                                  rdf:type owl:Restriction ;
+                                  owl:onProperty lumieres-lausanne:transcriptionHasEnvelope ;
+                                  salsah-gui:guiOrder "5"^^xsd:integer ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger                               ] ,
+                               [
+                                  rdf:type owl:Restriction ;
+                                  owl:onProperty lumieres-lausanne:hasDiffusionType ;
+                                  salsah-gui:guiOrder "2"^^xsd:integer ;
+                                  owl:cardinality "1"^^xsd:nonNegativeInteger                               ] ,
+                               [
+                                  rdf:type owl:Restriction ;
+                                  owl:onProperty lumieres-lausanne:hasReviewerValue ;
+                                  owl:minCardinality "0"^^xsd:nonNegativeInteger                               ] ,
+                               [
+                                  rdf:type owl:Restriction ;
+                                  owl:onProperty lumieres-lausanne:hasReviewer ;
+                                  salsah-gui:guiOrder "8"^^xsd:integer ;
+                                  owl:minCardinality "0"^^xsd:nonNegativeInteger                               ] ,
+		                        [
+		                           rdf:type owl:Restriction ;
+		                           owl:onProperty lumieres-lausanne:hasNote ;
+                                           salsah-gui:guiOrder "4"^^xsd:integer ;
+		                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+		                      	[
+		                           rdf:type owl:Restriction ;
+		                           owl:onProperty lumieres-lausanne:hasNoteValue ;
+		                           owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,           		 
+                           	  [
+	                           	 rdf:type owl:Restriction ;
+	                           	 owl:onProperty lumieres-lausanne:isInCollection ;
+                                         salsah-gui:guiOrder "42"^^xsd:integer ;
+	                           	 owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+	                      	  [
+	                           	 rdf:type owl:Restriction ;
+	                           	 owl:onProperty lumieres-lausanne:isInCollectionValue ;
+	                           	 owl:minCardinality "0"^^xsd:nonNegativeInteger                      ] ,
+                                [
+                                  rdf:type owl:Restriction ;
+                                  owl:onProperty lumieres-lausanne:hasReleaseDate ;
+                                  salsah-gui:guiOrder "8"^^xsd:integer ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger                               ] ;
+               rdfs:label """Transcription"""@fr ;
+               rdfs:comment """Transcription, liée à une notice bibliographique"""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#TranscriptionRestricted
+
+lumieres-lausanne:TranscriptionRestricted rdf:type owl:Class ;
+               rdfs:subClassOf lumieres-lausanne:Transcription ;
+               rdfs:label """Transcription privée"""@fr ;
+               rdfs:comment """Transcription privée, liée à une notice bibliographique"""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Documentfile
+### http://www.knora.org/ontology/0113/lumieres-lausanne#AdditionalResource
+
+lumieres-lausanne:AdditionalResource rdf:type owl:Class ;
+              rdfs:subClassOf knora-base:Resource ,
+                              [
+                                 rdf:type owl:Restriction ;
+                                 owl:onProperty lumieres-lausanne:additionalResourceHasTitle ;
+                                 salsah-gui:guiOrder "1"^^xsd:integer ;
+                                 owl:cardinality "1"^^xsd:nonNegativeInteger                              ] ,
+                              [
+                                 rdf:type owl:Restriction ;
+                                 owl:onProperty lumieres-lausanne:hasDiffusionType ;
+                                 salsah-gui:guiOrder "2"^^xsd:integer ;
+                                 owl:cardinality "1"^^xsd:nonNegativeInteger                              ] ,
+                              [
+                                 rdf:type owl:Restriction ;
+                                 owl:onProperty lumieres-lausanne:hasReference ;
+                                 salsah-gui:guiOrder "2"^^xsd:integer ;
+                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger                              ] ;
+              rdfs:label """Ressource ou document associé"""@fr ;
+              rdfs:comment """Ressource ou document associé à une notice bibliographique ou à du contenu de type web/blog."""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#AdditionalResourceRestricted
+
+lumieres-lausanne:AdditionalResourceRestricted rdf:type owl:Class ;
+              rdfs:subClassOf lumieres-lausanne:AdditionalResource ;
+              rdfs:label """Ressource ou document privé associé"""@fr ;
+              rdfs:comment """Ressource ou document privé associé à une notice bibliographique ou à du contenu de type web/blog."""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Document
+
+lumieres-lausanne:Document rdf:type owl:Class ;
+               rdfs:subClassOf knora-base:DocumentRepresentation ,
+							lumieres-lausanne:AdditionalResource ;
+               rdfs:label """PDF"""@fr ;
+               rdfs:comment """Document PDF associé à une notice ou du contenu de type web/blog."""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#DocumentRestricted
+
+lumieres-lausanne:DocumentRestricted rdf:type owl:Class ;
+               rdfs:subClassOf knora-base:DocumentRepresentation ,
+							lumieres-lausanne:AdditionalResource ;
+               rdfs:label """PDF privé"""@fr ;
+               rdfs:comment """Document PDF privé associé à une notice ou du contenu de type web/blog."""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Draft
+
+lumieres-lausanne:Draft rdf:type owl:Class ;
+               rdfs:subClassOf knora-base:Resource ,
+               					[
+		                           rdf:type owl:Restriction ;
+		                           owl:onProperty lumieres-lausanne:isDraftOfValue ;
+		                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ,
+		                      	[
+		                           rdf:type owl:Restriction ;
+		                           owl:onProperty lumieres-lausanne:isDraftOf ;
+		                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                      ] ;           		 
+               rdfs:label """[Draft]"""@en , """[Ébauche]"""@fr ;
+               rdfs:comment """Unpublished version of a resource."""@en, """Version non publiée d'une resource."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#DraftPerson
+
+lumieres-lausanne:DraftPerson rdf:type owl:Class ;
+               rdfs:subClassOf lumieres-lausanne:Draft , lumieres-lausanne:Person;
+               rdfs:label """Draft - Person"""@en , """Ébauche - Personne"""@fr ;
+               rdfs:comment """Unpublished version of a person notice."""@en, """Version non publiée de la notice d'une personne."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#DraftBibliographicNotice
+
+lumieres-lausanne:DraftBibliographicNotice rdf:type owl:Class ;
+               rdfs:subClassOf lumieres-lausanne:Draft , lumieres-lausanne:BibliographicNotice ;
+               rdfs:label """Draft - Bibliographic notice"""@en , """Ébauche - Notice bibliographique"""@fr ;
+               rdfs:comment """Unpublished version of a bibliographic notice."""@en, """Version non publiée d'une notice bibliographique."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Project
+
+lumieres-lausanne:Project rdf:type owl:Class ;
+         rdfs:subClassOf knora-base:Resource , 
+         				lumieres-lausanne:WebContent ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:projectHasUrlElement ;
+                            salsah-gui:guiOrder "2"^^xsd:integer ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger                         ] ;
+         rdfs:label """Projet"""@fr ;
+         rdfs:comment """Projet auquel sont rattachées les bibliographies, les biographies et les personnes. 
+Les droits d'accès aux différentes ressources sont conditionnés par l'appartenance d'un utilisateur à un projet.
+Certains projets ont une diffusion publique, d'autres sont uniquement diffusés en interne."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Society_membership
+### http://www.knora.org/ontology/0113/lumieres-lausanne#SocietyMembership
+
+lumieres-lausanne:SocietyMembership rdf:type owl:Class ;
+                    rdfs:subClassOf knora-base:Resource ,
+                                    [
+                                       rdf:type owl:Restriction ;
+                                       owl:onProperty lumieres-lausanne:societyHasName ;
+                                       salsah-gui:guiOrder "1"^^xsd:integer ;
+                                       owl:maxCardinality "1"^^xsd:nonNegativeInteger                                    ] ,
+                                    [
+                                       rdf:type owl:Restriction ;
+                                       owl:onProperty lumieres-lausanne:societyMembershipHasDate ;
+                                       salsah-gui:guiOrder "2"^^xsd:integer ;
+                                       owl:maxCardinality "1"^^xsd:nonNegativeInteger                                    ] ,
+                                    [
+                                       rdf:type owl:Restriction ;
+                                       owl:onProperty lumieres-lausanne:isApproximateBeginDate ;
+                                       owl:maxCardinality "1"^^xsd:nonNegativeInteger                                    ] ,
+                                    [
+                                       rdf:type owl:Restriction ;
+                                       owl:onProperty lumieres-lausanne:isApproximateEndDate ;
+                                       owl:maxCardinality "1"^^xsd:nonNegativeInteger                                    ] ,
+                                    [
+                                       rdf:type owl:Restriction ;
+                                       owl:onProperty lumieres-lausanne:societyHasPlace ;
+                                       salsah-gui:guiOrder "4"^^xsd:integer ;
+                                       owl:maxCardinality "1"^^xsd:nonNegativeInteger                                    ] ;
+                    rdfs:label """Appartenance à une société/académie"""@fr ;
+                    rdfs:comment """Société ou académie dont une Personne a été membre."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Position
+
+lumieres-lausanne:Position rdf:type owl:Class ;
+          rdfs:subClassOf knora-base:Resource ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty lumieres-lausanne:positionHasName ;
+                             salsah-gui:guiOrder "1"^^xsd:integer ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty lumieres-lausanne:positionHasDate ;
+                             salsah-gui:guiOrder "2"^^xsd:integer ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty lumieres-lausanne:positionHasPlace ;
+                             salsah-gui:guiOrder "4"^^xsd:integer ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty lumieres-lausanne:isApproximateBeginDate ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty lumieres-lausanne:isApproximateEndDate ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger                          ] ;
+          rdfs:label """Fonctions publiques et privées"""@fr ;
+          rdfs:comment """Fonction ou poste exact si connu (ex1 : Professeur ; ex2 : Professeur d’hébreu), ville et dates de début et de fin."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Relation
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Relationship
+
+lumieres-lausanne:Relationship rdf:type owl:Class ;
+          rdfs:subClassOf knora-base:Resource ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty lumieres-lausanne:hasRelationType ;
+                             salsah-gui:guiOrder "2"^^xsd:integer ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty lumieres-lausanne:isRelationshipTarget ;
+                             salsah-gui:guiOrder "3"^^xsd:integer ;
+                             owl:minCardinality "1"^^xsd:nonNegativeInteger                          ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty lumieres-lausanne:isRelationshipTargetValue ;
+                             owl:minCardinality "1"^^xsd:nonNegativeInteger                          ] ;
+          rdfs:label """Relations et contacts"""@fr ;
+          rdfs:comment """Réseau familial, social et intellectuel. Concerne seulement les noms de parenté qui ont une certaine importance."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Note
+
+lumieres-lausanne:Note rdf:type owl:Class ;
+      rdfs:subClassOf knora-base:Resource ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty lumieres-lausanne:noteHasText ;
+                         salsah-gui:guiOrder "1"^^xsd:integer ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty lumieres-lausanne:hasDiffusionType ;
+                         salsah-gui:guiOrder "2"^^xsd:integer ;
+                         owl:cardinality "1"^^xsd:nonNegativeInteger                      ] ;
+      rdfs:label """Note"""@fr ;
+      rdfs:comment """Note ou commentaire associé à une notice bibliographique, à une notice biographique ou à une transcription."""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#NoteRestricted
+
+lumieres-lausanne:NoteRestricted rdf:type owl:Class ;
+      rdfs:subClassOf lumieres-lausanne:Note ;
+      rdfs:label """Note privée"""@fr ;
+      rdfs:comment """Note ou commentaire privé associé à une notice bibliographique, à une notice biographique ou à une transcription."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Contribution
+
+lumieres-lausanne:Contribution rdf:type owl:Class ;
+              rdfs:subClassOf knora-base:Resource ,
+                              [
+                                 rdf:type owl:Restriction ;
+                                 owl:onProperty lumieres-lausanne:isContributorValue ;
+                                 salsah-gui:guiOrder "1"^^xsd:integer ;
+                                 owl:cardinality "1"^^xsd:nonNegativeInteger                              ] ,
+                              [
+                                 rdf:type owl:Restriction ;
+                                 owl:onProperty lumieres-lausanne:isContributor ;
+                                 salsah-gui:guiOrder "1"^^xsd:integer ;
+                                 owl:cardinality "1"^^xsd:nonNegativeInteger                              ] ,
+                              [
+                                 rdf:type owl:Restriction ;
+                                 owl:onProperty lumieres-lausanne:hasContributionType ;
+                                 salsah-gui:guiOrder "2"^^xsd:integer ;
+                                 owl:cardinality "1"^^xsd:nonNegativeInteger                              ] ,
+                                [
+                                 rdf:type owl:Restriction ;
+                                 owl:onProperty lumieres-lausanne:contributionHasSequenceNumber ;
+                                 salsah-gui:guiOrder "2"^^xsd:integer ;
+                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger                              ] ;
+              rdfs:label """Contribution"""@fr ;
+              rdfs:comment """Contribution d'une personne à un ouvrage, à un article, etc."""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Collection
+
+lumieres-lausanne:Collection	rdf:type owl:Class ;
+         rdfs:subClassOf knora-base:Resource ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:collectionHasTitle ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:collectionHasUrlElement ;
+                            salsah-gui:guiOrder "3"^^xsd:integer ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:collectionHasDescription ;
+                            salsah-gui:guiOrder "46"^^xsd:integer ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                     	[
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:hasDiffusionType ;
+                            salsah-gui:guiOrder "2"^^xsd:integer ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger                               ]	 ,
+			[
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasOwnerValue ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] , 
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasOwner ;
+                           salsah-gui:guiOrder "7"^^xsd:integer ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                        ] ;
+         rdfs:label """Collection"""@fr ;
+         rdfs:comment """Collections de l'utilisateur ou collections partagées."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#CollectionRestricted
+
+lumieres-lausanne:CollectionRestricted	rdf:type owl:Class ;
+         rdfs:subClassOf lumieres-lausanne:Collection ;
+         rdfs:label """Collection privée"""@fr ;
+         rdfs:comment """Collections privées de l'utilisateur."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Finding
+
+lumieres-lausanne:Finding rdf:type owl:Class ;
+         rdfs:subClassOf lumieres-lausanne:WebContent ;
+         rdfs:label """Trouvaille"""@fr ;
+         rdfs:comment """Trouvaille"""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Freecontent
+### http://www.knora.org/ontology/0113/lumieres-lausanne#FreeContent
+
+lumieres-lausanne:FreeContent rdf:type owl:Class ;
+         rdfs:subClassOf lumieres-lausanne:WebContent ,
+						[
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:freeContentHasName ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger                         ] ;               
+         rdfs:label """Contenu libre"""@fr ;
+         rdfs:comment """Contenu libre."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#DisseminationGroup
+
+lumieres-lausanne:DisseminationGroup rdf:type owl:Class ;
+         rdfs:subClassOf knora-base:Resource ,
+						# [
+                  #           rdf:type owl:Restriction ;
+                  #           owl:onProperty lumieres-lausanne:disseminationHasDate ;
+                  #           salsah-gui:guiOrder "1"^^xsd:integer ;
+                  #           owl:maxCardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                  #        [
+                  #           rdf:type owl:Restriction ;
+                  #           owl:onProperty lumieres-lausanne:disseminationHasPlace ;
+                  #           salsah-gui:guiOrder "2"^^xsd:integer ;
+                  #           owl:maxCardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:disseminationGroupHasType ;
+                            salsah-gui:guiOrder "3"^^xsd:integer ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:disseminationGroupHasTitle ;
+                            salsah-gui:guiOrder "1"^^xsd:integer ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:disseminationGroupHasSequenceNumber ;
+                            salsah-gui:guiOrder "2"^^xsd:integer ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:hasDissemination ;
+                            salsah-gui:guiOrder "5"^^xsd:integer ;
+                            owl:minCardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:hasDisseminationValue ;
+                            salsah-gui:guiOrder "5"^^xsd:integer ;
+                            owl:minCardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:disseminationGroupHasDescription ;
+                            salsah-gui:guiOrder "4"^^xsd:integer ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger                         ] ;               
+         rdfs:label """Groupe de dissémination: Etudes ou Actes de colloques"""@fr ;
+         rdfs:comment """Groupe de dissémination: Etudes ou Actes de colloques."""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Dissemination
+
+lumieres-lausanne:Dissemination rdf:type owl:Class ;
+         rdfs:subClassOf knora-base:Resource ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:disseminationHasTitle ;
+                            salsah-gui:guiOrder "1"^^xsd:integer ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:disseminationHasSubtitle ;
+                            salsah-gui:guiOrder "2"^^xsd:integer ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:disseminationHasSequenceNumber ;
+                            salsah-gui:guiOrder "3"^^xsd:integer ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:hasLinkToBibliographicNotice ;
+                            salsah-gui:guiOrder "4"^^xsd:integer ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:hasLinkToBibliographicNoticeValue ;
+                            salsah-gui:guiOrder "4"^^xsd:integer ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger                         ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasAdditionalResource ;
+                           salsah-gui:guiOrder "5"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+                        [
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasAdditionalResourceValue ;
+                           salsah-gui:guiOrder "5"^^xsd:integer ;
+                           owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ;               
+         rdfs:label """Dissémination (contribution à un volume d'Etudes ou d'Actes de colloque)"""@fr ;
+         rdfs:comment """Dissémination faisant partie d'un groupe de dissémination (Etude ou Acte de colloque)."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#WebContent
+
+lumieres-lausanne:WebContent rdf:type owl:Class ;
+         rdfs:subClassOf knora-base:Resource ,
+                       	[
+	                        rdf:type owl:Restriction ;
+	                        owl:onProperty lumieres-lausanne:hasOldId ;
+                                salsah-gui:guiOrder "1"^^xsd:integer ;
+	                        owl:maxCardinality "1"^^xsd:nonNegativeInteger                        ] ,
+						[
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:webContentHasTitle ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger                         ] ,
+						[
+                           rdf:type owl:Restriction ;
+                           owl:onProperty lumieres-lausanne:hasContent ;
+                           salsah-gui:guiOrder "46"^^xsd:integer ;
+                           owl:cardinality "1"^^xsd:nonNegativeInteger                       ] ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:hasDiffusionType ;
+                            salsah-gui:guiOrder "2"^^xsd:integer ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger                         ] ,
+						[
+						   rdf:type owl:Restriction ;
+						   owl:onProperty lumieres-lausanne:hasAdditionalResource ;
+						   owl:minCardinality "0"^^xsd:nonNegativeInteger 		] ,
+						[
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:hasAdditionalResourceValue ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger                         ] ,
+                         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:contentHasAuthor ;
+                            salsah-gui:guiOrder "28"^^xsd:integer ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger                         ] ,
+                            [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:hasReleaseDate ;
+                            salsah-gui:guiOrder "8"^^xsd:integer ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger                         ] ;
+         rdfs:label """[Contenu web]"""@fr ;
+         rdfs:comment """[Contenu de type web ou blog: trouvailles, projets, actualités, contenus libres]."""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#Image
+
+lumieres-lausanne:Image rdf:type owl:Class ;
+         rdfs:subClassOf knora-base:StillImageRepresentation , 
+         				lumieres-lausanne:AdditionalResource ,
+						[
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:hasCaption ;
+                            salsah-gui:guiOrder "47"^^xsd:integer ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger                         ] ,
+			 			[
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:hasSequenceNumber ;
+                            salsah-gui:guiOrder "48"^^xsd:integer ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger                              ] ;                 
+         rdfs:label """Image"""@fr ;
+         rdfs:comment """Image associée à une notice ou du contenu de type web/blog."""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#ImageRestricted
+
+lumieres-lausanne:ImageRestricted rdf:type owl:Class ;
+         rdfs:subClassOf lumieres-lausanne:Image ;                 
+         rdfs:label """Image privée"""@fr ;
+         rdfs:comment """Image privée associée à une notice ou du contenu de type web/blog."""@fr .
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#News
+
+lumieres-lausanne:News rdf:type owl:Class ;
+         rdfs:subClassOf lumieres-lausanne:WebContent ;
+         rdfs:label """Nouvelle ou actualité"""@fr ;
+         rdfs:comment """Nouvelle publiée parmi le contenu de type site web ou blog."""@fr .
+
+
+### ###########################################
+### http://www.knora.org/ontology/0113/lumieres-lausanne#User
+
+lumieres-lausanne:User rdf:type owl:Class ;
+         rdfs:subClassOf knora-base:Resource ,
+         [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty lumieres-lausanne:isKnoraUser ;
+                            salsah-gui:guiOrder "1"^^xsd:integer ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger                              ] ;
+         rdfs:label """Utilisateur"""@fr , """User"""@en ;
+         rdfs:comment """Utilisateur de l'application Lumières.Lausanne."""@fr ,
+                      """User of the Lumières.Lausanne web app""" .

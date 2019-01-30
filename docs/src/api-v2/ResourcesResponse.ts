@@ -1,5 +1,6 @@
 import {Basic} from "./Basic";
 import IriObject = Basic.IriObject;
+import DatatypeObject = Basic.DatatypeObject;
 
 /**
  * This module contains response formats for resource instances.
@@ -30,7 +31,7 @@ export module ResourcesResponse {
              *
              * In case of a link value, this may again contain a `Resource` as a nested structure.
              */
-            [valueHasPropertyIri: string]: number | string | boolean | Resource | IriObject;
+            [valueHasPropertyIri: string]: number | string | boolean | Resource | IriObject | Basic.DatatypeObject;
 
         }
 
@@ -61,7 +62,7 @@ export module ResourcesResponse {
              * Please note that the type `string` is not a valid value for a property.
              * This is a mere requirement of TypeScript to make the index signature return types consistent with other members of this interface.
              */
-            [propertyIri: string]: Value | Array<Value> | string ;
+            [propertyIri: string]: Value | Array<Value> | string | IriObject | DatatypeObject;
 
         }
 

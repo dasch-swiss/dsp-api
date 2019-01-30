@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -35,7 +35,7 @@ import org.knora.webapi.routing.v1.ResourcesRouteV1
 class CORSSupportV1R2RSpec extends R2RSpec {
 
     /* get the path of the route we want to test */
-    private val sealedResourcesRoute = Route.seal(ResourcesRouteV1.knoraApiPath(system, settings, log))
+    private val sealedResourcesRoute = Route.seal(new ResourcesRouteV1(routeData).knoraApiPath)
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 

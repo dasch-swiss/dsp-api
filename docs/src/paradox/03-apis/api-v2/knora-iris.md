@@ -1,5 +1,5 @@
 <!---
-Copyright © 2015-2018 the contributors (see Contributors.md).
+Copyright © 2015-2019 the contributors (see Contributors.md).
 
 This file is part of Knora.
 
@@ -32,7 +32,7 @@ Knora project regardless of where it is hosted. The IRIs of ontologies that
 are built into Knora do not contain shortcodes; these ontologies implicitly
 belong to the Knora system project.
 
-A project-specific ontology IRI must always include its project shortcode.
+A user-created ontology IRI must always include its project shortcode.
 
 Project ID `0000` is reserved for shared ontologies
 (see @ref:[Shared Ontologies](#shared-ontologies)).
@@ -51,8 +51,8 @@ Knora makes a distinction between internal and external ontologies. Internal
 ontologies are used in the triplestore, while external ontologies are used in
 API v2. For each internal ontology, there is a corresponding external ontology. Some
 internal ontologies are built into Knora, while others are
-project-specific. Knora automatically generates external
-ontologies based on project-specific internal ontologies.
+user-created. Knora automatically generates external
+ontologies based on user-created internal ontologies.
 
 Each internal ontology has an IRI, which is also the IRI of the named
 graph that contains the ontology in the triplestore. An internal
@@ -78,7 +78,7 @@ The following names are reserved for built-in internal Knora ontologies:
   - `salsah-gui`
 
 Names starting with `knora` are reserved for future built-in Knora
-ontologies. A project-specific ontology name may not start with the
+ontologies. A user-created ontology name may not start with the
 letter `v` followed by a digit, and may not contain these reserved
 words:
 
@@ -173,23 +173,12 @@ has the following IRIs:
   - `http://HOST[:PORT]/ontology/0001/example/simple/v2#ExampleThing`
     (in the API v2 simple schema)
 
-### Shared Ontologies
+### Shared Ontology IRIs
 
-Knora does not normally allow a project to use classes or properties defined in
-an ontology that belongs to another project. Each project must be free to change
-its own ontologies, but this is not possible if they have been used in ontologies
-or data created by other projects.
-
-However, an ontology can be defined as shared, meaning that it can be used by
+As explained in @ref:[Shared Ontologies](../../02-knora-ontologies/introduction.md#shared-ontologies),
+a user-created ontology can be defined as shared, meaning that it can be used by
 multiple projects, and that its creators will not change it in ways that could
-affect other ontologies or data that are based on it. Specifically, in a shared
-ontology, existing classes and properties cannot safely be changed, but new ones
-can be added. (It is not even safe to add an optional cardinality to an existing
-class, because this could cause subclasses to violate the rule that a class cannot
-have a cardinality on property P as well as a cardinality on a subproperty of P;
-see @ref:[Restrictions on Classes](../../02-knora-ontologies/knora-base.md#restrictions-on-classes).)
-
-A standardisation process for shared ontologies is planned (issue @github[#523](#523)).
+affect other ontologies or data that are based on it.
 
 There is currently one project for shared ontologies:
 
@@ -214,19 +203,11 @@ project, `0000`, is assumed. The sample shared ontology, `example-box`, has thes
 Knora generates IRIs for data that it creates in the triplestore. Each
 generated data IRI contains one or more @extref[UUID](rfc:4122)
 identifiers to make it unique. To keep data IRIs relatively short, each UUID is
-@extref[Base64](rfc:4648) encoded, using the 'URL
-and Filename safe Base64 Alphabet' specified in Table 2 of @extref[RFC 4648](rfc:4648),
-without padding; thus each UUID is a 22-character string.
+@extref[base64url-encoded](rfc:4648#section-5), without padding;
+thus each UUID is a 22-character string.
 
 Data IRIs are not currently intended to be dereferenced as URLs.
-Instead, each Knora resource will have a corresponding
-[ARK](https://tools.ietf.org/html/draft-kunze-ark-18) URL, which will be
-handled by a server that redirects requests to the relevant Knora API
-server (see @ref:[Knora Resource Permalinks](#knora-resource-permalinks)). However, every
-generated data IRI begins with `http://rdfh.ch`. This domain is not
-currently used, but it is owned by the [DaSCH](http://dasch.swiss/), so
-it would be possible to make resource IRIs directly dereferenceable in
-the future.
+Instead, each Knora resource has a separate @ref:[permalink](resource-permalinks.md).
 
 A Knora value does not have a stable IRI throughout its version history.
 Each time a new version of a value is made, the new version gets a new IRI.
@@ -252,9 +233,3 @@ follows:
     `http://rdfh.ch/permissions/PROJECT_SHORTCODE/PERMISSION_UUID`
   - Lists: `http://rdfh.ch/lists/PROJECT_SHORTCODE/LIST_UUID`
   - User: `http://rdfh.ch/users/USER_UUID`
-
-## Knora Resource Permalinks
-
-TODO: document the use of
-[ARK](https://tools.ietf.org/html/draft-kunze-ark-18) permalinks for
-Knora resources.

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -19,7 +19,7 @@
 
 package org.knora.webapi.viewhandlers
 
-import akka.actor.ActorSelection
+import akka.actor.{ActorRef}
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
@@ -46,7 +46,7 @@ object ResourceHtmlView {
       */
     private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
-    def propertiesHtmlView(response: ResourceFullResponseV1, responderManager: ActorSelection): String = {
+    def propertiesHtmlView(response: ResourceFullResponseV1, responderManager: ActorRef): String = {
 
         val properties = response.props.get.properties
 
@@ -103,7 +103,7 @@ object ResourceHtmlView {
         }
     }
 
-    private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorSelection): String = {
+    private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorRef): String = {
 
 
         val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, systemUser)

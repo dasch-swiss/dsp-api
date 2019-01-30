@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright © 2015-2018 the contributors (see Contributors.md).
+  ~ Copyright © 2015-2019 the contributors (see Contributors.md).
   ~
   ~ This file is part of Knora.
   ~
@@ -88,7 +88,7 @@
 
     <!-- V2 -->
 
-    <logger name="org.knora.webapi.util.search.gravsearch" level="INFO"/>
+    <logger name="org.knora.webapi.responders.v2.search.gravsearch" level="INFO"/>
 
     <!-- Admin -->
     <logger name="org.knora.webapi.responders.admin.GroupsResponderADM" level="INFO"/>
@@ -115,6 +115,7 @@
 
     <!-- V2 -->
     <logger name="org.knora.webapi.e2e.v2.AuthenticationV2E2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.other.v2.LumieresLausanneV2E2ESpec" level="DEBUG"/>
 
     <!-- Admin -->
     <logger name="org.knora.webapi.http.ServerVersionE2ESpec" level="INFO"/>

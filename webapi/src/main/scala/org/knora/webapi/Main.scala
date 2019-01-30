@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -27,9 +27,6 @@ import org.knora.webapi.messages.app.appmessages._
   * three methods: ''checkActorSystem'', ''startService'', and ''stopService''.
   */
 object Main extends App with LiveCore with KnoraService {
-
-    // waits until the application state actor is ready
-    applicationStateActorReady()
 
     val arglist = args.toList
 
@@ -79,7 +76,8 @@ object Main extends App with LiveCore with KnoraService {
             """.stripMargin)
     } else {
         /* Start the HTTP layer, allowing access */
-        startService(true)
+        /* Don't skip loading of ontologies */
+        startService(skipLoadingOfOntologies=false)
 
         /* add the method for shutting down our application to the shutdown hook, so that we can clean up */
         scala.sys.addShutdownHook(stopService())

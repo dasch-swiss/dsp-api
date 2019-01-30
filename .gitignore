@@ -16,9 +16,14 @@ docs/env
 docs/_build
 docs/_format_docu
 docs/_format_docu_v2
-/project/
-*/project/target/
-*/project/project/
+docs/project
+salsah1/project
+webapi/project
+webapi/_fuseki/run
+triplestores/graphdb-se-7
+idea.vmoptions
+sipi/test
+**/project/target/
 /target/
 *.aux
 *.bbl
@@ -32,6 +37,5 @@ docs/_format_docu_v2
 *.toc
 *.bak
 .sbtrc
-webapi/_fuseki/run
-triplestores/graphdb-se-7
-idea.vmoptions
+
+

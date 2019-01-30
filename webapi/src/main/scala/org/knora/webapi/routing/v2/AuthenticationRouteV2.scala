@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -19,29 +19,18 @@
 
 package org.knora.webapi.routing.v2
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, KnoraPasswordCredentialsV2, LoginApiRequestPayloadV2}
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
-
-import scala.concurrent.ExecutionContext
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData}
 
 /**
   * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
   */
-object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProtocol {
+class AuthenticationRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with AuthenticationV2JsonProtocol {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    def knoraApiPath: Route = {
 
         path("v2" / "authentication") {
             get { // authenticate credentials
@@ -53,7 +42,7 @@ object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProt
             } ~
             post { // login
                 /* send iri, username, or email and password in body as: {"identifier": "iri|username|email", "password": "userspassword"}
-                 * returns a JWT token, which can be supplied with every request thereafter in the authorization
+                 * returns a JWT token (and session cookie), which can be supplied with every request thereafter in the authorization
                  * header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
                  */
                 entity(as[LoginApiRequestPayloadV2]) { apiRequest =>
@@ -68,6 +57,24 @@ object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProt
                     requestContext.complete {
                         doLogoutV2(requestContext)
                     }
+            }
+        } ~
+        path("v2" / "login") {
+            get { // html login interface (necessary for IIIF Authentication API support)
+                requestContext => {
+                    requestContext.complete {
+                        presentLoginFormV2(requestContext)
+                    }
+                }
+            } ~
+            post { // called by html login interface (necessary for IIIF Authentication API support)
+                formFields('identifier, 'password) { (identifier, password) =>
+                    requestContext => {
+                        requestContext.complete {
+                            doLoginV2(KnoraPasswordCredentialsV2(UserIdentifierADM(value = identifier), password))
+                        }
+                    }
+                }
             }
         }
     }

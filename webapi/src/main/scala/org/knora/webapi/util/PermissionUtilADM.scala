@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util
 
-import akka.actor.ActorSelection
+import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
@@ -565,7 +565,7 @@ object PermissionUtilADM {
       * @return the validated permission literal, normalised and reformatted.
       */
     def validatePermissions(permissionLiteral: String,
-                            responderManager: ActorSelection)
+                            responderManager: ActorRef)
                            (implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
         val stringFormatter = StringFormatter.getGeneralInstance
 
@@ -739,6 +739,8 @@ object PermissionUtilADM {
                     calculateHighestGrantedPermissionLevel(entityPermissions, Set(OntologyConstants.KnoraBase.UnknownUser))
             }
         }
+
+        // println(s"getUserPermissionV1: $maybePermissionLevel, $userProfile")
 
         maybePermissionLevel.map(_.toInt)
     }

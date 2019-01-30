@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v2
 import java.io._
 import java.util.UUID
 
-import akka.actor.Status
+import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.pattern._
@@ -33,15 +33,16 @@ import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
-import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
@@ -55,23 +56,22 @@ import scala.xml.{Elem, Node, NodeSeq, XML}
 /**
   * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
   */
-class StandoffResponderV2 extends Responder {
+class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
+    /* actor materializer needed for http requests */
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     /**
-      * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
       */
-    override def receive: Receive = {
-        case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) => future2Message(sender(), createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, requestingUser, uuid), log)
-        case GetMappingRequestV2(mappingIri, requestingUser) => future2Message(sender(), getMappingV2(mappingIri, requestingUser), log)
-        case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) => future2Message(sender(), getXSLTransformation(xsltTextReprIri, requestingUser), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: StandoffResponderRequestV2) = msg match {
+        case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) => createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, requestingUser, uuid)
+        case GetMappingRequestV2(mappingIri, requestingUser) => getMappingV2(mappingIri, requestingUser)
+        case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) => getXSLTransformation(xsltTextReprIri, requestingUser)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
-    val xsltCacheName = "xsltCache"
+    private val xsltCacheName = "xsltCache"
 
     /**
       * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.
@@ -86,7 +86,7 @@ class StandoffResponderV2 extends Responder {
 
             textRepresentationResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(xslTransformationIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
 
-            xsltFileValue: TextFileValueContentV2 = textRepresentationResponseV2.resources.headOption match {
+            xsltFileValueContent: TextFileValueContentV2 = textRepresentationResponseV2.resources.headOption match {
                 case Some(resource: ReadResourceV2) if resource.resourceClassIri.toString == OntologyConstants.KnoraBase.XSLTransformation =>
                     resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
                         case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
@@ -103,11 +103,11 @@ class StandoffResponderV2 extends Responder {
             }
 
             // check if `xsltFileValue` represents an XSL transformation
-            _ = if (!(xsltFileValue.internalMimeType == "text/xml" && xsltFileValue.originalFilename.endsWith(".xsl"))) {
+            _ = if (!(xsltFileValueContent.fileValue.internalMimeType == "text/xml" && xsltFileValueContent.fileValue.originalFilename.endsWith(".xsl"))) {
                 throw BadRequestException(s"$xslTransformationIri does not have a file value referring to an XSL transformation")
             }
 
-            xsltUrl: String = s"${settings.internalSipiFileServerGetUrl}/${xsltFileValue.internalFilename}"
+            xsltUrl: String = s"${settings.internalSipiFileServerGetUrl}/${xsltFileValueContent.fileValue.internalFilename}"
 
         } yield xsltUrl
 
@@ -126,52 +126,10 @@ class StandoffResponderV2 extends Responder {
                 // XSL transformation is cached
                 Future(xsltMaybe.get)
             } else {
-                // ask Sipi to return the XSL transformation
-                val sipiResponseFuture: Future[HttpResponse] = for {
-
-                    // ask Sipi to return the XSL transformation file
-                    response: HttpResponse <- Http().singleRequest(
-                        HttpRequest(
-                            method = HttpMethods.GET,
-                            uri = xsltFileUrl
-                        )
-                    )
-
-                } yield response
-
-                val sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
-
-                    case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
-                        // this problem is hardly the user's fault. Create a SipiException
-                        throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
-
-
-                    // TODO: what other exceptions have to be handled here?
-                    // if Exception is used, also previous errors are caught here
-
-                }
-
                 for {
-
-                    sipiResponseRecovered: HttpResponse <- sipiResponseFutureRecovered
-
-                    httpStatusCode: StatusCode = sipiResponseRecovered.status
-
-                    messageBody <- sipiResponseRecovered.entity.toStrict(5.seconds)
-
-                    // do cleanup after strict (in memory) access
-                    _ = sipiResponseRecovered.discardEntityBytes()
-
-                    _ = if (httpStatusCode != StatusCodes.OK) {
-                        throw SipiException(s"Sipi returned status code ${httpStatusCode.intValue} with msg '${messageBody.data.decodeString("UTF-8")}'")
-                    }
-
-                    // get the XSL transformation
-                    xslt: String = messageBody.data.decodeString("UTF-8")
-
-                    _ = CacheUtil.put(cacheName = xsltCacheName, key = xsltFileUrl, value = xslt)
-
-                } yield xslt
+                    response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(fileUrl = xsltFileUrl, KnoraSystemInstances.Users.SystemUser)).mapTo[SipiGetTextFileResponse]
+                    _ = CacheUtil.put(cacheName = xsltCacheName, key = xsltFileUrl, value = response.content)
+                } yield response.content
             }
 
         } yield GetXSLTransformationResponseV2(xslt = xslt)

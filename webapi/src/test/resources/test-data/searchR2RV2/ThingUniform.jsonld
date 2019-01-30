@@ -1,6 +1,10 @@
 {
   "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
   "@type" : "anything:Thing",
+  "knora-api:arkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/LOV=6aLYQFW15jwdyS51YwF"
+  },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0001"
   },

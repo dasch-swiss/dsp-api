@@ -1,5 +1,5 @@
 <!---
-Copyright © 2015-2018 the contributors (see Contributors.md).
+Copyright © 2015-2019 the contributors (see Contributors.md).
 
 This file is part of Knora.
 
@@ -24,6 +24,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 @@@ index
 
 - [Introduction](introduction.md)
+- [Authentication](authentication.md)
 - [Knora IRIs](knora-iris.md)
 - [Reading and Searching Resources](reading-and-searching-resources.md)
 - [Getting Lists](getting-lists.md)
@@ -33,5 +34,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Editing Values](editing-values.md)
 - [Querying, Creating, and Updating Ontologies](ontology-information.md)
 - [TEI/XML](tei-xml.md)
+- [Resource Permalinks](resource-permalinks.md)
 
 @@@

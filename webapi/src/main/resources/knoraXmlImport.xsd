@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -24,6 +24,7 @@
 
     <xs:complexType name="resourceType">
         <xs:attribute name="id" use="required" type="xs:NCName"/>
+        <xs:attribute name="creationDate" use="optional" type="xs:dateTime"/>
     </xs:complexType>
 
     <xs:element name="file">
@@ -42,6 +43,12 @@
     <xs:complexType name="Resource_linkValueType">
         <xs:sequence>
             <xs:element name="Resource" type="linkValueType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="Representation_linkValueType">
+        <xs:sequence>
+            <xs:element name="Representation" type="linkValueType"/>
         </xs:sequence>
     </xs:complexType>
 

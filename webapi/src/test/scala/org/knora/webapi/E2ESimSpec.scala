@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -75,8 +75,7 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
 
-    /* needed by the core trait */
-    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "PerfSpec")
+    override lazy val log: LoggingAdapter = akka.event.Logging(system, "PerfSpec")
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -19,6 +19,6 @@
 
 import { deleteResponseFormats } from "../deleteResponseFormats"
 
-let deleteValueResponse: deleteResponseFormats.deleteValueResponse = {"id":"http://data.knora.org/u0pVN9OxTxCu_qVq2A-5QQ/values/DQEI71C0SVeEvtzZ96EkQQ","status":0};
+let deleteValueResponse: deleteResponseFormats.deleteValueResponse = {"id":"http://rdfh.ch/u0pVN9OxTxCu_qVq2A-5QQ/values/DQEI71C0SVeEvtzZ96EkQQ","status":0};
 
-let deleteResourceResponse: deleteResponseFormats.deleteResourceResponse = {"id":"http://data.knora.org/u0pVN9OxTxCu_qVq2A-5QQ","status":0};
+let deleteResourceResponse: deleteResponseFormats.deleteResourceResponse = {"id":"http://rdfh.ch/u0pVN9OxTxCu_qVq2A-5QQ","status":0};

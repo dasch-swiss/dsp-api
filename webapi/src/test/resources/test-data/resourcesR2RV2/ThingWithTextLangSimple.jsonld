@@ -5,6 +5,10 @@
     "@language" : "fr",
     "@value" : "Bonjour"
   },
+  "knora-api:arkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB"
+  },
   "rdfs:label" : "ein verdammtes Ding mit einer Sprache",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
