@@ -140,7 +140,7 @@ for image_index, image_params in pairs(server.uploads) do
     local success, error_msg = uploaded_image:write(jp2_file_path)
 
     if not success then
-        send_error(500, "Unable to write " .. jp2_file_path .. ": " .. tostring(error_msg))
+        send_error(500, "Unable to write " .. tostring(jp2_file_path) .. ": " .. tostring(error_msg))
         return
     end
 
