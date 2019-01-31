@@ -6,7 +6,7 @@ import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types.{GravsearchTypeInspectionRunner, GravsearchTypeInspectionUtil}
 import org.knora.webapi.responders.v2.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{MessageUtil, StringFormatter}
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{AssertionException, CoreSpec, SettingsImpl, SharedTestDataADM}
 
 import scala.concurrent.Await
