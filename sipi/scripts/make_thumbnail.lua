@@ -82,8 +82,15 @@ for imgindex, imgparam in pairs(server.uploads) do
         send_error(500, "Couldn't generate uuid62!")
         return -1
     end
+    
+    local success, hashed_tmpName = helper.filename_hash(tmpName)
 
-    local tmpPath =  tmpDir .. tmpName
+    if not success then
+        send_error(500, hashed_tmpName)
+        return
+    end
+
+    local tmpPath =  tmpDir .. hashed_tmpName
 
     local success, result = server.copyTmpfile(imgindex, tmpPath)
     if not success then

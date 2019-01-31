@@ -65,8 +65,15 @@ end
 
 -- file with name given in param "filename" has been saved by make_thumbnail.lua beforehand
 tmpDir = config.imgroot .. '/tmp/'
-sourcePath = tmpDir .. filename
 
+local success, hashed_filename = helper.filename_hash(filename)
+
+if not success then
+    send_error(500, hashed_filename)
+    return
+end
+
+sourcePath = tmpDir .. hashed_filename
 
 -- check if source is readable
 success, readable = server.fs.is_readable(sourcePath)
