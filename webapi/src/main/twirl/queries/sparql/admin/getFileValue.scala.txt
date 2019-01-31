@@ -33,11 +33,11 @@
 
 @if(triplestore.startsWith("graphdb")) {
     @{
-        queries.sparql.v1.txt.getFileValueGraphDB(filename = filename)
+        queries.sparql.admin.txt.getFileValueGraphDB(filename = filename)
     }
 } else {
     @{
-        queries.sparql.v1.txt.getFileValueStandard(triplestore = triplestore,
-                                                   filename = filename)
+        queries.sparql.admin.txt.getFileValueStandard(triplestore = triplestore,
+                                                      filename = filename)
     }
 }

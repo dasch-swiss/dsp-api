@@ -17,33 +17,34 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v1.responder.sipimessages
+package org.knora.webapi.messages.admin.responder.sipimessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import spray.json.{DefaultJsonProtocol, NullOptions, RootJsonFormat}
+import spray.json.{DefaultJsonProtocol, JsValue, NullOptions, RootJsonFormat}
 
 /**
-  * An abstract trait representing a Knora v1 API request message that can be sent to `SipiResponderV1`.
+  * An abstract trait representing a Knora v1 API request message that can be sent to `SipiResponderV2`.
   */
-sealed trait SipiResponderRequestV1 extends KnoraRequestV1
+sealed trait SipiResponderRequestADM extends KnoraRequestV1
 
 /**
   * A Knora v1 API request message that requests information about a `FileValue`.
   *
+  * @param projectID   the project shortcode.
   * @param filename    the name of the file belonging to the file value to be queried.
-  * @param userProfile the profile of the user making the request.
+  * @param requestingUser the profile of the user making the request.
   */
-case class SipiFileInfoGetRequestV1(filename: String, userProfile: UserProfileV1) extends SipiResponderRequestV1
+case class SipiFileInfoGetRequestADM(projectID: String, filename: String, requestingUser: UserADM) extends SipiResponderRequestADM
 
 /**
   * Represents the Knora API v1 JSON response to a request for a information about a `FileValue`.
   *
   * @param permissionCode a code representing the user's maximum permission on the file.
   */
-case class SipiFileInfoGetResponseV1(permissionCode: Int) extends KnoraResponseV1 {
-    def toJsValue = RepresentationV1JsonProtocol.sipiFileInfoGetResponseV1Format.write(this)
+case class SipiFileInfoGetResponseADM(permissionCode: Int) extends KnoraResponseV1 {
+    def toJsValue: JsValue = SipiResponderResponseADMJsonProtocol.sipiFileInfoGetResponseADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +53,7 @@ case class SipiFileInfoGetResponseV1(permissionCode: Int) extends KnoraResponseV
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
-object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+object SipiResponderResponseADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat1(SipiFileInfoGetResponseV1)
+    implicit val sipiFileInfoGetResponseADMFormat: RootJsonFormat[SipiFileInfoGetResponseADM] = jsonFormat1(SipiFileInfoGetResponseADM)
 }

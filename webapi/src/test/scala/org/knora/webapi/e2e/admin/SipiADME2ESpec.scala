@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.e2e.v1
+package org.knora.webapi.e2e.admin
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
@@ -35,7 +35,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 
-object SipiV1E2ESpec {
+object SipiADME2ESpec {
     val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -46,9 +46,9 @@ object SipiV1E2ESpec {
 /**
   * End-to-End (E2E) test specification for Sipi access.
   *
-  * This spec tests the 'v1/files'.
+  * This spec tests the 'admin/files'.
   */
-class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol with SessionJsonProtocol with TriplestoreJsonProtocol {
+class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SipiJsonProtocol with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
@@ -77,11 +77,11 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol 
     }
 
 
-    "The Files Route ('v1/files') using token credentials" should {
+    "The Files Route ('admin/files') using token credentials" should {
 
         "return CR (8) permission code" in {
             /* anything image */
-            val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$anythingAdminEmailEnc&password=$testPass")
+            val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$anythingAdminEmailEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
 
             // println(response.toString)
@@ -95,7 +95,7 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol 
 
         "return RV (1) permission code" in {
             /* anything image */
-            val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$normalUserEmailEnc&password=$testPass")
+            val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$normalUserEmailEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
 
             // println(response.toString)
@@ -108,14 +108,14 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol 
         }
     }
 
-    "The Files Route ('v1/files') using session credentials" should {
+    "The Files Route ('admin/files') using session credentials" should {
 
         "return CR (8) permission code" in {
             /* login */
             val sessionId = sessionLogin(anythingAdminEmailEnc, testPass)
 
             /* anything image */
-            val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
+            val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
             val response: HttpResponse = singleAwaitingRequest(request)
 
             println(response.toString)
@@ -135,7 +135,7 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol 
             val sessionId = sessionLogin(normalUserEmailEnc, testPass)
 
             /* anything image */
-            val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2")~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
+            val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2")~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
             val response: HttpResponse = singleAwaitingRequest(request)
 
             println(response.toString)

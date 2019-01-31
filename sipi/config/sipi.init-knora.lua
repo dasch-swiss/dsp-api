@@ -88,7 +88,7 @@ function pre_flight(prefix, identifier, cookie)
     end
     server.log("webapi_port: " .. webapi_port, server.loglevel.LOG_DEBUG)
 
-    knora_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/v1/files/' .. identifier
+    knora_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' ..  identifier
     -- #snip_marker
 
     -- print("knora_url: " .. knora_url)

@@ -36,23 +36,17 @@ PARAMETERS_INCORRECT = "Parameters not set correctly"
 -------------------------------------------------------------------------------
 function send_error(status, msg)
 
-    if type(status) == "number" and status ~= 200 and type(msg) == "string" then
-
-        result = {
-            message = msg
-        }
-
+    if type(status) == "number" then
         http_status = status
-
-    else
-
-        result = {
-            message = "Unknown error. Please report this as a possible bug in a Sipi route."
-        }
-
+    else        
         http_status = 500
-
     end
+    
+    msg_str = tostring(msg)
+
+    result = {
+        message = msg_str
+    }
 
     local success, errormsg = server.sendHeader("Content-Type", "application/json")
 
@@ -72,7 +66,7 @@ function send_error(status, msg)
 
     -- If this is an internal server error, log it.
     if http_status // 100 == 5 then
-        server.log(msg, server.loglevel.LOG_ERR)
+        server.log(msg_str, server.loglevel.LOG_ERR)
     end
 
 end

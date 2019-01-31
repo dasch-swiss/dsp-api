@@ -74,7 +74,7 @@ function pre_flight(prefix,identifier,cookie)
         end
     end
 
-    knora_url = 'http://' .. config.knora_path .. ':' .. config.knora_port .. '/v1/files/' .. identifier
+    knora_url = 'http://' .. config.knora_path .. ':' .. config.knora_port .. '/admin/files/' .. prefix .. '/' .. identifier
 
     --print("knora_url: " .. knora_url)
 
