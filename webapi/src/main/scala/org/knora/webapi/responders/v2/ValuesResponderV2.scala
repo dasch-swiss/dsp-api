@@ -25,7 +25,6 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -216,18 +215,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                         )
                 }
 
-                // Get information about the project that the resource is in, so we know which named graph to put the new value in.
-                projectInfo: ProjectGetResponseADM <- {
-                    responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceInfo.projectADM.id), requestingUser = createValueRequest.requestingUser)
-                }.mapTo[ProjectGetResponseADM]
-
-                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfo.project)
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
 
                 // Create the new value.
 
                 unverifiedValue <- createValueV2AfterChecks(
                     dataNamedGraph = dataNamedGraph,
-                    projectIri = projectInfo.project.id,
+                    projectIri = resourceInfo.projectADM.id,
                     resourceInfo = resourceInfo,
                     propertyIri = adjustedInternalPropertyIri,
                     value = submittedInternalValueContent,
@@ -248,7 +242,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             } yield CreateValueResponseV2(
                 valueIri = verifiedValue.newValueIri,
                 valueType = verifiedValue.value.valueType,
-                projectADM = projectInfo.project
+                projectADM = resourceInfo.projectADM
             )
         }
 
@@ -803,12 +797,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     case _ => FastFuture.successful(())
                 }
 
-                // Get information about the project that the resource is in, so we know which named graph to put the new value in.
-                projectInfo: ProjectGetResponseADM <- {
-                    responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceInfo.projectADM.id), requestingUser = updateValueRequest.requestingUser)
-                }.mapTo[ProjectGetResponseADM]
-
-                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfo.project)
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
 
                 // Create the new value version.
 
@@ -835,7 +824,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             } yield UpdateValueResponseV2(
                 valueIri = unverifiedValue.newValueIri,
                 valueType = unverifiedValue.valueContent.valueType,
-                projectADM = projectInfo.project
+                projectADM = resourceInfo.projectADM
             )
         }
 
@@ -1183,11 +1172,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 // Get information about the project that the resource is in, so we know which named graph to do the update in.
 
-                projectInfo: ProjectGetResponseADM <- {
-                    responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceInfo.projectADM.id), requestingUser = deleteValueRequest.requestingUser)
-                }.mapTo[ProjectGetResponseADM]
-
-                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfo.project)
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
 
                 // Do the update.
                 deletedValueIri: IRI <- deleteValueV2AfterChecks(
