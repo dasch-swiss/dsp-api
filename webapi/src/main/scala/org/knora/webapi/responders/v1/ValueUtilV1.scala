@@ -55,20 +55,20 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val valueTypeIri = valueProps.literalData(OntologyConstants.Rdf.Type).literals.head
 
         valueTypeIri match {
-            case OntologyConstants.KnoraBase.TextValue => makeTextValue(valueProps, projectShortcode, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.IntValue => makeIntValue(valueProps, projectShortcode, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.DecimalValue => makeDecimalValue(valueProps, projectShortcode, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.BooleanValue => makeBooleanValue(valueProps, projectShortcode, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.UriValue => makeUriValue(valueProps, projectShortcode, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.DateValue => makeDateValue(valueProps, projectShortcode, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.ColorValue => makeColorValue(valueProps, projectShortcode, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.GeomValue => makeGeomValue(valueProps, projectShortcode, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.GeonameValue => makeGeonameValue(valueProps, projectShortcode, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.ListValue => makeListValue(valueProps, projectShortcode, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.IntervalValue => makeIntervalValue(valueProps, projectShortcode, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.TextValue => makeTextValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.IntValue => makeIntValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.DecimalValue => makeDecimalValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.BooleanValue => makeBooleanValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.UriValue => makeUriValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.DateValue => makeDateValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.ColorValue => makeColorValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.GeomValue => makeGeomValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.GeonameValue => makeGeonameValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.ListValue => makeListValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.IntervalValue => makeIntervalValue(valueProps, responderManager, userProfile)
             case OntologyConstants.KnoraBase.StillImageFileValue => makeStillImageValue(valueProps, projectShortcode, responderManager, userProfile)
             case OntologyConstants.KnoraBase.TextFileValue => makeTextFileValue(valueProps, projectShortcode, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, projectShortcode, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
         }
     }
 
@@ -455,7 +455,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return an [[IntegerValueV1]].
       */
-    private def makeIntValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeIntValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         Future(IntegerValueV1(predicates(OntologyConstants.KnoraBase.ValueHasInteger).literals.head.toInt))
@@ -467,7 +467,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[DecimalValueV1]].
       */
-    private def makeDecimalValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeDecimalValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         Future(DecimalValueV1(BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasDecimal).literals.head)))
@@ -479,7 +479,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[BooleanValueV1]].
       */
-    private def makeBooleanValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeBooleanValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         Future(BooleanValueV1(predicates(OntologyConstants.KnoraBase.ValueHasBoolean).literals.head.toBoolean))
@@ -491,7 +491,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[UriValueV1]].
       */
-    private def makeUriValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeUriValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         Future(UriValueV1(predicates(OntologyConstants.KnoraBase.ValueHasUri).literals.head))
@@ -503,7 +503,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[DateValueV1]].
       */
-    private def makeDateValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeDateValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         val julianDayNumberValueV1 = JulianDayNumberValueV1(
@@ -523,7 +523,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[IntervalValueV1]].
       */
-    private def makeIntervalValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeIntervalValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         Future(IntervalValueV1(
@@ -583,7 +583,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[TextValueV1]].
       */
-    private def makeTextValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeTextValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
 
 
         val valueHasString: String = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasString).map(_.literals.head).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${valueProps.valueIri} has no knora-base:valueHasString"))
@@ -606,7 +606,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[ColorValueV1]].
       */
-    private def makeColorValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeColorValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         Future(ColorValueV1(predicates(OntologyConstants.KnoraBase.ValueHasColor).literals.head))
@@ -618,7 +618,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[GeomValueV1]].
       */
-    private def makeGeomValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeGeomValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         Future(GeomValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeometry).literals.head))
@@ -630,7 +630,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[HierarchicalListValueV1]].
       */
-    private def makeListValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeListValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         Future(HierarchicalListValueV1(predicates(OntologyConstants.KnoraBase.ValueHasListNode).literals.head))
@@ -683,7 +683,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[LinkValueV1]].
       */
-    private def makeLinkValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeLinkValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         Future(LinkValueV1(
@@ -700,7 +700,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[GeonameValueV1]].
       */
-    private def makeGeonameValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeGeonameValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         Future(GeonameValueV1(predicates(OntologyConstants.KnoraBase.ValueHasGeonameCode).literals.head))
