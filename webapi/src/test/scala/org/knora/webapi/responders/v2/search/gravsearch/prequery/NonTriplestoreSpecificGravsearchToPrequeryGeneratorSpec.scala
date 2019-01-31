@@ -147,15 +147,12 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
             assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
         }
 
-        "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" ignore {
+        "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" in {
 
             val transformedQuery = QueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex, responderData, settings)
 
-            println(transformedQuery.toSparql)
-
-            println(MessageUtil.toSource(transformedQuery))
-
-            // assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
+            // TODO: user provided statements and statement generated for sorting should be unified (https://github.com/dhlab-basel/Knora/issues/1195)
+            assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)
         }
 
     }
@@ -1127,6 +1124,135 @@ class NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec extends CoreSpec()
             limit = Some(25),
             useDistinct = true
         )
+
+        val transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex =
+            SelectQuery(
+                variables = Vector(
+                    QueryVariable(variableName = "thing"),
+                    GroupConcat(
+                        inputVariable = QueryVariable(variableName = "decimal"),
+                        separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
+                        outputVariableName = "decimal__Concat",
+                    )
+                ),
+                offset = 0,
+                groupBy = Vector(
+                    QueryVariable(variableName = "thing"),
+                    QueryVariable(variableName = "decimal__valueHasDecimal")
+                ),
+                orderBy = Vector(
+                    OrderCriterion(
+                        queryVariable = QueryVariable(variableName = "decimal__valueHasDecimal"),
+                        isAscending = true
+                    ),
+                    OrderCriterion(
+                        queryVariable = QueryVariable(variableName = "thing"),
+                        isAscending = true
+                    )
+                ),
+                whereClause = WhereClause(
+                    patterns = Vector(
+                        StatementPattern(
+                            subj = QueryVariable(variableName = "thing"),
+                            pred = IriRef(
+                                iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                                propertyPathOperator = None
+                            ),
+                            obj = IriRef(
+                                iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
+                                propertyPathOperator = None
+                            ),
+                            namedGraph = None
+                        ),
+                        StatementPattern(
+                            subj = QueryVariable(variableName = "thing"),
+                            pred = IriRef(
+                                iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                                propertyPathOperator = None
+                            ),
+                            obj = XsdLiteral(
+                                value = "false",
+                                datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                            ),
+                            namedGraph = Some(IriRef(
+                                iri = "http://www.knora.org/explicit".toSmartIri,
+                                propertyPathOperator = None
+                            ))
+                        ),
+                        StatementPattern(
+                            subj = QueryVariable(variableName = "thing"),
+                            pred = IriRef(
+                                iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                                propertyPathOperator = None
+                            ),
+                            obj = IriRef(
+                                iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                                propertyPathOperator = None
+                            ),
+                            namedGraph = None
+                        ),
+                        OptionalPattern(patterns = Vector(
+                            StatementPattern(
+                                subj = QueryVariable(variableName = "thing"),
+                                pred = IriRef(
+                                    iri = "http://www.knora.org/ontology/0001/anything#hasDecimal".toSmartIri,
+                                    propertyPathOperator = None
+                                ),
+                                obj = QueryVariable(variableName = "decimal"),
+                                namedGraph = None
+                            ),
+                            StatementPattern(
+                                subj = QueryVariable(variableName = "decimal"),
+                                pred = IriRef(
+                                    iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                                    propertyPathOperator = None
+                                ),
+                                obj = XsdLiteral(
+                                    value = "false",
+                                    datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                                ),
+                                namedGraph = Some(IriRef(
+                                    iri = "http://www.knora.org/explicit".toSmartIri,
+                                    propertyPathOperator = None
+                                ))
+                            ),
+                            StatementPattern(
+                                subj = QueryVariable(variableName = "decimal"),
+                                pred = IriRef(
+                                    iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
+                                    propertyPathOperator = None
+                                ),
+                                obj = QueryVariable(variableName = "decimal__valueHasDecimal"),
+                                namedGraph = Some(IriRef(
+                                    iri = "http://www.knora.org/explicit".toSmartIri,
+                                    propertyPathOperator = None
+                                ))
+                            ),
+                            StatementPattern(
+                                subj = QueryVariable(variableName = "decimal"),
+                                pred = IriRef(
+                                    iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
+                                    propertyPathOperator = None
+                                ),
+                                obj = QueryVariable(variableName = "decimalVal"),
+                                namedGraph = None
+                            ),
+                            FilterPattern(expression = CompareExpression(
+                                leftArg = QueryVariable(variableName = "decimalVal"),
+                                operator = CompareExpressionOperator.GREATER_THAN,
+                                rightArg = XsdLiteral(
+                                    value = "2",
+                                    datatype = "http://www.w3.org/2001/XMLSchema#decimal".toSmartIri
+                                )
+                            ))
+                        ))
+                    ),
+                    positiveEntities = Set(),
+                    querySchema = None
+                ),
+                limit = Some(25),
+                useDistinct = true
+            )
 
 
 }
