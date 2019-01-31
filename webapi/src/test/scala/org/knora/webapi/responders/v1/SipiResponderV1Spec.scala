@@ -43,7 +43,7 @@ object SipiResponderV1Spec {
 class SipiResponderV1Spec extends CoreSpec(SipiResponderV1Spec.config) with ImplicitSender {
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/responders.v1.SipiResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     // The default timeout for receiving reply messages from actors.
@@ -54,7 +54,7 @@ class SipiResponderV1Spec extends CoreSpec(SipiResponderV1Spec.config) with Impl
             // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
             responderManager ! SipiFileInfoGetRequestV1(
                 userProfile = SharedTestDataV1.incunabulaMemberUser,
-                filename = "incunabula_0000000002.jp2"
+                filename = "incunabula_0000003328.jp2"
             )
 
             expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 6, None))
@@ -64,10 +64,10 @@ class SipiResponderV1Spec extends CoreSpec(SipiResponderV1Spec.config) with Impl
             // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
             responderManager ! SipiFileInfoGetRequestV1(
                 userProfile = SharedTestDataV1.anonymousUser,
-                filename = "incunabula_0000000002.jp2"
+                filename = "incunabula_0000003328.jp2"
             )
 
-            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 1, Some(ProjectRestrictedViewSettingsADM(size=Some("!512x512"), watermark = Some("path_to_image")))))
+            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 1, Some(ProjectRestrictedViewSettingsADM(size=Some("!512,512"), watermark = Some("path_to_image")))))
         }
     }
 }

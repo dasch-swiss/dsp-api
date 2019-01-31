@@ -145,14 +145,14 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
         "used to query project's restricted view settings" should {
 
-            val expectedResult = ProjectRestrictedViewSettingsADM(size = Some("!512x512"), watermark = Some("path_to_image"))
+            val expectedResult = ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image"))
 
             "return restricted view settings using project IRI" in {
                 responderManager ! ProjectRestrictedViewSettingsGetADM(
                     identifier = ProjectIdentifierADM(SharedTestDataADM.imagesProject.id),
                     requestingUser = SharedTestDataADM.rootUser
                 )
-                expectMsg(expectedResult)
+                expectMsg(Some(expectedResult))
             }
 
             "return restricted view settings using project SHORTCODE" in {
@@ -160,7 +160,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     identifier = ProjectIdentifierADM(SharedTestDataADM.imagesProject.shortcode),
                     requestingUser = SharedTestDataADM.rootUser
                 )
-                expectMsg(expectedResult)
+                expectMsg(Some(expectedResult))
             }
 
             "return restricted view settings using project SHORTNAME" in {
@@ -168,31 +168,31 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     identifier = ProjectIdentifierADM(SharedTestDataADM.imagesProject.shortname),
                     requestingUser = SharedTestDataADM.rootUser
                 )
-                expectMsg(expectedResult)
+                expectMsg(Some(expectedResult))
             }
 
             "return 'NotFoundException' when the project IRI is unknown" in {
-                responderManager ! ProjectRestrictedViewSettingsGetADM(
+                responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
                     identifier = ProjectIdentifierADM("http://rdfh.ch/projects/notexisting"),
                     requestingUser = SharedTestDataADM.rootUser
                 )
-                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found")))
+                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
             }
 
             "return 'NotFoundException' when the project SHORTCODE is unknown" in {
-                responderManager ! ProjectRestrictedViewSettingsGetADM(
+                responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
                     identifier = ProjectIdentifierADM("9999"),
                     requestingUser = SharedTestDataADM.rootUser
                 )
-                expectMsg(Failure(NotFoundException(s"Project '9999' not found")))
+                expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
             }
 
             "return 'NotFoundException' when the project SHORTNAME is unknown" in {
-                responderManager ! ProjectRestrictedViewSettingsGetADM(
+                responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
                     identifier = ProjectIdentifierADM("wrongshortname"),
                     requestingUser = SharedTestDataADM.rootUser
                 )
-                expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found")))
+                expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
             }
 
         }

@@ -118,14 +118,19 @@ function pre_flight(prefix, identifier, cookie)
             return 'deny'
         end
 
-        -- print("status: " .. response_json.status)
         server.log("pre_flight - status: " .. response_json.status, server.loglevel.LOG_DEBUG)
-        -- print("permission code: " .. response_json.permissionCode)
         server.log("pre_flight - permission code: " .. response_json.permissionCode, server.loglevel.LOG_DEBUG)
+        server.log("pre_flight - restricted view settings - size: " .. response_json.restrictedViewSettings.size, server.loglevel.LOG_DEBUG)
+        server.log("pre_flight - restricted view settings - watermark: " .. response_json.restrictedViewSettings.watermark, server.loglevel.LOG_DEBUG)
 
         if response_json.status ~= 0 then
             -- something went wrong with the request, Knora returned a non zero status
             return 'deny'
+        end
+
+        local restrictedViewSize = response_json.restrictedViewSettings.size
+        if restrictedViewSize == nil then
+            restrictedViewSize = config.thumb_size
         end
 
         if response_json.permissionCode == 0 then
@@ -134,7 +139,8 @@ function pre_flight(prefix, identifier, cookie)
         elseif response_json.permissionCode == 1 then
             -- restricted view permission on file
             -- either watermark or size (depends on project, should be returned with permission code by Sipi responder)
-            return 'restrict:size=' .. config.thumb_size, filepath
+            -- currently, only size is used
+            return 'restrict:size=' .. restrictedViewSize, filepath
         elseif response_json.permissionCode >= 2 then
             -- full view permissions on file
             return 'allow', filepath

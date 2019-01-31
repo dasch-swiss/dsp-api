@@ -20,12 +20,9 @@
 package org.knora.webapi.responders.v1
 
 import akka.actor.Status
-import akka.http.scaladsl.util
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora
-import org.knora.webapi
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectRestrictedViewSettingsADM, ProjectRestrictedViewSettingsGetADM, ProjectRestrictedViewSettingsGetRequestADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectIdentifierADM, ProjectRestrictedViewSettingsADM, ProjectRestrictedViewSettingsGetADM}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -34,7 +31,7 @@ import org.knora.webapi.responders.v1.GroupedProps.ValueProps
 import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.util.PermissionUtilADM
 import org.knora.webapi.util.PermissionUtilADM.filterPermissionRelevantAssertionsFromValueProps
-import org.knora.webapi.{BadRequestException, IRI, InconsistentTriplestoreDataException, OntologyConstants}
+import org.knora.webapi._
 
 import scala.concurrent.Future
 
@@ -109,7 +106,7 @@ class SipiResponderV1(responderData: ResponderData) extends Responder(responderD
 
                     } yield SipiFileInfoGetResponseV1(permissionCode = permissionCode, maybeRVSettings)
                 }
-                case other => FastFuture.successful(SipiFileInfoGetResponseV1(permissionCode = permissionCode, None))
+                case other => FastFuture.successful(SipiFileInfoGetResponseV1(permissionCode = permissionCode, restrictedViewSettings = None))
             }
 
         } yield response
@@ -123,7 +120,7 @@ class SipiResponderV1(responderData: ResponderData) extends Responder(responderD
         val projectIri: IRI = maybeProject.getOrElse(throw InconsistentTriplestoreDataException(s"No knora-base:attachedToProject was NOT provided for entity $valueIri"))
 
         for {
-            projectRestrictedViewSettings <- (responderManager ? ProjectRestrictedViewSettingsGetADM).mapTo[Option[ProjectRestrictedViewSettingsADM]]
+            projectRestrictedViewSettings <- (responderManager ? ProjectRestrictedViewSettingsGetADM(ProjectIdentifierADM(projectIri), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectRestrictedViewSettingsADM]]
 
         } yield projectRestrictedViewSettings
     }
