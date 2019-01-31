@@ -42,8 +42,12 @@ function send_error(status, msg)
         http_status = 500
     end
     
-    msg_str = tostring(msg)
-
+    if type(msg) == "string" then
+        msg_str = msg
+    else
+        msg_string = "Unknown error. Please report this as a possible bug in a Sipi route."
+    end
+    
     result = {
         message = msg_str
     }
