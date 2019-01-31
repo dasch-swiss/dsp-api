@@ -29,7 +29,7 @@ sipi = {
     -- Sipi's hostname as returned in the thumbnail response, default is "localhost".
     -- If sipi is run behind a proxy, then this external FQDN needs to be set here.
     --
-    hostname = 'localhost',
+    hostname = '0.0.0.0',
 
     --
     -- port number the server is listening to
@@ -177,21 +177,6 @@ routes = {
         script = 'convert_from_file.lua'
     },
     {
-        method = 'GET',
-        route = '/test_functions',
-        script = 'test_functions.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_mediatype',
-        script = 'test_mediatype.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_knora_session_cookie',
-        script = 'test_knora_session_cookie.lua'
-    },
-    {
         method = 'POST',
         route = '/upload',
         script = 'upload.lua'
@@ -205,6 +190,24 @@ routes = {
         method = 'DELETE',
         route = '/delete_temp_file',
         script = 'delete_temp_file.lua'
+    },
+    --
+    -- additional routes used for testing. should not be defined in production.
+    --
+    {
+        method = 'GET',
+        route = '/test_functions',
+        script = 'test_functions.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_mediatype',
+        script = 'test_mediatype.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_knora_session_cookie',
+        script = 'test_knora_session_cookie.lua'
     }
 
 }
