@@ -5294,6 +5294,44 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "perform a Gravsearch query for an anything:Thing that has an optional decimal value greater than 2 and sort by the decimal value (submitting the complex schema)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     OPTIONAL {
+                  |        ?thing anything:hasDecimal ?decimal .
+                  |
+                  |        ?decimal knora-api:decimalValueAsDecimal ?decimalVal .
+                  |
+                  |       FILTER(?decimalVal > "1"^^xsd:decimal)
+                  |     }
+                  |} ORDER BY DESC(?decimal)
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingsWithOptionalDecimalGreaterThan1.jsonld"), writeTestDataFiles)
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
         "do a Gravsearch query that finds all the books that have a page with seqnum 100 (submitting the complex schema)" in {
             val gravsearchQuery =
                 """
