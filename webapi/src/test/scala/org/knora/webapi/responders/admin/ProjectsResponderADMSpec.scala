@@ -145,11 +145,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
         "used to query project's restricted view settings" should {
 
-            val expectedResult = ProjectRestrictedViewSettingsADM(
-                sizeX = Some(512),
-                sizeY = Some(512),
-                watermark = Some("iiif_image_identifier")
-            )
+            val expectedResult = ProjectRestrictedViewSettingsADM(size = Some("!512x512"), watermark = Some("path_to_image"))
 
             "return restricted view settings using project IRI" in {
                 responderManager ! ProjectRestrictedViewSettingsGetRequestADM(

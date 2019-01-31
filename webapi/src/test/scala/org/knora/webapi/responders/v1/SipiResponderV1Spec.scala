@@ -23,6 +23,7 @@ package org.knora.webapi.responders.v1
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiFileInfoGetRequestV1, SipiFileInfoGetResponseV1}
 
@@ -56,7 +57,7 @@ class SipiResponderV1Spec extends CoreSpec(SipiResponderV1Spec.config) with Impl
                 filename = "incunabula_0000000002.jp2"
             )
 
-            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 6, None, None))
+            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 6, None))
         }
 
         "return details of a restricted view file value" in {
@@ -66,7 +67,7 @@ class SipiResponderV1Spec extends CoreSpec(SipiResponderV1Spec.config) with Impl
                 filename = "incunabula_0000000002.jp2"
             )
 
-            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 1, None, None))
+            expectMsg(timeout, SipiFileInfoGetResponseV1(permissionCode = 1, Some(ProjectRestrictedViewSettingsADM(size=Some("!512x512"), watermark = Some("path_to_image")))))
         }
     }
 }

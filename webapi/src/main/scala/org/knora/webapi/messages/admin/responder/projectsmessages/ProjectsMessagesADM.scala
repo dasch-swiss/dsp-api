@@ -550,14 +550,12 @@ object ProjectIdentifierType extends Enumeration {
 /**
   * API MAY CHANGE: Represents the project's restricted view settings.
   *
-  * @param sizeX     the x size.
-  * @param sizeY     the y size.
+  * @param size     the x size.
+  * @param sizeY the y size.
   * @param watermark the watermark file.
   */
 @ApiMayChange
-case class ProjectRestrictedViewSettingsADM(sizeX: Option[Int] = None,
-                                            sizeY: Option[Int] = None,
-                                            watermark: Option[String] = None)
+case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, watermark: Option[String] = None)
 
 /**
   * Payload used for updating of an existing project.
@@ -591,7 +589,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(jsonFormat10(ProjectADM))
     implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects")))
     implicit val projectResponseADMFormat: RootJsonFormat[ProjectGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectGetResponseADM, "project")))
-    implicit val projectRestrictedViewSettingsADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsADM] = jsonFormat3(ProjectRestrictedViewSettingsADM)
+    implicit val projectRestrictedViewSettingsADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsADM] = jsonFormat(ProjectRestrictedViewSettingsADM, "size", "watermark")
 
 
     implicit val projectAdminMembersGetResponseADMFormat: RootJsonFormat[ProjectAdminMembersGetResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectAdminMembersGetResponseADM, "members")))
@@ -600,7 +598,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestADM, "shortname", "longname", "description", "keywords", "logo", "status", "selfjoin")))
     implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] = jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")
     implicit val projectKeywordsGetResponseADMFormat: RootJsonFormat[ProjectKeywordsGetResponseADM] = jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
-    implicit val projectRestricedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsGetResponseADM] = jsonFormat1(ProjectRestrictedViewSettingsGetResponseADM)
+    implicit val projectRestricedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsGetResponseADM] = jsonFormat(ProjectRestrictedViewSettingsGetResponseADM, "settings")
 
     implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectOperationResponseADM, "project")))
 

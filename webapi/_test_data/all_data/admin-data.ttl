@@ -119,11 +119,9 @@
                                 knora-base:projectKeyword "images"^^xsd:string,
                                                           "collection"^^xsd:string ;
 
-                                knora-base:projectRestrictedViewSizeX "512"^^xsd:integer ;
+                                knora-base:projectRestrictedViewSize "!512x512"^^xsd:string ;
 
-                                knora-base:projectRestrictedViewSizeY "512"^^xsd:integer ;
-
-                                knora-base:projectRestrictedViewWatermark "iiif_image_identifier"^^xsd:integer ;
+                                knora-base:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
 
                                 knora-base:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
 

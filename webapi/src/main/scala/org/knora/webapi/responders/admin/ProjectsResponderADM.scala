@@ -378,12 +378,13 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     @ApiMayChange
     private def projectRestrictedViewSettingsGetADM(identifier: ProjectIdentifierADM, requestingUser: UserADM): Future[Option[ProjectRestrictedViewSettingsADM]] = {
 
+        // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestricedViewSettings resource. How send the client the correct NotFound reply.
+
         val maybeIri = identifier.toIriOption
         val maybeShortname = identifier.toShortnameOption
         val maybeShortcode = identifier.toShortcodeOption
 
         for {
-
             sparqlQuery <- Future(queries.sparql.admin.txt.getProjects(
                 triplestore = settings.triplestoreType,
                 maybeIri = maybeIri,
@@ -397,11 +398,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
                 val propsMap: Map[IRI, Seq[LiteralV2]] = projectResponse.statements.head._2
 
-                val sizeX = propsMap.get(OntologyConstants.KnoraBase.ProjectRestrictedViewSizeX).map(_.head.asInstanceOf[IntLiteralV2].value)
-                val sizeY = propsMap.get(OntologyConstants.KnoraBase.ProjectRestrictedViewSizeY).map(_.head.asInstanceOf[IntLiteralV2].value)
+                val size = propsMap.get(OntologyConstants.KnoraBase.ProjectRestrictedViewSize).map(_.head.asInstanceOf[StringLiteralV2].value)
                 val watermark = propsMap.get(OntologyConstants.KnoraBase.ProjectRestrictedViewWatermark).map(_.head.asInstanceOf[StringLiteralV2].value)
 
-                Some(ProjectRestrictedViewSettingsADM(sizeX, sizeY, watermark))
+                Some(ProjectRestrictedViewSettingsADM(size, watermark))
             } else {
                 None
             }
