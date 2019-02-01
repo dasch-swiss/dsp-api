@@ -17,17 +17,17 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/.
 -->
 
-# Admin Endppints
+# Admin Endpoint
 
 For the management of *users*, *projects*, and *groups*, the Knora API
 following a resource centric approach, provides three endpoints
 corresponding to the three classes of objects that they have an effect
 on, namely:
 
-  - Users Endpoint: `http://server:port/v1/users` - `knora-base:User`
-  - Projects Endpoint: `http://server:port/v1/projects` -
+  - Users Endpoint: `http://server:port/admin/users` - `knora-base:User`
+  - Projects Endpoint: `http://server:port/admin/projects` -
     `knora-base:knoraProject`
-  - Groups Endpoint: `http://server:port/v1/groups` -
+  - Groups Endpoint: `http://server:port/admin/groups` -
     `knora-base:UserGroup`
 
 All information regarding users, projects and groups is stored in the

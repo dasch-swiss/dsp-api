@@ -112,6 +112,10 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Restricted View Settings Operations
 
+Operates on the following properties:
+ - `knora-base:projectRestrictedViewSize` - takes the IIIF size value
+ - `knora-base:projectRestrictedViewWatermark` - takes the path to the watermark image. **Currently not used.**
+
 #### Get the restricted view settings:
 
   - Required permission: none

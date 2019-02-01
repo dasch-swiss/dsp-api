@@ -161,7 +161,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ```JSON
 {
-  "newSystemAdminMembershipStatus": false // true or false
+  "newSystemAdminMembershipStatus": false
 }
 ```
 
