@@ -15,11 +15,11 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:creationDate "2016-03-02T15:05:55Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/0803/482a33d65c36/reps/ed80ada52b2a> , <http://rdfh.ch/0803/482a33d65c36/reps/aca600df2b2a> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/0803/482a33d65c36/values/ed80ada52b2a> , <http://rdfh.ch/0803/482a33d65c36/values/aca600df2b2a> ;
 	knora-base:isDeleted false ;
 	rdfs:label "l_1a" .
 
-<http://rdfh.ch/0803/482a33d65c36/reps/aca600df2b2a> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/0803/482a33d65c36/values/aca600df2b2a> a knora-base:StillImageFileValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:dimX 328 ;
 	knora-base:dimY 4240 ;
@@ -33,7 +33,7 @@
 	knora-base:valueCreationDate "2015-05-19T22:39:12Z"^^xsd:dateTimeStamp ;
 	knora-base:valueHasString "l1a.tiff" .
 
-<http://rdfh.ch/0803/482a33d65c36/reps/ed80ada52b2a> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/0803/482a33d65c36/values/ed80ada52b2a> a knora-base:StillImageFileValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/b83acc5f05> ;
 	knora-base:dimX 9 ;
 	knora-base:dimY 128 ;

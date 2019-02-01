@@ -47,14 +47,14 @@ local temp_dir = config.imgroot .. '/tmp/'
 local success, exists = server.fs.exists(temp_dir)
 
 if not success then
-    send_error(500, exists)
+    send_error(500, "Unable to check whether " .. temp_dir .. "exists: " .. tostring(exists))
     return
 end
 
 if not exists then
     local success, error_msg = server.fs.mkdir(temp_dir, 511)
     if not success then
-        send_error(500, error_msg)
+        send_error(500, "Unable to create " .. temp_dir .. ": " .. tostring(error_msg))
         return
     end
 end
@@ -69,7 +69,7 @@ for image_index, image_params in pairs(server.uploads) do
     local success, mime_info = server.file_mimetype(image_index)
 
     if not success then
-        send_error(500, mime_info)
+        send_error(500, "Unable to get MIME info: " .. tostring(mime_info))
         return
     end
 
@@ -83,7 +83,7 @@ for image_index, image_params in pairs(server.uploads) do
     local media_type = get_mediatype(mime_info["mimetype"])
 
     if media_type ~= IMAGE then
-        send_error(400, "Unsupported MIME type: " .. mime_type)
+        send_error(400, "Unsupported MIME type: " .. tostring(mime_type))
         return
     end
 
@@ -96,7 +96,7 @@ for image_index, image_params in pairs(server.uploads) do
     local success, uploaded_image = SipiImage.new(image_index)
 
     if not success then
-        send_error(500, uploaded_image)
+        send_error(500, "Unable to create SipiImage: " .. tostring(uploaded_image))
         return
     end
 
@@ -104,7 +104,7 @@ for image_index, image_params in pairs(server.uploads) do
     local success, uuid62 = server.uuid62()
 
     if not success then
-        send_error(500, "Could not generate random filename")
+        send_error(500, "Could not generate random filename: " .. tostring(uuid62))
         return
     end
 
@@ -132,7 +132,7 @@ for image_index, image_params in pairs(server.uploads) do
     local success, hashed_jp2_filename = helper.filename_hash(jp2_filename)
 
     if not success then
-        send_error(500, hashed_jp2_filename)
+        send_error(500, "Unable to create hashed filename: " .. tostring(hashed_jp2_filename))
         return
     end
 
@@ -140,7 +140,7 @@ for image_index, image_params in pairs(server.uploads) do
     local success, error_msg = uploaded_image:write(jp2_file_path)
 
     if not success then
-        send_error(500, error_msg)
+        send_error(500, "Unable to write " .. tostring(jp2_file_path) .. ": " .. tostring(error_msg))
         return
     end
 

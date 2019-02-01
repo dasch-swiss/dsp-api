@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.v2.responder
 
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.util.jsonld._
 
 // #KnoraResponseV2
@@ -86,3 +87,14 @@ trait KnoraReadV2[C <: KnoraReadV2[C]] {
     def toOntologySchema(targetSchema: ApiV2Schema): C
 }
 // #KnoraReadV2
+
+
+/**
+  * Allows the successful result of an update operation to indicate which project was updated.
+  */
+trait UpdateResultInProject {
+    /**
+      * The project that was updated.
+      */
+    def projectADM: ProjectADM
+}

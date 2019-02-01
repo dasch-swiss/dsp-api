@@ -23,14 +23,13 @@ import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{DeleteTemporaryFileRequestV2, MoveTemporaryFileToPermanentStorageRequestV2}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, ReadValueV2, ValueContentV2}
+import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util.{PermissionUtilADM, SmartIri}
 import org.knora.webapi.{ForbiddenException, IRI, KnoraSystemInstances, NotFoundException}
@@ -149,21 +148,22 @@ object ResourceUtilV2 {
       * @param valueContent   the value that should have been created or updated.
       * @param requestingUser the user making the request.
       */
-    def doSipiPostUpdate[T](updateFuture: Future[T],
-                            valueContent: ValueContentV2,
-                            requestingUser: UserADM,
-                            responderManager: ActorRef,
-                            storeManager: ActorRef,
-                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[T] = {
+    def doSipiPostUpdate[T <: UpdateResultInProject](updateFuture: Future[T],
+                                                     valueContent: ValueContentV2,
+                                                     requestingUser: UserADM,
+                                                     responderManager: ActorRef,
+                                                     storeManager: ActorRef,
+                                                     log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[T] = {
         // Was this a file value update?
         valueContent match {
             case fileValueContent: FileValueContentV2 =>
                 // Yes. Did it succeed?
                 updateFuture.transformWith {
-                    case Success(_) =>
+                    case Success(updateInProject: UpdateResultInProject) =>
                         // Yes. Ask Sipi to move the file to permanent storage.
                         val sipiRequest = MoveTemporaryFileToPermanentStorageRequestV2(
                             internalFilename = fileValueContent.fileValue.internalFilename,
+                            prefix = updateInProject.projectADM.shortcode,
                             requestingUser = requestingUser
                         )
 

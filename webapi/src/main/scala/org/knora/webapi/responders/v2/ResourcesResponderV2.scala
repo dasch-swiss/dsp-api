@@ -21,9 +21,6 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.ActorMaterializer
@@ -33,16 +30,16 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetReq
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.{IriLocker, ResponderData}
+import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
+import org.knora.webapi.responders.{IriLocker, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
@@ -51,7 +48,6 @@ import org.knora.webapi.util._
 import org.knora.webapi.util.date.CalendarNameGregorian
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
@@ -831,7 +827,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param createResources the resources that were supposed to be created.
       * @param requestingUser  the user making the request.
       */
-    private def doSipiPostUpdateForResources[T](updateFuture: Future[T], createResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[T] = {
+    private def doSipiPostUpdateForResources[T <: UpdateResultInProject](updateFuture: Future[T],
+                                                                         createResources: Seq[CreateResourceV2],
+                                                                         requestingUser: UserADM): Future[T] = {
         val allValues: Seq[ValueContentV2] = createResources.flatMap(_.flatValues).map(_.valueContent)
 
         val resultFutures: Seq[Future[T]] = allValues.map {
@@ -966,21 +964,21 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         val gravsearchUrlFuture = for {
             gravsearchResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+            resource = gravsearchResponseV2.toResource(gravsearchTemplateIri)
 
-            gravsearchFileValueContent: TextFileValueContentV2 = gravsearchResponseV2.resources.headOption match {
-                case Some(resource: ReadResourceV2) if resource.resourceClassIri.toString == OntologyConstants.KnoraBase.TextRepresentation =>
-                    resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
-                        case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
-                            case value: ReadValueV2 => value.valueContent match {
-                                case textRepr: TextFileValueContentV2 => textRepr
-                                case other => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
-                            }
-                        }
+            _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
+                throw BadRequestException(s"Resource $gravsearchTemplateIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
+            }
 
-                        case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
+            gravsearchFileValueContent: TextFileValueContentV2 = resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
+                case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
+                    case value: ReadValueV2 => value.valueContent match {
+                        case textRepr: TextFileValueContentV2 => textRepr
+                        case other => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
                     }
+                }
 
-                case None => throw BadRequestException(s"Resource $gravsearchTemplateIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
+                case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
             }
 
             // check if `xsltFileValue` represents an XSL transformation
@@ -988,7 +986,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 throw BadRequestException(s"$gravsearchTemplateIri does not have a file value referring to an XSL transformation")
             }
 
-            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${gravsearchFileValueContent.fileValue.internalFilename}"
+            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}"
 
         } yield gravSearchUrl
 
@@ -1022,14 +1020,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         /**
           * Extract the text value to be converted to TEI/XML.
           *
-          * @param readResourceSeq the resource which is expected to hold the text value.
+          * @param readResource the resource which is expected to hold the text value.
           * @return a [[TextValueContentV2]] representing the text value to be converted to TEI/XML.
           */
-        def getTextValueFromReadResourceSeq(readResourceSeq: ReadResourcesSequenceV2): TextValueContentV2 = {
+        def getTextValueFromReadResource(readResource: ReadResourceV2): TextValueContentV2 = {
 
-            if (readResourceSeq.resources.size != 1) throw BadRequestException(s"Expected exactly one resource, but ${readResourceSeq.resources.size} given")
-
-            readResourceSeq.resources.head.values.get(textProperty) match {
+            readResource.values.get(textProperty) match {
                 case Some(valObjs: Seq[ReadValueV2]) if valObjs.size == 1 =>
                     // make sure that the property has one instance and that it is of type TextValue and that is has standoff (markup)
                     valObjs.head.valueContent match {
@@ -1098,7 +1094,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         for {
 
             // get the requested resource
-            resource: ReadResourcesSequenceV2 <- if (gravsearchTemplateIri.nonEmpty) {
+            resource: ReadResourceV2 <- if (gravsearchTemplateIri.nonEmpty) {
 
                 // check that there is an XSLT to create the TEI header
                 if (headerXSLTIri.isEmpty) throw BadRequestException(s"When a Gravsearch template Iri is provided, also a header XSLT Iri has to be provided.")
@@ -1115,11 +1111,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                     // do a request to the SearchResponder
                     gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
-
-                    // exactly one resource is expected
-                    _ = if (gravSearchResponse.resources.size != 1) throw BadRequestException(s"Gravsearch query for $resourceIri should return one result, but ${gravSearchResponse.resources.size} given.")
-
-                } yield gravSearchResponse
+                } yield gravSearchResponse.toResource(resourceIri)
 
             } else {
                 // no Gravsearch template is provided
@@ -1129,29 +1121,32 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 for {
                     // get requested resource
-                    resource <- getResources(Vector(resourceIri), requestingUser)
+                    resource <- getResources(Vector(resourceIri), requestingUser).map(_.toResource(resourceIri))
 
                 } yield resource
             }
 
             // get the value object representing the text value that is to be mapped to the body of the TEI document
-            bodyTextValue: TextValueContentV2 = getTextValueFromReadResourceSeq(resource)
+            bodyTextValue: TextValueContentV2 = getTextValueFromReadResource(resource)
 
             // the ext value is expected to have standoff markup
             _ = if (bodyTextValue.standoffAndMapping.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
 
             // get all the metadata but the text property for the TEI header
-            headerResource = resource.resources.head.copy(
-                values = convertDateToGregorian(resource.resources.head.values - textProperty)
+            headerResource = resource.copy(
+                values = convertDateToGregorian(resource.values - textProperty)
             )
 
             // get the XSL transformation for the TEI header
-            headerXSLT: Option[String] <- if (headerXSLTIri.nonEmpty) {
-                for {
-                    xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(headerXSLTIri.get, requestingUser = requestingUser)).mapTo[GetXSLTransformationResponseV2]
-                } yield Some(xslTransformation.xslt)
-            } else {
-                Future(None)
+            headerXSLT: Option[String] <- headerXSLTIri match {
+                case Some(headerIri) =>
+                    val teiHeaderXsltRequest = GetXSLTransformationRequestV2(xsltTextRepresentationIri = headerIri, requestingUser = requestingUser)
+
+                    for {
+                        xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? teiHeaderXsltRequest).mapTo[GetXSLTransformationResponseV2]
+                    } yield Some(xslTransformation.xslt)
+
+                case None => Future(None)
             }
 
             // get the Iri of the mapping to convert standoff markup to TEI/XML
@@ -1184,8 +1179,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                     case Some(xslTransformationIri) =>
                         // get XSLT for the TEI body.
+                        val teiBodyXsltRequest = GetXSLTransformationRequestV2(xsltTextRepresentationIri = xslTransformationIri, requestingUser = requestingUser)
+
                         for {
-                            xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(xslTransformationIri, requestingUser = requestingUser)).mapTo[GetXSLTransformationResponseV2]
+                            xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? teiBodyXsltRequest).mapTo[GetXSLTransformationResponseV2]
                         } yield xslTransformation.xslt
 
 

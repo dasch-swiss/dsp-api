@@ -599,7 +599,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
   * @param numberOfResources the amount of resources returned.
   * @param resources         a sequence of resources.
   */
-case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] {
+case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] with UpdateResultInProject {
 
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourcesSequenceV2 = {
         copy(
@@ -688,6 +688,26 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         }
 
         resourceInfo
+    }
+
+    /**
+      * Considers this [[ReadResourcesSequenceV2]] to be the result of an update operation in a single project
+      * (since Knora never updates resources in more than one project at a time), and returns information about that
+      * project. Throws [[AssertionException]] if this [[ReadResourcesSequenceV2]] is empty or refers to more than one
+      * project.
+      */
+    override def projectADM: ProjectADM = {
+        if (resources.isEmpty) {
+            throw AssertionException("ReadResourcesSequenceV2 is empty")
+        }
+
+        val allProjects: Set[ProjectADM] = resources.map(_.projectADM).toSet
+
+        if (allProjects.size != 1) {
+            throw AssertionException("ReadResourcesSequenceV2 refers to more than one project")
+        }
+
+        allProjects.head
     }
 }
 
