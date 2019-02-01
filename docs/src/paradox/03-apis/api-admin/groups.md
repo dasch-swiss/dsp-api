@@ -27,7 +27,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       - Optional information: group description
       - Returns information about the newly created group
       - TypeScript Docs: groupFormats - CreateGroupApiRequestV1
-      - POST: `/v1/groups`
+      - POST: `/admin/groups`
       - BODY:
 
 ```
@@ -47,7 +47,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
         hasProjectRestrictedGroupAdminPermission (for this group)
       - Changeable information: name, description, status, selfjoin
       - TypeScript Docs: groupFormats - ChangeGroupApiRequestV1
-      - PUT: `/v1/groups/<groupIri>`
+      - PUT: `/admin/groups/<groupIri>`
       - BODY:
 
 ```
@@ -64,7 +64,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       - Required permission: SystemAdmin / hasProjectAllAdminPermission
       - Remark: The same as updating a group and changing `status` to
         `false`. To un-delete, set `status` to `true`.
-      - DELETE: `/v1/groups/<groupIri>`
+      - DELETE: `/admin/groups/<groupIri>`
 
 Example Group Information stored in admin named graph: :
 

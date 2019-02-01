@@ -21,37 +21,45 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Endpoint Overview
 
-**Old style:**
+**Project Operations:**
 - `GET:  /admin/projects` : return all projects
 - `POST: /admin/projects` : create a new project
 - `GET: /admin/projects/[identifier]` : returns a single project identified either through iri, shortname, or shortcode
 - `PUT: /admin/projects/[identifier]` : update a project identified by iri
 - `DELETE: /admin/projects/[identifier]` : update project status to false
+
+**Project Member Operations:**
 - `GET: /admin/projects/members/[identifier]` : returns all members part of a project identified through iri, shortname or shortcode
+
+**Project Admin Member Operations:**
 - `GET: /admin/projects/admin-members/[identifier]` : returns all admin members part of a project identified through iri, shortname or shortcode
+
+**Project Keyword Operations:**
 - `GET: /admin/projects/keywords` : returns all unique keywords for all projects as a list
 - `GET: /admin/projects/keywords/[identifier]` : returns all keywords for a single project
 
-**New style:**
-- `GET: /admin/projects/[identifier]/commands/`
+**Project Restricted View Settings Operations:**
+- `GET: /admin/projects/[identifier]/RestrictedViewSettings` : returns the project's restricted view settings
 
+
+## Project Operations
 
 ### Create a new project:
 
-      - Required permission: SystemAdmin
-      - Required information: shortname (unique; used for named graphs),
-        status, selfjoin
-      - Optional information: longname, description, keywords, logo
-      - Returns information about the newly created project
-      - Remark: There are two distinct use cases / payload combination:
-        (1) change ontology and data graph: ontologygraph, datagraph,
-        (2) basic project information: shortname, longname, description,
-        keywords, logo, institution, status, selfjoin
-      - TypeScript Docs: projectFormats - CreateProjectApiRequestV1
-      - POST: `/admin/projects/`
-      - BODY:
+  - Required permission: SystemAdmin
+  - Required information: shortname (unique; used for named graphs),
+    status, selfjoin
+  - Optional information: longname, description, keywords, logo
+  - Returns information about the newly created project
+  - Remark: There are two distinct use cases / payload combination:
+    (1) change ontology and data graph: ontologygraph, datagraph,
+    (2) basic project information: shortname, longname, description,
+    keywords, logo, institution, status, selfjoin
+  - TypeScript Docs: projectFormats - CreateProjectApiRequestV1
+  - POST: `/admin/projects/`
+  - BODY:
 
-```
+```JSON
 {
   "shortname": "newproject",
   "longname": "project longname",
@@ -65,14 +73,14 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Update project information:
 
-      - Required permission: SystemAdmin / ProjectAdmin
-      - Changeable information: shortname, longname, description,
-        keywords, logo, status, selfjoin
-      - TypeScript Docs: projectFormats - ChangeProjectApiRequestV1
-      - PUT: `/admin/projects/<projectIri>`
-      - BODY:
+  - Required permission: SystemAdmin / ProjectAdmin
+  - Changeable information: shortname, longname, description,
+    keywords, logo, status, selfjoin
+  - TypeScript Docs: projectFormats - ChangeProjectApiRequestV1
+  - PUT: `/admin/projects/<projectIri>`
+  - BODY:
 
-```
+```JSON
 {
   "shortname": "newproject",
   "longname": "project longname",
@@ -84,34 +92,49 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 }
 ```
 
-### Get project members:
-
-      - Required permission: SystemAdmin / ProjectAdmin
-      - Required information: project IRI
-      - GET: `/admin/projects/members/<projectIri>`
-
-
 ### Delete project (update project status):
 
-      - Required permission: SystemAdmin / ProjectAdmin
-      - Remark: The same as updating a project and changing `status` to
-        `false`. To un-delete, set `status` to `true`.
-      - DELETE: `/admin/projects/<projectIri>`
-      - BODY: empty
+  - Required permission: SystemAdmin / ProjectAdmin
+  - Remark: The same as updating a project and changing `status` to
+    `false`. To un-delete, set `status` to `true`.
+  - DELETE: `/admin/projects/<projectIri>`
+  - BODY: empty
 
+
+## Project Member Operations
+
+### Get project members:
+
+  - Required permission: SystemAdmin / ProjectAdmin
+  - Required information: project IRI
+  - GET: `/admin/projects/members/<projectIri>`
+
+
+### Restricted View Settings Operations
+
+#### Get the restricted view settings:
+
+  - Required permission: none
+  - Required information: `identifier`. The `identifier` can be the project's IRI, shortocde or shortname.
+  - GET: `/admin/projects/[identifier]/RestrictedViewSettings`
 
 ## Example Data
 
 The following is an example for project information stored in admin named graph:
 
 ```
-<http://rdfh.ch/projects/[shortcode]>
-     rdf:type knora-base:knoraProject ;
-     knora-base:projectShortname "images" ;
-     knora-base:projectShortcode "00FF" ;
-     knora-base:projectLongname "Images Collection Demo" ;
-     knora-base:projectOntology <http://www.knora.org/ontology/00FF/images> ;
-     knora-base:isActiveProject "true"^^xsd:boolean ;
-     knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+<http://rdfh.ch/projects/00FF>
+    rdf:type knora-base:knoraProject ;
+    knora-base:projectShortname "images"^^xsd:string ;
+    knora-base:projectShortcode "00FF"^^xsd:string ;
+    knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
+    knora-base:projectDescription "A demo project of a collection of images"@en ;
+    knora-base:projectKeyword "images"^^xsd:string,
+                              "collection"^^xsd:string ;
+    knora-base:projectRestrictedViewSize "!512,512"^^xsd:string ;
+    knora-base:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
+    knora-base:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
+    knora-base:status "true"^^xsd:boolean ;
+    knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 ```
 
