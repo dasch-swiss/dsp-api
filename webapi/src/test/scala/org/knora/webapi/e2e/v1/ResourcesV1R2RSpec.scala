@@ -91,12 +91,12 @@ class ResourcesV1R2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
-        RdfDataObject(path = "_test_data/ontologies/example-ibox.ttl", name = "http://www.knora.org/ontology/shared/example-ibox"),
+        //RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
+        //RdfDataObject(path = "_test_data/ontologies/example-ibox.ttl", name = "http://www.knora.org/ontology/shared/example-ibox"),
         RdfDataObject(path = "_test_data/ontologies/empty-thing-onto.ttl", name = "http://www.knora.org/ontology/0001/empty-thing"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
+        //RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        //RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     private val firstThingIri = new MutableTestIri
@@ -237,6 +237,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
          """.stripMargin
     }
 
+    /*
 
     "The Resources Endpoint" should {
         "provide a HTML representation of the resource properties " in {
@@ -1977,5 +1978,41 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
 
         }
-    }
+
+        */
+
+        private val search = "/v1/resources?restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23Thing"
+        private val filter = "&searchstr=***"
+
+        private def checkSearch(search: String) = {
+
+                Get(search) ~> resourcesPathV1 ~> check {
+
+                    assert(status == StatusCodes.OK, response.toString)
+
+                    val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                    val resources = responseJson.fields("resources")
+                        .asInstanceOf[JsArray].elements
+
+                    val expectedNumber = 8
+
+                    println(resources)
+
+                    assert(resources.length == expectedNumber, s"expected $expectedNumber results, but ${resources.length} given: $resources")
+
+                }
+        }
+
+        "perform a search for an anything:Thing matching a '***'" in {
+
+            checkSearch(search + filter)
+
+        }
+
+        "perform a search for an anything:Thing matching a '***' with 2 numprops displayed" in {
+
+            checkSearch(search + filter + "&numprops=2")
+
+        }
+
 }
