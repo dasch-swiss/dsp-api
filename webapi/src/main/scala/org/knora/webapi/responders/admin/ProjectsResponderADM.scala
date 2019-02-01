@@ -396,7 +396,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
             restrictedViewSettings = if (projectResponse.statements.nonEmpty) {
 
-                val propsMap: Map[IRI, Seq[LiteralV2]] = projectResponse.statements.head._2
+                val statements = projectResponse.statements
+                val propsMap: Map[IRI, Seq[LiteralV2]] = statements.head._2
 
                 val size = propsMap.get(OntologyConstants.KnoraBase.ProjectRestrictedViewSize).map(_.head.asInstanceOf[StringLiteralV2].value)
                 val watermark = propsMap.get(OntologyConstants.KnoraBase.ProjectRestrictedViewWatermark).map(_.head.asInstanceOf[StringLiteralV2].value)
