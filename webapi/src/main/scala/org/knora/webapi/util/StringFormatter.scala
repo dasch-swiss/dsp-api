@@ -308,17 +308,21 @@ object StringFormatter {
     /**
       * Holds information extracted from the IRI.
       *
-      * @param iriType        the type of the IRI.
-      * @param projectCode    the IRI's project code, if any.
-      * @param ontologyName   the IRI's ontology name, if any.
-      * @param entityName     the IRI's entity name, if any.
-      * @param ontologySchema the IRI's ontology schema, or `None` if it is not a Knora definition IRI.
-      * @param isBuiltInDef   `true` if the IRI refers to a built-in Knora ontology or ontology entity.
+      * @param iriType          the type of the IRI.
+      * @param projectCode      the IRI's project code, if any.
+      * @param ontologyName     the IRI's ontology name, if any.
+      * @param entityName       the IRI's entity name, if any.
+      * @param resourceID       if this is a resource IRI or value IRI, its resource ID.
+      * @param valueID          if this is a value IRI, its value ID.
+      * @param ontologySchema   the IRI's ontology schema, or `None` if it is not a Knora definition IRI.
+      * @param isBuiltInDef     `true` if the IRI refers to a built-in Knora ontology or ontology entity.
       */
     private case class SmartIriInfo(iriType: IriType,
                                     projectCode: Option[String] = None,
                                     ontologyName: Option[String] = None,
                                     entityName: Option[String] = None,
+                                    resourceID: Option[String] = None,
+                                    valueID: Option[String] = None,
                                     ontologySchema: Option[OntologySchema],
                                     isBuiltInDef: Boolean = false,
                                     sharedOntology: Boolean = false)
@@ -439,6 +443,16 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
       * Returns the IRI's project code, if any.
       */
     def getProjectCode: Option[String]
+
+    /**
+      * Returns the IRI's resource ID, if any.
+      */
+    def getResourceID: Option[String]
+
+    /**
+      * Returns the IRI's value ID, if any.
+      */
+    def getValueID: Option[String]
 
     /**
       * If this is an ontology entity IRI, returns its ontology IRI.
@@ -746,7 +760,10 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     private val base64UrlCheckDigit = new Base64UrlCheckDigit
 
     // A regex that matches a Knora resource IRI.
-    private val ResourceIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")").r
+    private val ResourceIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")$").r
+
+    // A regex that matches a Knora values IRI.
+    private val ValueIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + ")$").r
 
     // A DateTimeFormatter that parses and formats Knora ARK timestamps.
     private val ArkTimestampFormat = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss[nnnnnnnnn]X").withZone(ZoneId.of("UTC"))
@@ -810,10 +827,38 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
             case None =>
                 // Parse the IRI from scratch.
-                if (isKnoraDataIriStr(iri) ||
-                    iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
+                if (isKnoraDataIriStr(iri)) {
+                    // This is a Knora data IRI. What sort of data IRI is it?
+                    iri match {
+                        case ResourceIriRegex(projectCode: String, resourceID: String) =>
+                            // It's a resource IRI.
+                            SmartIriInfo(
+                                iriType = KnoraDataIri,
+                                ontologySchema = None,
+                                projectCode = Some(projectCode),
+                                resourceID = Some(resourceID)
+                            )
+
+                        case ValueIriRegex(projectCode: String, resourceID: String, valueID: String) =>
+                            // It's a value IRI.
+                            SmartIriInfo(
+                                iriType = KnoraDataIri,
+                                ontologySchema = None,
+                                projectCode = Some(projectCode),
+                                resourceID = Some(resourceID),
+                                valueID = Some(valueID)
+                            )
+
+                        case _ =>
+                            // It's some other kind of data IRI; nothing else to do.
+                            SmartIriInfo(
+                                iriType = KnoraDataIri,
+                                ontologySchema = None
+                            )
+                    }
+                } else if (iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
                     iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph) {
-                    // This is a Knora data or named graph IRI. Nothing else to do.
+                    // Nothing else to do.
                     SmartIriInfo(
                         iriType = KnoraDataIri,
                         ontologySchema = None
@@ -975,6 +1020,10 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         override def isKnoraEntityIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.entityName.nonEmpty
 
         override def getProjectCode: Option[String] = iriInfo.projectCode
+
+        override def getResourceID: Option[String] = iriInfo.resourceID
+
+        override def getValueID: Option[String] = iriInfo.valueID
 
         lazy val ontologyFromEntity: SmartIri = if (isKnoraOntologyIri) {
             throw DataConversionException(s"$iri is not a Knora entity IRI")
@@ -1307,8 +1356,8 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
                 throw DataConversionException(s"IRI $iri is not a Knora data IRI, so it cannot be a resource IRI")
             }
 
-            iri match {
-                case ResourceIriRegex(projectID: String, resourceID: String) =>
+            (iriInfo.projectCode, iriInfo.resourceID, iriInfo.valueID) match {
+                case (Some(projectID: String), Some(resourceID: String), None) =>
                     val arkUrlTry = Try {
                         makeArkUrl(
                             projectID = projectID,
@@ -1322,7 +1371,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
                         case Failure(ex) => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
                     }
 
-                case _ => throw DataConversionException(s"IRI $iri is not a Knora resource IRI")
+                case _ => throw DataConversionException(s"IRI <$iri> is not a Knora resource IRI")
             }
         }
     }

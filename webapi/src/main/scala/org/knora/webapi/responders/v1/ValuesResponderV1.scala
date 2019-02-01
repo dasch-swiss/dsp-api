@@ -21,7 +21,6 @@ package org.knora.webapi.responders.v1
 
 import java.time.Instant
 
-import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM, PermissionADM, PermissionType}
@@ -648,7 +647,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                 // get the property Iris, file value Iris and qualities attached to the resource
                 fileValues: Seq[CurrentFileValue] = getFileValuesResponse.results.bindings.map {
-                    (row: VariableResultsRow) =>
+                    row: VariableResultsRow =>
 
                         CurrentFileValue(
                             property = row.rowMap("p"),
@@ -1622,7 +1621,14 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             val valueProps = valueUtilV1.createValueProps(valueIri, rows)
 
             for {
-                value <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
+                projectShortcode: String <- Future(valueIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid value IRI: $valueIri")))
+
+                value <- valueUtilV1.makeValueV1(
+                    valueProps = valueProps,
+                    projectShortcode = projectShortcode,
+                    responderManager = responderManager,
+                    userProfile = userProfile
+                )
 
                 // Get the value's class IRI.
                 valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows).getOrElse(throw InconsistentTriplestoreDataException(s"Value $valueIri has no rdf:type"))
@@ -1705,7 +1711,14 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             val valueProps = valueUtilV1.createValueProps(linkValueIri, rows)
 
             for {
-                linkValueMaybe <- valueUtilV1.makeValueV1(valueProps, responderManager, userProfile)
+                projectShortcode: String <- Future(linkValueIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid value IRI: $linkValueIri")))
+
+                linkValueMaybe <- valueUtilV1.makeValueV1(
+                    valueProps = valueProps,
+                    projectShortcode = projectShortcode,
+                    responderManager = responderManager,
+                    userProfile = userProfile
+                )
 
                 linkValueV1: LinkValueV1 = linkValueMaybe match {
                     case linkValue: LinkValueV1 => linkValue

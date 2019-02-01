@@ -1411,6 +1411,7 @@ sealed trait FileValueV1 extends UpdateValueV1 with ApiValueV1 {
     val internalFilename: String
     val originalFilename: String
     val originalMimeType: Option[String]
+    val projectShortcode: String
 }
 
 /**
@@ -1429,6 +1430,7 @@ case class StillImageFileValueV1(internalMimeType: String,
                                  internalFilename: String,
                                  originalFilename: String,
                                  originalMimeType: Option[String] = None,
+                                 projectShortcode: String,
                                  dimX: Int,
                                  dimY: Int,
                                  qualityLevel: Int,
@@ -1471,7 +1473,8 @@ case class StillImageFileValueV1(internalMimeType: String,
 case class MovingImageFileValueV1(internalMimeType: String,
                                   internalFilename: String,
                                   originalFilename: String,
-                                  originalMimeType: Option[String] = None) extends FileValueV1 {
+                                  originalMimeType: Option[String] = None,
+                                  projectShortcode: String) extends FileValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.MovingImageFileValue
 
@@ -1510,7 +1513,8 @@ case class MovingImageFileValueV1(internalMimeType: String,
 case class TextFileValueV1(internalMimeType: String,
                            internalFilename: String,
                            originalFilename: String,
-                           originalMimeType: Option[String] = None) extends FileValueV1 {
+                           originalMimeType: Option[String] = None,
+                           projectShortcode: String) extends FileValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextFileValue
 
@@ -1618,9 +1622,9 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat7(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat5(DateValueV1)
-    implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat9(StillImageFileValueV1)
-    implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat4(TextFileValueV1)
-    implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat4(MovingImageFileValueV1)
+    implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat10(StillImageFileValueV1)
+    implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat5(TextFileValueV1)
+    implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat5(MovingImageFileValueV1)
     implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
     implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat1(ValueVersionHistoryGetResponseV1)

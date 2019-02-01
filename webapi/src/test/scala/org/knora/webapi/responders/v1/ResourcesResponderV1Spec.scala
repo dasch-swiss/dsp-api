@@ -151,6 +151,7 @@ object ResourcesResponderV1Spec {
         resinfo = ResourceInfoV1(
             regions = None,
             firstproperty = Some("A thing that only project members can see"),
+            project_shortcode = "0001",
             locdata = None,
             locations = None,
             preview = None,
@@ -173,6 +174,7 @@ object ResourcesResponderV1Spec {
         resinfo = ResourceInfoV1(
             regions = None,
             firstproperty = Some("A thing that only project members can see"),
+            project_shortcode = "0001",
             locdata = None,
             locations = None,
             preview = None,
@@ -1199,6 +1201,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 internalFilename = "gaga.jpg",
                 originalFilename = "test.jpg",
                 originalMimeType = Some("image/jpg"),
+                projectShortcode = "0803",
                 dimX = 1000,
                 dimY = 1000,
                 qualityLevel = 100,
@@ -1211,6 +1214,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 internalFilename = "gaga.jpg",
                 originalFilename = "test.jpg",
                 originalMimeType = Some("image/jpg"),
+                projectShortcode = "0803",
                 dimX = 100,
                 dimY = 100,
                 qualityLevel = 10,
@@ -1246,6 +1250,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                     originalFilename = "test.jpg",
                     originalMimeType = "image/jpeg",
                     filename = "./test_server/images/Chlaus.jpg",
+                    projectShortcode = "0803",
                     userProfile = SharedTestDataADM.incunabulaProjectAdminUser.asUserProfileV1
                 )),
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser,

@@ -143,11 +143,11 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/0803/4f11adaf/reps/3d71f9ab> , <http://rdfh.ch/0803/4f11adaf/reps/fc964ce5> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/0803/4f11adaf/values/3d71f9ab> , <http://rdfh.ch/0803/4f11adaf/values/fc964ce5> ;
 	knora-base:isDeleted false ;
 	rdfs:label "a1v, Titelblatt, Rückseite" .
 
-<http://rdfh.ch/0803/4f11adaf/reps/3d71f9ab> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/0803/4f11adaf/values/3d71f9ab> a knora-base:StillImageFileValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:dimX 81 ;
 	knora-base:dimY 128 ;
@@ -162,7 +162,7 @@
 	knora-base:valueCreationDate "2012-11-21T16:49:35Z"^^xsd:dateTimeStamp ;
 	knora-base:valueHasString "ad+s167_druck1=0002.tif" .
 
-<http://rdfh.ch/0803/4f11adaf/reps/fc964ce5> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/0803/4f11adaf/values/fc964ce5> a knora-base:StillImageFileValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:dimX 1870 ;
 	knora-base:dimY 2937 ;
@@ -281,11 +281,11 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:creationDate "2016-01-22T11:31:24Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
-	knora-base:hasStillImageFileValue <http://rdfh.ch/0803/8a0b1e75/reps/bf255339> , <http://rdfh.ch/0803/8a0b1e75/reps/7e4ba672> ;
+	knora-base:hasStillImageFileValue <http://rdfh.ch/0803/8a0b1e75/values/bf255339> , <http://rdfh.ch/0803/8a0b1e75/values/7e4ba672> ;
 	knora-base:isDeleted false ;
 	rdfs:label "a1r, Titelblatt" .
 
-<http://rdfh.ch/0803/8a0b1e75/reps/7e4ba672> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/0803/8a0b1e75/values/7e4ba672> a knora-base:StillImageFileValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:dimX 2613 ;
 	knora-base:dimY 3505 ;
@@ -299,7 +299,7 @@
 	knora-base:valueCreationDate "2012-11-21T16:49:36Z"^^xsd:dateTimeStamp ;
 	knora-base:valueHasString "ad+s167_druck1=0001.tif" .
 
-<http://rdfh.ch/0803/8a0b1e75/reps/bf255339> a knora-base:StillImageFileValue ;
+<http://rdfh.ch/0803/8a0b1e75/values/bf255339> a knora-base:StillImageFileValue ;
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:dimX 95 ;
 	knora-base:dimY 128 ;
