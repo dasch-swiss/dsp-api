@@ -22,8 +22,8 @@ package org.knora.webapi.responders.admin
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.sipimessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 import scala.concurrent.duration._
@@ -52,7 +52,7 @@ class SipiResponderADMSpec extends CoreSpec(SipiResponderV1Spec.config) with Imp
         "return details of a full quality file value" in {
             // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
             responderManager ! SipiFileInfoGetRequestADM(
-                requestingUser = SharedTestDataV1.incunabulaMemberUser,
+                requestingUser = SharedTestDataADM.incunabulaMemberUser,
                 projectID = "0803",
                 filename = "incunabula_0000003328.jp2"
             )
@@ -63,7 +63,7 @@ class SipiResponderADMSpec extends CoreSpec(SipiResponderV1Spec.config) with Imp
         "return details of a restricted view file value" in {
             // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
             responderManager ! SipiFileInfoGetRequestADM(
-                requestingUser = SharedTestDataV1.anonymousUser,
+                requestingUser = SharedTestDataADM.anonymousUser,
                 projectID = "0803",
                 filename = "incunabula_0000003328.jp2"
             )

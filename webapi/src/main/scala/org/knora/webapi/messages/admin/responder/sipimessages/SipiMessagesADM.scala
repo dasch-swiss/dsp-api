@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.admin.responder.sipimessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectRestrictedViewSettingsADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json.{DefaultJsonProtocol, JsValue, NullOptions, RootJsonFormat}
@@ -44,7 +45,7 @@ case class SipiFileInfoGetRequestADM(projectID: String, filename: String, reques
   * @param permissionCode         a code representing the user's maximum permission on the file.
   * @param restrictedViewSettings the project's restricted view settings.
   */
-case class SipiFileInfoGetResponseADM(permissionCode: Int
+case class SipiFileInfoGetResponseADM(permissionCode: Int,
                                       restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM],
                                      ) extends KnoraResponseV1 {
     def toJsValue: JsValue = SipiResponderResponseADMJsonProtocol.sipiFileInfoGetResponseADMFormat.write(this)
