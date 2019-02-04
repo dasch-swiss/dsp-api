@@ -378,7 +378,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     @ApiMayChange
     private def projectRestrictedViewSettingsGetADM(identifier: ProjectIdentifierADM, requestingUser: UserADM): Future[Option[ProjectRestrictedViewSettingsADM]] = {
 
-        // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestricedViewSettings resource. How send the client the correct NotFound reply.
+        // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestricedViewSettings resource. How to send the client the correct NotFound reply?
 
         val maybeIri = identifier.toIriOption
         val maybeShortname = identifier.toShortnameOption
@@ -396,8 +396,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
             restrictedViewSettings = if (projectResponse.statements.nonEmpty) {
 
-                val statements = projectResponse.statements
-                val propsMap: Map[IRI, Seq[LiteralV2]] = statements.head._2
+                val (_, propsMap): (SubjectV2, Map[IRI, Seq[LiteralV2]]) = projectResponse.statements.head
 
                 val size = propsMap.get(OntologyConstants.KnoraBase.ProjectRestrictedViewSize).map(_.head.asInstanceOf[StringLiteralV2].value)
                 val watermark = propsMap.get(OntologyConstants.KnoraBase.ProjectRestrictedViewWatermark).map(_.head.asInstanceOf[StringLiteralV2].value)
