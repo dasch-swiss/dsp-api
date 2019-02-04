@@ -28,7 +28,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 import scala.concurrent.duration._
 
-object SipiResponderV1Spec {
+object SipiResponderADMSpec {
     val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
@@ -39,7 +39,7 @@ object SipiResponderV1Spec {
 /**
   * Tests [[SipiResponderADM]].
   */
-class SipiResponderADMSpec extends CoreSpec(SipiResponderV1Spec.config) with ImplicitSender {
+class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with ImplicitSender {
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
