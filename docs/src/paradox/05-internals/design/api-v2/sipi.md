@@ -55,14 +55,16 @@ temporary files can be set in Sipi's configuration file, using the parameter
 
 The `store.lua` script is available at Sipi's `store` route. It moves a file
 from temporary to permanent storage. It expects an HTTP `POST` request containing
-`application/x-www-form-urlencoded` data with the parameter `filename`, whose
-value is the internal Sipi-generated filename of the file to be moved.
+`application/x-www-form-urlencoded` data with the parameters `prefix` (the
+project shortcode) and `filename` (the internal Sipi-generated filename of the file
+to be moved).
 
 The JWT sent to this script must contain the key `knora-data`, whose value
 must be a JSON object containing:
 
 - `permission`: must be `StoreFile`
-- `filename`: must be the same as the filename submitted in the form data
+- `prefix`: the project shortcode submitted in the form data
+- `filename`: the filename submitted in the form data
 
 ### delete_temp_file.lua
 

@@ -94,6 +94,8 @@ jobs:
         - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/it:test webapi/coverageReport
         # upload code coverage report
         # - sbt codacyCoverage
+        # print out Sipi logs
+        - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose logs
     # testing docs generation
     - stage: test
       script:

@@ -26,7 +26,7 @@ import akka.util.Timeout
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{KnoraDispatchers, Settings, UnexpectedMessageException}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
 /**
@@ -41,7 +41,7 @@ object Responder {
       * @param log     a [[LoggingAdapter]].
       * @param who     the responder receiving the message.
       */
-    def handleUnexpectedMessage(message: Any, log: LoggingAdapter, who: String) = {
+    def handleUnexpectedMessage(message: Any, log: LoggingAdapter, who: String): Future[Nothing] = {
         val unexpectedMessageException = UnexpectedMessageException(s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}")
         FastFuture.failed(unexpectedMessageException)
     }

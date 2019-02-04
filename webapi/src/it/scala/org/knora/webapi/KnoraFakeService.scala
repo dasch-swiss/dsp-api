@@ -26,9 +26,10 @@ import akka.stream.ActorMaterializer
 import org.knora.webapi.util.StringFormatter
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
 
 /**
-  * Created by subotic on 26.06.17.
+  * A fake Knora service that Sipi can use to get file permissions.
   */
 trait KnoraFakeService {
 
@@ -45,13 +46,13 @@ trait KnoraFakeService {
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
       */
-    implicit private val timeout = settings.defaultTimeout
+    implicit private val timeout: FiniteDuration = settings.defaultTimeout
 
     /**
       * Faked `webapi` routes
       */
     private val apiRoutes = {
-        path("v1" / "files" / Segment) { file =>
+        path("admin" / "files" / Segments(2)) { projectIDAndFile =>
             get {
                 complete(
                     """
