@@ -36,9 +36,10 @@ end
 originalFilename = server.post['originalfilename']
 originalMimetype = server.post['originalmimetype']
 sourcePath = server.post['source']
+prefix = server.post['prefix']
 
 -- check if all the expected params are set
-if originalFilename == nil or originalMimetype == nil or sourcePath == nil then
+if originalFilename == nil or originalMimetype == nil or sourcePath == nil or prefix == nil then
     send_error(400, PARAMETERS_INCORRECT)
     return
 end
@@ -83,19 +84,21 @@ if mediatype == IMAGE then
     -- it is an image
 
     --
-    -- check if knora directory is available, if not, create it
+    -- check if project directory is available, if not, create it
     --
-    knoraDir = config.imgroot .. '/knora/'
-    success, exists = server.fs.exists(knoraDir)
+
+    projectDir = config.imgroot .. '/' .. prefix .. '/'
+
+    success, exists = server.fs.exists(projectDir)
     if not success then
         server.log("server.fs.exists() failed: " .. exists, server.loglevel.LOG_ERR)
     end
 
     if not exists then
-        success, errmsg = server.fs.mkdir(knoraDir, 511)
+        success, errmsg = server.fs.mkdir(projectDir, 511)
         if not success then
             server.log("server.fs.mkdir() failed: " .. errmsg, server.loglevel.LOG_ERR)
-            send_error(500, "Knora directory could not be created on server")
+            send_error(500, "Project directory could not be created on server")
             return
         end
     end
@@ -149,7 +152,7 @@ if mediatype == IMAGE then
         return false
     end
 
-    success, errmsg = fullImg:write(knoraDir .. newFilePath)
+    success, errmsg = fullImg:write(projectDir .. newFilePath)
     if not success then
         server.log("fullImg:write() failed: " .. errmsg, server.loglevel.LOG_ERR)
         return
@@ -183,7 +186,7 @@ if mediatype == IMAGE then
     end
 
 
-    success, errmsg = thumbImg:write(knoraDir .. newThumbPath)
+    success, errmsg = thumbImg:write(projectDir .. newThumbPath)
     if not success then
         server.log("thumbImg:write failed: " .. errmsg, server.loglevel.LOG_ERR)
         return
@@ -210,19 +213,19 @@ elseif mediatype == TEXT then
     -- it is a text file
 
     --
-    -- check if knora directory is available, if not, create it
+    -- check if project directory is available, if not, create it
     --
-    fileDir = config.docroot .. '/knora/'
-    success, exists = server.fs.exists(fileDir)
+    projectFileDir = config.docroot .. '/' .. prefix .. '/'
+    success, exists = server.fs.exists(projectFileDir)
     if not success then
         server.log("server.fs.exists() failed: " .. exists, server.loglevel.LOG_ERR)
     end
 
     if not exists then
-        success, errmsg = server.fs.mkdir(fileDir, 511)
+        success, errmsg = server.fs.mkdir(projectFileDir, 511)
         if not success then
             server.log("server.fs.mkdir() failed: " .. errmsg, server.loglevel.LOG_ERR)
-            send_error(500, "Knora directory could not be created on server")
+            send_error(500, "Project directory could not be created on server")
             return
         end
     end
@@ -253,7 +256,7 @@ elseif mediatype == TEXT then
         return
     end
 
-    local filePath = fileDir .. filename
+    local filePath = projectFileDir .. filename
 
     local success, result = server.fs.copyFile(sourcePath, filePath)
     if not success then

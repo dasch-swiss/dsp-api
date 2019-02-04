@@ -59,9 +59,23 @@ if token_filename == nil then
     return
 end
 
+local token_prefix = knora_data["prefix"]
+
+if token_prefix == nil then
+    send_error(401, "Token does not specify a prefix")
+    return
+end
+
 -- Check that the permanent storage directory exists.
 
-local storage_dir = config.imgroot .. "/knora/" -- TODO: use project-specific dir
+local prefix = server.post["prefix"]
+
+if prefix ~= token_prefix then
+    send_error(401, "Incorrect prefix in token")
+    return
+end
+
+local storage_dir = config.imgroot .. "/" .. prefix .. "/"
 local success, exists = server.fs.exists(storage_dir)
 
 if not success then

@@ -144,7 +144,6 @@ trait KnoraService {
         new RejectingRoute(routeData).knoraApiPath ~
         new ResourcesRouteV1(routeData).knoraApiPath ~
         new ValuesRouteV1(routeData).knoraApiPath ~
-        new SipiRouteV1(routeData).knoraApiPath ~
         new StandoffRouteV1(routeData).knoraApiPath ~
         new ListsRouteV1(routeData).knoraApiPath ~
         new ResourceTypesRouteV1(routeData).knoraApiPath ~
@@ -167,6 +166,7 @@ trait KnoraService {
         new ProjectsRouteADM(routeData).knoraApiPath ~
         new StoreRouteADM(routeData).knoraApiPath ~
         new UsersRouteADM(routeData).knoraApiPath ~
+        new SipiRouteADM(routeData).knoraApiPath ~
         new SwaggerApiDocsRoute(routeData).knoraApiPath,
         settings,
         log

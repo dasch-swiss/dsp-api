@@ -27,13 +27,13 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
 import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
-import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderRequestV1
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
@@ -107,16 +107,6 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
     protected lazy val valuesResponderV1: ValuesResponderV1 = makeDefaultValuesResponderV1
-
-    /**
-      * Constructs the default [[SipiResponderV1]].
-      */
-    protected final def makeDefaultSipiResponderV1: SipiResponderV1 = new SipiResponderV1(responderData)
-
-    /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
-    protected lazy val sipiRouterV1: SipiResponderV1 = makeDefaultSipiResponderV1
 
     /**
       * Constructs the default [[StandoffResponderV1]].
@@ -320,6 +310,16 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
       */
     protected val usersResponderADM: UsersResponderADM = makeDefaultUsersResponderADM
 
+    /**
+      * Constructs the default [[SipiResponderADM]].
+      */
+    protected final def makeDefaultSipiResponderADM: SipiResponderADM = new SipiResponderADM(responderData)
+
+    /**
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+      */
+    protected lazy val sipiRouterADM: SipiResponderADM = makeDefaultSipiResponderADM
+
 
     /**
       * Each responder's receive method is called and only messages of the allowed type are supplied as the parameter.
@@ -331,7 +331,6 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
         case ckanResponderRequestV1: CkanResponderRequestV1 => future2Message(sender(), ckanResponderV1 receive ckanResponderRequestV1, log)
         case resourcesResponderRequestV1: ResourcesResponderRequestV1 => future2Message(sender(), resourcesResponderV1 receive resourcesResponderRequestV1, log)
         case valuesResponderRequestV1: ValuesResponderRequestV1 => future2Message(sender(), valuesResponderV1 receive valuesResponderRequestV1, log)
-        case sipiResponderRequestV1: SipiResponderRequestV1 => future2Message(sender(), sipiRouterV1 receive sipiResponderRequestV1, log)
         case listsResponderRequestV1: ListsResponderRequestV1 => future2Message(sender(), listsResponderV1 receive listsResponderRequestV1, log)
         case searchResponderRequestV1: SearchResponderRequestV1 => future2Message(sender(), searchResponderV1 receive searchResponderRequestV1, log)
         case ontologyResponderRequestV1: OntologyResponderRequestV1 => future2Message(sender(), ontologyResponderV1 receive ontologyResponderRequestV1, log)
@@ -355,6 +354,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
         case projectsResponderRequestADM: ProjectsResponderRequestADM => future2Message(sender(), projectsResponderADMM receive projectsResponderRequestADM, log)
         case storeResponderRequestADM: StoreResponderRequestADM => future2Message(sender(), storeResponderADM receive storeResponderRequestADM, log)
         case usersResponderRequestADM: UsersResponderRequestADM => future2Message(sender(), usersResponderADM receive usersResponderRequestADM, log)
+        case sipiResponderRequestADM: SipiResponderRequestADM => future2Message(sender(), sipiRouterADM receive sipiResponderRequestADM, log)
 
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }

@@ -1571,6 +1571,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val fileRequest = SipiConversionFileRequestV1(
                 originalFilename = "Chlaus.jpg",
                 originalMimeType = "image/jpeg",
+                projectShortcode = "0803",
                 filename = "./test_server/images/Chlaus.jpg",
                 userProfile = incunabulaUser.asUserProfileV1
             )

@@ -25,3 +25,4 @@ Also, please change the **HINT** to the appropriate level:
   must update them.
 - FIX: Set cookie domain to the value specified in `application.conf` with the setting `cookie-domain` (@github[#1169](#1169))
 - FIX: Fix processing of shared property in bulk import (@github[#1182](#1182))
+- MAJOR: Use project shortcode in IIIF URLs (@github[#1191](#1191)). If you have file value IRIs containing the substring `/reps/`, you must replace `/reps/` with `/values/`.

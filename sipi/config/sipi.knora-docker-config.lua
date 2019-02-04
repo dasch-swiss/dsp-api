@@ -68,7 +68,7 @@ sipi = {
     -- thousand files in a unix directory (your mileage may vay depending on the
     -- file system used).
     --
-    subdir_levels = 0,
+    subdir_levels = 1,
 
     --
     -- if subdir_levels is > 0 and if prefix_as_path is true, all prefixes will be
@@ -77,7 +77,7 @@ sipi = {
     -- for certain prefixes *not* to use subdirs. A list of these prefix-directories
     -- can be given with this configuration parameter.
     --
-    subdir_excludes = { "tmp", "thumbs"},
+    subdir_excludes = { "knora", "thumbs" },
 
     --
     -- Lua script which is executed on initialization of the Lua interpreter
@@ -178,16 +178,6 @@ routes = {
         route = '/convert_from_file',
         script = 'convert_from_file.lua'
     },
-    --{
-    --    method = 'POST',
-    --    route = '/Knora_login',
-    --    script = 'Knora_login.lua'
-    --},
-    --{
-    --    method = 'POST',
-    --    route = '/Knora_logout',
-    --    script = 'Knora_logout.lua'
-    --},
     {
         method = 'POST',
         route = '/upload',

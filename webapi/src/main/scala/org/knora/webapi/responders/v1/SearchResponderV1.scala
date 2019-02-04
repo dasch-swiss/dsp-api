@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.twirl.SearchCriterion
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{DateUtilV1, PermissionUtilADM}
 
 import scala.concurrent.Future
@@ -187,6 +188,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
                     val resourceCreator = firstRowMap("resourceCreator")
                     val resourceProject = firstRowMap("resourceProject")
+                    val resourceProjectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI: $resourceIri"))
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
                     val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(
@@ -261,7 +263,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                             subjectsAcc :+ SearchResultRowV1(
                                 obj_id = resourceIri,
                                 preview_path = firstRowMap.get("previewPath") match {
-                                    case Some(path) => Some(valueUtilV1.makeSipiImagePreviewGetUrlFromFilename(path))
+                                    case Some(path) => Some(valueUtilV1.makeSipiImagePreviewGetUrlFromFilename(resourceProjectShortcode, path))
                                     case None =>
                                         // If there is no preview image, use the resource class icon from the ontology.
                                         resourceClassIconURL
@@ -515,6 +517,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
                     val resourceCreator = firstRowMap("resourceCreator")
                     val resourceProject = firstRowMap("resourceProject")
+                    val resourceProjectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI: $resourceIri"))
                     val resourcePermissions = firstRowMap("resourcePermissions")
 
                     val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(
@@ -627,7 +630,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                             subjectsAcc :+ SearchResultRowV1(
                                 obj_id = resourceIri,
                                 preview_path = firstRowMap.get("previewPath") match {
-                                    case Some(path) => Some(valueUtilV1.makeSipiImagePreviewGetUrlFromFilename(path))
+                                    case Some(path) => Some(valueUtilV1.makeSipiImagePreviewGetUrlFromFilename(resourceProjectShortcode, path))
                                     case None =>
                                         // If there is no preview image, use the resource class icon from the ontology.
                                         resourceClassIconURL
