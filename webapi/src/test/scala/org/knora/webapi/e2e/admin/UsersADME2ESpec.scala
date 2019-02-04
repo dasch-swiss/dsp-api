@@ -192,6 +192,15 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 // log.debug(s"iri: ${donaldIri.get}")
             }
 
+            "authenticate the newly created user" in {
+
+                val request = Get(baseApiUrl + s"/v2/authentication")  ~> addCredentials(BasicHttpCredentials("donald.duck", "test"))
+                val response: HttpResponse = singleAwaitingRequest(request)
+
+                // log.debug(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+            }
+
             "update the user's basic information" in {
 
                 val params =
