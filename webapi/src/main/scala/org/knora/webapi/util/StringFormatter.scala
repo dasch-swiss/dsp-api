@@ -391,6 +391,16 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     def isKnoraDataIri: Boolean
 
     /**
+      * Returns `true` if this is a Knora resource IRI.
+      */
+    def isKnoraResourceIri: Boolean
+
+    /**
+      * Returns `true` if this is a Knora value IRI.
+      */
+    def isKnoraValueIri: Boolean
+
+    /**
       * Returns `true` if this is a Knora ontology or entity IRI.
       */
     def isKnoraDefinitionIri: Boolean
@@ -1351,27 +1361,45 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
         override def fromLinkPropToLinkValueProp: SmartIri = asLinkValueProp
 
-        override def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String = {
+        override def isKnoraResourceIri: Boolean = {
             if (!isKnoraDataIri) {
-                throw DataConversionException(s"IRI $iri is not a Knora data IRI, so it cannot be a resource IRI")
+                false
+            } else {
+                (iriInfo.projectCode, iriInfo.resourceID, iriInfo.valueID) match {
+                    case (Some(_), Some(_), None) => true
+                    case _ => false
+                }
+            }
+        }
+
+        override def isKnoraValueIri: Boolean = {
+            if (!isKnoraDataIri) {
+                false
+            } else {
+                (iriInfo.projectCode, iriInfo.resourceID, iriInfo.valueID) match {
+                    case (Some(_), Some(_), Some(_)) => true
+                    case _ => false
+                }
+            }
+        }
+
+        override def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String = {
+            if (!isKnoraResourceIri) {
+                throw DataConversionException(s"IRI $iri is not a Knora resource IRI")
             }
 
-            (iriInfo.projectCode, iriInfo.resourceID, iriInfo.valueID) match {
-                case (Some(projectID: String), Some(resourceID: String), None) =>
-                    val arkUrlTry = Try {
-                        makeArkUrl(
-                            projectID = projectID,
-                            resourceID = resourceID,
-                            maybeTimestamp = maybeTimestamp
-                        )
-                    }
+            val arkUrlTry = Try {
+                makeArkUrl(
+                    projectID = iriInfo.projectCode.get,
+                    resourceID = iriInfo.resourceID.get,
+                    maybeTimestamp = maybeTimestamp
+                )
 
-                    arkUrlTry match {
-                        case Success(arkUrl) => arkUrl
-                        case Failure(ex) => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
-                    }
+            }
 
-                case _ => throw DataConversionException(s"IRI <$iri> is not a Knora resource IRI")
+            arkUrlTry match {
+                case Success(arkUrl) => arkUrl
+                case Failure(ex) => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
             }
         }
     }

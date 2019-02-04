@@ -1132,6 +1132,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
 
+                // Check that the resource belongs to the class that the client submitted.
+
+                _ = if (resourceInfo.resourceClassIri != deleteValueRequest.resourceClassIri.toOntologySchema(InternalSchema)) {
+                    throw BadRequestException(s"Resource <${deleteValueRequest.resourceIri}> does not belong to class <${deleteValueRequest.resourceClassIri}>")
+                }
+
                 // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
 
                 maybeCurrentValue: Option[ReadValueV2] = resourceInfo.values.get(submittedInternalPropertyIri).flatMap(_.find(_.valueIri == deleteValueRequest.valueIri))
@@ -1142,6 +1148,14 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     case Some(value) => value
                     case None => throw NotFoundException(s"Resource <${deleteValueRequest.resourceIri}> does not have value <${deleteValueRequest.valueIri}> as an object of property <${deleteValueRequest.propertyIri}>")
                 }
+
+                // Check that the value is of the type that the client submitted.
+
+                _ = if (currentValue.valueContent.valueType != deleteValueRequest.valueTypeIri.toOntologySchema(InternalSchema)) {
+                    throw BadRequestException(s"Value <${deleteValueRequest.valueIri}> in resource <${deleteValueRequest.resourceIri}> is not of type <${deleteValueRequest.valueTypeIri}>")
+                }
+
+                // Check the user's permissions on the value.
 
                 _ = ResourceUtilV2.checkValuePermission(
                     resourceInfo = resourceInfo,
