@@ -320,11 +320,27 @@ that they do not appear in normal query results.
 To mark a value as deleted, use this route:
 
 ```
-HTTP DELETE to http://host/v2/values/RESOURCE_IRI/PROPERTY_IRI/VALUE_IRI[?deleteComment=DELETE_COMMENT]
+HTTP POST to http://host/v2/values/delete
 ```
 
-The resource IRI, property IRI, and value IRI must be URL-encoded. If the value
-is a link value, the property must be a link value property.
+The request must include the resource's ID and type, the property that points from
+the resource to the value, and the value's ID and type. For example:
 
-The optional URL parameter `deleteComment` specifies a comment to be attached to the
-value, explaining why it has been marked as deleted. The comment must also be URL-encoded.
+```jsonld
+{
+  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@type" : "anything:Thing",
+  "anything:hasInteger" : {
+    "@id" : "http://rdfh.ch/0001/a-thing/values/vp96riPIRnmQcbMhgpv_Rg",
+    "@type" : "knora-api:IntValue",
+    "knora-api:deleteComment" : "This value was created by mistake."
+  },
+  "@context" : {
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
+The optional property `knora-api:deleteComment` specifies a comment to be attached to the
+value, explaining why it has been marked as deleted.

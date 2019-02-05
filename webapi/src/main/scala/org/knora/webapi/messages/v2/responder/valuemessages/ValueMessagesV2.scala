@@ -91,6 +91,10 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
             // Get the IRI of the resource that the value is to be created in.
             resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
 
+            _ = if (!resourceIri.isKnoraResourceIri) {
+                throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+            }
+
             // Get the resource class.
             resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
 
