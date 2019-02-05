@@ -85,9 +85,9 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       */
     private case class GeneratedQueryVariable(variable: QueryVariable, useInOrderBy: Boolean)
 
-    // variables that are created when processing filter statements
+    // variables that are created when processing filter statements or for a value object var used as a sort criterion
     // they represent the value of a literal pointed to by a value object
-    private val valueVariablesGeneratedInFilters = mutable.Map.empty[QueryVariable, Set[GeneratedQueryVariable]]
+    private val valueVariablesAutomaticallyGenerated = mutable.Map.empty[QueryVariable, Set[GeneratedQueryVariable]]
 
     /**
       * Saves a generated variable representing a value literal, if it hasn't been saved already.
@@ -98,10 +98,10 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       * @return `true` if the generated variable was saved, `false` if it had already been saved.
       */
     protected def addGeneratedVariableForValueLiteral(valueVar: QueryVariable, generatedVar: QueryVariable, useInOrderBy: Boolean = true): Boolean = {
-        val currentGeneratedVars = valueVariablesGeneratedInFilters.getOrElse(valueVar, Set.empty[GeneratedQueryVariable])
+        val currentGeneratedVars = valueVariablesAutomaticallyGenerated.getOrElse(valueVar, Set.empty[GeneratedQueryVariable])
 
         if (!currentGeneratedVars.exists(currentGeneratedVar => currentGeneratedVar.variable == generatedVar)) {
-            valueVariablesGeneratedInFilters.put(valueVar, currentGeneratedVars + GeneratedQueryVariable(generatedVar, useInOrderBy))
+            valueVariablesAutomaticallyGenerated.put(valueVar, currentGeneratedVars + GeneratedQueryVariable(generatedVar, useInOrderBy))
             true
         } else {
             false
@@ -115,7 +115,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       * @return a generated variable that represents a value literal and can be used in ORDER BY, or `None` if no such variable has been saved.
       */
     protected def getGeneratedVariableForValueLiteralInOrderBy(valueVar: QueryVariable): Option[QueryVariable] = {
-        valueVariablesGeneratedInFilters.get(valueVar) match {
+        valueVariablesAutomaticallyGenerated.get(valueVar) match {
             case Some(generatedVars: Set[GeneratedQueryVariable]) =>
                 val generatedVarsForOrderBy: Set[QueryVariable] = generatedVars.filter(_.useInOrderBy).map(_.variable)
 
@@ -267,7 +267,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         )
     }
 
-    protected def convertStatementForPropertyType(inputOrderBy: Seq[OrderCriterion])(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern, typeInspectioResult: GravsearchTypeInspectionResult): Seq[QueryPattern] = {
+    protected def convertStatementForPropertyType(inputOrderBy: Seq[OrderCriterion])(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult): Seq[QueryPattern] = {
         /**
           * Ensures that if the object of a statement is a variable, and is used in the ORDER BY clause of the input query, the subject of the statement
           * is the main resource. Throws an exception otherwise.
@@ -336,7 +336,45 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                     // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
                     val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
-                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted)
+
+                    // check if the object var is used as a sort criterion
+                    val objectVarAsSortCriterionMaybe = inputOrderBy.find(criterion => criterion.queryVariable == objectVar)
+
+                    val orderByStatement: Option[QueryPattern] = if (objectVarAsSortCriterionMaybe.nonEmpty) {
+                        // it is used as a sort criterion, create an additional statement to get the literal value
+
+                        val criterion = objectVarAsSortCriterionMaybe.get
+
+                        val propertyIri: SmartIri = typeInspectionResult.getTypeOfEntity(criterion.queryVariable) match {
+                            case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) =>
+                                valueTypesToValuePredsForOrderBy.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw GravsearchException(s"${criterion.queryVariable.toSparql} cannot be used in ORDER BY")).toSmartIri
+
+                            case Some(_) => throw GravsearchException(s"Variable ${criterion.queryVariable.toSparql} represents a property, and therefore cannot be used in ORDER BY")
+
+                            case None => throw GravsearchException(s"No type information found for ${criterion.queryVariable.toSparql}")
+                        }
+
+                        // Generate the variable name.
+                        val variableForLiteral: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
+
+                        // put the generated variable into a collection so it can be reused in `NonTriplestoreSpecificGravsearchToPrequeryGenerator.getOrderBy`
+                        // set to true when the variable already exists
+                        val variableForLiteralExists = !addGeneratedVariableForValueLiteral(criterion.queryVariable, variableForLiteral)
+
+                        if (!variableForLiteralExists) {
+                            // Generate a statement to get the literal value
+                            val statementPatternForSortCriterion = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
+                            Some(statementPatternForSortCriterion)
+                        } else {
+                            // statement has already been created
+                            None
+                        }
+                    } else {
+                        // it is not a sort criterion
+                        None
+                    }
+                    
+                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted) ++ orderByStatement
                 } else {
                     // The variable doesn't refer to a value object. Just convert the statement pattern to the internal schema.
                     Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
@@ -620,13 +658,19 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         val dateValueHasStartVar = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN)
 
         // sort dates by their period's start (in the prequery)
-        addGeneratedVariableForValueLiteral(queryVar, dateValueHasStartVar)
+        // is set to `true` if the date value object var is a sort criterion and has been handled already
+        val dateValVarExists: Boolean = !addGeneratedVariableForValueLiteral(queryVar, dateValueHasStartVar)
 
         // Generate a variable name representing the period's end
         val dateValueHasEndVar = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN)
 
         // connects the value object with the periods start variable
-        val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar)
+        // only generate a new statement if it has not already been created when handling the sort criteria
+        val dateValStartStatementOption: Option[StatementPattern] = if (!dateValVarExists) {
+            Some(StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar))
+        } else {
+           None
+        }
 
         // connects the value object with the periods end variable
         val dateValEndStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri), obj = dateValueHasEndVar)
@@ -643,7 +687,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                 val filter = AndExpression(leftArgFilter, rightArgFilter)
 
-                val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement))
+                val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement))
                 generatedDateStatements ++= statementsToAdd
 
                 TransformedFilterPattern(
@@ -660,7 +704,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                 val filter = OrExpression(leftArgFilter, rightArgFilter)
 
-                val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement))
+                val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement))
                 generatedDateStatements ++= statementsToAdd
 
                 TransformedFilterPattern(
@@ -673,7 +717,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 // period ends before indicated period
                 val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
-                val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
+                val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
                 generatedDateStatements ++= statementsToAdd
 
                 TransformedFilterPattern(
@@ -686,9 +730,9 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 // period ends before indicated period or equals it (any overlap)
                 val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
-                val statementToAdd = if (!generatedDateStatements.contains(dateValStartStatement)) {
-                    generatedDateStatements += dateValStartStatement
-                    Seq(dateValStartStatement)
+                val statementToAdd = if (dateValStartStatementOption.nonEmpty && !generatedDateStatements.contains(dateValStartStatementOption.get)) {
+                    generatedDateStatements += dateValStartStatementOption.get
+                    Seq(dateValStartStatementOption.get)
                 } else {
                     Seq.empty[StatementPattern]
                 }
@@ -703,9 +747,9 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 // period starts after end of indicated period
                 val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
-                val statementToAdd = if (!generatedDateStatements.contains(dateValStartStatement)) {
-                    generatedDateStatements += dateValStartStatement
-                    Seq(dateValStartStatement)
+                val statementToAdd = if (dateValStartStatementOption.nonEmpty && !generatedDateStatements.contains(dateValStartStatementOption.get)) {
+                    generatedDateStatements += dateValStartStatementOption.get
+                    Seq(dateValStartStatementOption.get)
                 } else {
                     Seq.empty[StatementPattern]
                 }
@@ -720,7 +764,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 // period starts after indicated period or equals it (any overlap)
                 val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
-                val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
+                val statementsToAdd = (dateValStartStatementOption.toSeq :+ dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
                 generatedDateStatements ++= statementsToAdd
 
                 TransformedFilterPattern(

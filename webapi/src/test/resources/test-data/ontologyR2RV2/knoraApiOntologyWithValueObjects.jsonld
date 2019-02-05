@@ -4873,9 +4873,21 @@
     "@id" : "knora-api:knoraProject",
     "@type" : "owl:Class",
     "rdfs:comment" : "Represents a project that uses Knora",
-    "rdfs:subClassOf" : {
+    "rdfs:subClassOf" : [ {
       "@id" : "http://xmlns.com/foaf/0.1/Project"
-    }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:projectRestrictedViewSize"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:projectRestrictedViewWatermark"
+      }
+    } ]
   }, {
     "@id" : "knora-api:lastModificationDate",
     "@type" : "owl:DatatypeProperty",
@@ -5037,6 +5049,26 @@
     },
     "rdfs:comment" : "Represents the short name of an ontology",
     "rdfs:label" : "ontology name"
+  }, {
+    "@id" : "knora-api:projectRestrictedViewSize",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:string"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:knoraProject"
+    },
+    "rdfs:comment" : "The size of the image (as defined by IIIF) returned for restricted view"
+  }, {
+    "@id" : "knora-api:projectRestrictedViewWatermark",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:string"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:knoraProject"
+    },
+    "rdfs:comment" : "Path to the restricted view watermark"
   }, {
     "@id" : "knora-api:resourceIcon",
     "@type" : "owl:DatatypeProperty",
