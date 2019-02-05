@@ -565,6 +565,16 @@ knora-api:objectType a rdf:Property;
   rdfs:comment "Specifies the required type of the objects of a property";
   rdfs:label "Object type" .
 
+knora-api:projectRestrictedViewSize a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:knoraProject;
+  rdfs:comment "The size of the image (as defined by IIIF) returned for restricted view" .
+
+knora-api:projectRestrictedViewWatermark a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:knoraProject;
+  rdfs:comment "Path to the restricted view watermark" .
+
 knora-api:resourceIcon a owl:DatatypeProperty;
   knora-api:objectType xsd:string;
   knora-api:subjectType owl:Class .
