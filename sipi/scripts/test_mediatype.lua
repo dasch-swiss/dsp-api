@@ -16,42 +16,55 @@
 -- License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 require "send_response"
-require "get_mediatype"
+require "file_info"
 
 -- Sample values for mediatype handling.
 
 local mediatype_test_data = {
     {
+        filename = "test.xml",
         received = "application/xml",
         expected = "text"
     },
     {
+        filename = "test.xml",
         received = "text/xml",
         expected = "text"
     },
     {
+        filename = "test.txt",
         received = "text/plain",
         expected = "text"
     },
     {
+        filename = "test.jp2",
         received = "image/jp2",
         expected = "image"
     },
     {
+        filename = "test.tif",
         received = "image/tiff",
         expected = "image"
     },
     {
+        filename = "test.png",
         received = "image/png",
         expected = "image"
     },
     {
+        filename = "test.jpg",
         received = "image/jpeg",
         expected = "image"
     },
     {
-        received = "garbage",
-        expected = false
+        filename = "test.pdf",
+        received = "application/pdf",
+        expected = "document"
+    },
+    {
+        filename = "garbage.grb",
+        received = "application/garbage",
+        expected = nil
     }
 }
 
@@ -66,68 +79,27 @@ end
 result = {}
 
 for i, test_data_item in ipairs(mediatype_test_data) do
-    local mediatype = get_mediatype(test_data_item.received)
-
-    if (mediatype ~= test_data_item.expected) then
-        send_error(500, "Could not determine correct mediatype for " .. test_data_item.received .. ", got " .. tostring(mediatype))
+    local file_info = get_file_info(test_data_item.filename, test_data_item.received)
+    local success = false
+    
+    if file_info == nil then
+        if test_data_item.expected == nil then
+            success = true
+        else
+            send_error(500, "Could not determine any mediatype for " .. test_data_item.received)
+        end
+    elseif file_info["media_type"] == test_data_item.expected then
+        success = true
+    else
+        send_error(500, "Could not determine correct mediatype for " .. test_data_item.received .. ", got " .. file_info["media_type"])
+    end
+        
+    if success then
+        table.insert(result, { test_data_item, "OK" })
+    else
+        return
     end
 
-    table.insert(result, { test_data_item, "OK" })
 end
-
-local file_extension_test_data = {
-    {
-        received1 = "application/xml",
-        received2 = "test.xml",
-        expected = true
-    },
-    {
-        received1 = "application/xml",
-        received2 = "test.xsl",
-        expected = true
-    },
-    {
-        received1 = "application/xml",
-        received2 = "test.xsd",
-        expected = true
-    },
-    {
-        received1 = "text/xml",
-        received2 = "test.xml",
-        expected = true
-    },
-    {
-        received1 = "text/xml",
-        received2 = "test.xsl",
-        expected = true
-    },
-    {
-        received1 = "text/xml",
-        received2 = "test.xsd",
-        expected = true
-    },
-    {
-        received1 = "text/plain",
-        received2 = "test.txt",
-        expected = true
-    },
-    {
-        received1 = "text/xml",
-        received2 = "test.jpg",
-        expected = false
-    }
-}
-
-
-for i, test_data_item in ipairs(file_extension_test_data) do
-    local check = check_file_extension(test_data_item.received1, test_data_item.received2)
-
-    if (check ~= test_data_item.expected) then
-        send_error(500, "Could not correctly check consistency between mimetype and file extension for " .. test_data_item.received1 .. ", "..  test_data_item.received2)
-    end
-
-    table.insert(result, { test_data_item, "OK" })
-end
-
 
 send_success(result)

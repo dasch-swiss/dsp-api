@@ -53,11 +53,16 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val stillImageFileValueIri = new MutableTestIri
     private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 
+    private val pdfOriginalFilename = "minimal.pdf"
+    private val pathToPdf = s"_test_data/test_route/files/$pdfOriginalFilename"
+
+
     /**
       * Represents a file to be uploaded to Sipi.
       *
       * @param path     the path of the file.
       * @param mimeType the MIME type of the file.
+      *
       */
     case class FileToUpload(path: String, mimeType: ContentType)
 
@@ -73,11 +78,12 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     /**
       * Represents the information that Sipi returns about each file that has been uploaded.
       *
-      * @param originalFilename     the original filename that was submitted to Sipi.
-      * @param internalFilename     Sipi's internal filename for the stored temporary file.
-      * @param temporaryBaseIIIFUrl the base URL at which the temporary file can be accessed.
+      * @param originalFilename the original filename that was submitted to Sipi.
+      * @param internalFilename Sipi's internal filename for the stored temporary file.
+      * @param temporaryUrl     the URL at which the temporary file can be accessed.
+      * @param fileType         `image`, `text`, or `document`.
       */
-    case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryBaseIIIFUrl: String)
+    case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryUrl: String, fileType: String)
 
     /**
       * Represents Sipi's response to a file upload request.
@@ -87,7 +93,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
 
     object GetImageMetadataResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat3(SipiUploadResponseEntry)
+        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(SipiUploadResponseEntry)
         implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
     }
 
@@ -102,6 +108,14 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
       * @param height           the image's height in pixels.
       */
     case class SavedImage(internalFilename: String, iiifUrl: String, width: Int, height: Int)
+
+    /**
+      * Represents the information that Knora returns about a document file value that was created.
+      *
+      * @param internalFilename the files's internal filename.
+      * @param url          the file's URL.
+      */
+    case class SavedDocument(internalFilename: String, url: String)
 
     /**
       * Uploads a file to Sipi and returns the information in Sipi's response.
@@ -127,15 +141,20 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
         val sipiFormData = Multipart.FormData(formDataParts: _*)
 
-        // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
+        // Send Sipi the file in a POST request.
         val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData)
         val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
         // println(sipiUploadResponseJson.prettyPrint)
         val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
 
-        // Request the temporary image from Sipi.
+        // Request the temporary file from Sipi.
         for (responseEntry <- sipiUploadResponse.uploadedFiles) {
-            val sipiGetTmpFileRequest = Get(responseEntry.temporaryBaseIIIFUrl + "/full/full/0/default.jpg")
+            val sipiGetTmpFileRequest: HttpRequest = if (responseEntry.fileType == "image") {
+                Get(responseEntry.temporaryUrl + "/full/full/0/default.jpg")
+            } else {
+                Get(responseEntry.temporaryUrl)
+            }
+
             checkResponseOK(sipiGetTmpFileRequest)
         }
 
@@ -208,6 +227,27 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             iiifUrl = iiifUrl,
             width = width,
             height = height
+        )
+    }
+
+    /**
+      * Given a JSON-LD object representing a Knora document file value, returns a [[SavedImage]] containing the same information.
+      *
+      * @param savedValue a JSON-LD object representing a Knora document file value.
+      * @return a [[SavedDocument]] containing the same information.
+      */
+    private def savedValueToSavedDocument(savedValue: JsonLDObject): SavedDocument = {
+        val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename)
+
+        val url = savedValue.requireDatatypeValueInObject(
+            key = OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl,
+            expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
+            validationFun = stringFormatter.toSparqlEncodedString
+        )
+
+        SavedDocument(
+            internalFilename = internalFilename,
+            url = url
         )
     }
 
@@ -447,7 +487,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
-            val temporaryBaseIIIFUrl = sipiUploadResponse.uploadedFiles.head.temporaryBaseIIIFUrl
+            val temporaryBaseIIIFUrl = sipiUploadResponse.uploadedFiles.head.temporaryUrl
 
             val resourceIri: IRI = aThingPictureIri
 
@@ -455,7 +495,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val jsonLdEntity =
                 s"""{
                    |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:ThingPicture",
+                   |  "@type" : "anything:ThingDocument",
                    |  "knora-api:hasStillImageFileValue" : {
                    |    "@type" : "knora-api:StillImageFileValue",
                    |    "knora-api:fileValueHasFilename" : "$internalFilename"
@@ -476,5 +516,59 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val sipiResponse = singleAwaitingRequest(sipiGetTmpFileRequest)
             assert(sipiResponse.status == StatusCodes.NotFound)
         }
+
+        /*
+        "create a resource with a PDF file" in {
+            // Upload the file to Sipi.
+            val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = pathToPdf, mimeType = MediaTypes.`application/pdf`))
+            )
+
+            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+            uploadedFile.originalFilename should ===(pdfOriginalFilename)
+
+            // Ask Knora to create the resource.
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@type" : "anything:ThingDocument",
+                   |  "knora-api:hasDocumentFileValue" : {
+                   |    "@type" : "knora-api:DocumentFileValue",
+                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+                   |  },
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "rdfs:label" : "test thing",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri.toSmartIri.isKnoraDataIri)
+
+            // Get the resource from Knora.
+            val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
+            val resource = getResponseJsonLD(knoraGetRequest)
+
+            // Get the new file value from the resource.
+            val savedValue: JsonLDObject = getValueFromResource(
+                resource = resource,
+                propertyIriInResult = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri,
+                expectedValueIri = stillImageFileValueIri.get
+            )
+
+            val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
+            assert(savedDocument.internalFilename == uploadedFile.internalFilename)
+        }
+        */
     }
 }

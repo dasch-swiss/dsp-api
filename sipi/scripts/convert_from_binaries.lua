@@ -18,7 +18,7 @@
 -- handles the Knora non GUI-case: Knora uploaded a file to sourcePath
 
 require "send_response"
-require "get_mediatype"
+require "file_info"
 
 success, errmsg = server.setBuffer()
 if not success then
@@ -70,16 +70,16 @@ if not success then
 end
 
 -- handle the file depending on its media type (image, text file)
-mediatype = get_mediatype(real_mimetype.mimetype)
+file_info = get_file_info(originalFilename, real_mimetype.mimetype)
 
 -- in case of an unsupported mimetype, the function returns false
-if not mediatype then
+if file_info == nil then
     send_error(400, "Mimetype '" .. real_mimetype.mimetype .. "' is not supported")
     return
 end
 
 -- depending on the media type, decide what to do
-if mediatype == IMAGE then
+if file_info["media_type"] == IMAGE then
 
     -- it is an image
 
@@ -208,9 +208,9 @@ if mediatype == IMAGE then
 
     send_success(result)
 
-elseif mediatype == TEXT then
+else
 
-    -- it is a text file
+    -- it is a text or document file
 
     --
     -- check if project directory is available, if not, create it
@@ -234,12 +234,6 @@ elseif mediatype == TEXT then
     if not success then
         send_error(500, "Couldn't generate uuid62")
         return -1
-    end
-
-    -- check file extension
-    if not check_file_extension(real_mimetype.mimetype, originalFilename) then
-        send_error(400, MIMETYPES_INCONSISTENCY)
-        return
     end
 
     -- check that the submitted mimetype is the same as the real mimetype of the file
