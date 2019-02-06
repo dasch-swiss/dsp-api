@@ -17,33 +17,32 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing.v1
+package org.knora.webapi.routing.admin
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.BadRequestException
-import org.knora.webapi.messages.v1.responder.sipimessages.SipiFileInfoGetRequestV1
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
 /**
   * Provides a routing function for the API that Sipi connects to.
   */
-class SipiRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
     /**
       * A routing function for the API that Sipi connects to.
       */
     def knoraApiPath: Route = {
 
-        path("v1" / "files" / Segment) { file =>
+        path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
             get {
                 requestContext =>
-
                     val requestMessage = for {
-                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-                        //val fileValueIRI = StringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid file value IRI: $iri"))
-                        filename = stringFormatter.toSparqlEncodedString(file, throw BadRequestException(s"Invalid filename: '$file'"))
-                    } yield SipiFileInfoGetRequestV1(filename, userProfile)
+                        requestingUser <- getUserADM(requestContext)
+                        projectID = stringFormatter.validateProjectShortcode(projectIDAndFile.head, throw BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'"))
+                        filename = stringFormatter.toSparqlEncodedString(projectIDAndFile(1), throw BadRequestException(s"Invalid filename: '${projectIDAndFile(1)}'"))
+                    } yield SipiFileInfoGetRequestADM(projectID = projectID, filename = filename, requestingUser = requestingUser)
 
                     RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,

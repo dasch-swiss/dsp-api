@@ -133,7 +133,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGenerator(typeInspectionResult: 
 
         val transformedOrderBy = inputOrderBy.foldLeft(TransformedOrderBy()) {
             case (acc, criterion) =>
-                // Did a FILTER already generate a unique variable for the literal value of this value object?
+                // A unique variable for the literal value of this value object should already have been created
 
                 getGeneratedVariableForValueLiteralInOrderBy(criterion.queryVariable) match {
                     case Some(generatedVariable) =>
@@ -143,27 +143,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryGenerator(typeInspectionResult: 
                         )
 
                     case None =>
-                        // No. Generate such a variable and generate an additional statement to get its literal value in the WHERE clause.
+                        // No.
+                        throw GravsearchException(s"Not value literal variable was automatically generated for ${criterion.queryVariable}")
 
-                        val propertyIri: SmartIri = typeInspectionResult.getTypeOfEntity(criterion.queryVariable) match {
-                            case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) =>
-                                valueTypesToValuePredsForOrderBy.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw GravsearchException(s"${criterion.queryVariable.toSparql} cannot be used in ORDER BY")).toSmartIri
-
-                            case Some(_) => throw GravsearchException(s"Variable ${criterion.queryVariable.toSparql} represents a property, and therefore cannot be used in ORDER BY")
-
-                            case None => throw GravsearchException(s"No type information found for ${criterion.queryVariable.toSparql}")
-                        }
-
-                        // Generate the variable name.
-                        val variableForLiteral: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
-
-                        // Generate a statement to get the literal value.
-                        val statementPattern = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
-
-                        acc.copy(
-                            statementPatterns = acc.statementPatterns :+ statementPattern,
-                            orderBy = acc.orderBy :+ OrderCriterion(queryVariable = variableForLiteral, isAscending = criterion.isAscending)
-                        )
                 }
         }
 

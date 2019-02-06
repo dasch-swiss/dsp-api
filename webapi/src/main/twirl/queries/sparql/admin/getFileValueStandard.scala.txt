@@ -58,17 +58,4 @@ WHERE {
         BIND(knora-base:attachedToProject AS ?objPred)
         BIND(?resourceProject AS ?objObj)
     }
-    UNION
-    {
-        @* Return the base path of the project. *@
-
-        ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
-        ?resource ?prop ?fileValue ;
-            knora-base:isDeleted false ;
-            knora-base:attachedToProject ?resourceProject .
-        ?resourceProject knora-base:projectBasepath ?resourceProjectBasepath .
-
-        BIND(knora-base:projectBasepath AS ?objPred)
-        BIND(?resourceProjectBasepath AS ?objObj)
-    }
 }

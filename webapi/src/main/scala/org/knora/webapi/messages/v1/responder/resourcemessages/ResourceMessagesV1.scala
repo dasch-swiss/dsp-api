@@ -548,6 +548,7 @@ case class ResourceContextItemV1(res_id: IRI,
   * @param regions               representation of regions pointing to this resource.
   */
 case class ResourceInfoV1(project_id: IRI,
+                          project_shortcode: String,
                           person_id: IRI,
                           restype_id: IRI,
                           restype_name: Option[IRI] = None,

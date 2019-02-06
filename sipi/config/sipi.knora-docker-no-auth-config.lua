@@ -118,7 +118,7 @@ sipi = {
     -- for certain prefixes *not* to use subdirs. A list of these prefix-directories
     -- can be given with this configuration parameter.
     --
-    subdir_excludes = { "tmp", "thumbs"},
+    subdir_excludes = { "knora", "thumbs" },
 
     --
     -- Port of Knora Application

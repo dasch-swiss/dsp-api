@@ -22,6 +22,7 @@ package org.knora.webapi.routing.v1
 import java.io.File
 import java.util.UUID
 
+import akka.pattern._
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
@@ -33,6 +34,7 @@ import akka.stream.scaladsl.FileIO
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceInfoGetRequestV1, ResourceInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
@@ -313,7 +315,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
         }
 
-        def makeChangeFileValueRequest(resIriStr: IRI, apiRequest: Option[ChangeFileValueApiRequestV1], multipartConversionRequest: Option[SipiConversionPathRequestV1], userADM: UserADM): ChangeFileValueRequestV1 = {
+        def makeChangeFileValueRequest(resIriStr: IRI, projectShortcode: String, apiRequest: Option[ChangeFileValueApiRequestV1], multipartConversionRequest: Option[SipiConversionPathRequestV1], userADM: UserADM): ChangeFileValueRequestV1 = {
             if (apiRequest.nonEmpty && multipartConversionRequest.nonEmpty) throw BadRequestException("File information is present twice, only one is allowed.")
 
             val resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
@@ -323,9 +325,11 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 val fileRequest = SipiConversionFileRequestV1(
                     originalFilename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalFilename, throw BadRequestException(s"The original filename is invalid: '${apiRequest.get.file.originalFilename}'")),
                     originalMimeType = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${apiRequest.get.file.originalMimeType}'")),
+                    projectShortcode = projectShortcode,
                     filename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.filename, throw BadRequestException(s"Invalid filename: '${apiRequest.get.file.filename}'")),
                     userProfile = userADM.asUserProfileV1
                 )
+
                 ChangeFileValueRequestV1(
                     resourceIri = resourceIri,
                     file = fileRequest,
@@ -468,14 +472,24 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
                 }
             }
-        } ~ path("v1" / "filevalue" / Segment) { (resIriStr: IRI) =>
+        } ~ path("v1" / "filevalue" / Segment) { resIriStr: IRI =>
             put {
                 entity(as[ChangeFileValueApiRequestV1]) { apiRequest =>
                     requestContext =>
 
                         val requestMessage = for {
                             userADM <- getUserADM(requestContext)
-                        } yield makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = Some(apiRequest), multipartConversionRequest = None, userADM = userADM)
+                            resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
+                            resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(resourceIri, userADM)).mapTo[ResourceInfoResponseV1]
+                            projectShortcode = resourceInfoResponse.resource_info.getOrElse(throw NotFoundException(s"Resource not found: $resourceIri")).project_shortcode
+
+                        } yield makeChangeFileValueRequest(
+                            resIriStr = resIriStr,
+                            projectShortcode = projectShortcode,
+                            apiRequest = Some(apiRequest),
+                            multipartConversionRequest = None,
+                            userADM = userADM
+                        )
 
                         RouteUtilV1.runJsonRouteWithFuture(
                             requestMessage,
@@ -532,14 +546,25 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             originalFilename = fileInfo.fileName
                             originalMimeType = fileInfo.contentType.toString
 
+                            resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
+                            resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(resourceIri, userADM)).mapTo[ResourceInfoResponseV1]
+                            projectShortcode = resourceInfoResponse.resource_info.getOrElse(throw NotFoundException(s"Resource not found: $resourceIri")).project_shortcode
+
                             sipiConvertPathRequest = SipiConversionPathRequestV1(
                                 originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, throw BadRequestException(s"The original filename is invalid: '$originalFilename'")),
                                 originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '$originalMimeType'")),
+                                projectShortcode = projectShortcode,
                                 source = sourcePath,
                                 userProfile = userADM.asUserProfileV1
                             )
 
-                        } yield makeChangeFileValueRequest(resIriStr = resIriStr, apiRequest = None, multipartConversionRequest = Some(sipiConvertPathRequest), userADM = userADM)
+                        } yield makeChangeFileValueRequest(
+                            resIriStr = resIriStr,
+                            projectShortcode = projectShortcode,
+                            apiRequest = None,
+                            multipartConversionRequest = Some(sipiConvertPathRequest),
+                            userADM = userADM
+                        )
 
                         RouteUtilV1.runJsonRouteWithFuture(
                             requestMessageFuture,
