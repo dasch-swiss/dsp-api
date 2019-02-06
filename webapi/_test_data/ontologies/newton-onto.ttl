@@ -91,7 +91,7 @@
 
 :letter rdf:type owl:Class ;
 
-        rdfs:subClassOf beol:letter ,
+        rdfs:subClassOf beol:basicLetter ,
                        [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasAbbreviatedTitle ;

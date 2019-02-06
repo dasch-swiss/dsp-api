@@ -141,7 +141,7 @@
               rdfs:comment """Empfänger"""@de ,
                            """Recipient"""@en ;
 
-              knora-base:subjectClassConstraint :letter ;
+              knora-base:subjectClassConstraint :basicLetter ;
 
               knora-base:objectClassConstraint :person ;
 
@@ -154,7 +154,7 @@
 
                    knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                   knora-base:subjectClassConstraint :letter ;
+                   knora-base:subjectClassConstraint :basicLetter ;
 
                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
@@ -281,8 +281,6 @@
               rdfs:comment """Der Brief ist eine Antwort auf einen Brief"""@de ,
                            """Letter is reply to another letter"""@en ;
 
-              knora-base:subjectClassConstraint :letter ;
-
               knora-base:objectClassConstraint :letter ;
 
               salsah-gui:guiElement salsah-gui:Searchbox .
@@ -294,7 +292,7 @@
 
                    knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                   knora-base:subjectClassConstraint :writtenSource ;
+                   knora-base:subjectClassConstraint :letter ;
 
                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
@@ -318,7 +316,7 @@
                 rdfs:comment """erwähnte Person"""@de ,
                              """mentioned person"""@en ;
 
-                knora-base:subjectClassConstraint :letter ;
+                knora-base:subjectClassConstraint :writtenSource ;
 
                 knora-base:objectClassConstraint :person ;
 
@@ -337,7 +335,7 @@
 
                      knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                     knora-base:subjectClassConstraint :letter ;
+                     knora-base:subjectClassConstraint :writtenSource ;
 
                      rdfs:subPropertyOf knora-base:hasLinkToValue .
 
@@ -354,7 +352,7 @@
           rdfs:comment """Der Nummer des Briefes"""@de ,
                        """Number of the letter """@en ;
 
-          knora-base:subjectClassConstraint :letter ;
+          knora-base:subjectClassConstraint :basicLetter ;
 
           knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -398,7 +396,7 @@
 
                 salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                knora-base:subjectClassConstraint :letter ;
+                knora-base:subjectClassConstraint :basicLetter ;
 
                 rdfs:subPropertyOf knora-base:hasValue .
 
@@ -1540,9 +1538,9 @@
 
 
 ### ###########################################
-### beol:letter
+### beol:basicLetter
 
-:letter rdf:type owl:Class ;
+:basicLetter rdf:type owl:Class ;
 
         rdfs:subClassOf :writtenSource ,
                         [
@@ -1565,22 +1563,24 @@
                         ] ,
                         [
                             rdf:type owl:Restriction ;
-                            owl:onProperty :hasSubject ;
+                            owl:onProperty :letterHasLanguage ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
-                        ] ,
-                        [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty :hasFigure ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
-                        ] ,
-                        [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty :hasFigureValue ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
-                        ] ,
+                        ] ;
+
+                      knora-base:resourceIcon "letter.png" ;
+
+                      rdfs:label "Basis-Brief"@de ,
+                                 "Basic Letter"@en ;
+
+                      rdfs:comment "A resource representing a basic letter"@en .
+
+### ###########################################
+### beol:letter
+
+:letter rdf:type owl:Class ;
+
+        rdfs:subClassOf :basicLetter ,
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasOriginal ;
@@ -1597,80 +1597,56 @@
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasTranslation ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                            salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                         ] ,
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasTranslationValue ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
-                        ] ,
-                        [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty :letterIsReplyTo ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
-                        ] ,
-                        [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty :letterIsReplyToValue ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
+                            salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                         ] ,
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterIsPublished ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
+                            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                         ] ,
                         [
                              rdf:type owl:Restriction ;
                              owl:onProperty :letterIsPublishedValue ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                             salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
+                             salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                         ] ,
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasRepertoriumNumber ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "8"^^xsd:nonNegativeInteger
+                            salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                         ] ,
-                        [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty :letterHasLanguage ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "9"^^xsd:nonNegativeInteger
-                        ] ,
-                        [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty :mentionsPerson ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "10"^^xsd:nonNegativeInteger
-                        ] ,
-                        [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty :mentionsPersonValue ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "10"^^xsd:nonNegativeInteger
-                        ] ,
-                        [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty :comment ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
-                        ],
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :externalRepository ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
-                        ],
+                            salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :letterIsReplyTo ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :letterIsReplyToValue ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                        ] ,
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :hasSystemNumber ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "13"^^xsd:nonNegativeInteger
-                        ];
+                            salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
+                        ] ;
 
         knora-base:resourceIcon "letter.png" ;
 
@@ -1678,7 +1654,7 @@
                    "Lettre"@fr ,
                    "Letter"@en ;
 
-        rdfs:comment "A resource representing a letter"@en .
+        rdfs:comment "A resource representing a BEOL letter"@en .
 
 
 ### ###########################################
@@ -1875,6 +1851,42 @@
                owl:onProperty :beolIDs ;
                owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+             ] ,
+             [
+                 rdf:type owl:Restriction ;
+                 owl:onProperty :comment ;
+                 owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                 salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
+             ],
+             [
+                 rdf:type owl:Restriction ;
+                 owl:onProperty :hasSubject ;
+                 owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                 salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
+             ] ,
+             [
+                 rdf:type owl:Restriction ;
+                 owl:onProperty :hasFigure ;
+                 owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                 salsah-gui:guiOrder "8"^^xsd:nonNegativeInteger
+             ] ,
+             [
+                 rdf:type owl:Restriction ;
+                 owl:onProperty :hasFigureValue ;
+                 owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                 salsah-gui:guiOrder "8"^^xsd:nonNegativeInteger
+             ] ,
+             [
+                 rdf:type owl:Restriction ;
+                 owl:onProperty :mentionsPerson ;
+                 owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                 salsah-gui:guiOrder "9"^^xsd:nonNegativeInteger
+             ] ,
+             [
+                 rdf:type owl:Restriction ;
+                 owl:onProperty :mentionsPersonValue ;
+                 owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                 salsah-gui:guiOrder "9"^^xsd:nonNegativeInteger
              ] ;
 
     rdfs:comment "schriftliche Quelle"@de ,
