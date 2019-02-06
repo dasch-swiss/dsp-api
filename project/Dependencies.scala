@@ -43,7 +43,7 @@ object Dependencies {
         akkaHttpVersion := "10.1.5",
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
-        sipiVersion := "v1.4.2-SNAPSHOT",
+        sipiVersion := "v1.4.3",
         gdbImage := "ontotext/graphdb:8.5.0-se"
     )
 

@@ -109,15 +109,15 @@ function pre_flight(prefix, identifier, cookie)
         return 'deny'
     end
 
+    server.log("pre_flight - response body: " .. tostring(result.body), server.loglevel.LOG_DEBUG)
+
     success, response_json = server.json_to_table(result.body)
     if not success then
         server.log("Server.http() failed: " .. response_json, server.loglevel.LOG_ERR)
         return 'deny'
     end
 
-    -- print("status: " .. response_json.status)
     server.log("pre_flight - status: " .. response_json.status, server.loglevel.LOG_DEBUG)
-    -- print("permission code: " .. response_json.permissionCode)
     server.log("pre_flight - permission code: " .. response_json.permissionCode, server.loglevel.LOG_DEBUG)
 
     if response_json.status ~= 0 then
@@ -131,7 +131,17 @@ function pre_flight(prefix, identifier, cookie)
     elseif response_json.permissionCode == 1 then
         -- restricted view permission on file
         -- either watermark or size (depends on project, should be returned with permission code by Sipi responder)
-        return 'restrict:size=' .. config.thumb_size, filepath
+        -- currently, only size is used
+
+        server.log("pre_flight - restricted view settings - size: " .. tostring(response_json.restrictedViewSettings.size), server.loglevel.LOG_DEBUG)
+        server.log("pre_flight - restricted view settings - watermark: " .. tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
+
+        local restrictedViewSize = response_json.restrictedViewSettings.size
+        if restrictedViewSize == nil then
+            restrictedViewSize = config.thumb_size
+        end
+
+        return 'restrict:size=' .. restrictedViewSize, filepath
     elseif response_json.permissionCode >= 2 then
         -- full view permissions on file
         return 'allow', filepath

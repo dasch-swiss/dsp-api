@@ -17,22 +17,14 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Knora Admin API
+# Permissions Endpoint
 
-The Knora admin API makes it possible to administer Knora projects, users, user groups, permissions, and hierarchical lists.
+  - **Add/change/delete administrative permissions**:
 
-@@toc { depth=1 }
+      - Required permission: SystemAdmin / hasProjectAllAdminPermission
+        / hasProjectRightsAdminPermission
 
-@@@ index
+  - **Add/change/delete default object access permissions**:
 
-- [Introduction](introduction.md)
-- [Overview](overview.md)
-- [Users Endpoint](users.md)
-- [Projects Endpoint](projects.md)
-- [Groups Endpoint](groups.md)
-- [Lists Endpoint](lists.md)
-- [Permissions Endpoint](permissions.md)
-- [Stores Endpoint](stores.md)
-
-
-@@@
+      - Required permission: SystemAdmin / hasProjectAllAdminPermission
+        / hasProjectRightsAdminPermission

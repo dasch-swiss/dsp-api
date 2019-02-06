@@ -310,7 +310,7 @@ object QueryTraverser {
             whereTransformer = transformer
         )
 
-        val transformedOrderBy = transformer.getOrderBy(inputQuery.orderBy)
+        val transformedOrderBy: TransformedOrderBy = transformer.getOrderBy(inputQuery.orderBy)
 
         val groupBy: Seq[QueryVariable] = transformer.getGroupBy(transformedOrderBy)
 

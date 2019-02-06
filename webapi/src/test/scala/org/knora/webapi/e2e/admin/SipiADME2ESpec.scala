@@ -25,9 +25,10 @@ import akka.http.scaladsl.model.headers.Cookie
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderResponseADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
-import org.knora.webapi.messages.v1.responder.sipimessages.{FilesResponse, SipiJsonProtocol}
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.{E2ESpec, SharedTestDataV1}
 
@@ -48,7 +49,7 @@ object SipiADME2ESpec {
   *
   * This spec tests the 'admin/files'.
   */
-class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SipiJsonProtocol with SessionJsonProtocol with TriplestoreJsonProtocol {
+class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
@@ -88,7 +89,7 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SipiJsonProtoco
 
             assert(response.status == StatusCodes.OK)
 
-            val fr: FilesResponse = Await.result(Unmarshal(response.entity).to[FilesResponse], 1.seconds)
+            val fr: SipiFileInfoGetResponseADM = Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
 
             (fr.permissionCode === 8) should be (true)
         }
@@ -102,7 +103,7 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SipiJsonProtoco
 
             assert(response.status == StatusCodes.OK)
 
-            val fr: FilesResponse = Await.result(Unmarshal(response.entity).to[FilesResponse], 1.seconds)
+            val fr: SipiFileInfoGetResponseADM = Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
 
             (fr.permissionCode === 1) should be (true)
         }
@@ -118,11 +119,11 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SipiJsonProtoco
             val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
             val response: HttpResponse = singleAwaitingRequest(request)
 
-            println(response.toString)
+            // println(response.toString)
 
             assert(response.status == StatusCodes.OK)
 
-            val fr: FilesResponse = Await.result(Unmarshal(response.entity).to[FilesResponse], 1.seconds)
+            val fr: SipiFileInfoGetResponseADM = Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
 
             (fr.permissionCode === 8) should be (true)
 
@@ -138,11 +139,11 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SipiJsonProtoco
             val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2")~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
             val response: HttpResponse = singleAwaitingRequest(request)
 
-            println(response.toString)
+            // println(response.toString)
 
             assert(response.status == StatusCodes.OK)
 
-            val fr: FilesResponse = Await.result(Unmarshal(response.entity).to[FilesResponse], 1.seconds)
+            val fr: SipiFileInfoGetResponseADM = Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
 
             (fr.permissionCode === 1) should be (true)
         }
