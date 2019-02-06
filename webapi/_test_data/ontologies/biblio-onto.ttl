@@ -92,7 +92,7 @@
 
                     rdfs:comment """Represents the location of a publication."""@en ;
 
-                    knora-base:subjectClassConstraint knora-base:Resource ;
+                    knora-base:subjectClassConstraint :Publication ;
 
                     knora-base:objectClassConstraint knora-base:TextValue ;
 
