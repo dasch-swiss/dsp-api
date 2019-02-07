@@ -240,10 +240,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         for {
 
-            /* Verify that the project exists. */
-            exists <- projectExists(maybeIri, maybeShortname, maybeShortcode)
-            _ = if (!exists) {
+            /* Get project and verify permissions. */
+            project <- projectGetADM(maybeIri, maybeShortname, maybeShortcode, KnoraSystemInstances.Users.SystemUser)
+            _ = if (project.isEmpty) {
                 throw NotFoundException(s"Project '${Seq(maybeIri, maybeShortname, maybeShortcode).flatten.head}' not found.")
+            } else {
+                if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(project.get.id) && !requestingUser.isSystemUser) {
+                    throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
+                }
             }
 
             sparqlQueryString <- Future(queries.sparql.admin.txt.getProjectMembers(
@@ -294,10 +298,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         for {
 
-            /* Verify that the project exists. */
-            exists <- projectExists(maybeIri, maybeShortname, maybeShortcode)
-            _ = if (!exists) {
+            /* Get project and verify permissions. */
+            project <- projectGetADM(maybeIri, maybeShortname, maybeShortcode, KnoraSystemInstances.Users.SystemUser)
+            _ = if (project.isEmpty) {
                 throw NotFoundException(s"Project '${Seq(maybeIri, maybeShortname, maybeShortcode).flatten.head}' not found.")
+            } else {
+                if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(project.get.id)) {
+                    throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
+                }
             }
 
             sparqlQueryString <- Future(queries.sparql.admin.txt.getProjectAdminMembers(
@@ -308,10 +316,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             ).toString())
             //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
-            projectMembersResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
+            projectAdminMembersResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
             //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
-            statements = projectMembersResponse.statements.toList
+            statements = projectAdminMembersResponse.statements.toList
 
             // get project member IRI from results rows
             userIris: Seq[IRI] = if (statements.nonEmpty) {

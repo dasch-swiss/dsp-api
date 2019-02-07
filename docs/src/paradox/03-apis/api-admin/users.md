@@ -52,11 +52,13 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Get users
 
+  - Required permission: SystemAdmin
   - GET: `/admin/users`
 
 ### Get user
 
-      - GET:`/admin/users/<userIri>`
+  - Required permission: SystemAdmin / self
+  - GET:`/admin/users/<userIri>`
 
 ### Create user
 
@@ -81,7 +83,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Update basic user information**
 
-  - Required permission: SystemAdmin / User
+  - Required permission: SystemAdmin / self
   - Changeable information: email, given name, family name,
     password, status, SystemAdmin membership
   - Remark: There are four distinct use case / payload combination.
@@ -105,7 +107,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Update user's password
 
-  - Required permission: User
+  - Required permission: SystemAdmin / self
   - Changeable information: password
   - PUT: `/admin/users/<userIri>/Password`
   - BODY:
@@ -118,7 +120,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Delete user
 
-  - Required permission: SystemAdmin / User
+  - Required permission: SystemAdmin / self
   - Remark: The same as updating a user and changing `status` to
     `false`. To un-delete, set `status` to `true`.
   - PUT: `/admin/users/<userIri>/Status`
@@ -131,7 +133,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Delete user (-\update user)**
 
-  - Required permission: SystemAdmin / User
+  - Required permission: SystemAdmin / self
   - Remark: The same as updating a user and changing `status` to
     `false`. To un-delete, set `status` to `true`.
   - DELETE: `/admin/users/<userIri>`
@@ -146,7 +148,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Add/remove user to/from project
 
-  - Required permission: SystemAdmin / ProjectAdmin / User (if
+  - Required permission: SystemAdmin / ProjectAdmin / self (if
     project self-assignment is enabled)
   - Required information: project IRI, user IRI
   - Effects: `knora-base:isInProject` user property
@@ -184,7 +186,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Add/remove user to/from system admin group
 
-  - Required permission: SystemAdmin / User
+  - Required permission: SystemAdmin / self
   - Effects property: `knora-base:isInSystemAdminGroup` with value
     `true` or `false`
   - PUT: `/admin/users/<userIri>/SystemAdmin`

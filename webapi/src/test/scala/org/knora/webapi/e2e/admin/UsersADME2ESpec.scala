@@ -55,14 +55,20 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
     val rootCreds = CredentialsV1(
-        SharedTestDataV1.rootUser.userData.user_id.get,
-        SharedTestDataV1.rootUser.userData.email.get,
+        SharedTestDataADM.rootUser.id,
+        SharedTestDataADM.rootUser.email,
+        "test"
+    )
+
+    val projectAdminCreds = CredentialsV1(
+        SharedTestDataADM.imagesUser01.id,
+        SharedTestDataADM.imagesUser01.email,
         "test"
     )
 
     val normalUserCreds = CredentialsV1(
-        SharedTestDataV1.normalUser.userData.user_id.get,
-        SharedTestDataV1.normalUser.userData.email.get,
+        SharedTestDataADM.normalUser.id,
+        SharedTestDataADM.normalUser.email,
         "test"
     )
 
@@ -127,7 +133,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
     "The Users Route ('admin/users')" when {
 
-        "used to query user information" should {
+        "used to query user information [FUNCTIONALITY]" should {
 
             "return all users" in {
                 val request = Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
@@ -150,6 +156,46 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
+            }
+
+        }
+
+        "used to query user information [PERMISSIONS]" should {
+
+            "return single user for SystemAdmin" in {
+                val request = Get(baseApiUrl + s"/admin/users/$normalUserIriEnc") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+            }
+
+            "return single user for itself" in {
+                val request = Get(baseApiUrl + s"/admin/users/$normalUserIriEnc") ~> addCredentials(BasicHttpCredentials(normalUserCreds.email, normalUserCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+            }
+
+            "return 'Forbiden' for single user for non SystemAdmin" in {
+                val request = Get(baseApiUrl + s"/admin/users/$normalUserIriEnc") ~> addCredentials(BasicHttpCredentials(projectAdminCreds.email, projectAdminCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.Forbidden)
+            }
+
+            "return all users for SystemAdmin" in {
+                val request = Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+            }
+
+            "return 'Forbidden' for all users for ProjectAdmin" in {
+                val request = Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(projectAdminCreds.email, projectAdminCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.Forbidden)
+            }
+
+            "return 'Forbidden' for all users for normal user" in {
+                val request = Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(normalUserCreds.email, normalUserCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.Forbidden)
             }
 
         }

@@ -87,11 +87,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       */
     private def usersGetADM(userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Seq[UserADM]] = {
 
-        //log.debug("usersGetV1")
-
-        // ToDO: need to have certain permissions to allow access (#961)
+        //log.debug("usersGetADM")
 
         for {
+            _ <- Future(
+                if (!requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser) {
+                    throw ForbiddenException("SystemAdmin permissions are required.")
+                }
+            )
+
             sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
                 triplestore = settings.triplestoreType,
                 maybeIri = None,
@@ -150,52 +154,58 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @return a [[UserADM]] describing the user.
       */
     private def userGetADM(identifier: UserIdentifierADM, userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
-        log.debug(s"userGetADM: identifier: {}, userInformationType: {}, requestingUser: {}", identifier, userInformationType, requestingUser )
+        log.debug(s"userGetADM: identifier: {}, userInformationType: {}, requestingUser: {}", identifier, userInformationType, requestingUser)
 
-        // ToDO: need to have certain permissions to allow access (#961)
+        for {
+            _ <- Future(
+                if (!requestingUser.permissions.isSystemAdmin && !requestingUser.isSelf(identifier) && !requestingUser.isSystemUser) {
+                    throw ForbiddenException("Operation not allowed.")
+                }
+            )
 
-        val maybeUserFromCache = identifier.hasType match {
-            case UserIdentifierType.IRI => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.toIri)
-            case UserIdentifierType.EMAIL => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
-            case UserIdentifierType.USERNAME => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
-        }
+            maybeUserFromCache = identifier.hasType match {
+                case UserIdentifierType.IRI => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.toIri)
+                case UserIdentifierType.EMAIL => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
+                case UserIdentifierType.USERNAME => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
+            }
 
-        val maybeUserADM: Future[Option[UserADM]] = maybeUserFromCache match {
-            case Some(user) =>
-                // found a user profile in the cache
-                log.debug("userGetADM - cache hit for: {}", identifier.value)
-                FastFuture.successful(Some(user.ofType(userInformationType)))
+            maybeUserADM: Future[Option[UserADM]] = maybeUserFromCache match {
+                case Some(user) =>
+                    // found a user profile in the cache
+                    log.debug("userGetADM - cache hit for: {}", identifier.value)
+                    FastFuture.successful(Some(user.ofType(userInformationType)))
 
-            case None =>
-                // didn't find a user profile in the cache
-                log.debug("userGetADM - no cache hit for: {}", identifier.value)
-                for {
-                    sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
-                        triplestore = settings.triplestoreType,
-                        maybeIri = identifier.toIriOption,
-                        maybeUsername = identifier.toUsernameOption,
-                        maybeEmail = identifier.toEmailOption
-                    ).toString())
+                case None =>
+                    // didn't find a user profile in the cache
+                    log.debug("userGetADM - no cache hit for: {}", identifier.value)
+                    for {
+                        sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
+                            triplestore = settings.triplestoreType,
+                            maybeIri = identifier.toIriOption,
+                            maybeUsername = identifier.toUsernameOption,
+                            maybeEmail = identifier.toEmailOption
+                        ).toString())
 
-                    userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
+                        userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
 
-                    maybeUserADM: Option[UserADM] <- if (userQueryResponse.statements.nonEmpty) {
-                        statements2UserADM(userQueryResponse.statements.head, requestingUser)
-                    } else {
-                        FastFuture.successful(None)
-                    }
+                        maybeUserADM: Option[UserADM] <- if (userQueryResponse.statements.nonEmpty) {
+                            statements2UserADM(userQueryResponse.statements.head, requestingUser)
+                        } else {
+                            FastFuture.successful(None)
+                        }
 
-                    _ = if (maybeUserADM.nonEmpty) {
-                        writeUserADMToCache(maybeUserADM.get)
-                    }
+                        _ = if (maybeUserADM.nonEmpty) {
+                            writeUserADMToCache(maybeUserADM.get)
+                        }
 
-                    result = maybeUserADM.map(_.ofType(userInformationType))
+                        result = maybeUserADM.map(_.ofType(userInformationType))
 
-                } yield result
-        }
+                    } yield result
+            }
 
-        // _ = log.debug("userGetADM - user: {}", MessageUtil.toSource(user))
-        maybeUserADM
+            // _ = log.debug("userGetADM - user: {}", MessageUtil.toSource(user))
+            result <- maybeUserADM
+        } yield result
     }
 
     /**

@@ -347,6 +347,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
         case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => future2Message(sender(), persistentMapResponderV2 receive persistentMapResponderRequestV2, log)
         case standoffResponderRequestV2: StandoffResponderRequestV2 => future2Message(sender(), standoffResponderV2 receive standoffResponderRequestV2, log)
         case listsResponderRequestV2: ListsResponderRequestV2 => future2Message(sender(), listsResponderV2 receive listsResponderRequestV2, log)
+
         // Knora Admin message
         case groupsResponderRequestADM: GroupsResponderRequestADM => future2Message(sender(), groupsResponderADM receive groupsResponderRequestADM, log)
         case listsResponderRequest: ListsResponderRequestADM => future2Message(sender(), listsResponderADM receive listsResponderRequest, log)

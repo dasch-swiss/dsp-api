@@ -555,6 +555,42 @@ case class UserADM(id: IRI,
         }
     }
 
+    /**
+      * Given an identifier, returns true if it is the same user, and false if not.
+      */
+    def isSelf(identifier: UserIdentifierADM): Boolean = {
+
+        val iriEquals = if (identifier.toIriOption.isDefined) {
+            if (identifier.toIri equals id ) {
+                true
+            } else {
+                false
+            }
+        }
+
+        val emailEquals = if (identifier.toEmailOption.isDefined) {
+            if (identifier.toEmailOption.get equals email) {
+                true
+            } else {
+                false
+            }
+        }
+
+        val usernameEquals = if (identifier.toUsernameOption.isDefined) {
+            if (identifier.toUsernameOption.get equals id ) {
+                true
+            } else {
+                false
+            }
+        }
+
+        if (iriEquals == true || emailEquals == true || usernameEquals == true) {
+            true
+        } else {
+            false
+        }
+    }
+
     /* Is the user a member of the SystemAdmin group */
     def isSystemAdmin: Boolean = {
         permissions.groupsPerProject.getOrElse(OntologyConstants.KnoraBase.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraBase.SystemAdmin)
