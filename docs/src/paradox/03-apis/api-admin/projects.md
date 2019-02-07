@@ -24,22 +24,22 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 **Project Operations:**
 - `GET:  /admin/projects` : return all projects
 - `POST: /admin/projects` : create a new project
-- `GET: /admin/projects/[identifier]` : returns a single project identified either through iri, shortname, or shortcode
-- `PUT: /admin/projects/[identifier]` : update a project identified by iri
-- `DELETE: /admin/projects/[identifier]` : update project status to false
+- `GET: /admin/projects/<identifier>` : returns a single project identified either through iri, shortname, or shortcode
+- `PUT: /admin/projects/<identifier>` : update a project identified by iri
+- `DELETE: /admin/projects/<identifier>` : update project status to false
 
 **Project Member Operations:**
-- `GET: /admin/projects/members/[identifier]` : returns all members part of a project identified through iri, shortname or shortcode
+- `GET: /admin/projects/members/<identifier>` : returns all members part of a project identified through iri, shortname or shortcode
 
 **Project Admin Member Operations:**
-- `GET: /admin/projects/admin-members/[identifier]` : returns all admin members part of a project identified through iri, shortname or shortcode
+- `GET: /admin/projects/admin-members/<identifier>` : returns all admin members part of a project identified through iri, shortname or shortcode
 
 **Project Keyword Operations:**
 - `GET: /admin/projects/keywords` : returns all unique keywords for all projects as a list
-- `GET: /admin/projects/keywords/[identifier]` : returns all keywords for a single project
+- `GET: /admin/projects/keywords/<identifier>` : returns all keywords for a single project
 
 **Project Restricted View Settings Operations:**
-- `GET: /admin/projects/[identifier]/RestrictedViewSettings` : returns the project's restricted view settings
+- `GET: /admin/projects/<identifier>/RestrictedViewSettings` : returns the project's restricted view settings
 
 
 ## Project Operations
@@ -124,7 +124,7 @@ Operates on the following properties:
 
 ## Example Data
 
-The following is an example for project information stored in admin named graph:
+The following is an example for project information stored in the `admin` named graph:
 
 ```
 <http://rdfh.ch/projects/00FF>

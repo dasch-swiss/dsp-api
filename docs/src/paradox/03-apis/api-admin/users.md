@@ -19,153 +19,185 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Users Endpoint
 
-  - **Get users**
+## Endpoint Overview
 
-      - GET: `/admin/users`
+**User Operations:**
+- `GET: /admin/users` : return all users
+- `GET: /admin/users/<userIri>` : return single user
+- `POST: /admin/users/` : create new user
+- `PUT: /admin/users/<userIri>/BasicUserInformation` : update user's basic user information
+- `PUT: /admin/users/<userIri>/Password` : update user's password
+- `PUT: /admin/users/<userIri>/Status` : update user's status
+- `DELETE: /admin/users/<userIri>` : delete user (set status to false)
 
-  - **Get user**
+**User's project membership operations**
+
+- `GET: /admin/users/<userIri>/project-memberships` : get user's project memberships
+- `POST: /admin/users/<userIri>/project-memberships/<projectIri>` : add user to project (to ProjectMember group)
+- `DELETE: /admin/users/<userIri>/project-memberships/<projectIri>` : remove user from project (to ProjectMember group)
+
+**User's group membership operations**
+
+- `GET: /admin/users/<userIri>/project-admin-memberships` : get user's ProjectAdmin group memberships
+- `POST: /admin/users/<userIri>/project-admin-memberships/<projectIri>` : add user to ProjectAdmin group
+- `DELETE: /admin/users/<userIri>/project-admin-memberships/<projectIri>` : remove user from ProjectAdmin group
+
+- `GET: /admin/users/<userIri>/group-memberships` : get user's normal group memberships
+- `POST: /admin/users/<userIri>/group-memberships/<groupIri>` : add user to normal group
+- `DELETE: /admin/users/<userIri>/group-memberships/<groupIri>` : remove user from normal group
+
+- `PUT: /admin/users/<userIri>/SystemAdmin` : Add/remove user to/from SystemAdmin group
+
+## User Operations
+
+### Get users
+
+  - GET: `/admin/users`
+
+### Get user
 
       - GET:`/admin/users/<userIri>`
 
-  - **Create user**:
+### Create user
 
-      - Required permission: none, self-registration is allowed
-      - Required information: email (unique), given name, family name,
-        password, password, status, systemAdmin
-      - Returns information about the newly created user
-      - TypeScript Docs: userFormats - `CreateUserApiRequestV1`
-      - POST: `/admin/users/`
-      - BODY:
+  - Required permission: none, self-registration is allowed
+  - Required information: email (unique), given name, family name,
+    password, password, status, systemAdmin
+  - Returns information about the newly created user
+  - TypeScript Docs: userFormats - `CreateUserApiRequestV1`
+  - POST: `/admin/users/`
+  - BODY:
+    ```
+    {
+      "email": "donald.duck@example.org",
+      "givenName": "Donald",
+      "familyName": "Duck",
+      "password": "test",
+      "status": true,
+      "lang": "en",
+      "systemAdmin": false
+    }
+    ```
 
-```
-{
-  "email": "donald.duck@example.org",
-  "givenName": "Donald",
-  "familyName": "Duck",
-  "password": "test",
-  "status": true,
-  "lang": "en",
-  "systemAdmin": false
-}
-```
+### Update basic user information**
 
-  - **Update user information**:
+  - Required permission: SystemAdmin / User
+  - Changeable information: email, given name, family name,
+    password, status, SystemAdmin membership
+  - Remark: There are four distinct use case / payload combination.
+    It is not possible to mix cases, e.g., sending `newUserStatus`
+    and basic user information at the same time will result in an
+    error: (1) change password: oldPassword, newPassword, (2) change
+    status: newUserStatus, (3) change system admin membership:
+    newSystemAdminMembershipStatus, and (4) change basic user
+    information: email, givenName, familyName, lang
+  - TypeScript Docs: userFormats - ChangeUserApiRequestV1
+  - PUT: `/admin/users/<userIri>/BasicUserInformation`
+  - BODY:
+    ```
+    {
+      "email": "donald.big.duck@example.org",
+      "givenName": "Big Donald",
+      "familyName": "Duckmann",
+      "lang": "de"
+    }
+    ```
 
-      - Required permission: SystemAdmin / User
-      - Changeable information: email, given name, family name,
-        password, status, SystemAdmin membership
-      - Remark: There are four distinct use case / payload combination.
-        It is not possible to mix cases, e.g., sending `newUserStatus`
-        and basic user information at the same time will result in an
-        error: (1) change password: oldPassword, newPassword, (2) change
-        status: newUserStatus, (3) change system admin membership:
-        newSystemAdminMembershipStatus, and (4) change basic user
-        information: email, givenName, familyName, lang
-      - TypeScript Docs: userFormats - ChangeUserApiRequestV1
-      - PUT: `/admin/users/<userIri>`
-      - BODY:
+### Update user's password
 
-```
-{
-  "email": "donald.big.duck@example.org",
-  "givenName": "Big Donald",
-  "familyName": "Duckmann",
-  "lang": "de"
-}
-```
+  - Required permission: User
+  - Changeable information: password
+  - PUT: `/admin/users/<userIri>/Password`
+  - BODY:
+    ```
+    {
+      "oldPassword": "test",
+      "newPassword": "test1234"
+    }
+    ```
 
-  - **Update user's password**
+### Delete user
 
-      - Required permission: User
-      - Changeable information: password
-      - PUT: `/admin/users/<userIri>`
-      - BODY:
+  - Required permission: SystemAdmin / User
+  - Remark: The same as updating a user and changing `status` to
+    `false`. To un-delete, set `status` to `true`.
+  - PUT: `/admin/users/<userIri>/Status`
+  - BODY:
+    ```
+    {
+      "status": false // true or false
+    }
+    ```
 
-```
-{
-  "oldPassword": "test",
-  "newPassword": "test1234"
-}
-```
+### Delete user (-\update user)**
 
-  - **Delete user**:
+  - Required permission: SystemAdmin / User
+  - Remark: The same as updating a user and changing `status` to
+    `false`. To un-delete, set `status` to `true`.
+  - DELETE: `/admin/users/<userIri>`
+  - BODY: empty
 
-      - Required permission: SystemAdmin / User
-      - Remark: The same as updating a user and changing `status` to
-        `false`. To un-delete, set `status` to `true`.
-      - PUT: `/admin/users/<userIri>`
-      - BODY:
 
-```
-{
-  "status": false // true or false
-}
-```
+## User's project membership operations
 
-  - **Delete user (-\update user)**
+### Get user's project memberships
 
-      - Required permission: SystemAdmin / User
-      - Remark: The same as updating a user and changing `status` to
-        `false`. To un-delete, set `status` to `true`.
-      - DELETE: `/admin/projects/<projectIri>`
-      - BODY: empty
+  - GET: `/admin/users/<userIri>/project-memberships`
 
-  - **Get user's project memberships**
+### Add/remove user to/from project
 
-      - GET: `/admin/users/projects/<userIri>`
+  - Required permission: SystemAdmin / ProjectAdmin / User (if
+    project self-assignment is enabled)
+  - Required information: project IRI, user IRI
+  - Effects: `knora-base:isInProject` user property
+  - POST / DELETE: `/admin/users/<userIri>/projects/<projectIri>`
+  - BODY: empty
 
-  - **Add/remove user to/from project**:
+## User's group membership operations
 
-      - Required permission: SystemAdmin / ProjectAdmin / User (if
-        project self-assignment is enabled)
-      - Required information: project IRI, user IRI
-      - Effects: `knora-base:isInProject` user property
-      - POST / DELETE: `/admin/users/projects/<userIri>/<projectIri>`
-      - BODY: empty
+### Get user's project admin memberships
 
-  - **Get user's project admin memberships**
+  - GET: `/admin/users/<userIri>/project-admin-memberships`
 
-      - GET: `/admin/users/projects-admin/<userIri>`
+### Add/remove user to/from project admin group
 
-  - **Add/remove user to/from project admin group**
+  - Required permission: SystemAdmin / ProjectAdmin
+  - Required information: project IRI, user IRI
+  - Effects: `knora-base:isInProjectAdminGroup` user property
+  - POST / DELETE: `/admin/users/<userIri>/project-admin-memberships/<projectIri>`
+  - BODY: empty
 
-      - Required permission: SystemAdmin / ProjectAdmin
-      - Required information: project IRI, user IRI
-      - Effects: `knora-base:isInProjectAdminGroup` user property
-      - POST / DELETE: `/v1/users/projects-admin/<userIri>/<projectIri>`
-      - BODY: empty
+### Get user's group memberships**
 
-  - **Get user's group memberships**
+  - GET: `/admin/users/<userIri>/group-memberships`
 
-      - GET: `/admin/users/groups/<userIri>`
+### Add/remove user to/from 'normal' group** (not *SystemAdmin* or *ProjectAdmin*)
 
-  - **Add/remove user to/from 'normal' group** (not *SystemAdmin* or
-    *ProjectAdmin*):
+  - Required permission: SystemAdmin / hasProjectAllAdminPermission
+    / hasProjectAllGroupAdminPermission /
+    hasProjectRestrictedGroupAdminPermission (for this group) / User
+    (if group self-assignment is enabled)
+  - Required information: group IRI, user IRI
+  - Effects: `knora-base:isInGroup`
+  - POST / DELETE: `/admin/users/<userIri>/group-memberships/<groupIri>`
+  - BODY: empty
 
-      - Required permission: SystemAdmin / hasProjectAllAdminPermission
-        / hasProjectAllGroupAdminPermission /
-        hasProjectRestrictedGroupAdminPermission (for this group) / User
-        (if group self-assignment is enabled)
-      - Required information: group IRI, user IRI
-      - Effects: `knora-base:isInGroup`
-      - POST / DELETE: `/admin/users/groups/<userIri>/<groupIri>`
-      - BODY: empty
+### Add/remove user to/from system admin group
 
-  - **Add/remove user to/from system admin group**:
+  - Required permission: SystemAdmin / User
+  - Effects property: `knora-base:isInSystemAdminGroup` with value
+    `true` or `false`
+  - PUT: `/admin/users/<userIri>/SystemAdmin`
+  - BODY:
+    ```JSON
+    {
+      "newSystemAdminMembershipStatus": false
+    }
+    ```
 
-      - Required permission: SystemAdmin / User
-      - Effects property: `knora-base:isInSystemAdminGroup` with value
-        `true` or `false`
-      - PUT: `/admin/users/<userIri>`
-      - BODY:
+## Example Data
 
-```JSON
-{
-  "newSystemAdminMembershipStatus": false
-}
-```
-
-Example User Information stored in admin graph: :
+The following is an example for user information stored in the `admin` named graph:
 
 ```
 <http://rdfh.ch/users/c266a56709>
