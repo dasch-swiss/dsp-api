@@ -29,14 +29,14 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - `DELETE: /admin/projects/<identifier>` : update project status to false
 
 **Project Member Operations:**
-- `GET: /admin/projects/members/<identifier>` : returns all members part of a project identified through iri, shortname or shortcode
+- `GET: /admin/projects/<identifier>/members` : returns all members part of a project identified through iri, shortname or shortcode
 
 **Project Admin Member Operations:**
-- `GET: /admin/projects/admin-members/<identifier>` : returns all admin members part of a project identified through iri, shortname or shortcode
+- `GET: /admin/projects/<identifier>/admin-members` : returns all admin members part of a project identified through iri, shortname or shortcode
 
 **Project Keyword Operations:**
-- `GET: /admin/projects/keywords` : returns all unique keywords for all projects as a list
-- `GET: /admin/projects/keywords/<identifier>` : returns all keywords for a single project
+- `GET: /admin/projects/Keywords` : returns all unique keywords for all projects as a list
+- `GET: /admin/projects/<identifier>/Keywords` : returns all keywords for a single project
 
 **Project Restricted View Settings Operations:**
 - `GET: /admin/projects/<identifier>/RestrictedViewSettings` : returns the project's restricted view settings
@@ -107,7 +107,16 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
   - Required permission: SystemAdmin / ProjectAdmin
   - Required information: project IRI
-  - GET: `/admin/projects/members/<projectIri>`
+  - GET: `/admin/projects/<projectIri>/members`
+
+
+## Project Admin Member Operations
+
+### Get project members:
+
+  - Required permission: SystemAdmin / ProjectAdmin
+  - Required information: project IRI
+  - GET: `/admin/projects/<projectIri>/admin-members`
 
 
 ### Restricted View Settings Operations
@@ -118,9 +127,9 @@ Operates on the following properties:
 
 #### Get the restricted view settings:
 
-  - Required permission: none
+  - Required permission: ProjectAdmin
   - Required information: `identifier`. The `identifier` can be the project's IRI, shortocde or shortname.
-  - GET: `/admin/projects/[identifier]/RestrictedViewSettings`
+  - GET: `/admin/projects/<identifier>/RestrictedViewSettings`
 
 ## Example Data
 

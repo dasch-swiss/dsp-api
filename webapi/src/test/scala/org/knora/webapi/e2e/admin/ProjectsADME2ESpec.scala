@@ -331,7 +331,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
         "used to query keywords" should {
 
             "return all unique keywords for all projects" in {
-                val request = Get(baseApiUrl + s"/admin/projects/keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -342,7 +342,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             "return all keywords for a single project" in {
                 val incunabulaIriEnc = java.net.URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/keywords/$incunabulaIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/$incunabulaIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -353,7 +353,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             "return empty list for a project without keywords" in {
                 val anythingIriEnc = java.net.URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/keywords/$anythingIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/$anythingIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -364,7 +364,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             "return 'NotFound' when the project IRI is unknown" in {
                 val notexistingIriEnc = java.net.URLEncoder.encode("http://rdfh.ch/projects/notexisting", "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/keywords/$notexistingIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/$notexistingIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.NotFound)

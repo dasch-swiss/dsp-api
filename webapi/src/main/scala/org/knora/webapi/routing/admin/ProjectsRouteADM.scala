@@ -110,7 +110,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
     /* returns all unique keywords for all projects as a list */
-    private def getKeywords: Route = path(ProjectsBasePath / "keywords") {
+    private def getKeywords: Route = path(ProjectsBasePath / "Keywords") {
         get {
             requestContext =>
                 val requestMessage: Future[ProjectsKeywordsGetRequestADM] = for {
@@ -129,7 +129,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
 
     /* returns all keywords for a single project */
-    private def getProjectKeywords: Route = path(ProjectsBasePath / "keywords" / Segment) { value =>
+    private def getProjectKeywords: Route = path(ProjectsBasePath / Segment / "Keywords") { value =>
         get {
             requestContext =>
                 val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
@@ -206,7 +206,10 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    /* update project status to false */
+    /**
+      * API MAY CHANGE: update project status to false
+      */
+    @ApiMayChange
     private def deleteProject: Route =  path(ProjectsBasePath / Segment) { value =>
         delete {
             requestContext =>
@@ -231,8 +234,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    /* returns all members part of a project identified through iri, shortname or shortcode */
-    private def getProjectMembers: Route = path(ProjectsBasePath / "members" / Segment) { value =>
+    /**
+      * API MAY CHANGE: returns all members part of a project identified through iri, shortname or shortcode
+      */
+    @ApiMayChange
+    private def getProjectMembers: Route = path(ProjectsBasePath / Segment / "members") { value =>
         get {
 
             parameters("identifier" ? "iri") { identifier: String =>
@@ -263,8 +269,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    /* returns all admin members part of a project identified through iri, shortname or shortcode */
-    private def getProjectAdminMembers: Route = path(ProjectsBasePath / "admin-members" / Segment) { value =>
+    /**
+      * API MAY CHANGE: returns all admin members part of a project identified through iri, shortname or shortcode
+      */
+    @ApiMayChange
+    private def getProjectAdminMembers: Route = path(ProjectsBasePath / Segment / "admin-members" ) { value =>
         get {
 
             parameters("identifier" ? "iri") { identifier: String =>
