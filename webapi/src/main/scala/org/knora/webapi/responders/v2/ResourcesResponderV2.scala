@@ -26,7 +26,6 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -43,7 +42,7 @@ import org.knora.webapi.responders.{IriLocker, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.PermissionUtilADM.ModifyPermission
+import org.knora.webapi.util.PermissionUtilADM.{DeletePermission, ModifyPermission}
 import org.knora.webapi.util._
 import org.knora.webapi.util.date.CalendarNameGregorian
 
@@ -74,6 +73,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
         case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
+        case deleteResourceRequestV2: DeleteResourceRequestV2 => deleteResourceV2(deleteResourceRequestV2)
         case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
@@ -249,13 +249,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             for {
                 // Get the metadata of the resource to be updated.
                 resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
-
-                _ = if (resourcesSeq.numberOfResources != 1) {
-                    throw AssertionException(s"Expected one resource, got ${resourcesSeq.numberOfResources}")
-                }
-
-                resource: ReadResourceV2 = resourcesSeq.resources.head
-
+                resource: ReadResourceV2 = resourcesSeq.toResource(updateResourceMetadataRequestV2.resourceIri)
                 internalResourceClassIri = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
 
                 // Make sure that the resource's class is what the client thinks it is.
@@ -268,12 +262,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     throw EditConflictException(s"Resource <${resource.resourceIri}> has been modified since you last read it")
                 }
 
-                // Get information about the project that the resource is in.
-                projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-                    maybeIri = Some(resource.projectADM.id),
-                    requestingUser = updateResourceMetadataRequestV2.requestingUser
-                )).mapTo[ProjectGetResponseADM]
-
                 // Check that the user has permission to modify the resource.
                 _ = ResourceUtilV2.checkResourcePermission(
                     resourceInfo = resource,
@@ -282,7 +270,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 )
 
                 // Get the IRI of the named graph in which the resource is stored.
-                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfoResponse.project)
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
 
                 newModificationDate: Instant = updateResourceMetadataRequestV2.maybeNewModificationDate match {
                     case Some(submittedNewModificationDate) =>
@@ -348,6 +336,73 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             taskResult <- IriLocker.runWithIriLock(
                 updateResourceMetadataRequestV2.apiRequestID,
                 updateResourceMetadataRequestV2.resourceIri,
+                () => makeTaskFuture
+            )
+        } yield taskResult
+    }
+
+    def deleteResourceV2(deleteResourceV2: DeleteResourceRequestV2): Future[SuccessResponseV2] = {
+        def makeTaskFuture: Future[SuccessResponseV2] = {
+            for {
+                // Get the metadata of the resource to be updated.
+                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(deleteResourceV2.resourceIri), deleteResourceV2.requestingUser)
+                resource: ReadResourceV2 = resourcesSeq.toResource(deleteResourceV2.resourceIri)
+                internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
+
+                // Make sure that the resource's class is what the client thinks it is.
+                _ = if (resource.resourceClassIri != internalResourceClassIri) {
+                    throw BadRequestException(s"Resource <${resource.resourceIri}> is not a member of class <${deleteResourceV2.resourceClassIri}>")
+                }
+
+                // Make sure that the resource hasn't been updated since the client got its last modification date.
+                _ = if (resource.lastModificationDate != deleteResourceV2.maybeLastModificationDate) {
+                    throw EditConflictException(s"Resource <${resource.resourceIri}> has been modified since you last read it")
+                }
+
+                // Check that the user has permission to mark the resource as deleted.
+                _ = ResourceUtilV2.checkResourcePermission(
+                    resourceInfo = resource,
+                    permissionNeeded = DeletePermission,
+                    requestingUser = deleteResourceV2.requestingUser
+                )
+
+                // Get the IRI of the named graph in which the resource is stored.
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
+
+                // Generate SPARQL for marking the resource as deleted.
+                sparqlUpdate = queries.sparql.v2.txt.deleteResource(
+                    triplestore = settings.triplestoreType,
+                    dataNamedGraph = dataNamedGraph,
+                    resourceIri = deleteResourceV2.resourceIri,
+                    maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
+                    currentTime = Instant.now
+                ).toString()
+
+                // Do the update.
+                _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+
+                // Verify that the resource was deleted correctly.
+
+                sparqlQuery = queries.sparql.v2.txt.checkResourceDeletion(
+                    triplestore = settings.triplestoreType,
+                    resourceIri = deleteResourceV2.resourceIri
+                ).toString()
+
+                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+                rows = sparqlSelectResponse.results.bindings
+
+                _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
+                    throw UpdateNotPerformedException(s"Resource <${deleteResourceV2.resourceIri}> was not marked as deleted. Please report this as a possible bug.")
+                }
+            } yield SuccessResponseV2("Resource marked as deleted")
+        }
+
+        for {
+            // Do the remaining pre-update checks and the update while holding an update lock on the resource.
+            taskResult <- IriLocker.runWithIriLock(
+                deleteResourceV2.apiRequestID,
+                deleteResourceV2.resourceIri,
                 () => makeTaskFuture
             )
         } yield taskResult

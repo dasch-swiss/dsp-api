@@ -102,55 +102,34 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     }
                 }
             }
-        } ~ path("v2" / "values" / Segments ) { iris: Seq[IRI] =>
-            delete {
-                requestContext => {
-                    if (iris.length != 3) {
-                        throw BadRequestException("A request to delete a value must provide resource IRI, property IRI, and value IRI")
+        } ~ path("v2" / "values" / "delete" ) {
+            post {
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessageFuture: Future[DeleteValueRequestV2] = for {
+                            requestingUser <- getUserADM(requestContext)
+                            requestMessage: DeleteValueRequestV2 <- DeleteValueRequestV2.fromJsonLD(
+                                requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                storeManager = storeManager,
+                                settings = settings,
+                                log = log
+                            )
+                        } yield requestMessage
+
+                        RouteUtilV2.runRdfRouteWithFuture(
+                            requestMessageFuture,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            ApiV2WithValueObjects
+                        )
                     }
-
-                    val Seq(resourceIriStr, propertyIriStr, valueIriStr) = iris
-
-                    val resourceIri = resourceIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource IRI: <$valueIriStr>"))
-
-                    if (!resourceIri.isKnoraDataIri) {
-                        throw BadRequestException(s"Invalid resource IRI: <$valueIriStr>")
-                    }
-
-                    val propertyIri = propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$valueIriStr>"))
-
-                    if (!(propertyIri.isKnoraApiV2DefinitionIri && propertyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
-                        throw BadRequestException(s"Invalid property IRI: <$valueIriStr>")
-                    }
-
-                    val valueIri = valueIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid value IRI: <$valueIriStr>"))
-
-                    if (!valueIri.isKnoraDataIri) {
-                        throw BadRequestException(s"Invalid value IRI: <$valueIriStr>")
-                    }
-
-                    val params = requestContext.request.uri.query().toMap
-                    val deleteComment = params.get("deleteComment")
-
-                    val requestMessageFuture: Future[DeleteValueRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield DeleteValueRequestV2(
-                        resourceIri = resourceIri.toString,
-                        propertyIri = propertyIri,
-                        valueIri = valueIri.toString,
-                        deleteComment = deleteComment,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID
-                    )
-
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        ApiV2WithValueObjects
-                    )
                 }
             }
         }

@@ -91,6 +91,10 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
             // Get the IRI of the resource that the value is to be created in.
             resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
 
+            _ = if (!resourceIri.isKnoraResourceIri) {
+                throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+            }
+
             // Get the resource class.
             resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
 
@@ -197,6 +201,10 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
             // Get the IRI of the resource that the value is to be created in.
             resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
 
+            _ = if (!resourceIri.isKnoraResourceIri) {
+                throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+            }
+
             // Get the resource class.
             resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
 
@@ -263,18 +271,95 @@ case class UpdateValueResponseV2(valueIri: IRI,
   * Requests that a value is marked as deleted. A successful response will be a [[SuccessResponseV2]].
   *
   * @param resourceIri    the IRI of the containing resource.
+  * @param resourceClassIri the IRI of the resource class.
   * @param propertyIri    the IRI of the property pointing to the value to be marked as deleted.
   * @param valueIri       the IRI of the value to be marked as deleted.
+  * @param valueTypeIri  the IRI of the value class.
   * @param deleteComment  an optional comment explaining why the value is being marked as deleted.
   * @param requestingUser the user making the request.
   * @param apiRequestID   the API request ID.
   */
 case class DeleteValueRequestV2(resourceIri: IRI,
+                                resourceClassIri: SmartIri,
                                 propertyIri: SmartIri,
                                 valueIri: IRI,
+                                valueTypeIri: SmartIri,
                                 deleteComment: Option[String] = None,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
+
+object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueRequestV2] {
+    /**
+      * Converts JSON-LD input into a case class instance.
+      *
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
+      * @param settings         the application settings.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a case class instance representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            requestingUser: UserADM,
+                            responderManager: ActorRef,
+                            storeManager: ActorRef,
+                            settings: SettingsImpl,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteValueRequestV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser
+            )
+        }
+    }
+
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                               apiRequestID: UUID,
+                               requestingUser: UserADM): DeleteValueRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        // Get the IRI of the resource that the value is to be created in.
+        val resourceIri: SmartIri = jsonLDDocument.getIDAsKnoraDataIri
+
+        if (!resourceIri.isKnoraResourceIri) {
+            throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+        }
+
+        // Get the resource class.
+        val resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+
+        // Get the resource property and the IRI and class of the value to be deleted.
+        jsonLDDocument.getResourcePropertyValue match {
+            case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
+                val valueIri = jsonLDObject.getIDAsKnoraDataIri
+
+                if (!valueIri.isKnoraValueIri) {
+                    throw BadRequestException(s"Invalid value IRI: <$valueIri>")
+                }
+
+                val valueTypeIri: SmartIri = jsonLDObject.getTypeAsKnoraTypeIri
+
+                val deleteComment: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DeleteComment, stringFormatter.toSparqlEncodedString)
+
+                DeleteValueRequestV2(
+                    resourceIri = resourceIri.toString,
+                    resourceClassIri = resourceClassIri,
+                    propertyIri = propertyIri,
+                    valueIri = valueIri.toString,
+                    valueTypeIri = valueTypeIri,
+                    deleteComment = deleteComment,
+                    requestingUser = requestingUser,
+                    apiRequestID = apiRequestID
+                )
+        }
+    }
+}
 
 /**
   * Requests SPARQL for creating multiple values in a new, empty resource. The resource ''must'' be a new, empty

@@ -201,14 +201,13 @@ The request body is a JSON-LD object containing the following information about 
 
 - `@id`: the resource's IRI
 - `@type`: the resource's class IRI
-- `knora-api:lastModificationDate`: an `xsd:dateTimeStamp` representing the last modification date that is currently attached to the resource, if any
+- `knora-api:lastModificationDate`: an `xsd:dateTimeStamp` representing the last modification date that is currently attached to the resource, if any. This is used to make sure that the resource has not been modified by someone else since you last read it.
 
 The submitted JSON-LD object must also contain one or more of the following predicates, representing the metadata you want to change:
 
 - `rdfs:label`: a string
 - `knora-api:hasPermissions`, in the format described in @ref:[Permissions](../../02-knora-ontologies/knora-base.md#permissions)
 - `knora-api:newModificationDate`: an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp).
-  This is used to make sure that the resource has not been modified by someone else since you last read it.
 
 Here is an example:
 
@@ -243,3 +242,45 @@ If you submit a `knora-api:newModificationDate` that is earlier than the resourc
 you will get an HTTP 400 (Bad Request) error.
 
 A successful response is an HTTP 200 (OK) status containing a confirmation message.
+
+## Deleting a Resource
+
+Knora does not normally delete resources; instead, it marks them as deleted, which means
+that they do not appear in normal query results.
+
+To mark a resource as deleted, use this route:
+
+```
+HTTP POST to http://host/v2/resources/delete
+```
+
+The request body is a JSON-LD object containing the following information about the resource:
+
+- `@id`: the resource's IRI
+- `@type`: the resource's class IRI
+- `knora-api:lastModificationDate`: an `xsd:dateTimeStamp` representing the last modification date that is currently attached to the resource, if any. This is used to make sure that the resource has not been modified by someone else since you last read it.
+
+```jsonld
+{
+  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@type" : "anything:Thing",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "2019-02-05T17:05:35.776747Z"
+  },
+  "knora-api:deleteComment" : "This resource was created by mistake.",
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
+The optional property `knora-api:deleteComment` specifies a comment to be attached to the
+resource, explaining why it has been marked as deleted.
+
+The response is a JSON-LD document containing the predicate `knora-api:result`
+with a confirmation message.
