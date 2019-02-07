@@ -11,3 +11,5 @@ Also, please change the **HINT** to the appropriate level:
 
 ## HINT => MAJOR CHANGE
 
+- FEATURE: Secure routes returning user informations (@github[#961](#961))
+- MAJOR: Reorganize user and project routes (@github[#1209](#1209))
