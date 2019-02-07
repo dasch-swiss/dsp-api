@@ -281,3 +281,6 @@ The request body is a JSON-LD object containing the following information about 
 
 The optional property `knora-api:deleteComment` specifies a comment to be attached to the
 resource, explaining why it has been marked as deleted.
+
+The response is a JSON-LD document containing the predicate `knora-api:result`
+with a confirmation message.

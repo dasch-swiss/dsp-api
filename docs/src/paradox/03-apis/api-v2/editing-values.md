@@ -344,3 +344,6 @@ the resource to the value, and the value's ID and type. For example:
 
 The optional property `knora-api:deleteComment` specifies a comment to be attached to the
 value, explaining why it has been marked as deleted.
+
+The response is a JSON-LD document containing the predicate `knora-api:result`
+with a confirmation message.
