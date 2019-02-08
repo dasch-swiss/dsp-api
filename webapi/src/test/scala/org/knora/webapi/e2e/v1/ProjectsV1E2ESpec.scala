@@ -92,48 +92,5 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                 assert(response.status === StatusCodes.OK)
             }
         }
-
-        "used to query members" should {
-
-            "return all members of a project identified by iri" in {
-                val request = Get(baseApiUrl + s"/v1/projects/members/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
-                members.size should be (4)
-            }
-
-            "return all members of a project identified by shortname" in {
-                val request = Get(baseApiUrl + s"/v1/projects/members/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
-                members.size should be (4)
-            }
-
-            "return all admin members of a project identified by iri" in {
-                val request = Get(baseApiUrl + s"/v1/projects/admin-members/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
-                members.size should be (2)
-            }
-
-            "return all admin members of a project identified by shortname" in {
-                val request = Get(baseApiUrl + s"/v1/projects/admin-members/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val members: Seq[UserDataV1] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserDataV1]]
-                members.size should be (2)
-            }
-        }
     }
 }

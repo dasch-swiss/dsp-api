@@ -2230,6 +2230,19 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
+      * Given the project IRI, checks if it is in a valid format.
+      *
+      * @param iri the project's IRI.
+      * @return the IRI of the project.
+      */
+    def validateProjectIri(iri: IRI, errorFun: => Nothing): IRI = {
+        isKnoraProjectIriStr(iri) match {
+            case true => iri
+            case false => errorFun
+        }
+    }
+
+    /**
       * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
       *
       * @param shortcode the project's shortcode.
@@ -2263,6 +2276,19 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       */
     def validateEmail(email: String): Option[String] = {
         EmailAddressRegex.findFirstIn(email)
+    }
+
+    /**
+      * Given an email address, checks if it is in a valid format.
+      *
+      * @param email the email.
+      * @return the email
+      */
+    def validateEmailAndThrow(email: String, errorFun: => Nothing): String = {
+        EmailAddressRegex.findFirstIn(email) match {
+            case Some(value) => value
+            case None => errorFun
+        }
     }
 
     /**

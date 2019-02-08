@@ -71,15 +71,15 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
         }
 
         "return isSelf for IRI" in {
-            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(SharedTestDataADM.rootUser.id))
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(iri = Some(SharedTestDataADM.rootUser.id)))
         }
 
         "return isSelf for email" in {
-            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(SharedTestDataADM.rootUser.email))
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(email = Some(SharedTestDataADM.rootUser.email)))
         }
 
         "return isSelf for username" in {
-            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(SharedTestDataADM.rootUser.username))
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(username = Some(SharedTestDataADM.rootUser.username)))
         }
     }
 
@@ -171,20 +171,20 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
         "return the identifier type" in {
 
             // FIXME: not working!!!
-            val iriIdentifier = UserIdentifierADM("http://rdfh.ch/users/root")
+            val iriIdentifier = UserIdentifierADM(iri = Some("http://rdfh.ch/users/root"))
             iriIdentifier.hasType should be (UserIdentifierType.IRI)
 
-            val emailIdentifier = UserIdentifierADM("root@example.com")
+            val emailIdentifier = UserIdentifierADM(email = Some("root@example.com"))
             emailIdentifier.hasType should be (UserIdentifierType.EMAIL)
 
-            val usernameIdentifier = UserIdentifierADM("root")
+            val usernameIdentifier = UserIdentifierADM(username = Some("root"))
             usernameIdentifier.hasType should be (UserIdentifierType.USERNAME)
         }
 
-        "throw a BadRequestException for an empty identifier string" in {
+        "throw a BadRequestException for an empty identifier" in {
 
             assertThrows[BadRequestException](
-                UserIdentifierADM("")
+                UserIdentifierADM()
             )
 
         }

@@ -23,30 +23,30 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 **User Operations:**
 - `GET: /admin/users` : return all users
-- `GET: /admin/users/<userIri>` : return single user
+- `GET: /admin/users/[iri | email | username]/<userIri>` : return single user identified by [IRI | email | username]
 - `POST: /admin/users/` : create new user
-- `PUT: /admin/users/<userIri>/BasicUserInformation` : update user's basic user information
-- `PUT: /admin/users/<userIri>/Password` : update user's password
-- `PUT: /admin/users/<userIri>/Status` : update user's status
-- `DELETE: /admin/users/<userIri>` : delete user (set status to false)
+- `PUT: /admin/users/iri/<userIri>/BasicUserInformation` : update user's basic user information
+- `PUT: /admin/users/iri/<userIri>/Password` : update user's password
+- `PUT: /admin/users/iri/<userIri>/Status` : update user's status
+- `DELETE: /admin/users/iri/<userIri>` : delete user (set status to false)
 
 **User's project membership operations**
 
-- `GET: /admin/users/<userIri>/project-memberships` : get user's project memberships
-- `POST: /admin/users/<userIri>/project-memberships/<projectIri>` : add user to project (to ProjectMember group)
-- `DELETE: /admin/users/<userIri>/project-memberships/<projectIri>` : remove user from project (to ProjectMember group)
+- `GET: /admin/users/iri/<userIri>/project-memberships` : get user's project memberships
+- `POST: /admin/users/iri/<userIri>/project-memberships/<projectIri>` : add user to project (to ProjectMember group)
+- `DELETE: /admin/users/iri/<userIri>/project-memberships/<projectIri>` : remove user from project (to ProjectMember group)
 
 **User's group membership operations**
 
-- `GET: /admin/users/<userIri>/project-admin-memberships` : get user's ProjectAdmin group memberships
-- `POST: /admin/users/<userIri>/project-admin-memberships/<projectIri>` : add user to ProjectAdmin group
-- `DELETE: /admin/users/<userIri>/project-admin-memberships/<projectIri>` : remove user from ProjectAdmin group
+- `GET: /admin/users/iri/<userIri>/project-admin-memberships` : get user's ProjectAdmin group memberships
+- `POST: /admin/users/iri/<userIri>/project-admin-memberships/<projectIri>` : add user to ProjectAdmin group
+- `DELETE: /admin/users/iri/<userIri>/project-admin-memberships/<projectIri>` : remove user from ProjectAdmin group
 
-- `GET: /admin/users/<userIri>/group-memberships` : get user's normal group memberships
-- `POST: /admin/users/<userIri>/group-memberships/<groupIri>` : add user to normal group
-- `DELETE: /admin/users/<userIri>/group-memberships/<groupIri>` : remove user from normal group
+- `GET: /admin/users/iri/<userIri>/group-memberships` : get user's normal group memberships
+- `POST: /admin/users/iri/<userIri>/group-memberships/<groupIri>` : add user to normal group
+- `DELETE: /admin/users/iri/<userIri>/group-memberships/<groupIri>` : remove user from normal group
 
-- `PUT: /admin/users/<userIri>/SystemAdmin` : Add/remove user to/from SystemAdmin group
+- `PUT: /admin/users/iri/<userIri>/SystemAdmin` : Add/remove user to/from SystemAdmin group
 
 ## User Operations
 
@@ -58,7 +58,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ### Get user
 
   - Required permission: SystemAdmin / self
-  - GET:`/admin/users/<userIri>`
+  - GET:`/admin/users/[iri | email | username ]/<userIri>`
 
 ### Create user
 
@@ -67,7 +67,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
     password, password, status, systemAdmin
   - Returns information about the newly created user
   - TypeScript Docs: userFormats - `CreateUserApiRequestV1`
-  - POST: `/admin/users/`
+  - POST: `/admin/users`
   - BODY:
     ```
     {
@@ -94,7 +94,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
     newSystemAdminMembershipStatus, and (4) change basic user
     information: email, givenName, familyName, lang
   - TypeScript Docs: userFormats - ChangeUserApiRequestV1
-  - PUT: `/admin/users/<userIri>/BasicUserInformation`
+  - PUT: `/admin/users/iri/<userIri>/BasicUserInformation`
   - BODY:
     ```
     {
@@ -109,7 +109,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
   - Required permission: SystemAdmin / self
   - Changeable information: password
-  - PUT: `/admin/users/<userIri>/Password`
+  - PUT: `/admin/users/iri/<userIri>/Password`
   - BODY:
     ```
     {
@@ -123,7 +123,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - Required permission: SystemAdmin / self
   - Remark: The same as updating a user and changing `status` to
     `false`. To un-delete, set `status` to `true`.
-  - PUT: `/admin/users/<userIri>/Status`
+  - PUT: `/admin/users/iri/<userIri>/Status`
   - BODY:
     ```
     {
@@ -136,7 +136,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - Required permission: SystemAdmin / self
   - Remark: The same as updating a user and changing `status` to
     `false`. To un-delete, set `status` to `true`.
-  - DELETE: `/admin/users/<userIri>`
+  - DELETE: `/admin/users/iri/<userIri>`
   - BODY: empty
 
 
@@ -144,7 +144,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Get user's project memberships
 
-  - GET: `/admin/users/<userIri>/project-memberships`
+  - GET: `/admin/users/iri/<userIri>/project-memberships`
 
 ### Add/remove user to/from project
 
@@ -152,26 +152,26 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
     project self-assignment is enabled)
   - Required information: project IRI, user IRI
   - Effects: `knora-base:isInProject` user property
-  - POST / DELETE: `/admin/users/<userIri>/projects/<projectIri>`
+  - POST / DELETE: `/admin/users/iri/<userIri>/projects/<projectIri>`
   - BODY: empty
 
 ## User's group membership operations
 
 ### Get user's project admin memberships
 
-  - GET: `/admin/users/<userIri>/project-admin-memberships`
+  - GET: `/admin/users/iri/<userIri>/project-admin-memberships`
 
 ### Add/remove user to/from project admin group
 
   - Required permission: SystemAdmin / ProjectAdmin
   - Required information: project IRI, user IRI
   - Effects: `knora-base:isInProjectAdminGroup` user property
-  - POST / DELETE: `/admin/users/<userIri>/project-admin-memberships/<projectIri>`
+  - POST / DELETE: `/admin/users/iri/<userIri>/project-admin-memberships/<projectIri>`
   - BODY: empty
 
 ### Get user's group memberships**
 
-  - GET: `/admin/users/<userIri>/group-memberships`
+  - GET: `/admin/users/iri/<userIri>/group-memberships`
 
 ### Add/remove user to/from 'normal' group** (not *SystemAdmin* or *ProjectAdmin*)
 
@@ -181,7 +181,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
     (if group self-assignment is enabled)
   - Required information: group IRI, user IRI
   - Effects: `knora-base:isInGroup`
-  - POST / DELETE: `/admin/users/<userIri>/group-memberships/<groupIri>`
+  - POST / DELETE: `/admin/users/iri/<userIri>/group-memberships/<groupIri>`
   - BODY: empty
 
 ### Add/remove user to/from system admin group
@@ -189,7 +189,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - Required permission: SystemAdmin / self
   - Effects property: `knora-base:isInSystemAdminGroup` with value
     `true` or `false`
-  - PUT: `/admin/users/<userIri>/SystemAdmin`
+  - PUT: `/admin/users/iri/<userIri>/SystemAdmin`
   - BODY:
     ```JSON
     {

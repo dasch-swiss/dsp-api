@@ -272,7 +272,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             }
 
             maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map {
-                userIri => (responderManager ? UserGetADM(identifier = UserIdentifierADM(userIri), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+                userIri => (responderManager ? UserGetADM(identifier = UserIdentifierADM(iri = Some(userIri)), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             }
             maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
             users: Seq[UserADM] = maybeUsers.flatten
@@ -329,7 +329,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             }
 
             maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map {
-                userIri => (responderManager ? UserGetADM(identifier = UserIdentifierADM(userIri), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+                userIri => (responderManager ? UserGetADM(identifier = UserIdentifierADM(iri = Some(userIri)), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             }
             maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
             users: Seq[UserADM] = maybeUsers.flatten

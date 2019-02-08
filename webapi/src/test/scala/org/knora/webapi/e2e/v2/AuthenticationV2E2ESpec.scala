@@ -68,23 +68,15 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
 
     "The Authentication Route ('v2/authentication') with credentials supplied via URL parameters" should {
 
-        "authenticate with correct user IRI and password (using new 'identifier' parameter)" in {
+        "authenticate with correct user IRI and password" in {
             /* Correct username and password */
-            val request = Get(baseApiUrl + s"/v2/authentication?identifier=$rootIriEnc&password=$testPass")
+            val request = Get(baseApiUrl + s"/v2/authentication?iri=$rootIriEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)
         }
 
-        "authenticate with correct username and password (using new 'identifier' parameter)" in {
-            /* Correct username and password */
-            val request = Get(baseApiUrl + s"/v2/authentication?identifier=$rootUsernameEnc&password=$testPass")
-            val response: HttpResponse = singleAwaitingRequest(request)
-            log.debug(s"response: ${response.toString}")
-            assert(response.status === StatusCodes.OK)
-        }
-
-        "authenticate with correct username and password (using old 'email' parameter)" in {
+        "authenticate with correct email and password" in {
             /* Correct username and password */
             val request = Get(baseApiUrl + s"/v2/authentication?email=$rootUsernameEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -92,17 +84,9 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             assert(response.status === StatusCodes.OK)
         }
 
-        "authenticate with correct email and password (using new 'identifier' parameter)" in {
-            /* Correct email and password */
-            val request = Get(baseApiUrl + s"/v2/authentication?identifier=$rootEmailEnc&password=$testPass")
-            val response: HttpResponse = singleAwaitingRequest(request)
-            log.debug(s"response: ${response.toString}")
-            assert(response.status === StatusCodes.OK)
-        }
-
-        "authenticate with correct email and password (using old 'email' parameter)" in {
-            /* Correct email and password */
-            val request = Get(baseApiUrl + s"/v2/authentication?email=$rootEmailEnc&password=$testPass")
+        "authenticate with correct username and password" in {
+            /* Correct username and password */
+            val request = Get(baseApiUrl + s"/v2/authentication?username=$rootUsernameEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)
@@ -125,13 +109,6 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
     }
 
     "The Authentication Route ('v2/authentication') with credentials supplied via Basic Auth" should {
-
-        "authenticate with correct username and password" in {
-            /* Correct username / correct password */
-            val request = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(BasicHttpCredentials(rootUsername, testPass))
-            val response = singleAwaitingRequest(request)
-            assert(response.status == StatusCodes.OK)
-        }
 
         "authenticate with correct email and password" in {
             /* Correct email / correct password */
@@ -165,7 +142,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val params =
                 s"""
                    |{
-                   |    "identifier": "$rootIri",
+                   |    "iri": "$rootIri",
                    |    "password": "$testPass"
                    |}
                 """.stripMargin
@@ -184,12 +161,12 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             token.set(lr.token)
         }
 
-        "login with username" in {
+        "login with email" in {
 
             val params =
                 s"""
                    |{
-                   |    "identifier": "$rootUsername",
+                   |    "email": "$rootEmail",
                    |    "password": "$testPass"
                    |}
                 """.stripMargin
@@ -206,12 +183,12 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             log.debug("token: {}", lr.token)
         }
 
-        "login with email" in {
+        "login with username" in {
 
             val params =
                 s"""
                    |{
-                   |    "identifier": "$rootEmail",
+                   |    "username": "$rootUsername",
                    |    "password": "$testPass"
                    |}
                 """.stripMargin
@@ -257,7 +234,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val params =
                 s"""
                    |{
-                   |    "identifier": "$rootEmail",
+                   |    "email": "$rootEmail",
                    |    "password": "$testPass"
                    |}
                 """.stripMargin
@@ -287,7 +264,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val params =
                 s"""
                    |{
-                   |    "identifier": "$rootEmail",
+                   |    "email": "$rootEmail",
                    |    "password": "wrong"
                    |}
                 """.stripMargin
@@ -305,7 +282,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val params =
                 s"""
                    |{
-                   |    "identifier": "wrong",
+                   |    "email": "wrong",
                    |    "password": "wrong"
                    |}
                 """.stripMargin
@@ -341,7 +318,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val params =
                 s"""
                    |{
-                   |    "identifier": "$rootEmail",
+                   |    "email": "$rootEmail",
                    |    "password": "$testPass"
                    |}
                 """.stripMargin

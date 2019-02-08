@@ -133,31 +133,32 @@ trait Authenticator {
 
         val apiUrl = settings.externalKnoraApiBaseUrl
 
-        val form = s"""
-          |<div align="center">
-          |    <section class="container">
-          |        <div class="login">
-          |            <h1>Knora Login</h1>
-          |            <form name="myform" action="${apiUrl}/v2/login" method="post">
-          |                <p>
-          |                    <input type="text" name="identifier" value="" placeholder="Username or Email">
-          |                </p>
-          |                <p>
-          |                    <input type="password" name="password" value="" placeholder="Password">
-          |                </p>
-          |                <p class="submit">
-          |                    <input type="submit" name="submit" value="Login">
-          |                </p>
-          |            </form>
-          |        </div>
-          |
+        val form =
+            s"""
+               |<div align="center">
+               |    <section class="container">
+               |        <div class="login">
+               |            <h1>Knora Login</h1>
+               |            <form name="myform" action="${apiUrl}/v2/login" method="post">
+               |                <p>
+               |                    <input type="text" name="identifier" value="" placeholder="Username or Email">
+               |                </p>
+               |                <p>
+               |                    <input type="password" name="password" value="" placeholder="Password">
+               |                </p>
+               |                <p class="submit">
+               |                    <input type="submit" name="submit" value="Login">
+               |                </p>
+               |            </form>
+               |        </div>
+               |
           |    </section>
-          |
+               |
           |    <section class="about">
-          |        <p class="about-author">
-          |            &copy; 2015&ndash;2019 <a href="https://knora.org" target="_blank">Knora.org</a>
-          |    </section>
-          |</div>
+               |        <p class="about-author">
+               |            &copy; 2015&ndash;2019 <a href="https://knora.org" target="_blank">Knora.org</a>
+               |    </section>
+               |</div>
         """.stripMargin
 
         val httpResponse = HttpResponse(
@@ -256,7 +257,7 @@ trait Authenticator {
                 CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, sessionCreds.token, sessionCreds.token)
 
                 HttpResponse(
-                    headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "", domain = cookieDomain, path = Some("/"), httpOnly = true , expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
+                    headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "", domain = cookieDomain, path = Some("/"), httpOnly = true, expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
                     status = StatusCodes.OK,
                     entity = HttpEntity(
                         ContentTypes.`application/json`,
@@ -272,7 +273,7 @@ trait Authenticator {
                 CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.token, tokenCreds.token)
 
                 HttpResponse(
-                    headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "", domain = cookieDomain, path = Some("/"), httpOnly = true , expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
+                    headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "", domain = cookieDomain, path = Some("/"), httpOnly = true, expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
                     status = StatusCodes.OK,
                     entity = HttpEntity(
                         ContentTypes.`application/json`,
@@ -495,13 +496,24 @@ object Authenticator {
 
         val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
 
-        // check for email (old name) or identifier (new name) parameters
-        val identifierList: Iterable[String] = params.get("email").map(_.head) ++ params.get("identifier").map(_.head)
-        val maybeIdentifier: Option[String] = identifierList.headOption
+        // check for iri, email, or username parameters
+        val maybeIriIdentifier: Option[String] = params.get("iri").map(_.head)
+        val maybeEmailIdentifier: Option[String] = params.get("email").map(_.head)
+        val maybeUsernameIdentifier: Option[String] = params.get("username").map(_.head)
+        val maybeIdentifier: Option[String] = List(maybeIriIdentifier, maybeEmailIdentifier, maybeUsernameIdentifier).flatten.headOption
         val maybePassword: Option[String] = params get "password" map (_.head)
 
         val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty) {
-            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeIdentifier.get), maybePassword.get))
+            Some(
+                KnoraPasswordCredentialsV2(
+                    UserIdentifierADM(
+                        iri = maybeIdentifier,
+                        email = maybeEmailIdentifier,
+                        username = maybeUsernameIdentifier
+                    ),
+                    maybePassword.get
+                )
+            )
         } else {
             None
         }
@@ -561,8 +573,8 @@ object Authenticator {
                 // in v2 we support the basic scheme
                 val maybeBasicAuthValue = credsArr.find(_.contains("Basic"))
 
-                // try to decode identifier/password
-                val (maybeIdentifier, maybePassword) = maybeBasicAuthValue match {
+                // try to decode email/password
+                val (maybeEmail, maybePassword) = maybeBasicAuthValue match {
                     case Some(value) =>
                         val trimmedValue = value.substring(5).trim() // remove 'Basic '
                     val decodedValue = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
@@ -572,8 +584,8 @@ object Authenticator {
                         (None, None)
                 }
 
-                val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty) {
-                    Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeIdentifier.get), maybePassword.get))
+                val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeEmail.nonEmpty && maybePassword.nonEmpty) {
+                    Some(KnoraPasswordCredentialsV2(UserIdentifierADM(email = maybeEmail), maybePassword.get))
                 } else {
                     None
                 }
@@ -639,7 +651,7 @@ object Authenticator {
                         }
                     }
                     // log.debug("getUserADMThroughCredentialsV2 - used token")
-                    getUserByIdentifier(UserIdentifierADM(userIri))
+                    getUserByIdentifier(UserIdentifierADM(iri = Some(userIri)))
                 }
                 case Some(sessionCreds: KnoraSessionCredentialsV2) => {
                     val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionCreds.token, settings.jwtSecretKey) match {
@@ -650,14 +662,14 @@ object Authenticator {
                         }
                     }
                     // log.debug("getUserADMThroughCredentialsV2 - used session token")
-                    getUserByIdentifier(UserIdentifierADM(userIri))
+                    getUserByIdentifier(UserIdentifierADM(iri = Some(userIri)))
                 }
                 case None => {
                     // log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
                     throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
                 }
             }
-            
+
         } yield user
     }
 
@@ -677,23 +689,20 @@ object Authenticator {
       */
     private def getUserByIdentifier(identifier: UserIdentifierADM)(implicit system: ActorSystem, responderManager: ActorRef, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
 
-        if (identifier.nonEmpty) {
-            val userADMFuture = for {
-                maybeUserADM <- (responderManager ? UserGetADM(identifier = identifier, userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
-                user = maybeUserADM match {
-                    case Some(u) => u
-                    case None => {
-                        log.debug(s"getUserByIdentifier - supplied identifier not found - throwing exception")
-                        throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
-                    }
+        val userADMFuture = for {
+            maybeUserADM <- (responderManager ? UserGetADM(identifier = identifier, userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+            user = maybeUserADM match {
+                case Some(u) => u
+                case None => {
+                    log.debug(s"getUserByIdentifier - supplied identifier not found - throwing exception")
+                    throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
                 }
-                // _ = log.debug(s"getUserByIdentifier - user: $user")
-            } yield user
+            }
+            // _ = log.debug(s"getUserByIdentifier - user: $user")
+        } yield user
 
-            userADMFuture
-        } else {
-            throw BadCredentialsException(BAD_CRED_EMAIL_NOT_SUPPLIED)
-        }
+        userADMFuture
+
     }
 }
 

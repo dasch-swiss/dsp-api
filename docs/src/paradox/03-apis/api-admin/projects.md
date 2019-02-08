@@ -24,22 +24,22 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 **Project Operations:**
 - `GET:  /admin/projects` : return all projects
 - `POST: /admin/projects` : create a new project
-- `GET: /admin/projects/<identifier>` : returns a single project identified either through iri, shortname, or shortcode
-- `PUT: /admin/projects/<identifier>` : update a project identified by iri
-- `DELETE: /admin/projects/<identifier>` : update project status to false
+- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>` : returns a single project identified either through iri, shortname, or shortcode
+- `PUT: /admin/projects/iri/<identifier>` : update a project identified by iri
+- `DELETE: /admin/projects/iri/<identifier>` : update project status to false
 
 **Project Member Operations:**
-- `GET: /admin/projects/<identifier>/members` : returns all members part of a project identified through iri, shortname or shortcode
+- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/members` : returns all members part of a project identified through iri, shortname or shortcode
 
 **Project Admin Member Operations:**
-- `GET: /admin/projects/<identifier>/admin-members` : returns all admin members part of a project identified through iri, shortname or shortcode
+- `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/admin-members` : returns all admin members part of a project identified through iri, shortname or shortcode
 
 **Project Keyword Operations:**
 - `GET: /admin/projects/Keywords` : returns all unique keywords for all projects as a list
-- `GET: /admin/projects/<identifier>/Keywords` : returns all keywords for a single project
+- `GET: /admin/projects/iri/<identifier>/Keywords` : returns all keywords for a single project
 
 **Project Restricted View Settings Operations:**
-- `GET: /admin/projects/<identifier>/RestrictedViewSettings` : returns the project's restricted view settings
+- `GET: /admin/projects/iri/<identifier>/RestrictedViewSettings` : returns the project's restricted view settings
 
 
 ## Project Operations
@@ -58,18 +58,17 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - TypeScript Docs: projectFormats - CreateProjectApiRequestV1
   - POST: `/admin/projects/`
   - BODY:
-
-```JSON
-{
-  "shortname": "newproject",
-  "longname": "project longname",
-  "description": "project description",
-  "keywords": "keywords",
-  "logo": "/fu/bar/baz.jpg",
-  "status": true,
-  "selfjoin": false
-}
-```
+    ```JSON
+    {
+      "shortname": "newproject",
+      "longname": "project longname",
+      "description": "project description",
+      "keywords": "keywords",
+      "logo": "/fu/bar/baz.jpg",
+      "status": true,
+      "selfjoin": false
+    }
+    ```
 
 ### Update project information:
 
@@ -77,27 +76,26 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - Changeable information: shortname, longname, description,
     keywords, logo, status, selfjoin
   - TypeScript Docs: projectFormats - ChangeProjectApiRequestV1
-  - PUT: `/admin/projects/<projectIri>`
+  - PUT: `/admin/projects/iri/<projectIri>`
   - BODY:
-
-```JSON
-{
-  "shortname": "newproject",
-  "longname": "project longname",
-  "description": "project description",
-  "keywords": "keywords",
-  "logo": "/fu/bar/baz.jpg",
-  "status": true,
-  "selfjoin": false
-}
-```
+    ```JSON
+    {
+      "shortname": "newproject",
+      "longname": "project longname",
+      "description": "project description",
+      "keywords": "keywords",
+      "logo": "/fu/bar/baz.jpg",
+      "status": true,
+      "selfjoin": false
+    }
+    ```
 
 ### Delete project (update project status):
 
   - Required permission: SystemAdmin / ProjectAdmin
   - Remark: The same as updating a project and changing `status` to
     `false`. To un-delete, set `status` to `true`.
-  - DELETE: `/admin/projects/<projectIri>`
+  - DELETE: `/admin/projects/iri/<projectIri>`
   - BODY: empty
 
 
@@ -106,8 +104,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ### Get project members:
 
   - Required permission: SystemAdmin / ProjectAdmin
-  - Required information: project IRI
-  - GET: `/admin/projects/<projectIri>/members`
+  - Required information: project identifier
+  - GET: `/admin/projects/[iri | shortname | shortcode]/<identifier>/members`
 
 
 ## Project Admin Member Operations
@@ -115,8 +113,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ### Get project members:
 
   - Required permission: SystemAdmin / ProjectAdmin
-  - Required information: project IRI
-  - GET: `/admin/projects/<projectIri>/admin-members`
+  - Required information: project identifier
+  - GET: `/admin/projects/[iri | shortname | shortcode]/<identifier>/admin-members`
 
 
 ### Restricted View Settings Operations
@@ -128,8 +126,8 @@ Operates on the following properties:
 #### Get the restricted view settings:
 
   - Required permission: ProjectAdmin
-  - Required information: `identifier`. The `identifier` can be the project's IRI, shortocde or shortname.
-  - GET: `/admin/projects/<identifier>/RestrictedViewSettings`
+  - Required information: `identifier`. The `identifier` can be the project's IRI, shortname or shortcode.
+  - GET: `/admin/projects/[iri | shortname | shortcode]/<identifier>/RestrictedViewSettings`
 
 ## Example Data
 

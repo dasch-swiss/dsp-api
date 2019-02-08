@@ -176,11 +176,6 @@ case class UsersGetRequestADM(userInformationTypeADM: UserInformationTypeADM = U
 case class UserGetADM(identifier: UserIdentifierADM,
                       userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
                       requestingUser: UserADM) extends UsersResponderRequestADM {
-
-    // need either user IRI username, or email
-    if (identifier.isEmpty) {
-        throw BadRequestException("Need to provide the user IRI, username, and/or email.")
-    }
 }
 
 /**
@@ -193,11 +188,6 @@ case class UserGetADM(identifier: UserIdentifierADM,
 case class UserGetRequestADM(identifier: UserIdentifierADM,
                              userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
                              requestingUser: UserADM) extends UsersResponderRequestADM {
-
-    // need either user IRI, username, or email
-    if (identifier.isEmpty) {
-        throw BadRequestException("Need to provide the user IRI, username, and/or email.")
-    }
 }
 
 /**
@@ -567,7 +557,9 @@ case class UserADM(id: IRI,
         iriEquals || emailEquals || usernameEquals
     }
 
-    /* Is the user a member of the SystemAdmin group */
+    /**
+      *  Is the user a member of the SystemAdmin group
+      */
     def isSystemAdmin: Boolean = {
         permissions.groupsPerProject.getOrElse(OntologyConstants.KnoraBase.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraBase.SystemAdmin)
     }
@@ -693,6 +685,9 @@ object UserInformationTypeADM extends Enumeration {
     }
 }
 
+/**
+  * Represents the type of a user identifier.
+  */
 object UserIdentifierType extends Enumeration {
 
     type UserIdentifierType
@@ -707,28 +702,37 @@ object UserIdentifierType extends Enumeration {
   * Represents the user's identifier. It can be an IRI, email, or username.
   * @param value the user's identifier.
   */
-case class UserIdentifierADM(value: String)(implicit stringFormatter: StringFormatter) {
+case class UserIdentifierADM(iri: Option[IRI] = None,
+                             email: Option[String] = None,
+                             username: Option[String] = None) {
 
-    // throws an exception if an empty string is used as an identifier value
-    if (value.isEmpty) {
-        throw BadRequestException("Empty user identifier is not allowed.")
-    }
 
-    def nonEmpty: Boolean = value.nonEmpty
+    val parametersCount: Int = List(
+        iri,
+        email,
+        username
+    ).flatten.size
 
-    def isEmpty: Boolean = value.isEmpty
+    // something needs to be set
+    if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
+
+    if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
+
+    // squash and return value.
+    val value: String = List(
+        iri,
+        email,
+        username
+    ).flatten.head
 
     def hasType: UserIdentifierType.Value = {
 
-        if (stringFormatter.isKnoraUserIriStr(value)) {
+        if (iri.isDefined) {
             UserIdentifierType.IRI
-        } else if (stringFormatter.validateEmail(value).isDefined) {
+        } else if (email.isDefined) {
             UserIdentifierType.EMAIL
-        } else if (value.nonEmpty) {
-            UserIdentifierType.USERNAME
         } else {
-            // this can actually never happen
-            throw BadRequestException("Empty user identifier is not allowed.")
+            UserIdentifierType.USERNAME
         }
     }
 
@@ -736,44 +740,28 @@ case class UserIdentifierADM(value: String)(implicit stringFormatter: StringForm
       * Tries to return the value as an IRI.
       */
     def toIri: IRI = {
-        if (this.hasType == UserIdentifierType.IRI) {
-            stringFormatter.validateAndEscapeIri(value, throw DataConversionException(s"Could not convert $value to an IRI."))
-        } else {
-            throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.IRI' type.")
-        }
+        iri.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.IRI' type."))
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toIriOption: Option[IRI] = {
-        if (this.hasType == UserIdentifierType.IRI) {
-            Some(stringFormatter.validateAndEscapeIri(value, throw DataConversionException(s"Could not convert $value to an IRI.")))
-        } else {
-            None
-        }
+        iri
     }
 
     /**
       * Returns an optional value of the identifier.
       */
-    def toEmailOption: Option[IRI] = {
-        if (this.hasType == UserIdentifierType.EMAIL) {
-            Some(value)
-        } else {
-            None
-        }
+    def toEmailOption: Option[String] = {
+        email
     }
 
     /**
       * Returns an optional value of the identifier.
       */
-    def toUsernameOption: Option[IRI] = {
-        if (this.hasType == UserIdentifierType.USERNAME) {
-            Some(value)
-        } else {
-            None
-        }
+    def toUsernameOption: Option[String] = {
+        username
     }
 
 }

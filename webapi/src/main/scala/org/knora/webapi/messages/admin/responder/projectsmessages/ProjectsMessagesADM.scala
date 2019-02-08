@@ -461,12 +461,27 @@ case class ProjectADM(id: IRI,
   * Represents the project's identifier. It can be an IRI, shortcode or shortname.
   * @param value the user's identifier.
   */
-case class ProjectIdentifierADM(value: String)(implicit stringFormatter: StringFormatter) {
+case class ProjectIdentifierADM(iri: Option[IRI] = None,
+                                shortname: Option[String] = None,
+                                shortcode: Option[String] = None) {
 
-    // throws an exception if an empty string is used as an identifier value
-    if (value.isEmpty) {
-        throw BadRequestException("Empty project identifier is not allowed.")
-    }
+    val parametersCount: Int = List(
+        iri,
+        shortname,
+        shortcode
+    ).flatten.size
+
+    // something needs to be set
+    if (parametersCount == 0) throw BadRequestException("Empty project identifier is not allowed.")
+
+    if (parametersCount > 1) throw BadRequestException("Only one option allowed for project identifier.")
+
+    // squash and return value.
+    val value: String = List(
+        iri,
+        shortname,
+        shortcode
+    ).flatten.head
 
     def nonEmpty: Boolean = value.nonEmpty
 
@@ -474,9 +489,9 @@ case class ProjectIdentifierADM(value: String)(implicit stringFormatter: StringF
 
     def hasType: ProjectIdentifierType.Value = {
 
-        if (stringFormatter.isKnoraProjectIriStr(value)) {
+        if (iri.isDefined) {
             ProjectIdentifierType.IRI
-        } else if (stringFormatter.validateProjectShortcodeOption(value).isDefined) {
+        } else if (shortcode.isDefined) {
             ProjectIdentifierType.SHORTCODE
         } else {
             ProjectIdentifierType.SHORTNAME
@@ -487,46 +502,29 @@ case class ProjectIdentifierADM(value: String)(implicit stringFormatter: StringF
       * Tries to return the value as an IRI.
       */
     def toIri: IRI = {
-        if (this.hasType == ProjectIdentifierType.IRI) {
-            stringFormatter.validateAndEscapeIri(value, throw DataConversionException(s"Could not convert $value to an IRI."))
-        } else {
-            throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.IRI' type.")
-        }
+        iri.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.IRI' type."))
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toIriOption: Option[IRI] = {
-        if (this.hasType == ProjectIdentifierType.IRI) {
-            Some(stringFormatter.validateAndEscapeIri(value, throw DataConversionException(s"Could not convert $value to an IRI.")))
-        } else {
-            None
-        }
-    }
-
-    /**
-      * Returns an optional value of the identifier.
-      */
-    def toShortcodeOption: Option[String] = {
-        if (this.hasType == ProjectIdentifierType.SHORTCODE) {
-            stringFormatter.validateProjectShortcodeOption(value)
-        } else {
-            None
-        }
+        iri
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toShortnameOption: Option[String] = {
-        if (this.hasType == ProjectIdentifierType.SHORTNAME) {
-            Some(value)
-        } else {
-            None
-        }
+        shortname
     }
 
+    /**
+      * Returns an optional value of the identifier.
+      */
+    def toShortcodeOption: Option[String] = {
+        shortcode
+    }
 }
 
 
