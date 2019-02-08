@@ -1609,5 +1609,28 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             assert(updatedLastModificationDate == newModificationDate)
             aThingLastModificationDate = updatedLastModificationDate
         }
+
+        "mark a resource as deleted" in {
+            val deleteRequest = DeleteResourceRequestV2(
+                resourceIri = aThingIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeDeleteComment = Some("This resource is too boring."),
+                maybeLastModificationDate = Some(aThingLastModificationDate),
+                requestingUser = SharedTestDataADM.anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! deleteRequest
+
+            expectMsgType[SuccessResponseV2]
+
+            // We should now be unable to request the resource.
+
+            responderManager ! ResourcesGetRequestV2(resourceIris = Seq(aThingIri), requestingUser = SharedTestDataADM.anythingUser1)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
     }
 }

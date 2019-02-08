@@ -237,7 +237,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     )
                 }
             }
-
         } ~ path("v2" / "tei" / Segment) { resIri: String =>
             get {
                 requestContext => {
@@ -276,7 +275,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     )
                 }
             }
-
         } ~ path("v2" / "graph" / Segment) { resIriStr: String =>
             get {
                 requestContext => {
@@ -321,6 +319,36 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         log,
                         RouteUtilV2.getOntologySchema(requestContext)
                     )
+                }
+            }
+        } ~ path ("v2" / "resources" / "delete") {
+            post {
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessageFuture: Future[DeleteResourceRequestV2] = for {
+                            requestingUser <- getUserADM(requestContext)
+                            requestMessage: DeleteResourceRequestV2 <- DeleteResourceRequestV2.fromJsonLD(
+                                requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                storeManager = storeManager,
+                                settings = settings,
+                                log = log
+                            )
+                        } yield requestMessage
+
+                        RouteUtilV2.runRdfRouteWithFuture(
+                            requestMessageFuture,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            ApiV2WithValueObjects
+                        )
+                    }
                 }
             }
         }
