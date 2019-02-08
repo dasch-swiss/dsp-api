@@ -558,7 +558,12 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
     def fromJsonLDSync(jsonLDDocument: JsonLDDocument, requestingUser: UserADM, apiRequestID: UUID): UpdateResourceMetadataRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val resourceIri: IRI = jsonLDDocument.getIDAsKnoraDataIri.toString
+        val resourceIri: SmartIri = jsonLDDocument.getIDAsKnoraDataIri
+
+        if (!resourceIri.isKnoraResourceIri) {
+            throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+        }
+
         val resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
 
         val maybeLastModificationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
@@ -581,12 +586,88 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
         }
 
         UpdateResourceMetadataRequestV2(
-            resourceIri = resourceIri,
+            resourceIri = resourceIri.toString,
             resourceClassIri = resourceClassIri,
             maybeLastModificationDate = maybeLastModificationDate,
             maybeLabel = maybeLabel,
             maybePermissions = maybePermissions,
             maybeNewModificationDate = maybeNewModificationDate,
+            requestingUser = requestingUser,
+            apiRequestID = apiRequestID
+        )
+    }
+}
+
+/**
+  * Represents a request to mark a resource as deleted.
+  *
+  * @param resourceIri               the IRI of the resource.
+  * @param resourceClassIri          the IRI of the resource class.
+  * @param maybeDeleteComment        a comment explaining why the resource is being marked as deleted.
+  * @param maybeLastModificationDate the resource's last modification date, if any.
+  */
+case class DeleteResourceRequestV2(resourceIri: IRI,
+                                   resourceClassIri: SmartIri,
+                                   maybeDeleteComment: Option[String] = None,
+                                   maybeLastModificationDate: Option[Instant] = None,
+                                   requestingUser: UserADM,
+                                   apiRequestID: UUID) extends ResourcesResponderRequestV2
+
+object DeleteResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteResourceRequestV2] {
+    /**
+      * Converts JSON-LD input into an instance of [[DeleteResourceRequestV2]].
+      *
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
+      * @param settings         the application settings.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a case class instance representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            requestingUser: UserADM,
+                            responderManager: ActorRef,
+                            storeManager: ActorRef,
+                            settings: SettingsImpl,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteResourceRequestV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                requestingUser = requestingUser,
+                apiRequestID = apiRequestID
+            )
+        }
+    }
+
+    def fromJsonLDSync(jsonLDDocument: JsonLDDocument, requestingUser: UserADM, apiRequestID: UUID): DeleteResourceRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val resourceIri: SmartIri = jsonLDDocument.getIDAsKnoraDataIri
+
+        if (!resourceIri.isKnoraResourceIri) {
+            throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+        }
+
+        val resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+
+        val maybeLastModificationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
+            key = OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
+            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+            validationFun = stringFormatter.toInstant
+        )
+
+        val maybeDeleteComment: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DeleteComment, stringFormatter.toSparqlEncodedString)
+
+        DeleteResourceRequestV2(
+            resourceIri = resourceIri.toString,
+            resourceClassIri = resourceClassIri,
+            maybeDeleteComment = maybeDeleteComment,
+            maybeLastModificationDate = maybeLastModificationDate,
             requestingUser = requestingUser,
             apiRequestID = apiRequestID
         )
