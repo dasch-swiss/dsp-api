@@ -188,5 +188,26 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
             )
 
         }
+
+        "check whether a user identified by email is the same is a user identified by username" in {
+            val userEmail = "user@example.org"
+            val username = "user"
+
+            val user = UserADM(
+                id = "http://example.org/user",
+                username = username,
+                email = userEmail,
+                givenName = "Foo",
+                familyName = "Bar",
+                status = true,
+                lang = "en"
+            )
+
+            val emailID = UserIdentifierADM(userEmail)
+            val usernameID = UserIdentifierADM(username)
+
+            assert(user.isSelf(emailID))
+            assert(user.isSelf(usernameID))
+        }
     }
 }
