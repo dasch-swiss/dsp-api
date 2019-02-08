@@ -560,35 +560,11 @@ case class UserADM(id: IRI,
       */
     def isSelf(identifier: UserIdentifierADM): Boolean = {
 
-        val iriEquals = if (identifier.toIriOption.isDefined) {
-            if (identifier.toIri equals id ) {
-                true
-            } else {
-                false
-            }
-        }
+        val iriEquals = identifier.toIriOption.contains(id)
+        val emailEquals = identifier.toEmailOption.contains(email)
+        val usernameEquals = identifier.toUsernameOption.contains(id)
 
-        val emailEquals = if (identifier.toEmailOption.isDefined) {
-            if (identifier.toEmailOption.get equals email) {
-                true
-            } else {
-                false
-            }
-        }
-
-        val usernameEquals = if (identifier.toUsernameOption.isDefined) {
-            if (identifier.toUsernameOption.get equals id ) {
-                true
-            } else {
-                false
-            }
-        }
-
-        if (iriEquals == true || emailEquals == true || usernameEquals == true) {
-            true
-        } else {
-            false
-        }
+        iriEquals || emailEquals || usernameEquals
     }
 
     /* Is the user a member of the SystemAdmin group */

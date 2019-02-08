@@ -69,6 +69,18 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
         "allow checking the password (2)" in {
             SharedTestDataADM.rootUser.passwordMatch("test") should equal(true)
         }
+
+        "return isSelf for IRI" in {
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(SharedTestDataADM.rootUser.id))
+        }
+
+        "return isSelf for email" in {
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(SharedTestDataADM.rootUser.email))
+        }
+
+        "return isSelf for username" in {
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(SharedTestDataADM.rootUser.username))
+        }
     }
 
     "The CreateUserApiRequestADM case class" should {
