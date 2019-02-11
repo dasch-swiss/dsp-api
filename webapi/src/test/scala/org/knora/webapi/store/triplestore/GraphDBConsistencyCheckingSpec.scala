@@ -1405,7 +1405,7 @@ object GraphDBConsistencyCheckingSpec {
           |    GRAPH ?dataNamedGraph {
           |        ?resource rdf:type ?resourceClass ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
-          |            knora-base:lastModificationDate "2016-01-23T11:31:24Z"^^xsd:dateTimeStamp ;
+          |            knora-base:lastModificationDate "2016-01-23T11:31:24Z"^^xsd:dateTime ;
           |			   knora-base:lastModificationDate ?currentTime ;
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;

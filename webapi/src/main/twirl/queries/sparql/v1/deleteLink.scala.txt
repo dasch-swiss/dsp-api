@@ -75,8 +75,8 @@ INSERT {
             rdf:object ?linkTarget ;
             knora-base:valueHasString "@linkUpdate.linkTargetIri"^^xsd:string ;
             knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
-            knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp ;
-            knora-base:deleteDate "@currentTime"^^xsd:dateTimeStamp ;
+            knora-base:valueCreationDate "@currentTime"^^xsd:dateTime ;
+            knora-base:deleteDate "@currentTime"^^xsd:dateTime ;
             knora-base:previousValue ?currentLinkValue ;
             @maybeComment match {
                 case Some(comment) => {
@@ -98,7 +98,7 @@ INSERT {
         ?linkSource ?linkValueProperty ?newLinkValue .
 
         @* Update the link source's last modification date. *@
-        ?linkSource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?linkSource knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
