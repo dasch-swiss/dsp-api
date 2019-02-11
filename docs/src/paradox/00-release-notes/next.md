@@ -12,3 +12,4 @@ Also, please change the **HINT** to the appropriate level:
 ## HINT => MAJOR CHANGE
 
 - MAJOR: Use HTTP POST to mark resources and values as deleted (@github[#1203](#1203))
+- MAJOR: Change all `xsd:dateTimeStamp` to `xsd:dateTime` in the triplestore (@github[#1211](#1211))
