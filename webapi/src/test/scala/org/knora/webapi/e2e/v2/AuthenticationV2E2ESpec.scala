@@ -78,7 +78,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
 
         "authenticate with correct email and password" in {
             /* Correct username and password */
-            val request = Get(baseApiUrl + s"/v2/authentication?email=$rootUsernameEnc&password=$testPass")
+            val request = Get(baseApiUrl + s"/v2/authentication?email=$rootEmailEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)
@@ -393,7 +393,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val params =
                 s"""
                    |{
-                   |    "identifier": "$rootEmail",
+                   |    "email": "$rootEmail",
                    |    "password": "$testPass"
                    |}
                 """.stripMargin
@@ -414,7 +414,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
 
         "allow access using URL parameters with token from v2" in {
             /* Correct token */
-            val request = Get(baseApiUrl + s"/admin/users/$rootIriEnc?token=${token.get}")
+            val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
             val response = singleAwaitingRequest(request)
             // log.debug(response.toString())
             assert(response.status === StatusCodes.OK)
@@ -422,7 +422,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
 
         "fail with authentication using URL parameters with wrong token" in {
             /* Wrong token */
-            val request = Get(baseApiUrl + s"/admin/users/$rootIriEnc?token=wrong")
+            val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=wrong")
 
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
@@ -431,7 +431,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
 
         "allow access using HTTP Bearer Auth header with token from v2" in {
             /* Correct token */
-            val request = Get(baseApiUrl + s"/admin/users/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
+            val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
@@ -439,14 +439,14 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
 
         "fail with authentication using HTTP Bearer Auth header with wrong token " in {
             /* Wrong token */
-            val request = Get(baseApiUrl + s"/admin/users/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
+            val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
         }
 
         "not return sensitive information (token, password) in the response " in {
-            val request = Get(baseApiUrl + s"/admin/users/$rootIriEnc?token=${token.get}")
+            val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             // assert(status === StatusCodes.OK)

@@ -141,7 +141,7 @@ trait Authenticator {
                |            <h1>Knora Login</h1>
                |            <form name="myform" action="${apiUrl}/v2/login" method="post">
                |                <p>
-               |                    <input type="text" name="identifier" value="" placeholder="Username or Email">
+               |                    <input type="text" name="username" value="" placeholder="Username">
                |                </p>
                |                <p>
                |                    <input type="password" name="password" value="" placeholder="Password">
@@ -496,18 +496,23 @@ object Authenticator {
 
         val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
 
+        log.debug("extractCredentialsFromParametersV2 - params: {}", params)
+
         // check for iri, email, or username parameters
         val maybeIriIdentifier: Option[String] = params.get("iri").map(_.head)
         val maybeEmailIdentifier: Option[String] = params.get("email").map(_.head)
         val maybeUsernameIdentifier: Option[String] = params.get("username").map(_.head)
         val maybeIdentifier: Option[String] = List(maybeIriIdentifier, maybeEmailIdentifier, maybeUsernameIdentifier).flatten.headOption
-        val maybePassword: Option[String] = params get "password" map (_.head)
+        log.debug("extractCredentialsFromParametersV2 - maybeIdentifier: {}", maybeIdentifier)
+
+        val maybePassword: Option[String] = params.get("password").map(_.head)
+        log.debug("extractCredentialsFromParametersV2 - maybePassword: {}", maybePassword)
 
         val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty) {
             Some(
                 KnoraPasswordCredentialsV2(
                     UserIdentifierADM(
-                        iri = maybeIdentifier,
+                        iri = maybeIriIdentifier,
                         email = maybeEmailIdentifier,
                         username = maybeUsernameIdentifier
                     ),
@@ -525,6 +530,9 @@ object Authenticator {
         } else {
             None
         }
+
+        log.debug("extractCredentialsFromParametersV2 - maybePassCreds: {}", maybePassCreds)
+        log.debug("extractCredentialsFromParametersV2 - maybeTokenCreds: {}", maybeTokenCreds)
 
         // prefer password credentials
         if (maybePassCreds.nonEmpty) {

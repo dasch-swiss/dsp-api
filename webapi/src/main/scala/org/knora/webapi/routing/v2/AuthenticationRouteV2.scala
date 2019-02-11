@@ -48,7 +48,16 @@ class AuthenticationRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeD
                 entity(as[LoginApiRequestPayloadV2]) { apiRequest =>
                     requestContext =>
                         requestContext.complete {
-                            doLoginV2(KnoraPasswordCredentialsV2(UserIdentifierADM(value = apiRequest.identifier), apiRequest.password))
+                            doLoginV2(
+                                KnoraPasswordCredentialsV2(
+                                    UserIdentifierADM(
+                                        iri = apiRequest.iri,
+                                        email = apiRequest.email,
+                                        username = apiRequest.username
+                                    ),
+                                    password = apiRequest.password
+                                )
+                            )
                         }
                 }
             } ~
@@ -68,10 +77,17 @@ class AuthenticationRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeD
                 }
             } ~
             post { // called by html login interface (necessary for IIIF Authentication API support)
-                formFields('identifier, 'password) { (identifier, password) =>
+                formFields('username, 'password) { (username, password) =>
                     requestContext => {
                         requestContext.complete {
-                            doLoginV2(KnoraPasswordCredentialsV2(UserIdentifierADM(value = identifier), password))
+                            doLoginV2(
+                                KnoraPasswordCredentialsV2(
+                                    UserIdentifierADM(
+                                    username = Some(username)
+                                ),
+                                password = password
+                            )
+                            )
                         }
                     }
                 }
