@@ -2518,7 +2518,12 @@
 ### http://www.knora.org/ontology/0801/beol#StandoffExpansionMarkerTag
 :StandoffExpansionMarkerTag rdf:type owl:Class ;
 
-            rdfs:subClassOf knora-base:StandoffTag ;
+            rdfs:subClassOf knora-base:StandoffTag ,
+            [
+                 rdf:type owl:Restriction ;
+                 owl:onProperty :standoffTagUnsureAttribute ;
+                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
+            ] ;
 
             rdfs:comment "identifies an expansion marker in a text"@en .
 
@@ -2566,7 +2571,12 @@
 ### http://www.knora.org/ontology/0801/beol#StandoffInterventionMarkerTag
 :StandoffInterventionMarkerTag rdf:type owl:Class ;
 
-            rdfs:subClassOf knora-base:StandoffTag ;
+            rdfs:subClassOf knora-base:StandoffTag ,
+            [
+              rdf:type owl:Restriction ;
+              owl:onProperty :standoffTagUnsureAttribute ;
+              owl:maxCardinality "1"^^xsd:nonNegativeInteger
+            ] ;
 
             rdfs:comment "represents an editorial intervention in a text"@en .
 
