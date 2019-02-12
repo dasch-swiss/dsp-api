@@ -170,7 +170,6 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
 
         "return the identifier type" in {
 
-            // FIXME: not working!!!
             val iriIdentifier = UserIdentifierADM(iri = Some("http://rdfh.ch/users/root"))
             iriIdentifier.hasType should be (UserIdentifierType.IRI)
 

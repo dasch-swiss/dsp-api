@@ -552,7 +552,7 @@ case class UserADM(id: IRI,
 
         val iriEquals = identifier.toIriOption.contains(id)
         val emailEquals = identifier.toEmailOption.contains(email)
-        val usernameEquals = identifier.toUsernameOption.contains(id)
+        val usernameEquals = identifier.toUsernameOption.contains(username)
 
         iriEquals || emailEquals || usernameEquals
     }
