@@ -103,7 +103,7 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
 
                 case 1 => {
                     for {
-                        maybeRVSettings <- (responderManager ? ProjectRestrictedViewSettingsGetADM(ProjectIdentifierADM(request.projectID), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectRestrictedViewSettingsADM]]
+                        maybeRVSettings <- (responderManager ? ProjectRestrictedViewSettingsGetADM(ProjectIdentifierADM(shortcode = Some(request.projectID)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectRestrictedViewSettingsADM]]
 
                     } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)
                 }
