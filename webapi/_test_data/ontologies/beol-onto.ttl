@@ -41,8 +41,6 @@
        rdfs:comment """Titel"""@de ,
                     """Title"""@en;
 
-       knora-base:subjectClassConstraint :writtenSource ;
-
        knora-base:objectClassConstraint knora-base:TextValue ;
 
        salsah-gui:guiElement salsah-gui:SimpleText ;
@@ -1967,7 +1965,19 @@
 
 :manuscriptEntry rdf:type owl:Class ;
 
-        rdfs:subClassOf :writtenSource ;
+        rdfs:subClassOf knora-base:Resource ,
+        [
+            rdf:type owl:Restriction ;
+            owl:onProperty :title ;
+            owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+        ],
+        [
+            rdf:type owl:Restriction ;
+            owl:onProperty :hasText ;
+            owl:cardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+        ];
 
         rdfs:label "Eintrag in einem Manuskript"@de ,
                    "Entry in a manuscript"@en ;
