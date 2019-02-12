@@ -2236,7 +2236,11 @@
 
 :StandoffGapTag rdf:type owl:Class ;
 
-                 rdfs:subClassOf knora-base:StandoffTag ;
+                 rdfs:subClassOf knora-base:StandoffTag ,
+                 [ rdf:type owl:Restriction ;
+                   owl:onProperty :standoffTagUnsureAttribute ;
+                   owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                 ] ;
 
                  rdfs:comment "Gap in the manuscript"@en .
 
@@ -2548,6 +2552,16 @@
 
                 knora-base:objectDatatypeConstraint xsd:boolean .
 
+###  http://www.knora.org/ontology/0801/beol#standoffTagUnsureAttribute
+:standoffTagUnsureAttribute rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                rdfs:comment "standoff tag annotation is unsure"@en ;
+
+                knora-base:subjectClassConstraint knora-base:StandoffTag ;
+
+                knora-base:objectDatatypeConstraint xsd:boolean .
 
 ### http://www.knora.org/ontology/0801/beol#StandoffInterventionMarkerTag
 :StandoffInterventionMarkerTag rdf:type owl:Class ;
