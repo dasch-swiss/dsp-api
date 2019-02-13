@@ -23,7 +23,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 **User Operations:**
 - `GET: /admin/users` : return all users
-- `GET: /admin/users/[iri | email | username]/<userIri>` : return single user identified by [IRI | email | username]
+- `GET: /admin/users/[iri | email | username]/<identifier>` : return single user identified by [IRI | email | username]
 - `POST: /admin/users/` : create new user
 - `PUT: /admin/users/iri/<userIri>/BasicUserInformation` : update user's basic user information
 - `PUT: /admin/users/iri/<userIri>/Password` : update user's password
@@ -58,7 +58,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ### Get user
 
   - Required permission: SystemAdmin / self
-  - GET:`/admin/users/[iri | email | username ]/<userIri>`
+  - GET:`/admin/users/[iri | email | username ]/<identifier>`
 
 ### Create user
 
