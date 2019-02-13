@@ -1562,7 +1562,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @param iri the IRI to be checked.
       */
     def isKnoraDataIriStr(iri: IRI): Boolean = {
-        isIri(iri) && DataIriStarts.exists(startStr => iri.startsWith(startStr))
+        DataIriStarts.exists(startStr => iri.startsWith(startStr))
     }
 
     /**

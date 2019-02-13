@@ -558,7 +558,7 @@ case class UserADM(id: IRI,
     }
 
     /**
-      *  Is the user a member of the SystemAdmin group
+      * Is the user a member of the SystemAdmin group
       */
     def isSystemAdmin: Boolean = {
         permissions.groupsPerProject.getOrElse(OntologyConstants.KnoraBase.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraBase.SystemAdmin)
@@ -726,11 +726,14 @@ object UserIdentifierADM {
 
 /**
   * Represents the user's identifier. It can be an IRI, email, or username.
-  * @param value the user's identifier.
+  *
+  * @param maybeIri      the user's IRI.
+  * @param maybeEmail    the user's email.
+  * @param maybeUsername the user's username.
   */
-class UserIdentifierADM private (maybeIri: Option[IRI] = None,
-                                 maybeEmail: Option[String] = None,
-                                 maybeUsername: Option[String] = None) {
+class UserIdentifierADM private(maybeIri: Option[IRI] = None,
+                                maybeEmail: Option[String] = None,
+                                maybeUsername: Option[String] = None) {
 
     // squash and return value.
     val value: String = List(
