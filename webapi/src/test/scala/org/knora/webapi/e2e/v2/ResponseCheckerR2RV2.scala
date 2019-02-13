@@ -163,7 +163,8 @@ object ResponseCheckerR2RV2 {
         val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
         // make sure the indicated amount of results is correct
-        assert(receivedJsonLDDocument.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt].value == expectedNumber, s"$numberOfItemsMember is incorrect.")
+        val receivedNumber = receivedJsonLDDocument.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt].value
+        assert(receivedNumber == expectedNumber, s"$numberOfItemsMember is incorrect (expected $expectedNumber, received $receivedNumber)")
 
     }
 
