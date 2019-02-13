@@ -96,8 +96,11 @@ CONSTRUCT {
     }
 
     OPTIONAL {
-        ?resource knora-base:deleteDate ?deleteDate ;
-            knora-base:deleteComment ?deleteComment .
+        ?resource knora-base:deleteDate ?deleteDate .
+    }
+
+    OPTIONAL {
+        ?resource knora-base:deleteComment ?deleteComment .
     }
 
     @* Check if this a full resource requests *@
@@ -151,8 +154,11 @@ CONSTRUCT {
                 }
 
                 OPTIONAL {
-                    ?referredResource knora-base:deleteDate ?referredResourceDeleteDate ;
-                        knora-base:deleteComment ?referredResourceDeleteComment .
+                    ?referredResource knora-base:deleteDate ?referredResourceDeleteDate .
+                }
+
+                OPTIONAL {
+                    ?referredResource knora-base:deleteComment ?referredResourceDeleteComment .
                 }
             }
         }
