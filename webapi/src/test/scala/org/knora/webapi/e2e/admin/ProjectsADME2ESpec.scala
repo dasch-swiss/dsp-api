@@ -57,10 +57,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")
     private val projectIri = SharedTestDataADM.imagesProject.id
     private val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
-    private val projectShortName = SharedTestDataADM.imagesProject.shortname
-    private val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
+    private val projectShortname = SharedTestDataADM.imagesProject.shortname
     private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
-    private val projectShortcodeEnc = java.net.URLEncoder.encode(projectShortcode, "utf-8")
 
     "The Projects Route ('admin/projects')" when {
 
@@ -87,14 +85,14 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return the information for a single project identified by shortname" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortnameEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
 
             "return the information for a single project identified by shortcode" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcodeEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -298,7 +296,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return all members of a project identified by shortname" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortnameEnc/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -308,7 +306,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
            "return all members of a project identified by shortcode" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcodeEnc/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -328,7 +326,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return all admin members of a project identified by shortname" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortnameEnc/admin-members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/admin-members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -338,7 +336,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return all admin members of a project identified by shortcode" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcodeEnc/admin-members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/admin-members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)

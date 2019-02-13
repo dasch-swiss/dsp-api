@@ -1043,6 +1043,15 @@ class StringFormatterSpec extends CoreSpec() {
 
     "The StringFormatter class for User and Project" should {
 
+        "validate project shortname" in {
+            stringFormatter.validateAndEscapeProjectShortname("images", throw AssertionException("not valid")) should be("images")
+
+            // to short
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeProjectShortname("abc", throw AssertionException("not valid"))
+            }
+        }
+
         "validate project shortcode" in {
             stringFormatter.validateProjectShortcode("00FF", throw AssertionException("not valid")) should be("00FF")
             stringFormatter.validateProjectShortcode("00ff", throw AssertionException("not valid")) should be("00FF")

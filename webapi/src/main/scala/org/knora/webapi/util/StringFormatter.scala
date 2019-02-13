@@ -794,7 +794,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * - Only contains alphanumeric characters.
       */
     private val ProjectShortnameRegex: Regex =
-        """^(?=.{4,50}$)[a-zA-Z0-9]$""".r
+        """^(?=.{4,50}$)[a-zA-Z0-9]+$""".r
 
     /**
       * The information that is stored about non-Knora IRIs.
