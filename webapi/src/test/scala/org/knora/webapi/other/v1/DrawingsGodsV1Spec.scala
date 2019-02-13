@@ -17,7 +17,6 @@ package org.knora.webapi.other.v1
 
 import java.util.UUID
 
-import arq.iri
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM}

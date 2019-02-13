@@ -22,7 +22,6 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import arq.iri
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}

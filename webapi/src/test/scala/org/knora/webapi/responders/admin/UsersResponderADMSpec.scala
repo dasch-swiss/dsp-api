@@ -28,7 +28,6 @@ import java.util.UUID
 import akka.actor.{ActorRef, ActorSystem}
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import arq.iri
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}

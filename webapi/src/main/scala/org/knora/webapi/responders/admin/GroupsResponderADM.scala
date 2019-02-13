@@ -23,7 +23,6 @@ import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import arq.iri
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}

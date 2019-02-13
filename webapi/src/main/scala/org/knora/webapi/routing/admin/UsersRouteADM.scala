@@ -23,7 +23,6 @@ import java.util.UUID
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import arq.iri
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.annotation.ApiMayChange

@@ -28,7 +28,6 @@ import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
-import arq.iri
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._

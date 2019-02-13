@@ -19,7 +19,6 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import arq.iri
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
 import org.knora.webapi.util.StringFormatter
