@@ -23,6 +23,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import arq.iri
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
@@ -555,7 +556,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       */
     private def userProjectMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[ProjectADM]] = {
         for {
-            maybeUser <- userGetADM(identifier = UserIdentifierADM(iri = Some(userIri)), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeUser <- userGetADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             result = maybeUser match {
                 case Some(userADM) => userADM.projects
                 case None => Seq.empty[ProjectADM]
@@ -949,7 +950,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     private def userGroupMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[GroupADM]] = {
 
         for {
-            maybeUserADM: Option[UserADM] <- userGetADM(identifier = UserIdentifierADM(iri = Some(userIri)), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeUserADM: Option[UserADM] <- userGetADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             groups: Seq[GroupADM] = maybeUserADM match {
                 case Some(user) => user.groups
                 case None => Seq.empty[GroupADM]
@@ -1177,7 +1178,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             _ = invalidateCachedUserADM(Some(userIri), userUpdatePayload.email)
 
             /* Verify that the user was updated. */
-            maybeUpdatedUserADM <- userGetADM(identifier = UserIdentifierADM(iri = Some(userIri)), requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL)
+            maybeUpdatedUserADM <- userGetADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL)
             updatedUserADM = maybeUpdatedUserADM.getOrElse(throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
 
             //_ = log.debug(s"apiUpdateRequest: $apiUpdateRequest /  updatedUserdata: $updatedUserData")

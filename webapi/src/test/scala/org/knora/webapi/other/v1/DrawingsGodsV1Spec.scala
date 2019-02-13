@@ -70,13 +70,13 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         val ddd2 = new MutableUserADM
 
         "retrieve the drawings gods user's profile" in {
-            responderManager ! UserGetADM(UserIdentifierADM(iri = Some(rootUserIri)), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            responderManager ! UserGetADM(UserIdentifierADM(maybeIri = Some(rootUserIri)), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             rootUser.set(expectMsgType[Option[UserADM]](timeout).get)
 
-            responderManager ! UserGetADM(UserIdentifierADM(iri = Some(ddd1UserIri)), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            responderManager ! UserGetADM(UserIdentifierADM(maybeIri = Some(ddd1UserIri)), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             ddd1.set(expectMsgType[Option[UserADM]](timeout).get)
 
-            responderManager ! UserGetADM(UserIdentifierADM(iri = Some(ddd2UserIri)), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            responderManager ! UserGetADM(UserIdentifierADM(maybeIri = Some(ddd2UserIri)), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             ddd2.set(expectMsgType[Option[UserADM]](timeout).get)
         }
 

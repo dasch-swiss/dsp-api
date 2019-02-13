@@ -458,23 +458,39 @@ case class ProjectADM(id: IRI,
 }
 
 /**
+  * The ProjectIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
+  * validated and escaped.
+  */
+object ProjectIdentifierADM {
+    def apply(iri: Option[IRI] = None,
+              shortname: Option[String] = None,
+              shortcode: Option[String] = None)(implicit sf: StringFormatter): ProjectIdentifierADM = {
+
+        val parametersCount: Int = List(
+            iri,
+            shortname,
+            shortcode
+        ).flatten.size
+
+        // something needs to be set
+        if (parametersCount == 0) throw BadRequestException("Empty project identifier is not allowed.")
+
+        if (parametersCount > 1) throw BadRequestException("Only one option allowed for project identifier.")
+
+        new ProjectIdentifierADM(
+            iri = sf.validateAndEscapeOptionalProjectIri(iri, throw BadRequestException(s"Invalid user project $iri")),
+            shortname = sf.validateAndEscapeOptionalProjectShortname(shortname, throw BadRequestException(s"Invalid user project shortname $shortname")),
+            shortcode = sf.validateAndEscapeOptionalProjectShortcode(shortcode, throw BadRequestException(s"Invalid user project shortcode $shortcode")))
+    }
+}
+
+/**
   * Represents the project's identifier. It can be an IRI, shortcode or shortname.
   * @param value the user's identifier.
   */
-case class ProjectIdentifierADM(iri: Option[IRI] = None,
-                                shortname: Option[String] = None,
-                                shortcode: Option[String] = None) {
-
-    val parametersCount: Int = List(
-        iri,
-        shortname,
-        shortcode
-    ).flatten.size
-
-    // something needs to be set
-    if (parametersCount == 0) throw BadRequestException("Empty project identifier is not allowed.")
-
-    if (parametersCount > 1) throw BadRequestException("Only one option allowed for project identifier.")
+class ProjectIdentifierADM private (iri: Option[IRI] = None,
+                                    shortname: Option[String] = None,
+                                    shortcode: Option[String] = None) {
 
     // squash and return value.
     val value: String = List(
@@ -482,10 +498,6 @@ case class ProjectIdentifierADM(iri: Option[IRI] = None,
         shortname,
         shortcode
     ).flatten.head
-
-    def nonEmpty: Boolean = value.nonEmpty
-
-    def isEmpty: Boolean = value.isEmpty
 
     def hasType: ProjectIdentifierType.Value = {
 

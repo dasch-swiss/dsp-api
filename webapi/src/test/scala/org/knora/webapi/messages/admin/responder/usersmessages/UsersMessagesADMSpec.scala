@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
+import arq.iri
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
 import org.knora.webapi.util.StringFormatter
@@ -71,15 +72,15 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
         }
 
         "return isSelf for IRI" in {
-            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(iri = Some(SharedTestDataADM.rootUser.id)))
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(maybeIri = Some(SharedTestDataADM.rootUser.id)))
         }
 
         "return isSelf for email" in {
-            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(email = Some(SharedTestDataADM.rootUser.email)))
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(maybeEmail = Some(SharedTestDataADM.rootUser.email)))
         }
 
         "return isSelf for username" in {
-            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(username = Some(SharedTestDataADM.rootUser.username)))
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(maybeUsername = Some(SharedTestDataADM.rootUser.username)))
         }
     }
 
@@ -170,22 +171,14 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
 
         "return the identifier type" in {
 
-            val iriIdentifier = UserIdentifierADM(iri = Some("http://rdfh.ch/users/root"))
+            val iriIdentifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/root"))
             iriIdentifier.hasType should be (UserIdentifierType.IRI)
 
-            val emailIdentifier = UserIdentifierADM(email = Some("root@example.com"))
+            val emailIdentifier = UserIdentifierADM(maybeEmail = Some("root@example.com"))
             emailIdentifier.hasType should be (UserIdentifierType.EMAIL)
 
-            val usernameIdentifier = UserIdentifierADM(username = Some("root"))
+            val usernameIdentifier = UserIdentifierADM(maybeUsername = Some("root"))
             usernameIdentifier.hasType should be (UserIdentifierType.USERNAME)
-        }
-
-        "throw a BadRequestException for an empty identifier" in {
-
-            assertThrows[BadRequestException](
-                UserIdentifierADM()
-            )
-
         }
 
         "check whether a user identified by email is the same as a user identified by username" in {
@@ -193,7 +186,7 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
             val username = "user"
 
             val user = UserADM(
-                id = "http://example.org/user",
+                id = "http://rdfh.ch/users/example",
                 username = username,
                 email = userEmail,
                 givenName = "Foo",
@@ -202,11 +195,38 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
                 lang = "en"
             )
 
-            val emailID = UserIdentifierADM(email = Some(userEmail))
-            val usernameID = UserIdentifierADM(username = Some(username))
+            val emailID = UserIdentifierADM(maybeEmail = Some(userEmail))
+            val usernameID = UserIdentifierADM(maybeUsername = Some(username))
 
             assert(user.isSelf(emailID))
             assert(user.isSelf(usernameID))
         }
+
+        "throw a BadRequestException for an empty identifier" in {
+            assertThrows[BadRequestException](
+                UserIdentifierADM()
+            )
+        }
+
+        "throw a BadRequestException for an invalid user IRI" in {
+            assertThrows[BadRequestException](
+                UserIdentifierADM(maybeIri = Some("http://example.org/not/our/user/iri/structure"))
+            )
+        }
+
+        "throw a BadRequestException for an invalid email" in {
+            assertThrows[BadRequestException](
+                UserIdentifierADM(maybeEmail = Some("invalidemail"))
+            )
+        }
+
+        "throw a BadRequestException for an invalid username" in {
+            assertThrows[BadRequestException](
+                // we allow max 50 characters in username
+                UserIdentifierADM(maybeEmail = Some("_username"))
+            )
+        }
+
+
     }
 }

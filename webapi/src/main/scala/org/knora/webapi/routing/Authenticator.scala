@@ -28,6 +28,7 @@ import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
+import arq.iri
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -512,9 +513,9 @@ object Authenticator {
             Some(
                 KnoraPasswordCredentialsV2(
                     UserIdentifierADM(
-                        iri = maybeIriIdentifier,
-                        email = maybeEmailIdentifier,
-                        username = maybeUsernameIdentifier
+                        maybeIri = maybeIriIdentifier,
+                        maybeEmail = maybeEmailIdentifier,
+                        maybeUsername = maybeUsernameIdentifier
                     ),
                     maybePassword.get
                 )
@@ -593,7 +594,7 @@ object Authenticator {
                 }
 
                 val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeEmail.nonEmpty && maybePassword.nonEmpty) {
-                    Some(KnoraPasswordCredentialsV2(UserIdentifierADM(email = maybeEmail), maybePassword.get))
+                    Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = maybeEmail), maybePassword.get))
                 } else {
                     None
                 }
@@ -659,7 +660,7 @@ object Authenticator {
                         }
                     }
                     // log.debug("getUserADMThroughCredentialsV2 - used token")
-                    getUserByIdentifier(UserIdentifierADM(iri = Some(userIri)))
+                    getUserByIdentifier(UserIdentifierADM(maybeIri = Some(userIri)))
                 }
                 case Some(sessionCreds: KnoraSessionCredentialsV2) => {
                     val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionCreds.token, settings.jwtSecretKey) match {
@@ -670,7 +671,7 @@ object Authenticator {
                         }
                     }
                     // log.debug("getUserADMThroughCredentialsV2 - used session token")
-                    getUserByIdentifier(UserIdentifierADM(iri = Some(userIri)))
+                    getUserByIdentifier(UserIdentifierADM(maybeIri = Some(userIri)))
                 }
                 case None => {
                     // log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")

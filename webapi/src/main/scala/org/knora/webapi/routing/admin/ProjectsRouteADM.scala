@@ -53,7 +53,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         deleteProject ~
         getProjectMembersByIri ~ getProjectMembersByShortname ~ getProjectMembersByShortcode ~
         getProjectAdminMembersByIri ~ getProjectAdminMembersByShortname ~ getProjectAdminMembersByShortcode ~
-        getProjectRestrictedViewSettingsByIri ~ getProjectRestrictedViewSettingsByShortname ~ getProjectAdminMembersByShortcode
+        getProjectRestrictedViewSettingsByIri ~ getProjectRestrictedViewSettingsByShortname ~ getProjectRestrictedViewSettingsByShortcode
 
 
     /* return all projects */
@@ -132,7 +132,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     private def getProjectKeywords: Route = path(ProjectsBasePath / "iri" / Segment / "Keywords") { value =>
         get {
             requestContext =>
-                val checkedProjectIri = stringFormatter.validateProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+                val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
                 val requestMessage: Future[ProjectKeywordsGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
@@ -156,7 +156,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                    checkedProjectIri = stringFormatter.validateProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+                    checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
                 } yield ProjectGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
 
@@ -178,7 +178,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                    shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
+                    shortNameDec = stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(s"Invalid project shotname $value"))
 
                 } yield ProjectGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
 
@@ -200,7 +200,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                    checkedShortcode = stringFormatter.validateProjectShortcode(value, throw BadRequestException(s"Invalid project shortcode $value"))
+                    checkedShortcode = stringFormatter.validateAndEscapeProjectShortcode(value, throw BadRequestException(s"Invalid project shortcode $value"))
 
                 } yield ProjectGetRequestADM(maybeIri = None, maybeShortname = None, maybeShortcode = Some(checkedShortcode), requestingUser = requestingUser)
 
@@ -221,7 +221,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         put {
             entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
                 requestContext =>
-                    val checkedProjectIri = stringFormatter.validateProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+                    val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
                     /* the api request is already checked at time of creation. see case class. */
 
@@ -252,7 +252,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     private def deleteProject: Route = path(ProjectsBasePath / "iri" / Segment) { value =>
         delete {
             requestContext =>
-                val checkedProjectIri = stringFormatter.validateProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+                val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
                 val requestMessage: Future[ProjectChangeRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
@@ -283,7 +283,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectMembersGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                    checkedProjectIri = stringFormatter.validateProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+                    checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
                 } yield ProjectMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
 
@@ -306,7 +306,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectMembersGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                    shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
+                    shortNameDec = stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(s"Invalid project shortname $value"))
 
                 } yield ProjectMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
 
@@ -330,7 +330,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectMembersGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                    checkedShortcode = stringFormatter.validateProjectShortcode(value, throw BadRequestException(s"Invalid project shortcode $value"))
+                    checkedShortcode = stringFormatter.validateAndEscapeProjectShortcode(value, throw BadRequestException(s"Invalid project shortcode $value"))
 
                 } yield ProjectMembersGetRequestADM(maybeIri = None, maybeShortname = None, maybeShortcode = Some(checkedShortcode), requestingUser = requestingUser)
 
@@ -354,7 +354,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                    checkedProjectIri = stringFormatter.validateProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+                    checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
                 } yield ProjectAdminMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
 
@@ -377,9 +377,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                    shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
+                    checkedShortname = stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(s"Invalid project shortname $value"))
 
-                } yield ProjectAdminMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
+                } yield ProjectAdminMembersGetRequestADM(maybeIri = None, maybeShortname = Some(checkedShortname), maybeShortcode = None, requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -424,9 +424,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                    checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
-                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(iri = Some(checkedProjectIri)), requestingUser)
+                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(iri = Some(value)), requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -470,9 +469,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                    checkedShortcode = stringFormatter.validateProjectShortcode(value, throw BadRequestException(s"Invalid project shortcode $value"))
-
-                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(shortcode = Some(checkedShortcode)), requestingUser)
+                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(shortcode = Some(value)), requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,

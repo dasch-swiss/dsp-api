@@ -22,6 +22,7 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import arq.iri
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}
@@ -697,39 +698,55 @@ object UserIdentifierType extends Enumeration {
     val USERNAME = Value(3, "username")
 }
 
+/**
+  * The UserIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
+  * validated and escaped.
+  */
+object UserIdentifierADM {
+    def apply(maybeIri: Option[String] = None,
+              maybeEmail: Option[String] = None,
+              maybeUsername: Option[String] = None)(implicit sf: StringFormatter): UserIdentifierADM = {
+
+        val parametersCount: Int = List(
+            maybeIri,
+            maybeEmail,
+            maybeUsername
+        ).flatten.size
+
+        // something needs to be set
+        if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
+
+        if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
+
+        new UserIdentifierADM(
+            maybeIri = sf.validateAndEscapeOptionalUserIri(maybeIri, throw BadRequestException(s"Invalid user IRI $maybeIri")),
+            maybeEmail = sf.validateAndEscapeOptionalEmail(maybeEmail, throw BadRequestException(s"Invalid email $maybeEmail")),
+            maybeUsername = sf.validateAndEscapeOptionalUsername(maybeUsername, throw BadRequestException(s"Invalid username $maybeUsername")))
+    }
+}
 
 /**
   * Represents the user's identifier. It can be an IRI, email, or username.
   * @param value the user's identifier.
   */
-case class UserIdentifierADM(iri: Option[IRI] = None,
-                             email: Option[String] = None,
-                             username: Option[String] = None) {
-
-
-    val parametersCount: Int = List(
-        iri,
-        email,
-        username
-    ).flatten.size
-
-    // something needs to be set
-    if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
-
-    if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
+class UserIdentifierADM private (maybeIri: Option[IRI] = None,
+                                 maybeEmail: Option[String] = None,
+                                 maybeUsername: Option[String] = None) {
 
     // squash and return value.
     val value: String = List(
-        iri,
-        email,
-        username
+        maybeIri,
+        maybeEmail,
+        maybeUsername
     ).flatten.head
+
+    // validate and escape
 
     def hasType: UserIdentifierType.Value = {
 
-        if (iri.isDefined) {
+        if (maybeIri.isDefined) {
             UserIdentifierType.IRI
-        } else if (email.isDefined) {
+        } else if (maybeEmail.isDefined) {
             UserIdentifierType.EMAIL
         } else {
             UserIdentifierType.USERNAME
@@ -740,28 +757,28 @@ case class UserIdentifierADM(iri: Option[IRI] = None,
       * Tries to return the value as an IRI.
       */
     def toIri: IRI = {
-        iri.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.IRI' type."))
+        maybeIri.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.IRI' type."))
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toIriOption: Option[IRI] = {
-        iri
+        maybeIri
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toEmailOption: Option[String] = {
-        email
+        maybeEmail
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toUsernameOption: Option[String] = {
-        username
+        maybeUsername
     }
 
 }

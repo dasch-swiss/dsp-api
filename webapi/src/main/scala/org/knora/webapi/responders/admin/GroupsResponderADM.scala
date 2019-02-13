@@ -23,6 +23,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import arq.iri
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}
@@ -225,7 +226,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             _ = log.debug("groupMembersGetRequestADM - groupMemberIris: {}", groupMemberIris)
 
             maybeUsersFutures: Seq[Future[Option[UserADM]]] = groupMemberIris.map {
-                userIri => (responderManager ? UserGetADM(UserIdentifierADM(iri = Some(userIri)), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+                userIri => (responderManager ? UserGetADM(UserIdentifierADM(maybeIri = Some(userIri)), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             }
             maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUsersFutures)
             users: Seq[UserADM] = maybeUsers.flatten

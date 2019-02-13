@@ -60,7 +60,8 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
     private val rootUsernameEnc = java.net.URLEncoder.encode(rootUsername, "utf-8")
     private val rootEmail = SharedTestDataADM.rootUser.email
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataADM.inactiveUser.email, "utf-8")
+    private val inactiveUserEmail = SharedTestDataADM.inactiveUser.email
+    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(inactiveUserEmail, "utf-8")
     private val wrongEmail = "wrong@example.com"
     private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")
@@ -126,7 +127,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
 
         "fail authentication with the user set as 'not active' " in {
             /* User not active */
-            val request = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(BasicHttpCredentials(inactiveUserEmailEnc, testPass))
+            val request = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(BasicHttpCredentials(inactiveUserEmail, testPass))
             val response: HttpResponse = singleAwaitingRequest(request)
             log.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.Unauthorized)
@@ -282,7 +283,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val params =
                 s"""
                    |{
-                   |    "email": "wrong",
+                   |    "username": "wrong",
                    |    "password": "wrong"
                    |}
                 """.stripMargin

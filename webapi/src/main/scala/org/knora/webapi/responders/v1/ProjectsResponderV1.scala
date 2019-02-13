@@ -21,6 +21,7 @@ package org.knora.webapi.responders.v1
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import arq.iri
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetRequestADM, UserIdentifierADM, UserResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -158,7 +159,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                     profile.userData.user_id match {
                         case Some(user_iri) => {
                             (responderManager ? UserGetRequestADM(
-                                identifier = UserIdentifierADM(iri = Some(user_iri)),
+                                identifier = UserIdentifierADM(maybeIri = Some(user_iri)),
                                 requestingUser = KnoraSystemInstances.Users.SystemUser
                             )).mapTo[UserResponseADM].map(_.user)
                         }
