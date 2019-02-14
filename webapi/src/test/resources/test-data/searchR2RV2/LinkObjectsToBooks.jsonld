@@ -41,6 +41,10 @@
           "@value" : "2016-03-02T15:05:43Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543000000000Z"
+        },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     }, {
@@ -68,10 +72,18 @@
           "@value" : "2016-03-02T15:05:39Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U.20160302T150539000000000Z"
+        },
         "rdfs:label" : "[Das] Narrenschiff (dt.)"
       }
     } ],
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/881405205304a.20160302T150554000000000Z"
+    },
     "rdfs:label" : "Lateinische Übersetzung"
   }, {
     "@id" : "http://rdfh.ch/0803/ab79ffa43935",
@@ -115,10 +127,18 @@
           "@value" : "2016-03-02T15:05:10Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T150510000000000Z"
+        },
         "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
       }
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ab79ffa43935M.20160302T150555000000000Z"
+    },
     "rdfs:label" : "DEMO_"
   }, {
     "@id" : "http://rdfh.ch/0803/cb1a74e3e2f6",
@@ -162,6 +182,10 @@
           "@value" : "2016-03-02T15:05:14Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/21abac2162A.20160302T150514000000000Z"
+        },
         "rdfs:label" : "Lob der Glieder Mariens"
       }
     }, {
@@ -189,6 +213,10 @@
           "@value" : "2016-03-02T15:05:14Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/e41ab5695cN.20160302T150514000000000Z"
+        },
         "rdfs:label" : "Orationes"
       }
     }, {
@@ -216,10 +244,18 @@
           "@value" : "2016-03-02T15:05:10Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T150510000000000Z"
+        },
         "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
       }
     } ],
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cb1a74e3e2f6X.20160302T150556000000000Z"
+    },
     "rdfs:label" : "Diese drei Texte sind in einem Band zusammengebunden."
   } ],
   "@context" : {

@@ -197,9 +197,16 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
                     }
 
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+                    val versionDate = params.get("version").map(versionStr => stringFormatter.toInstant(versionStr, throw BadRequestException(s"Invalid version date: $versionStr")))
+
                     val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield ResourcesGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
+                    } yield ResourcesGetRequestV2(
+                        resourceIris = resourceIris,
+                        versionDate = versionDate,
+                        requestingUser = requestingUser
+                    )
 
                     // #use-requested-schema
                     RouteUtilV2.runRdfRouteWithFuture(

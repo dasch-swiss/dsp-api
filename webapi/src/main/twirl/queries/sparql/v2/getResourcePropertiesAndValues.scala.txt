@@ -29,25 +29,25 @@
  * @param triplestore the name of the triplestore being used.
  * @param resourceIris the IRIs of the resources to be queried.
  * @param preview indicates if the request should only return preview information.
- * @param maybeTimestamp if defined, requests the state of the resources at the specified
- *                       time in the past. Cannot be used in conjunction with preview.
+ * @param maybeVersionDate if defined, requests the state of the resources at the specified
+ *                         time in the past. Cannot be used in conjunction with preview.
  *@
 @(triplestore: String,
   resourceIris: Seq[IRI],
   preview: Boolean,
-  maybeTimestamp: Option[Instant] = None)
+  maybeVersionDate: Option[Instant] = None)
 
 @if(triplestore.startsWith("graphdb")) {
     @{
         queries.sparql.v2.txt.getResourcePropertiesAndValuesGraphDB(resourceIris = resourceIris,
                                                                     preview = preview,
-                                                                    maybeTimestamp = maybeTimestamp)
+                                                                    maybeVersionDate = maybeVersionDate)
     }
 } else {
     @{
         queries.sparql.v2.txt.getResourcePropertiesAndValuesStandard(triplestore = triplestore,
                                                                     resourceIris = resourceIris,
                                                                     preview = preview,
-                                                                    maybeTimestamp = maybeTimestamp)
+                                                                    maybeVersionDate = maybeVersionDate)
     }
 }

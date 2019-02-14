@@ -104,6 +104,26 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         objectType = Some(OntologyConstants.Xsd.Uri)
     )
 
+    private val VersionArkUrl: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.VersionArkUrl,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "version ARK URL",
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides the ARK URL of a particular version of a resource."
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Uri)
+    )
+
     private val ResourceProperty: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Simple.ResourceProperty,
         propertyType = OntologyConstants.Rdf.Property,
@@ -323,7 +343,8 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
 
     private val ResourceCardinalites = Map(
         OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Cardinality.MayHaveMany,
-        OntologyConstants.KnoraApiV2Simple.ArkUrl -> Cardinality.MustHaveOne
+        OntologyConstants.KnoraApiV2Simple.ArkUrl -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraApiV2Simple.VersionArkUrl -> Cardinality.MustHaveOne
     )
 
     /**
@@ -528,6 +549,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         Result,
         Error,
         ArkUrl,
+        VersionArkUrl,
         HasValue,
         ResourceProperty,
         SubjectType,

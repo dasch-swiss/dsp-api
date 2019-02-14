@@ -17,6 +17,10 @@
       "@value" : "2018-06-06T12:08:56.759Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0666/1rK4ZevpT5eIxj48kgncsQu.20180606T120856759000000Z"
+    },
     "rdfs:label" : "Project2"
   }, {
     "@id" : "http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q",
@@ -71,10 +75,18 @@
           "@value" : "2018-06-06T12:08:57.382Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0666/xY8O4uSeQb=MDC4VtvQGdwm.20180606T120857382000000Z"
+        },
         "rdfs:label" : "Person3"
       }
     },
     "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0666/NLe33EVtTKGozGJOqKT_2QL.20180606T120856890000000Z"
+    },
     "rdfs:label" : "Project3"
   }, {
     "@id" : "http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w",
@@ -129,6 +141,10 @@
           "@value" : "2018-06-06T12:08:57.175Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0666/wopH6GHOSpCyASdrsNqg_Am.20180606T120857175000000Z"
+        },
         "rdfs:label" : "Person1"
       }
     }, {
@@ -167,10 +183,18 @@
           "@value" : "2018-06-06T12:08:57.561Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0666/yjOFfSKPR_uiw8KoJu5mQgy.20180606T120857561000000Z"
+        },
         "rdfs:label" : "Biblio1"
       }
     } ],
     "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0666/tWf2vqMqQ_OcUMJSRj6e5wm.20180606T120856619000000Z"
+    },
     "rdfs:label" : "Project1"
   } ],
   "@context" : {

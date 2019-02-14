@@ -27,16 +27,16 @@
  * This template is used only by getResourcePropertiesAndValues.scala.txt.
  *
  *
- * @param resourceIris   the Iris of the requested resources.
- * @param preview        indicates if the request should only return preview information.
- * @param maybeTimestamp if defined, requests the state of the resources at the specified
- *                       time in the past. Cannot be used in conjunction with preview.
+ * @param resourceIris     the Iris of the requested resources.
+ * @param preview          indicates if the request should only return preview information.
+ * @param maybeVersionDate if defined, requests the state of the resources at the specified
+ *                         time in the past. Cannot be used in conjunction with preview.
  *@
 @(resourceIris: Seq[IRI],
   preview: Boolean,
-  maybeTimestamp: Option[Instant] = None)
+  maybeVersionDate: Option[Instant] = None)
 
-@if(preview && maybeTimestamp.isDefined) {
+@if(preview && maybeVersionDate.isDefined) {
     @{throw SparqlGenerationException(s"A resource preview cannot be requested for a time in the past"); ()}
 }
 
@@ -90,12 +90,16 @@ CONSTRUCT {
         knora-base:creationDate ?creationDate ;
         rdfs:label ?label .
 
+        OPTIONAL {
+            ?resource knora-base:lastModificationDate ?lastModificationDate .
+        }
+
     @* Is this a version history request? *@
-    @maybeTimestamp match {
-        case Some(timestamp) => {
+    @maybeVersionDate match {
+        case Some(versionDate) => {
             @* Yes. Ensure that the resource was created on or before the target date. *@
 
-            FILTER(?creationDate <= "@timestamp"^^xsd:dateTime)
+            FILTER(?creationDate <= "@versionDate"^^xsd:dateTime)
 
             @*
 
@@ -104,17 +108,13 @@ CONSTRUCT {
             *@
             FILTER NOT EXISTS {
                 ?resource knora-base:deleteDate ?deleteDate .
-                FILTER(?deleteDate <= "@timestamp"^^xsd:dateTime)
+                FILTER(?deleteDate <= "@versionDate"^^xsd:dateTime)
             }
         }
 
         case None => {
             @* This is not a version history request. Ensure that the resource is not marked as deleted. *@
             ?resource knora-base:isDeleted false .
-
-            OPTIONAL {
-                ?resource knora-base:lastModificationDate ?lastModificationDate .
-            }
         }
     }
 
@@ -127,8 +127,8 @@ CONSTRUCT {
         @* There might be resources with no values. *@
         OPTIONAL {
             @* Is this a version history request? *@
-            @maybeTimestamp match {
-                case Some(timestamp) => {
+            @maybeVersionDate match {
+                case Some(versionDate) => {
                     @* Yes. Find the values that existed at the target date. *@
 
                     @* Get the current version of each value. *@
@@ -137,13 +137,13 @@ CONSTRUCT {
                     @* If the value was deleted on or before the target date, ignore all its versions. *@
                     FILTER NOT EXISTS {
                         ?currentValue knora-base:deleteDate ?currentValueDeleteDate .
-                        FILTER(?currentValueDeleteDate <= "@timestamp"^^xsd:dateTime)
+                        FILTER(?currentValueDeleteDate <= "@versionDate"^^xsd:dateTime)
                     }
 
                     @* In each value's history, find a version that was created on or before the target date. *@
                     ?currentValue knora-base:previousValue* ?valueObject .
                     ?valueObject knora-base:valueCreationDate ?valueObjectCreationDate .
-                    FILTER(?valueObjectCreationDate <= "@timestamp"^^xsd:dateTime)
+                    FILTER(?valueObjectCreationDate <= "@versionDate"^^xsd:dateTime)
 
                     @*
 
@@ -157,9 +157,13 @@ CONSTRUCT {
                         ?otherValueObject knora-base:valueCreationDate ?otherValueObjectCreationDate .
 
                         FILTER(
-                            (?otherValueObjectCreationDate <= "@timestamp"^^xsd:dateTime) &&
+                            (?otherValueObjectCreationDate <= "@versionDate"^^xsd:dateTime) &&
                             (?otherValueObjectCreationDate > ?valueObjectCreationDate)
                         )
+                    }
+
+                    GRAPH <http://www.ontotext.com/explicit> {
+                        ?resource ?resourceValueProperty ?currentValue .
                     }
                 }
 
@@ -168,13 +172,15 @@ CONSTRUCT {
 
                     ?resource knora-base:hasValue ?valueObject .
                     ?valueObject knora-base:isDeleted false .
+
+                    GRAPH <http://www.ontotext.com/explicit> {
+                        ?resource ?resourceValueProperty ?valueObject .
+                    }
                 }
             }
 
             {
                 GRAPH <http://www.ontotext.com/explicit> {
-                    ?resource ?resourceValueProperty ?valueObject .
-
                     ?valueObject a ?valueObjectType ;
                         ?valueObjectProperty ?valueObjectValue .
                 }
@@ -204,23 +210,23 @@ CONSTRUCT {
                   knora-base:attachedToProject ?referredResourceProject ;
                   knora-base:creationDate ?referredResourceCreationDate .
 
+                OPTIONAL {
+                    ?referredResource knora-base:lastModificationDate ?lastModificationDate .
+                }
+
                 @* Is this a version history request? *@
-                @maybeTimestamp match {
-                    case Some(timestamp) => {
+                @maybeVersionDate match {
+                    case Some(versionDate) => {
                         @* Yes. If the referred resource was deleted on or before the target date, ignore it. *@
                         FILTER NOT EXISTS {
                             ?referredResource knora-base:deleteDate ?referredResourceDeleteDate .
-                            FILTER(?referredResourceDeleteDate <= "@timestamp"^^xsd:dateTime)
+                            FILTER(?referredResourceDeleteDate <= "@versionDate"^^xsd:dateTime)
                         }
                     }
 
                     case None => {
                         @* This is not a version history request. Ensure that the referred resource is not marked as deleted. *@
                         ?referredResource knora-base:isDeleted false .
-
-                        OPTIONAL {
-                            ?referredResource knora-base:lastModificationDate ?lastModificationDate .
-                        }
                     }
                 }
             }

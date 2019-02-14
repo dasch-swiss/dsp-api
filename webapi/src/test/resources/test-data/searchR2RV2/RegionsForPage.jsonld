@@ -69,8 +69,16 @@
           "@value" : "2016-03-02T15:05:43Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9d626dc76c039.20160302T150543000000000Z"
+        },
         "rdfs:label" : "u1r"
       }
+    },
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/021ec18f1735T.20160302T150555000000000Z"
     },
     "rdfs:label" : "Siehe Seite c5v"
   }, {
@@ -143,8 +151,16 @@
           "@value" : "2016-03-02T15:05:43Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9d626dc76c039.20160302T150543000000000Z"
+        },
         "rdfs:label" : "u1r"
       }
+    },
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b64a62b006z.20160302T150554000000000Z"
     },
     "rdfs:label" : "Derselbe Holzschnitt wird auf Seite c5v verwendet."
   } ],

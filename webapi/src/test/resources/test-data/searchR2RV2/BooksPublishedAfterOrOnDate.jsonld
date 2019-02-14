@@ -40,6 +40,10 @@
       "@value" : "2016-03-02T15:05:53Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/de6d83112e04o.20160302T150553000000000Z"
+    },
     "rdfs:label" : "Itinerarius seu peregrinatio beatae virginis Mariae"
   }, {
     "@id" : "http://rdfh.ch/0803/8be1b7cf7103",
@@ -94,6 +98,10 @@
       "@value" : "2016-03-02T15:05:43Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543000000000Z"
+    },
     "rdfs:label" : "[Das] Narrenschiff (lat.)"
   }, {
     "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
@@ -148,6 +156,10 @@
       "@value" : "2016-03-02T15:05:47Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547000000000Z"
+    },
     "rdfs:label" : "[Das] Narrenschiff (lat.)"
   }, {
     "@id" : "http://rdfh.ch/0803/9935159f67",
@@ -190,6 +202,10 @@
       "@value" : "2016-03-02T15:05:14Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u.20160302T150514000000000Z"
+    },
     "rdfs:label" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
   } ],
   "@context" : {

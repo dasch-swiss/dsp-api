@@ -44,6 +44,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -69,6 +70,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -94,6 +96,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -119,6 +122,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -144,6 +148,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -169,6 +174,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -194,6 +200,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -219,6 +226,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -244,6 +252,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -269,6 +278,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -294,6 +304,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -319,6 +330,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -344,6 +356,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -369,6 +382,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -394,6 +408,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -419,6 +434,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -444,6 +460,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -469,6 +486,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -494,6 +512,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -519,6 +538,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -544,6 +564,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -569,6 +590,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -594,6 +616,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -619,6 +642,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -644,6 +668,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             )
         )
@@ -1306,6 +1331,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 )
             )),
             lastModificationDate = None,
+                versionDate = None,
             deletionInfo = None
         ))
     )
@@ -1368,6 +1394,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             ),
             ReadResourceV2(
@@ -1393,6 +1420,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
+                versionDate = None,
                 deletionInfo = None
             )
         )

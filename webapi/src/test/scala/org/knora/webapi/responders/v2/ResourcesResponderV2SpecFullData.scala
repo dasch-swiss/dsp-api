@@ -19,6 +19,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:10Z"),
+        versionDate = None,
         values = Map(
             "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(ReadNonLinkValueV2(
                 valueContent = TextValueContentV2(
@@ -193,6 +194,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         creationDate = Instant.parse("2016-03-02T15:05:10Z"),
         values = Map(),
         lastModificationDate = None,
+        versionDate = None,
         deletionInfo = None
     )
 
@@ -204,6 +206,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:21Z"),
+        versionDate = None,
         values = Map(
             "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(ReadNonLinkValueV2(
                 valueContent = TextValueContentV2(
@@ -578,6 +581,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         projectADM = SharedTestDataADM.incunabulaProject,
         values = Map(),
         lastModificationDate = None,
+        versionDate = None,
         deletionInfo = None
     )
 

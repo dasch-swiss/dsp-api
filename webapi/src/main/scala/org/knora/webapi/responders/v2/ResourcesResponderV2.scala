@@ -68,7 +68,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
       */
     def receive(msg: ResourcesResponderRequestV2) = msg match {
-        case ResourcesGetRequestV2(resIris, requestingUser) => getResources(resIris, requestingUser)
+        case ResourcesGetRequestV2(resIris, versionDate, requestingUser) => getResources(resIris, versionDate, requestingUser)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreview(resIris, requestingUser)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
@@ -142,7 +142,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(internalCreateResource.resourceClassIri)
 
-                // Make a timestamp for the resource and its values.
+                // Make a versionDate for the resource and its values.
                 creationDate: Instant = internalCreateResource.creationDate.getOrElse(Instant.now)
 
                 // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
@@ -422,7 +422,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param defaultResourcePermissions the default permissions to be given to the resource, if it does not have custom permissions.
       * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
       *                                   have custom permissions. This is a map of property IRIs to permission strings.
-      * @param creationDate               the timestamp to be attached to the resource and its values.
+      * @param creationDate               the versionDate to be attached to the resource and its values.
       * @param requestingUser             the user making the request.
       * @return a [[ResourceReadyToCreate]].
       */
@@ -909,9 +909,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Gets the requested resources from the triplestore.
       *
       * @param resourceIris the Iris of the requested resources.
-      * @return a [[Map[IRI, ResourceWithValueRdfData]]] representing the resources.
+      * @param preview      `true` if a preview of the resource is requested.
+      * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
+      *                     Cannot be used in conjunction with `preview`.
+      * @return a [[Map[IRI, ResoceWithValueRdfData]]] representing the resources.
       */
-    private def getResourcesFromTriplestore(resourceIris: Seq[IRI], preview: Boolean, requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
+    private def getResourcesFromTriplestore(resourceIris: Seq[IRI], preview: Boolean, versionDate: Option[Instant], requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -920,7 +923,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
                 resourceIris = resourceIrisDistinct,
-                preview
+                preview = preview,
+                maybeVersionDate = versionDate
             ).toString())
 
             // _ = println(resourceRequestSparql)
@@ -944,17 +948,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Get one or several resources and return them as a sequence.
       *
       * @param resourceIris   the resources to query for.
+      * @param versionDate      if defined, requests the state of the resources at the specified time in the past.
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResources(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def getResources(resourceIris: Seq[IRI], versionDate: Option[Instant] = None, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
 
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = false, requestingUser = requestingUser)
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = false, versionDate = versionDate, requestingUser = requestingUser)
 
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
@@ -965,6 +970,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         resourceIri = resIri,
                         resourceRdfData = queryResultsSeparated(resIri),
                         mappings = mappingsAsMap,
+                        versionDate = versionDate,
                         responderManager = responderManager,
                         requestingUser = requestingUser
                     )
@@ -989,7 +995,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = true, requestingUser = requestingUser)
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = true, versionDate = None, requestingUser = requestingUser)
 
             resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
@@ -997,6 +1003,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         resourceIri = resIri,
                         resourceRdfData = queryResultsSeparated(resIri),
                         mappings = Map.empty[IRI, MappingAndXSLTransformation],
+                        versionDate = None,
                         responderManager = responderManager,
                         requestingUser = requestingUser
                     )
@@ -1015,11 +1022,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param requestingUser        the user making the request.
       * @return the Gravsearch template.
       */
-    private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM) = {
+    private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM): Future[String] = {
 
         val gravsearchUrlFuture = for {
-            gravsearchResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
-            resource = gravsearchResponseV2.toResource(gravsearchTemplateIri)
+            resources: ReadResourcesSequenceV2 <- getResources(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)
+            resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
             _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
                 throw BadRequestException(s"Resource $gravsearchTemplateIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
@@ -1029,7 +1036,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
                     case value: ReadValueV2 => value.valueContent match {
                         case textRepr: TextFileValueContentV2 => textRepr
-                        case other => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
+                        case _ => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
                     }
                 }
 
@@ -1176,7 +1183,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 for {
                     // get requested resource
-                    resource <- getResources(Vector(resourceIri), requestingUser).map(_.toResource(resourceIri))
+                    resource <- getResources(resourceIris = Vector(resourceIri), requestingUser = requestingUser).map(_.toResource(resourceIri))
 
                 } yield resource
             }

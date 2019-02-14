@@ -550,6 +550,7 @@ object ConstructResponseUtilV2 {
       * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
       * @param valueCommentOption        the value's comment, if any.
       * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+      * @param versionDate               if defined, represents the requested time in the the resources' version history.
       * @param responderManager          the Knora responder manager.
       * @param requestingUser            the user making the request.
       * @return a [[LinkValueContentV2]].
@@ -558,6 +559,7 @@ object ConstructResponseUtilV2 {
                                        valueObjectValueHasString: String,
                                        valueCommentOption: Option[String],
                                        mappings: Map[IRI, MappingAndXSLTransformation],
+                                       versionDate: Option[Instant],
                                        responderManager: ActorRef,
                                        requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
@@ -585,6 +587,7 @@ object ConstructResponseUtilV2 {
                         resourceIri = referredResourceIri,
                         resourceWithValueRdfData = nestedResourceAssertions,
                         mappings = mappings,
+                        versionDate = versionDate,
                         responderManager = responderManager,
                         requestingUser = requestingUser
                     )
@@ -602,12 +605,14 @@ object ConstructResponseUtilV2 {
       *
       * @param valueObject the given [[ValueRdfData]].
       * @param mappings    the mappings needed for standoff conversions and XSL transformations.
+      * @param versionDate if defined, represents the requested time in the the resources' version history.
       * @return a [[ValueContentV2]] representing a value.
       */
-    def createValueContentV2FromValueRdfData(valueObject: ValueRdfData,
-                                             mappings: Map[IRI, MappingAndXSLTransformation],
-                                             responderManager: ActorRef,
-                                             requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
+    private def createValueContentV2FromValueRdfData(valueObject: ValueRdfData,
+                                                     mappings: Map[IRI, MappingAndXSLTransformation],
+                                                     versionDate: Option[Instant] = None,
+                                                     responderManager: ActorRef,
+                                                     requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // every knora-base:Value (any of its subclasses) has a string representation
@@ -721,6 +726,7 @@ object ConstructResponseUtilV2 {
                     valueObjectValueHasString = valueObjectValueHasString,
                     valueCommentOption = valueCommentOption,
                     mappings = mappings,
+                    versionDate = versionDate,
                     responderManager = responderManager,
                     requestingUser = requestingUser
                 )
@@ -746,13 +752,16 @@ object ConstructResponseUtilV2 {
       *
       * @param resourceIri              the IRI of the resource.
       * @param resourceWithValueRdfData the Rdf data belonging to the resource.
+      * @param mappings                 the mappings needed for standoff conversions and XSL transformations.
+      * @param versionDate              if defined, represents the requested time in the the resources' version history.
       * @return a [[ReadResourceV2]].
       */
-    def constructReadResourceV2(resourceIri: IRI,
-                                resourceWithValueRdfData: ResourceWithValueRdfData,
-                                mappings: Map[IRI, MappingAndXSLTransformation],
-                                responderManager: ActorRef,
-                                requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
+    private def constructReadResourceV2(resourceIri: IRI,
+                                        resourceWithValueRdfData: ResourceWithValueRdfData,
+                                        mappings: Map[IRI, MappingAndXSLTransformation],
+                                        versionDate: Option[Instant],
+                                        responderManager: ActorRef,
+                                        requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         def getDeletionInfo(entityIri: IRI, assertions: Map[IRI, String]): Option[DeletionInfo] = {
@@ -857,6 +866,7 @@ object ConstructResponseUtilV2 {
             values = valueObjects,
             creationDate = resourceCreationDate,
             lastModificationDate = resourceLastModificationDate,
+            versionDate = versionDate,
             deletionInfo = resourceDeletionInfo
         )
     }
@@ -867,11 +877,13 @@ object ConstructResponseUtilV2 {
       * @param resourceIri     the IRI of the requested resource.
       * @param resourceRdfData the results returned by the triplestore.
       * @param mappings        the mappings needed for standoff conversions and XSL transformations.
+      * @param versionDate     if defined, represents the requested time in the the resources' version history.
       * @return a [[ReadResourceV2]].
       */
     def createFullResourceResponse(resourceIri: IRI,
                                    resourceRdfData: ResourceWithValueRdfData,
                                    mappings: Map[IRI, MappingAndXSLTransformation],
+                                   versionDate: Option[Instant],
                                    responderManager: ActorRef,
                                    requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
 
@@ -879,6 +891,7 @@ object ConstructResponseUtilV2 {
             resourceIri = resourceIri,
             resourceWithValueRdfData = resourceRdfData,
             mappings = mappings,
+            versionDate = versionDate,
             responderManager = responderManager,
             requestingUser = requestingUser
         )
@@ -914,6 +927,7 @@ object ConstructResponseUtilV2 {
                             resourceIri = resourceIri,
                             resourceWithValueRdfData = assertions,
                             mappings = mappings,
+                            versionDate = None,
                             responderManager = responderManager,
                             requestingUser = requestingUser
                         )

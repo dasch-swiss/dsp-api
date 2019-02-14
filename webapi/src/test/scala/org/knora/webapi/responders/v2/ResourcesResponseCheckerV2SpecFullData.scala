@@ -367,6 +367,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             )
         ),
         lastModificationDate = None,
+        versionDate = None,
         deletionInfo = None
     )
 

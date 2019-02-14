@@ -80,6 +80,46 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         objectType = Some(OntologyConstants.Xsd.Uri)
     )
 
+    private val VersionArkUrl: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.VersionArkUrl,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "version ARK URL",
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides the ARK URL of a particular version of a resource."
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Uri)
+    )
+
+    private val VersionDate: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.VersionDate,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "version date",
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides the date of a particular version of a resource."
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Uri)
+    )
+
     private val IsShared: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsShared,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1198,7 +1238,9 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
 
     private val ResourceCardinalities = Map(
         OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLinkValue -> Cardinality.MayHaveMany,
-        OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl -> Cardinality.MustHaveOne
+        OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.VersionArkUrl -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.VersionDate -> Cardinality.MayHaveOne
     )
 
     private val DateBaseCardinalities = Map(
@@ -1447,7 +1489,9 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
       */
     override val knoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Result,
+        VersionDate,
         ArkUrl,
+        VersionArkUrl,
         IsShared,
         IsBuiltIn,
         IsResourceClass,
