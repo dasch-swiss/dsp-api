@@ -855,7 +855,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
             case None =>
                 // Parse the IRI from scratch.
-                if (isKnoraDataIriStr(iri)) {
+                if (DataIriStarts.exists(startStr => iri.startsWith(startStr))) {
                     // This is a Knora data IRI. What sort of data IRI is it?
                     iri match {
                         case ResourceIriRegex(projectCode: String, resourceID: String) =>
@@ -1557,15 +1557,6 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
-      * Returns `true` if an IRI string looks like a Knora data IRI.
-      *
-      * @param iri the IRI to be checked.
-      */
-    def isKnoraDataIriStr(iri: IRI): Boolean = {
-        DataIriStarts.exists(startStr => iri.startsWith(startStr))
-    }
-
-    /**
       * Returns `true` if an IRI string looks like a Knora project IRI
       *
       * @param iri the IRI to be checked.
@@ -2254,9 +2245,10 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @return the IRI of the project.
       */
     def validateProjectIri(iri: IRI, errorFun: => Nothing): IRI = {
-        isKnoraProjectIriStr(iri) match {
-            case true => iri
-            case false => errorFun
+        if (isKnoraProjectIriStr(iri)) {
+            iri
+        } else {
+            errorFun
         }
     }
 
@@ -2269,9 +2261,10 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @return the same string but escaped.
       */
     def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI = {
-        isKnoraProjectIriStr(iri) match {
-            case true => toSparqlEncodedString(iri, errorFun)
-            case false => errorFun
+        if (isKnoraProjectIriStr(iri)) {
+            toSparqlEncodedString(iri, errorFun)
+        } else {
+            errorFun
         }
     }
 
@@ -2356,7 +2349,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       */
     def validateAndEscapeProjectShortcode(shortcode: String, errorFun: => Nothing): String = {
         ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
-            case Some(shortcode) => toSparqlEncodedString(shortcode, errorFun)
+            case Some(definedShortcode) => toSparqlEncodedString(definedShortcode, errorFun)
             case None => errorFun
         }
     }
@@ -2385,9 +2378,10 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @return the same string.
       */
     def validateUserIri(iri: IRI, errorFun: => Nothing): IRI = {
-        isKnoraUserIriStr(iri) match {
-            case true => iri
-            case false => errorFun
+        if (isKnoraUserIriStr(iri)) {
+            iri
+        } else {
+            errorFun
         }
     }
 
@@ -2400,9 +2394,10 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @return the same string but escaped.
       */
     def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String = {
-        isKnoraUserIriStr(iri) match {
-            case true => toSparqlEncodedString(iri, errorFun)
-            case false => errorFun
+        if (isKnoraUserIriStr(iri)) {
+            toSparqlEncodedString(iri, errorFun)
+        } else {
+            errorFun
         }
     }
 
