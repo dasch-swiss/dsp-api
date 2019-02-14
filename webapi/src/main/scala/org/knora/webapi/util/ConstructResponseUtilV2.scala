@@ -43,7 +43,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object ConstructResponseUtilV2 {
 
-    val InferredPredicates = Set(
+    private val InferredPredicates = Set(
         OntologyConstants.KnoraBase.HasValue,
         OntologyConstants.KnoraBase.IsMainResource
     )

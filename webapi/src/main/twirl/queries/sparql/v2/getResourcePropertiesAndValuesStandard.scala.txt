@@ -17,6 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
+@import java.time.Instant
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
 
@@ -29,10 +30,13 @@
  * @param triplestore the name of the triplestore being used.
  * @param resourceIris the Iris of the requested resources.
  * @param preview indicates if the request should only return preview information.
+ * @param maybeTimestamp if defined, requests the state of the resources at the specified
+ *                       time in the past. Cannot be used in conjunction with preview.
  *@
 @(triplestore: String,
   resourceIris: Seq[IRI],
-  preview: Boolean)
+  preview: Boolean,
+  maybeTimestamp: Option[Instant] = None)
 
 
 @*
