@@ -37,7 +37,7 @@ import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
-import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM, SmartIri, StringFormatter}
+import org.knora.webapi.util._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -632,6 +632,25 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
 
                     xmlDiff.hasDifferences should be(false)
+            }
+
+        }
+
+        "return a past version of a resource" in {
+            val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+            val versionDate = Instant.parse("2019-02-12T08:05:10Z")
+
+            responderManager ! ResourcesGetRequestV2(
+                resourceIris = Seq(resourceIri),
+                versionDate = Some(versionDate),
+                requestingUser = incunabulaUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    val resource = response.toResource(resourceIri)
+
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory, received = response)
             }
 
         }

@@ -600,6 +600,79 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         numberOfResources = 1
     )
 
+    val expectedFullResourceResponseForThingWithHistory = ReadResourcesSequenceV2(
+        resources = Vector(
+            ReadResourceV2(
+                versionDate = Some(Instant.parse("2019-02-12T08:05:10Z")),
+                label = "A thing with version history",
+                resourceIri = "http://rdfh.ch/0001/thing-with-history",
+                permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
+                attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                creationDate = Instant.parse("2019-02-08T15:05:10Z"),
+                values = Map(
+                    "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri -> Vector(ReadNonLinkValueV2(
+                        valueContent = TextValueContentV2(
+                            standoffAndMapping = None,
+                            valueHasLanguage = None,
+                            ontologySchema = InternalSchema,
+                            comment = None,
+                            valueHasString = "two"
+                        ),
+                        valueIri = "http://rdfh.ch/0001/thing-with-history/values/2b",
+                        permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
+                        valueCreationDate = Instant.parse("2019-02-11T10:05:10Z"),
+                        attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+                        deletionInfo = None
+                    )),
+                    "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri -> Vector(ReadLinkValueV2(
+                        valueContent = LinkValueContentV2(
+                            referredResourceIri = "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ",
+                            ontologySchema = InternalSchema,
+                            comment = None,
+                            nestedResource = Some(ReadResourceV2(
+                                versionDate = None,
+                                label = "India",
+                                resourceIri = "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ",
+                                permissions = "V knora-base:UnknownUser|M knora-base:ProjectMember",
+                                attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+                                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                                creationDate = Instant.parse("2016-10-17T17:16:04.913Z"),
+                                values = Map(),
+                                projectADM = SharedTestDataADM.anythingProject,
+                                lastModificationDate = None,
+                                deletionInfo = None
+                            ))
+                        ),
+                        valueHasRefCount = 1,
+                        valueIri = "http://rdfh.ch/0001/thing-with-history/values/3a",
+                        permissions = "V knora-base:UnknownUser|M knora-base:ProjectMember",
+                        valueCreationDate = Instant.parse("2019-02-10T10:30:10Z"),
+                        attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+                        previousValueIri = None,
+                        deletionInfo = None
+                    )),
+                    "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(ReadNonLinkValueV2(
+                        valueContent = IntegerValueContentV2(
+                            ontologySchema = InternalSchema,
+                            valueHasInteger = 1,
+                            comment = None
+                        ),
+                        valueIri = "http://rdfh.ch/0001/thing-with-history/values/1a",
+                        permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
+                        valueCreationDate = Instant.parse("2019-02-11T09:05:10Z"),
+                        attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+                        deletionInfo = None
+                    ))
+                ),
+                projectADM = SharedTestDataADM.anythingProject,
+                lastModificationDate = Some(Instant.parse("2019-02-13T09:05:10Z")),
+                deletionInfo = None
+            )
+        ),
+        numberOfResources = 1
+    )
+
     val expectedFullResourceResponseForZeitgloeckleinAndReise = ReadResourcesSequenceV2(
         resources = Vector(expectedReadResourceV2ForZeitgloecklein, expectedReadResourceV2ForReiseInsHeiligeland),
         numberOfResources = 2
