@@ -242,7 +242,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val params =
                 s"""
                    |{
-                   |    "identifier": "$anythingUserEmail",
+                   |    "email": "$anythingUserEmail",
                    |    "password": "$password"
                    |}
                 """.stripMargin
