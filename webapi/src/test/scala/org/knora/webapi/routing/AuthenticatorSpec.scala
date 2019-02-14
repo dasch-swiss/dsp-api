@@ -59,34 +59,35 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     "During Authentication" when {
         "called, the 'getUserADMByEmail' method " should {
             "succeed with the correct 'email' " in {
-                val resF = Authenticator invokePrivate getUserByIdentifier(UserIdentifierADM(AuthenticatorSpec.rootUserEmail), system, responderManager, timeout, executionContext)
+                val resF = Authenticator invokePrivate getUserByIdentifier(UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)), system, responderManager, timeout, executionContext)
                 resF map { res => assert(res == AuthenticatorSpec.rootUser)}
             }
 
             "fail with the wrong 'email' " in {
-                    val resF = Authenticator invokePrivate getUserByIdentifier(UserIdentifierADM("wronguser@example.com"), system, responderManager, timeout, executionContext)
+                    val resF = Authenticator invokePrivate getUserByIdentifier(UserIdentifierADM(maybeEmail = Some("wronguser@example.com")), system, responderManager, timeout, executionContext)
                     resF map {res => assertThrows(BadCredentialsException)}
             }
 
-            "fail when not providing a email " in {
+            "fail when not providing anything " in {
                 an [BadRequestException] should be thrownBy {
-                    Authenticator invokePrivate getUserByIdentifier(UserIdentifierADM(""), system, responderManager, timeout, executionContext)
+                    Authenticator invokePrivate getUserByIdentifier(UserIdentifierADM(), system, responderManager, timeout, executionContext)
                 }
             }
         }
+
         "called, the 'authenticateCredentialsV2' method" should {
             "succeed with correct email/password" in {
-                val correctPasswordCreds = KnoraPasswordCredentialsV2(UserIdentifierADM(AuthenticatorSpec.rootUserEmail), AuthenticatorSpec.rootUserPassword)
+                val correctPasswordCreds = KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)), AuthenticatorSpec.rootUserPassword)
                 val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(correctPasswordCreds), system, responderManager, executionContext)
                 resF map {res => assert(res)}
             }
             "fail with unknown email" in {
-                    val wrongPasswordCreds = KnoraPasswordCredentialsV2(UserIdentifierADM("wrongemail"), "wrongpassword")
+                    val wrongPasswordCreds = KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some("wrongemail@example.com")), "wrongpassword")
                     val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(wrongPasswordCreds), system, responderManager, executionContext)
                     resF map {res => assertThrows(BadCredentialsException)}
             }
             "fail with wrong password" in {
-                    val wrongPasswordCreds = KnoraPasswordCredentialsV2(UserIdentifierADM(AuthenticatorSpec.rootUserEmail), "wrongpassword")
+                    val wrongPasswordCreds = KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)), "wrongpassword")
                     val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(wrongPasswordCreds), system, responderManager, executionContext)
                     resF map {res => assertThrows(BadCredentialsException)}
             }

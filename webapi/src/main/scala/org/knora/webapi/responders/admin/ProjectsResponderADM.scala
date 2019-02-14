@@ -232,7 +232,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       * @param maybeShortname the project's short name.
       * @param maybeShortcode the project's shortcode.
       * @param requestingUser the user making the request.
-      * @return the members of a project as a [[ProjectMembersGetResponseV1]]
+      * @return the members of a project as a [[ProjectMembersGetResponseADM]]
       */
     private def projectMembersGetRequestADM(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String], requestingUser: UserADM): Future[ProjectMembersGetResponseADM] = {
 
@@ -240,10 +240,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         for {
 
-            /* Verify that the project exists. */
-            exists <- projectExists(maybeIri, maybeShortname, maybeShortcode)
-            _ = if (!exists) {
+            /* Get project and verify permissions. */
+            project <- projectGetADM(maybeIri, maybeShortname, maybeShortcode, KnoraSystemInstances.Users.SystemUser)
+            _ = if (project.isEmpty) {
                 throw NotFoundException(s"Project '${Seq(maybeIri, maybeShortname, maybeShortcode).flatten.head}' not found.")
+            } else {
+                if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(project.get.id) && !requestingUser.isSystemUser) {
+                    throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
+                }
             }
 
             sparqlQueryString <- Future(queries.sparql.admin.txt.getProjectMembers(
@@ -268,7 +272,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             }
 
             maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map {
-                userIri => (responderManager ? UserGetADM(identifier = UserIdentifierADM(userIri), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+                userIri => (responderManager ? UserGetADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             }
             maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
             users: Seq[UserADM] = maybeUsers.flatten
@@ -294,10 +298,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         for {
 
-            /* Verify that the project exists. */
-            exists <- projectExists(maybeIri, maybeShortname, maybeShortcode)
-            _ = if (!exists) {
+            /* Get project and verify permissions. */
+            project <- projectGetADM(maybeIri, maybeShortname, maybeShortcode, KnoraSystemInstances.Users.SystemUser)
+            _ = if (project.isEmpty) {
                 throw NotFoundException(s"Project '${Seq(maybeIri, maybeShortname, maybeShortcode).flatten.head}' not found.")
+            } else {
+                if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(project.get.id)) {
+                    throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
+                }
             }
 
             sparqlQueryString <- Future(queries.sparql.admin.txt.getProjectAdminMembers(
@@ -308,10 +316,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             ).toString())
             //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
-            projectMembersResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
+            projectAdminMembersResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
             //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
-            statements = projectMembersResponse.statements.toList
+            statements = projectAdminMembersResponse.statements.toList
 
             // get project member IRI from results rows
             userIris: Seq[IRI] = if (statements.nonEmpty) {
@@ -321,7 +329,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             }
 
             maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map {
-                userIri => (responderManager ? UserGetADM(identifier = UserIdentifierADM(userIri), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+                userIri => (responderManager ? UserGetADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             }
             maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
             users: Seq[UserADM] = maybeUsers.flatten

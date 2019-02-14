@@ -928,23 +928,9 @@ class StringFormatterSpec extends CoreSpec() {
             stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.dokubibProject) should be (SharedOntologyTestDataADM.DOKUBIB_DATA_IRI)
         }
 
-        "validate project shortcode" in {
-            stringFormatter.validateProjectShortcode("00FF", throw AssertionException("not valid")) should be("00FF")
-            stringFormatter.validateProjectShortcode("00ff", throw AssertionException("not valid")) should be("00FF")
-            stringFormatter.validateProjectShortcode("12aF", throw AssertionException("not valid")) should be("12AF")
 
-            an[AssertionException] should be thrownBy {
-                stringFormatter.validateProjectShortcode("000", throw AssertionException("not valid"))
-            }
 
-            an[AssertionException] should be thrownBy {
-                stringFormatter.validateProjectShortcode("00000", throw AssertionException("not valid"))
-            }
 
-            an[AssertionException] should be thrownBy {
-                stringFormatter.validateProjectShortcode("wxyz", throw AssertionException("not valid"))
-            }
-        }
 
         "parse the objects of salsah-gui:guiAttributeDefinition" in {
             val hlistDef = "hlist(required):iri"
@@ -1053,5 +1039,79 @@ class StringFormatterSpec extends CoreSpec() {
             val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl()
             assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn")
         }
+    }
+
+    "The StringFormatter class for User and Project" should {
+
+        "validate project shortname" in {
+            stringFormatter.validateAndEscapeProjectShortname("images", throw AssertionException("not valid")) should be("images")
+
+            // to short
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeProjectShortname("abc", throw AssertionException("not valid"))
+            }
+        }
+
+        "validate project shortcode" in {
+            stringFormatter.validateProjectShortcode("00FF", throw AssertionException("not valid")) should be("00FF")
+            stringFormatter.validateProjectShortcode("00ff", throw AssertionException("not valid")) should be("00FF")
+            stringFormatter.validateProjectShortcode("12aF", throw AssertionException("not valid")) should be("12AF")
+
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateProjectShortcode("000", throw AssertionException("not valid"))
+            }
+
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateProjectShortcode("00000", throw AssertionException("not valid"))
+            }
+
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateProjectShortcode("wxyz", throw AssertionException("not valid"))
+            }
+        }
+
+        "validate username" in {
+
+            // 4 - 50 characters long
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("abc", throw AssertionException("not valid"))
+            }
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("123456789012345678901234567890123456789012345678901", throw AssertionException("not valid"))
+            }
+
+            // only contain alphanumeric, underscore, and dot
+            stringFormatter.validateAndEscapeUsername("a_2.3", throw AssertionException("not valid")) should be ("a_2.3")
+
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("a_2.3-4", throw AssertionException("not valid"))
+            }
+
+            // Underscore and dot can't be at the end or start of a username
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("_username", throw AssertionException("not valid"))
+            }
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("username_", throw AssertionException("not valid"))
+            }
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername(".username", throw AssertionException("not valid"))
+            }
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("username.", throw AssertionException("not valid"))
+            }
+
+            // Underscore or dot can't be used multiple times in a row
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("user__name", throw AssertionException("not valid"))
+            }
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("user..name", throw AssertionException("not valid"))
+            }
+
+
+        }
+
+
     }
 }

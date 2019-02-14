@@ -92,7 +92,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return a profile if the user (root user) is known" in {
                 responderManager ! UserGetADM(
-                    identifier = UserIdentifierADM(rootUser.id),
+                    identifier = UserIdentifierADM(maybeIri = Some(rootUser.id)),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -101,7 +101,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return a profile if the user (incunabula user) is known" in {
                 responderManager ! UserGetADM(
-                    identifier = UserIdentifierADM(incunabulaUser.id),
+                    identifier = UserIdentifierADM(maybeIri = Some(incunabulaUser.id)),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -110,7 +110,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return 'NotFoundException' when the user is unknown" in {
                 responderManager ! UserGetRequestADM(
-                    identifier = UserIdentifierADM("http://rdfh.ch/users/notexisting"),
+                    identifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/notexisting")),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -119,46 +119,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return 'None' when the user is unknown" in {
                 responderManager ! UserGetADM(
-                    identifier = UserIdentifierADM("http://rdfh.ch/users/notexisting"),
-                    userInformationTypeADM = UserInformationTypeADM.FULL,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                )
-                expectMsg(None)
-            }
-        }
-
-        "asked about an user identified by 'username'" should {
-
-            "return a profile if the user (root user) is known" in {
-                responderManager ! UserGetADM(
-                    identifier = UserIdentifierADM(rootUser.username),
-                    userInformationTypeADM = UserInformationTypeADM.FULL,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                )
-                expectMsg(Some(rootUser.ofType(UserInformationTypeADM.FULL)))
-            }
-
-            "return a profile if the user (incunabula user) is known" in {
-                responderManager ! UserGetADM(
-                    identifier = UserIdentifierADM(incunabulaUser.username),
-                    userInformationTypeADM = UserInformationTypeADM.FULL,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                )
-                expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.FULL)))
-            }
-
-            "return 'NotFoundException' when the user is unknown" in {
-                responderManager ! UserGetRequestADM(
-                    identifier = UserIdentifierADM("userwrong"),
-                    userInformationTypeADM = UserInformationTypeADM.FULL,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                )
-                expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
-            }
-
-            "return 'None' when the user is unknown" in {
-                responderManager ! UserGetADM(
-                    identifier = UserIdentifierADM("userwrong"),
+                    identifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/notexisting")),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -170,7 +131,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return a profile if the user (root user) is known" in {
                 responderManager ! UserGetADM(
-                    identifier = UserIdentifierADM(rootUser.email),
+                    identifier = UserIdentifierADM(maybeEmail = Some(rootUser.email)),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -179,7 +140,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return a profile if the user (incunabula user) is known" in {
                 responderManager ! UserGetADM(
-                    identifier = UserIdentifierADM(incunabulaUser.email),
+                    identifier = UserIdentifierADM(maybeEmail = Some(incunabulaUser.email)),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -188,7 +149,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return 'NotFoundException' when the user is unknown" in {
                 responderManager ! UserGetRequestADM(
-                    identifier = UserIdentifierADM("userwrong@example.com"),
+                    identifier = UserIdentifierADM(maybeEmail = Some("userwrong@example.com")),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -197,7 +158,46 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return 'None' when the user is unknown" in {
                 responderManager ! UserGetADM(
-                    identifier = UserIdentifierADM("userwrong@example.com"),
+                    identifier = UserIdentifierADM(maybeEmail = Some("userwrong@example.com")),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(None)
+            }
+        }
+
+        "asked about an user identified by 'username'" should {
+
+            "return a profile if the user (root user) is known" in {
+                responderManager ! UserGetADM(
+                    identifier = UserIdentifierADM(maybeUsername = Some(rootUser.username)),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(Some(rootUser.ofType(UserInformationTypeADM.FULL)))
+            }
+
+            "return a profile if the user (incunabula user) is known" in {
+                responderManager ! UserGetADM(
+                    identifier = UserIdentifierADM(maybeUsername = Some(incunabulaUser.username)),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.FULL)))
+            }
+
+            "return 'NotFoundException' when the user is unknown" in {
+                responderManager ! UserGetRequestADM(
+                    identifier = UserIdentifierADM(maybeUsername = Some("userwrong")),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
+            }
+
+            "return 'None' when the user is unknown" in {
+                responderManager ! UserGetADM(
+                    identifier = UserIdentifierADM(maybeUsername = Some("userwrong")),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -339,7 +339,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsgType[UserOperationResponseADM](timeout)
 
                 // need to be able to authenticate credentials with new password
-                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(UserIdentifierADM(normalUser.email), "test123456")))(system, responderManager, executionContext)
+                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test123456")))(system, responderManager, executionContext)
 
                 resF map { res => assert(res) }
             }
@@ -358,7 +358,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsgType[UserOperationResponseADM](timeout)
 
                 // need to be able to authenticate credentials with new password
-                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(UserIdentifierADM(normalUser.email), "test654321")))(system, responderManager, executionContext)
+                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test654321")))(system, responderManager, executionContext)
 
                 resF map { res => assert(res) }
             }

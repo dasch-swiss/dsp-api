@@ -149,15 +149,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return restricted view settings using project IRI" in {
                 responderManager ! ProjectRestrictedViewSettingsGetADM(
-                    identifier = ProjectIdentifierADM(SharedTestDataADM.imagesProject.id),
-                    requestingUser = SharedTestDataADM.rootUser
-                )
-                expectMsg(Some(expectedResult))
-            }
-
-            "return restricted view settings using project SHORTCODE" in {
-                responderManager ! ProjectRestrictedViewSettingsGetADM(
-                    identifier = ProjectIdentifierADM(SharedTestDataADM.imagesProject.shortcode),
+                    identifier = ProjectIdentifierADM(iri = Some(SharedTestDataADM.imagesProject.id)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Some(expectedResult))
@@ -165,7 +157,15 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return restricted view settings using project SHORTNAME" in {
                 responderManager ! ProjectRestrictedViewSettingsGetADM(
-                    identifier = ProjectIdentifierADM(SharedTestDataADM.imagesProject.shortname),
+                    identifier = ProjectIdentifierADM(shortname = Some(SharedTestDataADM.imagesProject.shortname)),
+                    requestingUser = SharedTestDataADM.rootUser
+                )
+                expectMsg(Some(expectedResult))
+            }
+
+            "return restricted view settings using project SHORTCODE" in {
+                responderManager ! ProjectRestrictedViewSettingsGetADM(
+                    identifier = ProjectIdentifierADM(shortcode = Some(SharedTestDataADM.imagesProject.shortcode)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Some(expectedResult))
@@ -173,7 +173,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFoundException' when the project IRI is unknown" in {
                 responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
-                    identifier = ProjectIdentifierADM("http://rdfh.ch/projects/notexisting"),
+                    identifier = ProjectIdentifierADM(iri = Some("http://rdfh.ch/projects/notexisting")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
@@ -181,7 +181,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFoundException' when the project SHORTCODE is unknown" in {
                 responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
-                    identifier = ProjectIdentifierADM("9999"),
+                    identifier = ProjectIdentifierADM(shortcode = Some("9999")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
@@ -189,7 +189,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFoundException' when the project SHORTNAME is unknown" in {
                 responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
-                    identifier = ProjectIdentifierADM("wrongshortname"),
+                    identifier = ProjectIdentifierADM(shortname = Some("wrongshortname")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))

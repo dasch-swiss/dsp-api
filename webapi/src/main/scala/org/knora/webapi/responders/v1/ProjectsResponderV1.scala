@@ -53,10 +53,6 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
         case ProjectInfoByIRIGetRequestV1(iri, userProfile) => projectInfoByIRIGetRequestV1(iri, userProfile)
         case ProjectInfoByIRIGetV1(iri, userProfile) => projectInfoByIRIGetV1(iri, userProfile)
         case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) => projectInfoByShortnameGetRequestV1(shortname, userProfile)
-        case ProjectMembersByIRIGetRequestV1(iri, userProfileV1) => projectMembersByIRIGetRequestV1(iri, userProfileV1)
-        case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => projectMembersByShortnameGetRequestV1(shortname, userProfileV1)
-        case ProjectAdminMembersByIRIGetRequestV1(iri, userProfileV1) => projectAdminMembersByIRIGetRequestV1(iri, userProfileV1)
-        case ProjectAdminMembersByShortnameGetRequestV1(shortname, userProfileV1) => projectAdminMembersByShortnameGetRequestV1(shortname, userProfileV1)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -162,7 +158,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                     profile.userData.user_id match {
                         case Some(user_iri) => {
                             (responderManager ? UserGetRequestADM(
-                                identifier = UserIdentifierADM(user_iri),
+                                identifier = UserIdentifierADM(maybeIri = Some(user_iri)),
                                 requestingUser = KnoraSystemInstances.Users.SystemUser
                             )).mapTo[UserResponseADM].map(_.user)
                         }
@@ -292,174 +288,6 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
         )
     }
 
-    /**
-      * Gets the members of a project with the given IRI.
-      *
-      * @param projectIri    the IRI of the project.
-      * @param userProfileV1 the profile of the user that is making the request.
-      * @return the members of a project as a [[ProjectMembersGetResponseV1]]
-      * @throws NotFoundException in the case that the project's IRI is not found.
-      */
-    private def projectMembersByIRIGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
-
-        //log.debug("projectMembersByIRIGetRequestV1 - projectIRI: {}", projectIri)
-
-        for {
-            projectExists: Boolean <- projectByIriExists(projectIri)
-
-            _ = if (!projectExists) {
-                throw NotFoundException(s"Project '$projectIri' not found.")
-            }
-
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByIri(
-                triplestore = settings.triplestoreType,
-                projectIri = projectIri
-            ).toString())
-            //_ = log.debug(s"projectMembersByIRIGetRequestV1 - query: $sparqlQueryString")
-
-            projectMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"projectMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
-
-            // get project member IRI from results rows
-            projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
-                projectMembersResponse.results.bindings.map(_.rowMap("s"))
-            } else {
-                Seq.empty[IRI]
-            }
-            //_ = log.debug(s"projectMembersByIRIGetRequestV1 - projectMemberIris: $projectMemberIris")
-
-            response <- createProjectMembersGetResponse(projectMemberIris, userProfileV1)
-
-        } yield response
-    }
-
-
-    /**
-      * Gets the members of a project with the given shortname.
-      *
-      * @param shortname     the IRI of the project.
-      * @param userProfileV1 the profile of the user that is making the request.
-      * @return the members of a project as a [[ProjectMembersGetResponseV1]]
-      * @throws NotFoundException in the case that the project with the given shortname can not be found.
-      */
-    private def projectMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
-
-        //log.debug("projectMembersByShortnameGetRequestV1 - shortname: {}", shortname)
-
-        for {
-            projectExists: Boolean <- projectByShortnameExists(shortname)
-
-            _ = if (!projectExists) {
-                throw NotFoundException(s"Project '$shortname' not found.")
-            }
-
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectMembersByShortname(
-                triplestore = settings.triplestoreType,
-                shortname = shortname
-            ).toString())
-            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - query: $sparqlQueryString")
-
-            projectMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
-
-
-            // get project member IRI from results rows
-            projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
-                projectMembersResponse.results.bindings.map(_.rowMap("s"))
-            } else {
-                Seq.empty[IRI]
-            }
-            //_ = log.debug(s"projectMembersByShortnameGetRequestV1 - projectMemberIris: $projectMemberIris")
-
-            response <- createProjectMembersGetResponse(projectMemberIris, userProfileV1)
-
-        } yield response
-    }
-
-    /**
-      * Gets the admin members of a project with the given IRI.
-      *
-      * @param projectIri    the IRI of the project.
-      * @param userProfileV1 the profile of the user that is making the request.
-      * @return the members of a project as a [[ProjectMembersGetResponseV1]]
-      * @throws NotFoundException in the case that the project's IRI is not found.
-      */
-    private def projectAdminMembersByIRIGetRequestV1(projectIri: IRI, userProfileV1: UserProfileV1): Future[ProjectAdminMembersGetResponseV1] = {
-
-        //log.debug("projectAdminMembersByIRIGetRequestV1 - projectIRI: {}", projectIri)
-
-        for {
-            projectExists: Boolean <- projectByIriExists(projectIri)
-
-            _ = if (!projectExists) {
-                throw NotFoundException(s"Project '$projectIri' not found.")
-            }
-
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectAdminMembersByIri(
-                triplestore = settings.triplestoreType,
-                projectIri = projectIri
-            ).toString())
-            //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - query: $sparqlQueryString")
-
-            projectMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
-
-            // get project member IRI from results rows
-            projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
-                projectMembersResponse.results.bindings.map(_.rowMap("s"))
-            } else {
-                Seq.empty[IRI]
-            }
-            //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - projectMemberIris: $projectMemberIris")
-
-            response <- createProjectAdminMembersGetResponse(projectMemberIris, userProfileV1)
-
-        } yield response
-    }
-
-
-    /**
-      * Gets the admin members of a project with the given shortname.
-      *
-      * @param shortname     the IRI of the project.
-      * @param userProfileV1 the profile of the user that is making the request.
-      * @return the members of a project as a [[ProjectMembersGetResponseV1]]
-      * @throws NotFoundException in the case that the project with the given shortname can not be found.
-      */
-    private def projectAdminMembersByShortnameGetRequestV1(shortname: String, userProfileV1: UserProfileV1): Future[ProjectAdminMembersGetResponseV1] = {
-
-        //log.debug("projectAdminMembersByShortnameGetRequestV1 - shortname: {}", shortname)
-
-        for {
-            projectExists: Boolean <- projectByShortnameExists(shortname)
-
-            _ = if (!projectExists) {
-                throw NotFoundException(s"Project '$shortname' not found.")
-            }
-
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getProjectAdminMembersByShortname(
-                triplestore = settings.triplestoreType,
-                shortname = shortname
-            ).toString())
-            //_ = log.debug(s"projectAdminMembersByShortnameGetRequestV1 - query: $sparqlQueryString")
-
-            projectMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
-            //_ = log.debug(s"projectAdminMembersByShortnameGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
-
-
-            // get project member IRI from results rows
-            projectMemberIris: Seq[IRI] = if (projectMembersResponse.results.bindings.nonEmpty) {
-                projectMembersResponse.results.bindings.map(_.rowMap("s"))
-            } else {
-                Seq.empty[IRI]
-            }
-            //_ = log.debug(s"projectAdminMembersByShortnameGetRequestV1 - projectMemberIris: $projectMemberIris")
-
-            response <- createProjectAdminMembersGetResponse(projectMemberIris, userProfileV1)
-
-        } yield response
-    }
-
     ////////////////////
     // Helper Methods //
     ////////////////////
@@ -512,69 +340,6 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
             throw NotFoundException(s"For the given project IRI $projectIri no information was found")
         }
 
-    }
-
-    /**
-      * Helper method that turns a sequence of user IRIs into a [[ProjectMembersGetResponseV1]]
-      *
-      * @param memberIris  the user IRIs
-      * @param userProfile the profile of the user that is making the request
-      * @return a [[ProjectMembersGetResponseV1]]
-      */
-    private def createProjectMembersGetResponse(memberIris: Seq[IRI], userProfile: UserProfileV1): Future[ProjectMembersGetResponseV1] = {
-
-        def getUserData(userIri: IRI): Future[UserDataV1] = {
-            for {
-                userProfile <- (responderManager ? UserDataByIriGetV1(userIri)).mapTo[Option[UserDataV1]]
-
-                result = userProfile match {
-                    case Some(ud) => ud
-                    case None => throw InconsistentTriplestoreDataException(s"User $userIri was not found but is member of project. Please report this as a possible bug.")
-                }
-            } yield result
-        }
-
-        val userDatasFuture: Future[Seq[Future[UserDataV1]]] = for {
-            memberIris: Seq[IRI] <- Future(memberIris)
-            userDatas: Seq[Future[UserDataV1]] = memberIris.map(userIri => getUserData(userIri))
-        } yield userDatas
-
-        for {
-            userDatas <- userDatasFuture
-            result: Seq[UserDataV1] <- Future.sequence(userDatas)
-        } yield ProjectMembersGetResponseV1(result, userProfile.ofType(UserProfileTypeV1.SHORT).userData)
-
-    }
-
-    /**
-      * Helper method that turns a sequence of user IRIs into a [[ProjectAdminMembersGetResponseV1]]
-      *
-      * @param memberIris  the user IRIs
-      * @param userProfile the profile of the user that is making the request
-      * @return a [[ProjectAdminMembersGetResponseV1]]
-      */
-    private def createProjectAdminMembersGetResponse(memberIris: Seq[IRI], userProfile: UserProfileV1): Future[ProjectAdminMembersGetResponseV1] = {
-
-        def getUserData(userIri: IRI): Future[UserDataV1] = {
-            for {
-                userProfile <- (responderManager ? UserDataByIriGetV1(userIri)).mapTo[Option[UserDataV1]]
-
-                result = userProfile match {
-                    case Some(ud) => ud
-                    case None => throw InconsistentTriplestoreDataException(s"User $userIri was not found but is member of project. Please report this as a possible bug.")
-                }
-            } yield result
-        }
-
-        val userDatasFuture: Future[Seq[Future[UserDataV1]]] = for {
-            memberIris: Seq[IRI] <- Future(memberIris)
-            userDatas: Seq[Future[UserDataV1]] = memberIris.map(userIri => getUserData(userIri))
-        } yield userDatas
-
-        for {
-            userDatas <- userDatasFuture
-            result: Seq[UserDataV1] <- Future.sequence(userDatas)
-        } yield ProjectAdminMembersGetResponseV1(result, userProfile.ofType(UserProfileTypeV1.SHORT).userData)
     }
 
     /**
