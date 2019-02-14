@@ -42,7 +42,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/de6d83112e04o.20160302T1505530Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/de6d83112e04o.20160302T150553Z"
     },
     "rdfs:label" : "Itinerarius seu peregrinatio beatae virginis Mariae"
   }, {
@@ -100,7 +100,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T1505430Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543Z"
     },
     "rdfs:label" : "[Das] Narrenschiff (lat.)"
   } ],

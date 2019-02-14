@@ -775,8 +775,8 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     // A regex that matches a Knora values IRI.
     private val ValueIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + ")$").r
 
-    // A DateTimeFormatter that parses and formats Knora ARK timestamps.
-    private val ArkTimestampFormat = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss[n]X").withZone(ZoneId.of("UTC"))
+    // A regex that parses a Knora ARK timestamp.
+    private val ArkTimestampRegex: Regex = """^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(\d{1,9})?Z$""".r
 
     /**
       * A regex that matches a valid username
@@ -1808,7 +1808,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             case _: Exception =>
                 // Try parsing it as a Knora ARK timestamp.
                 try {
-                    OffsetDateTime.parse(s, ArkTimestampFormat).toInstant
+                    parseArkTimestamp(s)
                 } catch {
                     case _: Exception =>
                         // Try parsing it as an ISO 8601 date with an offset.
@@ -1820,6 +1820,37 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
                         }
                 }
         }
+    }
+
+    /**
+      * Parses a Knora ARK timestamp.
+      *
+      * @param timestampStr the string to be parsed.
+      * @return an [[Instant]].
+      */
+    private def parseArkTimestamp(timestampStr: String): Instant = {
+        timestampStr match {
+            case ArkTimestampRegex(year, month, day, hour, minute, second, Optional(maybeFraction)) =>
+                val fractionStr = maybeFraction match {
+                    case Some(fraction) => s".$fraction"
+                    case None => ""
+                }
+
+                val instantStr = s"$year-$month-${day}T$hour:$minute:$second${fractionStr}Z"
+                Instant.parse(instantStr)
+
+            case _ => throw DataConversionException(s"Invalid ARK timestamp: $timestampStr")
+        }
+    }
+
+    /**
+      * Formats a Knora ARK timestamp.
+      *
+      * @param timestamp the timestamp to be formatted.
+      * @return a string representation of the timestamp.
+      */
+    private def formatArkTimestamp(timestamp: Instant): String = {
+        timestamp.toString.replace("-", "").replace(":", "").replace(".", "")
     }
 
     /**
@@ -2343,8 +2374,8 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * Check that a string represents a valid project shortcode.
       *
       * @param shortcode the optional string to be checked.
-      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-      *                    project shortcode.
+      * @param errorFun  a function that throws an exception. It will be called if the string does not represent a valid
+      *                  project shortcode.
       * @return the same string.
       */
     def validateAndEscapeProjectShortcode(shortcode: String, errorFun: => Nothing): String = {
@@ -2520,7 +2551,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         maybeTimestamp match {
             case Some(timestamp) =>
                 // Format the timestamp and append it to the URL as an ARK object variant.
-                arkUrlWithoutTimestamp + "." + ArkTimestampFormat.format(timestamp)
+                arkUrlWithoutTimestamp + "." + formatArkTimestamp(timestamp)
 
             case None =>
                 arkUrlWithoutTimestamp

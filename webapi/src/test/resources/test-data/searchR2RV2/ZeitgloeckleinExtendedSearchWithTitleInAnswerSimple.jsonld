@@ -9,7 +9,7 @@
     },
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T1505100Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T150510Z"
     },
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
@@ -22,7 +22,7 @@
     },
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T1505230Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"
     },
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   } ],

@@ -63,7 +63,7 @@
             "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
             "knora-api:versionArkUrl" : {
               "@type" : "xsd:anyURI",
-              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T1505230Z"
+              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"
             },
             "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
           }
@@ -85,14 +85,14 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/3f89a693a501w.20160302T1505240Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/3f89a693a501w.20160302T150524Z"
         },
         "rdfs:label" : "d8r"
       }
     },
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2e0252679a35p.20160302T1505550Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2e0252679a35p.20160302T150555Z"
     },
     "rdfs:label" : "DEMOX"
   }, {
@@ -159,7 +159,7 @@
             "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
             "knora-api:versionArkUrl" : {
               "@type" : "xsd:anyURI",
-              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T1505230Z"
+              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"
             },
             "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
           }
@@ -181,14 +181,14 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/6240ce899801x.20160302T1505230Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/6240ce899801x.20160302T150523Z"
         },
         "rdfs:label" : "a3v"
       }
     },
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/4e2223eb204c01w.20160302T1505560Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/4e2223eb204c01w.20160302T150556Z"
     },
     "rdfs:label" : "This is a saint"
   }, {
@@ -255,7 +255,7 @@
             "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
             "knora-api:versionArkUrl" : {
               "@type" : "xsd:anyURI",
-              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T1505230Z"
+              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"
             },
             "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
           }
@@ -277,14 +277,14 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c568b7239a01k.20160302T1505230Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c568b7239a01k.20160302T150523Z"
         },
         "rdfs:label" : "a7r"
       }
     },
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c2807e831a4c01G.20160302T1505560Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c2807e831a4c01G.20160302T150556Z"
     },
     "rdfs:label" : "TEST"
   }, {
@@ -351,7 +351,7 @@
             "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
             "knora-api:versionArkUrl" : {
               "@type" : "xsd:anyURI",
-              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T1505230Z"
+              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"
             },
             "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
           }
@@ -373,14 +373,14 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/6240ce899801x.20160302T1505230Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/6240ce899801x.20160302T150523Z"
         },
         "rdfs:label" : "a3v"
       }
     },
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c4160576204c01K.20160302T1505560Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c4160576204c01K.20160302T150556Z"
     },
     "rdfs:label" : "Image with angel and saint"
   } ],

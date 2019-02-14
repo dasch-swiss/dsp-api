@@ -35,7 +35,7 @@
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/91e19f1e01"/>
 	<knora-api:creationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp">2016-03-02T15:05:21Z</knora-api:creationDate>
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
-	<knora-api:versionArkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T1505210Z</knora-api:versionArkUrl>
+	<knora-api:versionArkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T150521Z</knora-api:versionArkUrl>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reise ins Heilige Land</rdfs:label>
 </incunabula:book>
 <knora-api:TextValue rdf:about="http://rdfh.ch/0803/2a6221216701/values/56c287fc9505">

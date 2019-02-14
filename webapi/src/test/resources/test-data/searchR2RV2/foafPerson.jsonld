@@ -36,7 +36,7 @@
   "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi.20180604T085622513000000Z"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi.20180604T085622513Z"
   },
   "rdfs:label" : "Testperson2",
   "@context" : {

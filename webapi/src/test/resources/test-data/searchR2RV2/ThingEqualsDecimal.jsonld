@@ -30,7 +30,7 @@
   "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/uqmMo72OQ2K2xe7mkIytlgf.20170725T071316732000000Z"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/uqmMo72OQ2K2xe7mkIytlgf.20170725T071316732Z"
   },
   "rdfs:label" : "Testding for extended search",
   "@context" : {

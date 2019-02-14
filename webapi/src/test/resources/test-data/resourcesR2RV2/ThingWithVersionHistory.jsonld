@@ -37,7 +37,7 @@
       "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
-        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/2qMtTWvVRXWMBcRNlduvCQa.20161017T171604913000000Z"
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/2qMtTWvVRXWMBcRNlduvCQa.20161017T171604913Z"
       },
       "rdfs:label" : "India"
     }
@@ -72,7 +72,7 @@
   },
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO.20190212T0805100Z"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO.20190212T080510Z"
   },
   "knora-api:versionDate" : {
     "@type" : "xsd:dateTimeStamp",

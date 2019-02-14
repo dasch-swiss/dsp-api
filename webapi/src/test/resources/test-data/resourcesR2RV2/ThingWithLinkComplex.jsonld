@@ -28,7 +28,7 @@
       "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
-        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/LOV=6aLYQFW15jwdyS51YwF.20161017T171604916000000Z"
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/LOV=6aLYQFW15jwdyS51YwF.20161017T171604916Z"
       },
       "rdfs:label" : "Uniform"
     }
@@ -50,7 +50,7 @@
   "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20161017T171604916000000Z"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20161017T171604916Z"
   },
   "rdfs:label" : "Sierra",
   "@context" : {

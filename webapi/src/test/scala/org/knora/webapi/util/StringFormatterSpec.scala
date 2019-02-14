@@ -1039,6 +1039,33 @@ class StringFormatterSpec extends CoreSpec() {
             val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl()
             assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn")
         }
+
+        "generate an ARK URL for a resource IRI with a timestamp with a fractional part" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+            val timestamp = Instant.parse("2018-06-04T08:56:22.513Z")
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(timestamp))
+            assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T085622513Z")
+        }
+
+        "generate an ARK URL for a resource IRI with a timestamp without a fractional part" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+            val timestamp = Instant.parse("2018-06-04T08:56:22Z")
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(timestamp))
+            assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T085622Z")
+        }
+
+        "parse an ARK URL timestamp with a fractional part" in {
+            val timestampStr = "20180604T085622513Z"
+            val timestamp = stringFormatter.toInstant(timestampStr, throw BadRequestException(s"invalid timestamp"))
+            assert(timestamp == Instant.parse("2018-06-04T08:56:22.513Z"))
+        }
+
+        "parse an ARK URL timestamp without a fractional part" in {
+            val timestampStr = "20180604T085622Z"
+            val timestamp = stringFormatter.toInstant(timestampStr, throw BadRequestException(s"invalid timestamp"))
+            assert(timestamp == Instant.parse("2018-06-04T08:56:22Z"))
+        }
+
     }
 
     "The StringFormatter class for User and Project" should {

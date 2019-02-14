@@ -61,9 +61,9 @@ See the interfaces `Resource` and `ResourcesSequence` in module
 `ResourcesResponse` (exists for both API schemas: `ApiV2Simple` and
 `ApiV2WithValueObjects`).
 
-## Get the Representation of a Resource by its IRI
+## Get the Representation of a Resource by IRI
 
-### Get a Full Representation of a Resource by its IRI
+### Get a Full Representation of a Resource by IRI
 
 A full representation of resource can be obtained by making a GET
 request to the API providing its IRI. Because a Knora IRI has the format
@@ -90,7 +90,25 @@ More formally, the URL looks like this:
 HTTP GET to http://host/v2/resources/resourceIRI(/anotherResourceIri)*
 ```
 
-### Get the preview of a resource by its IRI
+### Get a Full Representation of a Version of a Resource by IRI
+
+To get a specific past version of a resource, use the route described in
+@ref:[Get a Full Representation of a Resource by IRI](#get-a-full-representation-of-a-resource-by-iri),
+and add the URL parameter `?version=TIMESTAMP`, where `TIMESTAMP` is an
+[xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp) in the
+UTC timezone. The timestamp can either be URL-encoded, or submitted with all
+punctuation (`-`, `:`, and `.`) removed.
+
+The resource will be returned with the values that it had at the specified
+time. Since Knora only versions values, not other resource metadata (e.g.
+`rdfs:label`), the current metadata will be returned.
+
+The returned resource will include the predicate `knora-api:versionDate`,
+containing the timestamp that was submitted, and the its `knora-api:versionArkUrl`
+(see @ref:[Resource Permalinks](resource-permalinks.md)) will contain the
+same timestamp.
+
+### Get the preview of a resource by IRI
 
 In some cases, the client may only want to request the preview of a
 resource, which just provides its metadata (e.g. its IRI, `rdfs:label`,

@@ -28,7 +28,7 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
-        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T1505470Z"
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
       },
       "rdfs:label" : "[Das] Narrenschiff (lat.)"
     }
@@ -59,7 +59,7 @@
   "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/68ef9568b903O.20160302T1505470Z"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/68ef9568b903O.20160302T150547Z"
   },
   "rdfs:label" : "a4v",
   "@context" : {

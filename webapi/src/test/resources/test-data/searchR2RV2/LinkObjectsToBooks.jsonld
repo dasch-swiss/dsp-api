@@ -43,7 +43,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T1505430Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
@@ -74,7 +74,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U.20160302T1505390Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U.20160302T150539Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (dt.)"
       }
@@ -82,7 +82,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/881405205304a.20160302T1505540Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/881405205304a.20160302T150554Z"
     },
     "rdfs:label" : "Lateinische Übersetzung"
   }, {
@@ -129,7 +129,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T1505100Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T150510Z"
         },
         "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
       }
@@ -137,7 +137,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ab79ffa43935M.20160302T1505550Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ab79ffa43935M.20160302T150555Z"
     },
     "rdfs:label" : "DEMO_"
   }, {
@@ -184,7 +184,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/21abac2162A.20160302T1505140Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/21abac2162A.20160302T150514Z"
         },
         "rdfs:label" : "Lob der Glieder Mariens"
       }
@@ -215,7 +215,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/e41ab5695cN.20160302T1505140Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/e41ab5695cN.20160302T150514Z"
         },
         "rdfs:label" : "Orationes"
       }
@@ -246,7 +246,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T1505100Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T150510Z"
         },
         "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
       }
@@ -254,7 +254,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cb1a74e3e2f6X.20160302T1505560Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cb1a74e3e2f6X.20160302T150556Z"
     },
     "rdfs:label" : "Diese drei Texte sind in einem Band zusammengebunden."
   } ],
