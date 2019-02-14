@@ -42,7 +42,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv.20160302T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv.20160302T1505100Z"
     },
     "rdfs:label" : "Ein Ding für jemanden, dem die Dinge gefallen"
   }, {
@@ -77,7 +77,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/project=thing=1m.20160302T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/project=thing=1m.20160302T1505100Z"
     },
     "rdfs:label" : "A thing that only project members can see"
   } ],

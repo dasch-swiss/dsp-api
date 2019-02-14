@@ -63,7 +63,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0da887734b01l.20160302T150519000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0da887734b01l.20160302T1505190Z"
         },
         "rdfs:label" : "f8r"
       }
@@ -71,7 +71,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1967a9933401n.20160302T150518000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1967a9933401n.20160302T1505180Z"
     },
     "rdfs:label" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
   }, {
@@ -138,7 +138,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1ea3ff007e01L.20160302T150522000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1ea3ff007e01L.20160302T1505220Z"
         },
         "rdfs:label" : "48v"
       }
@@ -146,7 +146,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T150521000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T1505210Z"
     },
     "rdfs:label" : "Reise ins Heilige Land"
   }, {
@@ -213,7 +213,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/700b6b7e1201t.20160302T150516000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/700b6b7e1201t.20160302T1505160Z"
         },
         "rdfs:label" : "g2r"
       }
@@ -221,7 +221,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/41d01bd9fb0.20160302T150515000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/41d01bd9fb0.20160302T1505150Z"
     },
     "rdfs:label" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
   }, {
@@ -288,7 +288,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/52b8c76d3d03p.20160302T150540000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/52b8c76d3d03p.20160302T1505400Z"
         },
         "rdfs:label" : "g1v"
       }
@@ -296,7 +296,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U.20160302T150539000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U.20160302T1505390Z"
     },
     "rdfs:label" : "[Das] Narrenschiff (dt.)"
   }, {
@@ -363,7 +363,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/7a5c3424ca02J.20160302T150535000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/7a5c3424ca02J.20160302T1505350Z"
         },
         "rdfs:label" : "g1r"
       }
@@ -371,7 +371,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/861b5644b302T.20160302T150534000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/861b5644b302T.20160302T1505340Z"
     },
     "rdfs:label" : "Quadragesimale de filio prodigo"
   }, {
@@ -438,7 +438,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/7f2296af8803U.20160302T150544000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/7f2296af8803U.20160302T1505440Z"
         },
         "rdfs:label" : "g1r"
       }
@@ -446,7 +446,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T1505430Z"
     },
     "rdfs:label" : "[Das] Narrenschiff (lat.)"
   }, {
@@ -513,7 +513,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/87528201cc01p.20160302T150525000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/87528201cc01p.20160302T1505250Z"
         },
         "rdfs:label" : "g2v"
       }
@@ -521,7 +521,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9311a421b501n.20160302T150524000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9311a421b501n.20160302T1505240Z"
     },
     "rdfs:label" : "Bereitung zu dem Heiligen Sakrament"
   }, {
@@ -588,7 +588,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/87dc8d1f41020.20160302T150531000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/87dc8d1f41020.20160302T1505310Z"
         },
         "rdfs:label" : "g1v"
       }
@@ -596,7 +596,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/939baf3f2a02L.20160302T150530000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/939baf3f2a02L.20160302T1505300Z"
     },
     "rdfs:label" : "Postilla super epistolas et evangelia"
   }, {
@@ -663,7 +663,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/aaf6ddfecd03Z.20160302T150548000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/aaf6ddfecd03Z.20160302T1505480Z"
         },
         "rdfs:label" : "g1v"
       }
@@ -671,7 +671,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T1505470Z"
     },
     "rdfs:label" : "[Das] Narrenschiff (lat.)"
   }, {
@@ -738,7 +738,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b9466d1a17j.20160302T150511000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b9466d1a17j.20160302T1505110Z"
         },
         "rdfs:label" : "g2v"
       }
@@ -746,7 +746,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T1505100Z"
     },
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
@@ -813,7 +813,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c34970561804T.20160302T150552000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c34970561804T.20160302T1505520Z"
         },
         "rdfs:label" : "100"
       }
@@ -821,7 +821,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cf0892760104a.20160302T150551000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cf0892760104a.20160302T1505510Z"
     },
     "rdfs:label" : "Geschichte von der schönen Melusine"
   }, {
@@ -888,7 +888,7 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "knora-api:versionArkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b85e520aae015.20160302T150524000000000Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b85e520aae015.20160302T1505240Z"
         },
         "rdfs:label" : "g2v"
       }
@@ -896,7 +896,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T1505230Z"
     },
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   } ],

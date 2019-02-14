@@ -776,7 +776,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     private val ValueIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + ")$").r
 
     // A DateTimeFormatter that parses and formats Knora ARK timestamps.
-    private val ArkTimestampFormat = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss[nnnnnnnnn]X").withZone(ZoneId.of("UTC"))
+    private val ArkTimestampFormat = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss[n]X").withZone(ZoneId.of("UTC"))
 
     /**
       * A regex that matches a valid username

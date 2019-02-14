@@ -46,7 +46,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cf0892760104a.20160302T150551000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cf0892760104a.20160302T1505510Z"
     },
     "rdfs:label" : "Geschichte von der schönen Melusine"
   }, {
@@ -108,7 +108,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T150521000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T1505210Z"
     },
     "rdfs:label" : "Reise ins Heilige Land"
   }, {
@@ -162,7 +162,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c3f913666f0.20160302T150515000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c3f913666f0.20160302T1505150Z"
     },
     "rdfs:label" : "De generatione Christi"
   }, {
@@ -208,7 +208,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1967a9933401n.20160302T150518000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1967a9933401n.20160302T1505180Z"
     },
     "rdfs:label" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
   }, {
@@ -254,7 +254,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/41d01bd9fb0.20160302T150515000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/41d01bd9fb0.20160302T1505150Z"
     },
     "rdfs:label" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
   }, {
@@ -300,7 +300,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9311a421b501n.20160302T150524000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9311a421b501n.20160302T1505240Z"
     },
     "rdfs:label" : "Bereitung zu dem Heiligen Sakrament"
   }, {
@@ -354,7 +354,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T1505230Z"
     },
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
@@ -404,7 +404,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/3341c4984004k.20160302T150553000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/3341c4984004k.20160302T1505530Z"
     },
     "rdfs:label" : "Die wunderbare Meerfahrt des hl. Brandan"
   }, {
@@ -454,7 +454,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/939baf3f2a02L.20160302T150530000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/939baf3f2a02L.20160302T1505300Z"
     },
     "rdfs:label" : "Postilla super epistolas et evangelia"
   }, {
@@ -500,7 +500,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/21abac2162A.20160302T150514000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/21abac2162A.20160302T1505140Z"
     },
     "rdfs:label" : "Lob der Glieder Mariens"
   }, {
@@ -546,7 +546,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T1505100Z"
     },
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
@@ -600,7 +600,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/e41ab5695cN.20160302T150514000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/e41ab5695cN.20160302T1505140Z"
     },
     "rdfs:label" : "Orationes"
   }, {
@@ -646,7 +646,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/861b5644b302T.20160302T150534000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/861b5644b302T.20160302T1505340Z"
     },
     "rdfs:label" : "Quadragesimale de filio prodigo"
   }, {
@@ -696,7 +696,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U.20160302T150539000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U.20160302T1505390Z"
     },
     "rdfs:label" : "[Das] Narrenschiff (dt.)"
   }, {
@@ -746,7 +746,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/6fad5b8c1e03q.20160302T150538000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/6fad5b8c1e03q.20160302T1505380Z"
     },
     "rdfs:label" : "Passio sancti Meynrhadi martyris et heremite"
   } ],

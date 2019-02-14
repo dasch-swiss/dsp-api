@@ -111,7 +111,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/project=thing=1m.20160302T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/project=thing=1m.20160302T1505100Z"
     },
     "rdfs:label" : "A thing that only project members can see"
   }, {
@@ -134,7 +134,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/project=thing=2k.20160302T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/project=thing=2k.20160302T1505100Z"
     },
     "rdfs:label" : "Another thing that only project members can see"
   }, {
@@ -276,7 +276,7 @@
     },
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO.20190213T090510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO.20190213T0905100Z"
     },
     "rdfs:label" : "A thing with version history"
   }, {
@@ -299,7 +299,7 @@
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_dateb.20180131T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_dateb.20180131T1505100Z"
     },
     "rdfs:label" : "A thing that has a BCE date value"
   }, {
@@ -322,7 +322,7 @@
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S.20180131T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S.20180131T1505100Z"
     },
     "rdfs:label" : "A thing that has a BCE date value"
   }, {
@@ -345,7 +345,7 @@
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_list_valueO.20180131T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_list_valueO.20180131T1505100Z"
     },
     "rdfs:label" : "A thing that has a list value"
   }, {
@@ -368,7 +368,7 @@
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_richtext_with_markupO.20180131T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_richtext_with_markupO.20180131T1505100Z"
     },
     "rdfs:label" : "test thing with markup"
   }, {
@@ -391,7 +391,7 @@
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_two_list_valuesx.20180131T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_two_list_valuesx.20180131T1505100Z"
     },
     "rdfs:label" : "A thing that has two list values"
   }, {

@@ -78,7 +78,7 @@
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S.20180131T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S.20180131T1505100Z"
     },
     "rdfs:label" : "A thing that has a BCE date value"
   }, {
@@ -119,7 +119,7 @@
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_dateb.20180131T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_dateb.20180131T1505100Z"
     },
     "rdfs:label" : "A thing that has a BCE date value"
   }, {
@@ -464,7 +464,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thingO.20160302T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thingO.20160302T1505100Z"
     },
     "rdfs:label" : "A thing"
   }, {
@@ -487,7 +487,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=pictureE.20160302T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=pictureE.20160302T1505100Z"
     },
     "rdfs:label" : "A thing with a picture"
   }, {
@@ -510,7 +510,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|V knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV.20171006T110537000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV.20171006T1105370Z"
     },
     "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)"
   }, {
@@ -533,7 +533,7 @@
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB.20160302T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB.20160302T1505100Z"
     },
     "rdfs:label" : "ein verdammtes Ding mit einer Sprache"
   }, {
@@ -556,7 +556,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/another=thing4.20160302T150510000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/another=thing4.20160302T1505100Z"
     },
     "rdfs:label" : "Another thing"
   }, {
@@ -602,7 +602,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|V knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV.20171006T110537000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV.20171006T1105370Z"
     },
     "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)"
   }, {
@@ -625,7 +625,7 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|V knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV.20171006T110537000000000Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV.20171006T1105370Z"
     },
     "rdfs:label" : "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)"
   } ],
