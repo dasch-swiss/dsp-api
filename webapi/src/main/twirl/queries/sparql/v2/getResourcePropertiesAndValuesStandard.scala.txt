@@ -23,8 +23,7 @@
 @import org.knora.webapi.SparqlGenerationException
 
 @*
- * Performs a simple full-text search using standard SPARQL (except for the interface to Lucene, which is
- * triplestore-specific), and without inference.
+ * Gets the values of all the Knora properties of one or more resources, using standard SPARQL.
  *
  * This template is used only by getResourcePropertiesAndValues.scala.txt.
  *

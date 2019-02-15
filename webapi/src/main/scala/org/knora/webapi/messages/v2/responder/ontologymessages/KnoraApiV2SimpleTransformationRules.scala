@@ -358,6 +358,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         OntologyConstants.KnoraBase.AttachedToProject,
         OntologyConstants.KnoraBase.IsDeleted,
         OntologyConstants.KnoraBase.DeleteDate,
+        OntologyConstants.KnoraBase.DeletedBy,
         OntologyConstants.KnoraBase.DeleteComment,
         OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted,
         OntologyConstants.KnoraBase.ObjectDatatypeConstraint,

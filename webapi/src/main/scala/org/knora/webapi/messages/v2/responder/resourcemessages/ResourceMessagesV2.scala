@@ -75,6 +75,30 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
 case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI], requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
+  * Requests the version history of the values of a resource.
+  *
+  * @param resourceIri    the IRI of the resource.
+  * @param startDate      the start of the time period to return, inclusive.
+  * @param endDate        the end of the time period to return, exclusive.
+  * @param requestingUser the user making the request.
+  */
+case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI, startDate: Option[Instant], endDate: Option[Instant], requestingUser: UserADM)
+
+/**
+  * Represents an item in the version history of a resource.
+  *
+  * @param versionDate the date when the modification occurred.
+  * @param userIri     the IRI of the user that made the modification.
+  */
+case class ValueModification(versionDate: Instant, userIri: IRI)
+
+
+/**
+  * Represents the version history of the values of a resource.
+  */
+case class ResourceVersionHistoryResponseV2(history: Seq[ValueModification])
+
+/**
   * Requests a resource as TEI/XML. A successful response will be a [[ResourceTEIGetResponseV2]].
   *
   * @param resourceIri           the IRI of the resource to be returned in TEI/XML.

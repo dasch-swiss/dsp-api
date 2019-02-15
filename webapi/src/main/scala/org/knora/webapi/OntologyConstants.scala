@@ -501,6 +501,7 @@ object OntologyConstants {
 
         val Address: IRI = KnoraBasePrefixExpansion + "address"
         val DeleteDate: IRI = KnoraBasePrefixExpansion + "deleteDate"
+        val DeletedBy: IRI = KnoraBasePrefixExpansion + "deletedBy"
         val DeleteComment: IRI = KnoraBasePrefixExpansion + "deleteComment"
 
         val HasExtResValue: IRI = OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "hasExtResValue"

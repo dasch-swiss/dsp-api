@@ -510,6 +510,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -578,6 +579,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -795,6 +797,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -865,6 +868,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -998,6 +1002,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -1120,6 +1125,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -1191,6 +1197,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 

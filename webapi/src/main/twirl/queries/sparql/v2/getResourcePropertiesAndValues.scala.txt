@@ -23,12 +23,13 @@
 @import org.knora.webapi.SparqlGenerationException
 
 @**
- * Gets the values of all the Knora properties of a resource.
+ * Gets the values of all the Knora properties of one or more resources.
  *
  * If the triplestore type is GraphDB, this template delegates to getResourcePropertiesAndValuesGraphDB.sparql.txt,
  * which is optimised for GraphDB. Otherwise, it delegates to getResourcePropertiesAndValuesStandard.sparql.txt.
  *
  * @param triplestore      the name of the triplestore being used.
+ * @param resourceIris     the IRIs of the requested resources.
  * @param preview          indicates if the request should only return preview information.
  * @param maybePropertyIri if defined, only returns values of the specified explicit property.
  *                         Cannot be used in conjunction with preview.

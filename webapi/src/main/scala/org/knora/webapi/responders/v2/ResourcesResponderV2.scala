@@ -375,7 +375,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     dataNamedGraph = dataNamedGraph,
                     resourceIri = deleteResourceV2.resourceIri,
                     maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
-                    currentTime = Instant.now
+                    currentTime = Instant.now,
+                    requestingUser = deleteResourceV2.requestingUser.id
                 ).toString()
 
                 // Do the update.

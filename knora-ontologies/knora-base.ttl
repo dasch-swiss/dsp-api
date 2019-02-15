@@ -962,6 +962,7 @@
 
                :objectDatatypeConstraint xsd:boolean .
 
+
 ### http://www.knora.org/ontology/knora-base#mappingHasDefaultXSLTransformation
 
 :mappingHasDefaultXSLTransformation rdf:type owl:ObjectProperty ;
@@ -976,6 +977,20 @@
 
                :objectClassConstraint :XSLTransformation .
 
+
+###  http://www.knora.org/ontology/knora-base#deletedBy
+
+:deletedBy rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+           rdfs:comment "Indicates who deleted a resource or value"@en ;
+
+           # No :subjectClassConstraint, because this can be used with :Resource or :Value.
+
+           :objectClassConstraint :User .
+           
+           
 #################################################################
 #
 #    Datatype properties
@@ -1020,7 +1035,6 @@
             # No :subjectClassConstraint, because this can be used with :Resource or :Value.
 
             :objectDatatypeConstraint xsd:dateTime .
-
 
 
 ###  http://www.knora.org/ontology/knora-base#dimX
@@ -2192,6 +2206,10 @@
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
+                            owl:onProperty :deletedBy ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
                             owl:onProperty :deleteComment ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
@@ -2640,6 +2658,10 @@
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :deleteDate ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :deletedBy ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;

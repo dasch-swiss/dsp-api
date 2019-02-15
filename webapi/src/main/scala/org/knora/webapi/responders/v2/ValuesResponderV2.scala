@@ -992,7 +992,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 valuePermissions = valuePermissions,
                 maybeComment = newValueVersion.comment,
                 linkUpdates = standoffLinkUpdates,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = requestingUser.id
             ).toString())
 
             /*
@@ -1065,7 +1066,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                 linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                 maybeComment = newLinkValue.comment,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = requestingUser.id
             ).toString())
 
             /*
@@ -1324,7 +1326,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 linkSourceIri = resourceInfo.resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
                 maybeComment = deleteComment,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = requestingUser.id
             ).toString())
 
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
@@ -1381,7 +1384,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 valueIri = currentValue.valueIri,
                 maybeDeleteComment = deleteComment,
                 linkUpdates = linkUpdates,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = requestingUser.id
             ).toString())
 
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]

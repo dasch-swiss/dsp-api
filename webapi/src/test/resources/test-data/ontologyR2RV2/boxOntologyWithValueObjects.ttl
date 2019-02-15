@@ -28,6 +28,10 @@ example-box:Box a owl:Class;
       owl:onProperty knora-api:attachedToProject
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
@@ -68,6 +72,10 @@ example-box:Box a owl:Class;
       owl:onProperty knora-api:deleteDate
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deletedBy
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
@@ -78,10 +86,6 @@ example-box:Box a owl:Class;
       knora-api:isInherited true;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkToValue
     ] .
 
 example-box:hasName a owl:ObjectProperty;

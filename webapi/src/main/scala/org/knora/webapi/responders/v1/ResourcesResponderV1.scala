@@ -2031,7 +2031,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri,
                     maybeDeleteComment = resourceDeleteRequest.deleteComment,
-                    currentTime = currentTime
+                    currentTime = currentTime,
+                    requestingUser = resourceDeleteRequest.userADM.id
                 ).toString()
 
                 // Do the update.
