@@ -1809,7 +1809,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             case ArkTimestampRegex(year, month, day, hour, minute, second, Optional(maybeFraction)) =>
                 val nanoOfSecond: Int = maybeFraction match {
                     case None => 0
-                    case Some(fraction) => fraction.padTo(9, '0').toInt
+
+                    case Some(fraction) =>
+                        // Pad the nano-of-second with trailing zeroes so it has 9 digits, then convert it
+                        // to an integer.
+                        fraction.padTo(9, '0').toInt
                 }
 
                 try {
@@ -1840,7 +1844,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @return a string representation of the timestamp.
       */
     private def formatArkTimestamp(timestamp: Instant): String = {
-        val offsetDateTime = timestamp.atOffset(ZoneOffset.UTC)
+        val offsetDateTime: OffsetDateTime = timestamp.atOffset(ZoneOffset.UTC)
 
         val year: Int = offsetDateTime.get(ChronoField.YEAR)
         val month: Int = offsetDateTime.get(ChronoField.MONTH_OF_YEAR)
@@ -1848,10 +1852,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         val hour: Int = offsetDateTime.get(ChronoField.HOUR_OF_DAY)
         val minute: Int = offsetDateTime.get(ChronoField.MINUTE_OF_HOUR)
         val second: Int = offsetDateTime.get(ChronoField.SECOND_OF_MINUTE)
-        val nanoOfSecondInt: Int = offsetDateTime.get(ChronoField.NANO_OF_SECOND)
+        val nanoOfSecond: Int = offsetDateTime.get(ChronoField.NANO_OF_SECOND)
 
-        val fractionStr: IRI = if (nanoOfSecondInt > 0) {
-            TrailingZerosRegex.replaceAllIn(nanoOfSecondInt.toString, "")
+        val fractionStr: IRI = if (nanoOfSecond > 0) {
+            // Convert the nano-of-second to a string, then strip trailing zeroes.
+            TrailingZerosRegex.replaceAllIn(nanoOfSecond.toString, "")
         } else {
             ""
         }
