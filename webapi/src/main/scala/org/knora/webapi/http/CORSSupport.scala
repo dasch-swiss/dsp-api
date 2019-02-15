@@ -33,7 +33,7 @@ import scala.collection.immutable.Seq
 
 object CORSSupport extends Directives {
 
-    val age: Long = 30 * 60
+    val age: Long = 30 * 60 // seconds
 
     val corsSettings = CorsSettings.defaultSettings.
             withAllowGenericHttpRequests(true).
