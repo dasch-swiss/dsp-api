@@ -49,7 +49,7 @@ INSERT {
             knora-base:attachedToProject ?project ;
             knora-base:isShared @isShared ;
             rdfs:label """@ontologyLabel"""^^xsd:string ;
-            knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+            knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
