@@ -447,7 +447,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             creationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
                 key = OntologyConstants.KnoraApiV2WithValueObjects.CreationDate,
                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                validationFun = stringFormatter.toInstant
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
             )
 
             // Get the resource's values.
@@ -591,7 +591,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
         val maybeLastModificationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
             key = OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
             expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-            validationFun = stringFormatter.toInstant
+            validationFun = stringFormatter.xsdDateTimeStampToInstant
         )
 
         val maybeLabel: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
@@ -600,7 +600,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
         val maybeNewModificationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
             key = OntologyConstants.KnoraApiV2WithValueObjects.NewModificationDate,
             expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-            validationFun = stringFormatter.toInstant
+            validationFun = stringFormatter.xsdDateTimeStampToInstant
         )
 
         if (Seq(maybeLabel, maybePermissions, maybeNewModificationDate).forall(_.isEmpty)) {
@@ -680,7 +680,7 @@ object DeleteResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteResource
         val maybeLastModificationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
             key = OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
             expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-            validationFun = stringFormatter.toInstant
+            validationFun = stringFormatter.xsdDateTimeStampToInstant
         )
 
         val maybeDeleteComment: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DeleteComment, stringFormatter.toSparqlEncodedString)

@@ -198,7 +198,20 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     }
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
-                    val versionDate = params.get("version").map(versionStr => stringFormatter.toInstant(versionStr, throw BadRequestException(s"Invalid version date: $versionStr")))
+
+                    // Was a version date provided?
+                    val versionDate = params.get("version").map {
+                        versionStr =>
+                            def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
+
+                            // Yes. Try to parse it as an xsd:dateTimeStamp.
+                            try {
+                                stringFormatter.xsdDateTimeStampToInstant(versionStr, errorFun)
+                            } catch {
+                                // If that doesn't work, try to parse it as a Knora ARK timestamp.
+                                case _: Exception => stringFormatter.arkTimestampToInstant(versionStr, errorFun)
+                            }
+                    }
 
                     val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)

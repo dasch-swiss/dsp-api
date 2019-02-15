@@ -968,13 +968,12 @@
 <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1> knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
   knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
   knora-base:isDeleted "false"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
-  knora-base:valueCreationDate "2018-04-16T13:24:53.578Z"^^<http://www.w3.org/2001/XMLSchema#dateTimeStamp> ;
+  knora-base:valueCreationDate "2018-04-16T13:24:53.578Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
   knora-base:valueHasOrder "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
   knora-base:valueHasStandoff <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff1> , <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff2> , <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff3> , <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff4> ;
   knora-base:valueHasString "This is a test that contains marked up elements. This is interesting text in italics. This is boring text in italics." ;
   a knora-base:TextValue .
-
 
 <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff1> knora-base:standoffTagHasEnd 118 ;
   knora-base:standoffTagHasStart 0 ;

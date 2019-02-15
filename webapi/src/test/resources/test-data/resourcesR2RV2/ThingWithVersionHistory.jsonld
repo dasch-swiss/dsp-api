@@ -72,11 +72,11 @@
   },
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO.20190212T080510Z"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO.20190212T080510351Z"
   },
   "knora-api:versionDate" : {
     "@type" : "xsd:dateTimeStamp",
-    "@value" : "2019-02-12T08:05:10Z"
+    "@value" : "2019-02-12T08:05:10.351Z"
   },
   "rdfs:label" : "A thing with version history",
   "@context" : {

@@ -770,7 +770,7 @@ object ConstructResponseUtilV2 {
 
             if (resourceIsDeleted) {
                 val deleteDateStr = assertions(OntologyConstants.KnoraBase.DeleteDate)
-                val deleteDate = stringFormatter.toInstant(deleteDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:deleteDate in entity <$entityIri>: $deleteDateStr"))
+                val deleteDate = stringFormatter.xsdDateTimeStampToInstant(deleteDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:deleteDate in entity <$entityIri>: $deleteDateStr"))
                 val deleteComment = assertions(OntologyConstants.KnoraBase.DeleteComment)
 
                 Some(
@@ -792,8 +792,8 @@ object ConstructResponseUtilV2 {
         val resourceAttachedToProject: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToProject)
         val resourcePermissions: String = resourceAssertionsMap(OntologyConstants.KnoraBase.HasPermissions)
         val resourceCreationDateStr: String = resourceAssertionsMap(OntologyConstants.KnoraBase.CreationDate)
-        val resourceCreationDate: Instant = stringFormatter.toInstant(resourceCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:creationDate: $resourceCreationDateStr"))
-        val resourceLastModificationDate: Option[Instant] = resourceAssertionsMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(resourceLastModificationDateStr => stringFormatter.toInstant(resourceLastModificationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:lastModificationDate: $resourceLastModificationDateStr")))
+        val resourceCreationDate: Instant = stringFormatter.xsdDateTimeStampToInstant(resourceCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:creationDate: $resourceCreationDateStr"))
+        val resourceLastModificationDate: Option[Instant] = resourceAssertionsMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(resourceLastModificationDateStr => stringFormatter.xsdDateTimeStampToInstant(resourceLastModificationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:lastModificationDate: $resourceLastModificationDateStr")))
         val resourceDeletionInfo = getDeletionInfo(entityIri = resourceIri, assertions = resourceAssertionsMap)
 
         // get the resource's values
@@ -819,7 +819,7 @@ object ConstructResponseUtilV2 {
                             )
 
                             valueCreationDateStr: String = valObj.assertions(OntologyConstants.KnoraBase.ValueCreationDate)
-                            valueCreationDate: Instant = stringFormatter.toInstant(valueCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueCreationDate in value <${valObj.valueObjectIri}>: $valueCreationDateStr"))
+                            valueCreationDate: Instant = stringFormatter.xsdDateTimeStampToInstant(valueCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueCreationDate in value <${valObj.valueObjectIri}>: $valueCreationDateStr"))
                             valueDeletionInfo = getDeletionInfo(entityIri = valObj.valueObjectIri, assertions = valObj.assertions)
                         } yield valueContent match {
                             case linkValueContentV2: LinkValueContentV2 =>

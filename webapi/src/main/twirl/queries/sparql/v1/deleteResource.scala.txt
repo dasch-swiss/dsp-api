@@ -52,7 +52,7 @@ DELETE {
     GRAPH ?dataNamedGraph {
         @* Mark the resource as deleted. *@
         ?resource knora-base:isDeleted true ;
-            knora-base:deleteDate "@currentTime"^^xsd:dateTimeStamp .
+            knora-base:deleteDate "@currentTime"^^xsd:dateTime .
 
         @* Add the delete comment, if any. *@
         @maybeDeleteComment match {
@@ -66,7 +66,7 @@ DELETE {
         }
 
         @* Update the resource's last modification date. *@
-        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
