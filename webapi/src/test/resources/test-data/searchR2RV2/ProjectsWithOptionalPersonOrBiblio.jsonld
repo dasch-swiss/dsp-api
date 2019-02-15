@@ -85,7 +85,7 @@
     "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0666/NLe33EVtTKGozGJOqKT_2QL.20180606T120856890Z"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0666/NLe33EVtTKGozGJOqKT_2QL.20180606T12085689Z"
     },
     "rdfs:label" : "Project3"
   }, {

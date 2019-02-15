@@ -1855,8 +1855,9 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         val nanoOfSecond: Int = offsetDateTime.get(ChronoField.NANO_OF_SECOND)
 
         val fractionStr: IRI = if (nanoOfSecond > 0) {
-            // Convert the nano-of-second to a string, then strip trailing zeroes.
-            TrailingZerosRegex.replaceAllIn(nanoOfSecond.toString, "")
+            // Convert the nano-of-second to a 9-digit string representation, then strip trailing zeroes.
+            val nineDigitNanoOfSecond = f"$nanoOfSecond%09d"
+            TrailingZerosRegex.replaceAllIn(nineDigitNanoOfSecond, "")
         } else {
             ""
         }

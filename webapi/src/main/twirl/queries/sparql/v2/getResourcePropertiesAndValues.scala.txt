@@ -19,6 +19,8 @@
 
 @import java.time.Instant
 @import org.knora.webapi.IRI
+@import org.knora.webapi.util.SmartIri
+@import org.knora.webapi.SparqlGenerationException
 
 @**
  * Gets the values of all the Knora properties of a resource.
@@ -26,21 +28,28 @@
  * If the triplestore type is GraphDB, this template delegates to getResourcePropertiesAndValuesGraphDB.sparql.txt,
  * which is optimised for GraphDB. Otherwise, it delegates to getResourcePropertiesAndValuesStandard.sparql.txt.
  *
- * @param triplestore the name of the triplestore being used.
- * @param resourceIris the IRIs of the resources to be queried.
- * @param preview indicates if the request should only return preview information.
+ * @param triplestore      the name of the triplestore being used.
+ * @param preview          indicates if the request should only return preview information.
+ * @param maybePropertyIri if defined, only returns values of the specified explicit property.
+ *                         Cannot be used in conjunction with preview.
  * @param maybeVersionDate if defined, requests the state of the resources at the specified
  *                         time in the past. Cannot be used in conjunction with preview.
  *@
 @(triplestore: String,
   resourceIris: Seq[IRI],
   preview: Boolean,
+  maybePropertyIri: Option[SmartIri] = None,
   maybeVersionDate: Option[Instant] = None)
+
+@if(preview && (maybeVersionDate.isDefined || maybePropertyIri.isDefined)) {
+    @{throw SparqlGenerationException(s"A preview cannot be requested with a property or a version date"); ()}
+}
 
 @if(triplestore.startsWith("graphdb")) {
     @{
         queries.sparql.v2.txt.getResourcePropertiesAndValuesGraphDB(resourceIris = resourceIris,
                                                                     preview = preview,
+                                                                    maybePropertyIri = maybePropertyIri,
                                                                     maybeVersionDate = maybeVersionDate)
     }
 } else {
@@ -48,6 +57,7 @@
         queries.sparql.v2.txt.getResourcePropertiesAndValuesStandard(triplestore = triplestore,
                                                                     resourceIris = resourceIris,
                                                                     preview = preview,
+                                                                    maybePropertyIri = maybePropertyIri,
                                                                     maybeVersionDate = maybeVersionDate)
     }
 }

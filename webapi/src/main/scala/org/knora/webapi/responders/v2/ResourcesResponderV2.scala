@@ -68,7 +68,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
       */
     def receive(msg: ResourcesResponderRequestV2) = msg match {
-        case ResourcesGetRequestV2(resIris, versionDate, requestingUser) => getResources(resIris, versionDate, requestingUser)
+        case ResourcesGetRequestV2(resIris, propertyIri, versionDate, requestingUser) => getResources(resIris, propertyIri, versionDate, requestingUser)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreview(resIris, requestingUser)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
@@ -912,9 +912,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param preview      `true` if a preview of the resource is requested.
       * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
       *                     Cannot be used in conjunction with `preview`.
-      * @return a [[Map[IRI, ResoceWithValueRdfData]]] representing the resources.
+      * @return a map of resource IRIs to RDF data.
       */
-    private def getResourcesFromTriplestore(resourceIris: Seq[IRI], preview: Boolean, versionDate: Option[Instant], requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
+    private def getResourcesFromTriplestore(resourceIris: Seq[IRI],
+                                            preview: Boolean,
+                                            propertyIri: Option[SmartIri],
+                                            versionDate: Option[Instant],
+                                            requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -924,6 +928,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 triplestore = settings.triplestoreType,
                 resourceIris = resourceIrisDistinct,
                 preview = preview,
+                maybePropertyIri = propertyIri,
                 maybeVersionDate = versionDate
             ).toString())
 
@@ -952,14 +957,23 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResources(resourceIris: Seq[IRI], versionDate: Option[Instant] = None, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def getResources(resourceIris: Seq[IRI],
+                             propertyIri: Option[SmartIri] = None,
+                             versionDate: Option[Instant] = None,
+                             requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
 
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = false, versionDate = versionDate, requestingUser = requestingUser)
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(
+                resourceIris = resourceIris,
+                preview = false,
+                propertyIri = propertyIri,
+                versionDate = versionDate,
+                requestingUser = requestingUser
+            )
 
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
@@ -995,7 +1009,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = true, versionDate = None, requestingUser = requestingUser)
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(
+                resourceIris = resourceIris,
+                preview = true,
+                propertyIri = None,
+                versionDate = None,
+                requestingUser = requestingUser
+            )
 
             resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>

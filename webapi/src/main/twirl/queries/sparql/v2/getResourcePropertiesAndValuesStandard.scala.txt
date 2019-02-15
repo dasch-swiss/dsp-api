@@ -19,6 +19,7 @@
 
 @import java.time.Instant
 @import org.knora.webapi.IRI
+@import org.knora.webapi.util.SmartIri
 @import org.knora.webapi.SparqlGenerationException
 
 @*
@@ -27,16 +28,19 @@
  *
  * This template is used only by getResourcePropertiesAndValues.scala.txt.
  *
- * @param triplestore the name of the triplestore being used.
- * @param resourceIris the Iris of the requested resources.
- * @param preview indicates if the request should only return preview information.
+ * @param triplestore      the name of the triplestore being used.
+ * @param resourceIris     the IRIs of the requested resources.
+ * @param preview          indicates if the request should only return preview information.
+ * @param maybePropertyIri if defined, only returns values of the specified explicit property.
+ *                         Cannot be used in conjunction with preview.
  * @param maybeVersionDate if defined, requests the state of the resources at the specified
  *                         time in the past. Cannot be used in conjunction with preview.
  *@
 @(triplestore: String,
   resourceIris: Seq[IRI],
   preview: Boolean,
-  maybeVersionDate: Option[Instant] = None)
+  maybePropertyIri: Option[SmartIri],
+  maybeVersionDate: Option[Instant])
 
 
 @*

@@ -57,10 +57,14 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   * Requests a description of a resource. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param resourceIris   the IRIs of the resources to be queried.
+  * @param propertyIri    if defined, requests only the values of the specified explicit property.
   * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
   * @param requestingUser the user making the request.
   */
-case class ResourcesGetRequestV2(resourceIris: Seq[IRI], versionDate: Option[Instant] = None, requestingUser: UserADM) extends ResourcesResponderRequestV2
+case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
+                                 propertyIri: Option[SmartIri] = None,
+                                 versionDate: Option[Instant] = None,
+                                 requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
   * Requests a preview of one or more resources. A successful response will be a [[ReadResourcesSequenceV2]].

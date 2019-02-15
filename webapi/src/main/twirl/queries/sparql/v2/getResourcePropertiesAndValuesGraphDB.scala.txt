@@ -19,7 +19,7 @@
 
 @import java.time.Instant
 @import org.knora.webapi.IRI
-@import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.SmartIri
 
 @*
  * Performs a resource request using GraphDB.
@@ -27,18 +27,17 @@
  * This template is used only by getResourcePropertiesAndValues.scala.txt.
  *
  *
- * @param resourceIris     the Iris of the requested resources.
+ * @param resourceIris     the IRIs of the requested resources.
  * @param preview          indicates if the request should only return preview information.
+ * @param maybePropertyIri if defined, only returns values of the specified explicit property.
+ *                         Cannot be used in conjunction with preview.
  * @param maybeVersionDate if defined, requests the state of the resources at the specified
  *                         time in the past. Cannot be used in conjunction with preview.
  *@
 @(resourceIris: Seq[IRI],
   preview: Boolean,
-  maybeVersionDate: Option[Instant] = None)
-
-@if(preview && maybeVersionDate.isDefined) {
-    @{throw SparqlGenerationException(s"A resource preview cannot be requested for a time in the past"); ()}
-}
+  maybePropertyIri: Option[SmartIri],
+  maybeVersionDate: Option[Instant])
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -132,7 +131,18 @@ CONSTRUCT {
                     @* Yes. Find the values that existed at the target date. *@
 
                     @* Get the current version of each value. *@
-                    ?resource knora-base:hasValue ?currentValue .
+
+                    @maybePropertyIri match {
+                        case Some(propertyIri) => {
+                            GRAPH <http://www.ontotext.com/explicit> {
+                                ?resource <@propertyIri> ?currentValue .
+                            }
+                        }
+
+                        case None => {
+                            ?resource knora-base:hasValue ?currentValue .
+                        }
+                    }
 
                     @* If the value was deleted on or before the target date, ignore all its versions. *@
                     FILTER NOT EXISTS {
@@ -172,6 +182,18 @@ CONSTRUCT {
 
                     ?resource knora-base:hasValue ?valueObject .
                     ?valueObject knora-base:isDeleted false .
+
+                    @maybePropertyIri match {
+                        case Some(propertyIri) => {
+                            GRAPH <http://www.ontotext.com/explicit> {
+                                ?resource <@propertyIri> ?valueObject .
+                            }
+                        }
+
+                        case None => {
+                            ?resource knora-base:hasValue ?valueObject .
+                        }
+                    }
 
                     GRAPH <http://www.ontotext.com/explicit> {
                         ?resource ?resourceValueProperty ?valueObject .
