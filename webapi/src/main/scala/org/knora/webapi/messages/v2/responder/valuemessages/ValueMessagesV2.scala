@@ -622,8 +622,10 @@ case class UpdateValueV2(resourceIri: IRI,
   *
   * @param newValueIri  the IRI that was assigned to the new value.
   * @param valueContent the content of the new value (unescaped, as it would be read from the triplestore).
+  * @param permissions  the permissions of the new value.
+  * @param creationDate the new value's creation date.
   */
-case class UnverifiedValueV2(newValueIri: IRI, valueContent: ValueContentV2, permissions: String)
+case class UnverifiedValueV2(newValueIri: IRI, valueContent: ValueContentV2, permissions: String, creationDate: Instant)
 
 /**
   * The content of the value of a Knora property.
