@@ -35,7 +35,9 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 SELECT DISTINCT ?timestamp ?user WHERE {
-    <@resourceIri> knora-base:hasValue ?currentValue .
+    <@resourceIri> knora-base:isDeleted false ;
+        knora-base:hasValue ?currentValue .
+
     ?currentValue knora-base:previousValue* ?valueObject .
 
     {
