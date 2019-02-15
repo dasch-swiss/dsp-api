@@ -115,6 +115,7 @@ object OntologyConstants {
         val Decimal: IRI = XsdPrefixExpansion + "decimal"
         val Uri: IRI = XsdPrefixExpansion + "anyURI"
         val Pattern: IRI = XsdPrefixExpansion + "pattern"
+        val DateTime: IRI = XsdPrefixExpansion + "dateTime"
         val DateTimeStamp: IRI = XsdPrefixExpansion + "dateTimeStamp"
     }
 
@@ -348,6 +349,8 @@ object OntologyConstants {
         val ProjectDescription: IRI = KnoraBasePrefixExpansion + "projectDescription"
         val ProjectKeyword: IRI = KnoraBasePrefixExpansion + "projectKeyword"
         val ProjectLogo: IRI = KnoraBasePrefixExpansion + "projectLogo"
+        val ProjectRestrictedViewSize: IRI = KnoraBasePrefixExpansion + "projectRestrictedViewSize"
+        val ProjectRestrictedViewWatermark: IRI = KnoraBasePrefixExpansion + "projectRestrictedViewWatermark"
         val BelongsToInstitution: IRI = KnoraBasePrefixExpansion + "belongsToInstitution"
         val HasSelfJoinEnabled: IRI = KnoraBasePrefixExpansion + "hasSelfJoinEnabled"
 

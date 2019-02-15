@@ -37,7 +37,7 @@
 	webern:hasRelation <http://rdfh.ch/08AE/testperson1/values/f7675f26-4b01-4432-be74-9ae3aa24d2af> ;
 	knora-base:attachedToProject <http://rdfh.ch/projects/08AE> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
-	knora-base:creationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:creationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:hasPermissions "CR knora-base:ProjectMember,knora-base:Creator|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
 	rdfs:label "Test person for Webern" .
@@ -51,7 +51,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "Polnauer" .
 
@@ -63,7 +63,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "Josef" .
 
@@ -75,7 +75,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "Josef Maximilian Polnauer" .
 
@@ -87,7 +87,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "1017673659" .
 
@@ -99,7 +99,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "2011-10-24" ;
 	knora-base:valueHasCalendar "GREGORIAN" ;
@@ -116,7 +116,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "2011-10-24" ;
 	knora-base:valueHasCalendar "GREGORIAN" ;
@@ -133,7 +133,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "Wien" .
 
@@ -145,7 +145,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "Wien" .
 
@@ -157,7 +157,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "Musikstudien bei Arnold Schönberg (1909 bis 1911), Alban Berg (1911 bis 1913). Studien bei Guido Adler (1927 Promotion in Innsbruck). Beamter (bei den österreichischen Bundesbahnen, nach dem Zweiten Weltkrieg  beim Finanzministerium), Musikwissenschaftler, Bibliothekar, nach seiner Pensionierung auch Kompositionslehrer. Herausgeber des Briefwechsels Anton Webern und Hildegard Jone (stark gekürzt)." .
 
@@ -169,7 +169,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "https://www.wien.gv.at/wiki/index.php/Josef_Polnauer" .
 
@@ -182,7 +182,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "Angehöriger des Schönberg-Kreises. Freund." .
 
@@ -194,7 +194,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
-	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTimeStamp ;
+	knora-base:valueCreationDate "2017-12-01T17:00:00Z"^^xsd:dateTime ;
 	knora-base:valueHasOrder "0"^^xsd:integer ;
 	knora-base:valueHasString "Vgl. Eintrag 'Polnauer, Josef Maximilian' in Österreichisches Musiklexikon (online edition)." .
 

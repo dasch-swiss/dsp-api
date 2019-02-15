@@ -57,7 +57,7 @@ case class UsersGetRequestV1(userProfileV1: UserProfileV1) extends UsersResponde
   * no users are found. Administration permission checking is skipped.
   *
   */
-case class UsersGetV1() extends UsersResponderRequestV1
+case class UsersGetV1(userProfile: UserProfileV1) extends UsersResponderRequestV1
 
 
 /**

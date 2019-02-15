@@ -87,11 +87,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       */
     private def usersGetADM(userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Seq[UserADM]] = {
 
-        //log.debug("usersGetV1")
-
-        // ToDO: need to have certain permissions to allow access (#961)
+        //log.debug("usersGetADM")
 
         for {
+            _ <- Future(
+                if (!requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser) {
+                    throw ForbiddenException("SystemAdmin permissions are required.")
+                }
+            )
+
             sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
                 triplestore = settings.triplestoreType,
                 maybeIri = None,
@@ -150,52 +154,58 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @return a [[UserADM]] describing the user.
       */
     private def userGetADM(identifier: UserIdentifierADM, userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
-        log.debug(s"userGetADM: identifier: {}, userInformationType: {}, requestingUser: {}", identifier, userInformationType, requestingUser )
+        log.debug(s"userGetADM: identifier: {}, userInformationType: {}, requestingUser: {}", identifier, userInformationType, requestingUser)
 
-        // ToDO: need to have certain permissions to allow access (#961)
+        for {
+            _ <- Future(
+                if (!requestingUser.permissions.isSystemAdmin && !requestingUser.isSelf(identifier) && !requestingUser.isSystemUser) {
+                    throw ForbiddenException("Operation not allowed.")
+                }
+            )
 
-        val maybeUserFromCache = identifier.hasType match {
-            case UserIdentifierType.IRI => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.toIri)
-            case UserIdentifierType.EMAIL => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
-            case UserIdentifierType.USERNAME => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
-        }
+            maybeUserFromCache = identifier.hasType match {
+                case UserIdentifierType.IRI => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.toIri)
+                case UserIdentifierType.EMAIL => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
+                case UserIdentifierType.USERNAME => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
+            }
 
-        val maybeUserADM: Future[Option[UserADM]] = maybeUserFromCache match {
-            case Some(user) =>
-                // found a user profile in the cache
-                log.debug("userGetADM - cache hit for: {}", identifier.value)
-                FastFuture.successful(Some(user.ofType(userInformationType)))
+            maybeUserADM: Future[Option[UserADM]] = maybeUserFromCache match {
+                case Some(user) =>
+                    // found a user profile in the cache
+                    log.debug("userGetADM - cache hit for: {}", identifier.value)
+                    FastFuture.successful(Some(user.ofType(userInformationType)))
 
-            case None =>
-                // didn't find a user profile in the cache
-                log.debug("userGetADM - no cache hit for: {}", identifier.value)
-                for {
-                    sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
-                        triplestore = settings.triplestoreType,
-                        maybeIri = identifier.toIriOption,
-                        maybeUsername = identifier.toUsernameOption,
-                        maybeEmail = identifier.toEmailOption
-                    ).toString())
+                case None =>
+                    // didn't find a user profile in the cache
+                    log.debug("userGetADM - no cache hit for: {}", identifier.value)
+                    for {
+                        sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
+                            triplestore = settings.triplestoreType,
+                            maybeIri = identifier.toIriOption,
+                            maybeUsername = identifier.toUsernameOption,
+                            maybeEmail = identifier.toEmailOption
+                        ).toString())
 
-                    userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
+                        userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
 
-                    maybeUserADM: Option[UserADM] <- if (userQueryResponse.statements.nonEmpty) {
-                        statements2UserADM(userQueryResponse.statements.head, requestingUser)
-                    } else {
-                        FastFuture.successful(None)
-                    }
+                        maybeUserADM: Option[UserADM] <- if (userQueryResponse.statements.nonEmpty) {
+                            statements2UserADM(userQueryResponse.statements.head, requestingUser)
+                        } else {
+                            FastFuture.successful(None)
+                        }
 
-                    _ = if (maybeUserADM.nonEmpty) {
-                        writeUserADMToCache(maybeUserADM.get)
-                    }
+                        _ = if (maybeUserADM.nonEmpty) {
+                            writeUserADMToCache(maybeUserADM.get)
+                        }
 
-                    result = maybeUserADM.map(_.ofType(userInformationType))
+                        result = maybeUserADM.map(_.ofType(userInformationType))
 
-                } yield result
-        }
+                    } yield result
+            }
 
-        // _ = log.debug("userGetADM - user: {}", MessageUtil.toSource(user))
-        maybeUserADM
+            // _ = log.debug("userGetADM - user: {}", MessageUtil.toSource(user))
+            result <- maybeUserADM
+        } yield result
     }
 
     /**
@@ -545,7 +555,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       */
     private def userProjectMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[ProjectADM]] = {
         for {
-            maybeUser <- userGetADM(identifier = UserIdentifierADM(userIri), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeUser <- userGetADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             result = maybeUser match {
                 case Some(userADM) => userADM.projects
                 case None => Seq.empty[ProjectADM]
@@ -939,7 +949,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     private def userGroupMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[GroupADM]] = {
 
         for {
-            maybeUserADM: Option[UserADM] <- userGetADM(identifier = UserIdentifierADM(userIri), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeUserADM: Option[UserADM] <- userGetADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             groups: Seq[GroupADM] = maybeUserADM match {
                 case Some(user) => user.groups
                 case None => Seq.empty[GroupADM]
@@ -1167,7 +1177,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             _ = invalidateCachedUserADM(Some(userIri), userUpdatePayload.email)
 
             /* Verify that the user was updated. */
-            maybeUpdatedUserADM <- userGetADM(identifier = UserIdentifierADM(userIri), requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL)
+            maybeUpdatedUserADM <- userGetADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL)
             updatedUserADM = maybeUpdatedUserADM.getOrElse(throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
 
             //_ = log.debug(s"apiUpdateRequest: $apiUpdateRequest /  updatedUserdata: $updatedUserData")

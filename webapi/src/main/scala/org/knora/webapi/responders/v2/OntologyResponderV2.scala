@@ -3441,8 +3441,17 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 val predicateInfo = PredicateInfoV2(
                     predicateIri = predicateIri,
                     objects = predObjs.map {
-                        case IriLiteralV2(iriStr) => SmartIriLiteralV2(iriStr.toSmartIri)
+                        case IriLiteralV2(iriStr) =>
+                            // We use xsd:dateTime in the triplestore (because it is supported in SPARQL), but we return
+                            // the more restrictive xsd:dateTimeStamp in the API.
+                            if (iriStr == OntologyConstants.Xsd.DateTime) {
+                                SmartIriLiteralV2(OntologyConstants.Xsd.DateTimeStamp.toSmartIri)
+                            } else {
+                                SmartIriLiteralV2(iriStr.toSmartIri)
+                            }
+
                         case ontoLiteral: OntologyLiteralV2 => ontoLiteral
+
                         case other => throw InconsistentTriplestoreDataException(s"Predicate $predicateIri has an invalid object: $other")
                     }
                 )

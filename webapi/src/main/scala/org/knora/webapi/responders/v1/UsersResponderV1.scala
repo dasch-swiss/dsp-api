@@ -52,7 +52,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       * Receives a message of type [[UsersResponderRequestV1]], and returns an appropriate response message.
       */
     def receive(msg: UsersResponderRequestV1) = msg match {
-        case UsersGetV1() => usersGetV1
+        case UsersGetV1(userProfile) => usersGetV1(userProfile)
         case UsersGetRequestV1(userProfileV1) => usersGetRequestV1(userProfileV1)
         case UserDataByIriGetV1(userIri, short) => userDataByIriGetV1(userIri, short)
         case UserProfileByIRIGetV1(userIri, profileType) => userProfileByIRIGetV1(userIri, profileType)
@@ -71,11 +71,17 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       *
       * @return all the users as a sequence of [[UserDataV1]].
       */
-    private def usersGetV1: Future[Seq[UserDataV1]] = {
+    private def usersGetV1(userProfileV1: UserProfileV1): Future[Seq[UserDataV1]] = {
 
         //log.debug("usersGetV1")
 
         for {
+            _ <- Future(
+                if (!userProfileV1.permissionData.isSystemAdmin) {
+                    throw ForbiddenException("SystemAdmin permissions are required.")
+                }
+            )
+
             sparqlQueryString <- Future(queries.sparql.v1.txt.getUsers(
                 triplestore = settings.triplestoreType
             ).toString())
@@ -115,7 +121,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       */
     private def usersGetRequestV1(userProfileV1: UserProfileV1): Future[UsersGetResponseV1] = {
         for {
-            maybeUsersListToReturn <- usersGetV1
+            maybeUsersListToReturn <- usersGetV1(userProfileV1)
             result = maybeUsersListToReturn match {
                 case users: Seq[UserDataV1] if users.nonEmpty => UsersGetResponseV1(users = users)
                 case _ => throw NotFoundException(s"No users found")
@@ -201,6 +207,11 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       */
     private def userProfileByIRIGetRequestV1(userIRI: IRI, profileType: UserProfileType, userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
         for {
+            _ <- Future(
+                if (!userProfile.permissionData.isSystemAdmin && !userProfile.userData.user_id.contains(userIRI)) {
+                    throw ForbiddenException("SystemAdmin permissions are required.")
+                }
+            )
             maybeUserProfileToReturn <- userProfileByIRIGetV1(userIRI, profileType)
             result = maybeUserProfileToReturn match {
                 case Some(up) => UserProfileResponseV1(up)

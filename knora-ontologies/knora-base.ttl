@@ -1005,7 +1005,7 @@
 
               :subjectClassConstraint :Resource ;
 
-              :objectDatatypeConstraint xsd:dateTimeStamp .
+              :objectDatatypeConstraint xsd:dateTime .
 
 
 
@@ -1019,7 +1019,7 @@
 
             # No :subjectClassConstraint, because this can be used with :Resource or :Value.
 
-            :objectDatatypeConstraint xsd:dateTimeStamp .
+            :objectDatatypeConstraint xsd:dateTime .
 
 
 
@@ -1197,7 +1197,7 @@
 
                       rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-                      :objectDatatypeConstraint xsd:dateTimeStamp .
+                      :objectDatatypeConstraint xsd:dateTime .
 
 
 
@@ -1297,7 +1297,7 @@
 
                    rdfs:subPropertyOf :valueHas ;
 
-                   :objectDatatypeConstraint xsd:dateTimeStamp .
+                   :objectDatatypeConstraint xsd:dateTime .
 
 
 

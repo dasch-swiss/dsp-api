@@ -50,6 +50,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
     private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
     private val password = "test"
+    private var aThingLastModificationDate = Instant.now
 
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
     private val writeTestDataFiles = false
@@ -518,6 +519,39 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             )
 
             assert(lastModificationDate == newModificationDate)
+            aThingLastModificationDate = newModificationDate
+        }
+
+        "mark a resource as deleted" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+
+            val jsonLDEntity =
+                s"""|{
+                    |  "@id" : "http://rdfh.ch/0001/a-thing",
+                    |  "@type" : "anything:Thing",
+                    |  "knora-api:lastModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$aThingLastModificationDate"
+                    |  },
+                    |  "knora-api:deleteComment" : "This resource is too boring.",
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
+
+            val updateRequest = Post(s"$baseApiUrl/v2/resources/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
+            val updateResponseAsString = responseToString(updateResponse)
+            assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+
+            val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
+            val previewResponseAsString = responseToString(previewResponse)
+            assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
         }
     }
 }

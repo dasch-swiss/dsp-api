@@ -12,5 +12,6 @@
     - Loïc Jaouen <https://github.com/loicjaouen>
     - Sepideh Alassi <https://github.com/SepidehAlassi>
     - Stefan Münnich <https://github.com/musicEnfanthen>
+    - Lukas Rosenthaler <https://github.com/lrosenth>
     - André Kilchenmann <https://github.com/kilchenmann>
     - <https://github.com/janCstoffregen>
