@@ -217,7 +217,12 @@ CONSTRUCT {
                     ?listNode rdfs:label ?listNodeLabel .
                  }
             } UNION {
-                @* If the value is a link value, get the referred resource. *@
+                @*
+
+                If the value is a link value, get the referred resource, as long as it hasn't been
+                marked as deleted.
+
+                *@
                 GRAPH <http://www.ontotext.com/explicit> {
                     ?valueObject a knora-base:LinkValue ;
                       rdf:predicate ?resourceLinkProperty ;
@@ -225,7 +230,9 @@ CONSTRUCT {
                     ?referredResource a ?referredResourceType .
                 }
 
-                ?referredResource rdfs:label ?referredResourceLabel ;
+                ?referredResource a knora-base:Resource ;
+                  knora-base:isDeleted false ;
+                  rdfs:label ?referredResourceLabel ;
                   knora-base:attachedToUser ?referredResourceCreator ;
                   knora-base:hasPermissions ?referredResourcePermissions ;
                   knora-base:attachedToProject ?referredResourceProject ;
@@ -233,22 +240,6 @@ CONSTRUCT {
 
                 OPTIONAL {
                     ?referredResource knora-base:lastModificationDate ?lastModificationDate .
-                }
-
-                @* Is this a version history request? *@
-                @maybeVersionDate match {
-                    case Some(versionDate) => {
-                        @* Yes. If the referred resource was deleted on or before the target date, ignore it. *@
-                        FILTER NOT EXISTS {
-                            ?referredResource knora-base:deleteDate ?referredResourceDeleteDate .
-                            FILTER(?referredResourceDeleteDate <= "@versionDate"^^xsd:dateTime)
-                        }
-                    }
-
-                    case None => {
-                        @* This is not a version history request. Ensure that the referred resource is not marked as deleted. *@
-                        ?referredResource knora-base:isDeleted false .
-                    }
                 }
             }
         }

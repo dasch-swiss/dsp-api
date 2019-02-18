@@ -17,29 +17,8 @@
       "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
     },
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
-    "knora-api:linkValueHasTarget" : {
-      "@id" : "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ",
-      "@type" : "anything:Thing",
-      "knora-api:arkUrl" : {
-        "@type" : "xsd:anyURI",
-        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/2qMtTWvVRXWMBcRNlduvCQa"
-      },
-      "knora-api:attachedToProject" : {
-        "@id" : "http://rdfh.ch/projects/0001"
-      },
-      "knora-api:attachedToUser" : {
-        "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-      },
-      "knora-api:creationDate" : {
-        "@type" : "xsd:dateTimeStamp",
-        "@value" : "2016-10-17T17:16:04.913Z"
-      },
-      "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
-      "knora-api:versionArkUrl" : {
-        "@type" : "xsd:anyURI",
-        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/2qMtTWvVRXWMBcRNlduvCQa.20161017T171604913Z"
-      },
-      "rdfs:label" : "India"
+    "knora-api:linkValueHasTargetIri" : {
+      "@id" : "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ"
     }
   },
   "anything:hasText" : {

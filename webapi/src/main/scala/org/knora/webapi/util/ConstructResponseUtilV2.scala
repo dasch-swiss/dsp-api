@@ -218,24 +218,14 @@ object ConstructResponseUtilV2 {
 
                                 // check if it is a link value
                                 if (valueObjectClass == OntologyConstants.KnoraBase.LinkValue) {
-                                    // it is a link value, check if the referred resource is visible
-                                    val referredResourceIri = predicateMapForValueAssertions(OntologyConstants.Rdf.Object)
-
-                                    // If the user doesn't have permission to see the linked resource, don't return the link value
-                                    if (resourceStatementsVisible.contains(referredResourceIri)) {
-
-                                        // create a value object
-                                        Some(ValueRdfData(
-                                            valueObjectIri = valObjIri,
-                                            valueObjectClass = valueObjectClass,
-                                            assertions = predicateMapForValueAssertions,
-                                            standoff = Map.empty[IRI, Map[IRI, String]], // link value does not contain standoff
-                                            listNode = Map.empty[IRI, String] // link value cannot point to a list node
-                                        ))
-                                    } else {
-                                        // Return None for the removed link value; it will be filtered out by flatMap.
-                                        None
-                                    }
+                                    // create a value object
+                                    Some(ValueRdfData(
+                                        valueObjectIri = valObjIri,
+                                        valueObjectClass = valueObjectClass,
+                                        assertions = predicateMapForValueAssertions,
+                                        standoff = Map.empty[IRI, Map[IRI, String]], // link value does not contain standoff
+                                        listNode = Map.empty[IRI, String] // link value cannot point to a list node
+                                    ))
 
                                 } else {
 
@@ -332,11 +322,18 @@ object ConstructResponseUtilV2 {
                                 if (alreadyTraversed(dependentResourceIri)) {
                                     value
                                 } else {
-                                    val dependentResource: ResourceWithValueRdfData = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
+                                    // If we don't have the dependent resource, that means that the user doesn't have
+                                    // permission to see it, or it's been marked as deleted. Just return the link
+                                    // value without a nested resource.
+                                    if (flatResourcesWithValues.contains(dependentResourceIri)) {
+                                        val dependentResource: ResourceWithValueRdfData = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
 
-                                    value.copy(
-                                        nestedResource = Some(dependentResource)
-                                    )
+                                        value.copy(
+                                            nestedResource = Some(dependentResource)
+                                        )
+                                    } else {
+                                        value
+                                    }
                                 }
                             } else {
                                 value
