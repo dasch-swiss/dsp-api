@@ -52,7 +52,7 @@ DELETE {
     GRAPH ?dataNamedGraph {
         @maybeLastModificationDate match {
             case Some(lastModificationDate) => {
-                ?resource knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+                ?resource knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
             }
 
             case None => {}
@@ -76,7 +76,7 @@ DELETE {
     }
 } INSERT {
     GRAPH ?dataNamedGraph {
-        ?resource knora-base:lastModificationDate "@newModificationDate"^^xsd:dateTimeStamp .
+        ?resource knora-base:lastModificationDate "@newModificationDate"^^xsd:dateTime .
 
         @maybeLabel match {
             case Some(newLabel) => {
@@ -109,7 +109,7 @@ WHERE {
 
         @maybeLastModificationDate match {
             case Some(lastModificationDate) => {
-                ?resource knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+                ?resource knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
             }
 
             case None => {

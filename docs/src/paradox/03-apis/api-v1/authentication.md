@@ -48,7 +48,7 @@ There are two possibilities to do so:
   - in the HTTP authorization header ([HTTP basic
     authentication](https://en.wikipedia.org/wiki/Basic_access_authentication))
     when doing a HTTP request to the API When using Python's module
-    `requests`, the credentials can simply be submitted as a tuple
+    `requests`, the credentials (email / password) can simply be submitted as a tuple
     with each request using the param `auth` ([python
     requests](http://docs.python-requests.org/en/master/user/authentication/#basic-authentication)).
 

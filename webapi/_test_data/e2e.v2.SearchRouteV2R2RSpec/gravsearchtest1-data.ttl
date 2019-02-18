@@ -115,27 +115,27 @@
 
 <http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :attachedToProject <http://rdfh.ch/projects/0666> .
 
-<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :creationDate "2018-06-06T12:08:56.619Z"^^xsd:dateTimeStamp .
+<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :creationDate "2018-06-06T12:08:56.619Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> :creationDate "2018-06-06T12:08:56.759Z"^^xsd:dateTimeStamp .
+<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> :creationDate "2018-06-06T12:08:56.759Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> :creationDate "2018-06-06T12:08:56.890Z"^^xsd:dateTimeStamp .
+<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> :creationDate "2018-06-06T12:08:56.890Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> :creationDate "2018-06-06T12:08:57.175Z"^^xsd:dateTimeStamp .
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> :creationDate "2018-06-06T12:08:57.175Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> :creationDate "2018-06-06T12:08:57.382Z"^^xsd:dateTimeStamp .
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> :creationDate "2018-06-06T12:08:57.382Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> :creationDate "2018-06-06T12:08:57.561Z"^^xsd:dateTimeStamp .
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> :creationDate "2018-06-06T12:08:57.561Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :creationDate "2018-06-06T12:08:57.777Z"^^xsd:dateTimeStamp .
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :creationDate "2018-06-06T12:08:57.777Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> :valueCreationDate "2018-06-06T12:08:57.175Z"^^xsd:dateTimeStamp .
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> :valueCreationDate "2018-06-06T12:08:57.175Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> :valueCreationDate "2018-06-06T12:08:57.382Z"^^xsd:dateTimeStamp .
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> :valueCreationDate "2018-06-06T12:08:57.382Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> :valueCreationDate "2018-06-06T12:08:57.561Z"^^xsd:dateTimeStamp .
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> :valueCreationDate "2018-06-06T12:08:57.561Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> :valueCreationDate "2018-06-06T12:08:57.777Z"^^xsd:dateTimeStamp .
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> :valueCreationDate "2018-06-06T12:08:57.777Z"^^xsd:dateTime .
 
 <http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> :valueHasOrder "0"^^xsd:integer .
 

@@ -238,7 +238,7 @@
                     knora-base:valueHasOrder ?nextOrder ;
                 }
             }
-            knora-base:valueCreationDate "@creationDate"^^xsd:dateTimeStamp .
+            knora-base:valueCreationDate "@creationDate"^^xsd:dateTime .
 
         @* Insert direct links and LinkValues for resource references. *@
         @{

@@ -24,34 +24,36 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 Access to the Knora API can for certain operations require a user to authenticate.
 Authentication can be performed in two ways:
 
-1. By providing an *identifier*/*password* combination where the *identifier* is either
-the user's IRI, username, or email address.
+1. By providing *password credentials*, which are a combination of a *identifier* and
+   *password*. The user *identifier* can be one of the following:
+    - the user's IRI,
+    - the user's Email, or
+    - the user's Username.
 
 2. By providing an *access token*
 
-## Submitting *Identifier/Password* Credentials
+## Submitting Password Credentials
 
-When accessing any route and *identifier*/*password* or token credentials would
-need to be sent, we support two options to do so:
+When accessing any route and password credentials would need to be sent,
+we support two options to do so:
 
-- in the URL submitting the parameters `identifier` and `password`
-  (e.g., <http://knora-host/v1/resources/resIri?identifier=userUrlEncodedIdentifier&password=pw>),
-  where the identifier can be the user's IRI, username, or email, and
+- in the URL submitting the parameters `iri` / `email` / `username` and `password`
+  (e.g., <http://knora-host/v1/resources/resIri?email=userUrlEncodedIdentifier&password=pw>), and
 - in the HTTP header ([HTTP basic
   authentication](https://en.wikipedia.org/wiki/Basic_access_authentication)), where the
-  identifier can be the user's username or email (IRI not supported).
+  identifier can be the user's email (IRI and username not supported).
 
 When using Python's module `requests`, the credentials can simply be submitted as a tuple with
 each request using the param `auth` ([python requests](http://docs.python-requests.org/en/master/user/authentication/#basic-authentication)).
 
 ## Access Token / Session / Login and Logout
 
-A client can generate an *access token* by sending a POST request (e.g., `{"identifier":"usersemail",
-"password":"userspassword"}`) to the **/v2/authentication** route with
-*identifier* and *password* in the body. The identifier can be the user's IRI,
-username, or email. If the credentials are valid, a [JSON WEB Token](https://jwt.io) (JWT)
-will be sent back in the response (e.g., `{"token": "eyJ0eXAiOiJ..."}`). Additionally, for web browser
-clients a session cookie containing the JWT token is also created, containing `KnoraAuthentication=eyJ0eXAiOiJ...`.
+A client can generate an *access token* by sending a POST request (e.g., `{"identifier_type":"identifier_value",
+"password":"password_value"}`) to the **/v2/authentication** route with
+*identifier* and *password* in the body. The `identifier_type` can be `iri`, `email`, or `username`.
+If the credentials are valid, a [JSON WEB Token](https://jwt.io) (JWT) will be sent back in the
+response (e.g., `{"token": "eyJ0eXAiOiJ..."}`). Additionally, for web browser clients a session cookie
+containing the JWT token is also created, containing `KnoraAuthentication=eyJ0eXAiOiJ...`.
 
 When accessing any route, the *access token* would need to be supplied, we support three options to do so:
 

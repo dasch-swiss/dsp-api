@@ -52,12 +52,12 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
         ?class <@predicateToUpdate> ?oldObj .
     }
 } INSERT {
     GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
 
         @for(newObject <- newObjects) {
 
@@ -77,7 +77,7 @@ WHERE {
 
     GRAPH ?ontologyNamedGraph {
         ?ontology rdf:type owl:Ontology ;
-            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
 
         OPTIONAL {
             ?class <@predicateToUpdate> ?oldObj .

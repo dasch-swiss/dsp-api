@@ -50,7 +50,7 @@ class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config
 
     "For project Lumieres Lausanne" should {
 
-        val gfUser = "gfaucherand"
+        val gfUserEmail = "gilles.faucherand@unil.ch"
         val testPass = "test"
 
         "allow user 'gfaucherand' to create a resource using V2 API" in {
@@ -80,7 +80,7 @@ class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config
                    |}
                 """.stripMargin
 
-            val request = Post(baseApiUrl + s"/v2/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(gfUser, testPass))
+            val request = Post(baseApiUrl + s"/v2/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(gfUserEmail, testPass))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status === StatusCodes.OK)
         }
