@@ -3061,6 +3061,11 @@ knora-api:knoraProject a owl:Class;
 knora-api:valueHas a rdf:Property;
   knora-api:subjectType knora-api:ValueBase .
 
+knora-api:author a owl:ObjectProperty;
+  knora-api:objectType knora-api:User;
+  rdfs:comment "Specifies the author of a particular version of a resource.";
+  rdfs:label "author" .
+
 knora-api:canBeInstantiated a owl:AnnotationProperty;
   knora-api:objectType xsd:boolean;
   knora-api:subjectType owl:Class;

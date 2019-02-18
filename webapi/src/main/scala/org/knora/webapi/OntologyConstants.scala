@@ -696,6 +696,7 @@ object OntologyConstants {
         val ValueCreationDate: IRI = KnoraApiV2PrefixExpansion + "valueCreationDate"
         val ValueHasComment: IRI = KnoraApiV2PrefixExpansion + "valueHasComment"
 
+        val User: IRI = KnoraApiV2PrefixExpansion + "User"
         val AttachedToUser: IRI = KnoraApiV2PrefixExpansion + "attachedToUser"
         val AttachedToProject: IRI = KnoraApiV2PrefixExpansion + "attachedToProject"
         val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
@@ -710,6 +711,7 @@ object OntologyConstants {
         val DeleteComment: IRI = KnoraApiV2PrefixExpansion + "deleteComment"
         val ArkUrl: IRI = KnoraApiV2PrefixExpansion + "arkUrl"
         val VersionArkUrl: IRI = KnoraApiV2PrefixExpansion + "versionArkUrl"
+        val Author: IRI = KnoraApiV2PrefixExpansion + "author"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
         val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"

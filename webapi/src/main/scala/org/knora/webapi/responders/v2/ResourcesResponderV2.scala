@@ -75,6 +75,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
         case deleteResourceRequestV2: DeleteResourceRequestV2 => deleteResourceV2(deleteResourceRequestV2)
         case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
+        case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 => getResourceHistoryV2(resourceHistoryRequest)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -911,7 +912,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       *
       * @param resourceIris the Iris of the requested resources.
       * @param preview      `true` if a preview of the resource is requested.
-      * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
+      * @param versionDate  if defined, requests the state of the resources at the specified time in the past.
       *                     Cannot be used in conjunction with `preview`.
       * @return a map of resource IRIs to RDF data.
       */
@@ -954,7 +955,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Get one or several resources and return them as a sequence.
       *
       * @param resourceIris   the resources to query for.
-      * @param versionDate      if defined, requests the state of the resources at the specified time in the past.
+      * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
@@ -1605,5 +1606,67 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         )
     }
 
-}
+    /**
+      * Returns the version history of a resource.
+      *
+      * @param resourceHistoryRequest the version history request.
+      * @return the resource's version history.
+      */
+    def getResourceHistoryV2(resourceHistoryRequest: ResourceVersionHistoryGetRequestV2): Future[ResourceVersionHistoryResponseV2] = {
+        for {
+            // Get the resource preview, to make sure the user has permission to see the resource, and to get
+            // its creation date.
 
+            resourcePreviewResponse: ReadResourcesSequenceV2 <- getResourcePreview(
+                resourceIris = Seq(resourceHistoryRequest.resourceIri),
+                requestingUser = resourceHistoryRequest.requestingUser
+            )
+
+            resourcePreview: ReadResourceV2 = resourcePreviewResponse.toResource(resourceHistoryRequest.resourceIri)
+
+            // Get the version history of the resource's values.
+
+            historyRequestSparql = queries.sparql.v2.txt.getResourceValueVersionHistory(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceHistoryRequest.resourceIri,
+                maybeStartDate = resourceHistoryRequest.startDate,
+                maybeEndDate = resourceHistoryRequest.endDate
+            ).toString()
+
+            valueHistoryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(historyRequestSparql)).mapTo[SparqlSelectResponse]
+
+            valueHistoryEntries: Seq[ResourceHistoryEntry] = valueHistoryResponse.results.bindings.map {
+                row: VariableResultsRow =>
+                    val versionDateStr: String = row.rowMap("versionDate")
+                    val author: IRI = row.rowMap("author")
+
+                    ResourceHistoryEntry(
+                        versionDate = stringFormatter.xsdDateTimeStampToInstant(versionDateStr, throw InconsistentTriplestoreDataException(s"Could not parse version date: $versionDateStr")),
+                        author = author
+                    )
+            }
+
+            // Figure out whether to add the resource's creation to the history.
+
+            // Is there a requested start date that's after the resource's creation date?
+            historyEntriesWithResourceCreation: Seq[ResourceHistoryEntry] = if (resourceHistoryRequest.startDate.exists(_.isAfter(resourcePreview.creationDate))) {
+                // Yes. No need to add the resource's creation.
+                valueHistoryEntries
+            } else {
+                // No. Does the value history contain the resource creation date?
+                if (valueHistoryEntries.nonEmpty && valueHistoryEntries.last.versionDate == resourcePreview.creationDate) {
+                    // Yes. No need to add the resource's creation.
+                    valueHistoryEntries
+                } else {
+                    // No. Add a history entry for it.
+                    valueHistoryEntries :+ ResourceHistoryEntry(
+                        versionDate = resourcePreview.creationDate,
+                        author = resourcePreview.attachedToUser
+                    )
+                }
+            }
+        } yield ResourceVersionHistoryResponseV2(
+            historyEntriesWithResourceCreation
+        )
+    }
+}

@@ -4478,6 +4478,14 @@
       "@id" : "knora-api:valueHas"
     }
   }, {
+    "@id" : "knora-api:author",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:objectType" : {
+      "@id" : "knora-api:User"
+    },
+    "rdfs:comment" : "Specifies the author of a particular version of a resource.",
+    "rdfs:label" : "author"
+  }, {
     "@id" : "knora-api:booleanValueAsBoolean",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {

@@ -630,19 +630,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                             referredResourceIri = "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ",
                             ontologySchema = InternalSchema,
                             comment = None,
-                            nestedResource = Some(ReadResourceV2(
-                                versionDate = None,
-                                label = "India",
-                                resourceIri = "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ",
-                                permissions = "V knora-base:UnknownUser|M knora-base:ProjectMember",
-                                attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-                                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
-                                creationDate = Instant.parse("2016-10-17T17:16:04.913Z"),
-                                values = Map(),
-                                projectADM = SharedTestDataADM.anythingProject,
-                                lastModificationDate = None,
-                                deletionInfo = None
-                            ))
+                            nestedResource = None
                         ),
                         valueHasRefCount = 1,
                         valueIri = "http://rdfh.ch/0001/thing-with-history/values/3a",

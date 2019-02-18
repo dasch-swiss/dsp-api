@@ -82,21 +82,66 @@ case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI], requestingUser: 
   * @param endDate        the end of the time period to return, exclusive.
   * @param requestingUser the user making the request.
   */
-case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI, startDate: Option[Instant], endDate: Option[Instant], requestingUser: UserADM)
+case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI, startDate: Option[Instant], endDate: Option[Instant], requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
   * Represents an item in the version history of a resource.
   *
   * @param versionDate the date when the modification occurred.
-  * @param userIri     the IRI of the user that made the modification.
+  * @param author      the IRI of the user that made the modification.
   */
-case class ValueModification(versionDate: Instant, userIri: IRI)
-
+case class ResourceHistoryEntry(versionDate: Instant, author: IRI)
 
 /**
   * Represents the version history of the values of a resource.
   */
-case class ResourceVersionHistoryResponseV2(history: Seq[ValueModification])
+case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) extends KnoraResponseV2 {
+    /**
+      * Converts the response to a data structure that can be used to generate JSON-LD.
+      *
+      * @param targetSchema the Knora API schema to be used in the JSON-LD document.
+      * @return a [[JsonLDDocument]] representing the response.
+      */
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        if (targetSchema != ApiV2WithValueObjects) {
+            throw AssertionException("Version history can be returned only in the complex schema")
+        }
+
+        // Convert the history entries to an array of JSON-LD objects.
+
+        val historyAsJsonLD: Seq[JsonLDObject] = history.map {
+            historyEntry: ResourceHistoryEntry =>
+                JsonLDObject(
+                    Map(
+                        OntologyConstants.KnoraApiV2WithValueObjects.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                            value = historyEntry.versionDate.toString,
+                            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                        ),
+                        OntologyConstants.KnoraApiV2WithValueObjects.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author)
+                    )
+                )
+        }
+
+        // Make the JSON-LD context.
+
+        val context = JsonLDUtil.makeContext(
+            fixedPrefixes = Map(
+                "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
+                "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+                "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
+                OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
+            )
+        )
+
+        // Make the JSON-LD document.
+
+        val body = JsonLDObject(Map(JsonLDConstants.GRAPH -> JsonLDArray(historyAsJsonLD)))
+
+        JsonLDDocument(body = body, context = context)
+    }
+}
 
 /**
   * Requests a resource as TEI/XML. A successful response will be a [[ResourceTEIGetResponseV2]].

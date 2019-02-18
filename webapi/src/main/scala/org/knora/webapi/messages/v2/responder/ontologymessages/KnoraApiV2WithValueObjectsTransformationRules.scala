@@ -120,6 +120,26 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         objectType = Some(OntologyConstants.Xsd.Uri)
     )
 
+    private val Author: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.Author,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "author",
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Specifies the author of a particular version of a resource."
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.User)
+    )
+
     private val IsShared: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsShared,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1492,6 +1512,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         VersionDate,
         ArkUrl,
         VersionArkUrl,
+        Author,
         IsShared,
         IsBuiltIn,
         IsResourceClass,

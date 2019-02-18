@@ -21,31 +21,46 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets the the version history of the values of a resource.
+ * Gets the the version history of the values of a resource, using GraphDB.
  *
- * If the triplestore type is GraphDB, this template delegates to getResourceVersionHistoryGraphDB.sparql.txt,
- * which is optimised for GraphDB. Otherwise, it delegates to getResourceVersionHistoryStandard.sparql.txt.
- *
- * @param triplestore    the name of the triplestore being used.
  * @param resourceIri    the IRI of the resource.
  * @param maybeStartDate the start of the time period to return, inclusive.
  * @param maybeEndDate   the end of the time period to return, exclusive.
  *@
-@(triplestore: String,
-  resourceIri: IRI,
+@(resourceIri: IRI,
   maybeStartDate: Option[Instant] = None,
   maybeEndDate: Option[Instant] = None)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        queries.sparql.v2.txt.getResourceVersionHistoryGraphDB(resourceIri = resourceIri,
-                                                               maybeStartDate = maybeStartDate,
-                                                               maybeEndDate = maybeEndDate)
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?versionDate ?author WHERE {
+    <@resourceIri> knora-base:isDeleted false ;
+        knora-base:hasValue ?currentValue .
+
+    ?currentValue knora-base:previousValue* ?valueObject .
+
+    {
+        ?valueObject knora-base:valueCreationDate ?versionDate .
+        ?valueObject knora-base:attachedToUser ?author .
+    } UNION {
+        ?valueObject knora-base:deleteDate ?versionDate .
+        ?valueObject knora-base:deletedBy ?author .
     }
-} else {
-    @{
-        queries.sparql.v2.txt.getResourceVersionHistoryStandard(resourceIri = resourceIri,
-                                                                maybeStartDate = maybeStartDate,
-                                                                maybeEndDate = maybeEndDate)
+
+    @maybeStartDate match {
+        case Some(startDate) => {
+            FILTER(?versionDate >= "@startDate"^^xsd:dateTime)
+        }
+
+        case None => {}
     }
-}
+
+    @maybeEndDate match {
+        case Some(endDate) => {
+            FILTER(?versionDate <  "@endDate"^^xsd:dateTime)
+        }
+
+        case None => {}
+    }
+} ORDER BY DESC(?versionDate)
