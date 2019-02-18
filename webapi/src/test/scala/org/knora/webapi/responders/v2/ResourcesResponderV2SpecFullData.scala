@@ -661,6 +661,76 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         numberOfResources = 1
     )
 
+    val expectedCompleteVersionHistoryResponse = ResourceVersionHistoryResponseV2(history = Vector(
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-13T09:05:10Z"),
+            author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-13T09:00:10Z"),
+            author = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-12T10:05:10Z"),
+            author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-12T09:05:10Z"),
+            author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-11T10:05:10Z"),
+            author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-11T09:05:10Z"),
+            author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-10T10:30:10Z"),
+            author = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-10T10:05:10Z"),
+            author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-08T15:05:10Z"),
+            author = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+        )
+    ))
+
+    val expectedPartialVersionHistoryResponse = ResourceVersionHistoryResponseV2(history = Vector(
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-13T09:00:10Z"),
+            author = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-12T10:05:10Z"),
+            author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-12T09:05:10Z"),
+            author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-11T10:05:10Z"),
+            author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-11T09:05:10Z"),
+            author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-10T10:30:10Z"),
+            author = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+        ),
+        ResourceHistoryEntry(
+            versionDate = Instant.parse("2019-02-10T10:05:10Z"),
+            author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+        )
+    ))
+
     val expectedFullResourceResponseForZeitgloeckleinAndReise = ReadResourcesSequenceV2(
         resources = Vector(expectedReadResourceV2ForZeitgloecklein, expectedReadResourceV2ForReiseInsHeiligeland),
         numberOfResources = 2

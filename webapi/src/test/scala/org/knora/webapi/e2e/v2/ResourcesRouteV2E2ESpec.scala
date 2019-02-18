@@ -29,7 +29,7 @@ import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaRange, StatusCod
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLDForResourcesResponse
+import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.util.IriConversions._
@@ -235,6 +235,27 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(response.status == StatusCodes.OK, responseAsString)
             val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithVersionHistory.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+        }
+
+        "return the complete version history of a resource" in {
+            val request = Get(s"$baseApiUrl/v2/resources/history/${URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")}")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/CompleteVersionHistory.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+        }
+
+        "return the version history of a resource within a date range" in {
+            val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
+            val startDate = URLEncoder.encode(Instant.parse("2019-02-08T15:05:11Z").toString, "UTF-8")
+            val endDate =  URLEncoder.encode(Instant.parse("2019-02-13T09:05:10Z").toString, "UTF-8")
+            val request = Get(s"$baseApiUrl/v2/resources/history/$resourceIri?startDate=$startDate&endDate=$endDate")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/PartialVersionHistory.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
         "return a graph of resources reachable via links from/to a given resource" in {

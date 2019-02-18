@@ -643,16 +643,48 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! ResourcesGetRequestV2(
                 resourceIris = Seq(resourceIri),
                 versionDate = Some(versionDate),
-                requestingUser = incunabulaUserProfile
+                requestingUser = anythingUserProfile
             )
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
-                    val resource = response.toResource(resourceIri)
-
                     compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory, received = response)
             }
 
+        }
+
+        "return the complete version history of a resource" in {
+            val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+
+            responderManager ! ResourceVersionHistoryGetRequestV2(
+                resourceIri = resourceIri,
+                startDate = None,
+                endDate = None,
+                requestingUser = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceVersionHistoryResponseV2 =>
+                    assert(response == resourcesResponderV2SpecFullData.expectedCompleteVersionHistoryResponse)
+            }
+        }
+
+        "return the version history of a resource within a date range" in {
+            val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+            val startDate = Instant.parse("2019-02-08T15:05:11Z")
+            val endDate = Instant.parse("2019-02-13T09:05:10Z")
+
+            responderManager ! ResourceVersionHistoryGetRequestV2(
+                resourceIri = resourceIri,
+                startDate = Some(startDate),
+                endDate = Some(endDate),
+                requestingUser = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceVersionHistoryResponseV2 =>
+                    assert(response == resourcesResponderV2SpecFullData.expectedPartialVersionHistoryResponse)
+            }
         }
 
         "return a graph of resources reachable via links from/to a given resource" in {
