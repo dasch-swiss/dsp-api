@@ -20,7 +20,7 @@
 package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.BadRequestException
+import org.knora.webapi.{BadRequestException, IRI}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import spray.json._
 
@@ -33,11 +33,25 @@ import spray.json._
   * @param identifier   the user's IRI, username, or email.
   * @param password     the user's password.
   */
-case class LoginApiRequestPayloadV2(identifier: String,
-                                    password: String) {
+case class LoginApiRequestPayloadV2(iri: Option[IRI] = None,
+                                    email: Option[String] = None,
+                                    username: Option[String] = None,
+                                    password: String
+                                   ) {
 
-    // email and password need to be supplied
-    if (identifier.isEmpty || password.isEmpty) throw BadRequestException("Both identifier and password need to be supplied.")
+    val parametersCount: Int = List(
+        iri,
+        email,
+        username
+    ).flatten.size
+
+    // something needs to be set
+    if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
+
+    if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
+
+    // Password needs to be supplied
+    if (password.isEmpty) throw BadRequestException("Password needs to be supplied.")
 }
 
 /**
@@ -84,6 +98,6 @@ case class LoginResponse(token: String)
   * A spray-json protocol for generating Knora API v2 JSON for property values.
   */
 trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
-    implicit val loginApiRequestPayloadV2Format: RootJsonFormat[LoginApiRequestPayloadV2] = jsonFormat2(LoginApiRequestPayloadV2)
+    implicit val loginApiRequestPayloadV2Format: RootJsonFormat[LoginApiRequestPayloadV2] = jsonFormat(LoginApiRequestPayloadV2, "iri", "email", "username", "password")
     implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] = jsonFormat1(LoginResponse.apply)
 }

@@ -50,11 +50,11 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
     }
 } INSERT {
     GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
 
         @* Insert the property. *@
 
@@ -91,7 +91,7 @@ WHERE {
 
     GRAPH ?ontologyNamedGraph {
          ?ontology rdf:type owl:Ontology ;
-             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
     }
 
     FILTER NOT EXISTS {

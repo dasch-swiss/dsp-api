@@ -2804,7 +2804,13 @@ knora-api:XSLTransformation a owl:Class;
 
 knora-api:knoraProject a owl:Class;
   rdfs:comment "Represents a project that uses Knora";
-  rdfs:subClassOf <http://xmlns.com/foaf/0.1/Project> .
+  rdfs:subClassOf <http://xmlns.com/foaf/0.1/Project>, [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:projectRestrictedViewSize
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:projectRestrictedViewWatermark
+    ] .
 
 knora-api:valueHas a rdf:Property;
   knora-api:subjectType knora-api:ValueBase .
@@ -2916,6 +2922,16 @@ knora-api:isValueClass a owl:AnnotationProperty;
   knora-api:subjectType owl:Class;
   rdfs:comment "Indicates whether class is a subclass of Value.";
   rdfs:label "is value class" .
+
+knora-api:projectRestrictedViewSize a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:knoraProject;
+  rdfs:comment "The size of the image (as defined by IIIF) returned for restricted view" .
+
+knora-api:projectRestrictedViewWatermark a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:knoraProject;
+  rdfs:comment "Path to the restricted view watermark" .
 
 knora-api:linkValueHasTarget a owl:ObjectProperty;
   knora-api:objectType knora-api:Resource;

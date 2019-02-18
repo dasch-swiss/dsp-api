@@ -38,12 +38,12 @@ object Dependencies {
     lazy val metricsVersion = settingKey[String]("The metrics library version")
 
     val Versions = Seq(
-        scalaVersion := "2.12.4",
+        scalaVersion := "2.12.6",
         akkaVersion := "2.5.19",
         akkaHttpVersion := "10.1.5",
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
-        sipiVersion := "v1.4.2-SNAPSHOT",
+        sipiVersion := "v1.4.3",
         gdbImage := "ontotext/graphdb:8.5.0-se"
     )
 

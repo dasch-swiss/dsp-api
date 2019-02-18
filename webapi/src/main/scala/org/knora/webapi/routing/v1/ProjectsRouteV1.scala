@@ -78,61 +78,6 @@ class ProjectsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         )
                 }
             }
-        } ~ path("v1" / "projects" / "members" / Segment) { value =>
-            get {
-                /* returns all members part of a project identified through iri or shortname */
-                parameters("identifier" ? "iri") { identifier: String =>
-                    requestContext =>
-
-                        val requestMessage = if (identifier != "iri") {
-                            // identify project by shortname.
-                            val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
-                            for {
-                                userProfile <-getUserADM(requestContext).map(_.asUserProfileV1)
-                            } yield ProjectMembersByShortnameGetRequestV1(shortNameDec, userProfile)
-                        } else {
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-                            for {
-                                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-                            } yield ProjectMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
-                        }
-
-                        RouteUtilV1.runJsonRouteWithFuture(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                }
-            }
-        } ~ path("v1" / "projects" / "admin-members" / Segment) { value =>
-            get {
-                /* returns all admin members part of a project identified through iri or shortname */
-                parameters("identifier" ? "iri") { identifier: String =>
-                    requestContext =>
-                        val requestMessage = if (identifier != "iri") {
-                            // identify project by shortname.
-                            val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
-                            for {
-                                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-                            } yield ProjectAdminMembersByShortnameGetRequestV1(shortNameDec, userProfile)
-                        } else {
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-                            for {
-                                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-                            } yield ProjectAdminMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
-                        }
-
-                        RouteUtilV1.runJsonRouteWithFuture(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                }
-            }
         }
     }
 }

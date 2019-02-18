@@ -26,5 +26,13 @@ The Knora admin API makes it possible to administer Knora projects, users, user 
 @@@ index
 
 - [Introduction](introduction.md)
+- [Overview](overview.md)
+- [Users Endpoint](users.md)
+- [Projects Endpoint](projects.md)
+- [Groups Endpoint](groups.md)
+- [Lists Endpoint](lists.md)
+- [Permissions Endpoint](permissions.md)
+- [Stores Endpoint](stores.md)
+
 
 @@@

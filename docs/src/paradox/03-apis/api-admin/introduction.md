@@ -44,7 +44,7 @@ that are stored in the triplestore (see @ref:[Knora IRIs](../api-v2/knora-iris.m
 ## Admin Path Segment
 
 Every request to Admin API includes `admin` as a path segment, e.g.
-`http://host/admin/users/http%3A%2F%2Frdfh.ch%2Fusers%2Froot`.
+`http://host/admin/users/iri/http%3A%2F%2Frdfh.ch%2Fusers%2Froot`.
 
 ## Admin API Response Format
 

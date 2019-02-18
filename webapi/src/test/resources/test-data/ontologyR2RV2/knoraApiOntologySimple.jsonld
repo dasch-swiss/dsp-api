@@ -1040,6 +1040,26 @@
     "rdfs:comment" : "Specifies the required type of the objects of a property",
     "rdfs:label" : "Object type"
   }, {
+    "@id" : "knora-api:projectRestrictedViewSize",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:string"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:knoraProject"
+    },
+    "rdfs:comment" : "The size of the image (as defined by IIIF) returned for restricted view"
+  }, {
+    "@id" : "knora-api:projectRestrictedViewWatermark",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:string"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:knoraProject"
+    },
+    "rdfs:comment" : "Path to the restricted view watermark"
+  }, {
     "@id" : "knora-api:resourceIcon",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {

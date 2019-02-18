@@ -86,7 +86,7 @@ DELETE {
     }
 } INSERT {
     GRAPH ?dataNamedGraph {
-        ?resource knora-base:lastModificationDate "@creationDate"^^xsd:dateTimeStamp .
+        ?resource knora-base:lastModificationDate "@creationDate"^^xsd:dateTime .
 
         @{
             queries.sparql.v1.txt.generateInsertStatementsForCreateValue(resourceIri = resourceIri,

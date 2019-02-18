@@ -50,7 +50,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
         ?property ?propertyPred ?propertyObj .
 
         @maybeLinkValuePropertyIri match {
@@ -67,7 +67,7 @@ DELETE {
     }
 } INSERT {
     GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@
@@ -81,7 +81,7 @@ WHERE {
 
     GRAPH ?ontologyNamedGraph {
         ?ontology rdf:type owl:Ontology ;
-            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
 
         ?property rdf:type owl:ObjectProperty ;
             ?propertyPred ?propertyObj .

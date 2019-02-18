@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.admin.responder.sipimessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectRestrictedViewSettingsADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json.{DefaultJsonProtocol, JsValue, NullOptions, RootJsonFormat}
@@ -41,9 +42,12 @@ case class SipiFileInfoGetRequestADM(projectID: String, filename: String, reques
 /**
   * Represents the Knora API v1 JSON response to a request for a information about a `FileValue`.
   *
-  * @param permissionCode a code representing the user's maximum permission on the file.
+  * @param permissionCode         a code representing the user's maximum permission on the file.
+  * @param restrictedViewSettings the project's restricted view settings.
   */
-case class SipiFileInfoGetResponseADM(permissionCode: Int) extends KnoraResponseV1 {
+case class SipiFileInfoGetResponseADM(permissionCode: Int,
+                                      restrictedViewSettings: Option[ProjectRestrictedViewSettingsADM],
+                                     ) extends KnoraResponseV1 {
     def toJsValue: JsValue = SipiResponderResponseADMJsonProtocol.sipiFileInfoGetResponseADMFormat.write(this)
 }
 
@@ -53,7 +57,7 @@ case class SipiFileInfoGetResponseADM(permissionCode: Int) extends KnoraResponse
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
-object SipiResponderResponseADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
+object SipiResponderResponseADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions with ProjectsADMJsonProtocol {
 
-    implicit val sipiFileInfoGetResponseADMFormat: RootJsonFormat[SipiFileInfoGetResponseADM] = jsonFormat1(SipiFileInfoGetResponseADM)
+    implicit val sipiFileInfoGetResponseADMFormat: RootJsonFormat[SipiFileInfoGetResponseADM] = jsonFormat2(SipiFileInfoGetResponseADM)
 }

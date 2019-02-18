@@ -119,6 +119,10 @@
                                 knora-base:projectKeyword "images"^^xsd:string,
                                                           "collection"^^xsd:string ;
 
+                                knora-base:projectRestrictedViewSize "!512,512"^^xsd:string ;
+
+                                knora-base:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
+
                                 knora-base:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
 
                                 knora-base:status "true"^^xsd:boolean ;
@@ -257,6 +261,10 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                                                     "Contectualisation of images"^^xsd:string ;
 
                                           knora-base:projectLogo "incunabula_logo.png"^^xsd:string ;
+
+                                          knora-base:projectRestrictedViewSize "!512,512"^^xsd:string ;
+
+                                          knora-base:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
 
                                           knora-base:status "true"^^xsd:boolean ;
 

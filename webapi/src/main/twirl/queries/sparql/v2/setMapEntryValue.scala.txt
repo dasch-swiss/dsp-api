@@ -64,10 +64,10 @@ DELETE {
             knora-base:isInMap ?map ;
             knora-base:mapEntryKey "@mapEntryKey"^^xsd:string ;
             knora-base:mapEntryValue """@mapEntryValue"""^^xsd:string ;
-            knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+            knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
 
         @* Update the map's last modification date. *@
-        ?map knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?map knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@

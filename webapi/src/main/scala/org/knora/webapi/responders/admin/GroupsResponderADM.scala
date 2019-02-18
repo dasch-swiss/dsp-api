@@ -225,7 +225,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             _ = log.debug("groupMembersGetRequestADM - groupMemberIris: {}", groupMemberIris)
 
             maybeUsersFutures: Seq[Future[Option[UserADM]]] = groupMemberIris.map {
-                userIri => (responderManager ? UserGetADM(UserIdentifierADM(userIri), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+                userIri => (responderManager ? UserGetADM(UserIdentifierADM(maybeIri = Some(userIri)), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             }
             maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUsersFutures)
             users: Seq[UserADM] = maybeUsers.flatten

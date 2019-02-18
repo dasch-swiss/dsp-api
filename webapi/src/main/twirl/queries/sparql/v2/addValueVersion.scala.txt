@@ -111,7 +111,7 @@ DELETE {
 
         @* TODO: in case of a file value, order is not given *@
         ?newValue knora-base:valueHasOrder ?order .
-        ?newValue knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?newValue knora-base:valueCreationDate "@currentTime"^^xsd:dateTime .
         ?newValue knora-base:previousValue ?currentValue .
 
         @* Insert direct links and LinkValues for resource references. *@
@@ -131,11 +131,11 @@ DELETE {
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
                 @if(linkUpdate.newReferenceCount == 0) {
                     knora-base:isDeleted true ;
-                    knora-base:deleteDate "@currentTime"^^xsd:dateTimeStamp ;
+                    knora-base:deleteDate "@currentTime"^^xsd:dateTime ;
                 } else {
                     knora-base:isDeleted false ;
                 }
-                knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp .
+                knora-base:valueCreationDate "@currentTime"^^xsd:dateTime .
 
             <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
                 knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
@@ -153,7 +153,7 @@ DELETE {
         ?resource ?property ?newValue .
 
         @* Update the resource's last modification date. *@
-        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@

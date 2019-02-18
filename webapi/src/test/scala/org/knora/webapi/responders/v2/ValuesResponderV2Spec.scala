@@ -3390,8 +3390,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             responderManager ! DeleteValueRequestV2(
                 resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 propertyIri = propertyIri,
                 valueIri = intValueIri.get,
+                valueTypeIri = OntologyConstants.KnoraApiV2WithValueObjects.IntValue.toSmartIri,
                 deleteComment = Some("this value was incorrect"),
                 requestingUser = anythingUser2,
                 apiRequestID = UUID.randomUUID
@@ -3409,8 +3411,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             responderManager ! DeleteValueRequestV2(
                 resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 propertyIri = propertyIri,
                 valueIri = intValueIri.get,
+                valueTypeIri = OntologyConstants.KnoraApiV2WithValueObjects.IntValue.toSmartIri,
                 deleteComment = Some("this value was incorrect"),
                 requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
@@ -3429,8 +3433,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not delete a standoff link directly" in {
             responderManager ! DeleteValueRequestV2(
                 resourceIri = zeitglöckleinIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                 propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
                 valueIri = standoffLinkValueIri.get,
+                valueTypeIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValue.toSmartIri,
                 requestingUser = SharedTestDataADM.superUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -3446,8 +3452,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             responderManager ! DeleteValueRequestV2(
                 resourceIri = zeitglöckleinIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                 propertyIri = propertyIri,
                 valueIri = zeitglöckleinCommentWithStandoffIri.get,
+                valueTypeIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri,
                 deleteComment = Some("this value was incorrect"),
                 requestingUser = incunabulaUser,
                 apiRequestID = UUID.randomUUID
@@ -3481,8 +3489,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             responderManager ! DeleteValueRequestV2(
                 resourceIri = resourceIri,
+                resourceClassIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj.toSmartIri,
                 propertyIri = linkValuePropertyIri,
                 valueIri = linkValueIri.get,
+                valueTypeIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValue.toSmartIri,
                 requestingUser = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -3502,8 +3512,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             responderManager ! DeleteValueRequestV2(
                 resourceIri = zeitglöckleinIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                 propertyIri = propertyIri,
                 valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+                valueTypeIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri,
                 requestingUser = incunabulaCreatorUser,
                 apiRequestID = UUID.randomUUID
             )
