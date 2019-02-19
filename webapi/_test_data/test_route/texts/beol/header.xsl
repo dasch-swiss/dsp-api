@@ -95,9 +95,6 @@
             </xsl:choose>
         </xsl:variable>
         
-        <xsl:message>authorValueIri is <xsl:value-of select="$authorValueIri"/></xsl:message>
-        <xsl:message>authorIri is <xsl:value-of select="$authorIri"/></xsl:message>
-        
         <xsl:variable name="authorIAFValue"
                       select="//beol:person[@rdf:about=$authorIri]//beol:hasIAFIdentifier/@rdf:resource"/>
         <xsl:variable name="authorFamilyNameValue"
@@ -132,14 +129,27 @@
     </xsl:template>
 
     <xsl:template match="beol:letter/beol:hasRecipientValue">
-        <xsl:variable name="recipientValue" select="@rdf:resource"/>
-
+        <xsl:variable name="recipientValueIri" select="@rdf:resource"/>
+        
+        <xsl:variable name="recipientIri">
+            <xsl:choose>
+                <xsl:when test="boolean(//knora-api:LinkValue[@rdf:about=$recipientValueIri]//beol:person/@rdf:about)">
+                    <!-- The target resource is nested in the LinkValue. -->
+                    <xsl:value-of select="//knora-api:LinkValue[@rdf:about=$recipientValueIri]//beol:person/@rdf:about"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- The target resource is not nested in the LinkValue. -->
+                    <xsl:value-of select="//knora-api:LinkValue[@rdf:about=$recipientValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+        
         <xsl:variable name="recipientIAFValue"
-                      select="//knora-api:LinkValue[@rdf:about=$recipientValue]//beol:hasIAFIdentifier/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasIAFIdentifier/@rdf:resource"/>
         <xsl:variable name="recipientFamilyNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$recipientValue]//beol:hasFamilyName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasFamilyName/@rdf:resource"/>
         <xsl:variable name="recipientGivenNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$recipientValue]//beol:hasGivenName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasGivenName/@rdf:resource"/>
 
         <correspAction type="received">
 
