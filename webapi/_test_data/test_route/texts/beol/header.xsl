@@ -80,14 +80,30 @@
     </xsl:template>
 
     <xsl:template match="beol:letter/beol:hasAuthorValue">
-        <xsl:variable name="authorValue" select="@rdf:resource"/>
-
+        <xsl:variable name="authorValueIri" select="@rdf:resource"/>
+        
+        <xsl:variable name="authorIri">
+            <xsl:choose>
+                <xsl:when test="boolean(//knora-api:LinkValue[@rdf:about=$authorValueIri]//beol:person/@rdf:about)">
+                    <!-- The target resource is nested in the LinkValue. -->
+                    <xsl:value-of select="//knora-api:LinkValue[@rdf:about=$authorValueIri]//beol:person/@rdf:about"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- The target resource is not nested in the LinkValue. -->
+                    <xsl:value-of select="//knora-api:LinkValue[@rdf:about=$authorValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+        
+        <xsl:message>authorValueIri is <xsl:value-of select="$authorValueIri"/></xsl:message>
+        <xsl:message>authorIri is <xsl:value-of select="$authorIri"/></xsl:message>
+        
         <xsl:variable name="authorIAFValue"
-                      select="//knora-api:LinkValue[@rdf:about=$authorValue]//beol:hasIAFIdentifier/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$authorIri]//beol:hasIAFIdentifier/@rdf:resource"/>
         <xsl:variable name="authorFamilyNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$authorValue]//beol:hasFamilyName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$authorIri]//beol:hasFamilyName/@rdf:resource"/>
         <xsl:variable name="authorGivenNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$authorValue]//beol:hasGivenName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$authorIri]//beol:hasGivenName/@rdf:resource"/>
 
         <correspAction type="sent">
 
