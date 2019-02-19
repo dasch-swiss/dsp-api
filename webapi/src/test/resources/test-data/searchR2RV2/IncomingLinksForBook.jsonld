@@ -45,6 +45,10 @@
         "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543Z"
       },
       "rdfs:label" : "[Das] Narrenschiff (lat.)"
+    },
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:54Z"
     }
   },
   "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",

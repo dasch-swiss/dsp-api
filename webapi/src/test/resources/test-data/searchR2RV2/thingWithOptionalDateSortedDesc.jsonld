@@ -18,7 +18,11 @@
       "knora-api:dateValueHasStartMonth" : 5,
       "knora-api:dateValueHasStartYear" : 2018,
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
-      "knora-api:valueAsString" : "GREGORIAN:2018-05-13 CE"
+      "knora-api:valueAsString" : "GREGORIAN:2018-05-13 CE",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2018-05-28T15:52:03.897Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -59,7 +63,11 @@
       "knora-api:dateValueHasStartMonth" : 1,
       "knora-api:dateValueHasStartYear" : 10,
       "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
-      "knora-api:valueAsString" : "JULIAN:0010-01-10 BCE:0010-01-10 CE"
+      "knora-api:valueAsString" : "JULIAN:0010-01-10 BCE:0010-01-10 CE",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2018-01-31T15:05:10Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -100,7 +108,11 @@
       "knora-api:dateValueHasStartMonth" : 3,
       "knora-api:dateValueHasStartYear" : 44,
       "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
-      "knora-api:valueAsString" : "JULIAN:0044-03-15 BCE"
+      "knora-api:valueAsString" : "JULIAN:0044-03-15 BCE",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2018-01-31T15:05:10Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",

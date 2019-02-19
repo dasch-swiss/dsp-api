@@ -147,7 +147,11 @@
         "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
       },
       "knora-api:booleanValueAsBoolean" : true,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2018-05-28T15:52:03.897Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",

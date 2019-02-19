@@ -17,7 +17,11 @@
     "knora-api:dateValueHasStartMonth" : 1,
     "knora-api:dateValueHasStartYear" : 10,
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
-    "knora-api:valueAsString" : "JULIAN:0010-01-10 BCE:0010-01-10 CE"
+    "knora-api:valueAsString" : "JULIAN:0010-01-10 BCE:0010-01-10 CE",
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2018-01-31T15:05:10Z"
+    }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

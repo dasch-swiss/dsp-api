@@ -489,6 +489,8 @@ sealed trait ReadValueV2 extends IOValueV2 {
       * @return a JSON-LD representation of this value.
       */
     def toJsonLD(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         val valueContentAsJsonLD = valueContent.toJsonLDValue(targetSchema, projectADM, settings)
 
         // In the complex schema, add the value's IRI and type to the JSON-LD object that represents it.
@@ -503,7 +505,11 @@ sealed trait ReadValueV2 extends IOValueV2 {
                             JsonLDConstants.ID -> JsonLDString(valueIri),
                             JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString),
                             OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
-                            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions)
+                            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions),
+                            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                                value = valueCreationDate.toString,
+                                datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                            )
                         )
 
                         val valueHasCommentAsJsonLD: Option[(IRI, JsonLDValue)] = valueContent.comment.map {

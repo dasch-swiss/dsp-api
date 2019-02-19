@@ -12,7 +12,11 @@
         "@type" : "xsd:decimal",
         "@value" : "2.1"
       },
-      "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember"
+      "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2017-07-25T07:13:16.732Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -47,7 +51,11 @@
         "@type" : "xsd:decimal",
         "@value" : "1.5"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2018-05-28T15:52:03.897Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",

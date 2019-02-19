@@ -8,7 +8,11 @@
       "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
-    "knora-api:intValueAsInt" : 1
+    "knora-api:intValueAsInt" : 1,
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2018-05-28T15:52:03.897Z"
+    }
   },
   "anything:hasText" : {
     "@id" : "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/SZyeLLmOTcCCuS3B0VksHQ",
@@ -17,7 +21,11 @@
       "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
-    "knora-api:valueAsString" : "test"
+    "knora-api:valueAsString" : "test",
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2018-05-28T15:52:03.897Z"
+    }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

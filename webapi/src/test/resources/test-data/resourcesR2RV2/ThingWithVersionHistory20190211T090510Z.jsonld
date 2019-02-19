@@ -30,16 +30,16 @@
     }
   },
   "anything:hasText" : {
-    "@id" : "http://rdfh.ch/0001/thing-with-history/values/2b",
+    "@id" : "http://rdfh.ch/0001/thing-with-history/values/2a",
     "@type" : "knora-api:TextValue",
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
-    "knora-api:valueAsString" : "two",
+    "knora-api:valueAsString" : "one",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
-      "@value" : "2019-02-11T10:05:10Z"
+      "@value" : "2019-02-10T10:05:10Z"
     }
   },
   "knora-api:arkUrl" : {
@@ -63,11 +63,11 @@
   },
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO.20190212T080510351Z"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO.20190211T090510Z"
   },
   "knora-api:versionDate" : {
     "@type" : "xsd:dateTimeStamp",
-    "@value" : "2019-02-12T08:05:10.351Z"
+    "@value" : "2019-02-11T09:05:10Z"
   },
   "rdfs:label" : "A thing with version history",
   "@context" : {

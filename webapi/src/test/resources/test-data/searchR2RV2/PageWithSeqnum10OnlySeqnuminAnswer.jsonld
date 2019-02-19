@@ -8,7 +8,11 @@
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-    "knora-api:intValueAsInt" : 10
+    "knora-api:intValueAsInt" : 10,
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:47Z"
+    }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

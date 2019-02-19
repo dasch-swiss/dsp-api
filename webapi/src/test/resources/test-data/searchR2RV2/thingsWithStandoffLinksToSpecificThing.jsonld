@@ -11,6 +11,10 @@
     "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
     "knora-api:textValueHasMapping" : {
       "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+    },
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:54Z"
     }
   }, {
     "@id" : "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
@@ -22,6 +26,10 @@
     "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
     "knora-api:textValueHasMapping" : {
       "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+    },
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:54Z"
     }
   } ],
   "knora-api:arkUrl" : {

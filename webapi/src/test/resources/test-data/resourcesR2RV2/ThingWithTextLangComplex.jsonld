@@ -9,7 +9,11 @@
     },
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
     "knora-api:textValueHasLanguage" : "fr",
-    "knora-api:valueAsString" : "Bonjour"
+    "knora-api:valueAsString" : "Bonjour",
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:54Z"
+    }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

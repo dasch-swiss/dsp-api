@@ -31,6 +31,10 @@
         "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
       },
       "rdfs:label" : "[Das] Narrenschiff (lat.)"
+    },
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:47Z"
     }
   },
   "incunabula:seqnum" : {
@@ -40,7 +44,11 @@
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-    "knora-api:intValueAsInt" : 10
+    "knora-api:intValueAsInt" : 10,
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:47Z"
+    }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

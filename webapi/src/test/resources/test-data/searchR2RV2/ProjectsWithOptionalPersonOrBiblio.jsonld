@@ -58,6 +58,10 @@
           "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
           "knora-api:linkValueHasTargetIri" : {
             "@id" : "http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q"
+          },
+          "knora-api:valueCreationDate" : {
+            "@type" : "xsd:dateTimeStamp",
+            "@value" : "2018-06-06T12:08:57.382Z"
           }
         },
         "knora-api:arkUrl" : {
@@ -80,6 +84,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0666/xY8O4uSeQb=MDC4VtvQGdwm.20180606T120857382Z"
         },
         "rdfs:label" : "Person3"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2018-06-06T12:08:57.382Z"
       }
     },
     "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
@@ -124,6 +132,10 @@
           "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
           "knora-api:linkValueHasTargetIri" : {
             "@id" : "http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w"
+          },
+          "knora-api:valueCreationDate" : {
+            "@type" : "xsd:dateTimeStamp",
+            "@value" : "2018-06-06T12:08:57.175Z"
           }
         },
         "knora-api:arkUrl" : {
@@ -146,6 +158,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0666/wopH6GHOSpCyASdrsNqg_Am.20180606T120857175Z"
         },
         "rdfs:label" : "Person1"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2018-06-06T12:08:57.175Z"
       }
     }, {
       "@id" : "http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw",
@@ -166,6 +182,10 @@
           "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
           "knora-api:linkValueHasTargetIri" : {
             "@id" : "http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w"
+          },
+          "knora-api:valueCreationDate" : {
+            "@type" : "xsd:dateTimeStamp",
+            "@value" : "2018-06-06T12:08:57.561Z"
           }
         },
         "knora-api:arkUrl" : {
@@ -188,6 +208,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0666/yjOFfSKPR_uiw8KoJu5mQgy.20180606T120857561Z"
         },
         "rdfs:label" : "Biblio1"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2018-06-06T12:08:57.561Z"
       }
     } ],
     "knora-api:hasPermissions" : "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",

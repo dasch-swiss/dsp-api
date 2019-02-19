@@ -33,7 +33,7 @@ import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{FileUtil, PermissionUtilADM, StringFormatter}
 
 import scala.concurrent.ExecutionContextExecutor
@@ -256,6 +256,37 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(response.status == StatusCodes.OK, responseAsString)
             val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/PartialVersionHistory.jsonld"), writeTestDataFiles)
             compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+        }
+
+        "return each of the versions of a resource listed in its version history" in {
+            val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
+            val historyRequest = Get(s"$baseApiUrl/v2/resources/history/$resourceIri")
+            val historyResponse: HttpResponse = singleAwaitingRequest(historyRequest)
+            val historyResponseAsString = responseToString(historyResponse)
+            assert(historyResponse.status == StatusCodes.OK, historyResponseAsString)
+            val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(historyResponseAsString)
+            val entries: JsonLDArray = jsonLDDocument.requireArray("@graph")
+
+            for (entry: JsonLDValue <- entries.value) {
+                entry match {
+                    case jsonLDObject: JsonLDObject =>
+                        val versionDate: Instant = jsonLDObject.requireDatatypeValueInObject(
+                            key = OntologyConstants.KnoraApiV2WithValueObjects.VersionDate,
+                            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                            validationFun = stringFormatter.xsdDateTimeStampToInstant
+                        )
+
+                        val arkTimestamp = stringFormatter.formatArkTimestamp(versionDate)
+                        val versionRequest = Get(s"$baseApiUrl/v2/resources/$resourceIri?version=$arkTimestamp")
+                        val versionResponse: HttpResponse = singleAwaitingRequest(versionRequest)
+                        val versionResponseAsString = responseToString(versionResponse)
+                        assert(versionResponse.status == StatusCodes.OK, versionResponseAsString)
+                        val expectedAnswerJSONLD = readOrWriteTextFile(versionResponseAsString, new File(s"src/test/resources/test-data/resourcesR2RV2/ThingWithVersionHistory$arkTimestamp.jsonld"), writeTestDataFiles)
+                        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = versionResponseAsString)
+
+                    case other => throw AssertionException(s"Expected JsonLDObject, got $other")
+                }
+            }
         }
 
         "return a graph of resources reachable via links from/to a given resource" in {

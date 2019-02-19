@@ -32,6 +32,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -41,7 +45,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 26
+      "knora-api:intValueAsInt" : 26,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -96,6 +104,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -105,7 +117,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 27
+      "knora-api:intValueAsInt" : 27,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -160,6 +176,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -169,7 +189,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 28
+      "knora-api:intValueAsInt" : 28,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -224,6 +248,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -233,7 +261,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 29
+      "knora-api:intValueAsInt" : 29,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -288,6 +320,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -297,7 +333,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 30
+      "knora-api:intValueAsInt" : 30,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -352,6 +392,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -361,7 +405,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 31
+      "knora-api:intValueAsInt" : 31,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -416,6 +464,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -425,7 +477,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 32
+      "knora-api:intValueAsInt" : 32,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -480,6 +536,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -489,7 +549,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 33
+      "knora-api:intValueAsInt" : 33,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -544,6 +608,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -553,7 +621,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 34
+      "knora-api:intValueAsInt" : 34,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -608,6 +680,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -617,7 +693,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 35
+      "knora-api:intValueAsInt" : 35,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -672,6 +752,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -681,7 +765,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 36
+      "knora-api:intValueAsInt" : 36,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -736,6 +824,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -745,7 +837,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 37
+      "knora-api:intValueAsInt" : 37,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -800,6 +896,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -809,7 +909,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 38
+      "knora-api:intValueAsInt" : 38,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -864,6 +968,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -873,7 +981,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 39
+      "knora-api:intValueAsInt" : 39,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -928,6 +1040,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -937,7 +1053,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 40
+      "knora-api:intValueAsInt" : 40,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -992,6 +1112,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -1001,7 +1125,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 41
+      "knora-api:intValueAsInt" : 41,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -1056,6 +1184,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -1065,7 +1197,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 42
+      "knora-api:intValueAsInt" : 42,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -1120,6 +1256,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -1129,7 +1269,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 43
+      "knora-api:intValueAsInt" : 43,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -1184,6 +1328,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -1193,7 +1341,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 44
+      "knora-api:intValueAsInt" : 44,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -1248,6 +1400,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -1257,7 +1413,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 45
+      "knora-api:intValueAsInt" : 45,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -1312,6 +1472,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -1321,7 +1485,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 46
+      "knora-api:intValueAsInt" : 46,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -1376,6 +1544,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -1385,7 +1557,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 47
+      "knora-api:intValueAsInt" : 47,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -1440,6 +1616,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -1449,7 +1629,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 48
+      "knora-api:intValueAsInt" : 48,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -1504,6 +1688,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -1513,7 +1701,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 49
+      "knora-api:intValueAsInt" : 49,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -1568,6 +1760,10 @@
           "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z"
         },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
       }
     },
     "incunabula:seqnum" : {
@@ -1577,7 +1773,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-      "knora-api:intValueAsInt" : 50
+      "knora-api:intValueAsInt" : 50,
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",

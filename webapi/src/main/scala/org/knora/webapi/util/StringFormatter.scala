@@ -1843,7 +1843,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @param timestamp the timestamp to be formatted.
       * @return a string representation of the timestamp.
       */
-    private def formatArkTimestamp(timestamp: Instant): String = {
+    def formatArkTimestamp(timestamp: Instant): String = {
         val offsetDateTime: OffsetDateTime = timestamp.atOffset(ZoneOffset.UTC)
 
         val year: Int = offsetDateTime.get(ChronoField.YEAR)
