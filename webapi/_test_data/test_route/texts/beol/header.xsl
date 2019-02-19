@@ -14,6 +14,23 @@
         <xsl:param name="input" as="xs:string"/>
         <xsl:value-of select="replace($input, '\(DE-588\)', 'http://d-nb.info/gnd/')"/>
     </xsl:function>
+    
+    <!-- Given a link value IRI and the document root node, returns the IRI of the target resource. -->
+    <xsl:function name="knora-api:getTargetResourceIri">
+        <xsl:param name="linkValueIri" as="xs:anyURI"/>
+        <xsl:param name="documentRoot" as="item()"/>
+        
+        <xsl:choose>
+            <xsl:when test="boolean($documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//beol:person)">
+                <!-- The target resource is nested in the LinkValue. -->
+                <xsl:value-of select="$documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//beol:person/@rdf:about"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- The target resource is not nested in the LinkValue. -->
+                <xsl:value-of select="$documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
 
     <!-- make a standard date (Gregorian calendar assumed) -->
     <xsl:function name="knora-api:dateformat" as="element()*">
@@ -81,19 +98,7 @@
 
     <xsl:template match="beol:letter/beol:hasAuthorValue">
         <xsl:variable name="authorValueIri" select="@rdf:resource"/>
-        
-        <xsl:variable name="authorIri">
-            <xsl:choose>
-                <xsl:when test="boolean(//knora-api:LinkValue[@rdf:about=$authorValueIri]//beol:person/@rdf:about)">
-                    <!-- The target resource is nested in the LinkValue. -->
-                    <xsl:value-of select="//knora-api:LinkValue[@rdf:about=$authorValueIri]//beol:person/@rdf:about"/>
-                </xsl:when>
-                <xsl:otherwise>
-                    <!-- The target resource is not nested in the LinkValue. -->
-                    <xsl:value-of select="//knora-api:LinkValue[@rdf:about=$authorValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
+        <xsl:variable name="authorIri" select="knora-api:getTargetResourceIri($authorValueIri, /.)"/>
         
         <xsl:variable name="authorIAFValue"
                       select="//beol:person[@rdf:about=$authorIri]//beol:hasIAFIdentifier/@rdf:resource"/>
@@ -130,19 +135,7 @@
 
     <xsl:template match="beol:letter/beol:hasRecipientValue">
         <xsl:variable name="recipientValueIri" select="@rdf:resource"/>
-        
-        <xsl:variable name="recipientIri">
-            <xsl:choose>
-                <xsl:when test="boolean(//knora-api:LinkValue[@rdf:about=$recipientValueIri]//beol:person/@rdf:about)">
-                    <!-- The target resource is nested in the LinkValue. -->
-                    <xsl:value-of select="//knora-api:LinkValue[@rdf:about=$recipientValueIri]//beol:person/@rdf:about"/>
-                </xsl:when>
-                <xsl:otherwise>
-                    <!-- The target resource is not nested in the LinkValue. -->
-                    <xsl:value-of select="//knora-api:LinkValue[@rdf:about=$recipientValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:variable>
+        <xsl:variable name="recipientIri" select="knora-api:getTargetResourceIri($recipientValueIri, /.)"/>
         
         <xsl:variable name="recipientIAFValue"
                       select="//beol:person[@rdf:about=$recipientIri]//beol:hasIAFIdentifier/@rdf:resource"/>
