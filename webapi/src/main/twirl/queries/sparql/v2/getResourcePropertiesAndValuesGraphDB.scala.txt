@@ -82,15 +82,12 @@ CONSTRUCT {
     VALUES ?resource { @for(resIri <- resourceIris) { <@resIri> } }
 
     ?resource rdf:type knora-base:Resource ;
+        knora-base:isDeleted false ;
         knora-base:attachedToProject ?resourceProject ;
         knora-base:attachedToUser ?resourceCreator ;
         knora-base:hasPermissions ?resourcePermissions ;
         knora-base:creationDate ?creationDate ;
         rdfs:label ?label .
-
-        OPTIONAL {
-            ?resource knora-base:lastModificationDate ?lastModificationDate .
-        }
 
     @* Is this a version history request? *@
     @maybeVersionDate match {
@@ -98,22 +95,13 @@ CONSTRUCT {
             @* Yes. Ensure that the resource was created on or before the target date. *@
 
             FILTER(?creationDate <= "@versionDate"^^xsd:dateTime)
-
-            @*
-
-            If the resource was deleted on or before the target date, ignore it.
-
-            *@
-            FILTER NOT EXISTS {
-                ?resource knora-base:deleteDate ?deleteDate .
-                FILTER(?deleteDate <= "@versionDate"^^xsd:dateTime)
-            }
         }
 
-        case None => {
-            @* This is not a version history request. Ensure that the resource is not marked as deleted. *@
-            ?resource knora-base:isDeleted false .
-        }
+        case None => {}
+    }
+
+    OPTIONAL {
+        ?resource knora-base:lastModificationDate ?lastModificationDate .
     }
 
     GRAPH <http://www.ontotext.com/explicit> {
