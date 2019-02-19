@@ -238,6 +238,35 @@ class ResourcesV1R2RSpec extends R2RSpec {
     }
 
 
+    private val search = "/v1/resources?restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23Thing"
+    private val filter = "&searchstr=***"
+
+    /**
+      * Test the result of two subsequent requests nearly identical requests
+      * (used here for requesting different number of properties to be displayed)
+      * @param search : search query as a string
+      * @return : nothing, assert is called within this function
+      */
+    private def checkSearchWithDifferentNumberOfProperties(search: String) = {
+
+        Get(search) ~> resourcesPathV1 ~> check {
+
+            assert(status == StatusCodes.OK, response.toString)
+
+            val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+            val resources = responseJson.fields("resources")
+                .asInstanceOf[JsArray].elements
+
+            val expectedNumber = 11
+
+            println(resources)
+
+            assert(resources.length == expectedNumber, s"expected $expectedNumber results, but ${resources.length} given: $resources")
+
+        }
+    }
+
+
     "The Resources Endpoint" should {
         "provide a HTML representation of the resource properties " in {
             /* Incunabula resources*/
@@ -1977,5 +2006,18 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
 
         }
+
+        "perform a search for an anything:Thing matching a '***'" in {
+
+            checkSearchWithDifferentNumberOfProperties(search + filter)
+
+        }
+
+        "perform a search for an anything:Thing matching a '***' with 2 numprops displayed" in {
+
+            checkSearchWithDifferentNumberOfProperties(search + filter + "&numprops=2")
+
+        }
     }
+
 }
