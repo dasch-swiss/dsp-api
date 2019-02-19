@@ -97,7 +97,8 @@ To get a specific past version of a resource, use the route described in
 and add the URL parameter `?version=TIMESTAMP`, where `TIMESTAMP` is an
 [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp) in the
 UTC timezone. The timestamp can either be URL-encoded, or submitted with all
-punctuation (`-`, `:`, and `.`) removed.
+punctuation (`-`, `:`, and `.`) removed (this is to accept timestamps
+from Knora's @ref:[ARK URLs](resource-permalinks.md)).
 
 The resource will be returned with the values that it had at the specified
 time. Since Knora only versions values, not resource metadata (e.g.
