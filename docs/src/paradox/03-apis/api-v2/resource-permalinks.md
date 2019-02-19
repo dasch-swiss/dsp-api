@@ -67,6 +67,11 @@ For example:
 }
 ```
 
+For more information on getting past versions of resources, see
+@ref:[Get a Full Representation of a Version of a Resource by IRI](reading-and-searching-resources.md#get-a-full-representation-of-a-version-of-a-resource-by-iri)
+and
+@ref:[Get the Version History of a Resource](reading-and-searching-resources.md#get-the-version-history-of-a-resource).
+
 ## Resolving Knora ARK URLs
 
 A Knora ARK URL is intended to be resolved by the [Knora ARK resolver](https://github.com/dhlab-basel/ark-resolver).
