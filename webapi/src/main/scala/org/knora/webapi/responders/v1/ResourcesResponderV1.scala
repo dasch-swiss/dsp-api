@@ -1231,7 +1231,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                     )
                                 }
                                 case None => {
-                                    log.info("more values were asked (numberOfProps > 1), but there were none to be found")
+                                    log.debug("more values were asked (numberOfProps > 1), but there were none to be found")
                                     ResourceSearchResultRowV1(
                                         id = row.rowMap("resourceIri"),
                                         value = Vector(firstProp),
