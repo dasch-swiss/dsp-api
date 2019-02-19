@@ -241,7 +241,13 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val search = "/v1/resources?restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23Thing"
     private val filter = "&searchstr=***"
 
-    private def checkSearch(search: String) = {
+    /**
+      * Test the result of two subsequent requests nearly identical requests
+      * (used here for requesting different number of properties to be displayed)
+      * @param search : search query as a string
+      * @return : nothing, assert is called within this function
+      */
+    private def checkSearchWithDifferentNumberOfProperties(search: String) = {
 
         Get(search) ~> resourcesPathV1 ~> check {
 
@@ -2003,13 +2009,13 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         "perform a search for an anything:Thing matching a '***'" in {
 
-            checkSearch(search + filter)
+            checkSearchWithDifferentNumberOfProperties(search + filter)
 
         }
 
         "perform a search for an anything:Thing matching a '***' with 2 numprops displayed" in {
 
-            checkSearch(search + filter + "&numprops=2")
+            checkSearchWithDifferentNumberOfProperties(search + filter + "&numprops=2")
 
         }
     }
