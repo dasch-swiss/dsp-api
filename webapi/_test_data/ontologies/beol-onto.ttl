@@ -891,9 +891,9 @@
 :hasBirthPlace rdf:type owl:ObjectProperty ;
 
                rdfs:label "Geburtsort"@de ,
-                         "Birth Place"@en ;
+                         "Place of death"@en ;
 
-               rdfs:comment """Represents a birth place."""@en ;
+               rdfs:comment """Represents a place of birth."""@en ;
 
                knora-base:objectClassConstraint knora-base:TextValue ;
 
