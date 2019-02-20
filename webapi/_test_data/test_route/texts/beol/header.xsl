@@ -16,7 +16,7 @@
     </xsl:function>
     
     <!-- Given a link value IRI and the document root node, returns the IRI of the target resource. -->
-    <xsl:function name="knora-api:getTargetResourceIri">
+    <xsl:function name="knora-api:getTargetResourceIri" as="xs:anyURI">
         <xsl:param name="linkValueIri" as="xs:anyURI"/>
         <xsl:param name="documentRoot" as="item()"/>
         
