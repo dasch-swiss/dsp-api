@@ -1365,7 +1365,7 @@
 
 
 ### ###########################################
-### beol:transcriptionOfValue
+### beol:belongsToRegionValue
 
 :belongsToRegionValue rdf:type owl:ObjectProperty ;
 
