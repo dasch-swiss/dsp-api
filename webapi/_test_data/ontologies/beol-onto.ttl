@@ -1563,6 +1563,18 @@
                         ] ,
                         [
                             rdf:type owl:Restriction ;
+                            owl:onProperty :letterIsReplyTo ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :letterIsReplyToValue ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
                             owl:onProperty :letterHasLanguage ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
@@ -1628,18 +1640,6 @@
                             owl:onProperty :externalRepository ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
-                        ] ,
-                        [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty :letterIsReplyTo ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
-                        ] ,
-                        [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty :letterIsReplyToValue ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                         ] ,
                         [
                             rdf:type owl:Restriction ;
