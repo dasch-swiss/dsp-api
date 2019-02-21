@@ -281,7 +281,7 @@
               rdfs:comment """Der Brief ist eine Antwort auf einen Brief"""@de ,
                            """Letter is reply to another letter"""@en ;
 
-              knora-base:objectClassConstraint :basicLetter ;
+              knora-base:objectClassConstraint :letter ;
 
               salsah-gui:guiElement salsah-gui:Searchbox .
 
@@ -292,7 +292,7 @@
 
                    knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                   knora-base:subjectClassConstraint :basicLetter ;
+                   knora-base:subjectClassConstraint :letter ;
 
                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
@@ -1563,18 +1563,6 @@
                         ] ,
                         [
                             rdf:type owl:Restriction ;
-                            owl:onProperty :letterIsReplyTo ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
-                        ] ,
-                        [
-                            rdf:type owl:Restriction ;
-                            owl:onProperty :letterIsReplyToValue ;
-                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
-                        ] ,
-                        [
-                            rdf:type owl:Restriction ;
                             owl:onProperty :letterHasLanguage ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
@@ -1597,13 +1585,13 @@
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasOriginal ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                            salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                         ] ,
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasOriginalValue ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                            salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                         ] ,
                         [
                             rdf:type owl:Restriction ;
@@ -1617,6 +1605,7 @@
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                         ] ,
+
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterIsPublished ;
@@ -1640,6 +1629,18 @@
                             owl:onProperty :externalRepository ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :letterIsReplyTo ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :letterIsReplyToValue ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                         ] ,
                         [
                             rdf:type owl:Restriction ;
