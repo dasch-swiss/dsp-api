@@ -1359,7 +1359,7 @@
 
            knora-base:subjectClassConstraint :transcription ;
 
-           knora-base:objectClassConstraint knora-base:Resource ;
+           knora-base:objectClassConstraint knora-base:Region ;
 
            salsah-gui:guiElement salsah-gui:Searchbox .
 
