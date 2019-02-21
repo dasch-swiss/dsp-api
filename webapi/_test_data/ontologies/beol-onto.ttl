@@ -505,8 +505,6 @@
                      """Cette \"property\" dénote la position dans un séquence."""@fr ,
                      """This property stands for the position within a set of rdered items (resoucres)"""@en ;
 
-        knora-base:subjectClassConstraint :documentImage ;
-
         knora-base:objectClassConstraint knora-base:IntValue ;
 
         salsah-gui:guiElement salsah-gui:Spinbox ;
@@ -1347,6 +1345,43 @@
                             "Transcription of"@en .
 
 ### ###########################################
+### beol:manuscriptEntryOf
+
+:manuscriptEntryOf rdf:type owl:ObjectProperty ;
+
+                rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                rdfs:comment "Manuskripteintrag in"@de ,
+                             "Manuscript entry in"@en ;
+
+                rdfs:label  "Manuskripteintrag in"@de ,
+                            "Manuscript entry in"@en ;
+
+                knora-base:subjectClassConstraint :manuscriptEntry ;
+
+                knora-base:objectClassConstraint :manuscript ;
+
+                salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:manuscriptEntryOfValue
+
+:manuscriptEntryOfValue rdf:type owl:ObjectProperty ;
+
+                knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                knora-base:subjectClassConstraint :manuscriptEntry ;
+
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                rdfs:comment "Manuskripteintrag in"@de ,
+                             "Manuscript entry in"@en ;
+
+                rdfs:label  "Manuskripteintrag in"@de ,
+                            "Manuscript entry in"@en .
+
+### ###########################################
 ### beol:externalRepository
 
 :externalRepository rdf:type owl:ObjectProperty ;
@@ -1971,13 +2006,25 @@
             owl:onProperty :title ;
             owl:minCardinality "1"^^xsd:nonNegativeInteger ;
             salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
-        ],
+        ] ,
         [
             rdf:type owl:Restriction ;
-            owl:onProperty :hasText ;
+            owl:onProperty :seqnum ;
             owl:cardinality "1"^^xsd:nonNegativeInteger ;
             salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-        ];
+        ] ,
+        [
+            rdf:type owl:Restriction ;
+            owl:onProperty :manuscriptEntryOf ;
+            owl:cardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+        ] ,
+        [
+            rdf:type owl:Restriction ;
+            owl:onProperty :manuscriptEntryOfValue ;
+            owl:cardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+        ] ;
 
         rdfs:label "Eintrag in einem Manuskript"@de ,
                    "Entry in a manuscript"@en ;
