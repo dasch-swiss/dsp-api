@@ -1006,7 +1006,18 @@ object StandoffTagUtilV2 {
         // then make a sequence of sets of tags sorted by index.
 
         standoff.groupBy(_.startIndex).map {
-            case (index: Int, standoffForIndex: Seq[StandoffTagV2]) => index -> standoffForIndex.map(_.copy(uuid = "")).toSet
+            case (index: Int, standoffForIndex: Seq[StandoffTagV2]) =>
+                // Set each tag's UUID to the empty string (because these should not affect the comparison),
+                // and sort its attributes by standoff property IRI.
+                val comparableTags = standoffForIndex.map {
+                    tag =>
+                        tag.copy(
+                            uuid = "",
+                            attributes = tag.attributes.sortBy(_.standoffPropertyIri)
+                        )
+                }
+
+                index -> comparableTags.toSet
         }.toVector.sortBy {
             case (index: Int, standoffForIndex: Set[StandoffTagV2]) => index
         }.map {
