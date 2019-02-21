@@ -52,6 +52,12 @@
         </xs:sequence>
     </xs:complexType>
 
+    <xs:complexType name="Region_linkValueType">
+        <xs:sequence>
+            <xs:element name="Region" type="linkValueType"/>
+        </xs:sequence>
+    </xs:complexType>
+
     <xs:element name="resources">
         <xs:complexType>
             <xs:sequence>
