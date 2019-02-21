@@ -311,7 +311,7 @@
                 rdfs:subPropertyOf knora-base:hasLinkTo ;
 
                 rdfs:label "erwähnte Person"@de ,
-                           "Mentioned person"@en ;
+                           "Mentioned Person"@en ;
 
                 rdfs:comment """erwähnte Person"""@de ,
                              """mentioned person"""@en ;
