@@ -15,3 +15,4 @@ Also, please change the **HINT** to the appropriate level:
 - MAJOR: Reorganize user and project routes (@github[#1209](#1209))
 - FEATURE: Secure routes returning user informations (@github[#961](#961))
 - MAJOR: Change all `xsd:dateTimeStamp` to `xsd:dateTime` in the triplestore (@github[#1211](#1211)). Existing data must be updated.
+- FIX: Ignore order of attributes when comparing standoff (@github[#1224](#1224)).
