@@ -1322,7 +1322,7 @@
 
            knora-base:subjectClassConstraint :transcription ;
 
-           knora-base:objectClassConstraint knora-base:Resource ;
+           knora-base:objectClassConstraint :manuscriptEntry ;
 
            salsah-gui:guiElement salsah-gui:Searchbox .
 
@@ -1331,6 +1331,43 @@
 ### beol:transcriptionOfValue
 
 :transcriptionOfValue rdf:type owl:ObjectProperty ;
+
+                knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                knora-base:subjectClassConstraint :transcription ;
+
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                rdfs:comment "Transkription von"@de ,
+                             "Transcription of"@en ;
+
+                rdfs:label  "Transkription von"@de ,
+                            "Transcription of"@en .
+
+### ###########################################
+### beol:belongsToRegion
+
+    :belongsToRegion rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+           rdfs:comment "Transkription von"@de ,
+                        "Transcription of"@en ;
+
+           rdfs:label  "Transkription von"@de ,
+                       "Transcription of"@en ;
+
+           knora-base:subjectClassConstraint :transcription ;
+
+           knora-base:objectClassConstraint knora-base:Region ;
+
+           salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:transcriptionOfValue
+
+:belongsToRegionValue rdf:type owl:ObjectProperty ;
 
                 knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -1997,20 +2034,32 @@
          [
             rdf:type owl:Restriction ;
             owl:onProperty :transcriptionOf ;
-            owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+            owl:cardinality "1"^^xsd:nonNegativeInteger ;
             salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
          ],
          [
             rdf:type owl:Restriction ;
             owl:onProperty :transcriptionOfValue ;
-            owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+            owl:cardinality "1"^^xsd:nonNegativeInteger ;
             salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+         ],
+         [
+            rdf:type owl:Restriction ;
+            owl:onProperty :belongsToRegion ;
+            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+         ],
+         [
+            rdf:type owl:Restriction ;
+            owl:onProperty :belongsToRegionValue ;
+            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
          ],
          [
            rdf:type owl:Restriction ;
            owl:onProperty :layer ;
            owl:cardinality "1"^^xsd:nonNegativeInteger ;
-           salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+           salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
          ];
 
          rdfs:comment "Transkription"@de ,
