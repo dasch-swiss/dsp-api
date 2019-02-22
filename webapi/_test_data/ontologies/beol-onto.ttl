@@ -311,7 +311,7 @@
                 rdfs:subPropertyOf knora-base:hasLinkTo ;
 
                 rdfs:label "erwähnte Person"@de ,
-                           "Mentioned person"@en ;
+                           "Mentioned Person"@en ;
 
                 rdfs:comment """erwähnte Person"""@de ,
                              """mentioned person"""@en ;
@@ -891,9 +891,9 @@
 :hasBirthPlace rdf:type owl:ObjectProperty ;
 
                rdfs:label "Geburtsort"@de ,
-                         "Birth Place"@en ;
+                         "Place of death"@en ;
 
-               rdfs:comment """Represents a birth place."""@en ;
+               rdfs:comment """Represents a place of birth."""@en ;
 
                knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -1585,13 +1585,13 @@
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasOriginal ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                            salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                         ] ,
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasOriginalValue ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                            salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                         ] ,
                         [
                             rdf:type owl:Restriction ;
