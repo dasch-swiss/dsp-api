@@ -79,6 +79,40 @@
                    rdfs:comment """Die Faksimilen von deisem Brief ist vorhanden in"""@de ,
                               """The Facsimiles of this letter are available in"""@en .
 
+### ###########################################
+### newton:isReplyTo
+
+:isReplyTo rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Antwort auf"@de ,
+                         "Reply to"@en ;
+
+              rdfs:comment """Der Brief ist eine Antwort auf einen Brief"""@de ,
+                           """Letter is reply to another letter"""@en ;
+
+              knora-base:objectClassConstraint :letter ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### newton:isReplyToValue
+
+:isReplyToValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   knora-base:subjectClassConstraint :letter ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                   rdfs:label "Antwort auf"@de ,
+                              "Reply to"@en ;
+
+                   rdfs:comment """Der Brief ist eine Antwort auf einen Brief"""@de ,
+                                """Letter is reply to another letter"""@en .
+
 
 ##########################################################
 #
@@ -103,12 +137,24 @@
                           owl:onProperty :newtonProjectID ;
                           owl:minCardinality "1"^^xsd:nonNegativeInteger ;
                           salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                       ] ,
+                       ]  ,
                        [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasFacsimiles ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                           salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :isReplyTo ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :isReplyToValue ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                        ] ;
 
         knora-base:resourceIcon "letter.png" ;
