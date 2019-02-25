@@ -260,7 +260,7 @@
 <http://rdfh.ch/lists/0801/subject_index> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
 	knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
-	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/mathematics> , <http://rdfh.ch/lists/0801/other_sciences> , <http://rdfh.ch/lists/0801/professional_activity> , <http://rdfh.ch/lists/0801/personal_life> ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/mathematics> , <http://rdfh.ch/lists/0801/other_sciences> , <http://rdfh.ch/lists/0801/professional_activity> , <http://rdfh.ch/lists/0801/personal_life>, <http://rdfh.ch/lists/0801/optics> ;
 	rdfs:label "Subject Index"@en .
 
 <http://rdfh.ch/lists/0801/complex_numbers> a knora-base:ListNode ;
@@ -998,7 +998,7 @@
 <http://rdfh.ch/lists/0801/other_sciences> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
 	knora-base:listNodeName "Other sciences" ;
-	knora-base:listNodePosition 0 ;
+	knora-base:listNodePosition 1 ;
 	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/physics_natural_philosophy> , <http://rdfh.ch/lists/0801/astronomy> , <http://rdfh.ch/lists/0801/technology> , <http://rdfh.ch/lists/0801/music_theory> , <http://rdfh.ch/lists/0801/anatomy> ;
 	rdfs:label "Other sciences"@en .
 
@@ -1155,11 +1155,17 @@
 	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/for_the_academies_administration> , <http://rdfh.ch/lists/0801/goldbachs_work_as_a_russian_civil_servant> ;
 	rdfs:label "Other professional tasks"@en .
 
+<http://rdfh.ch/lists/0801/royalSocietyElection> a knora-base:ListNode ;
+    knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
+    knora-base:listNodeName "Royal Society Election" ;
+    knora-base:listNodePosition 6 ;
+    rdfs:label "Royal Society Election"@en .
+
 <http://rdfh.ch/lists/0801/professional_activity> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
 	knora-base:listNodeName "Professional activity" ;
-	knora-base:listNodePosition 0 ;
-	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/career> , <http://rdfh.ch/lists/0801/academies> , <http://rdfh.ch/lists/0801/publications> , <http://rdfh.ch/lists/0801/teaching> , <http://rdfh.ch/lists/0801/controversies> , <http://rdfh.ch/lists/0801/other_professional_tasks> ;
+	knora-base:listNodePosition 2 ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/career> , <http://rdfh.ch/lists/0801/academies> , <http://rdfh.ch/lists/0801/publications> , <http://rdfh.ch/lists/0801/teaching> , <http://rdfh.ch/lists/0801/controversies> , <http://rdfh.ch/lists/0801/other_professional_tasks> , <http://rdfh.ch/lists/0801/royalSocietyElection> ;
 	rdfs:label "Professional activity"@en .
 
 <http://rdfh.ch/lists/0801/eulers_youth> a knora-base:ListNode ;
@@ -1455,7 +1461,39 @@
 <http://rdfh.ch/lists/0801/personal_life> a knora-base:ListNode ;
 	knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
 	knora-base:listNodeName "Personal life" ;
-	knora-base:listNodePosition 0 ;
+	knora-base:listNodePosition 3 ;
 	knora-base:hasSubListNode <http://rdfh.ch/lists/0801/youth> , <http://rdfh.ch/lists/0801/personal_contact> , <http://rdfh.ch/lists/0801/correspondence> , <http://rdfh.ch/lists/0801/books> , <http://rdfh.ch/lists/0801/living_circumstances> , <http://rdfh.ch/lists/0801/miscellanea> ;
 	rdfs:label "Personal life"@en .
+
+<http://rdfh.ch/lists/0801/theoryOfReflection> a knora-base:ListNode ;
+    knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
+    knora-base:listNodeName "Theory of Reflection" ;
+    knora-base:listNodePosition 0 ;
+    rdfs:label "Theory of Reflection"@en .
+
+<http://rdfh.ch/lists/0801/theoryOfColors> a knora-base:ListNode ;
+    knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
+    knora-base:listNodeName "Theory of Colors" ;
+    knora-base:listNodePosition 1 ;
+    rdfs:label "Theory of Colors"@en .
+
+<http://rdfh.ch/lists/0801/glassExperiment> a knora-base:ListNode ;
+    knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
+    knora-base:listNodeName "Newton's Experiment of Glass" ;
+    knora-base:listNodePosition 2 ;
+    rdfs:label "Newton's Experiment of Glass"@en .
+
+<http://rdfh.ch/lists/0801/theoryOfLight> a knora-base:ListNode ;
+    knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
+    knora-base:listNodeName "Theory of Light" ;
+    knora-base:listNodePosition 0 ;
+    knora-base:hasSubListNode <http://rdfh.ch/lists/0801/theoryOfReflection> , <http://rdfh.ch/lists/0801/theoryOfColors> , <http://rdfh.ch/lists/0801/glassExperiment>;
+    rdfs:label "Theory of Light"@en .
+
+<http://rdfh.ch/lists/0801/optics> a knora-base:ListNode ;
+    knora-base:hasRootNode <http://rdfh.ch/lists/0801/subject_index> ;
+    knora-base:listNodeName "Optics" ;
+    knora-base:listNodePosition 4 ;
+    knora-base:hasSubListNode <http://rdfh.ch/lists/0801/theoryOfLight>;
+    rdfs:label "Optics"@en .
 
