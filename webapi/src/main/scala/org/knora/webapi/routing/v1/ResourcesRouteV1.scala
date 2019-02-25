@@ -686,7 +686,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     val clientIDForResource: String = (resourceNode \ "@id").toString
 
                     // Get the optional resource creation date.
-                    val creationDate: Option[Instant] = resourceNode.attribute("creationDate").map(creationDateNode => stringFormatter.toInstant(creationDateNode.text, throw BadRequestException(s"Invalid resource creation date: ${creationDateNode.text}")))
+                    val creationDate: Option[Instant] = resourceNode.attribute("creationDate").map(creationDateNode => stringFormatter.xsdDateTimeStampToInstant(creationDateNode.text, throw BadRequestException(s"Invalid resource creation date: ${creationDateNode.text}")))
 
                     // Convert the XML element's label and namespace to an internal resource class IRI.
 

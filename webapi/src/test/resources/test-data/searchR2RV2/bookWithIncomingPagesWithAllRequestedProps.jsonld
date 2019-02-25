@@ -8,7 +8,11 @@
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-    "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)"
+    "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)",
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:43Z"
+    }
   }, {
     "@id" : "http://rdfh.ch/0803/8be1b7cf7103/values/0965b7d1b70d",
     "@type" : "knora-api:TextValue",
@@ -16,7 +20,11 @@
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-    "knora-api:valueAsString" : "Stultifera navis (...)"
+    "knora-api:valueAsString" : "Stultifera navis (...)",
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:43Z"
+    }
   } ],
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
@@ -51,6 +59,10 @@
         "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/8be1b7cf7103"
+        },
+        "knora-api:valueCreationDate" : {
+          "@type" : "xsd:dateTimeStamp",
+          "@value" : "2016-03-02T15:05:43Z"
         }
       },
       "incunabula:seqnum" : {
@@ -60,7 +72,11 @@
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
-        "knora-api:intValueAsInt" : 1
+        "knora-api:intValueAsInt" : 1,
+        "knora-api:valueCreationDate" : {
+          "@type" : "xsd:dateTimeStamp",
+          "@value" : "2016-03-02T15:05:43Z"
+        }
       },
       "knora-api:arkUrl" : {
         "@type" : "xsd:anyURI",
@@ -94,6 +110,10 @@
         "knora-api:stillImageFileValueHasIIIFBaseUrl" : {
           "@type" : "xsd:anyURI",
           "@value" : "http://0.0.0.0:1024/0803"
+        },
+        "knora-api:valueCreationDate" : {
+          "@type" : "xsd:dateTimeStamp",
+          "@value" : "2012-11-21T16:50:50Z"
         }
       }, {
         "@id" : "http://rdfh.ch/0803/50e7460a7203/values/bf87bff7b706",
@@ -112,12 +132,28 @@
         "knora-api:stillImageFileValueHasIIIFBaseUrl" : {
           "@type" : "xsd:anyURI",
           "@value" : "http://0.0.0.0:1024/0803"
+        },
+        "knora-api:valueCreationDate" : {
+          "@type" : "xsd:dateTimeStamp",
+          "@value" : "2012-11-21T16:50:49Z"
         }
       } ],
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/50e7460a72036.20160302T150543Z"
+      },
       "rdfs:label" : "vorderer Spiegel"
+    },
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:43Z"
     }
   },
   "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:versionArkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543Z"
+  },
   "rdfs:label" : "[Das] Narrenschiff (lat.)",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

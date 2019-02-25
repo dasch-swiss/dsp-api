@@ -510,6 +510,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -578,6 +579,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -795,6 +797,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -865,6 +868,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -894,7 +898,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -998,6 +1002,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -1120,6 +1125,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -1152,7 +1158,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1191,6 +1197,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deletedBy".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
@@ -1220,7 +1227,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1234,7 +1241,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
