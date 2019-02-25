@@ -1,4 +1,4 @@
-dist: trusty
+dist: xenial
 
 sudo: required
 
@@ -113,6 +113,7 @@ jobs:
         # install jekyll
         # - gem install jekyll -v 3.8.1
         # install typedoc
+        - npm i npm@latest -g
         - npm install --global typedoc
         # install jekyll dependencies
         - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
