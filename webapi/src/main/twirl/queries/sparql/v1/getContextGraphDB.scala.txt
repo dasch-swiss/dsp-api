@@ -48,13 +48,11 @@ SELECT ?sourceObject
        ?linkValuePermissions
        ?firstprop
        ?fileValue
-       ?isPreview
        ?internalFilename
        ?internalMimeType
        ?originalFilename
        ?dimX
        ?dimY
-       ?qualityLevel
        ?fileValuePermissions
        ?fileValueAttachedToUser
 WHERE {
@@ -98,16 +96,11 @@ WHERE {
         ?fileValue a knora-base:StillImageFileValue ;
              knora-base:isDeleted false .
 
-        OPTIONAL {
-            ?fileValue knora-base:isPreview ?isPreview .
-        }
-
         ?fileValue knora-base:internalMimeType ?internalMimeType ;
                  knora-base:originalFilename ?originalFilename ;
                  knora-base:internalFilename ?internalFilename ;
                  knora-base:dimX ?dimX ;
                  knora-base:dimY ?dimY ;
-                 knora-base:qualityLevel ?qualityLevel ;
                  knora-base:attachedToUser ?fileValueAttachedToUser ;
                  knora-base:hasPermissions ?fileValuePermissions .
     }
