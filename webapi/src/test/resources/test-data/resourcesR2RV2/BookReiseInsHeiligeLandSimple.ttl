@@ -19,4 +19,5 @@
   incunabula:title "Itinerarius", "Reise ins Heilige Land", "Reysen und wanderschafften durch das Gelobte Land";
   incunabula:url "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320";
   knora-api:arkUrl "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W"^^xsd:anyURI;
+  knora-api:versionArkUrl "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T150521Z"^^xsd:anyURI;
   rdfs:label "Reise ins Heilige Land" .

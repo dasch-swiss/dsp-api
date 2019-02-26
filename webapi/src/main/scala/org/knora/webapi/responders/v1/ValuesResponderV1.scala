@@ -1135,7 +1135,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             linkSourceIri = findResourceWithValueResult.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
                             maybeComment = deleteValueRequest.deleteComment,
-                            currentTime = currentTime
+                            currentTime = currentTime,
+                            requestingUser = userIri
                         ).toString()
                     } yield (sparqlUpdate, sparqlTemplateLinkUpdate.newLinkValueIri)
 
@@ -1187,7 +1188,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             valueIri = deleteValueRequest.valueIri,
                             maybeDeleteComment = deleteValueRequest.deleteComment,
                             linkUpdates = linkUpdates,
-                            currentTime = currentTime
+                            currentTime = currentTime,
+                            requestingUser = userIri
                         ).toString()
                     } yield (sparqlUpdate, deleteValueRequest.valueIri)
             }
@@ -2204,7 +2206,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                 linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                 maybeComment = comment,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = userProfile.id
             ).toString()
 
             /*
@@ -2355,7 +2358,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 valuePermissions = valuePermissions,
                 maybeComment = comment,
                 linkUpdates = standoffLinkUpdates,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = userProfile.id
             ).toString()
 
             /*

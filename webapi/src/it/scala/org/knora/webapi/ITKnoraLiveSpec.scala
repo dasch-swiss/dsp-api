@@ -86,7 +86,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
         // start knora without loading ontologies
-        startService(false)
+        startService(skipLoadingOfOntologies = true)
 
         // waits until knora is up and running
         applicationStateRunning()

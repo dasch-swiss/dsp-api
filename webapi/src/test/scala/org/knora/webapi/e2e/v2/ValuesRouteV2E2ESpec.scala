@@ -118,7 +118,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resource.maybeObject(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).map {
             jsonLDObject =>
                 jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.validateAndEscapeIri) should ===(OntologyConstants.Xsd.DateTimeStamp)
-                jsonLDObject.requireStringWithValidation(JsonLDConstants.VALUE, stringFormatter.toInstant)
+                jsonLDObject.requireStringWithValidation(JsonLDConstants.VALUE, stringFormatter.xsdDateTimeStampToInstant)
         }
     }
 

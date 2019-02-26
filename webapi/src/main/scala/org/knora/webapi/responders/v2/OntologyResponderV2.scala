@@ -606,7 +606,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 val projectIri = ontologyMetadataMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no knora-base:attachedToProject")).toSmartIri
                 val ontologyLabel = ontologyMetadataMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName)
-                val lastModificationDate = ontologyMetadataMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(instant => stringFormatter.toInstant(instant, throw InconsistentTriplestoreDataException(s"Invalid UTC instant: $instant")))
+                val lastModificationDate = ontologyMetadataMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(instant => stringFormatter.xsdDateTimeStampToInstant(instant, throw InconsistentTriplestoreDataException(s"Invalid UTC instant: $instant")))
 
                 ontologySmartIri -> OntologyMetadataV2(
                     ontologyIri = ontologySmartIri,
@@ -1616,7 +1616,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             None
                         } else {
                             val dateStr = lastModDates.head
-                            Some(stringFormatter.toInstant(dateStr, throw InconsistentTriplestoreDataException(s"Invalid ${OntologyConstants.KnoraBase.LastModificationDate}: $dateStr")))
+                            Some(stringFormatter.xsdDateTimeStampToInstant(dateStr, throw InconsistentTriplestoreDataException(s"Invalid ${OntologyConstants.KnoraBase.LastModificationDate}: $dateStr")))
                         }
 
                         Some(OntologyMetadataV2(
