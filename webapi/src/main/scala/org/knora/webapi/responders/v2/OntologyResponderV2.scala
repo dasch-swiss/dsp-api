@@ -21,7 +21,6 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
-import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -38,6 +37,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
 import org.knora.webapi.util._
 
+import scala.collection.immutable
 import scala.concurrent.Future
 
 /**
@@ -2063,6 +2063,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         }
 
         val cardinalitiesForClassWithInheritance: Map[SmartIri, KnoraCardinalityInfo] = overrideCardinalities(
+            classIri = internalClassDef.classIri,
             thisClassCardinalities = thisClassKnoraCardinalities,
             inheritableCardinalities = inheritableKnoraCardinalities,
             allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
@@ -3914,11 +3915,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Given the cardinalities directly defined on a given resource class, and the cardinalities that it could inherit (directly
+      * Given the cardinalities directly defined on a given class, and the cardinalities that it could inherit (directly
       * or indirectly) from its base classes, combines the two, filtering out the base class cardinalities ones that are overridden
       * by cardinalities defined directly on the given class. Checks that if a directly defined cardinality overrides an inheritable one,
       * the directly defined one is at least as restrictive as the inheritable one.
       *
+      * @param classIri                  the class IRI.
       * @param thisClassCardinalities    the cardinalities directly defined on a given resource class.
       * @param inheritableCardinalities  the cardinalities that the given resource class could inherit from its base classes.
       * @param allSubPropertyOfRelations a map in which each property IRI points to the full set of its base properties.
@@ -3927,51 +3929,93 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       * @return a map in which each key is the IRI of a property that has a cardinality in the resource class (or that it inherits
       *         from its base classes), and each value is the cardinality on the property.
       */
-    private def overrideCardinalities(thisClassCardinalities: Map[SmartIri, OwlCardinalityInfo],
+    private def overrideCardinalities(classIri: SmartIri,
+                                      thisClassCardinalities: Map[SmartIri, OwlCardinalityInfo],
                                       inheritableCardinalities: Map[SmartIri, OwlCardinalityInfo],
                                       allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
                                       errorSchema: OntologySchema,
                                       errorFun: String => Nothing): Map[SmartIri, OwlCardinalityInfo] = {
-        thisClassCardinalities ++ inheritableCardinalities.filterNot {
-            case (baseClassProp, baseClassCardinality) => thisClassCardinalities.exists {
-                case (thisClassProp, thisClassCardinality) =>
-                    // Can the directly defined cardinality override the inheritable one?
+        // A map of directly defined properties to the base class properties they can override.
+        val overrides: Map[SmartIri, Set[SmartIri]] = thisClassCardinalities.map {
+            case (thisClassProp, thisClassCardinality) =>
+                // For each directly defined cardinality, get its base properties, if available.
+                // If the class has a cardinality for a non-Knora property like rdfs:label (which can happen only
+                // if it's a built-in class), we won't have any information about the base properties of that property.
+                val basePropsOfThisClassProp: Set[SmartIri] = allSubPropertyOfRelations.getOrElse(thisClassProp, Set.empty[SmartIri])
 
-                    val canOverride = allSubPropertyOfRelations.get(thisClassProp) match {
-                        case Some(baseProps) =>
-                            baseProps.contains(baseClassProp)
+                val overridedBaseProps: Set[SmartIri] = inheritableCardinalities.foldLeft(Set.empty[SmartIri]) {
+                    case (acc, (baseClassProp, baseClassCardinality)) =>
+                        // Can the directly defined cardinality override the inheritable one?
+                        if (thisClassProp == baseClassProp || basePropsOfThisClassProp.contains(baseClassProp)) {
+                            // Yes. Is the directly defined one at least as restrictive as the inheritable one?
 
-                        case None =>
-                            // If the class has a cardinality for a non-Knora property like rdfs:label (which can happen only
-                            // if it's a built-in class), we won't have any information about the base properties of that property.
-                            thisClassProp == baseClassProp
-                    }
+                            val thisClassKnoraCardinality: KnoraCardinalityInfo = Cardinality.owlCardinality2KnoraCardinality(
+                                propertyIri = thisClassProp.toString,
+                                owlCardinality = thisClassCardinality
+                            )
 
-                    if (canOverride) {
-                        // Yes. Is the directly defined one at least as restrictive as the inheritable one?
+                            val inheritableKnoraCardinality: KnoraCardinalityInfo = Cardinality.owlCardinality2KnoraCardinality(
+                                propertyIri = baseClassProp.toString,
+                                owlCardinality = baseClassCardinality
+                            )
 
-                        val thisClassKnoraCardinality: KnoraCardinalityInfo = Cardinality.owlCardinality2KnoraCardinality(
-                            propertyIri = thisClassProp.toString,
-                            owlCardinality = thisClassCardinality
-                        )
-
-                        val inheritableKnoraCardinality: KnoraCardinalityInfo = Cardinality.owlCardinality2KnoraCardinality(
-                            propertyIri = baseClassProp.toString,
-                            owlCardinality = baseClassCardinality
-                        )
-
-                        if (!Cardinality.isCompatible(directCardinality = thisClassKnoraCardinality.cardinality, inheritableCardinality = inheritableKnoraCardinality.cardinality)) {
-                            // No. Throw an exception.
-                            errorFun(s"The directly defined cardinality $thisClassKnoraCardinality on ${thisClassProp.toOntologySchema(errorSchema)} is not compatible with the inherited cardinality $inheritableKnoraCardinality on ${baseClassProp.toOntologySchema(errorSchema)}, because it is less restrictive")
+                            if (!Cardinality.isCompatible(directCardinality = thisClassKnoraCardinality.cardinality, inheritableCardinality = inheritableKnoraCardinality.cardinality)) {
+                                // No. Throw an exception.
+                                errorFun(s"In class <${classIri.toOntologySchema(errorSchema)}>, the directly defined cardinality $thisClassKnoraCardinality on ${thisClassProp.toOntologySchema(errorSchema)} is not compatible with the inherited cardinality $inheritableKnoraCardinality on ${baseClassProp.toOntologySchema(errorSchema)}, because it is less restrictive")
+                            } else {
+                                // Yes. Filter out the inheritable one, because the directly defined one overrides it.
+                                acc + baseClassProp
+                            }
                         } else {
-                            // Yes. Filter out the inheritable one, because the directly defined one overrides it.
-                            true
+                            // No. Let the class inherit the inheritable cardinality.
+                            acc
                         }
-                    } else {
-                        // No. Let the class inherit the inheritable cardinality.
-                        false
+                }
+
+                thisClassProp -> overridedBaseProps
+        }
+
+        // A map of base class properties to the directly defined properties that can override them.
+        val reverseOverrides: Map[SmartIri, Set[SmartIri]] = overrides.map {
+            // Unpack the sets to make an association list.
+            case (thisClassProp: SmartIri, baseClassProps: Set[SmartIri]) =>
+                baseClassProps.map {
+                    baseClassProp => thisClassProp -> baseClassProp
+                }
+        }.flatten.map {
+            // Reverse the direction of the association list.
+            case (thisClassProp: SmartIri, baseClassProp: SmartIri) =>
+                baseClassProp -> thisClassProp
+        }.groupBy {
+            // Group by base class prop to make a map.
+            case (baseClassProp: SmartIri, _) => baseClassProp
+        }.map {
+            // Make sets of directly defined props.
+            case (baseClassProp: SmartIri, thisClassProps: immutable.Iterable[(SmartIri, SmartIri)]) =>
+                baseClassProp -> thisClassProps.map {
+                    case (_, thisClassProp) => thisClassProp
+                }.toSet
+        }
+
+        // Are there any base class properties that are overridden by more than one directly defined property,
+        // and do any of those base properties have cardinalities that could cause conflicts between the cardinalities
+        // on the directly defined cardinalities?
+        reverseOverrides.foreach {
+            case (baseClassProp, thisClassProps) =>
+                if (thisClassProps.size > 1) {
+                    val overriddenCardinality: KnoraCardinalityInfo = Cardinality.owlCardinality2KnoraCardinality(
+                        propertyIri = baseClassProp.toString,
+                        owlCardinality = inheritableCardinalities(baseClassProp)
+                    )
+
+                    if (overriddenCardinality.cardinality == Cardinality.MustHaveOne || overriddenCardinality.cardinality == Cardinality.MayHaveOne) {
+                        errorFun(s"In class <${classIri.toOntologySchema(errorSchema)}>, there is more than one cardinality that would override the inherited cardinality $overriddenCardinality on <${baseClassProp.toOntologySchema(errorSchema)}>")
                     }
-            }
+                }
+        }
+
+        thisClassCardinalities ++ inheritableCardinalities.filterNot {
+            case (basePropIri, _) => reverseOverrides.contains(basePropIri)
         }
     }
 
@@ -4055,6 +4099,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Combine the cardinalities defined directly on this class with the ones that are available to inherit.
         overrideCardinalities(
+            classIri = classIri,
             thisClassCardinalities = thisClassCardinalities,
             inheritableCardinalities = cardinalitiesAvailableToInherit,
             allSubPropertyOfRelations = allSubPropertyOfRelations,

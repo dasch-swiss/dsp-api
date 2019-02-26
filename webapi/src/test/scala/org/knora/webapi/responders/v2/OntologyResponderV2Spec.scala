@@ -4478,7 +4478,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
-
         "not load a project-specific ontology containing a property whose subject class constraint is defined in a non-shared ontology in another project" in {
             val invalidOnto = List(RdfDataObject(
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-scc.ttl", name = "http://www.knora.org/ontology/invalid"
@@ -4491,6 +4490,15 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not load a project-specific ontology containing a property whose object class constraint is defined in a non-shared ontology in another project" in {
             val invalidOnto = List(RdfDataObject(
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-occ.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            customLoadTestData(invalidOnto)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+        }
+
+        "not load a project-specific ontology containing a class with two cardinalities that override the same base class cardinality of 1 or 0-1" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/conflicting-cardinalities-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
