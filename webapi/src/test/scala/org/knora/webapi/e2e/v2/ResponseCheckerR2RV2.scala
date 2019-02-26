@@ -163,7 +163,8 @@ object ResponseCheckerR2RV2 {
         val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
         // make sure the indicated amount of results is correct
-        assert(receivedJsonLDDocument.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt].value == expectedNumber, s"$numberOfItemsMember is incorrect.")
+        val receivedNumber = receivedJsonLDDocument.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt].value
+        assert(receivedNumber == expectedNumber, s"$numberOfItemsMember is incorrect (expected $expectedNumber, received $receivedNumber)")
 
     }
 
@@ -182,16 +183,29 @@ object ResponseCheckerR2RV2 {
     }
 
     /**
-      * Checks the response of a mapping creation request.
+      * Checks the response to a mapping creation request.
       *
-      * @param expectedJSONLD the expected response as JSONLD.
-      * @param receivedJSONLD the received response as JSONLD.
+      * @param expectedJSONLD the expected response as JSON-LD.
+      * @param receivedJSONLD the received response as JSON-LD.
       */
     def compareJSONLDForMappingCreationResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
         val expectedJsonLDDocument = JsonLDUtil.parseJsonLD(expectedJSONLD)
         val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
-        assert(expectedJsonLDDocument == receivedJsonLDDocument, "Mapping creation request response did not match expected response")
+        assert(expectedJsonLDDocument == receivedJsonLDDocument, "Mapping creation response did not match expected response")
+    }
+
+    /**
+      * Checks the response to a resource history request.
+      *
+      * @param expectedJSONLD the expected response as JSON-LD.
+      * @param receivedJSONLD the received response as JSON-LD.
+      */
+    def compareJSONLDForResourceHistoryResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
+        val expectedJsonLDDocument = JsonLDUtil.parseJsonLD(expectedJSONLD)
+        val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
+
+        assert(expectedJsonLDDocument == receivedJsonLDDocument, "Resource history response did not match expected response")
     }
 
 }

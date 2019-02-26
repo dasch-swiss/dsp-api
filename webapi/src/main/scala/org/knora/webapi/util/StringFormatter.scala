@@ -22,7 +22,7 @@ package org.knora.webapi.util
 import java.text.ParseException
 import java.time._
 import java.time.format.DateTimeFormatter
-import java.time.temporal.TemporalAccessor
+import java.time.temporal.{ChronoField, TemporalAccessor}
 import java.util.concurrent.ConcurrentHashMap
 
 import com.google.gwt.safehtml.shared.UriUtils._
@@ -775,8 +775,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     // A regex that matches a Knora values IRI.
     private val ValueIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + ")$").r
 
-    // A DateTimeFormatter that parses and formats Knora ARK timestamps.
-    private val ArkTimestampFormat = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss[nnnnnnnnn]X").withZone(ZoneId.of("UTC"))
+    // A regex that parses a Knora ARK timestamp.
+    private val ArkTimestampRegex: Regex = """^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(\d{1,9})?Z$""".r
+
+    // A regex that finds trailing zeroes.
+    private val TrailingZerosRegex: Regex = """0+$""".r
 
     /**
       * A regex that matches a valid username
@@ -1779,47 +1782,87 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
-      * Validates an OWL cardinality value, which must be 0 or 1 in Knora, and returns the corresponding integer.
-      *
-      * @param s        the string to be validated.
-      * @param errorFun a function that throws an exception. It will be called if the string is invalid.
-      * @return the corresponding integer value.
-      */
-    def validateCardinalityValue(s: String, errorFun: => Nothing): Int = {
-        s match {
-            case "0" => 0
-            case "1" => 1
-            case _ => errorFun
-        }
-    }
-
-    /**
-      * Parses an ISO-8601 instant and returns an instance of [[Instant]].
+      * Parses an `xsd:dateTimeStamp`.
       *
       * @param s        the string to be parsed.
       * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
       * @return an [[Instant]].
       */
-    def toInstant(s: String, errorFun: => Nothing): Instant = {
+    def xsdDateTimeStampToInstant(s: String, errorFun: => Nothing): Instant = {
         try {
-            // Try parsing it as an ISO 8601 UTC date.
-            Instant.parse(s)
+            val accessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
+            Instant.from(accessor)
         } catch {
-            case _: Exception =>
-                // Try parsing it as a Knora ARK timestamp.
-                try {
-                    OffsetDateTime.parse(s, ArkTimestampFormat).toInstant
-                } catch {
-                    case _: Exception =>
-                        // Try parsing it as an ISO 8601 date with an offset.
-                        try {
-                            val creationAccessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
-                            Instant.from(creationAccessor)
-                        } catch {
-                            case _: Exception => errorFun
-                        }
-                }
+            case _: Exception => errorFun
         }
+    }
+
+    /**
+      * Parses a Knora ARK timestamp.
+      *
+      * @param timestampStr the string to be parsed.
+      * @param errorFun     a function that throws an exception. It will be called if the string cannot be parsed.
+      * @return an [[Instant]].
+      */
+    def arkTimestampToInstant(timestampStr: String, errorFun: => Nothing): Instant = {
+        timestampStr match {
+            case ArkTimestampRegex(year, month, day, hour, minute, second, Optional(maybeFraction)) =>
+                val nanoOfSecond: Int = maybeFraction match {
+                    case None => 0
+
+                    case Some(fraction) =>
+                        // Pad the nano-of-second with trailing zeroes so it has 9 digits, then convert it
+                        // to an integer.
+                        fraction.padTo(9, '0').toInt
+                }
+
+                try {
+                    val accessor: TemporalAccessor = OffsetDateTime.of(
+                        year.toInt,
+                        month.toInt,
+                        day.toInt,
+                        hour.toInt,
+                        minute.toInt,
+                        second.toInt,
+                        nanoOfSecond,
+                        ZoneOffset.UTC
+                    )
+
+                    Instant.from(accessor)
+                } catch {
+                    case _: Exception => errorFun
+                }
+
+            case _ => errorFun
+        }
+    }
+
+    /**
+      * Formats a Knora ARK timestamp.
+      *
+      * @param timestamp the timestamp to be formatted.
+      * @return a string representation of the timestamp.
+      */
+    def formatArkTimestamp(timestamp: Instant): String = {
+        val offsetDateTime: OffsetDateTime = timestamp.atOffset(ZoneOffset.UTC)
+
+        val year: Int = offsetDateTime.get(ChronoField.YEAR)
+        val month: Int = offsetDateTime.get(ChronoField.MONTH_OF_YEAR)
+        val day: Int = offsetDateTime.get(ChronoField.DAY_OF_MONTH)
+        val hour: Int = offsetDateTime.get(ChronoField.HOUR_OF_DAY)
+        val minute: Int = offsetDateTime.get(ChronoField.MINUTE_OF_HOUR)
+        val second: Int = offsetDateTime.get(ChronoField.SECOND_OF_MINUTE)
+        val nanoOfSecond: Int = offsetDateTime.get(ChronoField.NANO_OF_SECOND)
+
+        val fractionStr: IRI = if (nanoOfSecond > 0) {
+            // Convert the nano-of-second to a 9-digit string representation, then strip trailing zeroes.
+            val nineDigitNanoOfSecond = f"$nanoOfSecond%09d"
+            TrailingZerosRegex.replaceAllIn(nineDigitNanoOfSecond, "")
+        } else {
+            ""
+        }
+
+        f"$year%04d$month%02d$day%02dT$hour%02d$minute%02d$second%02d${fractionStr}Z"
     }
 
     /**
@@ -2343,8 +2386,8 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * Check that a string represents a valid project shortcode.
       *
       * @param shortcode the optional string to be checked.
-      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
-      *                    project shortcode.
+      * @param errorFun  a function that throws an exception. It will be called if the string does not represent a valid
+      *                  project shortcode.
       * @return the same string.
       */
     def validateAndEscapeProjectShortcode(shortcode: String, errorFun: => Nothing): String = {
@@ -2520,7 +2563,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         maybeTimestamp match {
             case Some(timestamp) =>
                 // Format the timestamp and append it to the URL as an ARK object variant.
-                arkUrlWithoutTimestamp + "." + ArkTimestampFormat.format(timestamp)
+                arkUrlWithoutTimestamp + "." + formatArkTimestamp(timestamp)
 
             case None =>
                 arkUrlWithoutTimestamp

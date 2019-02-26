@@ -54,10 +54,10 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
 - `TIMESTAMP`: an optional timestamp indicating that the ARK URL represents
   the state of the resource at a specific time in the past. The format
   of the timestamp is an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)
-  date in Coordinated universal time (UTC), including date, time, and a 9-digit
-  nano-of-second field, without the characters `-`, `:`, and `.` (because
+  date in Coordinated universal time (UTC), including date, time, and an optional
+  nano-of-second field (of at most 9 digits), without the characters `-`, `:`, and `.` (because
   `-` and `.` are reserved characters in ARK, and `:` would have to be URL-encoded).
-  Example: `20190118T102919000031660Z`.
+  Example: `20180528T155203897Z`.
 
 Following the ARK ID spec, `/`
 [represents object hierarchy](https://tools.ietf.org/html/draft-kunze-ark-18#section-2.5.1)
@@ -88,7 +88,7 @@ http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY
 The same ARK URL with an optional timestamp is:
 
 ```
-http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20190118T102919000031660Z
+http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20180528T155203897Z
 ```
 
 ### Serving ARK URLs

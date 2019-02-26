@@ -32,6 +32,7 @@
  * @param linkUpdates a list of [[SparqlTemplateLinkUpdate]] objects describing LinkValues that need to be
  *        updated for resource references in standoff markup.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
+ * @param requestingUser the IRI of the user making the request.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
@@ -40,7 +41,8 @@
   valueIri: IRI,
   maybeDeleteComment: Option[String],
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
-  currentTime: String)
+  currentTime: String,
+  requestingUser: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -72,6 +74,7 @@ DELETE {
     GRAPH ?dataNamedGraph {
         @* Mark the value as deleted. *@
         ?value knora-base:isDeleted true ;
+            knora-base:deletedBy <@requestingUser> ;
             knora-base:deleteDate "@currentTime"^^xsd:dateTime .
 
         @* Add the delete comment, if any. *@
@@ -102,6 +105,7 @@ DELETE {
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
                 @if(linkUpdate.newReferenceCount == 0) {
                     knora-base:isDeleted true ;
+                    knora-base:deletedBy <@linkUpdate.newLinkValueCreator> ;
                     knora-base:deleteDate "@currentTime"^^xsd:dateTime ;
                 } else {
                     knora-base:isDeleted false ;

@@ -31,6 +31,7 @@
 	<incunabula:title rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Itinerarius</incunabula:title>
 	<incunabula:url rdf:datatype="http://www.w3.org/2001/XMLSchema#string">http://aleph.unibas.ch/F/?local_base=DSV01&amp;con_lng=GER&amp;func=find-b&amp;find_code=SYS&amp;request=002610320</incunabula:url>
 	<knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W</knora-api:arkUrl>
+	<knora-api:versionArkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T150521Z</knora-api:versionArkUrl>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reise ins Heilige Land</rdfs:label>
 </incunabula:book>
 

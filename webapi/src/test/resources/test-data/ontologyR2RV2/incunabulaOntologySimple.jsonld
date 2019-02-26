@@ -46,6 +46,12 @@
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "rdfs:label"
       }
     }, {
@@ -104,6 +110,12 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -327,6 +339,12 @@
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "rdfs:label"
       }
     }, {
@@ -458,6 +476,12 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
       }
     }, {
       "@type" : "owl:Restriction",

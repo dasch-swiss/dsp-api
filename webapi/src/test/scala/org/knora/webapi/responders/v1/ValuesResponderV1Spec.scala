@@ -1460,7 +1460,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(true)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
                     rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
-                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.ValueHasComment && row.rowMap("objObj") == comment) should ===(true)
+                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.DeleteComment && row.rowMap("objObj") == comment) should ===(true)
             }
 
             // Check that the link source's last modification date got updated.

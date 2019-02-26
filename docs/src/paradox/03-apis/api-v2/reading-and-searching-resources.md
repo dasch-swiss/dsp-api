@@ -61,9 +61,9 @@ See the interfaces `Resource` and `ResourcesSequence` in module
 `ResourcesResponse` (exists for both API schemas: `ApiV2Simple` and
 `ApiV2WithValueObjects`).
 
-## Get the Representation of a Resource by its IRI
+## Get the Representation of a Resource by IRI
 
-### Get a Full Representation of a Resource by its IRI
+### Get a Full Representation of a Resource by IRI
 
 A full representation of resource can be obtained by making a GET
 request to the API providing its IRI. Because a Knora IRI has the format
@@ -90,7 +90,92 @@ More formally, the URL looks like this:
 HTTP GET to http://host/v2/resources/resourceIRI(/anotherResourceIri)*
 ```
 
-### Get the preview of a resource by its IRI
+### Get a Full Representation of a Version of a Resource by IRI
+
+To get a specific past version of a resource, use the route described in
+@ref:[Get a Full Representation of a Resource by IRI](#get-a-full-representation-of-a-resource-by-iri),
+and add the URL parameter `?version=TIMESTAMP`, where `TIMESTAMP` is an
+[xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp) in the
+UTC timezone. The timestamp can either be URL-encoded, or submitted with all
+punctuation (`-`, `:`, and `.`) removed (this is to accept timestamps
+from Knora's @ref:[ARK URLs](resource-permalinks.md)).
+
+The resource will be returned with the values that it had at the specified
+time. Since Knora only versions values, not resource metadata (e.g.
+`rdfs:label`), the current metadata will be returned.
+
+The returned resource will include the predicate `knora-api:versionDate`,
+containing the timestamp that was submitted, and its `knora-api:versionArkUrl`
+(see @ref:[Resource Permalinks](resource-permalinks.md)) will contain the
+same timestamp.
+
+### Get the Version History of a Resource
+
+To get a list of the changes that have been made to a resource since its creation,
+use this route:
+
+```
+HTTP GET to http://host/v2/resources/history/resourceIRI[?startDate=START_DATE&endDate=END_DATE]
+```
+
+The resource IRI must be URL-encoded. The start and end dates are optional, and
+are URL-encoded timestamps in
+[xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp) format.
+The start date is inclusive, and the end date is exclusive.
+If the start date is not provided, the resource's history since its creation is returned.
+If the end date is not provided, the resource's history up to the present is returned.
+
+The response is a list of changes made to the resource, in reverse chronological order.
+Each entry has the properties `knora-api:author` (the IRI of the user who made the change) and
+`knora-api:versionDate` (the date when the change was made). For example:
+
+```jsonld
+{
+  "@graph" : [ {
+    "knora-api:author" : {
+      "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+    },
+    "knora-api:versionDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2019-02-11T09:05:10Z"
+    }
+  }, {
+    "knora-api:author" : {
+      "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+    },
+    "knora-api:versionDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2019-02-10T10:30:10Z"
+    }
+  }, {
+    "knora-api:author" : {
+      "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+    },
+    "knora-api:versionDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2019-02-10T10:05:10Z"
+    }
+  } ],
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+  }
+}
+```
+
+The entries include all the dates when the resource's values were created or modified (within
+the requested date range), as well as the date when the resource was created (if the requested
+date range allows it). Each date is included only once. Since Knora only versions values, not
+resource metadata (e.g. `rdfs:label`), changes to a resource's metadata are not included in its
+version history.
+
+To request the resource as it was at each of these dates, see
+@ref:[Get a Full Representation of a Version of a Resource by IRI](#get-a-full-representation-of-a-version-of-a-resource-by-iri). For consistency in citation, we recommend using these dates when
+requesting resource versions.
+
+### Get the preview of a resource by IRI
 
 In some cases, the client may only want to request the preview of a
 resource, which just provides its metadata (e.g. its IRI, `rdfs:label`,

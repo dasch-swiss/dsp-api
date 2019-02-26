@@ -11,6 +11,10 @@
     "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
     "knora-api:textValueHasMapping" : {
       "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+    },
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:54Z"
     }
   }, {
     "@id" : "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
@@ -22,6 +26,10 @@
     "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
     "knora-api:textValueHasMapping" : {
       "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+    },
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:54Z"
     }
   } ],
   "knora-api:arkUrl" : {
@@ -39,6 +47,10 @@
     "@value" : "2016-03-02T15:05:10Z"
   },
   "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:ProjectMember",
+  "knora-api:versionArkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv.20160302T150510Z"
+  },
   "rdfs:label" : "Ein Ding für jemanden, dem die Dinge gefallen",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
