@@ -229,7 +229,7 @@ object SipiConstants {
 }
 
 /**
-  * Response from [[org.knora.webapi.store.iiif.SipiConnector]] to a [[SipiConversionRequestV1]] representing a o[[FileValueV1]].
+  * Response from [[org.knora.webapi.store.iiif.SipiConnector]] to a [[SipiConversionRequestV1]] representing a [[FileValueV1]].
   *
   * @param fileValueV1 a [[FileValueV1]]
   */
