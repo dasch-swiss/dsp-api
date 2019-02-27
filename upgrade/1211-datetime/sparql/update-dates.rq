@@ -6,14 +6,21 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 # Replace all xsd:dateTimeStamp with xsd:dateTime.
 
 DELETE {
-    ?s ?p ?oldObj
+    GRAPH ?g {
+        ?s ?p ?oldObj .
+    }
 } INSERT {
-    ?s ?p ?newObj
+    GRAPH ?g {
+        ?s ?p ?newObj .
+    }
 }
 USING <http://www.ontotext.com/explicit>
 WHERE
 {
-  ?s ?p ?oldObj .
-  FILTER(datatype(?oldObj) = xsd:dateTimeStamp)
-  BIND(STRDT(STR(?oldObj), xsd:dateTime) AS ?newObj)
+    GRAPH ?g {
+        ?s ?p ?oldObj .
+    }
+
+    FILTER(datatype(?oldObj) = xsd:dateTimeStamp)
+    BIND(STRDT(STR(?oldObj), xsd:dateTime) AS ?newObj)
 }
