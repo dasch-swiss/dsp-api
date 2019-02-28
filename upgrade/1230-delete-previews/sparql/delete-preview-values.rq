@@ -1,0 +1,65 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+# Delete obsolete preview images and preview-related knora-base definitions
+# from the triplestore.
+DELETE {
+    ?class rdfs:subClassOf ?restriction .
+    ?restriction ?restrictionPred ?restrictionObj .
+    ?previewValue ?previewValuePred ?previewValueObj .
+    ?resource ?resourcePred ?previewValue .
+    ?fullSize knora-base:qualityLevel ?qualityLevel .
+    ?fullSize knora-base:isPreview ?preview .
+    ?fullSize knora-base:valueHasQname ?qName .
+}
+USING <http://www.ontotext.com/explicit>
+WHERE {
+    {
+        # Delete qualityLevel and isPreview cardinalities, and unlink them from class definitions.
+        ?class rdfs:subClassOf ?restriction .
+
+        ?restriction rdf:type owl:Restriction ;
+            owl:onProperty ?onProp ;
+            ?restrictionPred ?restrictionObj .
+
+        FILTER(?onProp = knora-base:qualityLevel || ?onProp = knora-base:isPreview)
+    } UNION {
+        # Delete preview images and unlink them from resources.
+        ?previewValue a knora-base:StillImageFileValue ;
+            knora-base:isPreview true ;
+            ?previewValuePred ?previewValueObj .
+
+        ?resource ?resourcePred ?previewValue .
+    } UNION {
+        # Remove qualityLevel from full-size images.
+        ?fullSize knora-base:qualityLevel ?qualityLevel .
+    } UNION {
+        # Remove isPreview from full-size images.
+        ?fullSize knora-base:isPreview ?preview .
+    } UNION {
+        # Remove valueHasQname from full-size images.
+        ?fullSize knora-base:valueHasQname ?qName .
+    }
+};
+# Use owl:cardinality 1 on knora-base:hasFileValue and its subproperties.
+DELETE {
+    GRAPH ?graph {
+        ?restriction owl:minCardinality "1"^^xsd:nonNegativeInteger .
+    }
+} INSERT {
+    GRAPH ?graph {
+	    ?restriction owl:cardinality "1"^^xsd:nonNegativeInteger .
+    }
+}
+USING <http://www.ontotext.com/explicit>
+WHERE {
+    GRAPH ?graph {
+        ?restriction owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+            owl:onProperty ?prop .
+
+        ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
+    }
+}

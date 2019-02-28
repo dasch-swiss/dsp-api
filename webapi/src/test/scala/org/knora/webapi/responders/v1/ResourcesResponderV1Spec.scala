@@ -1203,23 +1203,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 originalMimeType = Some("image/jpg"),
                 projectShortcode = "0803",
                 dimX = 1000,
-                dimY = 1000,
-                qualityLevel = 100,
-                qualityName = Some("full"),
-                isPreview = false
-            )
-
-            val fileValueThumb = StillImageFileValueV1(
-                internalMimeType = "image/jpeg",
-                internalFilename = "gaga.jpg",
-                originalFilename = "test.jpg",
-                originalMimeType = Some("image/jpg"),
-                projectShortcode = "0803",
-                dimX = 100,
-                dimY = 100,
-                qualityLevel = 10,
-                qualityName = Some("thumbnail"),
-                isPreview = true
+                dimY = 1000
             )
 
             val book = newBookResourceIri.get
@@ -1238,7 +1222,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 "http://www.knora.org/ontology/0803/incunabula#partOf" -> Vector(LinkV1(book)),
                 "http://www.knora.org/ontology/0803/incunabula#origname" -> Vector(origname),
                 "http://www.knora.org/ontology/0803/incunabula#seqnum" -> Vector(seqnum),
-                OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(fileValueFull, fileValueThumb)
+                OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(fileValueFull)
             )
 
             responderManager ! ResourceCreateRequestV1(

@@ -235,7 +235,6 @@ object OntologyConstants {
         val HasDocumentFileValue: IRI = KnoraBasePrefixExpansion + "hasDocumentFileValue"
         val HasComment: IRI = KnoraBasePrefixExpansion + "hasComment"
 
-        val IsPreview: IRI = KnoraBasePrefixExpansion + "isPreview"
         val ResourceIcon: IRI = KnoraBasePrefixExpansion + "resourceIcon"
 
         val InternalMimeType: IRI = KnoraBasePrefixExpansion + "internalMimeType"
@@ -245,7 +244,6 @@ object OntologyConstants {
         val DimX: IRI = KnoraBasePrefixExpansion + "dimX"
         val DimY: IRI = KnoraBasePrefixExpansion + "dimY"
         val Fps: IRI = KnoraBasePrefixExpansion + "fps"
-        val QualityLevel: IRI = KnoraBasePrefixExpansion + "qualityLevel"
 
         val ValueBase: IRI = KnoraBasePrefixExpansion + "ValueBase"
         val DateBase: IRI = KnoraBasePrefixExpansion + "DateBase"

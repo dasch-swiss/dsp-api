@@ -185,8 +185,7 @@ to store files. The @ref:[Knora APIs](../03-apis/index.md) provide ways
 to create file values using Knora and Sipi.
 
 A resource that has a file value must belong to one of the subclasses of
-`kb:Representation`. Its subclasses, which are intended to be used directly in data,
-include:
+`kb:Representation`. Its subclasses include:
 
 `StillImageRepresentation`
 
@@ -213,12 +212,15 @@ include:
 :   A representation containing a document (such as a PDF file) that is
     not a text file.
 
+These classes can be used directly in data, but it is often better to make
+subclasses of them, to include metadata about the files being stored.
+
 The base class of all these classes is `Representation`, which is not intended to
 be used directly. It has this property, which its subclasses override:
 
-`hasFileValue` (1-n)
+`hasFileValue` (1)
 
-:   Points to one or more file values.
+:   Points to a file value.
 
 There are two ways for a project to design classes for representations.
 The simpler way is to create a resource class that represents a thing in
@@ -229,12 +231,11 @@ by still images, `ex:Painting` could be a subclass of
 `StillImageRepresentation`. This is the only approach supported in
 @ref:[Knora API v1](../03-apis/api-v1/index.md).
 
-The more flexible approach, which is supported by
-@ref:[Knora API v2](../03-apis/api-v2/index.md), is for each
-`ex:Painting` to use the `kb:hasRepresentation` property to point to
-other resources containing files that represent the painting. Each of
-these other resources can extend a different subclass of
-`Representation`. For example, a painting could have a
+The more flexible approach, which is supported by @ref:[Knora API
+v2](../03-apis/api-v2/index.md), is for each `ex:Painting` to link (using
+`kb:hasRepresentation` or a subproperty) to other resources containing files
+that represent the painting. Each of these other resources can extend a
+different subclass of `Representation`. For example, a painting could have a
 `StillImageRepresentation` as well as a `DDDrepresentation`.
 
 #### Standard Resource Classes

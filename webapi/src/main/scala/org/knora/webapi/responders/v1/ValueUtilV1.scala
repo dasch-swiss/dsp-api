@@ -645,18 +645,13 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     private def makeStillImageValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        val isPreviewStr = predicates.get(OntologyConstants.KnoraBase.IsPreview).flatMap(_.literals.headOption)
-        val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
-
         Future(StillImageFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
             internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
             originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head,
             projectShortcode = projectShortcode,
             dimX = predicates(OntologyConstants.KnoraBase.DimX).literals.head.toInt,
-            dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt,
-            qualityLevel = predicates(OntologyConstants.KnoraBase.QualityLevel).literals.head.toInt,
-            isPreview = isPreview
+            dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt
         ))
     }
 

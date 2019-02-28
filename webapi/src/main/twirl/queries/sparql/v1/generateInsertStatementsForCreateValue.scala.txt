@@ -175,14 +175,7 @@
                                      knora-base:internalFilename """@stillImageFileValue.internalFilename""" ;
                                      knora-base:internalMimeType """@stillImageFileValue.internalMimeType""" ;
                                      knora-base:dimX @stillImageFileValue.dimX ;
-                                     knora-base:dimY @stillImageFileValue.dimY ;
-                                     knora-base:qualityLevel @stillImageFileValue.qualityLevel ;
-                                     knora-base:valueHasQname """@stillImageFileValue.qualityName""" .
-
-                @if(stillImageFileValue.isPreview) {
-                    <@newValueIri> knora-base:isPreview true .
-                }
-
+                                     knora-base:dimY @stillImageFileValue.dimY .
             }
 
             case textFileValue: TextFileValueV1 => {

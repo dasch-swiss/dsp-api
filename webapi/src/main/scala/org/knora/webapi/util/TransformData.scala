@@ -27,6 +27,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.{Resource, Statement}
 import org.eclipse.rdf4j.rio.turtle._
 import org.eclipse.rdf4j.rio.{RDFHandler, RDFWriter}
+import org.knora.webapi.OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
@@ -143,6 +144,7 @@ object TransformData extends App {
     private val CreatorTransformationOption = "creator"
     private val ValueProjectTransformationOption = "valueproject"
     private val OwnerBehaviourTransformationOption = "owner"
+    private val PreviewTransformationOption = "preview"
     private val AllTransformationsOption = "all"
 
     private val allTransformations = Vector(
@@ -153,7 +155,8 @@ object TransformData extends App {
         StandoffTransformationOption,
         RegionLabelTransformation,
         ValueProjectTransformationOption,
-        CreatorTransformationOption
+        CreatorTransformationOption,
+        PreviewTransformationOption
     )
 
     private val TempFilePrefix = "TransformData"
@@ -312,6 +315,7 @@ object TransformData extends App {
             case ValueProjectTransformationOption => new ValueProjectHandler(turtleWriter)
             case CreatorTransformationOption => new CreatorHandler(turtleWriter)
             case OwnerBehaviourTransformationOption => new OwnerBehaviourHandler(turtleWriter)
+            case PreviewTransformationOption => new PreviewHandler(turtleWriter)
             case _ => throw new Exception(s"Unsupported transformation $transformation")
         }
 
@@ -319,6 +323,39 @@ object TransformData extends App {
         turtleParser.parse(fileInputStream, inputFile.getAbsolutePath)
         fileOutputStream.close()
         fileInputStream.close()
+    }
+
+    private class PreviewHandler(turtleWriter: RDFWriter) extends StatementCollectingHandler(turtleWriter: RDFWriter) {
+        private val IsPreview: IRI = KnoraBasePrefixExpansion + "isPreview"
+        private val QualityLevel: IRI = KnoraBasePrefixExpansion + "qualityLevel"
+        private val ValueHasQname: IRI = KnoraBasePrefixExpansion + "valueHasQname"
+        private val obsoletePredicates = Set(IsPreview, QualityLevel, ValueHasQname)
+
+        override def endRDF(): Unit = {
+            val previewImageIris: Set[IRI] = statements.foldLeft(Set.empty[IRI]) {
+                case (acc, (subject, subjectStatements: Vector[Statement])) =>
+                    if (subjectStatements.exists(statement => statement.getPredicate.stringValue == IsPreview && statement.getObject.stringValue.toBoolean)) {
+                        acc + subject.stringValue
+                    } else {
+                        acc
+                    }
+            }
+
+            statements.foreach {
+                case (subject, subjectStatements: Vector[Statement]) =>
+                    if (!previewImageIris.contains(subject.stringValue)) {
+                        subjectStatements.foreach {
+                            statement =>
+                                if (!(previewImageIris.contains(statement.getObject.stringValue) ||
+                                    obsoletePredicates.contains(statement.getPredicate.stringValue))) {
+                                    turtleWriter.handleStatement(statement)
+                                }
+                        }
+                    }
+            }
+
+            turtleWriter.endRDF()
+        }
     }
 
     /**
@@ -1222,13 +1259,13 @@ object TransformData extends App {
             s"""
                |Updates the structure of Knora repository data to accommodate changes in Knora.
                |
-               |Usage: org.knora.webapi.util.TransformData -t [$IsDeletedTransformationOption|$PermissionsTransformationOption|$MissingValueHasStringTransformationOption|$StandoffTransformationOption|$RegionLabelTransformation|$JulianDayTransformation|$ValueProjectTransformationOption|$CreatorTransformationOption|$OwnerBehaviourTransformationOption|$AllTransformationsOption] input output
+               |Usage: org.knora.webapi.util.TransformData -t [$IsDeletedTransformationOption|$PermissionsTransformationOption|$MissingValueHasStringTransformationOption|$StandoffTransformationOption|$RegionLabelTransformation|$JulianDayTransformation|$ValueProjectTransformationOption|$CreatorTransformationOption|$OwnerBehaviourTransformationOption|$PreviewTransformationOption|$AllTransformationsOption] input output
             """.stripMargin)
 
         val transform: ScallopOption[String] = opt[String](
             required = true,
-            validate = t => Set(IsDeletedTransformationOption, PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, RegionLabelTransformation, JulianDayTransformation, ValueProjectTransformationOption, CreatorTransformationOption, OwnerBehaviourTransformationOption, AllTransformationsOption).contains(t),
-            descr = s"Selects a transformation. Available transformations: '$IsDeletedTransformationOption' (adds missing 'knora-base:isDeleted' statements), '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements), '$MissingValueHasStringTransformationOption' (adds missing valueHasString), '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff), '$RegionLabelTransformation' (fixes the labels of regions whose label is 'test'), '$JulianDayTransformation' (changes Julian Day Count to Julian Day Number), '$ValueProjectTransformationOption' (removes 'knora-base:attachedToProject' from values), '$CreatorTransformationOption' (transforms existing 'knora-base:Owner' group inside permissions to 'knora-base:Creator'), '$OwnerBehaviourTransformationOption' (gives 'knora-base:Creator' CR permissions to correspond to the previous behaviour for owners - use with care as it will add permissions that where not there before), '$AllTransformationsOption' (all of the above minus '$OwnerBehaviourTransformationOption')"
+            validate = t => Set(IsDeletedTransformationOption, PermissionsTransformationOption, MissingValueHasStringTransformationOption, StandoffTransformationOption, RegionLabelTransformation, JulianDayTransformation, ValueProjectTransformationOption, CreatorTransformationOption, OwnerBehaviourTransformationOption, PreviewTransformationOption, AllTransformationsOption).contains(t),
+            descr = s"Selects a transformation. Available transformations: '$IsDeletedTransformationOption' (adds missing 'knora-base:isDeleted' statements), '$PermissionsTransformationOption' (combines old-style multiple permission statements into single permission statements), '$MissingValueHasStringTransformationOption' (adds missing valueHasString), '$StandoffTransformationOption' (transforms old-style standoff into new-style standoff), '$RegionLabelTransformation' (fixes the labels of regions whose label is 'test'), '$JulianDayTransformation' (changes Julian Day Count to Julian Day Number), '$ValueProjectTransformationOption' (removes 'knora-base:attachedToProject' from values), '$CreatorTransformationOption' (transforms existing 'knora-base:Owner' group inside permissions to 'knora-base:Creator'), '$OwnerBehaviourTransformationOption' (gives 'knora-base:Creator' CR permissions to correspond to the previous behaviour for owners - use with care as it will add permissions that where not there before), '$PreviewTransformationOption' (removes preview images), '$AllTransformationsOption' (all of the above minus '$OwnerBehaviourTransformationOption')"
         )
 
         val input: ScallopOption[String] = trailArg[String](required = true, descr = "Input Turtle file")

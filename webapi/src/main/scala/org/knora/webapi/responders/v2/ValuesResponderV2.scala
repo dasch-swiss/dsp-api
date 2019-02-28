@@ -263,6 +263,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             )
         } yield taskResult
 
+        // Since PR #1230, the cardinalities in knora-base don't allow you to create a file value
+        // without creating a new resource, but we leave this line here in case it's needed again
+        // someday:
+        //
         // If we were creating a file value, have Sipi move the file to permanent storage if the update
         // was successful, or delete the temporary file if the update failed.
         ResourceUtilV2.doSipiPostUpdate(
