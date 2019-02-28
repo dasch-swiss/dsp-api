@@ -1249,6 +1249,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                            apiRequestID: UUID): Future[MultipleResourceCreateResponseV1] = {
         val userProfileV1 = userProfile.asUserProfileV1
 
+        // TODO: this method has to send MoveTemporaryFileToPermanentStorageRequestV2 for each file, as ResourcesResponderV2 does.
+
         for {
             // Get user's IRI and don't allow anonymous users to create resources.
             userIri: IRI <- Future {
@@ -1409,7 +1411,17 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             resourceClassInfo = resourceClassesEntityInfoResponse.resourceClassInfoMap(resourceCreateRequest.resourceTypeIri),
                             propertyInfoMap = propertyEntityInfoMapsPerResource(resourceCreateRequest.resourceTypeIri),
                             values = resourceCreateRequest.values,
-                            sipiConversionRequest = resourceCreateRequest.file,
+                            sipiConversionRequest = resourceCreateRequest.file.map {
+                                fileMetadata =>
+                                    // TODO: this is nonsense, just to get this file to compile for now.
+                                    SipiConversionFileRequestV1(
+                                        originalFilename = fileMetadata.originalFilename,
+                                        originalMimeType = fileMetadata.originalMimeType,
+                                        projectShortcode = projectInfoResponse.project_info.shortcode,
+                                        filename = fileMetadata.originalFilename,
+                                        userProfile = userProfile.asUserProfileV1
+                                    )
+                            },
                             clientResourceIDsToResourceClasses = clientResourceIDsToResourceClasses,
                             userProfile = userProfile
                         )
@@ -1629,8 +1641,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     case None => Future(None) // expected behaviour
                     case Some(_: SipiConversionFileRequestV1) =>
                         throw BadRequestException(s"File params (GUI-case) are given but resource class $resourceClassIri does not allow any representation")
-                    case Some(_: SipiConversionPathRequestV1) =>
-                        throw BadRequestException(s"A binary file was provided (non GUI-case) but resource class $resourceClassIri does not have any binary representation")
                 }
             }
         } yield fileValues
@@ -1902,7 +1912,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                   apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
         val userProfileV1 = userProfile.asUserProfileV1
 
-        val resultFuture = for {
+        for {
 
             // Get user's IRI and don't allow anonymous users to create resources.
             userIri: IRI <- Future {
@@ -1969,21 +1979,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 )
             )
         } yield result
-
-        // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
-        resultFuture.andThen {
-            case _ =>
-                sipiConversionRequest match {
-                    case Some(conversionRequest) =>
-                        conversionRequest match {
-                            case conversionPathRequest: SipiConversionPathRequestV1 =>
-                                // a tmp file has been created by the resources route (non GUI-case), delete it
-                                FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
-                            case _ => ()
-                        }
-                    case None => ()
-                }
-        }
     }
 
     /**

@@ -86,12 +86,12 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
       */
     case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
 
-    object GetImageMetadataResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+    object SipiUploadResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
         implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat3(SipiUploadResponseEntry)
         implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
     }
 
-    import GetImageMetadataResponseV2JsonProtocol._
+    import SipiUploadResponseV2JsonProtocol._
 
     /**
       * Represents the information that Knora returns about an image file value that was created.

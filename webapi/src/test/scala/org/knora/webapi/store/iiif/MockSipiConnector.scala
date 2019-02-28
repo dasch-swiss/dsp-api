@@ -19,8 +19,6 @@
 
 package org.knora.webapi.store.iiif
 
-import java.io.File
-
 import akka.actor.{Actor, ActorLogging, ActorSystem}
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV1
@@ -30,22 +28,6 @@ import org.knora.webapi.{BadRequestException, KnoraDispatchers, Settings, SipiEx
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
-
-/**
-  * Keep track of the temporary files that was written in the route
-  * when submitting a multipart request
-  */
-object SourcePath {
-    private var sourcePath: File = new File("") // for init
-
-    def setSourcePath(path: File) = {
-        sourcePath = path
-    }
-
-    def getSourcePath() = {
-        sourcePath
-    }
-}
 
 /**
   * Constants for [[MockSipiConnector]].
@@ -68,12 +50,11 @@ class MockSipiConnector extends Actor with ActorLogging {
     implicit val system: ActorSystem = context.system
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    val settings = Settings(system)
+    private val settings = Settings(system)
 
 
     def receive = {
         case sipiResponderConversionFileRequest: SipiConversionFileRequestV1 => future2Message(sender(), imageConversionResponse(sipiResponderConversionFileRequest), log)
-        case sipiResponderConversionPathRequest: SipiConversionPathRequestV1 => future2Message(sender(), imageConversionResponse(sipiResponderConversionPathRequest), log)
         case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
         case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)
         case deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2 => try2Message(sender(), deleteTemporaryFileV2(deleteTemporaryFileRequestV2), log)
@@ -103,16 +84,6 @@ class MockSipiConnector extends Actor with ActorLogging {
                 dimY = 800,
                 internalFilename = "full.jp2"
             )
-
-            // Whenever Knora had to create a temporary file, store its path
-            // the calling test context can then make sure that is has actually been deleted after the test is done
-            // (on successful or failed conversion)
-            conversionRequest match {
-                case conversionPathRequest: SipiConversionPathRequestV1 =>
-                    // store path to tmp file
-                    SourcePath.setSourcePath(conversionPathRequest.source)
-                case _ => () // params request only
-            }
 
             SipiConversionResponseV1(fileValueV1, file_type = SipiConstants.FileType.IMAGE)
         }

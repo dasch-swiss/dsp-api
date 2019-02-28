@@ -37,19 +37,9 @@ for the client to request them from Sipi, but the whole handling of
 files (storing, naming, organization of the internal directory
 structure, format conversions, and serving) is taken care of by Sipi.
 
-## Adding Files to Knora: Using the GUI or directly the API
+## Adding Files to Knora
 
-To create a resource with a digital representation attached to, either
-the browser-based GUI (SALSAH) can be used or this can be done by
-*directly* addressing the API. (Of course, also the GUI uses the API.
-But the user does not need to know about it.) The same applies for
-changing an existing digital representation for a resource. Subsequently, the first
-case will be called the *GUI case* and the second the *non-GUI case*.
-
-### GUI Case
-
-In this case, the user may choose a file to upload using his
-web-browser. The file is directly sent to Sipi (route:
+The file is directly sent to Sipi (route:
 `create_thumbnail`) to calculate a thumbnail hosted by Sipi which then
 gets displayed to the user in the browser. Sipi copies the original file
 into a temporary directory and keeps it there (for later processing in
@@ -89,83 +79,7 @@ representing the information about the file to be attached to the new
 resource. Along with the other parameters, it is sent to the resources
 responder.
 
-See @ref:[Further Handling of the GUI and the non GUI-case in the Resources Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-resources-responder) for
-details of how the resources responder then handles the request.
-
-#### Change the Digital Representation of a Resource
-
-The request is taken care of in `ValuesRouteV1.scala`. The PUT request
-is handled in path `v1/filevalue/{resIri}` which receives the resource
-Iri as a part of the URL: *The submitted file will update the existing
-file values of the given resource.*
-
-The file parameters are submitted as json and are parsed into a
-`ChangeFileValueApiRequestV1`. To represent the conversion request for
-the Sipi responder, a `SipiResponderConversionFileRequestV1` is created.
-A `ChangeFileValueRequestV1` containing the resource Iri and the message
-for Sipi is then created and sent to the values responder.
-
-See @ref:[Further Handling of the GUI and the non GUI-case in the Values Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-values-responder)
-for details of how the values responder then handles the request.
-
-### Non-GUI case
-
-In this case, the API receives an HTTP multipart request containing the
-binary data.
-
-#### Create a new Resource with a Digital Representation
-
-The request is handled in `ResourcesRouteV1.scala`. The multipart POST
-request consists of two named body parts: `json` containing the resource
-parameters (properties) and `file` containing the binary data as well as
-the file name and its mime type. Using Python's [request
-module](http://docs.python-requests.org/en/master/user/quickstart/#post-a-multipart-encoded-file),
-a request could look like this:
-
-```python
-import requests, json
-
-params = {...} // resource parameters
-files = {'file': (filename, open(path + filename, 'rb'), mimetype)} // filename, binary data, and mime type
-
-r = requests.post(knora_url + '/resources',
-                  data={'json': json.dumps(params)},
-                  files=files,
-                  headers=None)
-```
-
-The binary data is saved to a temporary location by Knora. The route
-then creates a `SipiResponderConversionPathRequestV1` representing the
-information about the file (i.e. the temporary path to the file) to be
-attached to the new resource. Along with the other parameters, it is
-sent to the resources responder.
-
-See @ref:[Further Handling of the GUI and the non GUI-case in the Resources Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-resources-responder) for
-details of how the resources responder then handles the request.
-
-#### Change the Digital Representation of a Resource
-
-The request is taken care of in `ValuesRouteV1.scala`. The multipart PUT
-request is handled in path `v1/filevalue/{resIri}` which receives the
-resource Iri as a part of the URL: *The submitted file will update the
-existing file values of the given resource.*
-
-For the request, no json parameters are required. So its body just
-consists of the binary data
-(see @ref:[Create a new Resource with a Digital Representation](#create-a-new-resource-with-a-digital-representation)).
-The values route stores the submitted
-binaries as a temporary file and creates a
-`SipiResponderConversionPathRequestV1`. A `ChangeFileValueRequestV1`
-containing the resource Iri and the message for Sipi is then created and
-sent to the values responder.
-
-See @ref:[Further Handling of the GUI and the non GUI-case in the Values Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-values-responder) for details
-of how the values responder then handles the request.
-
-### Further Handling of the GUI and the Non-GUI case in the Resources Responder
-
-Once a `SipiResponderConversionFileRequestV1` (GUI case) or a
-`SipiResponderConversionPathRequestV1` (non-GUI case) has been created
+Once a `SipiResponderConversionFileRequestV1` has been created
 and passed to the resources responder, the GUI and the non-GUI case can
 be handled in a very similar way. This is why they are both
 implementations of the trait `SipiResponderConversionRequestV1`.
@@ -173,34 +87,18 @@ implementations of the trait `SipiResponderConversionRequestV1`.
 The resource responder calls the ontology responder to check if all
 required properties were submitted for the given resource type. Also it
 is checked if the given resource type may have a digital representation.
-The resources responder then sends a message to Sipi responder that does
-a request to the Sipi server. Depending on the type of the message
-(`SipiResponderConversionFileRequestV1` or
-`SipiResponderConversionPathRequestV1`), a different Sipi route is
-called. In the first case (GUI case), the file is already managed by
-Sipi and only the filename has to be indicated. In the latter case, Sipi
-is told about the location where Knora has saved the binary data to.
+The resources responder then sends a message to Sipi connector, which makes
+a request to the Sipi server.
 
-To make this handling easy for Knora, both messages have their own
-implementation for creating the parameters for Sipi (declared in the
-trait as `toFormData`). If Knora deals with a
-`SipiResponderConversionPathRequestV1`, it has to delete the temporary
-file after it has been processed by SIPI. Here, we assume that we deal
-with an image.
-
-For both cases, Sipi returns the same answer containing the following
-information:
+Sipi's response contains the following information:
 
    - `file_type`: the type of the file that has been handled by Sipi
      (image | video | audio | text | binary)
-   - `mimetype_full` and `mimetype_thumb`: mime types of the full image
-     representation and the thumbnail
+   - `mimetype_full`: mime type of the image
    - `original_mimetype`: the mime type of the original file
    - `original_filename`: the name of the original file
-   - `nx_full`, `ny_full`, `nx_thumb`, and `ny_thumb`: the x and y
-     dimensions of both the full image and the thumbnail
-   - `filename_full` and `filename_full`: the names of the full image
-     and the thumbnail (needed to request the images from Sipi)
+   - `nx_full`, `ny_full`: the x and y dimensions of the image
+   - `filename_full`: the internal filename of the image (needed to request the image from Sipi)
 
 The `file_type` is important because representations for resources are
 restricted to media types: image, audio, video or a generic binary file.
@@ -215,22 +113,28 @@ Depending on the given file type, Sipi responder can create the apt
 message (here: `StillImageFileValueV1`) to save the data to the
 triplestore.
 
-### Further Handling of the GUI and the non-GUI case in the Values Responder
+#### Change the Digital Representation of a Resource
+
+The request is taken care of in `ValuesRouteV1.scala`. The PUT request
+is handled in path `v1/filevalue/{resIri}` which receives the resource
+Iri as a part of the URL: *The submitted file will update the existing
+file value of the given resource.*
+
+The file parameters are submitted as json and are parsed into a
+`ChangeFileValueApiRequestV1`. To represent the conversion request for
+the Sipi responder, a `SipiResponderConversionFileRequestV1` is created.
+A `ChangeFileValueRequestV1` containing the resource Iri and the message
+for Sipi is then created and sent to the values responder.
 
 In the values responder, `ChangeFileValueRequestV1` is passed to the
 method `changeFileValueV1`. Unlike ordinary value change requests, the
 Iris of the value objects to be updated are not known yet. Because of
 this, all the existing file values of the given resource Iri have to be
-queried first. Also their quality levels are queried because in case of
-a `StillImageFileValue`, we have to deal with a file value for the
-thumbnail and another one for the full quality representation. When
-these two file values are being updated, the quality levels have to be
-considered for the sake of consistency (otherwise a full quality value's
-`knora-base:previous-value` may point to a thumbnail file value).
+queried first.
 
 With the file values being returned, we actually know about the current
 Iris of the value objects. Now the Sipi responder is called to handle
-the file conversion request (see @ref:[Further Handling of the GUI and the non GUI-case in the Resources Responder](#further-handling-of-the-gui-and-the-non-gui-case-in-the-resources-responder)).
+the file conversion request (see @ref:[Further Processing in the Resources Responder](#further-processing-in-the-resources-responder)).
 After that, it is checked that the `file_type` returned by Sipi responder
 corresponds to the property type of the existing file values. For
 example, if the `file_type` is an image, the property pointing to the
@@ -312,7 +216,6 @@ for the communication with Sipi. The reason the Knora session id is set
 in two cookies, is the fact that cookies can not be shared among
 different domains. Since Knora and Sipi are likely to be running under
 different domains, this solution offers the necessary flexibility.
-
 
 ## Authentication of users with Sipi
 

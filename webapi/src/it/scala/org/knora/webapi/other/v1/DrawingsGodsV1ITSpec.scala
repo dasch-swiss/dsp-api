@@ -57,8 +57,38 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
         val testPass = "test"
         val pathToChlaus = "_test_data/test_route/images/Chlaus.jpg"
 
-
         "be able to create a resource, only find one DOAP (with combined resource class / property), and have permission to access the image" in {
+
+            // The image to be uploaded.
+            val fileToSend = new File(pathToChlaus)
+            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
+
+            // A multipart/form-data request containing the image.
+            val sipiFormData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
+            val sipiRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
+            val sipiResponseJson = getResponseJson(sipiRequest)
+
+            // Request the thumbnail from Sipi.
+            val jsonFields = sipiResponseJson.fields
+            val previewUrl = jsonFields("preview_path").asInstanceOf[JsString].value
+            val sipiThumbnailGetRequest = Get(previewUrl) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
+            checkResponseOK(sipiThumbnailGetRequest)
+
+            val fileParams = JsObject(
+                Map(
+                    "originalFilename" -> jsonFields("original_filename"),
+                    "originalMimeType" -> jsonFields("original_mimetype"),
+                    "filename" -> jsonFields("filename")
+                )
+            )
 
             val params =
                 s"""
@@ -74,30 +104,14 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
                    |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentAuthor":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-CommentAuthorList-child"}],
                    |        "http://www.knora.org/ontology/0105/drawings-gods#hasCodeVerso":[{"richtext_value":{"utf8str":"dayyad"}}]
                    |    },
+                   |    "file": ${fileParams.compactPrint},
                    |    "project_id":"http://rdfh.ch/projects/0105",
                    |    "label":"dayyad"
                    |}
              """.stripMargin
 
-            // The image to be uploaded.
-            val fileToSend = new File(pathToChlaus)
-            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
-
-            // A multipart/form-data request containing the image and the JSON.
-            val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, params)
-                ),
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-            )
-
-            // Send the multipart/form-data request to the Knora API server.
-            val knoraPostRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
+            // Send the JSON in a POST request to the Knora API server.
+            val knoraPostRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
             val knoraPostResponseJson = getResponseJson(knoraPostRequest)
 
             // Get the IRI of the newly created resource.

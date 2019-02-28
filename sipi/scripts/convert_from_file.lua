@@ -112,6 +112,8 @@ if not success then
     return -1
 end
 
+server.log("********* Checking consistency of mimetype " .. submitted_mimetype.mimetype .. " and filename " .. originalFilename)
+
 success, check = fullImg:mimetype_consistency(submitted_mimetype.mimetype, originalFilename)
 
 if not success then

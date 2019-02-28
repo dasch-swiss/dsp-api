@@ -67,44 +67,6 @@ sealed trait SipiConversionRequestV1 extends SipiRequestV1 {
 
 
 /**
-  * Represents a binary file that has been temporarily stored by Knora (non GUI-case). Knora route received a multipart request
-  * containing binary data which it saved to a temporary location, so it can be accessed by Sipi. Knora has to delete that file afterwards.
-  * For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.
-  *
-  * @param originalFilename the original name of the binary file.
-  * @param originalMimeType the MIME type of the binary file (e.g. image/tiff).
-  * @param source           the temporary location of the source file on disk (absolute path).
-  * @param userProfile      the user making the request.
-  */
-case class SipiConversionPathRequestV1(originalFilename: String,
-                                       originalMimeType: String,
-                                       projectShortcode: String,
-                                       source: File,
-                                       userProfile: UserProfileV1) extends SipiConversionRequestV1 {
-
-    /**
-      * Creates the parameters needed to call the Sipi route convert_path.
-      *
-      * Required parameters:
-      * - originalFilename: original name of the file to be converted.
-      * - originalMimeType: original mime type of the file to be converted.
-      * - source: path to the file to be converted (file was created by Knora).
-      *
-      * @return a Map of key-value pairs that can be turned into form data by Sipi responder.
-      */
-    def toFormData: Map[String, String] = {
-        Map(
-            "originalFilename" -> originalFilename,
-            "originalMimeType" -> originalMimeType,
-            "source" -> source.toString,
-            "prefix" -> projectShortcode
-        )
-    }
-
-    def toJsValue: JsValue = RepresentationV1JsonProtocol.SipiConversionPathRequestV1Format.write(this)
-}
-
-/**
   * Represents an binary file that has been temporarily stored by Sipi (GUI-case). Knora route received a request telling it about
   * a file that is already managed by Sipi. The binary file data have already been sent to Sipi by the client (browser-based GUI).
   * Knora has to tell Sipi about the name of the file to be converted.
@@ -243,33 +205,6 @@ case class SipiConversionResponseV1(fileValueV1: FileValueV1, file_type: SipiCon
   * A spray-json protocol for generating Knora API v1 JSON providing data about representations of a resource.
   */
 object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
-
-    /**
-      * Converts between [[SipiConversionPathRequestV1]] objects and [[JsValue]] objects.
-      */
-    implicit object SipiConversionPathRequestV1Format extends RootJsonFormat[SipiConversionPathRequestV1] {
-        /**
-          * Not implemented.
-          */
-        def read(jsonVal: JsValue): SipiConversionPathRequestV1 = ???
-
-        /**
-          * Converts a [[SipiConversionPathRequestV1]] into [[JsValue]] for formatting as JSON.
-          *
-          * @param request the [[SipiConversionPathRequestV1]] to be converted.
-          * @return a [[JsValue]].
-          */
-        def write(request: SipiConversionPathRequestV1): JsValue = {
-
-            val fields = Map(
-                "originalFilename" -> request.originalFilename.toJson,
-                "originalMimeType" -> request.originalMimeType.toJson,
-                "source" -> request.source.toString.toJson
-            )
-
-            JsObject(fields)
-        }
-    }
 
     /**
       * Converts between [[SipiConversionFileRequestV1]] objects and [[JsValue]] objects.

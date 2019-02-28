@@ -49,59 +49,11 @@ The request header's content type has to be set to `application/json`.
 
 ## Adding Resources with Image Files
 
-Certain resource classes can have attached image files. There are two ways to
-attach a file to a resource: Either by submitting directly the binaries of the file in a
-an HTTP Multipart request, or by indicating the location of the file. The two cases are referred to
-as non-GUI case and GUI case (see @ref:[Sipi and Knora](../../07-sipi/sipi-and-knora.md)).
+Certain resource classes can have attached image files. To attach
+attach a file to a resource, you must first submit to the file to Sipi, then
+submit the file's metadata to Knora (see @ref:[Sipi and Knora](../../07-sipi/sipi-and-knora.md)).
 
-### Including the binaries (non-GUI case)
-
-In order to include the binaries, a HTTP Multipart request has to be
-sent. One part contains the JSON (same format as described for
-[Adding Resources Without Images Files](#adding-resources-without-a-digital-representation))
-and has to be named `json`. The other part contains the file's name, its binaries, and its mime type
-and has to be named `file`. The following example illustrates how to
-make this type of request using Python 3:
-
-```python
-#!/usr/bin/env python3
-
-import requests, json
-
-# a Python dictionary that will be turned into a JSON object
-resourceParams = {
-   'restype_id': 'http://www.knora.org/ontology/test#testType',
-   'properties': {
-       'http://www.knora.org/ontology/test#testtext': [
-           {'richtext_value': {'utf8str': "test"}}
-       ],
-       'http://www.knora.org/ontology/test#testnumber': [
-           {'int_value': 1}
-       ]
-   },
-   'label': "test resource",
-   'project_id': 'http://rdfh.ch/projects/testproject'
-}
-
-# the name of the file to be submitted
-filename = "myimage.jpg"
-
-# a tuple containing the file's name, its binaries and its mimetype
-file = {'file': (filename, open(filename, 'rb'), "image/jpeg")} # use name "file"
-
-# do a POST request providing both the JSON and the binaries
-r = requests.post("http://host/v1/resources",
-                  data={'json': json.dumps(resourceParams)}, # use name "json"
-                  files=file,
-                  auth=('user', 'password'))
-```
-
-Please note that the file has to be read in binary mode (by default it
-would be read in text mode).
-
-### Indicating the location of a file (GUI case)
-
-This request works similarly to
+The request to Knora works similarly to
 [Adding Resources Without Image Files](#adding-resources-without-a-digital-representation). The JSON format is described
 in the TypeScript interface `createResourceWithRepresentationRequest` in
 module `createResourceFormats`. The request header's content type has to
@@ -152,18 +104,24 @@ Only system or project administrators may use the bulk import.
 The procedure for using this feature is as follows
 (see the @ref:[example below](#bulk-import-example)).
 
-1.  Make an HTTP GET request to Knora to @ref:[get XML schemas](#1-get-xml-schemas) describing
-    the XML to be provided for the import.
-2.  @ref:[Generate an XML import document](#2-generate-xml-import-document) representing the
-    data to be imported, following the Knora import schemas that were generated in step 1.
-    You will probably want to write a script to do this. Knora is not involved in this step.
-    If you are also importing image files, this XML document needs to
-    @ref:[contain the filesystem paths](#bulk-import-with-image-files) of those files.
-3.  @ref:[Validate your XML import document](#3-validate-xml-import-document), using an XML schema validator such as
-    [Apache Xerces](http://xerces.apache.org) or [Saxon](http://www.saxonica.com), or an
-    XML development environment such as [Oxygen](https://www.oxygenxml.com). This will
-    help ensure that the data you submit to Knora is correct. Knora is not involved in this step.
-4.  @ref:[Submit the XML import document to Knora](#4-submit-xml-import-document-to-knora).
+1. Make an HTTP GET request to Knora to @ref:[get XML schemas](#1-get-xml-schemas) describing
+   the XML to be provided for the import.
+    
+2. If you are importing image files, @ref:[upload files to Sipi](#2-upload-files-to-sipi).
+
+3. @ref:[Generate an XML import document](#3-generate-xml-import-document) representing the
+   data to be imported, following the Knora import schemas that were generated in step 1.
+   You will probably want to write a script to do this. Knora is not involved in this step.
+   If you are also importing image files, this XML document needs to
+   @ref:[contain the filenames](#bulk-import-with-image-files) that Sipi returned
+   for the files you uploaded in step 2.
+
+4. @ref:[Validate your XML import document](#4-validate-xml-import-document), using an XML schema validator such as
+   [Apache Xerces](http://xerces.apache.org) or [Saxon](http://www.saxonica.com), or an
+   XML development environment such as [Oxygen](https://www.oxygenxml.com). This will
+   help ensure that the data you submit to Knora is correct. Knora is not involved in this step.
+
+5. @ref:[Submit the XML import document to Knora](#5-submit-xml-import-document-to-knora).
 
 In this procedure, the person responsible for generating the XML import
 data need not be familiar with RDF or with the ontologies involved.
@@ -208,7 +166,12 @@ containing three files:
 
 - `knoraXmlImport.xsd`: The standard Knora XML import schema, used by all XML imports.
 
-#### 2. Generate XML Import Document
+#### 2. Upload Files to Sipi
+
+See @ref:[Upload Files to Sipi](../api-v2/editing-values.md#upload-files-to-sipi) in
+the Knora API v2 documentation.
+
+#### 3. Generate XML Import Document
 
 We now convert our existing data to XML, probably by writing a custom
 script. The resulting XML import document could look like this:
@@ -341,7 +304,7 @@ This illustrates several aspects of XML imports:
   - A text value can have a `lang` attribute, whose value is an ISO 639-1
     code specifying the language of the text.
 
-#### 3. Validate XML Import Document
+#### 4. Validate XML Import Document
 
 You can use an XML schema validator such as [Apache Xerces](http://xerces.apache.org) or
 [Saxon](http://saxon.sourceforge.net/), or an XML development environment
@@ -354,7 +317,7 @@ For example, using Saxon:
 java -cp ./saxon9ee.jar com.saxonica.Validate -xsd:p0801-biblio.xsd -s:data.xml
 ```
 
-#### 4. Submit XML Import Document to Knora
+#### 5. Submit XML Import Document to Knora
 
 To create these resources in Knora, make an HTTP post request with the XML import document
 as the request body. The URL must specify the (URL-encoded) IRI of the project in which
@@ -411,8 +374,8 @@ contains the IRI of the target resource.
 
 To attach an image file to a resource, we must provide the
 element `knoraXmlImport:file` before the property elements. In this
-element, we must give the absolute filesystem path to the file that
-should be attached to the resource, along with its MIME type:
+element, we must give the filename that Sipi returned for the file in
+@ref:[2. Upload Files to Sipi](#2-upload-files-to-sipi).
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -427,7 +390,7 @@ should be attached to the resource, along with its MIME type:
     </incunabula:book>
     <incunabula:page id="test_page">
         <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
-        <knoraXmlImport:file path="/usr/local/share/import-images/incunabula/12345.tiff" mimetype="image/tiff"/>
+        <knoraXmlImport:file path="67SEfNU1wK2-CSf5abe2eh3.jp2"/>
         <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
         <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
         <incunabula:partOf>
@@ -438,6 +401,5 @@ should be attached to the resource, along with its MIME type:
 </knoraXmlImport:resources>
 ```
 
-During the processing of the bulk import, Knora will
-communicate the location of file to Sipi, which will convert it to JPEG 2000
-for storage.
+During the processing of the bulk import, Knora will ask Sipi for the rest of the
+file's metadata, and store that metadata in a file value attached to the resource.

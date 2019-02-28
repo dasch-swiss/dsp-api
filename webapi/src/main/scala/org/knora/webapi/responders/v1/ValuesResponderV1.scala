@@ -25,7 +25,7 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM, PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{SipiConstants, SipiConversionPathRequestV1, SipiConversionRequestV1, SipiConversionResponseV1}
+import org.knora.webapi.messages.store.sipimessages.{SipiConstants, SipiConversionRequestV1, SipiConversionResponseV1}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
@@ -630,7 +630,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         def makeTaskFuture(changeFileValueRequest: ChangeFileValueRequestV1): Future[ChangeFileValueResponseV1] = {
 
             // get the Iris of the current file value(s)
-            val resultFuture = for {
+            for {
 
                 resourceIri <- Future(changeFileValueRequest.resourceIri)
 
@@ -696,16 +696,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             } yield ChangeFileValueResponseV1(
                 locations = Vector(changedLocation)
             )
-
-            // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
-            resultFuture.andThen {
-                case _ => changeFileValueRequest.file match {
-                    case conversionPathRequest: SipiConversionPathRequestV1 =>
-                        // a tmp file has been created by the resources route (non GUI-case), delete it
-                        FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
-                    case _ => ()
-                }
-            }
         }
 
         for {
