@@ -32,7 +32,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasStillImageFile"
       }
@@ -467,7 +467,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasStillImageFile"
       }

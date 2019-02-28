@@ -74,8 +74,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val pathToBEOLLetterMapping = "_test_data/test_route/texts/beol/testLetter/beolMapping.xml"
     private val pathToBEOLBulkXML = "_test_data/test_route/texts/beol/testLetter/bulk.xml"
     private val letterIri = new MutableTestIri
-    private val authorIri = new MutableTestIri
-    private val recipientIri = new MutableTestIri
 
     /**
       * Adds the IRI of a XSL transformation to the given mapping.

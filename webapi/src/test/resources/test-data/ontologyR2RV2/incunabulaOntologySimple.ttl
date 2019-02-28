@@ -27,7 +27,7 @@ incunabula:Sideband a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasStandoffLinkTo
     ], [ a owl:Restriction;
-      owl:minCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:hasStillImageFile
     ], [ a owl:Restriction;
       owl:maxCardinality 1;
@@ -230,7 +230,7 @@ incunabula:page a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasStandoffLinkTo
     ], [ a owl:Restriction;
-      owl:minCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:hasStillImageFile
     ], [ a owl:Restriction;
       owl:maxCardinality 1;

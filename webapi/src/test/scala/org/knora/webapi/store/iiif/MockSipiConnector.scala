@@ -94,30 +94,14 @@ class MockSipiConnector extends Actor with ActorLogging {
             // we expect original mimetype to be "image/jpeg"
             if (originalMimeType != "image/jpeg") throw BadRequestException("Wrong mimetype for jpg file")
 
-            val fileValuesV1 = Vector(
-                StillImageFileValueV1(// full representation
-                    internalMimeType = "image/jp2",
-                    originalFilename = originalFilename,
-                    originalMimeType = Some(originalMimeType),
-                    projectShortcode = conversionRequest.projectShortcode,
-                    dimX = 800,
-                    dimY = 800,
-                    internalFilename = "full.jp2",
-                    qualityLevel = 100,
-                    qualityName = Some("full")
-                ),
-                StillImageFileValueV1(// thumbnail representation
-                    internalMimeType = "image/jpeg",
-                    originalFilename = originalFilename,
-                    originalMimeType = Some(originalMimeType),
-                    projectShortcode = conversionRequest.projectShortcode,
-                    dimX = 80,
-                    dimY = 80,
-                    internalFilename = "thumb.jpg",
-                    qualityLevel = 10,
-                    qualityName = Some("thumbnail"),
-                    isPreview = true
-                )
+            val fileValueV1 = StillImageFileValueV1(
+                internalMimeType = "image/jp2",
+                originalFilename = originalFilename,
+                originalMimeType = Some(originalMimeType),
+                projectShortcode = conversionRequest.projectShortcode,
+                dimX = 800,
+                dimY = 800,
+                internalFilename = "full.jp2"
             )
 
             // Whenever Knora had to create a temporary file, store its path
@@ -130,7 +114,7 @@ class MockSipiConnector extends Actor with ActorLogging {
                 case _ => () // params request only
             }
 
-            SipiConversionResponseV1(fileValuesV1, file_type = SipiConstants.FileType.IMAGE)
+            SipiConversionResponseV1(fileValueV1, file_type = SipiConstants.FileType.IMAGE)
         }
     }
 

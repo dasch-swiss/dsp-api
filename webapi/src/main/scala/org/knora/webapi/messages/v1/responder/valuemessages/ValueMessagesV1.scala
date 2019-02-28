@@ -121,7 +121,7 @@ case class CreateRichtextV1(utf8str: Option[String] = None,
                             xml: Option[String] = None,
                             mapping_id: Option[IRI] = None) {
 
-    def toJsValue = ApiValueV1JsonProtocol.createRichtextV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.createRichtextV1Format.write(this)
 }
 
 /**
@@ -135,7 +135,7 @@ case class CreateFileV1(originalFilename: String,
                         originalMimeType: String,
                         filename: String) {
 
-    def toJsValue = ApiValueV1JsonProtocol.createFileV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.createFileV1Format.write(this)
 
 }
 
@@ -160,7 +160,7 @@ case class CreateFileQualityLevelV1(path: String,
                                     dimX: Option[Int] = None,
                                     dimY: Option[Int] = None) {
 
-    def toJsValue = ApiValueV1JsonProtocol.createFileQualityLevelFormat.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.createFileQualityLevelFormat.write(this)
 }
 
 /**
@@ -223,7 +223,7 @@ case class ChangeValueApiRequestV1(richtext_value: Option[CreateRichtextV1] = No
   */
 case class ChangeFileValueApiRequestV1(file: CreateFileV1) {
 
-    def toJsValue = ApiValueV1JsonProtocol.changeFileValueApiRequestV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.changeFileValueApiRequestV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -271,7 +271,7 @@ case class ValueGetResponseV1(valuetype: IRI,
                               valuecreationdate: String,
                               comment: Option[String] = None,
                               rights: Int) extends KnoraResponseV1 {
-    def toJsValue = ApiValueV1JsonProtocol.valueGetResponseV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.valueGetResponseV1Format.write(this)
 }
 
 /**
@@ -293,7 +293,7 @@ case class ValueVersionHistoryGetRequestV1(resourceIri: IRI,
   * @param valueVersions a list of the versions of the value, from newest to oldest.
   */
 case class ValueVersionHistoryGetResponseV1(valueVersions: Seq[ValueVersionV1]) extends KnoraResponseV1 {
-    def toJsValue = ApiValueV1JsonProtocol.valueVersionHistoryGetResponseV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.valueVersionHistoryGetResponseV1Format.write(this)
 }
 
 /**
@@ -328,7 +328,7 @@ case class CreateValueResponseV1(value: ApiValueV1,
                                  comment: Option[String] = None,
                                  id: IRI,
                                  rights: Int) extends KnoraResponseV1 {
-    def toJsValue = ApiValueV1JsonProtocol.createValueResponseV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.createValueResponseV1Format.write(this)
 }
 
 /**
@@ -463,7 +463,7 @@ case class ChangeValueResponseV1(value: ApiValueV1,
                                  comment: Option[String] = None,
                                  id: IRI,
                                  rights: Int) extends KnoraResponseV1 {
-    def toJsValue = ApiValueV1JsonProtocol.changeValueResponseV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.changeValueResponseV1Format.write(this)
 }
 
 /**
@@ -488,7 +488,7 @@ case class DeleteValueRequestV1(valueIri: IRI,
   *           ''Triplestore Updates'' in the Knora API server design documentation.
   */
 case class DeleteValueResponseV1(id: IRI) extends KnoraResponseV1 {
-    def toJsValue = ApiValueV1JsonProtocol.deleteValueResponseV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.deleteValueResponseV1Format.write(this)
 }
 
 /**
@@ -507,7 +507,7 @@ case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiConversionReques
   * @param locations the updated file value(s).
   */
 case class ChangeFileValueResponseV1(locations: Vector[LocationV1]) extends KnoraResponseV1 {
-    def toJsValue = ApiValueV1JsonProtocol.changeFileValueresponseV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.changeFileValueresponseV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -599,9 +599,9 @@ object KnoraCalendarV1 extends Enumeration {
   * of the values of this enumeration; use `lookup` instead, because it reports errors better.
   */
 object KnoraPrecisionV1 extends Enumeration {
-    val DAY = Value(0, "DAY")
-    val MONTH = Value(1, "MONTH")
-    val YEAR = Value(2, "YEAR")
+    val DAY: Value = Value(0, "DAY")
+    val MONTH: Value = Value(1, "MONTH")
+    val YEAR: Value = Value(2, "YEAR")
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -658,9 +658,9 @@ case class TextValueWithStandoffV1(utf8str: String,
     private val knoraIdUtil = new KnoraIdUtil
     private val stringFormatter = StringFormatter.getGeneralInstance
 
-    def valueTypeIri = OntologyConstants.KnoraBase.TextValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.TextValue
 
-    def toJsValue = {
+    def toJsValue: JsValue = {
         // TODO: depending on the given mapping, decide how serialize the text with standoff markup
 
         val xml = StandoffTagUtilV2.convertStandoffTagV2ToXML(utf8str, standoff, mapping)
@@ -694,7 +694,7 @@ case class TextValueWithStandoffV1(utf8str: String,
         // create an IRI for each standoff tag
         // internal references to XML ids are not resolved yet
         val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV1InTriplestore] = standoff.map {
-            case (standoffNode: StandoffTagV2) =>
+            standoffNode: StandoffTagV2 =>
                 CreateStandoffTagV1InTriplestore(
                     standoffNode = standoffNode,
                     standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
@@ -704,11 +704,11 @@ case class TextValueWithStandoffV1(utf8str: String,
         // collect all the standoff tags that contain XML ids and
         // map the XML ids to standoff node Iris
         val iDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
-            (standoffTag: CreateStandoffTagV1InTriplestore) =>
+            standoffTag: CreateStandoffTagV1InTriplestore =>
                 // filter those tags out that have an XML id
                 standoffTag.standoffNode.originalXMLID.isDefined
         }.map {
-            (standoffTagWithID: CreateStandoffTagV1InTriplestore) =>
+            standoffTagWithID: CreateStandoffTagV1InTriplestore =>
                 // return the XML id as a key and the standoff IRI as the value
                 standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
         }.toMap
@@ -722,11 +722,11 @@ case class TextValueWithStandoffV1(utf8str: String,
 
         // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV1`
         val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV1InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
-            (standoffTag: CreateStandoffTagV1InTriplestore) =>
+            standoffTag: CreateStandoffTagV1InTriplestore =>
 
                 // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV1`
                 val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] = standoffTag.standoffNode.attributes.map {
-                    (attributeWithOriginalXMLID: StandoffTagAttributeV2) =>
+                    attributeWithOriginalXMLID: StandoffTagAttributeV2 =>
                         attributeWithOriginalXMLID match {
                             case refAttr: StandoffTagInternalReferenceAttributeV2 =>
                                 // resolve the XML id to the corresponding standoff node IRI
@@ -768,7 +768,7 @@ case class TextValueWithStandoffV1(utf8str: String,
         }
     }
 
-    override def toString = utf8str
+    override def toString: String = utf8str
 
     /**
       * It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup.
@@ -796,7 +796,6 @@ case class TextValueWithStandoffV1(utf8str: String,
             case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
-
 }
 
 /**
@@ -807,9 +806,9 @@ case class TextValueWithStandoffV1(utf8str: String,
   */
 case class TextValueSimpleV1(utf8str: String, language: Option[String] = None) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.TextValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.TextValue
 
-    def toJsValue = {
+    def toJsValue: JsValue = {
         language match {
             case Some(lang) =>
                 JsObject(
@@ -837,7 +836,7 @@ case class TextValueSimpleV1(utf8str: String, language: Option[String] = None) e
         }
     }
 
-    override def toString = utf8str
+    override def toString: String = utf8str
 
 
     /**
@@ -849,7 +848,7 @@ case class TextValueSimpleV1(utf8str: String, language: Option[String] = None) e
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
         currentVersion match {
             case textValueSimpleV1: TextValueSimpleV1 => textValueSimpleV1 == this
-            case textValueWithStandoffV1: TextValueWithStandoffV1 => false
+            case _: TextValueWithStandoffV1 => false
             case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
@@ -871,11 +870,11 @@ case class LinkV1(targetResourceIri: IRI,
                   valueResourceClassLabel: Option[String] = None,
                   valueResourceClassIcon: Option[String] = None) extends ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.LinkValue
 
-    override def toString = targetResourceIri
+    override def toString: String = targetResourceIri
 
-    def toJsValue = JsString(targetResourceIri)
+    def toJsValue: JsValue = JsString(targetResourceIri)
 }
 
 /**
@@ -892,9 +891,9 @@ case class LinkValueV1(subjectIri: IRI,
                        predicateIri: IRI,
                        objectIri: IRI,
                        referenceCount: Int) extends ApiValueV1 {
-    def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.LinkValue
 
-    override def toJsValue = ApiValueV1JsonProtocol.linkValueV1Format.write(this)
+    override def toJsValue: JsValue = ApiValueV1JsonProtocol.linkValueV1Format.write(this)
 }
 
 /**
@@ -905,7 +904,7 @@ case class LinkValueV1(subjectIri: IRI,
   *                          same transaction.
   */
 case class LinkUpdateV1(targetResourceIri: IRI, targetExists: Boolean = true) extends UpdateValueV1 {
-    def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.LinkValue
 
     /**
       * It doesn't make sense to add a link to a resource when we already have a link to the same resource.
@@ -922,7 +921,7 @@ case class LinkUpdateV1(targetResourceIri: IRI, targetExists: Boolean = true) ex
         }
     }
 
-    override def toString = targetResourceIri
+    override def toString: String = targetResourceIri
 
     /**
       * A link isn't really changed if the new version points to the same resource as the old version.
@@ -941,11 +940,11 @@ case class LinkUpdateV1(targetResourceIri: IRI, targetExists: Boolean = true) ex
   * @param clientIDForTargetResource the client's ID for the target resource.
   */
 case class LinkToClientIDUpdateV1(clientIDForTargetResource: String) extends UpdateValueV1 {
-    def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.LinkValue
 
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = false
 
-    override def toString = clientIDForTargetResource
+    override def toString: String = clientIDForTargetResource
 
     override def isRedundant(currentVersion: ApiValueV1): Boolean = false
 }
@@ -957,11 +956,11 @@ case class LinkToClientIDUpdateV1(clientIDForTargetResource: String) extends Upd
   */
 case class HierarchicalListValueV1(hierarchicalListIri: IRI) extends UpdateValueV1 with ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.ListValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.ListValue
 
-    def toJsValue = JsString(hierarchicalListIri)
+    def toJsValue: JsValue = JsString(hierarchicalListIri)
 
-    override def toString = {
+    override def toString: String = {
         // TODO: implement this correctly
 
         // the string representation is the rdfs:label of the list node
@@ -1003,11 +1002,11 @@ case class HierarchicalListValueV1(hierarchicalListIri: IRI) extends UpdateValue
   */
 case class IntegerValueV1(ival: Int) extends UpdateValueV1 with ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.IntValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.IntValue
 
-    def toJsValue = JsNumber(ival)
+    def toJsValue: JsValue = JsNumber(ival)
 
-    override def toString = ival.toString
+    override def toString: String = ival.toString
 
     /**
       * Checks if a new integer value would duplicate an existing integer value.
@@ -1043,11 +1042,11 @@ case class IntegerValueV1(ival: Int) extends UpdateValueV1 with ApiValueV1 {
   */
 case class BooleanValueV1(bval: Boolean) extends UpdateValueV1 with ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.BooleanValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.BooleanValue
 
-    def toJsValue = JsBoolean(bval)
+    def toJsValue: JsValue = JsBoolean(bval)
 
-    override def toString = bval.toString
+    override def toString: String = bval.toString
 
     /**
       * Checks if a new boolean value would duplicate an existing boolean value. Always returns `true`, because it
@@ -1079,11 +1078,11 @@ case class BooleanValueV1(bval: Boolean) extends UpdateValueV1 with ApiValueV1 {
   */
 case class UriValueV1(uri: String) extends UpdateValueV1 with ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.UriValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.UriValue
 
-    def toJsValue = JsString(uri)
+    def toJsValue: JsValue = JsString(uri)
 
-    override def toString = uri
+    override def toString: String = uri
 
     /**
       * Checks if a new URI value would duplicate an existing URI value.
@@ -1118,11 +1117,11 @@ case class UriValueV1(uri: String) extends UpdateValueV1 with ApiValueV1 {
   * @param dval the decimal value.
   */
 case class DecimalValueV1(dval: BigDecimal) extends UpdateValueV1 with ApiValueV1 {
-    def valueTypeIri = OntologyConstants.KnoraBase.DecimalValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.DecimalValue
 
-    def toJsValue = JsNumber(dval)
+    def toJsValue: JsValue = JsNumber(dval)
 
-    override def toString = dval.toString
+    override def toString: String = dval.toString
 
     /**
       * Checks if a new decimal value would duplicate an existing decimal value.
@@ -1160,14 +1159,14 @@ case class DecimalValueV1(dval: BigDecimal) extends UpdateValueV1 with ApiValueV
   */
 case class IntervalValueV1(timeval1: BigDecimal, timeval2: BigDecimal) extends UpdateValueV1 with ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.IntervalValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.IntervalValue
 
-    def toJsValue = JsObject(
+    def toJsValue: JsValue = JsObject(
         "timeval1" -> JsNumber(timeval1),
         "timeval2" -> JsNumber(timeval2)
     )
 
-    override def toString = s"$timeval1 - $timeval2"
+    override def toString: String = s"$timeval1 - $timeval2"
 
     /**
       * Checks if a new interval value would duplicate an existing interval value.
@@ -1212,7 +1211,7 @@ case class JulianDayNumberValueV1(dateval1: Int,
                                   dateprecision1: KnoraPrecisionV1.Value,
                                   dateprecision2: KnoraPrecisionV1.Value) extends UpdateValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.DateValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.DateValue
 
     override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
         other match {
@@ -1224,7 +1223,7 @@ case class JulianDayNumberValueV1(dateval1: Int,
     override def isRedundant(currentVersion: ApiValueV1): Boolean = isDuplicateOfOtherValue(currentVersion)
 
     // value for String representation of a date in templates.
-    override def toString = {
+    override def toString: String = {
         // use only precision DAY: either the date is exact (a certain day)
         // or it is a period expressed as a range from one day to another.
         val date1 = DateUtilV1.julianDayNumber2DateString(dateval1, calendar, KnoraPrecisionV1.DAY)
@@ -1264,9 +1263,9 @@ case class DateValueV1(dateval1: String,
                        era2: String,
                        calendar: KnoraCalendarV1.Value) extends ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.DateValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.DateValue
 
-    override def toString = {
+    override def toString: String = {
 
 
         // if date1 and date2 are identical, it's not a period.
@@ -1280,7 +1279,7 @@ case class DateValueV1(dateval1: String,
 
     }
 
-    def toJsValue = ApiValueV1JsonProtocol.dateValueV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.dateValueV1Format.write(this)
 }
 
 /**
@@ -1290,11 +1289,11 @@ case class DateValueV1(dateval1: String,
   */
 case class ColorValueV1(color: String) extends UpdateValueV1 with ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.ColorValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.ColorValue
 
-    def toJsValue = JsString(color)
+    def toJsValue: JsValue = JsString(color)
 
-    override def toString = color
+    override def toString: String = color
 
     /**
       * Checks if a new color value would equal an existing color value.
@@ -1330,11 +1329,11 @@ case class ColorValueV1(color: String) extends UpdateValueV1 with ApiValueV1 {
   */
 case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.GeomValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.GeomValue
 
-    def toJsValue = JsString(geom)
+    def toJsValue: JsValue = JsString(geom)
 
-    override def toString = geom
+    override def toString: String = geom
 
     /**
       * Checks if a new geom value would duplicate an existing geom value.
@@ -1370,11 +1369,11 @@ case class GeomValueV1(geom: String) extends UpdateValueV1 with ApiValueV1 {
   */
 case class GeonameValueV1(geonameCode: String) extends UpdateValueV1 with ApiValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.GeonameValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.GeonameValue
 
-    def toJsValue = JsString(geonameCode)
+    def toJsValue: JsValue = JsString(geonameCode)
 
-    override def toString = geonameCode
+    override def toString: String = geonameCode
 
     /**
       * Checks if a new GeoName value would duplicate an existing GeoName value.
@@ -1422,9 +1421,6 @@ sealed trait FileValueV1 extends UpdateValueV1 with ApiValueV1 {
   * @param originalFilename the original filename of the object at the time of the import.
   * @param dimX             the X dimension of the object.
   * @param dimY             the Y dimension of the object.
-  * @param qualityLevel     the quality level of this image (higher values mean higher resolutions).
-  * @param qualityName      a string representation of the qualityLevel
-  * @param isPreview        indicates if the file value is used as a preview (thumbnail)
   */
 case class StillImageFileValueV1(internalMimeType: String,
                                  internalFilename: String,
@@ -1432,16 +1428,13 @@ case class StillImageFileValueV1(internalMimeType: String,
                                  originalMimeType: Option[String] = None,
                                  projectShortcode: String,
                                  dimX: Int,
-                                 dimY: Int,
-                                 qualityLevel: Int,
-                                 qualityName: Option[String] = None,
-                                 isPreview: Boolean = false) extends FileValueV1 {
+                                 dimY: Int) extends FileValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.StillImageFileValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.StillImageFileValue
 
-    def toJsValue = ApiValueV1JsonProtocol.stillImageFileValueV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.stillImageFileValueV1Format.write(this)
 
-    override def toString = originalFilename
+    override def toString: String = originalFilename
 
     /**
       * Checks if a new still image file value would duplicate an existing still image file value.
@@ -1476,11 +1469,11 @@ case class MovingImageFileValueV1(internalMimeType: String,
                                   originalMimeType: Option[String] = None,
                                   projectShortcode: String) extends FileValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.MovingImageFileValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.MovingImageFileValue
 
-    def toJsValue = ApiValueV1JsonProtocol.movingImageFileValueV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.movingImageFileValueV1Format.write(this)
 
-    override def toString = originalFilename
+    override def toString: String = originalFilename
 
     /**
       * Checks if a new moving image file value would duplicate an existing moving image file value.
@@ -1516,11 +1509,11 @@ case class TextFileValueV1(internalMimeType: String,
                            originalMimeType: Option[String] = None,
                            projectShortcode: String) extends FileValueV1 {
 
-    def valueTypeIri = OntologyConstants.KnoraBase.TextFileValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.TextFileValue
 
-    def toJsValue = ApiValueV1JsonProtocol.textFileValueV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.textFileValueV1Format.write(this)
 
-    override def toString = originalFilename
+    override def toString: String = originalFilename
 
     /**
       * Checks if a new text file value would duplicate an existing text file value.
@@ -1561,9 +1554,9 @@ case class TextFileValueV1(internalMimeType: String,
 case class ValueVersionV1(valueObjectIri: IRI,
                           valueCreationDate: Option[String],
                           previousValue: Option[IRI]) extends ApiValueV1 {
-    def valueTypeIri = OntologyConstants.KnoraBase.LinkValue
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.LinkValue
 
-    def toJsValue = ApiValueV1JsonProtocol.valueVersionV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.valueVersionV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1607,7 +1600,7 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         /**
           * Not implemented.
           */
-        def read(jsonVal: JsValue) = ???
+        def read(jsonVal: JsValue): ApiValueV1 = ???
 
         /**
           * Converts an [[ApiValueV1]] to a [[JsValue]].
@@ -1622,7 +1615,7 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat7(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat5(DateValueV1)
-    implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat10(StillImageFileValueV1)
+    implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat7(StillImageFileValueV1)
     implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat5(TextFileValueV1)
     implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat5(MovingImageFileValueV1)
     implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)
