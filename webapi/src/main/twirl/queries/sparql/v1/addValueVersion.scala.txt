@@ -209,13 +209,6 @@ DELETE {
                 ?newValue knora-base:internalMimeType """@stillImageFileValue.internalMimeType""" .
                 ?newValue knora-base:dimX @stillImageFileValue.dimX .
                 ?newValue knora-base:dimY @stillImageFileValue.dimY .
-                ?newValue knora-base:qualityLevel @stillImageFileValue.qualityLevel .
-                ?newValue knora-base:valueHasQname """@stillImageFileValue.qualityName""" .
-
-                @if(stillImageFileValue.isPreview) {
-                    ?newValue knora-base:isPreview true .
-                }
-
             }
 
             case textFileValue: TextFileValueV1 => {

@@ -289,7 +289,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasAudioFileValue"
       }
@@ -685,7 +685,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasDDDFileValue"
       }
@@ -1183,7 +1183,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasDocumentFileValue"
       }
@@ -2322,7 +2322,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasMovingImageFileValue"
       }
@@ -2540,7 +2540,7 @@
     "@id" : "knora-api:Representation",
     "@type" : "owl:Class",
     "knora-api:isResourceClass" : true,
-    "rdfs:comment" : "A resource that can store one or more files",
+    "rdfs:comment" : "A resource that can store a file",
     "rdfs:label" : "Representation",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Resource"
@@ -2595,7 +2595,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasFileValue"
       }
@@ -3707,7 +3707,7 @@
     "@id" : "knora-api:StillImageRepresentation",
     "@type" : "owl:Class",
     "knora-api:isResourceClass" : true,
-    "rdfs:comment" : "A resource that can contain two-dimensional still image files",
+    "rdfs:comment" : "A resource that can contain a two-dimensional still image file",
     "rdfs:label" : "Representation (Image)",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Representation"
@@ -3790,7 +3790,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasStillImageFileValue"
       }
@@ -3919,7 +3919,7 @@
     "@id" : "knora-api:TextRepresentation",
     "@type" : "owl:Class",
     "knora-api:isResourceClass" : true,
-    "rdfs:comment" : "A resource containing text files",
+    "rdfs:comment" : "A resource containing a text file",
     "rdfs:label" : "Representation (Text)",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Representation"
@@ -4002,7 +4002,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasTextFileValue"
       }

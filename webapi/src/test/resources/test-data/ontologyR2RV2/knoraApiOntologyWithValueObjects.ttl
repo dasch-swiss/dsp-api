@@ -418,7 +418,7 @@ knora-api:AudioRepresentation a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty knora-api:deletedBy
     ], [ a owl:Restriction;
-      owl:minCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:hasAudioFileValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -460,7 +460,7 @@ knora-api:AudioRepresentation a owl:Class;
 
 knora-api:Representation a owl:Class;
   knora-api:isResourceClass true;
-  rdfs:comment "A resource that can store one or more files";
+  rdfs:comment "A resource that can store a file";
   rdfs:label "Representation";
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
       knora-api:isInherited true;
@@ -491,7 +491,7 @@ knora-api:Representation a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty knora-api:deletedBy
     ], [ a owl:Restriction;
-      owl:minCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:hasFileValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -773,7 +773,7 @@ knora-api:DDDRepresentation a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty knora-api:deletedBy
     ], [ a owl:Restriction;
-      owl:minCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:hasDDDFileValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -1131,7 +1131,7 @@ knora-api:DocumentRepresentation a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty knora-api:deletedBy
     ], [ a owl:Restriction;
-      owl:minCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:hasDocumentFileValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -1828,7 +1828,7 @@ knora-api:MovingImageRepresentation a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
-      owl:minCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:hasMovingImageFileValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2615,7 +2615,7 @@ knora-api:stillImageFileValueHasIIIFBaseUrl a owl:DatatypeProperty;
 
 knora-api:StillImageRepresentation a owl:Class;
   knora-api:isResourceClass true;
-  rdfs:comment "A resource that can contain two-dimensional still image files";
+  rdfs:comment "A resource that can contain a two-dimensional still image file";
   rdfs:label "Representation (Image)";
   rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2662,7 +2662,7 @@ knora-api:StillImageRepresentation a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasStandoffLinkToValue
     ], [ a owl:Restriction;
-      owl:minCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:hasStillImageFileValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2747,7 +2747,7 @@ knora-api:TextFileValue a owl:Class;
 
 knora-api:TextRepresentation a owl:Class;
   knora-api:isResourceClass true;
-  rdfs:comment "A resource containing text files";
+  rdfs:comment "A resource containing a text file";
   rdfs:label "Representation (Text)";
   rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2794,7 +2794,7 @@ knora-api:TextRepresentation a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasStandoffLinkToValue
     ], [ a owl:Restriction;
-      owl:minCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:hasTextFileValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;

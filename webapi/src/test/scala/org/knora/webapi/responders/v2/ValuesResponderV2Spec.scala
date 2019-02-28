@@ -1757,158 +1757,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             standoffLinkValueIri.set(linkValueFromTriplestore.valueIri)
         }
 
-        "create a still image file value" in {
-            // Add the value.
-
-            val resourceIri: IRI = aThingPictureIri
-            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-            val valueContent = StillImageFileValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
-                fileValue = FileValueV2(
-                    internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
-                    internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
-                ),
-                dimX = 512,
-                dimY = 256
-            )
-
-            responderManager ! CreateValueRequestV2(
-                CreateValueV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-                    propertyIri = propertyIri,
-                    valueContent = valueContent
-                ),
-                requestingUser = anythingUser1,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => stillImageFileValueIri.set(createValueResponse.valueIri)
-            }
-
-            // Read the value back to check that it was added correctly.
-
-            val valueFromTriplestore = getValue(
-                resourceIri = resourceIri,
-                maybePreviousLastModDate = maybeResourceLastModDate,
-                propertyIriForGravsearch = propertyIri,
-                propertyIriInResult = propertyIri,
-                expectedValueIri = stillImageFileValueIri.get,
-                requestingUser = anythingUser1
-            )
-
-            valueFromTriplestore.valueContent match {
-                case savedValue: StillImageFileValueContentV2 => savedValue should ===(valueContent)
-                case _ => throw AssertionException(s"Expected file value, got $valueFromTriplestore")
-            }
-        }
-
-        "not create a duplicate still image file value" in {
-            val resourceIri: IRI = aThingPictureIri
-            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
-
-            val valueContent = StillImageFileValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
-                fileValue = FileValueV2(
-                    internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
-                    internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
-                ),
-                dimX = 512,
-                dimY = 256
-            )
-
-            responderManager ! CreateValueRequestV2(
-                CreateValueV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-                    propertyIri = propertyIri,
-                    valueContent = valueContent
-                ),
-                requestingUser = anythingUser1,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
-            }
-        }
-
-        "return a Sipi error if Sipi fails to move a file to permanent storage" in {
-            val resourceIri: IRI = aThingPictureIri
-            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
-
-            val valueContent = StillImageFileValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
-                fileValue = FileValueV2(
-                    internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
-                    internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
-                ),
-                dimX = 512,
-                dimY = 256
-            )
-
-            // Knora will accept this request, but the mock Sipi responder will say it failed to move the file to permanent storage.
-            responderManager ! CreateValueRequestV2(
-                CreateValueV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-                    propertyIri = propertyIri,
-                    valueContent = valueContent
-                ),
-                requestingUser = anythingUser1,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[SipiException] should ===(true)
-            }
-        }
-
-        "not return a Sipi error if Sipi fails to delete a temporary file when Knora rejects a request" in {
-            val resourceIri: IRI = aThingPictureIri
-            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
-
-            val valueContent = StillImageFileValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
-                fileValue = FileValueV2(
-                    internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
-                    internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
-                ),
-                dimX = 512,
-                dimY = 256
-            )
-
-            // Knora will reject this request.
-            responderManager ! CreateValueRequestV2(
-                CreateValueV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-                    propertyIri = propertyIri,
-                    valueContent = valueContent
-                ),
-                requestingUser = incunabulaUser, // this user doesn't have the necessary permission
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-            }
-        }
-
         "update an integer value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
@@ -3283,11 +3131,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not update a still image file value without changing it" in {
             val resourceIri: IRI = aThingPictureIri
+            stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/file1")
 
             val valueContent = StillImageFileValueContentV2(
                 ontologySchema = ApiV2WithValueObjects,
                 fileValue = FileValueV2(
-                    internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+                    internalFilename = "B1D0OkEgfFp-Cew2Seur7Wi.jp2",
                     internalMimeType = "image/jp2",
                     originalFilename = "test.tiff",
                     originalMimeType = "image/tiff"
@@ -3380,6 +3229,76 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case _ => throw AssertionException(s"Expected still image file value, got $updatedValueFromTriplestore")
             }
 
+        }
+
+        "not return a Sipi error if Sipi fails to delete a temporary file when Knora rejects a request" in {
+            val resourceIri: IRI = aThingPictureIri
+            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
+
+            val valueContent = StillImageFileValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                fileValue = FileValueV2(
+                    internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
+                    internalMimeType = "image/jp2",
+                    originalFilename = "test.tiff",
+                    originalMimeType = "image/tiff"
+                ),
+                dimX = 512,
+                dimY = 256
+            )
+
+            // Knora will reject this request.
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = stillImageFileValueIri.get,
+                    valueContent = valueContent
+                ),
+                requestingUser = incunabulaUser, // this user doesn't have the necessary permission
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "return a Sipi error if Sipi fails to move a file to permanent storage" in {
+            val resourceIri: IRI = aThingPictureIri
+            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
+
+            val valueContent = StillImageFileValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                fileValue = FileValueV2(
+                    internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
+                    internalMimeType = "image/jp2",
+                    originalFilename = "test.tiff",
+                    originalMimeType = "image/tiff"
+                ),
+                dimX = 512,
+                dimY = 256
+            )
+
+            // Knora will accept this request, but the mock Sipi responder will say it failed to move the file to permanent storage.
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = stillImageFileValueIri.get,
+                    valueContent = valueContent
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[SipiException] should ===(true)
+            }
         }
 
         "not delete a value if the requesting user does not have DeletePermission on the value" in {

@@ -158,49 +158,11 @@ if mediatype == IMAGE then
         return
     end
 
-    --
-    -- create thumbnail (jpg)
-    --
-    success, thumbImg = SipiImage.new(sourcePath, { size = config.thumb_size })
-    if not success then
-        server.log("SipiImage.new failed: " .. thumbImg, server.loglevel.LOG_ERR)
-        return
-    end
-
-    success, thumbDims = thumbImg:dims()
-    if not success then
-        server.log("thumbImg:dims() failed: " .. thumbDims, server.loglevel.LOG_ERR)
-        return
-    end
-
-    thumbImgName = baseName .. '.jpg'
-
-    --
-    -- create new thumnail image file path with sublevels:
-    --
-    success, newThumbPath = helper.filename_hash(thumbImgName);
-    if not success then
-        server.sendStatus(500)
-        server.log(gaga, server.loglevel.error)
-        return false
-    end
-
-
-    success, errmsg = thumbImg:write(projectDir .. newThumbPath)
-    if not success then
-        server.log("thumbImg:write failed: " .. errmsg, server.loglevel.LOG_ERR)
-        return
-    end
-
     result = {
         mimetype_full = "image/jp2",
         filename_full = fullImgName,
         nx_full = fullDims.nx,
         ny_full = fullDims.ny,
-        mimetype_thumb = "image/jpeg",
-        filename_thumb = thumbImgName,
-        nx_thumb = thumbDims.nx,
-        ny_thumb = thumbDims.ny,
         original_mimetype = originalMimetype,
         original_filename = originalFilename,
         file_type = IMAGE

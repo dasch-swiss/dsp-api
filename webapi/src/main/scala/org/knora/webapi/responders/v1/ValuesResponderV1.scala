@@ -675,53 +675,26 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 //
 
                 // create the apt case class depending on the file type returned by Sipi
-                changeValueResponses: Vector[ChangeValueResponseV1] <- sipiResponse.file_type match {
+                changedLocation: LocationV1 <- sipiResponse.file_type match {
                     case SipiConstants.FileType.IMAGE =>
-                        // we deal with hasStillImageFileValue, so there need to be two file values:
-                        // one for the full and one for the thumb
-                        if (fileValues.size != 2) {
-                            throw InconsistentTriplestoreDataException(s"Expected 2 file values for $resourceIri, but ${fileValues.size} given.")
+                        if (fileValues.size != 1) {
+                            throw InconsistentTriplestoreDataException(s"Expected 1 file value for $resourceIri, but ${fileValues.size} given.")
                         }
 
-                        // make sure that we have quality information for the existing file values
-                        fileValues.foreach {
-                            (fileValue) => fileValue.quality.getOrElse(throw InconsistentTriplestoreDataException(s"No quality level given for ${fileValue.valueObjectIri}"))
-                        }
+                        val oldFileValue: CurrentFileValue = fileValues.head
+                        val newFileValue: FileValueV1 = sipiResponse.fileValueV1
 
-                        // sort file values by quality: the thumbnail file value has to be updated with another thumbnail file value,
-                        // the applies for the full quality
-                        val oldFileValuesSorted: Seq[CurrentFileValue] = fileValues.sortBy(_.quality)
-                        val newFileValuesSorted: Vector[FileValueV1] = sipiResponse.fileValuesV1.sortBy {
-                            case imageFileValue: StillImageFileValueV1 => imageFileValue.qualityLevel
-                            case otherFileValue: FileValueV1 => throw SipiException(s"Sipi returned a wrong file value type: ${otherFileValue.valueTypeIri}")
-                        }
-
-                        val valuesToChange = oldFileValuesSorted.zip(newFileValuesSorted)
-                        val (firstOldValue, firstNewValue) = valuesToChange.head
-                        val (secondOldValue, secondNewValue) = valuesToChange(1)
-
-                        //
-                        // Change the file values sequentially (because concurrent SPARQL updates could interfere with each other).
-                        //
                         for {
-                            firstResult <- changeFileValue(firstOldValue, firstNewValue)
-                            secondResult <- changeFileValue(secondOldValue, secondNewValue)
-                        } yield Vector(firstResult, secondResult)
-
-
-                    case otherFileType => throw NotImplementedException(s"File type $otherFileType not yet supported")
-                }
-
-            } yield ChangeFileValueResponseV1(// return the response(s) of the call(s) of changeValueV1
-                locations = changeValueResponses.map {
-                    changeValueResponse =>
-                        val fileValue: FileValueV1 = changeValueResponse.value match {
-                            case fileValueV1: FileValueV1 => fileValueV1
+                            response: ChangeValueResponseV1 <- changeFileValue(oldFileValue, newFileValue)
+                        } yield response.value match {
+                            case fileValueV1: FileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1)
                             case other => throw AssertionException(s"Expected Sipi to change a file value, but it changed one of these: ${other.valueTypeIri}")
                         }
 
-                        valueUtilV1.fileValueV12LocationV1(fileValue)
+                    case otherFileType => throw NotImplementedException(s"File type $otherFileType not yet supported")
                 }
+            } yield ChangeFileValueResponseV1(
+                locations = Vector(changedLocation)
             )
 
             // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
@@ -732,8 +705,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                     case _ => ()
                 }
-
-
             }
         }
 
