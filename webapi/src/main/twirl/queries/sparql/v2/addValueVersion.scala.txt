@@ -40,6 +40,7 @@
  * @param linkUpdates a list of [[SparqlTemplateLinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in standoff markup.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
+ * @param requestingUser the IRI of the user making the request.
  *
  * This operation will do nothing if `currentValueIri` is not in fact the most recent version, if `valueTypeIri` is
  * the wrong type for the property, or if the resource or the current value are nonexistent or marked as deleted. To
@@ -57,7 +58,8 @@
   valuePermissions: String,
   maybeComment: Option[String],
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
-  currentTime: Instant)
+  currentTime: Instant,
+  requestingUser: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -111,7 +113,7 @@ DELETE {
 
         @* TODO: in case of a file value, order is not given *@
         ?newValue knora-base:valueHasOrder ?order .
-        ?newValue knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?newValue knora-base:valueCreationDate "@currentTime"^^xsd:dateTime .
         ?newValue knora-base:previousValue ?currentValue .
 
         @* Insert direct links and LinkValues for resource references. *@
@@ -131,11 +133,12 @@ DELETE {
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
                 @if(linkUpdate.newReferenceCount == 0) {
                     knora-base:isDeleted true ;
-                    knora-base:deleteDate "@currentTime"^^xsd:dateTimeStamp ;
+                    knora-base:deleteDate "@currentTime"^^xsd:dateTime ;
+                    knora-base:deletedBy <@requestingUser> ;
                 } else {
                     knora-base:isDeleted false ;
                 }
-                knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp .
+                knora-base:valueCreationDate "@currentTime"^^xsd:dateTime .
 
             <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
                 knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
@@ -153,7 +156,7 @@ DELETE {
         ?resource ?property ?newValue .
 
         @* Update the resource's last modification date. *@
-        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@

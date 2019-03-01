@@ -1,0 +1,26 @@
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+# Replace all xsd:dateTimeStamp with xsd:dateTime.
+
+DELETE {
+    GRAPH ?g {
+        ?s ?p ?oldObj .
+    }
+} INSERT {
+    GRAPH ?g {
+        ?s ?p ?newObj .
+    }
+}
+USING <http://www.ontotext.com/explicit>
+WHERE
+{
+    GRAPH ?g {
+        ?s ?p ?oldObj .
+    }
+
+    FILTER(datatype(?oldObj) = xsd:dateTimeStamp)
+    BIND(STRDT(STR(?oldObj), xsd:dateTime) AS ?newObj)
+}

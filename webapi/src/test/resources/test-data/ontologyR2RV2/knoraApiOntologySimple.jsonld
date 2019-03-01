@@ -52,6 +52,12 @@
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "rdfs:label"
       }
     } ]
@@ -76,7 +82,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasAudioFile"
       }
@@ -97,6 +103,12 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -140,7 +152,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasDDDFile"
       }
@@ -161,6 +173,12 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -203,7 +221,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasDocumentFile"
       }
@@ -224,6 +242,12 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -282,6 +306,12 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -380,6 +410,12 @@
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "rdfs:label"
       }
     } ]
@@ -410,7 +446,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasMovingImageFile"
       }
@@ -425,6 +461,12 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -499,13 +541,19 @@
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "rdfs:label"
       }
     } ]
   }, {
     "@id" : "knora-api:Representation",
     "@type" : "owl:Class",
-    "rdfs:comment" : "A resource that can store one or more files",
+    "rdfs:comment" : "A resource that can store a file",
     "rdfs:label" : "Representation",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Resource"
@@ -523,7 +571,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasFile"
       }
@@ -544,6 +592,12 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -591,13 +645,19 @@
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "rdfs:label"
       }
     } ]
   }, {
     "@id" : "knora-api:StillImageRepresentation",
     "@type" : "owl:Class",
-    "rdfs:comment" : "A resource that can contain two-dimensional still image files",
+    "rdfs:comment" : "A resource that can contain a two-dimensional still image file",
     "rdfs:label" : "Representation (Image)",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Representation"
@@ -627,7 +687,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasStillImageFile"
       }
@@ -641,13 +701,19 @@
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "rdfs:label"
       }
     } ]
   }, {
     "@id" : "knora-api:TextRepresentation",
     "@type" : "owl:Class",
-    "rdfs:comment" : "A resource containing text files",
+    "rdfs:comment" : "A resource containing a text file",
     "rdfs:label" : "Representation (Text)",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Representation"
@@ -677,7 +743,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasTextFile"
       }
@@ -686,6 +752,12 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -736,6 +808,12 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1113,6 +1191,14 @@
       "@id" : "knora-api:User"
     },
     "rdfs:comment" : "The username and login name of a user of Knora"
+  }, {
+    "@id" : "knora-api:versionArkUrl",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:anyURI"
+    },
+    "rdfs:comment" : "Provides the ARK URL of a particular version of a resource.",
+    "rdfs:label" : "version ARK URL"
   } ],
   "@id" : "http://api.knora.org/ontology/knora-api/simple/v2",
   "@type" : "owl:Ontology",

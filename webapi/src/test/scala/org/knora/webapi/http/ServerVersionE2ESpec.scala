@@ -43,7 +43,7 @@ class ServerVersionE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
     "The Server" should {
 
         "return the custom 'Server' header with every response" in {
-            val request = Get(baseApiUrl + s"/admin/users")
+            val request = Get(baseApiUrl + s"/admin/projects")
             val response: HttpResponse = singleAwaitingRequest(request)
             // log.debug(s"response: ${response.toString}")
             response.headers should contain (ServerVersion.getServerVersionHeader())

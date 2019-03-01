@@ -14,7 +14,11 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1487,
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "JULIAN:1487 CE:1490 CE"
+      "knora-api:valueAsString" : "JULIAN:1487 CE:1490 CE",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:15Z"
+      }
     },
     "incunabula:title" : [ {
       "@id" : "http://rdfh.ch/0803/c3f913666f/values/8ab7aa3cb801",
@@ -23,7 +27,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "De generatione Christi"
+      "knora-api:valueAsString" : "De generatione Christi",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:15Z"
+      }
     }, {
       "@id" : "http://rdfh.ch/0803/c3f913666f/values/4de1fd75b801",
       "@type" : "knora-api:TextValue",
@@ -31,7 +39,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae"
+      "knora-api:valueAsString" : "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:15Z"
+      }
     } ],
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -48,6 +60,10 @@
       "@value" : "2016-03-02T15:05:15Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c3f913666f0.20160302T150515Z"
+    },
     "rdfs:label" : "De generatione Christi"
   }, {
     "@id" : "http://rdfh.ch/0803/1967a9933401",
@@ -64,7 +80,11 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1489,
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "GREGORIAN:1489 CE"
+      "knora-api:valueAsString" : "GREGORIAN:1489 CE",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:18Z"
+      }
     },
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/0803/1967a9933401/values/4530b04dc704",
@@ -73,7 +93,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
+      "knora-api:valueAsString" : "Itinerarius sive peregrinarius Beatissime Virginis Marie",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:18Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -90,6 +114,10 @@
       "@value" : "2016-03-02T15:05:18Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1967a9933401n.20160302T150518Z"
+    },
     "rdfs:label" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
   }, {
     "@id" : "http://rdfh.ch/0803/41d01bd9fb",
@@ -106,7 +134,11 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1489,
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "JULIAN:1489 CE"
+      "knora-api:valueAsString" : "JULIAN:1489 CE",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:15Z"
+      }
     },
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/0803/41d01bd9fb/values/be3d3542e603",
@@ -115,7 +147,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
+      "knora-api:valueAsString" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:15Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -132,6 +168,10 @@
       "@value" : "2016-03-02T15:05:15Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/41d01bd9fb0.20160302T150515Z"
+    },
     "rdfs:label" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
   }, {
     "@id" : "http://rdfh.ch/0803/9311a421b501",
@@ -148,7 +188,11 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1489,
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "JULIAN:1489 CE"
+      "knora-api:valueAsString" : "JULIAN:1489 CE",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:24Z"
+      }
     },
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/0803/9311a421b501/values/2083143ecd06",
@@ -157,7 +201,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "Bereitung zu dem Heiligen Sakrament"
+      "knora-api:valueAsString" : "Bereitung zu dem Heiligen Sakrament",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:24Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -174,6 +222,10 @@
       "@value" : "2016-03-02T15:05:24Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9311a421b501n.20160302T150524Z"
+    },
     "rdfs:label" : "Bereitung zu dem Heiligen Sakrament"
   }, {
     "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
@@ -190,7 +242,11 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1490,
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "JULIAN:1490 CE"
+      "knora-api:valueAsString" : "JULIAN:1490 CE",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:23Z"
+      }
     },
     "incunabula:title" : [ {
       "@id" : "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
@@ -199,7 +255,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
+      "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:23Z"
+      }
     }, {
       "@id" : "http://rdfh.ch/0803/ff17e5ef9601/values/9ccf75bd5006",
       "@type" : "knora-api:TextValue",
@@ -207,7 +267,11 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-      "knora-api:valueAsString" : "Horologium devotionis circa vitam Christi"
+      "knora-api:valueAsString" : "Horologium devotionis circa vitam Christi",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:23Z"
+      }
     } ],
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -224,6 +288,10 @@
       "@value" : "2016-03-02T15:05:23Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"
+    },
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   } ],
   "@context" : {

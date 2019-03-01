@@ -4,10 +4,12 @@ Write any new release notes between releases into this file. They will be moved 
 at the time of the release, because only then we will know the next release number.
 
 Also, please change the **HINT** to the appropriate level:
- - MAJOR: the changes introduced warrant a major number increase
- - FEATURE: the changes introduced warrant a minor number increase
- - FIX: the changes introduced warrant a bugfix number increase
+
+- MAJOR: the changes introduced warrant a major number increase
+
+- FEATURE: the changes introduced warrant a minor number increase
+
+- FIX: the changes introduced warrant a bugfix number increase
 
 
 ## HINT => MAJOR CHANGE
-

@@ -14,7 +14,7 @@
 <http://www.knora.org/ontology/0001/anything> rdf:type owl:Ontology ;
     rdfs:label "The anything ontology" ;
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
-    knora-base:lastModificationDate "2017-12-19T15:23:42.166Z"^^xsd:dateTimeStamp .
+    knora-base:lastModificationDate "2017-12-19T15:23:42.166Z"^^xsd:dateTime .
 
 
 :hasListItem rdf:type owl:ObjectProperty ;
@@ -408,6 +408,35 @@
 
                knora-base:objectClassConstraint knora-base:LinkValue .
 
+:thingHasRegion rdf:type owl:ObjectProperty ;
+
+               rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+               rdfs:label "hat Region"@de ,
+                          "a région"@fr ,
+                          "ha regione"@it ,
+                          "has region"@en ;
+
+               knora-base:subjectClassConstraint :ThingWithRegion ;
+
+               knora-base:objectClassConstraint knora-base:Region ;
+
+               salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+:thingHasRegionValue rdf:type owl:ObjectProperty ;
+
+               rdfs:label "hat Region"@de ,
+                          "a région"@fr ,
+                          "ha regione"@it ,
+                          "has region"@en ;
+
+               rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+               knora-base:subjectClassConstraint :ThingWithRegion ;
+
+               knora-base:objectClassConstraint knora-base:LinkValue .
+
 
 #################################################################
 #
@@ -695,6 +724,24 @@
     owl:onProperty knora-base:hasRepresentationValue ;
     owl:minCardinality "0"^^xsd:nonNegativeInteger
   ] .
+
+  :ThingWithRegion rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:Resource ;
+
+    rdfs:label "Thing with region"@en ;
+
+    rdfs:comment "A thing with a region"@en ;
+
+    rdfs:subClassOf [
+      a owl:Restriction ;
+      owl:onProperty :thingHasRegion ;
+      owl:minCardinality "0"^^xsd:nonNegativeInteger
+    ], [
+      a owl:Restriction ;
+      owl:onProperty :thingHasRegionValue ;
+      owl:minCardinality "0"^^xsd:nonNegativeInteger
+    ] .
 
 
 #################################################################

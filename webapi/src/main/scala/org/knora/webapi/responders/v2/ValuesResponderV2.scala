@@ -29,7 +29,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
@@ -234,8 +234,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 verifiedValue: VerifiedValueV2 <- verifyValue(
                     resourceIri = createValueRequest.createValue.resourceIri,
-                    propertyIriForGravsearch = adjustedInternalPropertyIri.toOntologySchema(ApiV2WithValueObjects),
-                    propertyIriInResult = submittedInternalPropertyIri,
+                    propertyIri = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
                     requestingUser = createValueRequest.requestingUser
                 )
@@ -264,6 +263,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             )
         } yield taskResult
 
+        // Since PR #1230, the cardinalities in knora-base don't allow you to create a file value
+        // without creating a new resource, but we leave this line here in case it's needed again
+        // someday:
+        //
         // If we were creating a file value, have Sipi move the file to permanent storage if the update
         // was successful, or delete the temporary file if the update failed.
         ResourceUtilV2.doSipiPostUpdate(
@@ -283,7 +286,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       * @param dataNamedGraph   the named graph in which the value is to be created.
       * @param projectIri       the IRI of the project in which to create the value.
       * @param resourceInfo     information about the the resource in which to create the value.
-      * @param propertyIri      the IRI of the property that will point from the resource to the value.
+      * @param propertyIri      the IRI of the property that will point from the resource to the value, or, if the
+      *                         value is a link value, the IRI of the link property.
       * @param value            the value to create.
       * @param valueCreator     the IRI of the new value's owner.
       * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
@@ -391,7 +395,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
             valueContent = value.unescape,
-            permissions = valuePermissions
+            permissions = valuePermissions,
+            creationDate = currentTime
         )
     }
 
@@ -447,7 +452,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         } yield UnverifiedValueV2(
             newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
             valueContent = linkValueContent.unescape,
-            permissions = valuePermissions
+            permissions = valuePermissions,
+            creationDate = currentTime
         )
     }
 
@@ -507,7 +513,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       * @param propertyIri    the IRI of the property that will point to the value.
       * @param valueToCreate  the value to be created.
       * @param valueHasOrder  the value's `knora-base:valueHasOrder`.
-      * @param creationDate    the timestamp to be used as the value creation time.
+      * @param creationDate   the timestamp to be used as the value creation time.
       * @param requestingUser the user making the request.
       * @return a [[InsertSparqlWithUnverifiedValue]] containing the generated SPARQL and an [[UnverifiedValueV2]].
       */
@@ -571,7 +577,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             unverifiedValue = UnverifiedValueV2(
                 newValueIri = newValueIri,
                 valueContent = valueToCreate.valueContent.unescape,
-                permissions = valueToCreate.permissions
+                permissions = valueToCreate.permissions,
+                creationDate = creationDate
             )
         )
     }
@@ -816,8 +823,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 verifiedValue <- verifyValue(
                     resourceIri = updateValueRequest.updateValue.resourceIri,
-                    propertyIriForGravsearch = adjustedInternalPropertyIri.toOntologySchema(ApiV2WithValueObjects),
-                    propertyIriInResult = submittedInternalPropertyIri,
+                    propertyIri = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
                     requestingUser = updateValueRequest.requestingUser
                 )
@@ -862,7 +868,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       *
       * @param dataNamedGraph   the named graph in which the value is to be created.
       * @param resourceInfo     information about the the resource in which to create the value.
-      * @param propertyIri      the IRI of the property that will point from the resource to the value.
+      * @param propertyIri      the IRI of the property that will point from the resource to the value, or, if the
+      *                         value is a link value, the IRI of the link property.
       * @param currentValue     the value to be updated.
       * @param newValueVersion  the new version of the value.
       * @param valueCreator     the IRI of the new value's owner.
@@ -883,7 +890,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 updateLinkValueV2AfterChecks(
                     dataNamedGraph = dataNamedGraph,
                     resourceInfo = resourceInfo,
-                    propertyIri = propertyIri,
+                    linkPropertyIri = propertyIri,
                     currentLinkValue = currentLinkValue,
                     newLinkValue = newLinkValue,
                     valueCreator = valueCreator,
@@ -989,7 +996,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 valuePermissions = valuePermissions,
                 maybeComment = newValueVersion.comment,
                 linkUpdates = standoffLinkUpdates,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = requestingUser.id
             ).toString())
 
             /*
@@ -1004,7 +1012,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
             valueContent = newValueVersion.unescape,
-            permissions = valuePermissions
+            permissions = valuePermissions,
+            creationDate = currentTime
         )
     }
 
@@ -1013,7 +1022,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       *
       * @param dataNamedGraph   the IRI of the named graph to be updated.
       * @param resourceInfo     information about the resource containing the link.
-      * @param propertyIri      the IRI of the link property.
+      * @param linkPropertyIri  the IRI of the link property.
       * @param currentLinkValue a [[LinkValueContentV2]] representing the `knora-base:LinkValue` for the existing link.
       * @param newLinkValue     a [[LinkValueContentV2]] indicating the new target resource.
       * @param valueCreator     the IRI of the new link value's owner.
@@ -1023,7 +1032,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       */
     private def updateLinkValueV2AfterChecks(dataNamedGraph: IRI,
                                              resourceInfo: ReadResourceV2,
-                                             propertyIri: SmartIri,
+                                             linkPropertyIri: SmartIri,
                                              currentLinkValue: LinkValueContentV2,
                                              newLinkValue: LinkValueContentV2,
                                              valueCreator: IRI,
@@ -1032,7 +1041,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // Delete the existing link and decrement its LinkValue's reference count.
         val sparqlTemplateLinkUpdateForCurrentLink: SparqlTemplateLinkUpdate = decrementLinkValue(
             sourceResourceInfo = resourceInfo,
-            linkPropertyIri = propertyIri,
+            linkPropertyIri = linkPropertyIri,
             targetResourceIri = currentLinkValue.referredResourceIri,
             valueCreator = valueCreator,
             valuePermissions = valuePermissions,
@@ -1042,7 +1051,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // Create a new link, and create a new LinkValue for it.
         val sparqlTemplateLinkUpdateForNewLink: SparqlTemplateLinkUpdate = incrementLinkValue(
             sourceResourceInfo = resourceInfo,
-            linkPropertyIri = propertyIri,
+            linkPropertyIri = linkPropertyIri,
             targetResourceIri = newLinkValue.referredResourceIri,
             valueCreator = valueCreator,
             valuePermissions = valuePermissions,
@@ -1061,7 +1070,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                 linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                 maybeComment = newLinkValue.comment,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = requestingUser.id
             ).toString())
 
             /*
@@ -1074,7 +1084,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         } yield UnverifiedValueV2(
             newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
             valueContent = newLinkValue.unescape,
-            permissions = valuePermissions
+            permissions = valuePermissions,
+            creationDate = currentTime
         )
     }
 
@@ -1132,6 +1143,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
 
+                // Check that the resource belongs to the class that the client submitted.
+
+                _ = if (resourceInfo.resourceClassIri != deleteValueRequest.resourceClassIri.toOntologySchema(InternalSchema)) {
+                    throw BadRequestException(s"Resource <${deleteValueRequest.resourceIri}> does not belong to class <${deleteValueRequest.resourceClassIri}>")
+                }
+
                 // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
 
                 maybeCurrentValue: Option[ReadValueV2] = resourceInfo.values.get(submittedInternalPropertyIri).flatMap(_.find(_.valueIri == deleteValueRequest.valueIri))
@@ -1142,6 +1159,14 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     case Some(value) => value
                     case None => throw NotFoundException(s"Resource <${deleteValueRequest.resourceIri}> does not have value <${deleteValueRequest.valueIri}> as an object of property <${deleteValueRequest.propertyIri}>")
                 }
+
+                // Check that the value is of the type that the client submitted.
+
+                _ = if (currentValue.valueContent.valueType != deleteValueRequest.valueTypeIri.toOntologySchema(InternalSchema)) {
+                    throw BadRequestException(s"Value <${deleteValueRequest.valueIri}> in resource <${deleteValueRequest.resourceIri}> is not of type <${deleteValueRequest.valueTypeIri}>")
+                }
+
+                // Check the user's permissions on the value.
 
                 _ = ResourceUtilV2.checkValuePermission(
                     resourceInfo = resourceInfo,
@@ -1305,7 +1330,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 linkSourceIri = resourceInfo.resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
                 maybeComment = deleteComment,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = requestingUser.id
             ).toString())
 
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
@@ -1362,7 +1388,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 valueIri = currentValue.valueIri,
                 maybeDeleteComment = deleteComment,
                 linkUpdates = linkUpdates,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = requestingUser.id
             ).toString())
 
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
@@ -1481,42 +1508,38 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         } yield searchResponse.toResource(resourceIri)
     }
 
-    /*
-    private def findResourceWithValue(valueIri: IRI, requestingUser: UserADM): Future[ReadResourceV2] = {
-
-    }
-    */
-
     /**
       * Verifies that a value was written correctly to the triplestore.
       *
-      * @param resourceIri              the IRI of the resource that the value belongs to.
-      * @param propertyIriForGravsearch the external IRI the property to be used in Gravsearch to find the value. If the value is a link value, this is the link property.
-      * @param propertyIriInResult      the internal IRI of the property that is expected to be returned. If the value is a link value, this is the link value property.
-      * @param unverifiedValue          the value that should have been written to the triplestore.
-      * @param requestingUser           the user making the request.
+      * @param resourceIri     the IRI of the resource that the value belongs to.
+      * @param propertyIri     the internal IRI of the property that points to the value. If the value is a link value,
+      *                        this is the link value property.
+      * @param unverifiedValue the value that should have been written to the triplestore.
+      * @param requestingUser  the user making the request.
       */
     private def verifyValue(resourceIri: IRI,
-                            propertyIriForGravsearch: SmartIri,
-                            propertyIriInResult: SmartIri,
+                            propertyIri: SmartIri,
                             unverifiedValue: UnverifiedValueV2,
                             requestingUser: UserADM): Future[VerifiedValueV2] = {
         for {
-            gravsearchQuery: String <- Future(queries.gravsearch.txt.getResourceWithSpecifiedProperties(
-                resourceIri = resourceIri,
-                propertyIris = Seq(propertyIriForGravsearch)
-            ).toString())
+            resourcesRequest <- Future {
+                ResourcesGetRequestV2(
+                    resourceIris = Seq(resourceIri),
+                    propertyIri = Some(propertyIri),
+                    versionDate = Some(unverifiedValue.creationDate),
+                    requestingUser = requestingUser
+                )
+            }
 
-            parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
-            searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, requestingUser)).mapTo[ReadResourcesSequenceV2]
+            resourcesResponse <- (responderManager ? resourcesRequest).mapTo[ReadResourcesSequenceV2]
 
             resource = try {
-                searchResponse.toResource(resourceIri)
+                resourcesResponse.toResource(resourceIri)
             } catch {
                 case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not created. Please report this as a possible bug.")
             }
 
-            propertyValues = resource.values.getOrElse(propertyIriInResult, throw UpdateNotPerformedException())
+            propertyValues = resource.values.getOrElse(propertyIri, throw UpdateNotPerformedException())
             valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
 
             _ = if (!(unverifiedValue.valueContent.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent) &&

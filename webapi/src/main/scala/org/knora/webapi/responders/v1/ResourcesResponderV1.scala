@@ -750,14 +750,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           * @param firstprop      first property of the source object.
           * @param seqnum         sequence number of the source object.
           * @param permissionCode the current user's permissions on the source object.
-          * @param fileValues     the file values belonging to the source object.
+          * @param fileValue      the file value, if any, belonging to the source object.
           */
         case class SourceObject(id: IRI,
                                 firstprop: Option[String],
                                 seqnum: Option[Int],
                                 permissionCode: Option[Int],
                                 projectShortcode: String,
-                                fileValues: Vector[StillImageFileValue] = Vector.empty[StillImageFileValue])
+                                fileValue: Option[StillImageFileValue])
 
         /**
           * Represents a still image file value belonging to a source object (e.g., an image representation of a page).
@@ -802,9 +802,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             originalFilename = row.rowMap("originalFilename"),
                             projectShortcode = projectShortcode,
                             dimX = row.rowMap("dimX").toInt,
-                            dimY = row.rowMap("dimY").toInt,
-                            qualityLevel = row.rowMap("qualityLevel").toInt,
-                            isPreview = stringFormatter.optionStringToBoolean(row.rowMap.get("isPreview"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isPreview: ${row.rowMap.get("isPreview")}"))
+                            dimY = row.rowMap("dimY").toInt
                         ))
                     )
 
@@ -851,7 +849,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 seqnum = row.rowMap.get("seqnum").map(_.toInt),
                 permissionCode = permissionCode,
                 projectShortcode = projectShortcode,
-                fileValues = createStillImageFileValueFromResultRow(projectShortcode, row).toVector
+                fileValue = createStillImageFileValueFromResultRow(projectShortcode, row)
             )
         }
 
@@ -921,48 +919,23 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     // _ = println(contextSparqlQuery)
 
                     contextQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(contextSparqlQuery)).mapTo[SparqlSelectResponse]
-                    rows = contextQueryResponse.results.bindings
+                    rows: Seq[VariableResultsRow] = contextQueryResponse.results.bindings
 
-                    projectIris: Set[IRI] = rows.foldLeft(Set.empty[IRI]) {
-                        case (acc, row) => acc + row.rowMap("sourceObjectAttachedToProject")
-                    }
-
-                    // The results consist of one or more rows per source object. If there is more than one row per source object,
-                    // each row provides a different file value. For each source object, create a SourceObject containing a Vector
-                    // of file values.
-                    sourceObjects: Vector[SourceObject] = rows.foldLeft(Vector.empty[SourceObject]) {
-                        case (acc: Vector[SourceObject], row) =>
+                    // The results consist of one row per source object.
+                    sourceObjects: Seq[SourceObject] = rows.map {
+                        row: VariableResultsRow =>
                             val sourceObject: IRI = row.rowMap("sourceObject")
                             val projectShortcode: String = sourceObject.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI: $sourceObject"))
-
-                            if (acc.isEmpty) {
-                                // This is the first row, so create the first SourceObject containing the first file value, if any.
-                                acc :+ createSourceObjectFromResultRow(projectShortcode, row)
-                            } else {
-                                // Get the current SourceObject.
-                                val currentSourceObj = acc.last
-
-                                // Does the current row refer to the current SourceObject?
-                                if (currentSourceObj.id == row.rowMap("sourceObject")) {
-                                    // Yes. Add the additional file value to the existing SourceObject.
-                                    acc.dropRight(1) :+ currentSourceObj.copy(fileValues = currentSourceObj.fileValues ++ createStillImageFileValueFromResultRow(projectShortcode, row))
-                                } else {
-                                    // No. Make a new SourceObject.
-                                    acc :+ createSourceObjectFromResultRow(projectShortcode, row)
-                                }
-                            }
+                            createSourceObjectFromResultRow(projectShortcode, row)
                     }
 
                     // Filter the source objects by eliminating the ones that the user doesn't have permission to see.
                     sourceObjectsWithPermissions = sourceObjects.filter(sourceObj => sourceObj.permissionCode.nonEmpty)
 
-                    contextItems = sourceObjectsWithPermissions.map {
+                    contextItems: Seq[ResourceContextItemV1] = sourceObjectsWithPermissions.map {
                         sourceObj: SourceObject =>
-
-                            // Because of #1068, we ignore file values representing preview images. Instead, we generate
-                            // a IIIF preview URL from the full-size image.
-
-                            val (preview: Option[LocationV1], locations: Option[Seq[LocationV1]]): (Option[LocationV1], Option[Seq[LocationV1]]) = sourceObj.fileValues.find(fileVal => fileVal.permissionCode.nonEmpty && !fileVal.image.isPreview) match {
+                            // Generate a IIIF preview URL from the full-size image.
+                            val (preview: Option[LocationV1], locations: Option[Seq[LocationV1]]): (Option[LocationV1], Option[Seq[LocationV1]]) = sourceObj.fileValue.find(fileVal => fileVal.permissionCode.nonEmpty) match {
                                 case Some(full: StillImageFileValue) =>
                                     val preview: LocationV1 = valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(full.image))
                                     val fileVals: Seq[LocationV1] = createMultipleImageResolutions(full.image).map(valueUtilV1.fileValueV12LocationV1)
@@ -1194,46 +1167,61 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                         searchResultRow: ResourceSearchResultRowV1 = if (numberOfProps > 1) {
                             // The client requested more than one property per resource that was found.
 
-                            val valueStrings = row.rowMap("values").split(StringFormatter.INFORMATION_SEPARATOR_ONE)
-                            val properties = row.rowMap("properties").split(StringFormatter.INFORMATION_SEPARATOR_ONE)
-                            val valueOrders = row.rowMap("valueOrders").split(StringFormatter.INFORMATION_SEPARATOR_ONE).map(_.toInt)
+                            val maybeValues: Option[String] = row.rowMap.get("values")
+                            maybeValues match {
+                                case Some(valuesReturned) => {
+                                    val valueStrings = valuesReturned.split(StringFormatter.INFORMATION_SEPARATOR_ONE)
+                                    val properties = row.rowMap("properties").split(StringFormatter.INFORMATION_SEPARATOR_ONE)
+                                    val valueOrders = row.rowMap("valueOrders").split(StringFormatter.INFORMATION_SEPARATOR_ONE).map(_.toInt)
 
-                            val guiOrders: Array[Int] = properties.map {
-                                propertyIri =>
-                                    cardinalities(propertyIri).guiOrder match {
-                                        case Some(order) => order
-                                        case None => -1
+                                    val guiOrders: Array[Int] = properties.map {
+                                        propertyIri =>
+                                            cardinalities(propertyIri).guiOrder match {
+                                                case Some(order) => order
+                                                case None => -1
+                                            }
                                     }
-                            }
 
-                            // create a list of three tuples, sort it by guiOrder and valueOrder and return only string values
-                            val values: Seq[String] = (valueStrings, guiOrders, valueOrders).zipped.toVector.sortBy(row => (row._2, row._3)).map(_._1)
+                                    // create a list of three tuples, sort it by guiOrder and valueOrder and return only string values
+                                    val values: Seq[String] = (valueStrings, guiOrders, valueOrders).zipped.toVector.sortBy(row => (row._2, row._3)).map(_._1)
 
-                            // ?values is given: it is one string to be split by separator
-                            val propValues = values.foldLeft(Vector(firstProp)) {
-                                case (acc, prop: String) =>
-                                    if (prop == firstProp || prop == acc.last) {
-                                        // in the SPAQRL results, all values are returned four times because of inclusion of permissions. If already existent, ignore prop.
-                                        acc
-                                    } else {
-                                        acc :+ prop // append prop to List
+                                    // ?values is given: it is one string to be split by separator
+                                    val propValues = values.foldLeft(Vector(firstProp)) {
+                                        case (acc, prop: String) =>
+                                            if (prop == firstProp || prop == acc.last) {
+                                                // in the SPAQRL results, all values are returned four times because of inclusion of permissions. If already existent, ignore prop.
+                                                acc
+                                            } else {
+                                                acc :+ prop // append prop to List
+                                            }
                                     }
+
+                                    ResourceSearchResultRowV1(
+                                        id = row.rowMap("resourceIri"),
+                                        value = propValues.slice(0, numberOfProps), // take only as many elements as were requested by the client.
+                                        rights = permissionCode
+
+                                    )
+                                }
+                                case None => {
+                                    log.debug("more values were asked (numberOfProps > 1), but there were none to be found")
+                                    ResourceSearchResultRowV1(
+                                        id = row.rowMap("resourceIri"),
+                                        value = Vector(firstProp),
+                                        rights = permissionCode
+                                    )
+                                }
                             }
-
-                            ResourceSearchResultRowV1(
-                                id = row.rowMap("resourceIri"),
-                                value = propValues.slice(0, numberOfProps), // take only as many elements as were requested by the client.
-                                rights = permissionCode
-
-                            )
-                        } else {
-                            // ?firstProp is sufficient: the client requested just one property per resource that was found
-                            ResourceSearchResultRowV1(
-                                id = row.rowMap("resourceIri"),
-                                value = Vector(firstProp),
-                                rights = permissionCode
-                            )
                         }
+                        else
+                            {
+                                // ?firstProp is sufficient: the client requested just one property per resource that was found
+                                ResourceSearchResultRowV1(
+                                    id = row.rowMap("resourceIri"),
+                                    value = Vector(firstProp),
+                                    rights = permissionCode
+                                )
+                            }
 
                     } yield searchResultRow
 
@@ -1632,7 +1620,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     // in case we deal with a SipiResponderConversionPathRequestV1 (non GUI-case), the tmp file created by resources route
                     // has already been deleted by the SipiResponder
 
-                } yield Some(resourceClassInfo.fileValueProperties.head -> sipiResponse.fileValuesV1.map(fileValue => CreateValueV1WithComment(fileValue)))
+                } yield Some(resourceClassInfo.fileValueProperties.head -> Vector(CreateValueV1WithComment(sipiResponse.fileValueV1)))
             } else {
                 // resource class requires no binary representation
                 // check if there was no file sent
@@ -2031,7 +2019,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri,
                     maybeDeleteComment = resourceDeleteRequest.deleteComment,
-                    currentTime = currentTime
+                    currentTime = currentTime,
+                    requestingUser = resourceDeleteRequest.userADM.id
                 ).toString()
 
                 // Do the update.
@@ -2362,11 +2351,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                 fileValues: Seq[FileValueV1] <- Future.sequence(fileValuesWithFuture)
 
-                // Because of #1068, we ignore file values representing preview images. Instead, we generate
-                // a IIIF preview URL from the full-size image.
+                // Generate a IIIF preview URL from the full-size image.
 
                 fullSizeImageFileValues: Seq[StillImageFileValueV1] = fileValues.collect {
-                    case fileValue: StillImageFileValueV1 if !fileValue.isPreview => fileValue
+                    case fileValue: StillImageFileValueV1 => fileValue
                 }
 
                 preview: Option[LocationV1] = fullSizeImageFileValues.headOption.map {
@@ -2822,10 +2810,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
         fullSizeImageFileValue.copy(
             dimX = previewWidth,
-            dimY = previewHeight,
-            qualityLevel = 10,
-            isPreview = true,
-            qualityName = Some(SipiConstants.StillImage.thumbnailQuality)
+            dimY = previewHeight
         )
     }
 }

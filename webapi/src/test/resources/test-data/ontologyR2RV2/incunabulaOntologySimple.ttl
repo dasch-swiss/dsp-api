@@ -19,16 +19,22 @@ incunabula:Sideband a owl:Class;
       owl:onProperty knora-api:creationDate
     ], [ a owl:Restriction;
       owl:minCardinality 0;
+      owl:onProperty incunabula:sideband_comment
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasStandoffLinkTo
     ], [ a owl:Restriction;
-      owl:minCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:hasStillImageFile
     ], [ a owl:Restriction;
       owl:maxCardinality 1;
       owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty rdfs:label
@@ -38,9 +44,6 @@ incunabula:Sideband a owl:Class;
     ], [ a owl:Restriction;
       owl:maxCardinality 1;
       owl:onProperty incunabula:description
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty incunabula:sideband_comment
     ] .
 
 incunabula:sbTitle a owl:DatatypeProperty;
@@ -82,6 +85,9 @@ incunabula:book a owl:Class;
     ], [ a owl:Restriction;
       owl:maxCardinality 1;
       owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty rdfs:label
@@ -224,11 +230,14 @@ incunabula:page a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasStandoffLinkTo
     ], [ a owl:Restriction;
-      owl:minCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:hasStillImageFile
     ], [ a owl:Restriction;
       owl:maxCardinality 1;
       owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty rdfs:label
@@ -289,6 +298,9 @@ incunabula:misc a owl:Class;
     ], [ a owl:Restriction;
       owl:maxCardinality 1;
       owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty rdfs:label
