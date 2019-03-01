@@ -57,9 +57,9 @@ jobs:
         - rm -rf $HOME/.ivy2
         - cd $TRAVIS_BUILD_DIR && sbt clean stage
         # only uncomment if docker image is needed for this branch. remove before merging into develop
-        - docker login -u $DOCKER_USER -p $DOCKER_PASS
-        - sbt webapi/docker:publish
-        - sbt salsah1/docker:publish
+        # - docker login -u $DOCKER_USER -p $DOCKER_PASS
+        # - sbt webapi/docker:publish
+        # - sbt salsah1/docker:publish
     # unit and e2e tests
     - stage: test
       script:
