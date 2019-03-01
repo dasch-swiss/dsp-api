@@ -1351,11 +1351,11 @@
 
            rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-           rdfs:comment "Transkription von"@de ,
-                        "Transcription of"@en ;
+           rdfs:comment "Bezug zu Region"@de ,
+                        "belongs to region"@en ;
 
-           rdfs:label  "Transkription von"@de ,
-                       "Transcription of"@en ;
+           rdfs:label  "Bezug zu Region"@de ,
+                       "belongs to region"@en ;
 
            knora-base:subjectClassConstraint :transcription ;
 
@@ -1375,11 +1375,11 @@
 
                 rdfs:subPropertyOf knora-base:hasLinkToValue ;
 
-                rdfs:comment "Transkription von"@de ,
-                             "Transcription of"@en ;
+                rdfs:comment "Bezug zu Region"@de ,
+                             "belongs to region"@en ;
 
-                rdfs:label  "Transkription von"@de ,
-                            "Transcription of"@en .
+                rdfs:label  "Bezug zu Region"@de ,
+                            "belongs to region"@en .
 
 ### ###########################################
 ### beol:layer
