@@ -24,10 +24,12 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{GetImageMetadataResponseV2, SipiConversionFileRequestV1, SipiConversionRequestV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import spray.json._
 
 import scala.collection.breakOut
@@ -228,7 +230,7 @@ case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
                                                 clientResourceID: String,
                                                 label: String,
                                                 values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                                file: Option[GetImageMetadataResponseV2] = None,
+                                                file: Option[StillImageFileValueV1] = None,
                                                 creationDate: Option[Instant])
 
 /**
@@ -251,9 +253,9 @@ case class MultipleResourceCreateRequestV1(resourcesToCreate: Seq[OneOfMultipleR
   * @param createdResources created resources
   *
   */
-case class MultipleResourceCreateResponseV1(createdResources: Seq[OneOfMultipleResourcesCreateResponseV1]) extends KnoraResponseV1 {
+case class MultipleResourceCreateResponseV1(createdResources: Seq[OneOfMultipleResourcesCreateResponseV1], projectADM: ProjectADM) extends KnoraResponseV1 with UpdateResultInProject {
 
-    def toJsValue: JsValue = ResourceV1JsonProtocol.multipleResourceCreateResponseV1Format.write(this)
+    def toJsValue: JsValue = ResourceV1JsonProtocol.MultipleResourceCreateResponseV1Format.write(this)
 
 }
 
@@ -1096,7 +1098,6 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         }
     }
 
-
     /**
       * Converts between [[ResourceInfoV1]] objects and [[JsValue]] objects.
       */
@@ -1141,6 +1142,27 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         }
     }
 
+    /**
+      * Converts between [[MultipleResourceCreateResponseV1]] objects and [[JsValue]] objects.
+      */
+    implicit object MultipleResourceCreateResponseV1Format extends JsonFormat[MultipleResourceCreateResponseV1] {
+        /**
+          * Not implemented.
+          */
+        override def read(json: JsValue): MultipleResourceCreateResponseV1 = ???
+
+        /**
+          * Converts a [[MultipleResourceCreateResponseV1]] into a [[JsValue]] for formatting as JSON.
+          */
+        override def write(response: MultipleResourceCreateResponseV1): JsValue = {
+            val fields = Map(
+                "createdResources" -> response.createdResources.toJson
+            )
+
+            JsObject(fields)
+        }
+    }
+
     implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat14(CreateResourceValueV1)
     implicit val createResourceApiRequestV1Format: RootJsonFormat[CreateResourceApiRequestV1] = jsonFormat5(CreateResourceApiRequestV1)
     implicit val ChangeResourceLabelApiRequestV1Format: RootJsonFormat[ChangeResourceLabelApiRequestV1] = jsonFormat1(ChangeResourceLabelApiRequestV1)
@@ -1157,7 +1179,6 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val resourceCreateValueObjectResponseV1Format: RootJsonFormat[ResourceCreateValueObjectResponseV1] = jsonFormat14(ResourceCreateValueObjectResponseV1)
     implicit val resourceCreateValueResponseV1Format: RootJsonFormat[ResourceCreateValueResponseV1] = jsonFormat2(ResourceCreateValueResponseV1)
     implicit val oneOfMultipleResourcesCreateResponseFormat: JsonFormat[OneOfMultipleResourcesCreateResponseV1] = jsonFormat3(OneOfMultipleResourcesCreateResponseV1)
-    implicit val multipleResourceCreateResponseV1Format: RootJsonFormat[MultipleResourceCreateResponseV1] = jsonFormat1(MultipleResourceCreateResponseV1)
     implicit val resourceCreateResponseV1Format: RootJsonFormat[ResourceCreateResponseV1] = jsonFormat2(ResourceCreateResponseV1)
     implicit val resourceDeleteResponseV1Format: RootJsonFormat[ResourceDeleteResponseV1] = jsonFormat1(ResourceDeleteResponseV1)
     implicit val changeResourceLabelResponseV1Format: RootJsonFormat[ChangeResourceLabelResponseV1] = jsonFormat2(ChangeResourceLabelResponseV1)

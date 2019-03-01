@@ -279,14 +279,22 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         } yield propIri -> values
                 }
 
-                maybeImageMetadataResponse <- resourceRequest.file match {
+                convertedFileV1 <- resourceRequest.file match {
                     case Some(filename) =>
                         // Ask Sipi about the file's metadata.
                         val tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$filename"
 
                         for {
                             imageMetadataResponse: GetImageMetadataResponseV2 <- (storeManager ? GetImageMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = userProfile)).mapTo[GetImageMetadataResponseV2]
-                        } yield Some(imageMetadataResponse)
+                        } yield Some(StillImageFileValueV1(
+                            internalFilename = filename,
+                            internalMimeType = "image/jp2",
+                            originalFilename = imageMetadataResponse.originalFilename,
+                            originalMimeType = Some(imageMetadataResponse.originalMimeType),
+                            projectShortcode = projectShortcode,
+                            dimX = imageMetadataResponse.width,
+                            dimY = imageMetadataResponse.height
+                        ))
 
                     case None => FastFuture.successful(None)
                 }
@@ -295,7 +303,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 clientResourceID = resourceRequest.client_id,
                 label = resourceRequest.label,
                 values = valuesToBeCreated.toMap,
-                file = maybeImageMetadataResponse,
+                file = convertedFileV1,
                 creationDate = resourceRequest.creationDate
             )
         }

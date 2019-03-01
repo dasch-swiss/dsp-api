@@ -26,6 +26,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -35,8 +36,10 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResource
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, OntologyMetadataGetByIriRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
+import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueV2, StillImageFileValueContentV2}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v1.GroupedProps._
+import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.IriConversions._
@@ -44,7 +47,7 @@ import org.knora.webapi.util._
 
 import scala.collection.immutable
 import scala.concurrent.Future
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -1213,15 +1216,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                 }
                             }
                         }
-                        else
-                            {
-                                // ?firstProp is sufficient: the client requested just one property per resource that was found
-                                ResourceSearchResultRowV1(
-                                    id = row.rowMap("resourceIri"),
-                                    value = Vector(firstProp),
-                                    rights = permissionCode
-                                )
-                            }
+                        else {
+                            // ?firstProp is sufficient: the client requested just one property per resource that was found
+                            ResourceSearchResultRowV1(
+                                id = row.rowMap("resourceIri"),
+                                value = Vector(firstProp),
+                                rights = permissionCode
+                            )
+                        }
 
                     } yield searchResultRow
 
@@ -1240,38 +1242,56 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       * @param resourcesToCreate collection of ResourceRequests .
       * @param projectIri        IRI of the project .
       * @param apiRequestID      the the ID of the API request.
-      * @param userProfile       the profile of the user making the request.
+      * @param requestingUser    the user making the request.
       * @return a [[MultipleResourceCreateResponseV1]] informing the client about the new resources.
       */
     private def createMultipleNewResources(resourcesToCreate: Seq[OneOfMultipleResourceCreateRequestV1],
                                            projectIri: IRI,
-                                           userProfile: UserADM,
+                                           requestingUser: UserADM,
                                            apiRequestID: UUID): Future[MultipleResourceCreateResponseV1] = {
-        val userProfileV1 = userProfile.asUserProfileV1
+        // Convert all the image metadata in the request to StillImageFileValueContentV2 instances, so we
+        // can use ResourceUtilV2.doSipiPostUpdate after updating the triplestore.
+        val stillImageFileValueContentV2s: Seq[StillImageFileValueContentV2] = resourcesToCreate.flatMap {
+            resourceToCreate =>
+                resourceToCreate.file.map {
+                    stillImageFileValueV1: StillImageFileValueV1 =>
+                        StillImageFileValueContentV2(
+                            ontologySchema = InternalSchema,
+                            fileValue = FileValueV2(
+                                internalFilename = stillImageFileValueV1.internalFilename,
+                                internalMimeType = stillImageFileValueV1.internalMimeType,
+                                originalFilename = stillImageFileValueV1.originalFilename,
+                                originalMimeType = stillImageFileValueV1.internalMimeType
+                            ),
+                            dimX = stillImageFileValueV1.dimX,
+                            dimY = stillImageFileValueV1.dimY
+                        )
+                }
+        }
 
-        // TODO: this method has to send MoveTemporaryFileToPermanentStorageRequestV2 for each file, as ResourcesResponderV2 does.
-
-        for {
+        val updateFuture: Future[MultipleResourceCreateResponseV1] = for {
             // Get user's IRI and don't allow anonymous users to create resources.
             userIri: IRI <- Future {
-                if (userProfile.isAnonymousUser) {
+                if (requestingUser.isAnonymousUser) {
                     throw ForbiddenException("Anonymous users aren't allowed to create resources")
                 } else {
-                    userProfile.id
+                    requestingUser.id
                 }
             }
 
             // Get information about the project in which the resources will be created.
             projectInfoResponse <- {
-                responderManager ? ProjectInfoByIRIGetRequestV1(
-                    projectIri,
-                    Some(userProfileV1)
+                responderManager ? ProjectGetRequestADM(
+                    maybeIri = Some(projectIri),
+                    requestingUser = requestingUser
                 )
-            }.mapTo[ProjectInfoResponseV1]
+            }.mapTo[ProjectGetResponseADM]
+
+            projectADM = projectInfoResponse.project
 
             // Ensure that the project isn't the system project or the shared ontologies project.
 
-            resourceProjectIri: IRI = projectInfoResponse.project_info.id
+            resourceProjectIri: IRI = projectADM.id
 
             _ = if (resourceProjectIri == OntologyConstants.KnoraBase.SystemProject || resourceProjectIri == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
                 throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
@@ -1279,11 +1299,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             // Ensure that the resource class isn't from a non-shared ontology in another project.
 
-            namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
+            namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectADM)
 
             // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
             clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
-                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortcode)).toMap,
+                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectADM.shortcode)).toMap,
                 errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
                 errorFun = { errorMsg => throw BadRequestException(errorMsg) }
             )
@@ -1302,7 +1322,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             // Ensure that none of the resource classes is from a non-shared ontology in another project.
 
             resourceClassOntologyIris: Set[SmartIri] = resourceClasses.map(_.toSmartIri.getOntologyFromEntity)
-            readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(resourceClassOntologyIris, userProfile)).mapTo[ReadOntologyMetadataV2]
+            readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(resourceClassOntologyIris, requestingUser)).mapTo[ReadOntologyMetadataV2]
 
             _ = for (ontologyMetadata <- readOntologyMetadataV2.ontologies) {
                 val ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology ${ontologyMetadata.ontologyIri} has no project")).toString
@@ -1315,7 +1335,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             resourceClassesEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = resourceClasses,
                 propertyIris = Set.empty[IRI],
-                userProfile = userProfile
+                userProfile = requestingUser
             )).mapTo[EntityInfoGetResponseV1]
 
             allPropertyIris: Set[IRI] = resourceClassesEntityInfoResponse.resourceClassInfoMap.flatMap {
@@ -1326,7 +1346,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             propertyEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = Set.empty[IRI],
                 propertyIris = allPropertyIris,
-                userProfile = userProfile
+                userProfile = requestingUser
             )).mapTo[EntityInfoGetResponseV1]
 
             propertyEntityInfoMapsPerResource: Map[IRI, Map[IRI, PropertyInfoV1]] = resourceClassesEntityInfoResponse.resourceClassInfoMap.map {
@@ -1348,7 +1368,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(
                                 projectIri = projectIri,
                                 resourceClassIri = resourceClassIri,
-                                targetUser = userProfile,
+                                targetUser = requestingUser,
                                 requestingUser = KnoraSystemInstances.Users.SystemUser
                             )
                         }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
@@ -1368,7 +1388,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                         projectIri = projectIri,
                                         resourceClassIri = resourceClassIri,
                                         propertyIri = propertyIri,
-                                        targetUser = userProfile,
+                                        targetUser = requestingUser,
                                         requestingUser = KnoraSystemInstances.Users.SystemUser)
                                 }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
                             } yield (propertyIri, defaultObjectAccessPermissions.permissionLiteral)
@@ -1411,19 +1431,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             resourceClassInfo = resourceClassesEntityInfoResponse.resourceClassInfoMap(resourceCreateRequest.resourceTypeIri),
                             propertyInfoMap = propertyEntityInfoMapsPerResource(resourceCreateRequest.resourceTypeIri),
                             values = resourceCreateRequest.values,
-                            sipiConversionRequest = resourceCreateRequest.file.map {
-                                fileMetadata =>
-                                    // TODO: this is nonsense, just to get this file to compile for now.
-                                    SipiConversionFileRequestV1(
-                                        originalFilename = fileMetadata.originalFilename,
-                                        originalMimeType = fileMetadata.originalMimeType,
-                                        projectShortcode = projectInfoResponse.project_info.shortcode,
-                                        filename = fileMetadata.originalFilename,
-                                        userProfile = userProfile.asUserProfileV1
-                                    )
-                            },
+                            sipiConversionRequest = None,
+                            convertedFile = resourceCreateRequest.file,
                             clientResourceIDsToResourceClasses = clientResourceIDsToResourceClasses,
-                            userProfile = userProfile
+                            userProfile = requestingUser
                         )
 
                         // Convert each LinkToClientIDUpdateV1 into a LinkUpdateV1.
@@ -1456,7 +1467,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
                             creationDate = creationDate,
                             fileValues = fileValues,
-                            userProfile = userProfile,
+                            userProfile = requestingUser,
                             apiRequestID = apiRequestID
                         )
 
@@ -1496,7 +1507,28 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                         label = resourceToCreate.label
                     )
             }
-        } yield MultipleResourceCreateResponseV1(responses)
+        } yield MultipleResourceCreateResponseV1(responses, projectADM)
+
+        // Use ResourceUtilV2.doSipiPostUpdate to ask Sipi to to move temporary image files to permanent storage if the
+        // triplestore update was successful, or to delete the temporary files if the triplestore update failed.
+        val sipiPostUpdateResultFutures: Seq[Future[MultipleResourceCreateResponseV1]] = stillImageFileValueContentV2s.map {
+            valueContent =>
+                ResourceUtilV2.doSipiPostUpdate(
+                    updateFuture = updateFuture,
+                    valueContent = valueContent,
+                    requestingUser = requestingUser,
+                    responderManager = responderManager,
+                    storeManager = storeManager,
+                    log = log
+                )
+        }
+
+        // If ResourceUtilV2.doSipiPostUpdate returned an error, return it to the client, otherwise return
+        // a MultipleResourceCreateResponseV1.
+        Future.sequence(sipiPostUpdateResultFutures).transformWith {
+            case Success(_) => updateFuture
+            case Failure(e) => Future.failed(e)
+        }
     }
 
     /**
@@ -1508,7 +1540,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       * @param values                             values to be created for resource. If `linkTargetsAlreadyExist` is true, any links must be represented as [[LinkUpdateV1]] instances.
       *                                           Otherwise, they must be represented as [[LinkToClientIDUpdateV1]] instances, so that appropriate error messages can
       *                                           be generated for links to missing resources.
-      * @param sipiConversionRequest              a file (binary representation) to be attached to the resource (GUI and non GUI-case).
+      * @param sipiConversionRequest              a file to be converted and attached to the resource.
+      * @param convertedFile                      an already converted file to be attached to the resource.
       * @param clientResourceIDsToResourceClasses for each client resource ID, the IRI of the resource's class. Used only if `linkTargetsAlreadyExist` is false.
       * @param userProfile                        the profile of the user making the request.
       * @return a tuple (IRI, Vector[CreateValueV1WithComment]) containing the IRI of the resource and a collection of holders of [[UpdateValueV1]] and comment.
@@ -1518,6 +1551,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                               propertyInfoMap: Map[IRI, PropertyInfoV1],
                               values: Map[IRI, Seq[CreateValueV1WithComment]],
                               sipiConversionRequest: Option[SipiConversionRequestV1],
+                              convertedFile: Option[StillImageFileValueV1],
                               clientResourceIDsToResourceClasses: Map[String, IRI] = new ErrorHandlingMap[IRI, IRI](
                                   toWrap = Map.empty[IRI, IRI],
                                   errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
@@ -1602,9 +1636,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     }
             }
 
-            // maximally one file value can be handled here
-            _ = if (resourceClassInfo.fileValueProperties.size > 1) throw BadRequestException(s"The given resource type $resourceClassIri requires more than on file value. This is not supported for API V1")
-
             // Check that no required values are missing.
             requiredProps: Set[IRI] = resourceClassInfo.knoraResourceCardinalities.filter {
                 case (propIri, cardinalityInfo) => cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome
@@ -1619,20 +1650,26 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             // check if a file value is required by the ontology
             fileValues: Option[(IRI, Vector[CreateValueV1WithComment])] <- if (resourceClassInfo.fileValueProperties.nonEmpty) {
-                // call sipi responder
-                for {
-                    sipiResponse: SipiConversionResponseV1 <- (storeManager ? sipiConversionRequest.getOrElse(throw OntologyConstraintException(s"No file (required) given for resource type $resourceClassIri"))).mapTo[SipiConversionResponseV1]
+                (sipiConversionRequest, convertedFile) match {
+                    case (Some(conversionRequest), None) =>
+                        // Send a message to SipiConnector to ask Sipi to convert the image file.
+                        for {
+                            sipiResponse: SipiConversionResponseV1 <- (storeManager ? conversionRequest).mapTo[SipiConversionResponseV1]
 
-                    // check if the file type returned by Sipi corresponds to the expected fileValue property in resourceClassInfo.fileValueProperties.head
-                    _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != resourceClassInfo.fileValueProperties.head) {
-                        // TODO: remove the file from SIPI (delete request)
-                        throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${resourceClassInfo.fileValueProperties.head}")
-                    }
+                            // check if the file type returned by Sipi corresponds to the expected fileValue property in resourceClassInfo.fileValueProperties.head
+                            _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != resourceClassInfo.fileValueProperties.head) {
+                                // TODO: remove the file from SIPI (delete request)
+                                throw BadRequestException(s"Type of submitted file (${sipiResponse.file_type}) does not correspond to expected property type ${resourceClassInfo.fileValueProperties.head}")
+                            }
+                        } yield Some(resourceClassInfo.fileValueProperties.head -> Vector(CreateValueV1WithComment(sipiResponse.fileValueV1)))
 
-                    // in case we deal with a SipiResponderConversionPathRequestV1 (non GUI-case), the tmp file created by resources route
-                    // has already been deleted by the SipiResponder
+                    case (None, Some(converted)) =>
+                        // The file has already been converted, just return it.
+                        Future.successful(Some(resourceClassInfo.fileValueProperties.head -> Vector(CreateValueV1WithComment(converted))))
 
-                } yield Some(resourceClassInfo.fileValueProperties.head -> Vector(CreateValueV1WithComment(sipiResponse.fileValueV1)))
+                    case other => throw AssertionException(s"Expected a SipiConversionRequestV1 or a StillImageFileValueV1, got $other")
+                }
+
             } else {
                 // resource class requires no binary representation
                 // check if there was no file sent
@@ -1640,7 +1677,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 sipiConversionRequest match {
                     case None => Future(None) // expected behaviour
                     case Some(_: SipiConversionFileRequestV1) =>
-                        throw BadRequestException(s"File params (GUI-case) are given but resource class $resourceClassIri does not allow any representation")
+                        throw BadRequestException(s"File params are given but resource class $resourceClassIri does not allow any representation")
                 }
             }
         } yield fileValues
@@ -1840,6 +1877,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 propertyInfoMap = propertyInfoMap,
                 values = values,
                 sipiConversionRequest = sipiConversionRequest,
+                convertedFile = None,
                 userProfile = userProfile
             )
 
