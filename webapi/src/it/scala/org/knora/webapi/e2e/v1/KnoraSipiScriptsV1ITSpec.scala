@@ -191,40 +191,6 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
 
         }
 
-        "successfully call convert_from_binaries.lua sipi script" in {
-
-            // The image to be uploaded.
-            val fileToSend = new File(pathToChlaus)
-            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
-
-            // A multipart/form-data request containing the image.
-            val sipiFormData = FormData(
-                Map(
-                    "originalFilename" -> fileToSend.getName,
-                    "originalMimeType" -> "image/jpeg",
-                    "prefix" -> "0001",
-                    "source" -> fileToSend.getAbsolutePath
-                )
-            )
-
-            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
-            val sipiConvertFromBinariesPostRequest = Post(baseSipiUrl + "/convert_from_binaries", sipiFormData)
-            val sipiConvertFromBinariesPostResponseJson = getResponseJson(sipiConvertFromBinariesPostRequest)
-
-            val filenameFull = sipiConvertFromBinariesPostResponseJson.fields("filename_full").asInstanceOf[JsString].value
-
-            //log.debug("sipiConvertFromBinariesPostResponseJson: {}", sipiConvertFromBinariesPostResponseJson)
-
-            // Running with KnoraFakeService which always allows access to files.
-            val sipiGetImageRequest = Get(baseSipiUrl + "/0001/" + filenameFull + "/full/full/0/default.jpg") ~> addCredentials(BasicHttpCredentials(username, password))
-            checkResponseOK(sipiGetImageRequest)
-
-            // Send a GET request to Sipi, asking for the info.json of the image
-            val sipiGetInfoRequest = Get(baseSipiUrl + "/0001/" + filenameFull + "/info.json" ) ~> addCredentials(BasicHttpCredentials(username, password))
-            val sipiGetInfoResponseJson = getResponseJson(sipiGetInfoRequest)
-            log.debug("sipiGetInfoResponseJson: {}", sipiGetInfoResponseJson)
-        }
-
     }
 }
 
