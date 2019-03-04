@@ -85,19 +85,13 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
   - Required permission: SystemAdmin / self
   - Changeable information: email, given name, family name,
-    password, status, SystemAdmin membership
-  - Remark: There are four distinct use case / payload combination.
-    It is not possible to mix cases, e.g., sending `newUserStatus`
-    and basic user information at the same time will result in an
-    error: (1) change password: oldPassword, newPassword, (2) change
-    status: newUserStatus, (3) change system admin membership:
-    newSystemAdminMembershipStatus, and (4) change basic user
-    information: email, givenName, familyName, lang
-  - TypeScript Docs: userFormats - ChangeUserApiRequestV1
+    password, status, SystemAdmin membership 
+  - TypeScript Docs: userFormats - ChangeUserApiRequestADM
   - PUT: `/admin/users/iri/<userIri>/BasicUserInformation`
   - BODY:
     ```
     {
+      "username": "donald.big.duck",
       "email": "donald.big.duck@example.org",
       "givenName": "Big Donald",
       "familyName": "Duckmann",
@@ -152,7 +146,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
     project self-assignment is enabled)
   - Required information: project IRI, user IRI
   - Effects: `knora-base:isInProject` user property
-  - POST / DELETE: `/admin/users/iri/<userIri>/projects/<projectIri>`
+  - POST / DELETE: `/admin/users/iri/<userIri>/project-memberships/<projectIri>`
   - BODY: empty
 
 ## User's group membership operations
