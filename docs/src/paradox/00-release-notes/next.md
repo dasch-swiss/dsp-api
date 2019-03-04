@@ -9,7 +9,9 @@ Also, please change the **HINT** to the appropriate level:
 
 - FEATURE: the changes introduced warrant a minor number increase
 
-- FIX: the changes introduced warrant a bugfix number increase
+- FIX: the changes introduced warrant a bug fix number increase
 
 
 ## HINT => MAJOR CHANGE
+
+- FIX: Unescape standoff string attributes when verifying text value update (@github[#1242](#1242))

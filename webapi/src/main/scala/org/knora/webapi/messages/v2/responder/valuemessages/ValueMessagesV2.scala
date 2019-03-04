@@ -33,7 +33,7 @@ import org.knora.webapi.messages.store.sipimessages.{GetImageMetadataRequestV2, 
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
-import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagIriAttributeV2, StandoffTagV2}
+import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.date._
@@ -1227,8 +1227,27 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
     }
 
     override def unescape: ValueContentV2 = {
+        // Unescape the text in standoff string attributes.
+        val unescapedStandoffAndMapping: Option[StandoffAndMapping] = standoffAndMapping.map {
+            definedStandoffAndMapping =>
+                definedStandoffAndMapping.copy(
+                    standoff = definedStandoffAndMapping.standoff.map {
+                        standoffTag =>
+                            standoffTag.copy(
+                                attributes = standoffTag.attributes.map {
+                                    case stringAttribute: StandoffTagStringAttributeV2 =>
+                                        stringAttribute.copy(value = stringFormatter.fromSparqlEncodedString(stringAttribute.value))
+
+                                    case other => other
+                                }
+                            )
+                    }
+                )
+        }
+
         copy(
             valueHasString = stringFormatter.fromSparqlEncodedString(valueHasString),
+            standoffAndMapping = unescapedStandoffAndMapping,
             comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr))
         )
     }
