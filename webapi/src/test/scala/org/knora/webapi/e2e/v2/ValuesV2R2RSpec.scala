@@ -129,7 +129,7 @@ class ValuesV2R2RSpec extends R2RSpec {
     }
 
     "The values v2 endpoint" should {
-        "create a still image file value using a mock Sipi" in {
+        "update a still image file value using a mock Sipi" in {
             val resourceIri: IRI = aThingPictureIri
 
             val internalFilename ="IQUO3t1AABm-FSLC0vNvVpr.jp2"
@@ -139,6 +139,7 @@ class ValuesV2R2RSpec extends R2RSpec {
                    |  "@id" : "$resourceIri",
                    |  "@type" : "anything:ThingPicture",
                    |  "knora-api:hasStillImageFileValue" : {
+                   |    "@id" : "http://rdfh.ch/0001/a-thing-picture/values/file1",
                    |    "@type" : "knora-api:StillImageFileValue",
                    |    "knora-api:fileValueHasFilename" : "$internalFilename"
                    |  },
@@ -148,7 +149,7 @@ class ValuesV2R2RSpec extends R2RSpec {
                    |  }
                    |}""".stripMargin
 
-            Post("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+            Put("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)

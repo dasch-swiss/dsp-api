@@ -43,7 +43,7 @@ import scala.concurrent.Future
   */
 object SearchResponderV2Constants {
 
-    val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
+    val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/0000/forbiddenResource"
 }
 
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
@@ -321,7 +321,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             )
 
             nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
-                inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
+                inputQuery = inputQuery.copy(
+                    whereClause = whereClauseWithoutAnnotations,
+                    orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
+                ),
                 transformer = nonTriplestoreSpecificConstructToSelectTransformer
             )
 

@@ -13,7 +13,7 @@
       "@type" : "anything:Thing",
       "knora-api:arkUrl" : {
         "@type" : "xsd:anyURI",
-        "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/LOV=6aLYQFW15jwdyS51YwF"
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/LOV=6aLYQFW15jwdyS51YwF"
       },
       "knora-api:attachedToProject" : {
         "@id" : "http://rdfh.ch/projects/0001"
@@ -26,12 +26,20 @@
         "@value" : "2016-10-17T17:16:04.916Z"
       },
       "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/LOV=6aLYQFW15jwdyS51YwF.20161017T171604916Z"
+      },
       "rdfs:label" : "Uniform"
+    },
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-10-17T17:16:04.916Z"
     }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY"
   },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0001"
@@ -44,6 +52,10 @@
     "@value" : "2016-10-17T17:16:04.916Z"
   },
   "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+  "knora-api:versionArkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20161017T171604916Z"
+  },
   "rdfs:label" : "Sierra",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

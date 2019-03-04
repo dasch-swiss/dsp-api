@@ -22,9 +22,6 @@ package org.knora.webapi.responders.v2
 import java.io._
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem, Status}
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import javax.xml.XMLConstants
@@ -50,7 +47,6 @@ import org.knora.webapi.util.standoff.StandoffTagUtilV2.XMLTagItem
 import org.xml.sax.SAXException
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.xml.{Elem, Node, NodeSeq, XML}
 
 /**
@@ -76,8 +72,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     /**
       * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.
       *
-      * @param xslTransformationIri The IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
-      * @param requestingUser          The client making the request.
+      * @param xslTransformationIri the IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
+      * @param requestingUser       the user making the request.
       * @return a [[GetXSLTransformationResponseV2]].
       */
     private def getXSLTransformation(xslTransformationIri: IRI, requestingUser: UserADM): Future[GetXSLTransformationResponseV2] = {
@@ -85,21 +81,21 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
         val xsltUrlFuture = for {
 
             textRepresentationResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(xslTransformationIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+            resource = textRepresentationResponseV2.toResource(xslTransformationIri)
 
-            xsltFileValueContent: TextFileValueContentV2 = textRepresentationResponseV2.resources.headOption match {
-                case Some(resource: ReadResourceV2) if resource.resourceClassIri.toString == OntologyConstants.KnoraBase.XSLTransformation =>
-                    resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
-                        case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
-                            case value: ReadValueV2 => value.valueContent match {
-                                case textRepr: TextFileValueContentV2 => textRepr
-                                case other => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
-                            }
-                        }
+            _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.XSLTransformation) {
+                throw BadRequestException(s"Resource $xslTransformationIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
+            }
 
-                        case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
+            xsltFileValueContent: TextFileValueContentV2 = resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
+                case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
+                    case value: ReadValueV2 => value.valueContent match {
+                        case textRepr: TextFileValueContentV2 => textRepr
+                        case _ => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
                     }
+                }
 
-                case None => throw BadRequestException(s"Resource $xslTransformationIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
+                case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
             }
 
             // check if `xsltFileValue` represents an XSL transformation
@@ -107,7 +103,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 throw BadRequestException(s"$xslTransformationIri does not have a file value referring to an XSL transformation")
             }
 
-            xsltUrl: String = s"${settings.internalSipiFileServerGetUrl}/${xsltFileValueContent.fileValue.internalFilename}"
+            xsltUrl: String = s"${settings.internalSipiFileServerGetUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}"
 
         } yield xsltUrl
 
@@ -141,7 +137,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       * Creates a mapping between XML elements and attributes to standoff classes and properties.
       * The mapping is used to convert XML documents to texts with standoff and back.
       *
-      * @param xml         the provided mapping.
+      * @param xml            the provided mapping.
       * @param requestingUser the client that made the request.
       */
     private def createMappingV2(xml: String, label: String, projectIri: SmartIri, mappingName: String, requestingUser: UserADM, apiRequestID: UUID): Future[CreateMappingResponseV2] = {
@@ -500,47 +496,47 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     /**
       * Gets a mapping either from the cache or by making a request to the triplestore.
       *
-      * @param mappingIri  the IRI of the mapping to retrieve.
+      * @param mappingIri     the IRI of the mapping to retrieve.
       * @param requestingUser the user making the request.
       * @return a [[MappingXMLtoStandoff]].
       */
     private def getMappingV2(mappingIri: IRI, requestingUser: UserADM): Future[GetMappingResponseV2] = {
 
-            val mappingFuture: Future[GetMappingResponseV2] = CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
-                case Some(mapping: MappingXMLtoStandoff) =>
+        val mappingFuture: Future[GetMappingResponseV2] = CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
+            case Some(mapping: MappingXMLtoStandoff) =>
 
-                    for {
+                for {
 
-                        entities: StandoffEntityInfoGetResponseV2 <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
+                    entities: StandoffEntityInfoGetResponseV2 <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
 
-                    } yield GetMappingResponseV2(
-                        mappingIri = mappingIri,
-                        mapping = mapping,
-                        standoffEntities = entities
-                    )
+                } yield GetMappingResponseV2(
+                    mappingIri = mappingIri,
+                    mapping = mapping,
+                    standoffEntities = entities
+                )
 
-                case None =>
+            case None =>
 
-                    for {
-                        mapping: MappingXMLtoStandoff <- getMappingFromTriplestore(mappingIri, requestingUser)
+                for {
+                    mapping: MappingXMLtoStandoff <- getMappingFromTriplestore(mappingIri, requestingUser)
 
-                        entities: StandoffEntityInfoGetResponseV2 <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
+                    entities: StandoffEntityInfoGetResponseV2 <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
 
-                    } yield GetMappingResponseV2(
-                        mappingIri = mappingIri,
-                        mapping = mapping,
-                        standoffEntities = entities
-                    )
-            }
+                } yield GetMappingResponseV2(
+                    mappingIri = mappingIri,
+                    mapping = mapping,
+                    standoffEntities = entities
+                )
+        }
 
-            val mappingRecovered: Future[GetMappingResponseV2] = mappingFuture.recover {
-                case e: Exception =>
-                    throw BadRequestException(s"An error occurred when requesting mapping $mappingIri: ${e.getMessage}")
-            }
+        val mappingRecovered: Future[GetMappingResponseV2] = mappingFuture.recover {
+            case e: Exception =>
+                throw BadRequestException(s"An error occurred when requesting mapping $mappingIri: ${e.getMessage}")
+        }
 
-            for {
-                mapping <- mappingRecovered
-            } yield mapping
+        for {
+            mapping <- mappingRecovered
+        } yield mapping
 
     }
 
@@ -548,7 +544,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       *
       * Gets a mapping from the triplestore.
       *
-      * @param mappingIri  the IRI of the mapping to retrieve.
+      * @param mappingIri     the IRI of the mapping to retrieve.
       * @param requestingUser the user making the request.
       * @return a [[MappingXMLtoStandoff]].
       */
@@ -647,7 +643,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       * Gets the required standoff entities (classes and properties) from the mapping and requests information about these entities from the ontology responder.
       *
       * @param mappingXMLtoStandoff the mapping to be used.
-      * @param requestingUser          the client that made the request.
+      * @param requestingUser       the client that made the request.
       * @return a [[StandoffEntityInfoGetResponseV2]] holding information about standoff classes and properties.
       */
     private def getStandoffEntitiesFromMappingV2(mappingXMLtoStandoff: MappingXMLtoStandoff, requestingUser: UserADM): Future[StandoffEntityInfoGetResponseV2] = {

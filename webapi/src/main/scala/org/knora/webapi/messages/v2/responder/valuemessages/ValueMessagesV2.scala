@@ -91,6 +91,10 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
             // Get the IRI of the resource that the value is to be created in.
             resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
 
+            _ = if (!resourceIri.isKnoraResourceIri) {
+                throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+            }
+
             // Get the resource class.
             resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
 
@@ -103,14 +107,14 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
                     for {
                         valueContent: ValueContentV2 <-
-                                ValueContentV2.fromJsonLDObject(
-                                    jsonLDObject = jsonLDObject,
-                                    requestingUser = requestingUser,
-                                    responderManager = responderManager,
-                                    storeManager = storeManager,
-                                    settings = settings,
-                                    log = log
-                                )
+                            ValueContentV2.fromJsonLDObject(
+                                jsonLDObject = jsonLDObject,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                storeManager = storeManager,
+                                settings = settings,
+                                log = log
+                            )
 
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
@@ -132,11 +136,13 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 /**
   * Represents a successful response to a [[CreateValueRequestV2]].
   *
-  * @param valueIri  the IRI of the value that was created.
-  * @param valueType the type of the value that was created.
+  * @param valueIri   the IRI of the value that was created.
+  * @param valueType  the type of the value that was created.
+  * @param projectADM the project in which the value was created.
   */
 case class CreateValueResponseV2(valueIri: IRI,
-                                 valueType: SmartIri) extends KnoraResponseV2 {
+                                 valueType: SmartIri,
+                                 projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         if (targetSchema != ApiV2WithValueObjects) {
             throw AssertionException(s"CreateValueResponseV2 can only be returned in the complex schema")
@@ -195,6 +201,10 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
             // Get the IRI of the resource that the value is to be created in.
             resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
 
+            _ = if (!resourceIri.isKnoraResourceIri) {
+                throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+            }
+
             // Get the resource class.
             resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
 
@@ -203,14 +213,14 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
                     for {
                         valueContent: ValueContentV2 <-
-                                ValueContentV2.fromJsonLDObject(
-                                    jsonLDObject = jsonLDObject,
-                                    requestingUser = requestingUser,
-                                    responderManager = responderManager,
-                                    storeManager = storeManager,
-                                    settings = settings,
-                                    log = log
-                                )
+                            ValueContentV2.fromJsonLDObject(
+                                jsonLDObject = jsonLDObject,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                storeManager = storeManager,
+                                settings = settings,
+                                log = log
+                            )
 
                         valueIri = jsonLDObject.getIDAsKnoraDataIri
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
@@ -234,10 +244,13 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
 /**
   * Represents a successful response to an [[UpdateValueRequestV2]].
   *
-  * @param valueIri the IRI of the value version that was created.
+  * @param valueIri   the IRI of the value version that was created.
+  * @param valueType  the type of the value that was updated.
+  * @param projectADM the project in which the value was updated.
   */
 case class UpdateValueResponseV2(valueIri: IRI,
-                                 valueType: SmartIri) extends KnoraResponseV2 {
+                                 valueType: SmartIri,
+                                 projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         if (targetSchema != ApiV2WithValueObjects) {
             throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex schema")
@@ -258,18 +271,95 @@ case class UpdateValueResponseV2(valueIri: IRI,
   * Requests that a value is marked as deleted. A successful response will be a [[SuccessResponseV2]].
   *
   * @param resourceIri    the IRI of the containing resource.
+  * @param resourceClassIri the IRI of the resource class.
   * @param propertyIri    the IRI of the property pointing to the value to be marked as deleted.
   * @param valueIri       the IRI of the value to be marked as deleted.
+  * @param valueTypeIri  the IRI of the value class.
   * @param deleteComment  an optional comment explaining why the value is being marked as deleted.
   * @param requestingUser the user making the request.
   * @param apiRequestID   the API request ID.
   */
 case class DeleteValueRequestV2(resourceIri: IRI,
+                                resourceClassIri: SmartIri,
                                 propertyIri: SmartIri,
                                 valueIri: IRI,
+                                valueTypeIri: SmartIri,
                                 deleteComment: Option[String] = None,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
+
+object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueRequestV2] {
+    /**
+      * Converts JSON-LD input into a case class instance.
+      *
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
+      * @param settings         the application settings.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a case class instance representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            requestingUser: UserADM,
+                            responderManager: ActorRef,
+                            storeManager: ActorRef,
+                            settings: SettingsImpl,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteValueRequestV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser
+            )
+        }
+    }
+
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                               apiRequestID: UUID,
+                               requestingUser: UserADM): DeleteValueRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        // Get the IRI of the resource that the value is to be created in.
+        val resourceIri: SmartIri = jsonLDDocument.getIDAsKnoraDataIri
+
+        if (!resourceIri.isKnoraResourceIri) {
+            throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+        }
+
+        // Get the resource class.
+        val resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+
+        // Get the resource property and the IRI and class of the value to be deleted.
+        jsonLDDocument.getResourcePropertyValue match {
+            case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
+                val valueIri = jsonLDObject.getIDAsKnoraDataIri
+
+                if (!valueIri.isKnoraValueIri) {
+                    throw BadRequestException(s"Invalid value IRI: <$valueIri>")
+                }
+
+                val valueTypeIri: SmartIri = jsonLDObject.getTypeAsKnoraTypeIri
+
+                val deleteComment: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DeleteComment, stringFormatter.toSparqlEncodedString)
+
+                DeleteValueRequestV2(
+                    resourceIri = resourceIri.toString,
+                    resourceClassIri = resourceClassIri,
+                    propertyIri = propertyIri,
+                    valueIri = valueIri.toString,
+                    valueTypeIri = valueTypeIri,
+                    deleteComment = deleteComment,
+                    requestingUser = requestingUser,
+                    apiRequestID = apiRequestID
+                )
+        }
+    }
+}
 
 /**
   * Requests SPARQL for creating multiple values in a new, empty resource. The resource ''must'' be a new, empty
@@ -399,6 +489,8 @@ sealed trait ReadValueV2 extends IOValueV2 {
       * @return a JSON-LD representation of this value.
       */
     def toJsonLD(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         val valueContentAsJsonLD = valueContent.toJsonLDValue(targetSchema, projectADM, settings)
 
         // In the complex schema, add the value's IRI and type to the JSON-LD object that represents it.
@@ -413,7 +505,11 @@ sealed trait ReadValueV2 extends IOValueV2 {
                             JsonLDConstants.ID -> JsonLDString(valueIri),
                             JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString),
                             OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
-                            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions)
+                            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions),
+                            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                                value = valueCreationDate.toString,
+                                datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                            )
                         )
 
                         val valueHasCommentAsJsonLD: Option[(IRI, JsonLDValue)] = valueContent.comment.map {
@@ -532,8 +628,10 @@ case class UpdateValueV2(resourceIri: IRI,
   *
   * @param newValueIri  the IRI that was assigned to the new value.
   * @param valueContent the content of the new value (unescaped, as it would be read from the triplestore).
+  * @param permissions  the permissions of the new value.
+  * @param creationDate the new value's creation date.
   */
-case class UnverifiedValueV2(newValueIri: IRI, valueContent: ValueContentV2, permissions: String)
+case class UnverifiedValueV2(newValueIri: IRI, valueContent: ValueContentV2, permissions: String, creationDate: Instant)
 
 /**
   * The content of the value of a Knora property.
@@ -768,14 +866,14 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
                 val endCalendarDate: CalendarDateV2 = asCalendarDateRange.endCalendarDate
 
                 val startDateAssertions = Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> JsonLDInt(startCalendarDate.year)) ++
-                        startCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> JsonLDInt(month)) ++
-                        startCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> JsonLDInt(day)) ++
-                        startCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra -> JsonLDString(era.toString))
+                    startCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> JsonLDInt(month)) ++
+                    startCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> JsonLDInt(day)) ++
+                    startCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra -> JsonLDString(era.toString))
 
                 val endDateAssertions = Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> JsonLDInt(endCalendarDate.year)) ++
-                        endCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> JsonLDInt(month)) ++
-                        endCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> JsonLDInt(day)) ++
-                        endCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra -> JsonLDString(era.toString))
+                    endCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> JsonLDInt(month)) ++
+                    endCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> JsonLDInt(day)) ++
+                    endCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra -> JsonLDString(era.toString))
 
                 JsonLDObject(Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString),
@@ -792,10 +890,10 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
         that match {
             case thatDateValue: DateValueContentV2 =>
                 valueHasStartJDN == thatDateValue.valueHasStartJDN &&
-                        valueHasEndJDN == thatDateValue.valueHasEndJDN &&
-                        valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
-                        valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
-                        valueHasCalendar == thatDateValue.valueHasCalendar
+                    valueHasEndJDN == thatDateValue.valueHasEndJDN &&
+                    valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
+                    valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
+                    valueHasCalendar == thatDateValue.valueHasCalendar
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }
@@ -805,11 +903,11 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatDateValue: DateValueContentV2 =>
                 valueHasStartJDN == thatDateValue.valueHasStartJDN &&
-                        valueHasEndJDN == thatDateValue.valueHasEndJDN &&
-                        valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
-                        valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
-                        valueHasCalendar == thatDateValue.valueHasCalendar &&
-                        comment == thatDateValue.comment
+                    valueHasEndJDN == thatDateValue.valueHasEndJDN &&
+                    valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
+                    valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
+                    valueHasCalendar == thatDateValue.valueHasCalendar &&
+                    comment == thatDateValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1308,7 +1406,7 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatIntegerValue: IntegerValueContentV2 =>
                 valueHasInteger == thatIntegerValue.valueHasInteger &&
-                        comment == thatIntegerValue.comment
+                    comment == thatIntegerValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1400,7 +1498,7 @@ case class DecimalValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatDecimalValue: DecimalValueContentV2 =>
                 valueHasDecimal == thatDecimalValue.valueHasDecimal &&
-                        comment == thatDecimalValue.comment
+                    comment == thatDecimalValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1489,7 +1587,7 @@ case class BooleanValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatBooleanValue: BooleanValueContentV2 =>
                 valueHasBoolean == thatBooleanValue.valueHasBoolean &&
-                        comment == thatBooleanValue.comment
+                    comment == thatBooleanValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1583,7 +1681,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatGeomValue: GeomValueContentV2 =>
                 valueHasGeometry == thatGeomValue.valueHasGeometry &&
-                        comment == thatGeomValue.comment
+                    comment == thatGeomValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1660,15 +1758,15 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
             case ApiV2WithValueObjects =>
                 JsonLDObject(Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart ->
-                            JsonLDUtil.datatypeValueToJsonLDObject(
-                                value = valueHasIntervalStart.toString,
-                                datatype = OntologyConstants.Xsd.Decimal.toSmartIri
-                            ),
+                        JsonLDUtil.datatypeValueToJsonLDObject(
+                            value = valueHasIntervalStart.toString,
+                            datatype = OntologyConstants.Xsd.Decimal.toSmartIri
+                        ),
                     OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd ->
-                            JsonLDUtil.datatypeValueToJsonLDObject(
-                                value = valueHasIntervalEnd.toString,
-                                datatype = OntologyConstants.Xsd.Decimal.toSmartIri
-                            )
+                        JsonLDUtil.datatypeValueToJsonLDObject(
+                            value = valueHasIntervalEnd.toString,
+                            datatype = OntologyConstants.Xsd.Decimal.toSmartIri
+                        )
                 ))
         }
     }
@@ -1681,7 +1779,7 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
         that match {
             case thatIntervalValueContent: IntervalValueContentV2 =>
                 valueHasIntervalStart == thatIntervalValueContent.valueHasIntervalStart &&
-                        valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd
+                    valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }
@@ -1691,8 +1789,8 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatIntervalValueContent: IntervalValueContentV2 =>
                 valueHasIntervalStart == thatIntervalValueContent.valueHasIntervalStart &&
-                        valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd &&
-                        comment == thatIntervalValueContent.comment
+                    valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd &&
+                    comment == thatIntervalValueContent.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1804,7 +1902,7 @@ case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatListContent: HierarchicalListValueContentV2 =>
                 valueHasListNode == thatListContent.valueHasListNode &&
-                        comment == thatListContent.comment
+                    comment == thatListContent.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1903,7 +2001,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatColorContent: ColorValueContentV2 =>
                 valueHasColor == thatColorContent.valueHasColor &&
-                        comment == thatColorContent.comment
+                    comment == thatColorContent.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1998,7 +2096,7 @@ case class UriValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatUriContent: UriValueContentV2 =>
                 valueHasUri == thatUriContent.valueHasUri &&
-                        comment == thatUriContent.comment
+                    comment == thatUriContent.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -2097,7 +2195,7 @@ case class GeonameValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatGeonameContent: GeonameValueContentV2 =>
                 valueHasGeonameCode == thatGeonameContent.valueHasGeonameCode &&
-                        comment == thatGeonameContent.comment
+                    comment == thatGeonameContent.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -2201,8 +2299,7 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
     override def toOntologySchema(targetSchema: OntologySchema): StillImageFileValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
-        // TODO: this needs to include the project shortcode (#874).
-        val fileUrl: String = s"${settings.externalSipiIIIFGetUrl}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
+        val fileUrl: String = s"${settings.externalSipiIIIFGetUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
 
         targetSchema match {
             case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
@@ -2212,7 +2309,7 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX -> JsonLDInt(dimX),
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY -> JsonLDInt(dimY),
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
-                        value = settings.externalSipiIIIFGetUrl,
+                        value = s"${settings.externalSipiIIIFGetUrl}/${projectADM.shortcode}",
                         datatype = OntologyConstants.Xsd.Uri.toSmartIri
                     )
                 ))
@@ -2227,8 +2324,8 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
         that match {
             case thatStillImage: StillImageFileValueContentV2 =>
                 fileValue == thatStillImage.fileValue &&
-                        dimX == thatStillImage.dimX &&
-                        dimY == thatStillImage.dimY
+                    dimX == thatStillImage.dimX &&
+                    dimY == thatStillImage.dimY
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }
@@ -2326,7 +2423,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatTextFile: TextFileValueContentV2 =>
                 fileValue == thatTextFile.fileValue &&
-                        comment == thatTextFile.comment
+                    comment == thatTextFile.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -2431,7 +2528,7 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
         that match {
             case thatLinkValue: LinkValueContentV2 =>
                 referredResourceIri == thatLinkValue.referredResourceIri &&
-                        isIncomingLink == thatLinkValue.isIncomingLink
+                    isIncomingLink == thatLinkValue.isIncomingLink
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }
@@ -2441,8 +2538,8 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatLinkValue: LinkValueContentV2 =>
                 referredResourceIri == thatLinkValue.referredResourceIri &&
-                        isIncomingLink == thatLinkValue.isIncomingLink &&
-                        comment == thatLinkValue.comment
+                    isIncomingLink == thatLinkValue.isIncomingLink &&
+                    comment == thatLinkValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }

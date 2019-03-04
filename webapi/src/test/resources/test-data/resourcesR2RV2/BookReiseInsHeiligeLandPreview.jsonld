@@ -3,7 +3,7 @@
   "@type" : "incunabula:book",
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W"
   },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0803"
@@ -16,6 +16,10 @@
     "@value" : "2016-03-02T15:05:21Z"
   },
   "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:versionArkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T150521Z"
+  },
   "rdfs:label" : "Reise ins Heilige Land",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

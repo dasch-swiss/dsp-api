@@ -298,16 +298,4 @@
         </standoffClass>
     </mappingElement>
 
-    <mappingElement>
-        <tag>
-            <name>html</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>false</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/0801/beol#StandoffHtmlTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
 </mapping>

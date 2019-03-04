@@ -14,6 +14,23 @@
         <xsl:param name="input" as="xs:string"/>
         <xsl:value-of select="replace($input, '\(DE-588\)', 'http://d-nb.info/gnd/')"/>
     </xsl:function>
+    
+    <!-- Given a link value IRI and the document root node, returns the IRI of the target resource. -->
+    <xsl:function name="knora-api:getTargetResourceIri" as="xs:anyURI">
+        <xsl:param name="linkValueIri" as="xs:anyURI"/>
+        <xsl:param name="documentRoot" as="item()"/>
+        
+        <xsl:choose>
+            <xsl:when test="boolean($documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//beol:person)">
+                <!-- The target resource is nested in the LinkValue. -->
+                <xsl:value-of select="$documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//beol:person/@rdf:about"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- The target resource is not nested in the LinkValue. -->
+                <xsl:value-of select="$documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
 
     <!-- make a standard date (Gregorian calendar assumed) -->
     <xsl:function name="knora-api:dateformat" as="element()*">
@@ -24,7 +41,7 @@
                 <!-- no period, day precision -->
                 <date>
                     <xsl:attribute name="when">
-                        <xsl:value-of select="format-number($input/knora-api:dateValueHasStartYear/text(), '0000')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>
+                        <xsl:value-of select="format-number($input/knora-api:dateValueHasStartYear/text(), '0000')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartDay/text(), '00')"/>
                     </xsl:attribute>
                 </date>
 
@@ -80,14 +97,15 @@
     </xsl:template>
 
     <xsl:template match="beol:letter/beol:hasAuthorValue">
-        <xsl:variable name="authorValue" select="@rdf:resource"/>
-
+        <xsl:variable name="authorValueIri" select="@rdf:resource"/>
+        <xsl:variable name="authorIri" select="knora-api:getTargetResourceIri($authorValueIri, /.)"/>
+        
         <xsl:variable name="authorIAFValue"
-                      select="//knora-api:LinkValue[@rdf:about=$authorValue]//beol:hasIAFIdentifier/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$authorIri]//beol:hasIAFIdentifier/@rdf:resource"/>
         <xsl:variable name="authorFamilyNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$authorValue]//beol:hasFamilyName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$authorIri]//beol:hasFamilyName/@rdf:resource"/>
         <xsl:variable name="authorGivenNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$authorValue]//beol:hasGivenName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$authorIri]//beol:hasGivenName/@rdf:resource"/>
 
         <correspAction type="sent">
 
@@ -116,14 +134,15 @@
     </xsl:template>
 
     <xsl:template match="beol:letter/beol:hasRecipientValue">
-        <xsl:variable name="recipientValue" select="@rdf:resource"/>
-
+        <xsl:variable name="recipientValueIri" select="@rdf:resource"/>
+        <xsl:variable name="recipientIri" select="knora-api:getTargetResourceIri($recipientValueIri, /.)"/>
+        
         <xsl:variable name="recipientIAFValue"
-                      select="//knora-api:LinkValue[@rdf:about=$recipientValue]//beol:hasIAFIdentifier/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasIAFIdentifier/@rdf:resource"/>
         <xsl:variable name="recipientFamilyNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$recipientValue]//beol:hasFamilyName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasFamilyName/@rdf:resource"/>
         <xsl:variable name="recipientGivenNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$recipientValue]//beol:hasGivenName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasGivenName/@rdf:resource"/>
 
         <correspAction type="received">
 

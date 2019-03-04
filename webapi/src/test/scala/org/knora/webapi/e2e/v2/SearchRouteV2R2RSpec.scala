@@ -107,6 +107,20 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "perform a fulltext search for 'Ding'" in {
+
+            Get("/v2/search/Ding") ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // the response involves forbidden resource
+
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/searchResponseWithforbiddenResource.jsonld"), writeTestDataFiles)
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
 
         "perform a fulltext search for 'Dinge' (in the complex schema)" in {
             Get("/v2/search/Dinge") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
@@ -168,6 +182,78 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Queries without type inference
+
+        "perform a Gravsearch query for an anything:Thing with an optional date and sort by date" in {
+
+            val gravsearchQuery =
+                """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |  ?thing knora-api:isMainResource true .
+                  |  ?thing anything:hasDate ?date .
+                  |} WHERE {
+                  |
+                  |  ?thing a knora-api:Resource .
+                  |  ?thing a anything:Thing .
+                  |
+                  |   OPTIONAL {
+                  |
+                  |    ?thing anything:hasDate ?date .
+                  |    anything:hasDate knora-api:objectType knora-api:Date .
+                  |    ?date a knora-api:Date .
+                  |
+                  |    }
+                  |}
+                  |ORDER BY DESC(?date)
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"), writeTestDataFiles)
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch count query for an anything:Thing with an optional date used as a sort criterion" in {
+
+            val gravsearchQuery =
+                """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |  ?thing knora-api:isMainResource true .
+                  |  ?thing anything:hasDate ?date .
+                  |} WHERE {
+                  |
+                  |  ?thing a knora-api:Resource .
+                  |  ?thing a anything:Thing .
+                  |
+                  |   OPTIONAL {
+                  |
+                  |    ?thing anything:hasDate ?date .
+                  |    anything:hasDate knora-api:objectType knora-api:Date .
+                  |    ?date a knora-api:Date .
+                  |
+                  |    }
+                  |}
+                  |ORDER BY DESC(?date)
+                """.stripMargin
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountResponse(responseAs[String], 43)
+
+            }
+
+        }
 
         "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)" in {
             val gravsearchQuery =
@@ -1677,7 +1763,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 17)
+                checkSearchResponseNumberOfResults(responseAs[String], 18)
             }
 
         }
@@ -2216,6 +2302,54 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "do a Gravsearch count query for a letter that links to a specific person via two possible properties" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |
+                  |
+                  |    } WHERE {
+                  |        ?letter a knora-api:Resource .
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        beol:creationDate knora-api:objectType knora-api:Date .
+                  |        ?date a knora-api:Date .
+                  |
+                  |        # testperson2
+                  |        ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |
+                  |        <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
+                  |
+                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |
+                  |        beol:hasAuthor knora-api:objectType knora-api:Resource .
+                  |        beol:hasRecipient knora-api:objectType knora-api:Resource .
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountResponse(responseAs[String], 1)
+
+            }
+        }
+
         "do a Gravsearch query for a letter that links to a person with a specified name" in {
 
             val gravsearchQuery =
@@ -2273,6 +2407,63 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch count query for a letter that links to a person with a specified name" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |    } WHERE {
+                  |        ?letter a knora-api:Resource .
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        beol:creationDate knora-api:objectType knora-api:Date .
+                  |        ?date a knora-api:Date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        ?person1 a knora-api:Resource .
+                  |
+                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |
+                  |        beol:hasAuthor knora-api:objectType knora-api:Resource .
+                  |        beol:hasRecipient knora-api:objectType knora-api:Resource .
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |        beol:hasFamilyName knora-api:objectType xsd:string .
+                  |        ?name a xsd:string .
+                  |
+                  |        FILTER(?name = "Meier")
+                  |
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountResponse(responseAs[String], 1)
 
             }
         }
@@ -4242,7 +4433,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 17)
+                checkSearchResponseNumberOfResults(responseAs[String], 18)
             }
 
         }
@@ -5034,6 +5225,112 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Queries that submit the complex schema
+
+        "perform a Gravsearch query for an anything:Thing with an optional date and sort by date (submitting the complex schema)" in {
+
+            val gravsearchQuery =
+                """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |CONSTRUCT {
+                  |  ?thing knora-api:isMainResource true .
+                  |  ?thing anything:hasDate ?date .
+                  |} WHERE {
+                  |
+                  |  ?thing a knora-api:Resource .
+                  |  ?thing a anything:Thing .
+                  |
+                  |   OPTIONAL {
+                  |
+                  |    ?thing anything:hasDate ?date .
+                  |
+                  |    }
+                  |}
+                  |ORDER BY DESC(?date)
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"), writeTestDataFiles)
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch count query for an anything:Thing with an optional date used as a sort criterion (submitting the complex schema)" in {
+
+            val gravsearchQuery =
+                """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |CONSTRUCT {
+                  |  ?thing knora-api:isMainResource true .
+                  |  ?thing anything:hasDate ?date .
+                  |} WHERE {
+                  |
+                  |  ?thing a knora-api:Resource .
+                  |  ?thing a anything:Thing .
+                  |
+                  |   OPTIONAL {
+                  |
+                  |    ?thing anything:hasDate ?date .
+                  |
+                  |    }
+                  |}
+                  |ORDER BY DESC(?date)
+                """.stripMargin
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountResponse(responseAs[String], 43)
+
+            }
+
+        }
+
+        "perform a Gravsearch query for an anything:Thing that has an optional decimal value greater than 2 and sort by the decimal value (submitting the complex schema)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     OPTIONAL {
+                  |        ?thing anything:hasDecimal ?decimal .
+                  |
+                  |        ?decimal knora-api:decimalValueAsDecimal ?decimalVal .
+                  |
+                  |       FILTER(?decimalVal > "1"^^xsd:decimal)
+                  |     }
+                  |} ORDER BY DESC(?decimal)
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingsWithOptionalDecimalGreaterThan1.jsonld"), writeTestDataFiles)
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
 
         "do a Gravsearch query that finds all the books that have a page with seqnum 100 (submitting the complex schema)" in {
             val gravsearchQuery =
@@ -6161,7 +6458,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 17)
+                checkSearchResponseNumberOfResults(responseAs[String], 18)
             }
 
         }

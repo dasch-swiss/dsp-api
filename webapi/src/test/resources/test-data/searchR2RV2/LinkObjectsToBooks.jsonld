@@ -4,7 +4,7 @@
     "@type" : "knora-api:LinkObj",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/881405205304a"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/881405205304a"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -28,7 +28,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/8be1b7cf7103G"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -41,7 +41,15 @@
           "@value" : "2016-03-02T15:05:43Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543Z"
+        },
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:54Z"
       }
     }, {
       "@id" : "http://rdfh.ch/0803/881405205304/values/daadc2ff-863e-49a1-a03c-51888e444bb3",
@@ -55,7 +63,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/5e77e98d2603U"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -68,17 +76,29 @@
           "@value" : "2016-03-02T15:05:39Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U.20160302T150539Z"
+        },
         "rdfs:label" : "[Das] Narrenschiff (dt.)"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:54Z"
       }
     } ],
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/881405205304a.20160302T150554Z"
+    },
     "rdfs:label" : "Lateinische Übersetzung"
   }, {
     "@id" : "http://rdfh.ch/0803/ab79ffa43935",
     "@type" : "knora-api:LinkObj",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/ab79ffa43935M"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ab79ffa43935M"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -102,7 +122,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/c5058f3a5"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -115,17 +135,29 @@
           "@value" : "2016-03-02T15:05:10Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T150510Z"
+        },
         "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:55Z"
       }
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ab79ffa43935M.20160302T150555Z"
+    },
     "rdfs:label" : "DEMO_"
   }, {
     "@id" : "http://rdfh.ch/0803/cb1a74e3e2f6",
     "@type" : "knora-api:LinkObj",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/cb1a74e3e2f6X"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cb1a74e3e2f6X"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -149,7 +181,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/21abac2162A"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/21abac2162A"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -162,7 +194,15 @@
           "@value" : "2016-03-02T15:05:14Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/21abac2162A.20160302T150514Z"
+        },
         "rdfs:label" : "Lob der Glieder Mariens"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:56Z"
       }
     }, {
       "@id" : "http://rdfh.ch/0803/cb1a74e3e2f6/values/87fbf1ca-05b7-4cf0-aa2f-4964ee1a7a8d",
@@ -176,7 +216,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/e41ab5695cN"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/e41ab5695cN"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -189,7 +229,15 @@
           "@value" : "2016-03-02T15:05:14Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/e41ab5695cN.20160302T150514Z"
+        },
         "rdfs:label" : "Orationes"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:56Z"
       }
     }, {
       "@id" : "http://rdfh.ch/0803/cb1a74e3e2f6/values/add0efdb-7af4-4a73-9bf4-3965d50dac28",
@@ -203,7 +251,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/c5058f3a5"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -216,10 +264,22 @@
           "@value" : "2016-03-02T15:05:10Z"
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T150510Z"
+        },
         "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+      },
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:56Z"
       }
     } ],
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cb1a74e3e2f6X.20160302T150556Z"
+    },
     "rdfs:label" : "Diese drei Texte sind in einem Band zusammengebunden."
   } ],
   "@context" : {

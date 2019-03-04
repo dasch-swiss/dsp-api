@@ -50,6 +50,7 @@ sealed trait SipiRequestV1 extends IIIFRequest
 sealed trait SipiConversionRequestV1 extends SipiRequestV1 {
     val originalFilename: String
     val originalMimeType: String
+    val projectShortcode: String
     val userProfile: UserProfileV1
 
     /**
@@ -59,9 +60,9 @@ sealed trait SipiConversionRequestV1 extends SipiRequestV1 {
       *
       * @return a Map of key-value pairs that can be turned into form data by Sipi responder.
       */
-    def toFormData(): Map[String, String]
+    def toFormData: Map[String, String]
 
-    def toJsValue(): JsValue
+    def toJsValue: JsValue
 }
 
 
@@ -77,6 +78,7 @@ sealed trait SipiConversionRequestV1 extends SipiRequestV1 {
   */
 case class SipiConversionPathRequestV1(originalFilename: String,
                                        originalMimeType: String,
+                                       projectShortcode: String,
                                        source: File,
                                        userProfile: UserProfileV1) extends SipiConversionRequestV1 {
 
@@ -90,15 +92,16 @@ case class SipiConversionPathRequestV1(originalFilename: String,
       *
       * @return a Map of key-value pairs that can be turned into form data by Sipi responder.
       */
-    def toFormData() = {
+    def toFormData: Map[String, String] = {
         Map(
             "originalFilename" -> originalFilename,
             "originalMimeType" -> originalMimeType,
-            "source" -> source.toString
+            "source" -> source.toString,
+            "prefix" -> projectShortcode
         )
     }
 
-    def toJsValue = RepresentationV1JsonProtocol.SipiConversionPathRequestV1Format.write(this)
+    def toJsValue: JsValue = RepresentationV1JsonProtocol.SipiConversionPathRequestV1Format.write(this)
 }
 
 /**
@@ -115,6 +118,7 @@ case class SipiConversionPathRequestV1(originalFilename: String,
 
 case class SipiConversionFileRequestV1(originalFilename: String,
                                        originalMimeType: String,
+                                       projectShortcode: String,
                                        filename: String,
                                        userProfile: UserProfileV1) extends SipiConversionRequestV1 {
 
@@ -128,15 +132,16 @@ case class SipiConversionFileRequestV1(originalFilename: String,
       *
       * @return a Map of key-value pairs that can be turned into form data by Sipi responder.
       */
-    def toFormData() = {
+    def toFormData: Map[String, String] = {
         Map(
             "originalFilename" -> originalFilename,
             "originalMimeType" -> originalMimeType,
-            "filename" -> filename
+            "filename" -> filename,
+            "prefix" -> projectShortcode
         )
     }
 
-    def toJsValue = RepresentationV1JsonProtocol.SipiConversionFileRequestV1Format.write(this)
+    def toJsValue: JsValue = RepresentationV1JsonProtocol.SipiConversionFileRequestV1Format.write(this)
 
 }
 
@@ -148,10 +153,6 @@ case class SipiConversionFileRequestV1(originalFilename: String,
   * @param ny_full           y dim of the full quality representation.
   * @param mimetype_full     mime type of the full quality representation.
   * @param filename_full     filename of the full quality representation.
-  * @param nx_thumb          x dim of the thumbnail representation.
-  * @param ny_thumb          y dim of the thumbnail representation.
-  * @param mimetype_thumb    mime type of the thumbnail representation.
-  * @param filename_thumb    filename of the thumbnail representation.
   * @param original_mimetype mime type of the original file.
   * @param original_filename name of the original file.
   * @param file_type         type of file that has been converted (image).
@@ -160,10 +161,6 @@ case class SipiImageConversionResponse(nx_full: Int,
                                        ny_full: Int,
                                        mimetype_full: String,
                                        filename_full: String,
-                                       nx_thumb: Int,
-                                       ny_thumb: Int,
-                                       mimetype_thumb: String,
-                                       filename_thumb: String,
                                        original_mimetype: String,
                                        original_filename: String,
                                        file_type: String)
@@ -189,7 +186,7 @@ case class SipiTextResponse(mimetype: String,
 object SipiConstants {
     // TODO: Shall we better use an ErrorHandlingMap here?
     // map file types converted by Sipi to file value properties in Knora
-    val fileType2FileValueProperty = Map(
+    val fileType2FileValueProperty: Map[FileType.Value, IRI] = Map(
         FileType.TEXT -> OntologyConstants.KnoraBase.HasTextFileValue,
         FileType.IMAGE -> OntologyConstants.KnoraBase.HasStillImageFileValue,
         FileType.MOVIE -> OntologyConstants.KnoraBase.HasMovingImageFileValue,
@@ -200,11 +197,11 @@ object SipiConstants {
 
     object FileType extends Enumeration {
         // the string representations correspond to Sipi's internal enum.
-        val IMAGE = Value(0, "image")
-        val TEXT = Value(1, "text")
-        val MOVIE = Value(2, "movie")
-        val AUDIO = Value(3, "audio")
-        val BINARY = Value(4, "binary")
+        val IMAGE: Value = Value(0, "image")
+        val TEXT: Value = Value(1, "text")
+        val MOVIE: Value = Value(2, "movie")
+        val AUDIO: Value = Value(3, "audio")
+        val BINARY: Value = Value(4, "binary")
 
         val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -232,11 +229,11 @@ object SipiConstants {
 }
 
 /**
-  * Response from SIPIResponder to a [[SipiConversionRequestV1]] representing one or more [[FileValueV1]].
+  * Response from [[org.knora.webapi.store.iiif.SipiConnector]] to a [[SipiConversionRequestV1]] representing a [[FileValueV1]].
   *
-  * @param fileValuesV1 a list of [[FileValueV1]]
+  * @param fileValueV1 a [[FileValueV1]]
   */
-case class SipiConversionResponseV1(fileValuesV1: Vector[FileValueV1], file_type: SipiConstants.FileType.Value)
+case class SipiConversionResponseV1(fileValueV1: FileValueV1, file_type: SipiConstants.FileType.Value)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -254,7 +251,7 @@ object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonPro
         /**
           * Not implemented.
           */
-        def read(jsonVal: JsValue) = ???
+        def read(jsonVal: JsValue): SipiConversionPathRequestV1 = ???
 
         /**
           * Converts a [[SipiConversionPathRequestV1]] into [[JsValue]] for formatting as JSON.
@@ -301,7 +298,7 @@ object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonPro
         }
     }
 
-    implicit val sipiImageConversionResponseFormat: RootJsonFormat[SipiImageConversionResponse] = jsonFormat11(SipiImageConversionResponse)
+    implicit val sipiImageConversionResponseFormat: RootJsonFormat[SipiImageConversionResponse] = jsonFormat7(SipiImageConversionResponse)
     implicit val textStoreResponseFormat: RootJsonFormat[SipiTextResponse] = jsonFormat6(SipiTextResponse)
 }
 
@@ -346,9 +343,11 @@ object GetImageMetadataResponseV2JsonProtocol extends SprayJsonSupport with Defa
   * Asks Sipi to move a file from temporary to permanent storage.
   *
   * @param internalFilename the name of the file.
+  * @param prefix           the prefix under which the file should be stored.
   * @param requestingUser   the user making the request.
   */
 case class MoveTemporaryFileToPermanentStorageRequestV2(internalFilename: String,
+                                                        prefix: String,
                                                         requestingUser: UserADM) extends SipiRequestV2
 
 /**

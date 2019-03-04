@@ -69,6 +69,18 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
         "allow checking the password (2)" in {
             SharedTestDataADM.rootUser.passwordMatch("test") should equal(true)
         }
+
+        "return isSelf for IRI" in {
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(maybeIri = Some(SharedTestDataADM.rootUser.id)))
+        }
+
+        "return isSelf for email" in {
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(maybeEmail = Some(SharedTestDataADM.rootUser.email)))
+        }
+
+        "return isSelf for username" in {
+            SharedTestDataADM.rootUser.isSelf(UserIdentifierADM(maybeUsername = Some(SharedTestDataADM.rootUser.username)))
+        }
     }
 
     "The CreateUserApiRequestADM case class" should {
@@ -158,23 +170,62 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
 
         "return the identifier type" in {
 
-            // FIXME: not working!!!
-            val iriIdentifier = UserIdentifierADM("http://rdfh.ch/users/root")
+            val iriIdentifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/root"))
             iriIdentifier.hasType should be (UserIdentifierType.IRI)
 
-            val emailIdentifier = UserIdentifierADM("root@example.com")
+            val emailIdentifier = UserIdentifierADM(maybeEmail = Some("root@example.com"))
             emailIdentifier.hasType should be (UserIdentifierType.EMAIL)
 
-            val usernameIdentifier = UserIdentifierADM("root")
+            val usernameIdentifier = UserIdentifierADM(maybeUsername = Some("root"))
             usernameIdentifier.hasType should be (UserIdentifierType.USERNAME)
         }
 
-        "throw a BadRequestException for an empty identifier string" in {
+        "check whether a user identified by email is the same as a user identified by username" in {
+            val userEmail = "user@example.org"
+            val username = "user"
 
-            assertThrows[BadRequestException](
-                UserIdentifierADM("")
+            val user = UserADM(
+                id = "http://rdfh.ch/users/example",
+                username = username,
+                email = userEmail,
+                givenName = "Foo",
+                familyName = "Bar",
+                status = true,
+                lang = "en"
             )
 
+            val emailID = UserIdentifierADM(maybeEmail = Some(userEmail))
+            val usernameID = UserIdentifierADM(maybeUsername = Some(username))
+
+            assert(user.isSelf(emailID))
+            assert(user.isSelf(usernameID))
         }
+
+        "throw a BadRequestException for an empty identifier" in {
+            assertThrows[BadRequestException](
+                UserIdentifierADM()
+            )
+        }
+
+        "throw a BadRequestException for an invalid user IRI" in {
+            assertThrows[BadRequestException](
+                UserIdentifierADM(maybeIri = Some("http://example.org/not/our/user/iri/structure"))
+            )
+        }
+
+        "throw a BadRequestException for an invalid email" in {
+            assertThrows[BadRequestException](
+                UserIdentifierADM(maybeEmail = Some("invalidemail"))
+            )
+        }
+
+        "throw a BadRequestException for an invalid username" in {
+            assertThrows[BadRequestException](
+                // we allow max 50 characters in username
+                UserIdentifierADM(maybeEmail = Some("_username"))
+            )
+        }
+
+
     }
 }

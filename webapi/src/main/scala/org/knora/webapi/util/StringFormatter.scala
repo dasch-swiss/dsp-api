@@ -22,7 +22,7 @@ package org.knora.webapi.util
 import java.text.ParseException
 import java.time._
 import java.time.format.DateTimeFormatter
-import java.time.temporal.TemporalAccessor
+import java.time.temporal.{ChronoField, TemporalAccessor}
 import java.util.concurrent.ConcurrentHashMap
 
 import com.google.gwt.safehtml.shared.UriUtils._
@@ -312,6 +312,8 @@ object StringFormatter {
       * @param projectCode    the IRI's project code, if any.
       * @param ontologyName   the IRI's ontology name, if any.
       * @param entityName     the IRI's entity name, if any.
+      * @param resourceID     if this is a resource IRI or value IRI, its resource ID.
+      * @param valueID        if this is a value IRI, its value ID.
       * @param ontologySchema the IRI's ontology schema, or `None` if it is not a Knora definition IRI.
       * @param isBuiltInDef   `true` if the IRI refers to a built-in Knora ontology or ontology entity.
       */
@@ -319,6 +321,8 @@ object StringFormatter {
                                     projectCode: Option[String] = None,
                                     ontologyName: Option[String] = None,
                                     entityName: Option[String] = None,
+                                    resourceID: Option[String] = None,
+                                    valueID: Option[String] = None,
                                     ontologySchema: Option[OntologySchema],
                                     isBuiltInDef: Boolean = false,
                                     sharedOntology: Boolean = false)
@@ -387,6 +391,16 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     def isKnoraDataIri: Boolean
 
     /**
+      * Returns `true` if this is a Knora resource IRI.
+      */
+    def isKnoraResourceIri: Boolean
+
+    /**
+      * Returns `true` if this is a Knora value IRI.
+      */
+    def isKnoraValueIri: Boolean
+
+    /**
       * Returns `true` if this is a Knora ontology or entity IRI.
       */
     def isKnoraDefinitionIri: Boolean
@@ -439,6 +453,16 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
       * Returns the IRI's project code, if any.
       */
     def getProjectCode: Option[String]
+
+    /**
+      * Returns the IRI's resource ID, if any.
+      */
+    def getResourceID: Option[String]
+
+    /**
+      * Returns the IRI's value ID, if any.
+      */
+    def getValueID: Option[String]
 
     /**
       * If this is an ontology entity IRI, returns its ontology IRI.
@@ -578,11 +602,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         maybeSettings.map(_.externalKnoraApiHostPort)
     }
 
-    // The host that the ARK resolver is running on.
-    private val arkResolverHost: Option[String] = if (initForTest) {
-        Some("ark.dasch.swiss")
+    // The protocol and host that the ARK resolver is running on.
+    private val arkResolver: Option[String] = if (initForTest) {
+        Some("http://0.0.0.0:3336")
     } else {
-        maybeSettings.map(_.arkResolverHost)
+        maybeSettings.map(_.arkResolver)
     }
 
     // The DaSCH's ARK assigned number.
@@ -636,18 +660,18 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
     // EE being the era: one of BC or AD
     private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN)""" +
-        CalendarSeparator + // calendar name
-        """(?:[1-9][0-9]{0,3})(""" + // year
-        PrecisionSeparator +
-        """(?!00)[0-9]{1,2}(""" + // month
-        PrecisionSeparator +
-        """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
-        CalendarSeparator + // separator if a period is given
-        """(?:[1-9][0-9]{0,3})(""" + // year 2
-        PrecisionSeparator +
-        """(?!00)[0-9]{1,2}(""" + // month 2
-        PrecisionSeparator +
-        """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
+            CalendarSeparator + // calendar name
+            """(?:[1-9][0-9]{0,3})(""" + // year
+            PrecisionSeparator +
+            """(?!00)[0-9]{1,2}(""" + // month
+            PrecisionSeparator +
+            """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
+            CalendarSeparator + // separator if a period is given
+            """(?:[1-9][0-9]{0,3})(""" + // year 2
+            PrecisionSeparator +
+            """(?!00)[0-9]{1,2}(""" + // month 2
+            PrecisionSeparator +
+            """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
 
     // The expected format of a datetime.
     private val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
@@ -693,10 +717,10 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
     // A regex for the URL path of an API v2 ontology (built-in or project-specific).
     private val ApiV2OntologyUrlPathRegex: Regex = (
-        "^" + "/ontology/((" +
-            ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
-            OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
-        ).r
+            "^" + "/ontology/((" +
+                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
+                    OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
+            ).r
 
     // The start of the IRI of a project-specific API v2 ontology that is served by this API server.
     private val MaybeProjectSpecificApiV2OntologyStart: Option[String] = knoraApiHostAndPort match {
@@ -706,22 +730,22 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
-        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
-            "(shared/)?((" + ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
-            OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
-        ).r
+            "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
+                    "(shared/)?((" + ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
+                    OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
+            ).r
 
     // In XML import data, a property from another ontology is referred to as prefixLabel__localName. The prefix label
     // may start with a project ID (prefixed with 'p') and a hyphen. This regex parses that pattern.
     private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
-        "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
-        ).r
+            "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
+            ).r
 
     // In XML import data, a standoff link tag that refers to a resource described in the import must have the
     // form defined by this regex.
     private val StandoffLinkReferenceToClientIDForResourceRegex: Regex = (
-        "^ref:(" + NCNamePattern + ")$"
-        ).r
+            "^ref:(" + NCNamePattern + ")$"
+            ).r
 
     private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
 
@@ -746,10 +770,34 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     private val base64UrlCheckDigit = new Base64UrlCheckDigit
 
     // A regex that matches a Knora resource IRI.
-    private val ResourceIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")").r
+    private val ResourceIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")$").r
 
-    // A DateTimeFormatter that parses and formats Knora ARK timestamps.
-    private val ArkTimestampFormat = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss[nnnnnnnnn]X").withZone(ZoneId.of("UTC"))
+    // A regex that matches a Knora values IRI.
+    private val ValueIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + ")$").r
+
+    // A regex that parses a Knora ARK timestamp.
+    private val ArkTimestampRegex: Regex = """^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(\d{1,9})?Z$""".r
+
+    // A regex that finds trailing zeroes.
+    private val TrailingZerosRegex: Regex = """0+$""".r
+
+    /**
+      * A regex that matches a valid username
+      * - 4 - 50 characters long
+      * - Only contains alphanumeric characters, underscore and dot.
+      * - Underscore and dot can't be at the end or start of a username
+      * - Underscore or dot can't be used multiple times in a row
+      */
+    private val UsernameRegex: Regex =
+        """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
+
+    /**
+      * A regex that matches a valid project shortname
+      * - 4 - 50 characters long
+      * - Only contains alphanumeric characters.
+      */
+    private val ProjectShortnameRegex: Regex =
+        """^(?=.{4,50}$)[a-zA-Z0-9]+$""".r
 
     /**
       * The information that is stored about non-Knora IRIs.
@@ -810,10 +858,38 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
             case None =>
                 // Parse the IRI from scratch.
-                if (isKnoraDataIriStr(iri) ||
-                    iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
-                    iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph) {
-                    // This is a Knora data or named graph IRI. Nothing else to do.
+                if (DataIriStarts.exists(startStr => iri.startsWith(startStr))) {
+                    // This is a Knora data IRI. What sort of data IRI is it?
+                    iri match {
+                        case ResourceIriRegex(projectCode: String, resourceID: String) =>
+                            // It's a resource IRI.
+                            SmartIriInfo(
+                                iriType = KnoraDataIri,
+                                ontologySchema = None,
+                                projectCode = Some(projectCode),
+                                resourceID = Some(resourceID)
+                            )
+
+                        case ValueIriRegex(projectCode: String, resourceID: String, valueID: String) =>
+                            // It's a value IRI.
+                            SmartIriInfo(
+                                iriType = KnoraDataIri,
+                                ontologySchema = None,
+                                projectCode = Some(projectCode),
+                                resourceID = Some(resourceID),
+                                valueID = Some(valueID)
+                            )
+
+                        case _ =>
+                            // It's some other kind of data IRI; nothing else to do.
+                            SmartIriInfo(
+                                iriType = KnoraDataIri,
+                                ontologySchema = None
+                            )
+                    }
+                } else if (iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
+                        iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph) {
+                    // Nothing else to do.
                     SmartIriInfo(
                         iriType = KnoraDataIri,
                         ontologySchema = None
@@ -975,6 +1051,10 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         override def isKnoraEntityIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.entityName.nonEmpty
 
         override def getProjectCode: Option[String] = iriInfo.projectCode
+
+        override def getResourceID: Option[String] = iriInfo.resourceID
+
+        override def getValueID: Option[String] = iriInfo.valueID
 
         lazy val ontologyFromEntity: SmartIri = if (isKnoraOntologyIri) {
             throw DataConversionException(s"$iri is not a Knora entity IRI")
@@ -1302,27 +1382,45 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
         override def fromLinkPropToLinkValueProp: SmartIri = asLinkValueProp
 
-        override def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String = {
+        override def isKnoraResourceIri: Boolean = {
             if (!isKnoraDataIri) {
-                throw DataConversionException(s"IRI $iri is not a Knora data IRI, so it cannot be a resource IRI")
+                false
+            } else {
+                (iriInfo.projectCode, iriInfo.resourceID, iriInfo.valueID) match {
+                    case (Some(_), Some(_), None) => true
+                    case _ => false
+                }
+            }
+        }
+
+        override def isKnoraValueIri: Boolean = {
+            if (!isKnoraDataIri) {
+                false
+            } else {
+                (iriInfo.projectCode, iriInfo.resourceID, iriInfo.valueID) match {
+                    case (Some(_), Some(_), Some(_)) => true
+                    case _ => false
+                }
+            }
+        }
+
+        override def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String = {
+            if (!isKnoraResourceIri) {
+                throw DataConversionException(s"IRI $iri is not a Knora resource IRI")
             }
 
-            iri match {
-                case ResourceIriRegex(projectID: String, resourceID: String) =>
-                    val arkUrlTry = Try {
-                        makeArkUrl(
-                            projectID = projectID,
-                            resourceID = resourceID,
-                            maybeTimestamp = maybeTimestamp
-                        )
-                    }
+            val arkUrlTry = Try {
+                makeArkUrl(
+                    projectID = iriInfo.projectCode.get,
+                    resourceID = iriInfo.resourceID.get,
+                    maybeTimestamp = maybeTimestamp
+                )
 
-                    arkUrlTry match {
-                        case Success(arkUrl) => arkUrl
-                        case Failure(ex) => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
-                    }
+            }
 
-                case _ => throw DataConversionException(s"IRI $iri is not a Knora resource IRI")
+            arkUrlTry match {
+                case Success(arkUrl) => arkUrl
+                case Failure(ex) => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
             }
         }
     }
@@ -1462,21 +1560,12 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
-      * Returns `true` if an IRI string looks like a Knora data IRI.
-      *
-      * @param iri the IRI to be checked.
-      */
-    def isKnoraDataIriStr(iri: IRI): Boolean = {
-        DataIriStarts.exists(startStr => iri.startsWith(startStr))
-    }
-
-    /**
       * Returns `true` if an IRI string looks like a Knora project IRI
       *
       * @param iri the IRI to be checked.
       */
     def isKnoraProjectIriStr(iri: IRI): Boolean = {
-        iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/projects/")
+        isIri(iri) && iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/projects/")
     }
 
     /**
@@ -1485,7 +1574,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @param iri the IRI to be checked.
       */
     def isKnoraListIriStr(iri: IRI): Boolean = {
-        iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/lists/")
+        isIri(iri) && iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/lists/")
     }
 
     /**
@@ -1494,7 +1583,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @param iri the IRI to be checked.
       */
     def isKnoraUserIriStr(iri: IRI): Boolean = {
-        iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/users/")
+        isIri(iri) && iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/users/")
     }
 
     /**
@@ -1693,47 +1782,87 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
-      * Validates an OWL cardinality value, which must be 0 or 1 in Knora, and returns the corresponding integer.
-      *
-      * @param s        the string to be validated.
-      * @param errorFun a function that throws an exception. It will be called if the string is invalid.
-      * @return the corresponding integer value.
-      */
-    def validateCardinalityValue(s: String, errorFun: => Nothing): Int = {
-        s match {
-            case "0" => 0
-            case "1" => 1
-            case _ => errorFun
-        }
-    }
-
-    /**
-      * Parses an ISO-8601 instant and returns an instance of [[Instant]].
+      * Parses an `xsd:dateTimeStamp`.
       *
       * @param s        the string to be parsed.
       * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
       * @return an [[Instant]].
       */
-    def toInstant(s: String, errorFun: => Nothing): Instant = {
+    def xsdDateTimeStampToInstant(s: String, errorFun: => Nothing): Instant = {
         try {
-            // Try parsing it as an ISO 8601 UTC date.
-            Instant.parse(s)
+            val accessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
+            Instant.from(accessor)
         } catch {
-            case _: Exception =>
-                // Try parsing it as a Knora ARK timestamp.
-                try {
-                    OffsetDateTime.parse(s, ArkTimestampFormat).toInstant
-                } catch {
-                    case _: Exception =>
-                        // Try parsing it as an ISO 8601 date with an offset.
-                        try {
-                            val creationAccessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
-                            Instant.from(creationAccessor)
-                        } catch {
-                            case _: Exception => errorFun
-                        }
-                }
+            case _: Exception => errorFun
         }
+    }
+
+    /**
+      * Parses a Knora ARK timestamp.
+      *
+      * @param timestampStr the string to be parsed.
+      * @param errorFun     a function that throws an exception. It will be called if the string cannot be parsed.
+      * @return an [[Instant]].
+      */
+    def arkTimestampToInstant(timestampStr: String, errorFun: => Nothing): Instant = {
+        timestampStr match {
+            case ArkTimestampRegex(year, month, day, hour, minute, second, Optional(maybeFraction)) =>
+                val nanoOfSecond: Int = maybeFraction match {
+                    case None => 0
+
+                    case Some(fraction) =>
+                        // Pad the nano-of-second with trailing zeroes so it has 9 digits, then convert it
+                        // to an integer.
+                        fraction.padTo(9, '0').toInt
+                }
+
+                try {
+                    val accessor: TemporalAccessor = OffsetDateTime.of(
+                        year.toInt,
+                        month.toInt,
+                        day.toInt,
+                        hour.toInt,
+                        minute.toInt,
+                        second.toInt,
+                        nanoOfSecond,
+                        ZoneOffset.UTC
+                    )
+
+                    Instant.from(accessor)
+                } catch {
+                    case _: Exception => errorFun
+                }
+
+            case _ => errorFun
+        }
+    }
+
+    /**
+      * Formats a Knora ARK timestamp.
+      *
+      * @param timestamp the timestamp to be formatted.
+      * @return a string representation of the timestamp.
+      */
+    def formatArkTimestamp(timestamp: Instant): String = {
+        val offsetDateTime: OffsetDateTime = timestamp.atOffset(ZoneOffset.UTC)
+
+        val year: Int = offsetDateTime.get(ChronoField.YEAR)
+        val month: Int = offsetDateTime.get(ChronoField.MONTH_OF_YEAR)
+        val day: Int = offsetDateTime.get(ChronoField.DAY_OF_MONTH)
+        val hour: Int = offsetDateTime.get(ChronoField.HOUR_OF_DAY)
+        val minute: Int = offsetDateTime.get(ChronoField.MINUTE_OF_HOUR)
+        val second: Int = offsetDateTime.get(ChronoField.SECOND_OF_MINUTE)
+        val nanoOfSecond: Int = offsetDateTime.get(ChronoField.NANO_OF_SECOND)
+
+        val fractionStr: IRI = if (nanoOfSecond > 0) {
+            // Convert the nano-of-second to a 9-digit string representation, then strip trailing zeroes.
+            val nineDigitNanoOfSecond = f"$nanoOfSecond%09d"
+            TrailingZerosRegex.replaceAllIn(nineDigitNanoOfSecond, "")
+        } else {
+            ""
+        }
+
+        f"$year%04d$month%02d$day%02dT$hour%02d$minute%02d$second%02d${fractionStr}Z"
     }
 
     /**
@@ -2153,6 +2282,81 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
+      * Given the project IRI, checks if it is in a valid format.
+      *
+      * @param iri the project's IRI.
+      * @return the IRI of the project.
+      */
+    def validateProjectIri(iri: IRI, errorFun: => Nothing): IRI = {
+        if (isKnoraProjectIriStr(iri)) {
+            iri
+        } else {
+            errorFun
+        }
+    }
+
+    /**
+      * Check that the supplied IRI represents a valid project IRI.
+      *
+      * @param iri      the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+      *                 project IRI.
+      * @return the same string but escaped.
+      */
+    def validateAndEscapeProjectIri(iri: IRI, errorFun: => Nothing): IRI = {
+        if (isKnoraProjectIriStr(iri)) {
+            toSparqlEncodedString(iri, errorFun)
+        } else {
+            errorFun
+        }
+    }
+
+    /**
+      * Check that an optional string represents a valid project IRI.
+      *
+      * @param maybeString the optional string to be checked.
+      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+      *                    project IRI.
+      * @return the same optional string but escaped.
+      */
+    def validateAndEscapeOptionalProjectIri(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
+        maybeString match {
+            case Some(s) => Some(validateAndEscapeProjectIri(s, errorFun))
+            case None => None
+        }
+    }
+
+    /**
+      * Check that the string represents a valid project shortname.
+      *
+      * @param value    the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+      *                 project shortname.
+      * @return the same string.
+      */
+    def validateAndEscapeProjectShortname(value: String, errorFun: => Nothing): String = {
+        ProjectShortnameRegex.findFirstIn(value) match {
+            case Some(shortname) => toSparqlEncodedString(shortname, errorFun)
+            case None => errorFun
+        }
+    }
+
+    /**
+      * Check that an optional string represents a valid project shortname.
+      *
+      * @param maybeString the optional string to be checked.
+      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+      *                    project shortname.
+      * @return the same optional string.
+      */
+    def validateAndEscapeOptionalProjectShortname(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
+        maybeString match {
+            case Some(s) => Some(validateAndEscapeProjectShortname(s, errorFun))
+            case None => None
+        }
+    }
+
+    /**
       * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
       *
       * @param shortcode the project's shortcode.
@@ -2162,6 +2366,96 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
             case Some(value) => value
             case None => errorFun
+        }
+    }
+
+    /**
+      * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
+      *
+      * @param shortcode the project's shortcode.
+      * @return the shortcode in upper case.
+      */
+    def validateProjectShortcodeOption(shortcode: String): Option[String] = {
+        ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
+            case Some(value) => Some(value)
+            case None => None
+        }
+    }
+
+    /**
+      * Check that a string represents a valid project shortcode.
+      *
+      * @param shortcode the optional string to be checked.
+      * @param errorFun  a function that throws an exception. It will be called if the string does not represent a valid
+      *                  project shortcode.
+      * @return the same string.
+      */
+    def validateAndEscapeProjectShortcode(shortcode: String, errorFun: => Nothing): String = {
+        ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
+            case Some(definedShortcode) => toSparqlEncodedString(definedShortcode, errorFun)
+            case None => errorFun
+        }
+    }
+
+    /**
+      * Check that an optional string represents a valid project shortcode.
+      *
+      * @param maybeString the optional string to be checked.
+      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+      *                    project shortcode.
+      * @return the same optional string.
+      */
+    def validateAndEscapeOptionalProjectShortcode(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
+        maybeString match {
+            case Some(s) => Some(validateAndEscapeProjectShortcode(s, errorFun))
+            case None => None
+        }
+    }
+
+    /**
+      * Check that the supplied IRI represents a valid user IRI.
+      *
+      * @param iri      the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+      *                 user IRI.
+      * @return the same string.
+      */
+    def validateUserIri(iri: IRI, errorFun: => Nothing): IRI = {
+        if (isKnoraUserIriStr(iri)) {
+            iri
+        } else {
+            errorFun
+        }
+    }
+
+    /**
+      * Check that the supplied IRI represents a valid user IRI.
+      *
+      * @param iri      the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+      *                 user IRI.
+      * @return the same string but escaped.
+      */
+    def validateAndEscapeUserIri(iri: IRI, errorFun: => Nothing): String = {
+        if (isKnoraUserIriStr(iri)) {
+            toSparqlEncodedString(iri, errorFun)
+        } else {
+            errorFun
+        }
+    }
+
+    /**
+      * Check that an optional string represents a valid user IRI.
+      *
+      * @param maybeString the optional string to be checked.
+      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+      *                    user IRI.
+      * @return the same optional string.
+      */
+    def validateAndEscapeOptionalUserIri(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
+        maybeString match {
+            case Some(s) => Some(validateAndEscapeUserIri(s, errorFun))
+            case None => None
         }
     }
 
@@ -2176,6 +2470,64 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
+      * Given an email address, checks if it is in a valid format.
+      *
+      * @param email the email.
+      * @return the email
+      */
+    def validateEmailAndThrow(email: String, errorFun: => Nothing): String = {
+        EmailAddressRegex.findFirstIn(email) match {
+            case Some(value) => value
+            case None => errorFun
+        }
+    }
+
+    /**
+      * Check that an optional string represents a valid email address.
+      *
+      * @param maybeString the optional string to be checked.
+      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+      *                    email address.
+      * @return the same optional string.
+      */
+    def validateAndEscapeOptionalEmail(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
+        maybeString match {
+            case Some(s) => Some(toSparqlEncodedString(validateEmailAndThrow(s, errorFun), errorFun))
+            case None => None
+        }
+    }
+
+    /**
+      * Check that the string represents a valid username.
+      *
+      * @param value    the string to be checked.
+      * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+      *                 username.
+      * @return the same string.
+      */
+    def validateAndEscapeUsername(value: String, errorFun: => Nothing): String = {
+        UsernameRegex.findFirstIn(value) match {
+            case Some(username) => toSparqlEncodedString(username, errorFun)
+            case None => errorFun
+        }
+    }
+
+    /**
+      * Check that an optional string represents a valid username.
+      *
+      * @param maybeString the optional string to be checked.
+      * @param errorFun    a function that throws an exception. It will be called if the string does not represent a valid
+      *                    username.
+      * @return the same optional string.
+      */
+    def validateAndEscapeOptionalUsername(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
+        maybeString match {
+            case Some(s) => Some(validateAndEscapeUsername(s, errorFun))
+            case None => None
+        }
+    }
+
+    /**
       * Generates an ARK URL for a resource as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
       *
       * @param projectID      the shortcode of the project that the resource belongs to.
@@ -2185,7 +2537,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @return an ARK URL that can be resolved to obtain the resource.
       */
     private def makeArkUrl(projectID: String, resourceID: String, maybeTimestamp: Option[Instant] = None): String = {
-        val (host: String, assignedNumber: Int) = (arkResolverHost, arkAssignedNumber) match {
+        val (resolver: String, assignedNumber: Int) = (arkResolver, arkAssignedNumber) match {
             case (Some(definedHost: String), Some(definedAssignedNumber: Int)) => (definedHost, definedAssignedNumber)
             case _ => throw AssertionException(s"StringFormatter has not been initialised with system settings")
         }
@@ -2206,12 +2558,12 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         // Escape '-' as '=' in the resource ID and check digit, because '-' can be ignored in ARK URLs.
         val escapedResourceIDWithCheckDigit = resourceIDWithCheckDigit.replace('-', '=')
 
-        val arkUrlWithoutTimestamp = s"http://$host/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit"
+        val arkUrlWithoutTimestamp = s"$resolver/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit"
 
         maybeTimestamp match {
             case Some(timestamp) =>
                 // Format the timestamp and append it to the URL as an ARK object variant.
-                arkUrlWithoutTimestamp + "." + ArkTimestampFormat.format(timestamp)
+                arkUrlWithoutTimestamp + "." + formatArkTimestamp(timestamp)
 
             case None =>
                 arkUrlWithoutTimestamp

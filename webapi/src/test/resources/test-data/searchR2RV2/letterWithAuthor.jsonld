@@ -17,7 +17,11 @@
     "knora-api:dateValueHasStartMonth" : 6,
     "knora-api:dateValueHasStartYear" : 2018,
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
-    "knora-api:valueAsString" : "GREGORIAN:2018-06-04 CE"
+    "knora-api:valueAsString" : "GREGORIAN:2018-06-04 CE",
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2018-06-04T08:56:33.879Z"
+    }
   },
   "beol:hasAuthorValue" : {
     "@id" : "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/Cvp07eTqQQSnYdcvqlWW_g",
@@ -31,7 +35,7 @@
       "@type" : "beol:person",
       "knora-api:arkUrl" : {
         "@type" : "xsd:anyURI",
-        "@value" : "http://ark.dasch.swiss/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi"
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi"
       },
       "knora-api:attachedToProject" : {
         "@id" : "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
@@ -44,12 +48,20 @@
         "@value" : "2018-06-04T08:56:22.513Z"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi.20180604T085622513Z"
+      },
       "rdfs:label" : "Testperson2"
+    },
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2018-06-04T08:56:33.879Z"
     }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0801/_B3lQa6tSymIq7_7SowBsAD"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/_B3lQa6tSymIq7_7SowBsAD"
   },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
@@ -62,6 +74,10 @@
     "@value" : "2018-06-04T08:56:33.879Z"
   },
   "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:versionArkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/_B3lQa6tSymIq7_7SowBsAD.20180604T085633879Z"
+  },
   "rdfs:label" : "Testbrief1",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

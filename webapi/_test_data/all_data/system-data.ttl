@@ -48,7 +48,7 @@
 #
 ##########################################################
 
-<http://rdfh.ch/permissions/forbiddenResource> a knora-base:ForbiddenResource ;
+<http://rdfh.ch/0000/forbiddenResource> a knora-base:ForbiddenResource ;
 
                       rdfs:label "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)" ;
 
@@ -58,6 +58,6 @@
 
                       knora-base:attachedToProject knora-base:SystemProject ;
 
-                      knora-base:creationDate "2017-10-06T11:05:37Z"^^xsd:dateTimeStamp ;
+                      knora-base:creationDate "2017-10-06T11:05:37Z"^^xsd:dateTime ;
 
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|V knora-base:UnknownUser" .

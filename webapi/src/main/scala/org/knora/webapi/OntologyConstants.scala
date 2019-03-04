@@ -115,6 +115,7 @@ object OntologyConstants {
         val Decimal: IRI = XsdPrefixExpansion + "decimal"
         val Uri: IRI = XsdPrefixExpansion + "anyURI"
         val Pattern: IRI = XsdPrefixExpansion + "pattern"
+        val DateTime: IRI = XsdPrefixExpansion + "dateTime"
         val DateTimeStamp: IRI = XsdPrefixExpansion + "dateTimeStamp"
     }
 
@@ -234,7 +235,6 @@ object OntologyConstants {
         val HasDocumentFileValue: IRI = KnoraBasePrefixExpansion + "hasDocumentFileValue"
         val HasComment: IRI = KnoraBasePrefixExpansion + "hasComment"
 
-        val IsPreview: IRI = KnoraBasePrefixExpansion + "isPreview"
         val ResourceIcon: IRI = KnoraBasePrefixExpansion + "resourceIcon"
 
         val InternalMimeType: IRI = KnoraBasePrefixExpansion + "internalMimeType"
@@ -244,7 +244,6 @@ object OntologyConstants {
         val DimX: IRI = KnoraBasePrefixExpansion + "dimX"
         val DimY: IRI = KnoraBasePrefixExpansion + "dimY"
         val Fps: IRI = KnoraBasePrefixExpansion + "fps"
-        val QualityLevel: IRI = KnoraBasePrefixExpansion + "qualityLevel"
 
         val ValueBase: IRI = KnoraBasePrefixExpansion + "ValueBase"
         val DateBase: IRI = KnoraBasePrefixExpansion + "DateBase"
@@ -348,6 +347,8 @@ object OntologyConstants {
         val ProjectDescription: IRI = KnoraBasePrefixExpansion + "projectDescription"
         val ProjectKeyword: IRI = KnoraBasePrefixExpansion + "projectKeyword"
         val ProjectLogo: IRI = KnoraBasePrefixExpansion + "projectLogo"
+        val ProjectRestrictedViewSize: IRI = KnoraBasePrefixExpansion + "projectRestrictedViewSize"
+        val ProjectRestrictedViewWatermark: IRI = KnoraBasePrefixExpansion + "projectRestrictedViewWatermark"
         val BelongsToInstitution: IRI = KnoraBasePrefixExpansion + "belongsToInstitution"
         val HasSelfJoinEnabled: IRI = KnoraBasePrefixExpansion + "hasSelfJoinEnabled"
 
@@ -498,6 +499,7 @@ object OntologyConstants {
 
         val Address: IRI = KnoraBasePrefixExpansion + "address"
         val DeleteDate: IRI = KnoraBasePrefixExpansion + "deleteDate"
+        val DeletedBy: IRI = KnoraBasePrefixExpansion + "deletedBy"
         val DeleteComment: IRI = KnoraBasePrefixExpansion + "deleteComment"
 
         val HasExtResValue: IRI = OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "hasExtResValue"
@@ -692,6 +694,7 @@ object OntologyConstants {
         val ValueCreationDate: IRI = KnoraApiV2PrefixExpansion + "valueCreationDate"
         val ValueHasComment: IRI = KnoraApiV2PrefixExpansion + "valueHasComment"
 
+        val User: IRI = KnoraApiV2PrefixExpansion + "User"
         val AttachedToUser: IRI = KnoraApiV2PrefixExpansion + "attachedToUser"
         val AttachedToProject: IRI = KnoraApiV2PrefixExpansion + "attachedToProject"
         val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
@@ -699,11 +702,14 @@ object OntologyConstants {
         val HasPermissions: IRI = KnoraApiV2PrefixExpansion + "hasPermissions"
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
+        val VersionDate: IRI = KnoraApiV2PrefixExpansion + "versionDate"
         val NewModificationDate: IRI = KnoraApiV2PrefixExpansion + "newModificationDate"
         val IsDeleted: IRI = KnoraApiV2PrefixExpansion + "isDeleted"
         val DeleteDate: IRI = KnoraApiV2PrefixExpansion + "deleteDate"
         val DeleteComment: IRI = KnoraApiV2PrefixExpansion + "deleteComment"
         val ArkUrl: IRI = KnoraApiV2PrefixExpansion + "arkUrl"
+        val VersionArkUrl: IRI = KnoraApiV2PrefixExpansion + "versionArkUrl"
+        val Author: IRI = KnoraApiV2PrefixExpansion + "author"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
         val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"
@@ -946,6 +952,7 @@ object OntologyConstants {
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
         val ArkUrl: IRI = KnoraApiV2PrefixExpansion + "arkUrl"
+        val VersionArkUrl: IRI = KnoraApiV2PrefixExpansion + "versionArkUrl"
     }
 
     /**

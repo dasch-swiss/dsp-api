@@ -411,6 +411,30 @@
              :objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/knora-base#projectRestrictedViewSize
+
+:projectRestrictedViewSize rdf:type owl:DatatypeProperty ;
+
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+             rdfs:comment "The size of the image (as defined by IIIF) returned for restricted view"@en ;
+
+             :subjectClassConstraint :knoraProject ;
+
+             :objectDatatypeConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/knora-base#projectRestrictedViewWatermark
+
+:projectRestrictedViewWatermark rdf:type owl:DatatypeProperty ;
+
+             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+             rdfs:comment "Path to the restricted view watermark"@en ;
+
+             :subjectClassConstraint :knoraProject ;
+
+             :objectDatatypeConstraint xsd:string .
 
 
 ###  http://www.knora.org/ontology/knora-base#projectShortname
@@ -629,6 +653,14 @@
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLogo ;
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :projectRestrictedViewSize ;
+                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                owl:onProperty :projectRestrictedViewWatermark ;
                                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;

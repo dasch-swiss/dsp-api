@@ -676,7 +676,7 @@ object JsonLDUtil {
       * @param knoraOntologiesNeedingPrefixes a set of IRIs of other Knora ontologies that need prefixes.
       * @return a JSON-LD context.
       */
-    def makeContext(fixedPrefixes: Map[String, String], knoraOntologiesNeedingPrefixes: Set[SmartIri]): JsonLDObject = {
+    def makeContext(fixedPrefixes: Map[String, String], knoraOntologiesNeedingPrefixes: Set[SmartIri] = Set.empty): JsonLDObject = {
         /**
           * Given a function that makes a prefix from a Knora ontology IRI, returns an association list in which
           * each element is a prefix associated with a namespace.

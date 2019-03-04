@@ -57,10 +57,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")
     private val projectIri = SharedTestDataADM.imagesProject.id
     private val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
-    private val projectShortName = SharedTestDataADM.imagesProject.shortname
-    private val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
+    private val projectShortname = SharedTestDataADM.imagesProject.shortname
     private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
-    private val projectShortcodeEnc = java.net.URLEncoder.encode(projectShortcode, "utf-8")
 
     "The Projects Route ('admin/projects')" when {
 
@@ -80,24 +78,35 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return the information for a single project identified by iri" in {
-                val request = Get(baseApiUrl + s"/admin/projects/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
 
             "return the information for a single project identified by shortname" in {
-                val request = Get(baseApiUrl + s"/admin/projects/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
 
             "return the information for a single project identified by shortcode" in {
-                val request = Get(baseApiUrl + s"/admin/projects/$projectShortcodeEnc?identifier=shortcode") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
+            }
+
+            "return the project's restricted view settings" in {
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/RestrictedViewSettings") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+
+                val settings: ProjectRestrictedViewSettingsADM = AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
+                settings.size should be (Some("!512,512"))
+                settings.watermark should be (Some("path_to_image"))
             }
         }
 
@@ -244,7 +253,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 """.stripMargin
 
                 val projectIriEncoded = java.net.URLEncoder.encode(newProjectIri.get, "utf-8")
-                val request = Put(baseApiUrl + s"/admin/projects/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Put(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
@@ -263,7 +272,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             "DELETE a project" in {
 
                 val projectIriEncoded = java.net.URLEncoder.encode(newProjectIri.get, "utf-8")
-                val request = Delete(baseApiUrl + s"/admin/projects/" + projectIriEncoded) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Delete(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
@@ -274,10 +283,10 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
         }
 
-        "used to query members" should {
+        "used to query members [FUNCTIONALITY]" should {
 
             "return all members of a project identified by iri" in {
-                val request = Get(baseApiUrl + s"/admin/projects/members/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -287,7 +296,17 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return all members of a project identified by shortname" in {
-                val request = Get(baseApiUrl + s"/admin/projects/members/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+
+                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+                members.size should be (4)
+            }
+
+           "return all members of a project identified by shortcode" in {
+                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -297,7 +316,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return all admin members of a project identified by iri" in {
-                val request = Get(baseApiUrl + s"/admin/projects/admin-members/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -307,7 +326,17 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return all admin members of a project identified by shortname" in {
-                val request = Get(baseApiUrl + s"/admin/projects/admin-members/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/admin-members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                assert(response.status === StatusCodes.OK)
+
+                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+                members.size should be (2)
+            }
+
+            "return all admin members of a project identified by shortcode" in {
+                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/admin-members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -317,10 +346,49 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
         }
 
+        "used to query members [PERMISSIONS]" should {
+
+            "return members of a project to a SystemAdmin" in {
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return members of a project to a ProjectAdmin" in {
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return `Forbidden` for members of a project to a normal user" in {
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.Forbidden)
+            }
+
+            "return admin-members of a project to a SystemAdmin" in {
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return admin-members of a project to a ProjectAdmin" in {
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.OK)
+            }
+
+            "return `Forbidden` for admin-members of a project to a normal user" in {
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.Forbidden)
+            }
+        }
+
         "used to query keywords" should {
 
             "return all unique keywords for all projects" in {
-                val request = Get(baseApiUrl + s"/admin/projects/keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -331,7 +399,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             "return all keywords for a single project" in {
                 val incunabulaIriEnc = java.net.URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/keywords/$incunabulaIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$incunabulaIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -342,7 +410,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             "return empty list for a project without keywords" in {
                 val anythingIriEnc = java.net.URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/keywords/$anythingIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$anythingIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
@@ -353,7 +421,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             "return 'NotFound' when the project IRI is unknown" in {
                 val notexistingIriEnc = java.net.URLEncoder.encode("http://rdfh.ch/projects/notexisting", "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/keywords/$notexistingIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$notexistingIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.NotFound)

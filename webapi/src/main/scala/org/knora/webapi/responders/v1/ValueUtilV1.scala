@@ -51,7 +51,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       *                   and the values are lists of the objects of each predicate.
       * @return a [[ApiValueV1]] representing the `Value`.
       */
-    def makeValueV1(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    def makeValueV1(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val valueTypeIri = valueProps.literalData(OntologyConstants.Rdf.Type).literals.head
 
         valueTypeIri match {
@@ -66,14 +66,14 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             case OntologyConstants.KnoraBase.GeonameValue => makeGeonameValue(valueProps, responderManager, userProfile)
             case OntologyConstants.KnoraBase.ListValue => makeListValue(valueProps, responderManager, userProfile)
             case OntologyConstants.KnoraBase.IntervalValue => makeIntervalValue(valueProps, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.StillImageFileValue => makeStillImageValue(valueProps, responderManager, userProfile)
-            case OntologyConstants.KnoraBase.TextFileValue => makeTextFileValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.StillImageFileValue => makeStillImageValue(valueProps, projectShortcode, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.TextFileValue => makeTextFileValue(valueProps, projectShortcode, responderManager, userProfile)
             case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
         }
     }
 
-    def makeSipiImagePreviewGetUrlFromFilename(filename: String): String = {
-        s"${settings.externalSipiIIIFGetUrl}/$filename/full/full/0/default.jpg"
+    def makeSipiImagePreviewGetUrlFromFilename(projectShortcode: String, filename: String): String = {
+        s"${settings.externalSipiIIIFGetUrl}/$projectShortcode/$filename/full/full/0/default.jpg"
     }
 
     /**
@@ -83,7 +83,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @return a Sipi IIIF URL.
       */
     def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String = {
-        s"${settings.externalSipiIIIFGetUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
+        s"${settings.externalSipiIIIFGetUrl}/${imageFileValueV1.projectShortcode}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
     }
 
     /**
@@ -96,9 +96,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1, external: Boolean = true): String = {
 
         if (external) {
-            s"${settings.externalSipiFileServerGetUrl}/${textFileValue.internalFilename}"
+            s"${settings.externalSipiFileServerGetUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
         } else {
-            s"${settings.internalSipiFileServerGetUrl}/${textFileValue.internalFilename}"
+            s"${settings.internalSipiFileServerGetUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
         }
     }
 
@@ -642,20 +642,16 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[StillImageFileValueV1]].
       */
-    private def makeStillImageValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeStillImageValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
-
-        val isPreviewStr = predicates.get(OntologyConstants.KnoraBase.IsPreview).flatMap(_.literals.headOption)
-        val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
 
         Future(StillImageFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
             internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
             originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head,
+            projectShortcode = projectShortcode,
             dimX = predicates(OntologyConstants.KnoraBase.DimX).literals.head.toInt,
-            dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt,
-            qualityLevel = predicates(OntologyConstants.KnoraBase.QualityLevel).literals.head.toInt,
-            isPreview = isPreview
+            dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt
         ))
     }
 
@@ -665,13 +661,14 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
       * @return a [[TextFileValueV1]].
       */
-    private def makeTextFileValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    private def makeTextFileValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
         Future(TextFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
             internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
-            originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head
+            originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head,
+            projectShortcode = projectShortcode
         ))
     }
 
@@ -710,7 +707,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param resourceClass the resource class.
       * @return an attribute string to be included in the attributes for the GUI
       */
-    def makeAttributeRestype(resourceClass: IRI) = {
+    def makeAttributeRestype(resourceClass: IRI): String = {
         "restypeid=" + resourceClass
     }
 

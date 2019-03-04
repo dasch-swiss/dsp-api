@@ -928,23 +928,9 @@ class StringFormatterSpec extends CoreSpec() {
             stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.dokubibProject) should be (SharedOntologyTestDataADM.DOKUBIB_DATA_IRI)
         }
 
-        "validate project shortcode" in {
-            stringFormatter.validateProjectShortcode("00FF", throw AssertionException("not valid")) should be("00FF")
-            stringFormatter.validateProjectShortcode("00ff", throw AssertionException("not valid")) should be("00FF")
-            stringFormatter.validateProjectShortcode("12aF", throw AssertionException("not valid")) should be("12AF")
 
-            an[AssertionException] should be thrownBy {
-                stringFormatter.validateProjectShortcode("000", throw AssertionException("not valid"))
-            }
 
-            an[AssertionException] should be thrownBy {
-                stringFormatter.validateProjectShortcode("00000", throw AssertionException("not valid"))
-            }
 
-            an[AssertionException] should be thrownBy {
-                stringFormatter.validateProjectShortcode("wxyz", throw AssertionException("not valid"))
-            }
-        }
 
         "parse the objects of salsah-gui:guiAttributeDefinition" in {
             val hlistDef = "hlist(required):iri"
@@ -1051,7 +1037,121 @@ class StringFormatterSpec extends CoreSpec() {
         "generate an ARK URL for a resource IRI without a timestamp" in {
             val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
             val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl()
-            assert(arkUrl == "http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn")
+            assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn")
         }
+
+        "generate an ARK URL for a resource IRI with a timestamp with a fractional part" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+            val timestamp = Instant.parse("2018-06-04T08:56:22.9876543Z")
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(timestamp))
+            assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T0856229876543Z")
+        }
+
+        "generate an ARK URL for a resource IRI with a timestamp with a leading zero" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+            val timestamp = Instant.parse("2018-06-04T08:56:22.098Z")
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(timestamp))
+            assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T085622098Z")
+        }
+
+        "generate an ARK URL for a resource IRI with a timestamp without a fractional part" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+            val timestamp = Instant.parse("2018-06-04T08:56:22Z")
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(timestamp))
+            assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T085622Z")
+        }
+
+        "parse an ARK URL timestamp with a fractional part" in {
+            val timestampStr = "20180604T0856229876543Z"
+            val timestamp = stringFormatter.arkTimestampToInstant(timestampStr, throw BadRequestException(s"invalid timestamp"))
+            assert(timestamp == Instant.parse("2018-06-04T08:56:22.9876543Z"))
+        }
+
+        "parse an ARK URL timestamp with a leading zero" in {
+            val timestampStr = "20180604T085622098Z"
+            val timestamp = stringFormatter.arkTimestampToInstant(timestampStr, throw BadRequestException(s"invalid timestamp"))
+            assert(timestamp == Instant.parse("2018-06-04T08:56:22.098Z"))
+        }
+
+        "parse an ARK URL timestamp without a fractional part" in {
+            val timestampStr = "20180604T085622Z"
+            val timestamp = stringFormatter.arkTimestampToInstant(timestampStr, throw BadRequestException(s"invalid timestamp"))
+            assert(timestamp == Instant.parse("2018-06-04T08:56:22Z"))
+        }
+
+    }
+
+    "The StringFormatter class for User and Project" should {
+
+        "validate project shortname" in {
+            stringFormatter.validateAndEscapeProjectShortname("images", throw AssertionException("not valid")) should be("images")
+
+            // to short
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeProjectShortname("abc", throw AssertionException("not valid"))
+            }
+        }
+
+        "validate project shortcode" in {
+            stringFormatter.validateProjectShortcode("00FF", throw AssertionException("not valid")) should be("00FF")
+            stringFormatter.validateProjectShortcode("00ff", throw AssertionException("not valid")) should be("00FF")
+            stringFormatter.validateProjectShortcode("12aF", throw AssertionException("not valid")) should be("12AF")
+
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateProjectShortcode("000", throw AssertionException("not valid"))
+            }
+
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateProjectShortcode("00000", throw AssertionException("not valid"))
+            }
+
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateProjectShortcode("wxyz", throw AssertionException("not valid"))
+            }
+        }
+
+        "validate username" in {
+
+            // 4 - 50 characters long
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("abc", throw AssertionException("not valid"))
+            }
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("123456789012345678901234567890123456789012345678901", throw AssertionException("not valid"))
+            }
+
+            // only contain alphanumeric, underscore, and dot
+            stringFormatter.validateAndEscapeUsername("a_2.3", throw AssertionException("not valid")) should be ("a_2.3")
+
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("a_2.3-4", throw AssertionException("not valid"))
+            }
+
+            // Underscore and dot can't be at the end or start of a username
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("_username", throw AssertionException("not valid"))
+            }
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("username_", throw AssertionException("not valid"))
+            }
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername(".username", throw AssertionException("not valid"))
+            }
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("username.", throw AssertionException("not valid"))
+            }
+
+            // Underscore or dot can't be used multiple times in a row
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("user__name", throw AssertionException("not valid"))
+            }
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateAndEscapeUsername("user..name", throw AssertionException("not valid"))
+            }
+
+
+        }
+
+
     }
 }

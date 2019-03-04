@@ -54,7 +54,7 @@ DELETE {
         ?resource rdfs:label ?newLabel .
 
         @* Update the resource's last modification date. *@
-        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
 }
 @* Ensure that inference is not used in the WHERE clause of this update. *@

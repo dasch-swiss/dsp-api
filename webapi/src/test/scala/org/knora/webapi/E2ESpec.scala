@@ -88,7 +88,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
         // start the knora service without loading of the ontologies
-        startService(false)
+        startService(skipLoadingOfOntologies = true)
 
         // waits until knora is up and running
         applicationStateRunning()

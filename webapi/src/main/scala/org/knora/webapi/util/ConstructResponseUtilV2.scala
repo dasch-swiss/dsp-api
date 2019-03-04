@@ -43,7 +43,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object ConstructResponseUtilV2 {
 
-    val InferredPredicates = Set(
+    private val InferredPredicates = Set(
         OntologyConstants.KnoraBase.HasValue,
         OntologyConstants.KnoraBase.IsMainResource
     )
@@ -218,24 +218,14 @@ object ConstructResponseUtilV2 {
 
                                 // check if it is a link value
                                 if (valueObjectClass == OntologyConstants.KnoraBase.LinkValue) {
-                                    // it is a link value, check if the referred resource is visible
-                                    val referredResourceIri = predicateMapForValueAssertions(OntologyConstants.Rdf.Object)
-
-                                    // If the user doesn't have permission to see the linked resource, don't return the link value
-                                    if (resourceStatementsVisible.contains(referredResourceIri)) {
-
-                                        // create a value object
-                                        Some(ValueRdfData(
-                                            valueObjectIri = valObjIri,
-                                            valueObjectClass = valueObjectClass,
-                                            assertions = predicateMapForValueAssertions,
-                                            standoff = Map.empty[IRI, Map[IRI, String]], // link value does not contain standoff
-                                            listNode = Map.empty[IRI, String] // link value cannot point to a list node
-                                        ))
-                                    } else {
-                                        // Return None for the removed link value; it will be filtered out by flatMap.
-                                        None
-                                    }
+                                    // create a value object
+                                    Some(ValueRdfData(
+                                        valueObjectIri = valObjIri,
+                                        valueObjectClass = valueObjectClass,
+                                        assertions = predicateMapForValueAssertions,
+                                        standoff = Map.empty[IRI, Map[IRI, String]], // link value does not contain standoff
+                                        listNode = Map.empty[IRI, String] // link value cannot point to a list node
+                                    ))
 
                                 } else {
 
@@ -332,11 +322,18 @@ object ConstructResponseUtilV2 {
                                 if (alreadyTraversed(dependentResourceIri)) {
                                     value
                                 } else {
-                                    val dependentResource: ResourceWithValueRdfData = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
+                                    // If we don't have the dependent resource, that means that the user doesn't have
+                                    // permission to see it, or it's been marked as deleted. Just return the link
+                                    // value without a nested resource.
+                                    if (flatResourcesWithValues.contains(dependentResourceIri)) {
+                                        val dependentResource: ResourceWithValueRdfData = nestResources(dependentResourceIri, alreadyTraversed + resourceIri)
 
-                                    value.copy(
-                                        nestedResource = Some(dependentResource)
-                                    )
+                                        value.copy(
+                                            nestedResource = Some(dependentResource)
+                                        )
+                                    } else {
+                                        value
+                                    }
                                 }
                             } else {
                                 value
@@ -426,6 +423,7 @@ object ConstructResponseUtilV2 {
       * @return a set of mapping Iris.
       */
     def getMappingIrisFromValuePropertyAssertions(valuePropertyAssertions: Map[IRI, Seq[ValueRdfData]]): Set[IRI] = {
+
         valuePropertyAssertions.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], (valueObjIri: IRI, valObjs: Seq[ValueRdfData])) =>
                 val mappings: Seq[String] = valObjs.filter {
@@ -436,7 +434,19 @@ object ConstructResponseUtilV2 {
                         textValObj.assertions(OntologyConstants.KnoraBase.ValueHasMapping)
                 }
 
-                acc ++ mappings
+                // get mappings from linked resources
+                val mappingsFromReferredResources: Set[IRI] = valObjs.filter {
+                    (valObj: ValueRdfData) =>
+                        valObj.nestedResource.nonEmpty
+                }.flatMap {
+                    (valObj: ValueRdfData) =>
+                        val referredRes: ResourceWithValueRdfData = valObj.nestedResource.get
+
+                        // recurse on the nested resource's values
+                        getMappingIrisFromValuePropertyAssertions(referredRes.valuePropertyAssertions)
+                }.toSet
+
+                acc ++ mappings ++ mappingsFromReferredResources
         }
     }
 
@@ -550,6 +560,7 @@ object ConstructResponseUtilV2 {
       * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
       * @param valueCommentOption        the value's comment, if any.
       * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+      * @param versionDate               if defined, represents the requested time in the the resources' version history.
       * @param responderManager          the Knora responder manager.
       * @param requestingUser            the user making the request.
       * @return a [[LinkValueContentV2]].
@@ -558,6 +569,7 @@ object ConstructResponseUtilV2 {
                                        valueObjectValueHasString: String,
                                        valueCommentOption: Option[String],
                                        mappings: Map[IRI, MappingAndXSLTransformation],
+                                       versionDate: Option[Instant],
                                        responderManager: ActorRef,
                                        requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
@@ -585,6 +597,7 @@ object ConstructResponseUtilV2 {
                         resourceIri = referredResourceIri,
                         resourceWithValueRdfData = nestedResourceAssertions,
                         mappings = mappings,
+                        versionDate = versionDate,
                         responderManager = responderManager,
                         requestingUser = requestingUser
                     )
@@ -602,12 +615,14 @@ object ConstructResponseUtilV2 {
       *
       * @param valueObject the given [[ValueRdfData]].
       * @param mappings    the mappings needed for standoff conversions and XSL transformations.
+      * @param versionDate if defined, represents the requested time in the the resources' version history.
       * @return a [[ValueContentV2]] representing a value.
       */
-    def createValueContentV2FromValueRdfData(valueObject: ValueRdfData,
-                                             mappings: Map[IRI, MappingAndXSLTransformation],
-                                             responderManager: ActorRef,
-                                             requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
+    private def createValueContentV2FromValueRdfData(valueObject: ValueRdfData,
+                                                     mappings: Map[IRI, MappingAndXSLTransformation],
+                                                     versionDate: Option[Instant] = None,
+                                                     responderManager: ActorRef,
+                                                     requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // every knora-base:Value (any of its subclasses) has a string representation
@@ -721,6 +736,7 @@ object ConstructResponseUtilV2 {
                     valueObjectValueHasString = valueObjectValueHasString,
                     valueCommentOption = valueCommentOption,
                     mappings = mappings,
+                    versionDate = versionDate,
                     responderManager = responderManager,
                     requestingUser = requestingUser
                 )
@@ -746,13 +762,16 @@ object ConstructResponseUtilV2 {
       *
       * @param resourceIri              the IRI of the resource.
       * @param resourceWithValueRdfData the Rdf data belonging to the resource.
+      * @param mappings                 the mappings needed for standoff conversions and XSL transformations.
+      * @param versionDate              if defined, represents the requested time in the the resources' version history.
       * @return a [[ReadResourceV2]].
       */
-    def constructReadResourceV2(resourceIri: IRI,
-                                resourceWithValueRdfData: ResourceWithValueRdfData,
-                                mappings: Map[IRI, MappingAndXSLTransformation],
-                                responderManager: ActorRef,
-                                requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
+    private def constructReadResourceV2(resourceIri: IRI,
+                                        resourceWithValueRdfData: ResourceWithValueRdfData,
+                                        mappings: Map[IRI, MappingAndXSLTransformation],
+                                        versionDate: Option[Instant],
+                                        responderManager: ActorRef,
+                                        requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         def getDeletionInfo(entityIri: IRI, assertions: Map[IRI, String]): Option[DeletionInfo] = {
@@ -761,7 +780,7 @@ object ConstructResponseUtilV2 {
 
             if (resourceIsDeleted) {
                 val deleteDateStr = assertions(OntologyConstants.KnoraBase.DeleteDate)
-                val deleteDate = stringFormatter.toInstant(deleteDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:deleteDate in entity <$entityIri>: $deleteDateStr"))
+                val deleteDate = stringFormatter.xsdDateTimeStampToInstant(deleteDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:deleteDate in entity <$entityIri>: $deleteDateStr"))
                 val deleteComment = assertions(OntologyConstants.KnoraBase.DeleteComment)
 
                 Some(
@@ -783,8 +802,8 @@ object ConstructResponseUtilV2 {
         val resourceAttachedToProject: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToProject)
         val resourcePermissions: String = resourceAssertionsMap(OntologyConstants.KnoraBase.HasPermissions)
         val resourceCreationDateStr: String = resourceAssertionsMap(OntologyConstants.KnoraBase.CreationDate)
-        val resourceCreationDate: Instant = stringFormatter.toInstant(resourceCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:creationDate: $resourceCreationDateStr"))
-        val resourceLastModificationDate: Option[Instant] = resourceAssertionsMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(resourceLastModificationDateStr => stringFormatter.toInstant(resourceLastModificationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:lastModificationDate: $resourceLastModificationDateStr")))
+        val resourceCreationDate: Instant = stringFormatter.xsdDateTimeStampToInstant(resourceCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:creationDate: $resourceCreationDateStr"))
+        val resourceLastModificationDate: Option[Instant] = resourceAssertionsMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(resourceLastModificationDateStr => stringFormatter.xsdDateTimeStampToInstant(resourceLastModificationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:lastModificationDate: $resourceLastModificationDateStr")))
         val resourceDeletionInfo = getDeletionInfo(entityIri = resourceIri, assertions = resourceAssertionsMap)
 
         // get the resource's values
@@ -810,7 +829,7 @@ object ConstructResponseUtilV2 {
                             )
 
                             valueCreationDateStr: String = valObj.assertions(OntologyConstants.KnoraBase.ValueCreationDate)
-                            valueCreationDate: Instant = stringFormatter.toInstant(valueCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueCreationDate in value <${valObj.valueObjectIri}>: $valueCreationDateStr"))
+                            valueCreationDate: Instant = stringFormatter.xsdDateTimeStampToInstant(valueCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueCreationDate in value <${valObj.valueObjectIri}>: $valueCreationDateStr"))
                             valueDeletionInfo = getDeletionInfo(entityIri = valObj.valueObjectIri, assertions = valObj.assertions)
                         } yield valueContent match {
                             case linkValueContentV2: LinkValueContentV2 =>
@@ -857,6 +876,7 @@ object ConstructResponseUtilV2 {
             values = valueObjects,
             creationDate = resourceCreationDate,
             lastModificationDate = resourceLastModificationDate,
+            versionDate = versionDate,
             deletionInfo = resourceDeletionInfo
         )
     }
@@ -867,11 +887,13 @@ object ConstructResponseUtilV2 {
       * @param resourceIri     the IRI of the requested resource.
       * @param resourceRdfData the results returned by the triplestore.
       * @param mappings        the mappings needed for standoff conversions and XSL transformations.
+      * @param versionDate     if defined, represents the requested time in the the resources' version history.
       * @return a [[ReadResourceV2]].
       */
     def createFullResourceResponse(resourceIri: IRI,
                                    resourceRdfData: ResourceWithValueRdfData,
                                    mappings: Map[IRI, MappingAndXSLTransformation],
+                                   versionDate: Option[Instant],
                                    responderManager: ActorRef,
                                    requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
 
@@ -879,6 +901,7 @@ object ConstructResponseUtilV2 {
             resourceIri = resourceIri,
             resourceWithValueRdfData = resourceRdfData,
             mappings = mappings,
+            versionDate = versionDate,
             responderManager = responderManager,
             requestingUser = requestingUser
         )
@@ -914,6 +937,7 @@ object ConstructResponseUtilV2 {
                             resourceIri = resourceIri,
                             resourceWithValueRdfData = assertions,
                             mappings = mappings,
+                            versionDate = None,
                             responderManager = responderManager,
                             requestingUser = requestingUser
                         )

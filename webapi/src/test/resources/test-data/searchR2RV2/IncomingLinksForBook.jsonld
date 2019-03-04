@@ -3,7 +3,7 @@
   "@type" : "knora-api:LinkObj",
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/881405205304a"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/881405205304a"
   },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0803"
@@ -27,7 +27,7 @@
       "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
       "knora-api:arkUrl" : {
         "@type" : "xsd:anyURI",
-        "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/8be1b7cf7103G"
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G"
       },
       "knora-api:attachedToProject" : {
         "@id" : "http://rdfh.ch/projects/0803"
@@ -40,10 +40,22 @@
         "@value" : "2016-03-02T15:05:43Z"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543Z"
+      },
       "rdfs:label" : "[Das] Narrenschiff (lat.)"
+    },
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:54Z"
     }
   },
   "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+  "knora-api:versionArkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/881405205304a.20160302T150554Z"
+  },
   "rdfs:label" : "Lateinische Übersetzung",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

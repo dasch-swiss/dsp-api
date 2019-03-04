@@ -118,7 +118,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resource.maybeObject(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).map {
             jsonLDObject =>
                 jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.validateAndEscapeIri) should ===(OntologyConstants.Xsd.DateTimeStamp)
-                jsonLDObject.requireStringWithValidation(JsonLDConstants.VALUE, stringFormatter.toInstant)
+                jsonLDObject.requireStringWithValidation(JsonLDConstants.VALUE, stringFormatter.xsdDateTimeStampToInstant)
         }
     }
 
@@ -2376,22 +2376,43 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "delete an integer value" in {
-            val resourceIriEnc: String = URLEncoder.encode(aThingIri, "UTF-8")
-            val propertyIriEnc: String = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger", "UTF-8")
-            val valueIriEnc: String = URLEncoder.encode(intValueIri.get, "UTF-8")
-            val deleteComment: String = URLEncoder.encode("this value was incorrect", "UTF-8")
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$aThingIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasInteger" : {
+                   |    "@id" : "${intValueIri.get}",
+                   |    "@type" : "knora-api:IntValue",
+                   |    "knora-api:deleteComment" : "this value was incorrect"
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
 
-            val request = Delete(s"$baseApiUrl/v2/values/$resourceIriEnc/$propertyIriEnc/$valueIriEnc?deleteComment=$deleteComment") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val request = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
         }
 
         "delete a link between two resources" in {
-            val resourceIriEnc: String = URLEncoder.encode("http://rdfh.ch/0803/cb1a74e3e2f6", "UTF-8")
-            val propertyIriEnc: String = URLEncoder.encode(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue, "UTF-8")
-            val valueIriEnc: String = URLEncoder.encode(linkValueIri.get, "UTF-8")
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "http://rdfh.ch/0803/cb1a74e3e2f6",
+                   |  "@type" : "knora-api:LinkObj",
+                   |  "knora-api:hasLinkToValue" : {
+                   |    "@id": "${linkValueIri.get}",
+                   |    "@type" : "knora-api:LinkValue"
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+                   |  }
+                   |}""".stripMargin
 
-            val request = Delete(s"$baseApiUrl/v2/values/$resourceIriEnc/$propertyIriEnc/$valueIriEnc") ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val request = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
         }

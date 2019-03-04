@@ -86,7 +86,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
         // start knora without loading ontologies
-        startService(false)
+        startService(skipLoadingOfOntologies = true)
 
         // waits until knora is up and running
         applicationStateRunning()
@@ -107,8 +107,8 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     }
 
     protected def getResponseString(request: HttpRequest): String = {
-        val response = singleAwaitingRequest(request)
-        val responseBodyStr = Await.result(Unmarshal(response.entity).to[String], 6.seconds)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        val responseBodyStr: String = Await.result(response.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
         assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
         responseBodyStr
     }
@@ -130,7 +130,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 8 minutes)
+        singleAwaitingRequest(request, 8.minutes)
     }
 
     protected def checkIfSipiIsRunning(): Unit = {

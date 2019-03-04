@@ -37,7 +37,7 @@ import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
-import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM, SmartIri, StringFormatter}
+import org.knora.webapi.util._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -508,7 +508,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "The resources responder v2" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(
+                resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+                versionDate = None,
+                requestingUser = incunabulaUserProfile
+            )
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -530,7 +534,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(
+                resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
+                versionDate = None,
+                requestingUser = incunabulaUserProfile
+            )
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -541,7 +549,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), versionDate = None, requestingUser = incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -563,7 +571,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
 
-            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(
+                resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
+                versionDate = None,
+                requestingUser = incunabulaUserProfile
+            )
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -574,7 +586,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
 
-            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(
+                resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+                versionDate = None,
+                requestingUser = incunabulaUserProfile
+            )
 
             // the redundant Iri should be ignored (distinct)
             expectMsgPF(timeout) {
@@ -618,6 +634,57 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     xmlDiff.hasDifferences should be(false)
             }
 
+        }
+
+        "return a past version of a resource" in {
+            val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+            val versionDate = Instant.parse("2019-02-12T08:05:10Z")
+
+            responderManager ! ResourcesGetRequestV2(
+                resourceIris = Seq(resourceIri),
+                versionDate = Some(versionDate),
+                requestingUser = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory, received = response)
+            }
+
+        }
+
+        "return the complete version history of a resource" in {
+            val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+
+            responderManager ! ResourceVersionHistoryGetRequestV2(
+                resourceIri = resourceIri,
+                startDate = None,
+                endDate = None,
+                requestingUser = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceVersionHistoryResponseV2 =>
+                    assert(response == resourcesResponderV2SpecFullData.expectedCompleteVersionHistoryResponse)
+            }
+        }
+
+        "return the version history of a resource within a date range" in {
+            val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+            val startDate = Instant.parse("2019-02-08T15:05:11Z")
+            val endDate = Instant.parse("2019-02-13T09:05:10Z")
+
+            responderManager ! ResourceVersionHistoryGetRequestV2(
+                resourceIri = resourceIri,
+                startDate = Some(startDate),
+                endDate = Some(endDate),
+                requestingUser = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceVersionHistoryResponseV2 =>
+                    assert(response == resourcesResponderV2SpecFullData.expectedPartialVersionHistoryResponse)
+            }
         }
 
         "return a graph of resources reachable via links from/to a given resource" in {
@@ -1608,6 +1675,29 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val updatedLastModificationDate = outputResource.lastModificationDate.get
             assert(updatedLastModificationDate == newModificationDate)
             aThingLastModificationDate = updatedLastModificationDate
+        }
+
+        "mark a resource as deleted" in {
+            val deleteRequest = DeleteResourceRequestV2(
+                resourceIri = aThingIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeDeleteComment = Some("This resource is too boring."),
+                maybeLastModificationDate = Some(aThingLastModificationDate),
+                requestingUser = SharedTestDataADM.anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! deleteRequest
+
+            expectMsgType[SuccessResponseV2]
+
+            // We should now be unable to request the resource.
+
+            responderManager ! ResourcesGetRequestV2(resourceIris = Seq(aThingIri), requestingUser = SharedTestDataADM.anythingUser1)
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
         }
     }
 }

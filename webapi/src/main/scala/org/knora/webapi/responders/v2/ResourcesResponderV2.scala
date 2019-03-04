@@ -21,37 +21,32 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.{IriLocker, ResponderData}
+import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
+import org.knora.webapi.responders.{IriLocker, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.PermissionUtilADM.ModifyPermission
+import org.knora.webapi.util.PermissionUtilADM.{DeletePermission, ModifyPermission}
 import org.knora.webapi.util._
 import org.knora.webapi.util.date.CalendarNameGregorian
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
@@ -73,12 +68,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
       */
     def receive(msg: ResourcesResponderRequestV2) = msg match {
-        case ResourcesGetRequestV2(resIris, requestingUser) => getResources(resIris, requestingUser)
+        case ResourcesGetRequestV2(resIris, propertyIri, versionDate, requestingUser) => getResources(resIris, propertyIri, versionDate, requestingUser)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreview(resIris, requestingUser)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
         case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
+        case deleteResourceRequestV2: DeleteResourceRequestV2 => deleteResourceV2(deleteResourceRequestV2)
         case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
+        case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 => getResourceHistoryV2(resourceHistoryRequest)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -146,7 +143,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(internalCreateResource.resourceClassIri)
 
-                // Make a timestamp for the resource and its values.
+                // Make a versionDate for the resource and its values.
                 creationDate: Instant = internalCreateResource.creationDate.getOrElse(Instant.now)
 
                 // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
@@ -253,13 +250,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             for {
                 // Get the metadata of the resource to be updated.
                 resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
-
-                _ = if (resourcesSeq.numberOfResources != 1) {
-                    throw AssertionException(s"Expected one resource, got ${resourcesSeq.numberOfResources}")
-                }
-
-                resource: ReadResourceV2 = resourcesSeq.resources.head
-
+                resource: ReadResourceV2 = resourcesSeq.toResource(updateResourceMetadataRequestV2.resourceIri)
                 internalResourceClassIri = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
 
                 // Make sure that the resource's class is what the client thinks it is.
@@ -272,12 +263,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     throw EditConflictException(s"Resource <${resource.resourceIri}> has been modified since you last read it")
                 }
 
-                // Get information about the project that the resource is in.
-                projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-                    maybeIri = Some(resource.projectADM.id),
-                    requestingUser = updateResourceMetadataRequestV2.requestingUser
-                )).mapTo[ProjectGetResponseADM]
-
                 // Check that the user has permission to modify the resource.
                 _ = ResourceUtilV2.checkResourcePermission(
                     resourceInfo = resource,
@@ -286,7 +271,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 )
 
                 // Get the IRI of the named graph in which the resource is stored.
-                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfoResponse.project)
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
 
                 newModificationDate: Instant = updateResourceMetadataRequestV2.maybeNewModificationDate match {
                     case Some(submittedNewModificationDate) =>
@@ -357,6 +342,74 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         } yield taskResult
     }
 
+    def deleteResourceV2(deleteResourceV2: DeleteResourceRequestV2): Future[SuccessResponseV2] = {
+        def makeTaskFuture: Future[SuccessResponseV2] = {
+            for {
+                // Get the metadata of the resource to be updated.
+                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(deleteResourceV2.resourceIri), deleteResourceV2.requestingUser)
+                resource: ReadResourceV2 = resourcesSeq.toResource(deleteResourceV2.resourceIri)
+                internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
+
+                // Make sure that the resource's class is what the client thinks it is.
+                _ = if (resource.resourceClassIri != internalResourceClassIri) {
+                    throw BadRequestException(s"Resource <${resource.resourceIri}> is not a member of class <${deleteResourceV2.resourceClassIri}>")
+                }
+
+                // Make sure that the resource hasn't been updated since the client got its last modification date.
+                _ = if (resource.lastModificationDate != deleteResourceV2.maybeLastModificationDate) {
+                    throw EditConflictException(s"Resource <${resource.resourceIri}> has been modified since you last read it")
+                }
+
+                // Check that the user has permission to mark the resource as deleted.
+                _ = ResourceUtilV2.checkResourcePermission(
+                    resourceInfo = resource,
+                    permissionNeeded = DeletePermission,
+                    requestingUser = deleteResourceV2.requestingUser
+                )
+
+                // Get the IRI of the named graph in which the resource is stored.
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
+
+                // Generate SPARQL for marking the resource as deleted.
+                sparqlUpdate = queries.sparql.v2.txt.deleteResource(
+                    triplestore = settings.triplestoreType,
+                    dataNamedGraph = dataNamedGraph,
+                    resourceIri = deleteResourceV2.resourceIri,
+                    maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
+                    currentTime = Instant.now,
+                    requestingUser = deleteResourceV2.requestingUser.id
+                ).toString()
+
+                // Do the update.
+                _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+
+                // Verify that the resource was deleted correctly.
+
+                sparqlQuery = queries.sparql.v2.txt.checkResourceDeletion(
+                    triplestore = settings.triplestoreType,
+                    resourceIri = deleteResourceV2.resourceIri
+                ).toString()
+
+                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+
+                rows = sparqlSelectResponse.results.bindings
+
+                _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
+                    throw UpdateNotPerformedException(s"Resource <${deleteResourceV2.resourceIri}> was not marked as deleted. Please report this as a possible bug.")
+                }
+            } yield SuccessResponseV2("Resource marked as deleted")
+        }
+
+        for {
+            // Do the remaining pre-update checks and the update while holding an update lock on the resource.
+            taskResult <- IriLocker.runWithIriLock(
+                deleteResourceV2.apiRequestID,
+                deleteResourceV2.resourceIri,
+                () => makeTaskFuture
+            )
+        } yield taskResult
+    }
+
     /**
       * Generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating a resource and its values.
       * This method does pre-update checks that have to be done for each new resource individually, even when
@@ -371,7 +424,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param defaultResourcePermissions the default permissions to be given to the resource, if it does not have custom permissions.
       * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
       *                                   have custom permissions. This is a map of property IRIs to permission strings.
-      * @param creationDate               the timestamp to be attached to the resource and its values.
+      * @param creationDate               the versionDate to be attached to the resource and its values.
       * @param requestingUser             the user making the request.
       * @return a [[ResourceReadyToCreate]].
       */
@@ -831,7 +884,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param createResources the resources that were supposed to be created.
       * @param requestingUser  the user making the request.
       */
-    private def doSipiPostUpdateForResources[T](updateFuture: Future[T], createResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[T] = {
+    private def doSipiPostUpdateForResources[T <: UpdateResultInProject](updateFuture: Future[T],
+                                                                         createResources: Seq[CreateResourceV2],
+                                                                         requestingUser: UserADM): Future[T] = {
         val allValues: Seq[ValueContentV2] = createResources.flatMap(_.flatValues).map(_.valueContent)
 
         val resultFutures: Seq[Future[T]] = allValues.map {
@@ -856,9 +911,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Gets the requested resources from the triplestore.
       *
       * @param resourceIris the Iris of the requested resources.
-      * @return a [[Map[IRI, ResourceWithValueRdfData]]] representing the resources.
+      * @param preview      `true` if a preview of the resource is requested.
+      * @param versionDate  if defined, requests the state of the resources at the specified time in the past.
+      *                     Cannot be used in conjunction with `preview`.
+      * @return a map of resource IRIs to RDF data.
       */
-    private def getResourcesFromTriplestore(resourceIris: Seq[IRI], preview: Boolean, requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
+    private def getResourcesFromTriplestore(resourceIris: Seq[IRI],
+                                            preview: Boolean,
+                                            propertyIri: Option[SmartIri],
+                                            versionDate: Option[Instant],
+                                            requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -867,7 +929,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
                 resourceIris = resourceIrisDistinct,
-                preview
+                preview = preview,
+                maybePropertyIri = propertyIri,
+                maybeVersionDate = versionDate
             ).toString())
 
             // _ = println(resourceRequestSparql)
@@ -891,17 +955,27 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Get one or several resources and return them as a sequence.
       *
       * @param resourceIris   the resources to query for.
+      * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResources(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def getResources(resourceIris: Seq[IRI],
+                             propertyIri: Option[SmartIri] = None,
+                             versionDate: Option[Instant] = None,
+                             requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
 
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = false, requestingUser = requestingUser)
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(
+                resourceIris = resourceIris,
+                preview = false,
+                propertyIri = propertyIri,
+                versionDate = versionDate,
+                requestingUser = requestingUser
+            )
 
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
@@ -912,6 +986,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         resourceIri = resIri,
                         resourceRdfData = queryResultsSeparated(resIri),
                         mappings = mappingsAsMap,
+                        versionDate = versionDate,
                         responderManager = responderManager,
                         requestingUser = requestingUser
                     )
@@ -936,7 +1011,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = true, requestingUser = requestingUser)
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(
+                resourceIris = resourceIris,
+                preview = true,
+                propertyIri = None,
+                versionDate = None,
+                requestingUser = requestingUser
+            )
 
             resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
@@ -944,6 +1025,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         resourceIri = resIri,
                         resourceRdfData = queryResultsSeparated(resIri),
                         mappings = Map.empty[IRI, MappingAndXSLTransformation],
+                        versionDate = None,
                         responderManager = responderManager,
                         requestingUser = requestingUser
                     )
@@ -962,25 +1044,25 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param requestingUser        the user making the request.
       * @return the Gravsearch template.
       */
-    private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM) = {
+    private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM): Future[String] = {
 
         val gravsearchUrlFuture = for {
-            gravsearchResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+            resources: ReadResourcesSequenceV2 <- getResources(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)
+            resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
-            gravsearchFileValueContent: TextFileValueContentV2 = gravsearchResponseV2.resources.headOption match {
-                case Some(resource: ReadResourceV2) if resource.resourceClassIri.toString == OntologyConstants.KnoraBase.TextRepresentation =>
-                    resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
-                        case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
-                            case value: ReadValueV2 => value.valueContent match {
-                                case textRepr: TextFileValueContentV2 => textRepr
-                                case other => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
-                            }
-                        }
+            _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
+                throw BadRequestException(s"Resource $gravsearchTemplateIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
+            }
 
-                        case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
+            gravsearchFileValueContent: TextFileValueContentV2 = resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
+                case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
+                    case value: ReadValueV2 => value.valueContent match {
+                        case textRepr: TextFileValueContentV2 => textRepr
+                        case _ => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
                     }
+                }
 
-                case None => throw BadRequestException(s"Resource $gravsearchTemplateIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
+                case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
             }
 
             // check if `xsltFileValue` represents an XSL transformation
@@ -988,7 +1070,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 throw BadRequestException(s"$gravsearchTemplateIri does not have a file value referring to an XSL transformation")
             }
 
-            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${gravsearchFileValueContent.fileValue.internalFilename}"
+            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}"
 
         } yield gravSearchUrl
 
@@ -1022,14 +1104,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         /**
           * Extract the text value to be converted to TEI/XML.
           *
-          * @param readResourceSeq the resource which is expected to hold the text value.
+          * @param readResource the resource which is expected to hold the text value.
           * @return a [[TextValueContentV2]] representing the text value to be converted to TEI/XML.
           */
-        def getTextValueFromReadResourceSeq(readResourceSeq: ReadResourcesSequenceV2): TextValueContentV2 = {
+        def getTextValueFromReadResource(readResource: ReadResourceV2): TextValueContentV2 = {
 
-            if (readResourceSeq.resources.size != 1) throw BadRequestException(s"Expected exactly one resource, but ${readResourceSeq.resources.size} given")
-
-            readResourceSeq.resources.head.values.get(textProperty) match {
+            readResource.values.get(textProperty) match {
                 case Some(valObjs: Seq[ReadValueV2]) if valObjs.size == 1 =>
                     // make sure that the property has one instance and that it is of type TextValue and that is has standoff (markup)
                     valObjs.head.valueContent match {
@@ -1098,7 +1178,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         for {
 
             // get the requested resource
-            resource: ReadResourcesSequenceV2 <- if (gravsearchTemplateIri.nonEmpty) {
+            resource: ReadResourceV2 <- if (gravsearchTemplateIri.nonEmpty) {
 
                 // check that there is an XSLT to create the TEI header
                 if (headerXSLTIri.isEmpty) throw BadRequestException(s"When a Gravsearch template Iri is provided, also a header XSLT Iri has to be provided.")
@@ -1115,11 +1195,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                     // do a request to the SearchResponder
                     gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
-
-                    // exactly one resource is expected
-                    _ = if (gravSearchResponse.resources.size != 1) throw BadRequestException(s"Gravsearch query for $resourceIri should return one result, but ${gravSearchResponse.resources.size} given.")
-
-                } yield gravSearchResponse
+                } yield gravSearchResponse.toResource(resourceIri)
 
             } else {
                 // no Gravsearch template is provided
@@ -1129,29 +1205,32 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 for {
                     // get requested resource
-                    resource <- getResources(Vector(resourceIri), requestingUser)
+                    resource <- getResources(resourceIris = Vector(resourceIri), requestingUser = requestingUser).map(_.toResource(resourceIri))
 
                 } yield resource
             }
 
             // get the value object representing the text value that is to be mapped to the body of the TEI document
-            bodyTextValue: TextValueContentV2 = getTextValueFromReadResourceSeq(resource)
+            bodyTextValue: TextValueContentV2 = getTextValueFromReadResource(resource)
 
             // the ext value is expected to have standoff markup
             _ = if (bodyTextValue.standoffAndMapping.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
 
             // get all the metadata but the text property for the TEI header
-            headerResource = resource.resources.head.copy(
-                values = convertDateToGregorian(resource.resources.head.values - textProperty)
+            headerResource = resource.copy(
+                values = convertDateToGregorian(resource.values - textProperty)
             )
 
             // get the XSL transformation for the TEI header
-            headerXSLT: Option[String] <- if (headerXSLTIri.nonEmpty) {
-                for {
-                    xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(headerXSLTIri.get, requestingUser = requestingUser)).mapTo[GetXSLTransformationResponseV2]
-                } yield Some(xslTransformation.xslt)
-            } else {
-                Future(None)
+            headerXSLT: Option[String] <- headerXSLTIri match {
+                case Some(headerIri) =>
+                    val teiHeaderXsltRequest = GetXSLTransformationRequestV2(xsltTextRepresentationIri = headerIri, requestingUser = requestingUser)
+
+                    for {
+                        xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? teiHeaderXsltRequest).mapTo[GetXSLTransformationResponseV2]
+                    } yield Some(xslTransformation.xslt)
+
+                case None => Future(None)
             }
 
             // get the Iri of the mapping to convert standoff markup to TEI/XML
@@ -1184,8 +1263,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                     case Some(xslTransformationIri) =>
                         // get XSLT for the TEI body.
+                        val teiBodyXsltRequest = GetXSLTransformationRequestV2(xsltTextRepresentationIri = xslTransformationIri, requestingUser = requestingUser)
+
                         for {
-                            xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(xslTransformationIri, requestingUser = requestingUser)).mapTo[GetXSLTransformationResponseV2]
+                            xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? teiBodyXsltRequest).mapTo[GetXSLTransformationResponseV2]
                         } yield xslTransformation.xslt
 
 
@@ -1525,5 +1606,67 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         )
     }
 
-}
+    /**
+      * Returns the version history of a resource.
+      *
+      * @param resourceHistoryRequest the version history request.
+      * @return the resource's version history.
+      */
+    def getResourceHistoryV2(resourceHistoryRequest: ResourceVersionHistoryGetRequestV2): Future[ResourceVersionHistoryResponseV2] = {
+        for {
+            // Get the resource preview, to make sure the user has permission to see the resource, and to get
+            // its creation date.
 
+            resourcePreviewResponse: ReadResourcesSequenceV2 <- getResourcePreview(
+                resourceIris = Seq(resourceHistoryRequest.resourceIri),
+                requestingUser = resourceHistoryRequest.requestingUser
+            )
+
+            resourcePreview: ReadResourceV2 = resourcePreviewResponse.toResource(resourceHistoryRequest.resourceIri)
+
+            // Get the version history of the resource's values.
+
+            historyRequestSparql = queries.sparql.v2.txt.getResourceValueVersionHistory(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceHistoryRequest.resourceIri,
+                maybeStartDate = resourceHistoryRequest.startDate,
+                maybeEndDate = resourceHistoryRequest.endDate
+            ).toString()
+
+            valueHistoryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(historyRequestSparql)).mapTo[SparqlSelectResponse]
+
+            valueHistoryEntries: Seq[ResourceHistoryEntry] = valueHistoryResponse.results.bindings.map {
+                row: VariableResultsRow =>
+                    val versionDateStr: String = row.rowMap("versionDate")
+                    val author: IRI = row.rowMap("author")
+
+                    ResourceHistoryEntry(
+                        versionDate = stringFormatter.xsdDateTimeStampToInstant(versionDateStr, throw InconsistentTriplestoreDataException(s"Could not parse version date: $versionDateStr")),
+                        author = author
+                    )
+            }
+
+            // Figure out whether to add the resource's creation to the history.
+
+            // Is there a requested start date that's after the resource's creation date?
+            historyEntriesWithResourceCreation: Seq[ResourceHistoryEntry] = if (resourceHistoryRequest.startDate.exists(_.isAfter(resourcePreview.creationDate))) {
+                // Yes. No need to add the resource's creation.
+                valueHistoryEntries
+            } else {
+                // No. Does the value history contain the resource creation date?
+                if (valueHistoryEntries.nonEmpty && valueHistoryEntries.last.versionDate == resourcePreview.creationDate) {
+                    // Yes. No need to add the resource's creation.
+                    valueHistoryEntries
+                } else {
+                    // No. Add a history entry for it.
+                    valueHistoryEntries :+ ResourceHistoryEntry(
+                        versionDate = resourcePreview.creationDate,
+                        author = resourcePreview.attachedToUser
+                    )
+                }
+            }
+        } yield ResourceVersionHistoryResponseV2(
+            historyEntriesWithResourceCreation
+        )
+    }
+}

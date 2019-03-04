@@ -11,11 +11,15 @@
       "@type" : "xsd:decimal",
       "@value" : "2.1"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember"
+    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2017-07-25T07:13:16.732Z"
+    }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/uqmMo72OQ2K2xe7mkIytlgf"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/uqmMo72OQ2K2xe7mkIytlgf"
   },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0001"
@@ -28,6 +32,10 @@
     "@value" : "2017-07-25T07:13:16.732Z"
   },
   "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+  "knora-api:versionArkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/uqmMo72OQ2K2xe7mkIytlgf.20170725T071316732Z"
+  },
   "rdfs:label" : "Testding for extended search",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

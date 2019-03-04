@@ -3,7 +3,11 @@
   "@type" : "incunabula:book",
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W"
+  },
+  "knora-api:versionArkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T150521Z"
   },
   "rdfs:label" : "Reise ins Heilige Land",
   "@context" : {

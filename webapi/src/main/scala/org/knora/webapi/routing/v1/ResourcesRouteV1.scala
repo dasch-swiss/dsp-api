@@ -40,6 +40,7 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator}
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages._
@@ -224,31 +225,36 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             val resourceTypeIri = stringFormatter.validateAndEscapeIri(apiRequest.restype_id, throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
             val label = stringFormatter.toSparqlEncodedString(apiRequest.label, throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
 
-            // for GUI-case:
-            // file has already been stored by Sipi.
-            // TODO: in the old SALSAH, the file params were sent as a property salsah:__location__ -> the GUI has to be adapated
-            val paramConversionRequest: Option[SipiConversionFileRequestV1] = apiRequest.file match {
-                case Some(createFile: CreateFileV1) => Some(SipiConversionFileRequestV1(
-                    originalFilename = stringFormatter.toSparqlEncodedString(createFile.originalFilename, throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
-                    originalMimeType = stringFormatter.toSparqlEncodedString(createFile.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
-                    filename = stringFormatter.toSparqlEncodedString(createFile.filename, throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
-                    userProfile = userADM.asUserProfileV1
-                ))
-                case None => None
-            }
-
-            val valuesToBeCreatedWithFuture: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(
-                properties = apiRequest.properties,
-                acceptStandoffLinksToClientIDs = false,
-                userProfile = userADM
-            )
-
-            // since this function `makeCreateResourceRequestMessage` is called by the POST multipart route receiving the binaries (non GUI-case)
-            // and by the other POST route, either multipartConversionRequest or paramConversionRequest is set if a file should be attached to the resource, but not both.
-            if (multipartConversionRequest.nonEmpty && paramConversionRequest.nonEmpty) throw BadRequestException("Binaries sent and file params set to route. This is illegal.")
-
             for {
-                // make the whole Map a Future
+                projectShortcode: String <- for {
+                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(projectIri), requestingUser = userADM)).mapTo[ProjectGetResponseADM]
+                } yield projectResponse.project.shortcode
+
+                // for GUI-case:
+                // file has already been stored by Sipi.
+                // TODO: in the old SALSAH, the file params were sent as a property salsah:__location__ -> the GUI has to be adapated
+                paramConversionRequest: Option[SipiConversionFileRequestV1] = apiRequest.file match {
+                    case Some(createFile: CreateFileV1) => Some(SipiConversionFileRequestV1(
+                        originalFilename = stringFormatter.toSparqlEncodedString(createFile.originalFilename, throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
+                        originalMimeType = stringFormatter.toSparqlEncodedString(createFile.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
+                        projectShortcode = projectShortcode,
+                        filename = stringFormatter.toSparqlEncodedString(createFile.filename, throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
+                        userProfile = userADM.asUserProfileV1
+                    ))
+                    case None => None
+                }
+
+                valuesToBeCreatedWithFuture: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(
+                    properties = apiRequest.properties,
+                    acceptStandoffLinksToClientIDs = false,
+                    userProfile = userADM
+                )
+
+                // since this function `makeCreateResourceRequestMessage` is called by the POST multipart route receiving the binaries (non GUI-case)
+                // and by the other POST route, either multipartConversionRequest or paramConversionRequest is set if a file should be attached to the resource, but not both.
+                _ = if (multipartConversionRequest.nonEmpty && paramConversionRequest.nonEmpty) throw BadRequestException("Binaries sent and file params set to route. This is illegal.")
+
+               // make the whole Map a Future
                 valuesToBeCreated: Iterable[(IRI, Seq[CreateValueV1WithComment])] <- Future.traverse(valuesToBeCreatedWithFuture) {
                     case (propIri: IRI, valuesFuture: Future[Seq[CreateValueV1WithComment]]) =>
                         for {
@@ -270,7 +276,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             )
         }
 
-        def createOneResourceRequestFromXmlImport(resourceRequest: CreateResourceFromXmlImportRequestV1, userProfile: UserADM): Future[OneOfMultipleResourceCreateRequestV1] = {
+        def createOneResourceRequestFromXmlImport(resourceRequest: CreateResourceFromXmlImportRequestV1, projectShortcode: String, userProfile: UserADM): Future[OneOfMultipleResourceCreateRequestV1] = {
             val values: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(
                 properties = resourceRequest.properties,
                 acceptStandoffLinksToClientIDs = true,
@@ -296,6 +302,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         SipiConversionPathRequestV1(
                             originalFilename = stringFormatter.toSparqlEncodedString(fileToRead.file.getName, throw BadRequestException(s"The filename is invalid: '${fileToRead.file.getName}'")),
                             originalMimeType = stringFormatter.toSparqlEncodedString(fileToRead.mimeType, throw BadRequestException(s"The MIME type is invalid: '${fileToRead.mimeType}'")),
+                            projectShortcode = projectShortcode,
                             source = fileToRead.file,
                             userProfile = userProfile.asUserProfileV1
                         )
@@ -313,12 +320,26 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 throw BadRequestException(s"One or more client resource IDs were used for multiple resources: ${duplicateClientIDs.mkString(", ")}")
             }
 
-            val resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
-                resourceRequest.map(createResourceRequest => createOneResourceRequestFromXmlImport(createResourceRequest, userProfile))
-
             for {
+                projectShortcode: String <- for {
+                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(projectId), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
+                } yield projectResponse.project.shortcode
+
+                resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] = resourceRequest.map {
+                    createResourceRequest => createOneResourceRequestFromXmlImport(
+                        resourceRequest = createResourceRequest,
+                        projectShortcode = projectShortcode,
+                        userProfile = userProfile
+                    )
+                }
+
                 resToCreateCollection: Seq[OneOfMultipleResourceCreateRequestV1] <- Future.sequence(resourcesToCreate)
-            } yield MultipleResourceCreateRequestV1(resToCreateCollection, projectId, userProfile, apiRequestID)
+            } yield MultipleResourceCreateRequestV1(
+                resourcesToCreate = resToCreateCollection,
+                projectIri = projectId,
+                userProfile = userProfile,
+                apiRequestID = apiRequestID
+            )
         }
 
         def makeGetPropertiesRequestMessage(resIri: IRI, userADM: UserADM) = {
@@ -665,7 +686,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     val clientIDForResource: String = (resourceNode \ "@id").toString
 
                     // Get the optional resource creation date.
-                    val creationDate: Option[Instant] = resourceNode.attribute("creationDate").map(creationDateNode => stringFormatter.toInstant(creationDateNode.text, throw BadRequestException(s"Invalid resource creation date: ${creationDateNode.text}")))
+                    val creationDate: Option[Instant] = resourceNode.attribute("creationDate").map(creationDateNode => stringFormatter.xsdDateTimeStampToInstant(creationDateNode.text, throw BadRequestException(s"Invalid resource creation date: ${creationDateNode.text}")))
 
                     // Convert the XML element's label and namespace to an internal resource class IRI.
 
@@ -895,12 +916,12 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         searchString = stringFormatter.toSparqlEncodedString(searchstr, throw BadRequestException(s"Invalid search string: '$searchstr'"))
 
                         resourceTypeIri: Option[IRI] = restype match {
-                            case ("-1") => None
-                            case (restype: IRI) => Some(stringFormatter.validateAndEscapeIri(restype, throw BadRequestException(s"Invalid param restype: $restype")))
+                            case "-1" => None
+                            case restype: IRI => Some(stringFormatter.validateAndEscapeIri(restype, throw BadRequestException(s"Invalid param restype: $restype")))
                         }
 
                         numberOfProps: Int = stringFormatter.validateInt(numprops, throw BadRequestException(s"Invalid param numprops: $numprops")) match {
-                            case (number: Int) => if (number < 1) 1 else number // numberOfProps must not be smaller than 1
+                            case number: Int => if (number < 1) 1 else number // numberOfProps must not be smaller than 1
                         }
 
                         limitOfResults = stringFormatter.validateInt(limit, throw BadRequestException(s"Invalid param limit: $limit"))
@@ -959,11 +980,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
                         // collect all parts of the multipart as it arrives into a map
                         val allPartsFuture: Future[Map[Name, Any]] = formdata.parts.mapAsync[(Name, Any)](1) {
-                            case b: BodyPart if b.name == JSON_PART => {
+                            case b: BodyPart if b.name == JSON_PART =>
                                 log.debug(s"inside allPartsFuture - processing $JSON_PART")
                                 b.toStrict(2.seconds).map(strict => (b.name, strict.entity.data.utf8String.parseJson))
-                            }
-                            case b: BodyPart if b.name == FILE_PART => {
+
+                            case b: BodyPart if b.name == FILE_PART =>
                                 log.debug(s"inside allPartsFuture - processing $FILE_PART")
                                 val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
                                 val tmpFile = FileUtil.createTempFile(settings)
@@ -973,7 +994,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                     receivedFile.success(tmpFile)
                                     (b.name, FileInfo(b.name, b.filename.get, b.entity.contentType))
                                 }
-                            }
+
                             case b: BodyPart if b.name.isEmpty => throw BadRequestException("part of HTTP multipart request has no name")
                             case b: BodyPart => throw BadRequestException(s"multipart contains invalid name: ${b.name}")
                         }.runFold(Map.empty[Name, Any])((map, tuple) => map + tuple)
@@ -1006,10 +1027,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             originalFilename = fileInfo.fileName
                             originalMimeType = fileInfo.contentType.toString
 
+                            projectIri = stringFormatter.validateAndEscapeIri(apiRequest.project_id, throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
+
+                            projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(projectIri), requestingUser = userADM)).mapTo[ProjectGetResponseADM]
 
                             sipiConvertPathRequest = SipiConversionPathRequestV1(
                                 originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
                                 originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
+                                projectShortcode = projectResponse.project.shortcode,
                                 source = sourcePath,
                                 userProfile = userProfile
                             )

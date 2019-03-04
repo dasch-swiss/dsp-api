@@ -176,11 +176,6 @@ case class UsersGetRequestADM(userInformationTypeADM: UserInformationTypeADM = U
 case class UserGetADM(identifier: UserIdentifierADM,
                       userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
                       requestingUser: UserADM) extends UsersResponderRequestADM {
-
-    // need either user IRI username, or email
-    if (identifier.isEmpty) {
-        throw BadRequestException("Need to provide the user IRI, username, and/or email.")
-    }
 }
 
 /**
@@ -193,11 +188,6 @@ case class UserGetADM(identifier: UserIdentifierADM,
 case class UserGetRequestADM(identifier: UserIdentifierADM,
                              userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
                              requestingUser: UserADM) extends UsersResponderRequestADM {
-
-    // need either user IRI, username, or email
-    if (identifier.isEmpty) {
-        throw BadRequestException("Need to provide the user IRI, username, and/or email.")
-    }
 }
 
 /**
@@ -555,7 +545,21 @@ case class UserADM(id: IRI,
         }
     }
 
-    /* Is the user a member of the SystemAdmin group */
+    /**
+      * Given an identifier, returns true if it is the same user, and false if not.
+      */
+    def isSelf(identifier: UserIdentifierADM): Boolean = {
+
+        val iriEquals = identifier.toIriOption.contains(id)
+        val emailEquals = identifier.toEmailOption.contains(email)
+        val usernameEquals = identifier.toUsernameOption.contains(username)
+
+        iriEquals || emailEquals || usernameEquals
+    }
+
+    /**
+      * Is the user a member of the SystemAdmin group
+      */
     def isSystemAdmin: Boolean = {
         permissions.groupsPerProject.getOrElse(OntologyConstants.KnoraBase.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraBase.SystemAdmin)
     }
@@ -681,6 +685,9 @@ object UserInformationTypeADM extends Enumeration {
     }
 }
 
+/**
+  * Represents the type of a user identifier.
+  */
 object UserIdentifierType extends Enumeration {
 
     type UserIdentifierType
@@ -690,33 +697,61 @@ object UserIdentifierType extends Enumeration {
     val USERNAME = Value(3, "username")
 }
 
+/**
+  * The UserIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
+  * validated and escaped.
+  */
+object UserIdentifierADM {
+    def apply(maybeIri: Option[String] = None,
+              maybeEmail: Option[String] = None,
+              maybeUsername: Option[String] = None)(implicit sf: StringFormatter): UserIdentifierADM = {
+
+        val parametersCount: Int = List(
+            maybeIri,
+            maybeEmail,
+            maybeUsername
+        ).flatten.size
+
+        // something needs to be set
+        if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
+
+        if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
+
+        new UserIdentifierADM(
+            maybeIri = sf.validateAndEscapeOptionalUserIri(maybeIri, throw BadRequestException(s"Invalid user IRI $maybeIri")),
+            maybeEmail = sf.validateAndEscapeOptionalEmail(maybeEmail, throw BadRequestException(s"Invalid email $maybeEmail")),
+            maybeUsername = sf.validateAndEscapeOptionalUsername(maybeUsername, throw BadRequestException(s"Invalid username $maybeUsername")))
+    }
+}
 
 /**
   * Represents the user's identifier. It can be an IRI, email, or username.
-  * @param value the user's identifier.
+  *
+  * @param maybeIri      the user's IRI.
+  * @param maybeEmail    the user's email.
+  * @param maybeUsername the user's username.
   */
-case class UserIdentifierADM(value: String)(implicit stringFormatter: StringFormatter) {
+class UserIdentifierADM private(maybeIri: Option[IRI] = None,
+                                maybeEmail: Option[String] = None,
+                                maybeUsername: Option[String] = None) {
 
-    // throws an exception if an empty string is used as an identifier value
-    if (value.isEmpty) {
-        throw BadRequestException("Empty user identifier is not allowed.")
-    }
+    // squash and return value.
+    val value: String = List(
+        maybeIri,
+        maybeEmail,
+        maybeUsername
+    ).flatten.head
 
-    def nonEmpty: Boolean = value.nonEmpty
-
-    def isEmpty: Boolean = value.isEmpty
+    // validate and escape
 
     def hasType: UserIdentifierType.Value = {
 
-        if (stringFormatter.isKnoraUserIriStr(value)) {
+        if (maybeIri.isDefined) {
             UserIdentifierType.IRI
-        } else if (stringFormatter.validateEmail(value).isDefined) {
+        } else if (maybeEmail.isDefined) {
             UserIdentifierType.EMAIL
-        } else if (value.nonEmpty) {
-            UserIdentifierType.USERNAME
         } else {
-            // this can actually never happen
-            throw BadRequestException("Empty user identifier is not allowed.")
+            UserIdentifierType.USERNAME
         }
     }
 
@@ -724,44 +759,28 @@ case class UserIdentifierADM(value: String)(implicit stringFormatter: StringForm
       * Tries to return the value as an IRI.
       */
     def toIri: IRI = {
-        if (this.hasType == UserIdentifierType.IRI) {
-            stringFormatter.validateAndEscapeIri(value, throw DataConversionException(s"Could not convert $value to an IRI."))
-        } else {
-            throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.IRI' type.")
-        }
+        maybeIri.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.IRI' type."))
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toIriOption: Option[IRI] = {
-        if (this.hasType == UserIdentifierType.IRI) {
-            Some(stringFormatter.validateAndEscapeIri(value, throw DataConversionException(s"Could not convert $value to an IRI.")))
-        } else {
-            None
-        }
+        maybeIri
     }
 
     /**
       * Returns an optional value of the identifier.
       */
-    def toEmailOption: Option[IRI] = {
-        if (this.hasType == UserIdentifierType.EMAIL) {
-            Some(value)
-        } else {
-            None
-        }
+    def toEmailOption: Option[String] = {
+        maybeEmail
     }
 
     /**
       * Returns an optional value of the identifier.
       */
-    def toUsernameOption: Option[IRI] = {
-        if (this.hasType == UserIdentifierType.USERNAME) {
-            Some(value)
-        } else {
-            None
-        }
+    def toUsernameOption: Option[String] = {
+        maybeUsername
     }
 
 }

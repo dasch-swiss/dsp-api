@@ -36,9 +36,10 @@ end
 originalFilename = server.post['originalfilename']
 originalMimetype = server.post['originalmimetype']
 sourcePath = server.post['source']
+prefix = server.post['prefix']
 
 -- check if all the expected params are set
-if originalFilename == nil or originalMimetype == nil or sourcePath == nil then
+if originalFilename == nil or originalMimetype == nil or sourcePath == nil or prefix == nil then
     send_error(400, PARAMETERS_INCORRECT)
     return
 end
@@ -83,19 +84,21 @@ if mediatype == IMAGE then
     -- it is an image
 
     --
-    -- check if knora directory is available, if not, create it
+    -- check if project directory is available, if not, create it
     --
-    knoraDir = config.imgroot .. '/knora/'
-    success, exists = server.fs.exists(knoraDir)
+
+    projectDir = config.imgroot .. '/' .. prefix .. '/'
+
+    success, exists = server.fs.exists(projectDir)
     if not success then
         server.log("server.fs.exists() failed: " .. exists, server.loglevel.LOG_ERR)
     end
 
     if not exists then
-        success, errmsg = server.fs.mkdir(knoraDir, 511)
+        success, errmsg = server.fs.mkdir(projectDir, 511)
         if not success then
             server.log("server.fs.mkdir() failed: " .. errmsg, server.loglevel.LOG_ERR)
-            send_error(500, "Knora directory could not be created on server")
+            send_error(500, "Project directory could not be created on server")
             return
         end
     end
@@ -149,43 +152,9 @@ if mediatype == IMAGE then
         return false
     end
 
-    success, errmsg = fullImg:write(knoraDir .. newFilePath)
+    success, errmsg = fullImg:write(projectDir .. newFilePath)
     if not success then
         server.log("fullImg:write() failed: " .. errmsg, server.loglevel.LOG_ERR)
-        return
-    end
-
-    --
-    -- create thumbnail (jpg)
-    --
-    success, thumbImg = SipiImage.new(sourcePath, { size = config.thumb_size })
-    if not success then
-        server.log("SipiImage.new failed: " .. thumbImg, server.loglevel.LOG_ERR)
-        return
-    end
-
-    success, thumbDims = thumbImg:dims()
-    if not success then
-        server.log("thumbImg:dims() failed: " .. thumbDims, server.loglevel.LOG_ERR)
-        return
-    end
-
-    thumbImgName = baseName .. '.jpg'
-
-    --
-    -- create new thumnail image file path with sublevels:
-    --
-    success, newThumbPath = helper.filename_hash(thumbImgName);
-    if not success then
-        server.sendStatus(500)
-        server.log(gaga, server.loglevel.error)
-        return false
-    end
-
-
-    success, errmsg = thumbImg:write(knoraDir .. newThumbPath)
-    if not success then
-        server.log("thumbImg:write failed: " .. errmsg, server.loglevel.LOG_ERR)
         return
     end
 
@@ -194,10 +163,6 @@ if mediatype == IMAGE then
         filename_full = fullImgName,
         nx_full = fullDims.nx,
         ny_full = fullDims.ny,
-        mimetype_thumb = "image/jpeg",
-        filename_thumb = thumbImgName,
-        nx_thumb = thumbDims.nx,
-        ny_thumb = thumbDims.ny,
         original_mimetype = originalMimetype,
         original_filename = originalFilename,
         file_type = IMAGE
@@ -210,19 +175,19 @@ elseif mediatype == TEXT then
     -- it is a text file
 
     --
-    -- check if knora directory is available, if not, create it
+    -- check if project directory is available, if not, create it
     --
-    fileDir = config.docroot .. '/knora/'
-    success, exists = server.fs.exists(fileDir)
+    projectFileDir = config.docroot .. '/' .. prefix .. '/'
+    success, exists = server.fs.exists(projectFileDir)
     if not success then
         server.log("server.fs.exists() failed: " .. exists, server.loglevel.LOG_ERR)
     end
 
     if not exists then
-        success, errmsg = server.fs.mkdir(fileDir, 511)
+        success, errmsg = server.fs.mkdir(projectFileDir, 511)
         if not success then
             server.log("server.fs.mkdir() failed: " .. errmsg, server.loglevel.LOG_ERR)
-            send_error(500, "Knora directory could not be created on server")
+            send_error(500, "Project directory could not be created on server")
             return
         end
     end
@@ -253,7 +218,7 @@ elseif mediatype == TEXT then
         return
     end
 
-    local filePath = fileDir .. filename
+    local filePath = projectFileDir .. filename
 
     local success, result = server.fs.copyFile(sourcePath, filePath)
     if not success then
