@@ -180,31 +180,6 @@ fileserver = {
 --
 routes = {
     {
-        method = 'POST',
-        route = '/make_thumbnail',
-        script = 'make_thumbnail.lua'
-    },
-    {
-        method = 'POST',
-        route = '/convert_from_binaries',
-        script = 'convert_from_binaries.lua'
-    },
-    {
-        method = 'POST',
-        route = '/convert_from_file',
-        script = 'convert_from_file.lua'
-    },
-    --{
-    --    method = 'POST',
-    --    route = '/Knora_login',
-    --    script = 'Knora_login.lua'
-    --},
-    --{
-    --    method = 'POST',
-    --    route = '/Knora_logout',
-    --    script = 'Knora_logout.lua'
-    --},
-    {
         method = 'GET',
         route = '/test_functions',
         script = 'test_functions.lua'
