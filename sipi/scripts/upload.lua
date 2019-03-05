@@ -33,12 +33,24 @@ if not success then
     return
 end
 
--- Check for a valid JSON Web Token from Knora.
+-- Check for a valid JSON Web Token or authentication cookie from Knora.
 
 local token = get_knora_token()
 
 if token == nil then
-  return
+    local cookie_OK = false
+
+    for cookie_index, cookie in pairs(server.cookies) do
+        if get_session_id(cookie) ~= nil then
+            cookie_OK = true
+            server.log("Knora cookie OK", server.loglevel.LOG_DEBUG)
+            break
+        end
+    end
+
+    if not cookie_OK then
+        return
+    end
 end
 
 -- Create the temporary directory if necessary.
