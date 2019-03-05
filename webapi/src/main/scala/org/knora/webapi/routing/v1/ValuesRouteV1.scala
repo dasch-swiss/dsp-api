@@ -28,7 +28,7 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.SipiConversionFileRequestV1
+import org.knora.webapi.messages.store.sipimessages.{GetImageMetadataRequest, GetImageMetadataResponseV2}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceInfoGetRequestV1, ResourceInfoResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -310,29 +310,28 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
         }
 
-        def makeChangeFileValueRequest(resIriStr: IRI, projectShortcode: String, apiRequest: Option[ChangeFileValueApiRequestV1], userADM: UserADM): ChangeFileValueRequestV1 = {
+        def makeChangeFileValueRequest(resIriStr: IRI, projectShortcode: String, apiRequest: ChangeFileValueApiRequestV1, userADM: UserADM): Future[ChangeFileValueRequestV1] = {
             val resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
+            val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, apiRequest.file)
 
-            if (apiRequest.nonEmpty) {
-                // GUI-case
-                val fileRequest = SipiConversionFileRequestV1(
-                    originalFilename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalFilename, throw BadRequestException(s"The original filename is invalid: '${apiRequest.get.file.originalFilename}'")),
-                    originalMimeType = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${apiRequest.get.file.originalMimeType}'")),
+            for {
+                imageMetadataResponse: GetImageMetadataResponseV2 <- (storeManager ? GetImageMetadataRequest(fileUrl = tempFileUrl, requestingUser = userADM)).mapTo[GetImageMetadataResponseV2]
+
+                // TODO: check that the file stored is an image.
+            } yield ChangeFileValueRequestV1(
+                resourceIri = resourceIri,
+                file = StillImageFileValueV1(
+                    internalFilename = apiRequest.file,
+                    internalMimeType = "image/jp2",
+                    originalFilename = imageMetadataResponse.originalFilename,
+                    originalMimeType = Some(imageMetadataResponse.originalMimeType),
                     projectShortcode = projectShortcode,
-                    filename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.filename, throw BadRequestException(s"Invalid filename: '${apiRequest.get.file.filename}'")),
-                    userProfile = userADM.asUserProfileV1
-                )
-
-                ChangeFileValueRequestV1(
-                    resourceIri = resourceIri,
-                    file = fileRequest,
-                    apiRequestID = UUID.randomUUID,
-                    userProfile = userADM)
-            } else {
-                // no file information was provided
-                throw BadRequestException("A file value change was requested but no file information was provided")
-            }
-
+                    dimX = imageMetadataResponse.width,
+                    dimY = imageMetadataResponse.height
+                ),
+                apiRequestID = UUID.randomUUID,
+                userProfile = userADM
+            )
         }
 
         // Version history request requires 3 URL path segments: resource IRI, property IRI, and current value IRI
@@ -461,19 +460,18 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             put {
                 entity(as[ChangeFileValueApiRequestV1]) { apiRequest =>
                     requestContext =>
-
                         val requestMessage = for {
                             userADM <- getUserADM(requestContext)
                             resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
                             resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(resourceIri, userADM)).mapTo[ResourceInfoResponseV1]
                             projectShortcode = resourceInfoResponse.resource_info.getOrElse(throw NotFoundException(s"Resource not found: $resourceIri")).project_shortcode
-
-                        } yield makeChangeFileValueRequest(
-                            resIriStr = resIriStr,
-                            projectShortcode = projectShortcode,
-                            apiRequest = Some(apiRequest),
-                            userADM = userADM
-                        )
+                            request <- makeChangeFileValueRequest(
+                                resIriStr = resIriStr,
+                                projectShortcode = projectShortcode,
+                                apiRequest = apiRequest,
+                                userADM = userADM
+                            )
+                        } yield request
 
                         RouteUtilV1.runJsonRouteWithFuture(
                             requestMessage,

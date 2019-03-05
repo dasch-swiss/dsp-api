@@ -108,13 +108,10 @@ class SipiV1R2RSpec extends R2RSpec {
     "The Resources Endpoint" should {
 
         "create a resource with a digital representation" in {
+            val internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2"
 
             val params = RequestParams.createResourceParams.copy(
-                file = Some(CreateFileV1(
-                    originalFilename = "Chlaus.jpg",
-                    originalMimeType = "image/jpeg",
-                    filename = "./test_server/images/Chlaus.jpg"
-                ))
+                file = Some(internalFilename)
             )
 
             Post("/v1/resources", HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> resourcesPath ~> check {
@@ -127,13 +124,10 @@ class SipiV1R2RSpec extends R2RSpec {
     "The Values endpoint" should {
 
         "change the file value of an existing page" in {
+            val internalFilename ="FSLC0vNvVpr-IQUO3t1AABm.jp2"
 
             val params = ChangeFileValueApiRequestV1(
-                file = CreateFileV1(
-                    originalFilename = "Chlaus.jpg",
-                    originalMimeType = "image/jpeg",
-                    filename = "./test_server/images/Chlaus.jpg"
-                )
+                file = internalFilename
             )
 
             val resIri = URLEncoder.encode("http://rdfh.ch/0803/8a0b1e75", "UTF-8")

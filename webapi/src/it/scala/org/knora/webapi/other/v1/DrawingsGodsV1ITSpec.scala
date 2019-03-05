@@ -19,18 +19,23 @@
 
 package org.knora.webapi.other.v1
 
-import java.io.File
 import java.net.URLEncoder
 
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import com.typesafe.config.ConfigFactory
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
 import org.knora.webapi.{ITKnoraLiveSpec, InvalidApiJsonException}
 import spray.json._
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 object DrawingsGodsV1ITSpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -40,9 +45,9 @@ object DrawingsGodsV1ITSpec {
 /**
   * End-to-End (E2E) test specification for additional testing of permissions.
   */
-class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) with TriplestoreJsonProtocol {
+class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass())
+    implicit override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
@@ -56,39 +61,39 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
         val drawingsOfGodsUserEmail = "ddd1@unil.ch"
         val testPass = "test"
         val pathToChlaus = "_test_data/test_route/images/Chlaus.jpg"
+        var loginToken: String = ""
+
+        "log in as a Knora user" in {
+            /* Correct username and correct password */
+
+            val params =
+                s"""
+                   |{
+                   |    "email": "$drawingsOfGodsUserEmail",
+                   |    "password": "$testPass"
+                   |}
+                """.stripMargin
+
+            val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK)
+
+            val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
+            loginToken = lr.token
+
+            loginToken.nonEmpty should be(true)
+
+            log.debug("token: {}", loginToken)
+        }
 
         "be able to create a resource, only find one DOAP (with combined resource class / property), and have permission to access the image" in {
-
-            // The image to be uploaded.
-            val fileToSend = new File(pathToChlaus)
-            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
-
-            // A multipart/form-data request containing the image.
-            val sipiFormData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
+            // Upload the image to Sipi.
+            val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = pathToChlaus, mimeType = MediaTypes.`image/tiff`))
             )
 
-            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
-            val sipiRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
-            val sipiResponseJson = getResponseJson(sipiRequest)
-
-            // Request the thumbnail from Sipi.
-            val jsonFields = sipiResponseJson.fields
-            val previewUrl = jsonFields("preview_path").asInstanceOf[JsString].value
-            val sipiThumbnailGetRequest = Get(previewUrl) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
-            checkResponseOK(sipiThumbnailGetRequest)
-
-            val fileParams = JsObject(
-                Map(
-                    "originalFilename" -> jsonFields("original_filename"),
-                    "originalMimeType" -> jsonFields("original_mimetype"),
-                    "filename" -> jsonFields("filename")
-                )
-            )
+            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
 
             val params =
                 s"""
@@ -104,7 +109,7 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
                    |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentAuthor":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-CommentAuthorList-child"}],
                    |        "http://www.knora.org/ontology/0105/drawings-gods#hasCodeVerso":[{"richtext_value":{"utf8str":"dayyad"}}]
                    |    },
-                   |    "file": ${fileParams.compactPrint},
+                   |    "file": "${uploadedFile.internalFilename}",
                    |    "project_id":"http://rdfh.ch/projects/0105",
                    |    "label":"dayyad"
                    |}

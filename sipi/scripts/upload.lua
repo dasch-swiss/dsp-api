@@ -109,6 +109,7 @@ for image_index, image_params in pairs(server.uploads) do
     end
 
     local jp2_filename = uuid62 .. '.jp2'
+    local protocol
 
     if server.secure then
         protocol = 'https://'

@@ -22,9 +22,8 @@ package org.knora.webapi.e2e.v1
 import java.io.File
 import java.net.URLEncoder
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
@@ -67,7 +66,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val pathToMarbles = "_test_data/test_route/images/marbles.tif"
     private val pathToXSLTransformation = "_test_data/test_route/texts/letterToHtml.xsl"
     private val pathToMappingWithXSLT = "_test_data/test_route/texts/mappingForLetterWithXSLTransformation.xml"
-    private val firstPageIri = new MutableTestIri
     private val secondPageIri = new MutableTestIri
 
     private val pathToBEOLBodyXSLTransformation = "_test_data/test_route/texts/beol/standoffToTEI.xsl"
@@ -77,86 +75,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val pathToBEOLLetterMapping = "_test_data/test_route/texts/beol/testLetter/beolMapping.xml"
     private val pathToBEOLBulkXML = "_test_data/test_route/texts/beol/testLetter/bulk.xml"
     private val letterIri = new MutableTestIri
-
-    /**
-      * Represents a file to be uploaded to Sipi.
-      *
-      * @param path     the path of the file.
-      * @param mimeType the MIME type of the file.
-      */
-    case class FileToUpload(path: String, mimeType: ContentType)
-
-    /**
-      * Represents an image file to be uploaded to Sipi.
-      *
-      * @param fileToUpload the file to be uploaded.
-      * @param width        the image's width in pixels.
-      * @param height       the image's height in pixels.
-      */
-    case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
-
-    /**
-      * Represents the information that Sipi returns about each file that has been uploaded.
-      *
-      * @param originalFilename     the original filename that was submitted to Sipi.
-      * @param internalFilename     Sipi's internal filename for the stored temporary file.
-      * @param temporaryBaseIIIFUrl the base URL at which the temporary file can be accessed.
-      */
-    case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryBaseIIIFUrl: String)
-
-    /**
-      * Represents Sipi's response to a file upload request.
-      *
-      * @param uploadedFiles the information about each file that was uploaded.
-      */
-    case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
-
-
-    object SipiUploadResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat3(SipiUploadResponseEntry)
-        implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
-    }
-
-    import SipiUploadResponseV2JsonProtocol._
-
-    /**
-      * Uploads a file to Sipi and returns the information in Sipi's response.
-      *
-      * @param loginToken    the login token to be included in the request to Sipi.
-      * @param filesToUpload the files to be uploaded.
-      * @return a [[SipiUploadResponse]] representing Sipi's response.
-      */
-    private def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse = {
-        // Make a multipart/form-data request containing the files.
-
-        val formDataParts: Seq[Multipart.FormData.BodyPart] = filesToUpload.map {
-            fileToUpload =>
-                val fileToSend = new File(fileToUpload.path)
-                assert(fileToSend.exists(), s"File ${fileToUpload.path} does not exist")
-
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(fileToUpload.mimeType, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-        }
-
-        val sipiFormData = Multipart.FormData(formDataParts: _*)
-
-        // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
-        val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData)
-        val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
-        // println(sipiUploadResponseJson.prettyPrint)
-        val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
-
-        // Request the temporary image from Sipi.
-        for (responseEntry <- sipiUploadResponse.uploadedFiles) {
-            val sipiGetTmpFileRequest = Get(responseEntry.temporaryBaseIIIFUrl + "/full/full/0/default.jpg")
-            checkResponseOK(sipiGetTmpFileRequest)
-        }
-
-        sipiUploadResponse
-    }
 
     /**
       * Adds the IRI of a XSL transformation to the given mapping.
@@ -199,7 +117,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
       * Given the id originally provided by the client, gets the generated IRI from a bulk import response.
       *
       * @param bulkResponse the response from the bulk import route.
-      * @param clientID the client id to look for.
+      * @param clientID     the client id to look for.
       * @return the Knora IRI of the resource.
       */
     private def getResourceIriFromBulkResponse(bulkResponse: JsObject, clientID: String): String = {
@@ -262,36 +180,13 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         }
 
         "create an 'incunabula:page' with parameters" in {
-            // The image to be uploaded.
-            val fileToSend = new File(pathToChlaus)
-            assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
-
-            // A multipart/form-data request containing the image.
-            val sipiFormData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/jpeg`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
+            // Upload the image to Sipi.
+            val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = pathToChlaus, mimeType = MediaTypes.`image/tiff`))
             )
 
-            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
-            val sipiRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData) ~> addCredentials(BasicHttpCredentials(userEmail, password))
-            val sipiResponseJson = getResponseJson(sipiRequest)
-
-            // Request the thumbnail from Sipi.
-            val jsonFields = sipiResponseJson.fields
-            val previewUrl = jsonFields("preview_path").asInstanceOf[JsString].value
-            val sipiGetRequest = Get(previewUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
-            checkResponseOK(sipiGetRequest)
-
-            val fileParams = JsObject(
-                Map(
-                    "originalFilename" -> jsonFields("original_filename"),
-                    "originalMimeType" -> jsonFields("original_mimetype"),
-                    "filename" -> jsonFields("filename")
-                )
-            )
+            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
 
             val knoraParams =
                 s"""
@@ -309,7 +204,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |        ],
                    |        "http://www.knora.org/ontology/0803/incunabula#seqnum": [{"int_value": 99999999}]
                    |    },
-                   |    "file": ${fileParams.compactPrint},
+                   |    "file": "${uploadedFile.internalFilename}",
                    |    "label": "test page",
                    |    "project_id": "http://rdfh.ch/projects/0803"
                    |}
@@ -329,39 +224,18 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         }
 
         "change an 'incunabula:page' with parameters" in {
-            // The image to be uploaded.
-            val fileToSend = new File(pathToMarbles)
-            assert(fileToSend.exists(), s"File $pathToMarbles does not exist")
-
-            // A multipart/form-data request containing the image.
-            val sipiFormData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
+            // Upload the image to Sipi.
+            val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = pathToMarbles, mimeType = MediaTypes.`image/tiff`))
             )
 
-            // Send a POST request to Sipi, asking it to make a thumbnail of the image.
-            val sipiRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData) ~> addCredentials(BasicHttpCredentials(userEmail, password))
-            val sipiResponseJson = getResponseJson(sipiRequest)
-
-            // Request the thumbnail from Sipi.
-            val jsonFields = sipiResponseJson.fields
-            val previewUrl = jsonFields("preview_path").asInstanceOf[JsString].value
-            val sipiGetRequest = Get(previewUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
-            checkResponseOK(sipiGetRequest)
+            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
 
             // JSON describing the new image to Knora.
             val knoraParams = JsObject(
                 Map(
-                    "file" -> JsObject(
-                        Map(
-                            "originalFilename" -> jsonFields("original_filename"),
-                            "originalMimeType" -> jsonFields("original_mimetype"),
-                            "filename" -> jsonFields("filename")
-                        )
-                    )
+                    "file" -> JsString(s"${uploadedFile.internalFilename}")
                 )
             )
 
@@ -411,7 +285,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val knoraPostRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
             checkResponseOK(knoraPostRequest)
         }
-
 
         "create a 'p0803-incunabula:book' and a 'p0803-incunabula:page' with file parameters via XML import" in {
             // Upload the image to Sipi.
@@ -759,36 +632,36 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val xmlExpected =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                  |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
-                  |<teiHeader>
-                  |   <fileDesc>
-                  |      <titleStmt>
-                  |         <title>Testletter</title>
-                  |      </titleStmt>
-                  |      <publicationStmt>
-                  |         <p> This is the TEI/XML representation of the resource identified by the Iri
-                  |                        ${letterIri.get}. </p>
-                  |      </publicationStmt>
-                  |      <sourceDesc>
-                  |         <p>Representation of the resource's text as TEI/XML</p>
-                  |      </sourceDesc>
-                  |   </fileDesc>
-                  |   <profileDesc>
-                  |      <correspDesc ref="${letterIri.get}">
-                  |         <correspAction type="sent">
-                  |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer, Johann Jacob</persName>
-                  |            <date when="1703-06-10"/>
-                  |         </correspAction>
-                  |         <correspAction type="received">
-                  |            <persName ref="http://d-nb.info/gnd/119112450">Hermann, Jacob</persName>
-                  |         </correspAction>
-                  |      </correspDesc>
-                  |   </profileDesc>
-                  |</teiHeader>
-                  |
+                   |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
+                   |<teiHeader>
+                   |   <fileDesc>
+                   |      <titleStmt>
+                   |         <title>Testletter</title>
+                   |      </titleStmt>
+                   |      <publicationStmt>
+                   |         <p> This is the TEI/XML representation of the resource identified by the Iri
+                   |                        ${letterIri.get}. </p>
+                   |      </publicationStmt>
+                   |      <sourceDesc>
+                   |         <p>Representation of the resource's text as TEI/XML</p>
+                   |      </sourceDesc>
+                   |   </fileDesc>
+                   |   <profileDesc>
+                   |      <correspDesc ref="${letterIri.get}">
+                   |         <correspAction type="sent">
+                   |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer, Johann Jacob</persName>
+                   |            <date when="1703-06-10"/>
+                   |         </correspAction>
+                   |         <correspAction type="received">
+                   |            <persName ref="http://d-nb.info/gnd/119112450">Hermann, Jacob</persName>
+                   |         </correspAction>
+                   |      </correspDesc>
+                   |   </profileDesc>
+                   |</teiHeader>
+                   |
                   |<text><body>                <p>[...] Viro Clarissimo.</p>                <p>Dn. Jacobo Hermanno S. S. M. C. </p>                <p>et Ph. M.</p>                <p>S. P. D. </p>                <p>J. J. Sch.</p>                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>                </p>            </body></text>
-                  |</TEI>
-                  |
+                   |</TEI>
+                   |
                 """.stripMargin
 
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(letterResponseBodyXML)).withTest(Input.fromString(xmlExpected)).build()

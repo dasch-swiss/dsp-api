@@ -2267,7 +2267,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @param projectInfo the project's [[ProjectInfoV1]].
       * @return the IRI of the project's data named graph.
       */
-    def projectDataNamedGraph(projectInfo: ProjectInfoV1): IRI = {
+    def projectDataNamedGraphV1(projectInfo: ProjectInfoV1): IRI = {
         OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + projectInfo.shortcode + "/" + projectInfo.shortname
     }
 
@@ -2568,5 +2568,16 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             case None =>
                 arkUrlWithoutTimestamp
         }
+    }
+
+    /**
+      * Constructs a URL for accessing a file that has been uploaded to Sipi's temporary storage.
+      *
+      * @param settings the application settings.
+      * @param filename the filename.
+      * @return a URL for accessing the file.
+      */
+    def makeSipiTempFileUrl(settings: SettingsImpl, filename: String): String = {
+        s"${settings.internalSipiBaseUrl}/tmp/$filename"
     }
 }

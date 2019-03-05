@@ -19,23 +19,25 @@
 
 package org.knora.webapi
 
+import java.io.File
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.{StartupUtils, StringFormatter}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.util.{StartupUtils, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.json.{JsObject, _}
 
 import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 import scala.languageFeature.postfixOps
 
 object ITKnoraLiveSpec {
@@ -151,4 +153,94 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         val responseBodyStr = getResponseString(request)
         JsonLDUtil.parseJsonLD(responseBodyStr)
     }
+
+    /**
+      * Represents a file to be uploaded to Sipi.
+      *
+      * @param path     the path of the file.
+      * @param mimeType the MIME type of the file.
+      */
+    protected case class FileToUpload(path: String, mimeType: ContentType)
+
+    /**
+      * Represents an image file to be uploaded to Sipi.
+      *
+      * @param fileToUpload the file to be uploaded.
+      * @param width        the image's width in pixels.
+      * @param height       the image's height in pixels.
+      */
+    protected case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
+
+    /**
+      * Represents the information that Sipi returns about each file that has been uploaded.
+      *
+      * @param originalFilename     the original filename that was submitted to Sipi.
+      * @param internalFilename     Sipi's internal filename for the stored temporary file.
+      * @param temporaryBaseIIIFUrl the base URL at which the temporary file can be accessed.
+      */
+    protected case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryBaseIIIFUrl: String)
+
+    /**
+      * Represents Sipi's response to a file upload request.
+      *
+      * @param uploadedFiles the information about each file that was uploaded.
+      */
+    protected case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
+
+    object SipiUploadResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat3(SipiUploadResponseEntry)
+        implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
+    }
+
+    import SipiUploadResponseV2JsonProtocol._
+
+    /**
+      * Represents the information that Knora returns about an image file value that was created.
+      *
+      * @param internalFilename the image's internal filename.
+      * @param iiifUrl          the image's IIIF URL.
+      * @param width            the image's width in pixels.
+      * @param height           the image's height in pixels.
+      */
+    protected case class SavedImage(internalFilename: String, iiifUrl: String, width: Int, height: Int)
+
+    /**
+      * Uploads a file to Sipi and returns the information in Sipi's response.
+      *
+      * @param loginToken    the login token to be included in the request to Sipi.
+      * @param filesToUpload the files to be uploaded.
+      * @return a [[SipiUploadResponse]] representing Sipi's response.
+      */
+    protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse = {
+        // Make a multipart/form-data request containing the files.
+
+        val formDataParts: Seq[Multipart.FormData.BodyPart] = filesToUpload.map {
+            fileToUpload =>
+                val fileToSend = new File(fileToUpload.path)
+                assert(fileToSend.exists(), s"File ${fileToUpload.path} does not exist")
+
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(fileToUpload.mimeType, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+        }
+
+        val sipiFormData = Multipart.FormData(formDataParts: _*)
+
+        // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
+        val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData)
+        val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
+        // println(sipiUploadResponseJson.prettyPrint)
+        val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
+
+        // Request the temporary image from Sipi.
+        for (responseEntry <- sipiUploadResponse.uploadedFiles) {
+            val sipiGetTmpFileRequest = Get(responseEntry.temporaryBaseIIIFUrl + "/full/full/0/default.jpg")
+            checkResponseOK(sipiGetTmpFileRequest)
+        }
+
+        sipiUploadResponse
+    }
+
 }

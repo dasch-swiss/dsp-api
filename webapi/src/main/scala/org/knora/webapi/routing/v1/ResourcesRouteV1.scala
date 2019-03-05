@@ -38,7 +38,7 @@ import javax.xml.validation.{Schema, SchemaFactory, Validator}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{GetImageMetadataRequestV2, GetImageMetadataResponseV2, SipiConversionFileRequestV1}
+import org.knora.webapi.messages.store.sipimessages.{GetImageMetadataRequest, GetImageMetadataResponseV2}
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -224,18 +224,26 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(projectIri), requestingUser = userADM)).mapTo[ProjectGetResponseADM]
                 } yield projectResponse.project.shortcode
 
-                // for GUI-case:
-                // file has already been stored by Sipi.
-                // TODO: in the old SALSAH, the file params were sent as a property salsah:__location__ -> the GUI has to be adapated
-                paramConversionRequest: Option[SipiConversionFileRequestV1] = apiRequest.file match {
-                    case Some(createFile: CreateFileV1) => Some(SipiConversionFileRequestV1(
-                        originalFilename = stringFormatter.toSparqlEncodedString(createFile.originalFilename, throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
-                        originalMimeType = stringFormatter.toSparqlEncodedString(createFile.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
-                        projectShortcode = projectShortcode,
-                        filename = stringFormatter.toSparqlEncodedString(createFile.filename, throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
-                        userProfile = userADM.asUserProfileV1
-                    ))
-                    case None => None
+                file <- apiRequest.file match {
+                    case Some(filename) =>
+                        // Ask Sipi about the file's metadata.
+                        val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
+
+                        for {
+                            imageMetadataResponse: GetImageMetadataResponseV2 <- (storeManager ? GetImageMetadataRequest(fileUrl = tempFileUrl, requestingUser = userADM)).mapTo[GetImageMetadataResponseV2]
+
+                            // TODO: check that the file stored is an image.
+                        } yield Some(StillImageFileValueV1(
+                            internalFilename = filename,
+                            internalMimeType = "image/jp2",
+                            originalFilename = imageMetadataResponse.originalFilename,
+                            originalMimeType = Some(imageMetadataResponse.originalMimeType),
+                            projectShortcode = projectShortcode,
+                            dimX = imageMetadataResponse.width,
+                            dimY = imageMetadataResponse.height
+                        ))
+
+                    case None => FastFuture.successful(None)
                 }
 
                 valuesToBeCreatedWithFuture: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(
@@ -256,7 +264,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 label = label,
                 projectIri = projectIri,
                 values = valuesToBeCreated.toMap,
-                file = paramConversionRequest,
+                file = file,
                 userProfile = userADM,
                 apiRequestID = UUID.randomUUID
             )
@@ -279,13 +287,15 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         } yield propIri -> values
                 }
 
-                convertedFileV1 <- resourceRequest.file match {
+                convertedFile <- resourceRequest.file match {
                     case Some(filename) =>
                         // Ask Sipi about the file's metadata.
-                        val tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$filename"
+                        val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
 
                         for {
-                            imageMetadataResponse: GetImageMetadataResponseV2 <- (storeManager ? GetImageMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = userProfile)).mapTo[GetImageMetadataResponseV2]
+                            imageMetadataResponse: GetImageMetadataResponseV2 <- (storeManager ? GetImageMetadataRequest(fileUrl = tempFileUrl, requestingUser = userProfile)).mapTo[GetImageMetadataResponseV2]
+
+                            // TODO: check that the file stored is an image.
                         } yield Some(StillImageFileValueV1(
                             internalFilename = filename,
                             internalMimeType = "image/jp2",
@@ -303,7 +313,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 clientResourceID = resourceRequest.client_id,
                 label = resourceRequest.label,
                 values = valuesToBeCreated.toMap,
-                file = convertedFileV1,
+                file = convertedFile,
                 creationDate = resourceRequest.creationDate
             )
         }

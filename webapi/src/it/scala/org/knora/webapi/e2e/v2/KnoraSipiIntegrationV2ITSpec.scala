@@ -1,9 +1,27 @@
+/*
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.knora.webapi.e2e.v2
 
 import java.io.File
 import java.net.URLEncoder
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -14,7 +32,6 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject}
 import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
-import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -39,8 +56,6 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
     private val marblesOriginalFilename = "marbles.tif"
     private val pathToMarbles = s"_test_data/test_route/images/$marblesOriginalFilename"
-    private val marblesWidth = 1419
-    private val marblesHeight = 1001
 
     private val trp88OriginalFilename = "Trp88.tiff"
     private val pathToTrp88 = s"_test_data/test_route/images/$trp88OriginalFilename"
@@ -52,95 +67,6 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val password = "test"
     private val stillImageFileValueIri = new MutableTestIri
     private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
-
-    /**
-      * Represents a file to be uploaded to Sipi.
-      *
-      * @param path     the path of the file.
-      * @param mimeType the MIME type of the file.
-      */
-    case class FileToUpload(path: String, mimeType: ContentType)
-
-    /**
-      * Represents an image file to be uploaded to Sipi.
-      *
-      * @param fileToUpload the file to be uploaded.
-      * @param width        the image's width in pixels.
-      * @param height       the image's height in pixels.
-      */
-    case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
-
-    /**
-      * Represents the information that Sipi returns about each file that has been uploaded.
-      *
-      * @param originalFilename     the original filename that was submitted to Sipi.
-      * @param internalFilename     Sipi's internal filename for the stored temporary file.
-      * @param temporaryBaseIIIFUrl the base URL at which the temporary file can be accessed.
-      */
-    case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryBaseIIIFUrl: String)
-
-    /**
-      * Represents Sipi's response to a file upload request.
-      *
-      * @param uploadedFiles the information about each file that was uploaded.
-      */
-    case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
-
-    object SipiUploadResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat3(SipiUploadResponseEntry)
-        implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
-    }
-
-    import SipiUploadResponseV2JsonProtocol._
-
-    /**
-      * Represents the information that Knora returns about an image file value that was created.
-      *
-      * @param internalFilename the image's internal filename.
-      * @param iiifUrl          the image's IIIF URL.
-      * @param width            the image's width in pixels.
-      * @param height           the image's height in pixels.
-      */
-    case class SavedImage(internalFilename: String, iiifUrl: String, width: Int, height: Int)
-
-    /**
-      * Uploads a file to Sipi and returns the information in Sipi's response.
-      *
-      * @param loginToken    the login token to be included in the request to Sipi.
-      * @param filesToUpload the files to be uploaded.
-      * @return a [[SipiUploadResponse]] representing Sipi's response.
-      */
-    private def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse = {
-        // Make a multipart/form-data request containing the files.
-
-        val formDataParts: Seq[Multipart.FormData.BodyPart] = filesToUpload.map {
-            fileToUpload =>
-                val fileToSend = new File(fileToUpload.path)
-                assert(fileToSend.exists(), s"File ${fileToUpload.path} does not exist")
-
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(fileToUpload.mimeType, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-        }
-
-        val sipiFormData = Multipart.FormData(formDataParts: _*)
-
-        // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
-        val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData)
-        val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
-        // println(sipiUploadResponseJson.prettyPrint)
-        val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
-
-        // Request the temporary image from Sipi.
-        for (responseEntry <- sipiUploadResponse.uploadedFiles) {
-            val sipiGetTmpFileRequest = Get(responseEntry.temporaryBaseIIIFUrl + "/full/full/0/default.jpg")
-            checkResponseOK(sipiGetTmpFileRequest)
-        }
-
-        sipiUploadResponse
-    }
 
     /**
       * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
