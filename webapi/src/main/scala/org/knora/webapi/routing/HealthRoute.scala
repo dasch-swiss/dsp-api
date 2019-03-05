@@ -100,7 +100,7 @@ trait HealthCheck {
             name = "AppState",
             severity = "non fatal",
             status = true,
-            message = "Application is heathy"
+            message = "Application is healthy"
         )
     }
 }
