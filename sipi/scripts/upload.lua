@@ -33,24 +33,12 @@ if not success then
     return
 end
 
--- Check for a valid JSON Web Token or authentication cookie from Knora.
+-- Check for a valid JSON Web Token from Knora.
 
 local token = get_knora_token()
 
 if token == nil then
-    local cookie_OK = false
-
-    for cookie_index, cookie in pairs(server.cookies) do
-        if get_session_id(cookie) ~= nil then
-            cookie_OK = true
-            server.log("Knora cookie OK", server.loglevel.LOG_DEBUG)
-            break
-        end
-    end
-
-    if not cookie_OK then
-        return
-    end
+    return
 end
 
 -- Create the temporary directory if necessary.
@@ -130,7 +118,7 @@ for image_index, image_params in pairs(server.uploads) do
     end
 
     -- Create a IIIF base URL for the converted file.
-    local iiif_base_url = protocol .. server.host .. '/tmp/' .. jp2_filename
+    local iiif_base_url = protocol .. server.host .. '/tmp'
 
     -- Construct response data about the file that was uploaded.
     local this_file_upload_data = {}

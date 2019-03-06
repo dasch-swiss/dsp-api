@@ -49,19 +49,53 @@ The request header's content type has to be set to `application/json`.
 
 ## Adding Resources with Image Files
 
-Certain resource classes can have attached image files. To attach
-attach a file to a resource, you must first submit to the file to Sipi, then
-submit the file's metadata to Knora (see @ref:[Sipi and Knora](../../07-sipi/sipi-and-knora.md)).
+The first step is to upload an image file to Sipi, using a
+`multipart/form-data` request, where `sipihost` represents the host and
+port on which Sipi is running:
+
+```
+HTTP POST to http://sipihost/upload?token=TOKEN
+```
+
+The `TOKEN` is the `sid` returned by Knora in response to the
+client's login request (see @ref:[Authentication](authentication.md)).
+The request must contain a body part providing the file as well as a parameter
+`filename`, providing the file's original filename, which both Knora and Sipi will
+store; these filenames can be descriptive and need not be unique.
+
+Sipi will then convert the uploaded image file to JPEG 2000 format and store
+it in a temporary location. If this is successful, it will return a JSON
+response that looks something like this:
+
+```json
+{
+  "uploadedFiles": [{
+    "originalFilename": "manuscript-1234-page-1.tiff",
+    "internalFilename": "3UIsXH9bP0j-BV0D4sN51Xz.jp2",
+    "temporaryBaseIIIFUrl": "http://sipihost/tmp"
+  }]
+}
+```
+
+This provides:
+
+- the `originalFilename`, which we submitted when uploading the file
+- the unique `internalFilename` that Sipi has randomly generated for the file
+- the `temporaryBaseIIIFUrl`, which we can use to construct a IIIF URL for
+  previewing the file
+
+The client may now wish to get a thumbnail of the uploaded image, to allow
+the user to confirm that the correct files have been uploaded. This can be done
+by adding the filename and IIIF parameters to `temporaryBaseIIIFUrl`. For example, to get
+a JPG thumbnail image whose width and height are at most 128 pixels wide, you would request
+`http://sipihost/tmp/3UIsXH9bP0j-BV0D4sN51Xz.jp2/full/!128,128/0/default.jpg`.
 
 The request to Knora works similarly to
-[Adding Resources Without Image Files](#adding-resources-without-a-digital-representation). The JSON format is described
-in the TypeScript interface `createResourceWithRepresentationRequest` in
-module `createResourceFormats`. The request header's content type has to
+[Adding Resources Without Image Files](#adding-resources-without-image-files),
+with the addition of `file`, whose value is the `internalFilename` that Sipi returned.
+See the TypeScript interface `createResourceWithRepresentationRequest` in
+module `createResourceFormats` for details. The request header's content type must be
 set to `application/json`.
-
-In addition to [Adding Resources Without Image Files](#adding-resources-without-a-digital-representation), the
-(temporary) name of the file, its original name, and mime type have to
-be provided (see @ref:[GUI Case](../../07-sipi/sipi-and-knora.md#gui-case)).
 
 ## Response to a Resource Creation
 
@@ -76,7 +110,7 @@ The JSON format of the response is described in the TypeScript interface
 ## Changing a Resource's Label
 
 A resource's label can be changed by making a PUT request to the path
-segments `resources/label`. The resource's Iri has to be provided in the
+segments `resources/label`. The resource's IRI has to be provided in the
 URL (as its last segment). The new label has to submitted as JSON in the
 HTTP request's body.
 
@@ -374,8 +408,8 @@ contains the IRI of the target resource.
 
 To attach an image file to a resource, we must provide the
 element `knoraXmlImport:file` before the property elements. In this
-element, we must give the filename that Sipi returned for the file in
-@ref:[2. Upload Files to Sipi](#2-upload-files-to-sipi).
+element, we must provide a `filename` attribute, containing the `internalFilename`
+that Sipi returned for the file in @ref:[2. Upload Files to Sipi](#2-upload-files-to-sipi).
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -390,7 +424,7 @@ element, we must give the filename that Sipi returned for the file in
     </incunabula:book>
     <incunabula:page id="test_page">
         <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
-        <knoraXmlImport:file path="67SEfNU1wK2-CSf5abe2eh3.jp2"/>
+        <knoraXmlImport:file filename="67SEfNU1wK2-CSf5abe2eh3.jp2"/>
         <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
         <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
         <incunabula:partOf>

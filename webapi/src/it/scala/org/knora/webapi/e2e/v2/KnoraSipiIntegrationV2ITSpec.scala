@@ -272,7 +272,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             assert(knoraPostResponse.status == StatusCodes.Forbidden)
 
             // Request the temporary image from Sipi.
-            val sipiGetTmpFileRequest = Get(temporaryBaseIIIFUrl)
+            val sipiGetTmpFileRequest = Get(temporaryBaseIIIFUrl + "/" + internalFilename + "/full/full/0/default.jpg")
             val sipiResponse = singleAwaitingRequest(sipiGetTmpFileRequest)
             assert(sipiResponse.status == StatusCodes.NotFound)
         }

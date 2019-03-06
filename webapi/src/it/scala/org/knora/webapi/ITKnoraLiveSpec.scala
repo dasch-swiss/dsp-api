@@ -176,7 +176,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
       *
       * @param originalFilename     the original filename that was submitted to Sipi.
       * @param internalFilename     Sipi's internal filename for the stored temporary file.
-      * @param temporaryBaseIIIFUrl the base URL at which the temporary file can be accessed.
+      * @param temporaryBaseIIIFUrl the base URL for constructing a IIIF URL for accessing the temporary file.
       */
     protected case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryBaseIIIFUrl: String)
 
@@ -236,7 +236,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
 
         // Request the temporary image from Sipi.
         for (responseEntry <- sipiUploadResponse.uploadedFiles) {
-            val sipiGetTmpFileRequest = Get(responseEntry.temporaryBaseIIIFUrl + "/full/full/0/default.jpg")
+            val sipiGetTmpFileRequest = Get(responseEntry.temporaryBaseIIIFUrl + "/" + responseEntry.internalFilename + "/full/full/0/default.jpg")
             checkResponseOK(sipiGetTmpFileRequest)
         }
 

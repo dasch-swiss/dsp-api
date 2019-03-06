@@ -218,11 +218,11 @@ response that looks something like this:
   "uploadedFiles": [{
     "originalFilename": "manuscript-1234-page-1.tiff",
     "internalFilename": "3UIsXH9bP0j-BV0D4sN51Xz.jp2",
-    "temporaryBaseIIIFUrl": "http://sipihost/tmp/3UIsXH9bP0j-BV0D4sN51Xz.jp2"
+    "temporaryBaseIIIFUrl": "http://sipihost/tmp"
   }, {
     "originalFilename": "manuscript-1234-page-2.tiff",
     "internalFilename": "2RvJgguglpe-B45EOk0Gx8H.jp2",
-    "temporaryBaseIIIFUrl": "http://sipihost/tmp/2RvJgguglpe-B45EOk0Gx8H.jp2"
+    "temporaryBaseIIIFUrl": "http://sipihost/tmp"
   }]
 }
 ```
