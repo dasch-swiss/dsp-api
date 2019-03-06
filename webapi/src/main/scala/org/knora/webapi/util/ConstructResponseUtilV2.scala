@@ -423,6 +423,7 @@ object ConstructResponseUtilV2 {
       * @return a set of mapping Iris.
       */
     def getMappingIrisFromValuePropertyAssertions(valuePropertyAssertions: Map[IRI, Seq[ValueRdfData]]): Set[IRI] = {
+
         valuePropertyAssertions.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], (valueObjIri: IRI, valObjs: Seq[ValueRdfData])) =>
                 val mappings: Seq[String] = valObjs.filter {
@@ -433,7 +434,19 @@ object ConstructResponseUtilV2 {
                         textValObj.assertions(OntologyConstants.KnoraBase.ValueHasMapping)
                 }
 
-                acc ++ mappings
+                // get mappings from linked resources
+                val mappingsFromReferredResources: Set[IRI] = valObjs.filter {
+                    (valObj: ValueRdfData) =>
+                        valObj.nestedResource.nonEmpty
+                }.flatMap {
+                    (valObj: ValueRdfData) =>
+                        val referredRes: ResourceWithValueRdfData = valObj.nestedResource.get
+
+                        // recurse on the nested resource's values
+                        getMappingIrisFromValuePropertyAssertions(referredRes.valuePropertyAssertions)
+                }.toSet
+
+                acc ++ mappings ++ mappingsFromReferredResources
         }
     }
 
