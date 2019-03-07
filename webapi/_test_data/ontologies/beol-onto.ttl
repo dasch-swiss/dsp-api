@@ -887,7 +887,7 @@
 :hasBirthPlace rdf:type owl:ObjectProperty ;
 
                rdfs:label "Geburtsort"@de ,
-                         "Place of death"@en ;
+                         "Place of birth"@en ;
 
                rdfs:comment """Represents a place of birth."""@en ;
 
