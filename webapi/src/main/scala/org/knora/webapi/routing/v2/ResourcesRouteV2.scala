@@ -187,6 +187,49 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     }
                 }
             }
+        } ~ path("v2" / "resources") {
+            get {
+                requestContext => {
+                    val projectIri: SmartIri = RouteUtilV2.getProject(requestContext).getOrElse(throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+                    val resourceClassStr: String = params.getOrElse("resourceClass", throw BadRequestException(s"This route requires the parameter 'resourceClass'"))
+                    val resourceClass: SmartIri = resourceClassStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr"))
+
+                    if (!(resourceClass.isKnoraApiV2EntityIri && resourceClass.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                        throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr")
+                    }
+
+                    val orderByPropertyStr: String = params.getOrElse("orderByProperty", throw BadRequestException(s"This route requires the parameter 'orderByProperty'"))
+                    val orderByProperty: SmartIri = orderByPropertyStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr"))
+
+                    if (!(orderByProperty.isKnoraApiV2EntityIri && orderByProperty.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                        throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr")
+                    }
+
+                    val pageStr: String = params.getOrElse("page", throw BadRequestException(s"This route requires the parameter 'page'"))
+                    val page: Int = stringFormatter.validateInt(pageStr, throw BadRequestException(s"Invalid page number: $pageStr"))
+
+                    val requestMessageFuture: Future[ResourcesInProjectGetRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ResourcesInProjectGetRequestV2(
+                        projectIri = projectIri,
+                        resourceClass = resourceClass.toOntologySchema(ApiV2WithValueObjects),
+                        orderByProperty = orderByProperty.toOntologySchema(ApiV2WithValueObjects),
+                        page = page,
+                        requestingUser = requestingUser
+                    )
+
+                    RouteUtilV2.runRdfRouteWithFuture(
+                        requestMessageFuture,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        responseSchema = ApiV2WithValueObjects
+                    )
+                }
+            }
         } ~ path("v2" / "resources" / "history" / Segment) { resourceIriStr: IRI =>
             get {
                 requestContext => {

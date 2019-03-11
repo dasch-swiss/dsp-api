@@ -75,7 +75,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     val groupConcatVariableSuffix = "__Concat"
 
     // A set of types that can be treated as dates by the knora-api:toSimpleDate function.
-    val dateTypes: Set[IRI] = Set(OntologyConstants.KnoraApiV2WithValueObjects.DateValue, OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag)
+    private val dateTypes: Set[IRI] = Set(OntologyConstants.KnoraApiV2WithValueObjects.DateValue, OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag)
 
     /**
       * A container for a generated variable representing a value literal.
@@ -315,72 +315,92 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 statementPatternToInternalSchema(statementPattern, typeInspectionResult) +: linkValueStatements
 
             } else {
-                // The subject is a resource, but the object isn't, so this isn't a link property. Make sure that the object of the property is a variable.
-                val objectVar: QueryVariable = statementPattern.obj match {
-                    case queryVar: QueryVariable =>
-                        checkSubjectInOrderBy(queryVar)
-                        queryVar
+                // The subject is a resource, but the object isn't, so this isn't a link property. Is it a statement
+                // about resource metadata?
 
-                    case other => throw GravsearchException(s"Object of a value property statement must be a QueryVariable, but ${other.toSparql} given.")
-                }
-
-                // Does the variable refer to a Knora value object? We assume it does if the query just uses the
-                // simple schema. If the query uses the complex schema, check whether the property's object type is
-                // a Knora API v2 value class.
-
-                val objectVarIsValueObject = querySchema == ApiV2Simple || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
-
-                if (objectVarIsValueObject) {
-                    // The variable refers to a value object. Add it to the collection representing value objects.
-                    valueObjectVariables += objectVar
-
-                    // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
-                    val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
-
-                    // check if the object var is used as a sort criterion
-                    val objectVarAsSortCriterionMaybe = inputOrderBy.find(criterion => criterion.queryVariable == objectVar)
-
-                    val orderByStatement: Option[QueryPattern] = if (objectVarAsSortCriterionMaybe.nonEmpty) {
-                        // it is used as a sort criterion, create an additional statement to get the literal value
-
-                        val criterion = objectVarAsSortCriterionMaybe.get
-
-                        val propertyIri: SmartIri = typeInspectionResult.getTypeOfEntity(criterion.queryVariable) match {
-                            case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) =>
-                                valueTypesToValuePredsForOrderBy.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw GravsearchException(s"${criterion.queryVariable.toSparql} cannot be used in ORDER BY")).toSmartIri
-
-                            case Some(_) => throw GravsearchException(s"Variable ${criterion.queryVariable.toSparql} represents a property, and therefore cannot be used in ORDER BY")
-
-                            case None => throw GravsearchException(s"No type information found for ${criterion.queryVariable.toSparql}")
+                val resourceMetadataStatement: Seq[StatementPattern] = statementPattern.pred match {
+                    case predIriRef: IriRef =>
+                        if (predIriRef.iri.toString == OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject) {
+                            statementPattern.obj match {
+                                case _: IriRef => Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                                case _ => throw GravsearchException(s"Object of ${predIriRef.toSparql} must ben an IRI")
+                            }
+                        } else {
+                            Seq.empty[StatementPattern]
                         }
 
-                        // Generate the variable name.
-                        val variableForLiteral: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
+                    case _ => Seq.empty[StatementPattern]
+                }
 
-                        // put the generated variable into a collection so it can be reused in `NonTriplestoreSpecificGravsearchToPrequeryGenerator.getOrderBy`
-                        // set to true when the variable already exists
-                        val variableForLiteralExists = !addGeneratedVariableForValueLiteral(criterion.queryVariable, variableForLiteral)
+                if (resourceMetadataStatement.nonEmpty) {
+                    // Yes. Allow it.
+                    resourceMetadataStatement
+                } else {
+                    // It's not a statement about resource metadata. Make sure that the object of the property is a variable.
+                    val objectVar: QueryVariable = statementPattern.obj match {
+                        case queryVar: QueryVariable =>
+                            checkSubjectInOrderBy(queryVar)
+                            queryVar
 
-                        if (!variableForLiteralExists) {
-                            // Generate a statement to get the literal value
-                            val statementPatternForSortCriterion = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
-                            Some(statementPatternForSortCriterion)
+                        case other => throw GravsearchException(s"Object of a value property statement must be a QueryVariable, but ${other.toSparql} given.")
+                    }
+
+                    // Does the variable refer to a Knora value object? We assume it does if the query just uses the
+                    // simple schema. If the query uses the complex schema, check whether the property's object type is
+                    // a Knora API v2 value class.
+
+                    val objectVarIsValueObject = querySchema == ApiV2Simple || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
+
+                    if (objectVarIsValueObject) {
+                        // The variable refers to a value object. Add it to the collection representing value objects.
+                        valueObjectVariables += objectVar
+
+                        // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
+                        val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
+
+                        // check if the object var is used as a sort criterion
+                        val objectVarAsSortCriterionMaybe = inputOrderBy.find(criterion => criterion.queryVariable == objectVar)
+
+                        val orderByStatement: Option[QueryPattern] = if (objectVarAsSortCriterionMaybe.nonEmpty) {
+                            // it is used as a sort criterion, create an additional statement to get the literal value
+
+                            val criterion = objectVarAsSortCriterionMaybe.get
+
+                            val propertyIri: SmartIri = typeInspectionResult.getTypeOfEntity(criterion.queryVariable) match {
+                                case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) =>
+                                    valueTypesToValuePredsForOrderBy.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw GravsearchException(s"${criterion.queryVariable.toSparql} cannot be used in ORDER BY")).toSmartIri
+
+                                case Some(_) => throw GravsearchException(s"Variable ${criterion.queryVariable.toSparql} represents a property, and therefore cannot be used in ORDER BY")
+
+                                case None => throw GravsearchException(s"No type information found for ${criterion.queryVariable.toSparql}")
+                            }
+
+                            // Generate the variable name.
+                            val variableForLiteral: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
+
+                            // put the generated variable into a collection so it can be reused in `NonTriplestoreSpecificGravsearchToPrequeryGenerator.getOrderBy`
+                            // set to true when the variable already exists
+                            val variableForLiteralExists = !addGeneratedVariableForValueLiteral(criterion.queryVariable, variableForLiteral)
+
+                            if (!variableForLiteralExists) {
+                                // Generate a statement to get the literal value
+                                val statementPatternForSortCriterion = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
+                                Some(statementPatternForSortCriterion)
+                            } else {
+                                // statement has already been created
+                                None
+                            }
                         } else {
-                            // statement has already been created
+                            // it is not a sort criterion
                             None
                         }
+
+                        Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted) ++ orderByStatement
                     } else {
-                        // it is not a sort criterion
-                        None
+                        // The variable doesn't refer to a value object. Just convert the statement pattern to the internal schema.
+                        Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
                     }
-                    
-                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted) ++ orderByStatement
-                } else {
-                    // The variable doesn't refer to a value object. Just convert the statement pattern to the internal schema.
-                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
                 }
-
-
             }
         } else {
             // The subject isn't a resource, so it must be a value object or standoff node. Is the query in the complex schema?

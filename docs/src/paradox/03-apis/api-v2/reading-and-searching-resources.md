@@ -368,3 +368,23 @@ called @ref:[Gravsearch: Virtual Graph Search](query-language.md)).
 ### Support of TEI/XML
 
 To convert standoff markup to TEI/XML, see @ref:[TEI/XML](tei-xml.md).
+
+### Reading Resources by Class from a Project
+
+To facilitate the development of tabular user interfaces for data entry, it is
+possible to get a paged list of all the resources belonging to a particular
+class in a given project, sorted by the value of a property:
+
+```
+HTTP GET to http://host/v2/resources?resourceClass=RESOURCE_CLASS_IRI&orderByProperty=PROPERTY_IRI&page=PAGE
+```
+
+This is useful only if the project does not contain a large amount of data;
+otherwise, you should use @ref:[Gravsearch](query-language.md)) to search
+using more specific criteria.
+
+The HTTP header `X-Knora-Accept-Project` must be submitted; its value is
+a Knora project IRI. In the request URL, `RESOURCE_CLASS_IRI` and `PROPERTY_IRI`
+are URL-encoded IRIs in the @ref:[complex schema](introduction.md#api-schema).
+`PAGE` is a 0-based integer page number. Paging works as it does in
+@ref:[Gravsearch](query-language.md)).

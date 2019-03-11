@@ -36,8 +36,8 @@ import org.knora.webapi.store.SipiConnectorActorName
 import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
 import org.knora.webapi.util._
+import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -750,6 +750,20 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: GraphDataGetResponseV2 => response should ===(graphTestData.graphWithOneNode)
+            }
+        }
+
+        "return resources from a project" in {
+            responderManager ! ResourcesInProjectGetRequestV2(
+                projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
+                resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                orderByProperty = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri,
+                page = 0,
+                requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 => response.numberOfResources should ===(25)
             }
         }
 
