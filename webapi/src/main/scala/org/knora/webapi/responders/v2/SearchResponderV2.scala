@@ -562,6 +562,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         val maybeInternalOrderByPropertyIri: Option[SmartIri] = resourcesInProjectGetRequestV2.orderByProperty.map(_.toOntologySchema(InternalSchema))
 
         for {
+            // Get information about the resource class, and about the ORDER BY property if specified.
             entityInfoResponse: EntityInfoGetResponseV2 <- {
                 responderManager ? EntityInfoGetRequestV2(
                     classIris = Set(internalClassIri),
@@ -572,21 +573,26 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             classDef: ReadClassInfoV2 = entityInfoResponse.classInfoMap(internalClassIri)
 
+            // If an ORDER BY property was specified, determine which subproperty of knora-base:valueHas to use to get the
+            // literal value to sort by.
             maybeOrderByValuePredicate: Option[SmartIri] = maybeInternalOrderByPropertyIri match {
                 case Some(internalOrderByPropertyIri) =>
                     val internalOrderByPropertyDef: ReadPropertyInfoV2 = entityInfoResponse.propertyInfoMap(internalOrderByPropertyIri)
 
+                    // Ensure that the ORDER BY property is one that we can sort by.
                     if (!internalOrderByPropertyDef.isResourceProp || internalOrderByPropertyDef.isLinkProp || internalOrderByPropertyDef.isLinkValueProp || internalOrderByPropertyDef.isFileValueProp) {
                         throw BadRequestException(s"Cannot sort by property <${resourcesInProjectGetRequestV2.orderByProperty}>")
                     }
 
-
+                    // Ensure that the resource class has a cardinality on the ORDER BY property.
                     if (!classDef.knoraResourceProperties.contains(internalOrderByPropertyIri)) {
                         throw BadRequestException(s"Class <${resourcesInProjectGetRequestV2.resourceClass}> has no cardinality on property <${resourcesInProjectGetRequestV2.orderByProperty}>")
                     }
 
+                    // Get the value class that's the object of the knora-base:objectClassConstraint of the ORDER BY property.
                     val orderByValueType: SmartIri = internalOrderByPropertyDef.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property <$internalOrderByPropertyIri> has no knora-base:objectClassConstraint"))
 
+                    // Determine which subproperty of knora-base:valueHas corresponds to that value class.
                     val orderByValuePredicate = orderByValueType.toString match {
                         case OntologyConstants.KnoraBase.IntValue => OntologyConstants.KnoraBase.ValueHasInteger
                         case OntologyConstants.KnoraBase.DecimalValue => OntologyConstants.KnoraBase.ValueHasDecimal
@@ -604,6 +610,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 case None => None
             }
 
+            // Do a SELECT prequery to get the IRIs of the requested page of resources.
             prequery = queries.sparql.v2.txt.getResourcesInProjectPrequery(
                 triplestore = settings.triplestoreType,
                 projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
@@ -617,8 +624,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResponse]
             mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
 
+            // Are there any matching resources?
             resources: Vector[ReadResourceV2] <- if (mainResourceIris.nonEmpty) {
                 for {
+                    // Yes. Do a CONSTRUCT query to get the complete contents of those resources.
                     resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                         triplestore = settings.triplestoreType,
                         resourceIris = mainResourceIris,
@@ -643,9 +652,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         Future(None)
                     }
 
-                    // get the mappings
+                    // get the standoff mappings used in the resources
                     mappings: Map[IRI, ConstructResponseUtilV2.MappingAndXSLTransformation] <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, resourcesInProjectGetRequestV2.requestingUser)
 
+                    // Construct a ReadResourceV2 for each resource that the user has permission to see.
                     searchResponse <- ConstructResponseUtilV2.createSearchResponse(
                         searchResults = queryResultsSeparated,
                         orderByResourceIri = mainResourceIris,
