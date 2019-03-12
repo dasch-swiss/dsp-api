@@ -753,20 +753,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "return resources from a project" in {
-            responderManager ! ResourcesInProjectGetRequestV2(
-                projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
-                resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-                orderByProperty = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri,
-                page = 0,
-                requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
-            )
-
-            expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => response.numberOfResources should ===(25)
-            }
-        }
-
         "create a resource with no values" in {
             // Create the resource.
 

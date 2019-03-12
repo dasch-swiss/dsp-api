@@ -67,20 +67,6 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
-  * Requests resources of the specified class from the specified project.
-  *
-  * @param projectIri      the IRI of the project.
-  * @param resourceClass   the IRI of the resource class, in the complex schema.
-  * @param orderByProperty the IRI of the property that the resources are to be ordered by, in the complex schema.
-  * @param page            the page number of the results page to be returned.
-  */
-case class ResourcesInProjectGetRequestV2(projectIri: SmartIri,
-                                          resourceClass: SmartIri,
-                                          orderByProperty: SmartIri,
-                                          page: Int,
-                                          requestingUser: UserADM) extends ResourcesResponderRequestV2
-
-/**
   * Requests a preview of one or more resources. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param resourceIris   the IRIs of the resources to obtain a preview for.

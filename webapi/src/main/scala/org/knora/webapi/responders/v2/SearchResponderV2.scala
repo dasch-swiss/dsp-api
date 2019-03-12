@@ -19,11 +19,12 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
@@ -33,6 +34,7 @@ import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch._
 import org.knora.webapi.responders.v2.search.gravsearch.prequery._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
+import org.knora.webapi.util.ConstructResponseUtilV2.ResourceWithValueRdfData
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 
@@ -61,6 +63,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         case GravsearchRequestV2(query, requestingUser) => gravsearchV2(inputQuery = query, requestingUser = requestingUser)
         case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser)
         case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser)
+        case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 => searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -547,6 +550,121 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         )
     }
 
+
+    /**
+      * Gets resources from a project.
+      *
+      * @param resourcesInProjectGetRequestV2 the request message.
+      * @return a [[ReadResourcesSequenceV2]].
+      */
+    private def searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2): Future[ReadResourcesSequenceV2] = {
+        val internalClassIri = resourcesInProjectGetRequestV2.resourceClass.toOntologySchema(InternalSchema)
+        val maybeInternalOrderByPropertyIri: Option[SmartIri] = resourcesInProjectGetRequestV2.orderByProperty.map(_.toOntologySchema(InternalSchema))
+
+        for {
+            entityInfoResponse: EntityInfoGetResponseV2 <- {
+                responderManager ? EntityInfoGetRequestV2(
+                    classIris = Set(internalClassIri),
+                    propertyIris = maybeInternalOrderByPropertyIri.toSet,
+                    requestingUser = resourcesInProjectGetRequestV2.requestingUser
+                )
+            }.mapTo[EntityInfoGetResponseV2]
+
+            classDef: ReadClassInfoV2 = entityInfoResponse.classInfoMap(internalClassIri)
+
+            maybeOrderByValuePredicate: Option[SmartIri] = maybeInternalOrderByPropertyIri match {
+                case Some(internalOrderByPropertyIri) =>
+                    val internalOrderByPropertyDef: ReadPropertyInfoV2 = entityInfoResponse.propertyInfoMap(internalOrderByPropertyIri)
+
+                    if (!internalOrderByPropertyDef.isResourceProp || internalOrderByPropertyDef.isLinkProp || internalOrderByPropertyDef.isLinkValueProp || internalOrderByPropertyDef.isFileValueProp) {
+                        throw BadRequestException(s"Cannot sort by property <${resourcesInProjectGetRequestV2.orderByProperty}>")
+                    }
+
+
+                    if (!classDef.knoraResourceProperties.contains(internalOrderByPropertyIri)) {
+                        throw BadRequestException(s"Class <${resourcesInProjectGetRequestV2.resourceClass}> has no cardinality on property <${resourcesInProjectGetRequestV2.orderByProperty}>")
+                    }
+
+                    val orderByValueType: SmartIri = internalOrderByPropertyDef.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property <$internalOrderByPropertyIri> has no knora-base:objectClassConstraint"))
+
+                    val orderByValuePredicate = orderByValueType.toString match {
+                        case OntologyConstants.KnoraBase.IntValue => OntologyConstants.KnoraBase.ValueHasInteger
+                        case OntologyConstants.KnoraBase.DecimalValue => OntologyConstants.KnoraBase.ValueHasDecimal
+                        case OntologyConstants.KnoraBase.BooleanValue => OntologyConstants.KnoraBase.ValueHasBoolean
+                        case OntologyConstants.KnoraBase.DateValue => OntologyConstants.KnoraBase.ValueHasStartJDN
+                        case OntologyConstants.KnoraBase.ColorValue => OntologyConstants.KnoraBase.ValueHasColor
+                        case OntologyConstants.KnoraBase.GeonameValue => OntologyConstants.KnoraBase.ValueHasGeonameCode
+                        case OntologyConstants.KnoraBase.IntervalValue => OntologyConstants.KnoraBase.ValueHasIntervalStart
+                        case OntologyConstants.KnoraBase.UriValue => OntologyConstants.KnoraBase.ValueHasUri
+                        case _ => OntologyConstants.KnoraBase.ValueHasString
+                    }
+
+                    Some(orderByValuePredicate.toSmartIri)
+
+                case None => None
+            }
+
+            prequery = queries.sparql.v2.txt.getResourcesInProjectPrequery(
+                triplestore = settings.triplestoreType,
+                projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
+                resourceClassIri = internalClassIri,
+                maybeOrderByProperty = maybeInternalOrderByPropertyIri,
+                maybeOrderByValuePredicate = maybeOrderByValuePredicate,
+                limit = settings.v2ResultsPerPage,
+                offset = resourcesInProjectGetRequestV2.page * settings.v2ResultsPerPage
+            ).toString
+
+            sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResponse]
+            mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
+
+            resources: Vector[ReadResourceV2] <- if (mainResourceIris.nonEmpty) {
+                for {
+                    resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
+                        triplestore = settings.triplestoreType,
+                        resourceIris = mainResourceIris,
+                        preview = false,
+                        maybePropertyIri = None,
+                        maybeVersionDate = None
+                    ).toString())
+
+                    // _ = println(resourceRequestSparql)
+
+                    resourceRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourceRequestSparql)).mapTo[SparqlConstructResponse]
+
+                    // separate resources and values
+                    queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = resourcesInProjectGetRequestV2.requestingUser)
+
+                    // check if there are resources the user does not have sufficient permissions to see
+                    forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparated.size) {
+                        // some of the main resources have been suppressed, represent them using the forbidden resource
+                        getForbiddenResource(resourcesInProjectGetRequestV2.requestingUser)
+                    } else {
+                        // all resources visible, no need for the forbidden resource
+                        Future(None)
+                    }
+
+                    // get the mappings
+                    mappings: Map[IRI, ConstructResponseUtilV2.MappingAndXSLTransformation] <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, resourcesInProjectGetRequestV2.requestingUser)
+
+                    searchResponse <- ConstructResponseUtilV2.createSearchResponse(
+                        searchResults = queryResultsSeparated,
+                        orderByResourceIri = mainResourceIris,
+                        mappings = mappings,
+                        forbiddenResource = forbiddenResourceOption,
+                        responderManager = responderManager,
+                        requestingUser = resourcesInProjectGetRequestV2.requestingUser
+                    )
+                } yield searchResponse
+            } else {
+                FastFuture.successful(Vector.empty[ReadResourceV2])
+            }
+
+        } yield ReadResourcesSequenceV2(
+            numberOfResources = resources.size,
+            resources = resources
+        )
+    }
+
     /**
       * Performs a count query for a search for resources by their rdfs:label.
       *
@@ -588,6 +706,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         )
 
     }
+
+
 
     /**
       * Performs a search for resources by their rdfs:label.

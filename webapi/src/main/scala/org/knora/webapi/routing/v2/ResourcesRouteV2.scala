@@ -26,6 +26,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
@@ -200,22 +201,27 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr")
                     }
 
-                    val orderByPropertyStr: String = params.getOrElse("orderByProperty", throw BadRequestException(s"This route requires the parameter 'orderByProperty'"))
-                    val orderByProperty: SmartIri = orderByPropertyStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr"))
+                    val maybeOrderByPropertyStr: Option[String] = params.get("orderByProperty")
+                    val maybeOrderByProperty: Option[SmartIri] = maybeOrderByPropertyStr.map {
+                        orderByPropertyStr =>
+                            val orderByProperty = orderByPropertyStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr"))
 
-                    if (!(orderByProperty.isKnoraApiV2EntityIri && orderByProperty.getOntologySchema.contains(ApiV2WithValueObjects))) {
-                        throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr")
+                            if (!(orderByProperty.isKnoraApiV2EntityIri && orderByProperty.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                                throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr")
+                            }
+
+                            orderByProperty.toOntologySchema(ApiV2WithValueObjects)
                     }
 
                     val pageStr: String = params.getOrElse("page", throw BadRequestException(s"This route requires the parameter 'page'"))
                     val page: Int = stringFormatter.validateInt(pageStr, throw BadRequestException(s"Invalid page number: $pageStr"))
 
-                    val requestMessageFuture: Future[ResourcesInProjectGetRequestV2] = for {
+                    val requestMessageFuture: Future[SearchResourcesByProjectAndClassRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield ResourcesInProjectGetRequestV2(
+                    } yield SearchResourcesByProjectAndClassRequestV2(
                         projectIri = projectIri,
                         resourceClass = resourceClass.toOntologySchema(ApiV2WithValueObjects),
-                        orderByProperty = orderByProperty.toOntologySchema(ApiV2WithValueObjects),
+                        orderByProperty = maybeOrderByProperty,
                         page = page,
                         requestingUser = requestingUser
                     )

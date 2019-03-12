@@ -71,7 +71,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         case ResourcesGetRequestV2(resIris, propertyIri, versionDate, requestingUser) => getResourcesV2(resIris, propertyIri, versionDate, requestingUser)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreviewV2(resIris, requestingUser)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
-        case resourcesInProjectGetRequestV2: ResourcesInProjectGetRequestV2 => getResourcesInProjectV2(resourcesInProjectGetRequestV2)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
         case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
         case deleteResourceRequestV2: DeleteResourceRequestV2 => deleteResourceV2(deleteResourceRequestV2)
@@ -1669,32 +1668,5 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         } yield ResourceVersionHistoryResponseV2(
             historyEntriesWithResourceCreation
         )
-    }
-
-    /**
-      * Gets resources from a project.
-      *
-      * @param resourcesInProjectGetRequestV2 the request message.
-      * @return a [[ReadResourcesSequenceV2]].
-      */
-    private def getResourcesInProjectV2(resourcesInProjectGetRequestV2: ResourcesInProjectGetRequestV2): Future[ReadResourcesSequenceV2] = {
-        for {
-            readOntology: ReadOntologyV2 <- (responderManager ? ClassesGetRequestV2(classIris = Set(resourcesInProjectGetRequestV2.resourceClass), allLanguages = true, requestingUser = resourcesInProjectGetRequestV2.requestingUser)).mapTo[ReadOntologyV2]
-            classDef: ReadClassInfoV2 = readOntology.toOntologySchema(ApiV2WithValueObjects).classes(resourcesInProjectGetRequestV2.resourceClass)
-            propertyIris = classDef.knoraResourceProperties.filterNot(classDef.linkValueProperties).toSeq
-
-            // TODO: when text values in Gravsearch query results are shortened, make a way for this query to get the complete value.
-
-            gravsearchQuery = queries.gravsearch.txt.getResourcesInProject(
-                projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
-                resourceClassIri = resourcesInProjectGetRequestV2.resourceClass,
-                propertyIris = propertyIris,
-                orderByProperty = resourcesInProjectGetRequestV2.orderByProperty,
-                page = resourcesInProjectGetRequestV2.page
-            ).toString
-
-            parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
-            searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, resourcesInProjectGetRequestV2.requestingUser)).mapTo[ReadResourcesSequenceV2]
-        } yield searchResponse
     }
 }
