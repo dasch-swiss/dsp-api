@@ -376,7 +376,7 @@ possible to get a paged list of all the resources belonging to a particular
 class in a given project, sorted by the value of a property:
 
 ```
-HTTP GET to http://host/v2/resources?resourceClass=RESOURCE_CLASS_IRI&orderByProperty=PROPERTY_IRI&page=PAGE
+HTTP GET to http://host/v2/resources?resourceClass=RESOURCE_CLASS_IRI&page=PAGE[&orderByProperty=PROPERTY_IRI]
 ```
 
 This is useful only if the project does not contain a large amount of data;
@@ -384,7 +384,9 @@ otherwise, you should use @ref:[Gravsearch](query-language.md)) to search
 using more specific criteria.
 
 The HTTP header `X-Knora-Accept-Project` must be submitted; its value is
-a Knora project IRI. In the request URL, `RESOURCE_CLASS_IRI` and `PROPERTY_IRI`
+a Knora project IRI. In the request URL, the values of `resourceClass` and `orderByProperty`
 are URL-encoded IRIs in the @ref:[complex schema](introduction.md#api-schema).
-`PAGE` is a 0-based integer page number. Paging works as it does in
-@ref:[Gravsearch](query-language.md)).
+The `orderByProperty` parameter is optional; if it is not supplied, resources will
+be sorted alphabetically by resource IRI (an arbitrary but consistent order).
+The value of `page` is a 0-based integer page number. Paging works as it does
+in @ref:[Gravsearch](query-language.md)).
