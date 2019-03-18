@@ -27,6 +27,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Authentication](authentication.md)
 - [Knora IRIs](knora-iris.md)
 - [Reading and Searching Resources](reading-and-searching-resources.md)
+- [Reading the User's Permissions on Resources and Values](reading-user-permissions.md)
 - [Getting Lists](getting-lists.md)
 - [XML to Standoff Mapping](xml-to-standoff-mapping.md)
 - [Gravsearch: Virtual Graph Search](query-language.md)
