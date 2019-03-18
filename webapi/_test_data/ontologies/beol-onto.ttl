@@ -1078,6 +1078,40 @@
 
                     rdfs:subPropertyOf knora-base:hasValue .
 
+### ###########################################
+### beol:manuscriptStartPage
+
+:manuscriptStartPage rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Start Page"@en ;
+
+                    rdfs:comment """Represents the start page of manuscript."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :manuscript ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:manuscriptEndPage
+
+:manuscriptEndPage rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "End Page"@en ;
+
+                    rdfs:comment """Represents the last page of manuscript."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :manuscript ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
 
 ### ###########################################
 ### beol:manuscriptAdditionalFolium
@@ -1563,6 +1597,19 @@
                              owl:onProperty biblio:hasURI ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                              salsah-gui:guiOrder "8"^^xsd:nonNegativeInteger
+                          ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :manuscriptStartPage ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "9"^^xsd:nonNegativeInteger
+                          ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :manuscriptEndPage ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "10"^^xsd:nonNegativeInteger
+
                           ] ;
 
           knora-base:resourceIcon "manuscript.gif" ;
