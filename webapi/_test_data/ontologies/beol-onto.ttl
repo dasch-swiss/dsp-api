@@ -83,8 +83,6 @@
                   rdfs:label "Datum der Entstehung"@de ,
                              "Date of creation"@en ;
 
-                  knora-base:subjectClassConstraint :writtenSource ;
-
                   knora-base:objectClassConstraint knora-base:DateValue ;
 
                   salsah-gui:guiElement salsah-gui:Date ;
@@ -1552,13 +1550,19 @@
                              rdf:type owl:Restriction ;
                              owl:onProperty biblio:isPartOfCollection ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                             salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                             salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
                           ] ,
                           [
                              rdf:type owl:Restriction ;
                              owl:onProperty biblio:isPartOfCollectionValue ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                             salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                             salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
+                          ] ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty biblio:hasURI ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "8"^^xsd:nonNegativeInteger
                           ] ;
 
           knora-base:resourceIcon "manuscript.gif" ;
