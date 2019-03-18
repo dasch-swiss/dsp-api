@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util._
 import org.knora.webapi.util.date._
 import org.knora.webapi.util.jsonld._
@@ -460,6 +461,11 @@ sealed trait ReadValueV2 extends IOValueV2 {
     def permissions: String
 
     /**
+      * The permission that the requesting user has on the value.
+      */
+    def userPermission: EntityPermission
+
+    /**
       * The date when the value was created.
       */
     def valueCreationDate: Instant
@@ -506,6 +512,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
                             JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString),
                             OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
                             OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions),
+                            OntologyConstants.KnoraApiV2WithValueObjects.UserHasPermission -> JsonLDString(userPermission.toString),
                             OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
                                 value = valueCreationDate.toString,
                                 datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
@@ -538,6 +545,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
   * @param valueIri       the IRI of the value.
   * @param attachedToUser the user that created the value.
   * @param permissions    the permissions that the value grants to user groups.
+  * @param userPermission the permission that the requesting user has on the value.
   * @param valueContent   the content of the value.
   * @param deletionInfo   if this value has been marked as deleted, provides the date when it was
   *                       deleted and the reason why it was deleted.
@@ -545,6 +553,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
 case class ReadNonLinkValueV2(valueIri: IRI,
                               attachedToUser: IRI,
                               permissions: String,
+                              userPermission: EntityPermission,
                               valueCreationDate: Instant,
                               valueContent: NonLinkValueContentV2,
                               deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadNonLinkValueV2] {
@@ -565,6 +574,7 @@ case class ReadNonLinkValueV2(valueIri: IRI,
   * @param valueIri         the IRI of the value.
   * @param attachedToUser   the user that created the value.
   * @param permissions      the permissions that the value grants to user groups.
+  * @param userPermission   the permission that the requesting user has on the value.
   * @param valueContent     the content of the value.
   * @param valueHasRefCount if this is a link value, its reference count.  Not returned in API responses, but needed
   *                         here for testing.
@@ -576,6 +586,7 @@ case class ReadNonLinkValueV2(valueIri: IRI,
 case class ReadLinkValueV2(valueIri: IRI,
                            attachedToUser: IRI,
                            permissions: String,
+                           userPermission: EntityPermission,
                            valueCreationDate: Instant,
                            valueContent: LinkValueContentV2,
                            valueHasRefCount: Int,
