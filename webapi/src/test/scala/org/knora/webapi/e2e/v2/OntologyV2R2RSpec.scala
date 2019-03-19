@@ -10,7 +10,7 @@ import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
@@ -325,7 +325,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.properties should ===(paramsAsInput.properties)
 
                 // Check that the ontology's last modification date was updated.
@@ -375,7 +375,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(paramsAsInput.properties.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
@@ -425,7 +425,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.properties.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
@@ -522,7 +522,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.classes should ===(paramsAsInput.classes)
 
                 // Check that cardinalities were inherited from anything:Thing.
@@ -591,7 +591,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.classes should ===(paramsAsInput.classes)
 
                 // Check that cardinalities were inherited from knora-api:Resource.
@@ -641,7 +641,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.classes.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(paramsAsInput.classes.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
@@ -688,7 +688,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.classes.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.classes.head._2.predicates.head._2.objects)
 
                 // Check that the ontology's last modification date was updated.
@@ -745,7 +745,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.properties should ===(paramsAsInput.properties)
 
                 // Check that the ontology's last modification date was updated.
@@ -822,7 +822,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.classes.head._2.directCardinalities should ===(paramsWithAddedLinkValueCardinality.classes.head._2.directCardinalities)
 
                 // Check that cardinalities were inherited from knora-api:Resource.
@@ -877,7 +877,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.classes.head._2.directCardinalities.isEmpty should ===(true)
 
                 // Check that cardinalities were inherited from knora-api:Resource.
@@ -951,7 +951,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.properties should ===(paramsAsInput.properties)
 
                 // Check that the ontology's last modification date was updated.
@@ -1014,7 +1014,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.classes.head._2.directCardinalities should ===(paramsAsInput.classes.head._2.directCardinalities)
 
                 // Check that cardinalities were inherited from knora-api:Resource.
@@ -1074,7 +1074,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.properties should ===(paramsAsInput.properties)
 
                 // Check that the ontology's last modification date was updated.
@@ -1137,7 +1137,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.classes.head._2.directCardinalities should ===(paramsAsInput.classes.head._2.directCardinalities)
 
                 // Check that cardinalities were inherited from knora-api:Resource.
@@ -1206,7 +1206,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.classes.head._2.directCardinalities.isEmpty should ===(true)
 
                 // Check that cardinalities were inherited from knora-api:Resource.
@@ -1321,7 +1321,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
                 // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
-                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
                 responseAsInput.properties should ===(paramsAsInput.properties)
 
                 // Check that the ontology's last modification date was updated.
