@@ -10,9 +10,9 @@
     <xsl:output method="xml" omit-xml-declaration="yes" encoding="utf-8" indent="yes"/>
 
     <!-- make IAF id a URL -->
-    <xsl:function name="knora-api:iaf" as="xs:anyURI">
+    <xsl:function name="knora-api:iaf" as="xs:string">
         <xsl:param name="input" as="xs:string"/>
-        <xsl:value-of select="replace($input, '\(DE-588\)', 'http://d-nb.info/gnd/')"/>
+        <xsl:sequence select="replace($input, '\(DE-588\)', 'http://d-nb.info/gnd/')"/>
     </xsl:function>
 
     <!-- Given a link value IRI and the document root node, returns the IRI of the target resource. -->
@@ -35,7 +35,7 @@
     </xsl:function>
 
     <!-- https://www.safaribooksonline.com/library/view/xslt-cookbook/0596003722/ch03s03.html?orpq -->
-    <xsl:function name="knora-api:last-day-of-month">
+    <xsl:function name="knora-api:last-day-of-month" as="xs:string">
         <xsl:param name="month"/>
         <xsl:param name="year"/>
         <xsl:choose>
