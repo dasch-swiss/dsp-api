@@ -318,6 +318,11 @@
                     <namespace>noNamespace</namespace>
                     <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasColumnSpan</propertyIri>
                 </attribute>
+                <attribute>
+                    <attributeName>cellstyle</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasStyle</propertyIri>
+                </attribute>
             </attributes>
         </standoffClass>
     </mappingElement>
