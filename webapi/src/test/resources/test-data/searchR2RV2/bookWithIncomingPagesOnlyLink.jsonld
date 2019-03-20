@@ -7,7 +7,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
@@ -19,7 +19,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "knora-api:valueAsString" : "Stultifera navis (...)",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
@@ -46,7 +46,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/50e7460a7203",
       "@type" : "incunabula:page",
@@ -56,7 +56,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/8be1b7cf7103"
         },
@@ -79,7 +79,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:43Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
         "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/50e7460a72036.20160302T150543Z"
@@ -91,7 +91,7 @@
       "@value" : "2016-03-02T15:05:43Z"
     }
   },
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543Z"

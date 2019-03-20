@@ -197,7 +197,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             projectIri = createResourceRequestV2.createResource.projectADM.id
 
-            _ = if (projectIri == OntologyConstants.KnoraBase.SystemProject || projectIri == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
+            _ = if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
                 throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
             }
 

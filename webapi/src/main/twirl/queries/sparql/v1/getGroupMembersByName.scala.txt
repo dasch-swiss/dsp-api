@@ -20,17 +20,17 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all members of a group, given the group's knora-base:groupName.
+ * Gets all members of a group, given the group's knora-admin:groupName.
  *
  * @param triplestore the name of the triplestore being used.
- * @param name the group's `knora-base:groupName`.
+ * @param name the group's `knora-admin:groupName`.
  *@
 @(triplestore: String,
   projectIri: IRI,
   name: String)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 
 SELECT ?s
@@ -41,9 +41,9 @@ SELECT ?s
 WHERE {
     BIND(IRI("@projectIri") as ?project)
 
-    ?group rdf:type knora-base:UserGroup .
-    ?group knora-base:belongsToProject ?project .
-    ?group knora-base:groupName "@name"^^xsd:string .
-    ?s rdf:type knora-base:User .
-    ?s knora-base:isInGroup ?group .
+    ?group rdf:type knora-admin:UserGroup .
+    ?group knora-admin:belongsToProject ?project .
+    ?group knora-admin:groupName "@name"^^xsd:string .
+    ?s rdf:type knora-admin:User .
+    ?s knora-admin:isInGroup ?group .
 }

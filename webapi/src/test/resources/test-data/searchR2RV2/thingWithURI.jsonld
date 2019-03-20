@@ -7,7 +7,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:uriValueAsUri" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://www.google.ch"
@@ -31,7 +31,7 @@
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2018-05-28T15:52:03.897Z"
   },
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk.20180528T155203897Z"

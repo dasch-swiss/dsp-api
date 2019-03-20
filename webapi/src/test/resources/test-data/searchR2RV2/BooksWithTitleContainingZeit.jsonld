@@ -8,7 +8,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -29,7 +29,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T150510Z"
@@ -44,7 +44,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -65,7 +65,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:23Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"

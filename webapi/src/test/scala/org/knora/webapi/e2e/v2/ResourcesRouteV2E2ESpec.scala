@@ -419,7 +419,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                   |  },
                   |  "anything:hasInteger" : [ {
                   |    "@type" : "knora-api:IntValue",
-                  |    "knora-api:hasPermissions" : "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
+                  |    "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
                   |    "knora-api:intValueAsInt" : 5,
                   |    "knora-api:valueHasComment" : "this is the number five"
                   |  }, {
@@ -544,7 +544,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         "update the metadata of a resource" in {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val newLabel = "test thing with modified label"
-            val newPermissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:ProjectMember"
+            val newPermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
             val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
 
             val jsonLDEntity =

@@ -7,7 +7,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>This is a test that contains marked up elements. This is <em>interesting text</em> in italics. This is <em>boring text</em> in italics.</p></text>",
     "knora-api:textValueHasMapping" : {
       "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
@@ -31,7 +31,7 @@
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2018-01-31T15:05:10Z"
   },
-  "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+  "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_richtext_with_markupO.20180131T150510Z"

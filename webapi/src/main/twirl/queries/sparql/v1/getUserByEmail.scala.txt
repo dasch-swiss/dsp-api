@@ -20,16 +20,16 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all information about a user, given the user's knora-base:userid.
+ * Gets all information about a user, given the user's knora-admin:userid.
  *
  * @param triplestore the name of the triplestore being used.
- * @param username the user's `knora-base:userid`.
+ * @param username the user's `knora-admin:userid`.
  *@
 @(triplestore: String,
   email: String)
 
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 SELECT ?s ?p ?o
 @* Ensure that inference is not used in this query. *@
@@ -37,6 +37,6 @@ SELECT ?s ?p ?o
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    ?s knora-base:email "@email"^^xsd:string .
+    ?s knora-admin:email "@email"^^xsd:string .
     ?s ?p ?o .
 }

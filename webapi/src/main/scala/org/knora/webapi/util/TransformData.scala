@@ -188,10 +188,10 @@ object TransformData extends App {
     )
 
     private val StandardClassesWithoutIsDeleted = Set(
-        OntologyConstants.KnoraBase.User,
-        OntologyConstants.KnoraBase.UserGroup,
-        OntologyConstants.KnoraBase.KnoraProject,
-        OntologyConstants.KnoraBase.Institution,
+        OntologyConstants.KnoraAdmin.User,
+        OntologyConstants.KnoraAdmin.UserGroup,
+        OntologyConstants.KnoraAdmin.KnoraProject,
+        OntologyConstants.KnoraAdmin.Institution,
         OntologyConstants.KnoraBase.ListNode
     )
 
@@ -888,7 +888,7 @@ object TransformData extends App {
                     val creatorStatement = valueFactory.createStatement(
                         valueFactory.createIRI(subjectIri),
                         valueFactory.createIRI(OntologyConstants.KnoraBase.AttachedToUser),
-                        valueFactory.createIRI(OntologyConstants.KnoraBase.SystemUser)
+                        valueFactory.createIRI(OntologyConstants.KnoraAdmin.SystemUser)
                     )
 
                     val permissionsStatement = valueFactory.createStatement(
@@ -1220,13 +1220,13 @@ object TransformData extends App {
                                 val parsedPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(Some(permissionsLiteral), PermissionType.OAP)
 
                                 /* remove ony permissions referencing the creator */
-                                parsedPermissions.filter(perm => perm.additionalInformation.get != OntologyConstants.KnoraBase.Creator)
+                                parsedPermissions.filter(perm => perm.additionalInformation.get != OntologyConstants.KnoraAdmin.Creator)
 
                             case None => Set.empty[PermissionADM]
                         }
 
                         /* add CR for Creator */
-                        val permissionsWithCreator = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraBase.Creator)) ++ currentPermissions
+                        val permissionsWithCreator = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator)) ++ currentPermissions
 
                         /* transform back to literal */
                         val changedPermissionsLiteral: String = PermissionUtilADM.formatPermissionADMs(permissionsWithCreator, PermissionType.OAP)
