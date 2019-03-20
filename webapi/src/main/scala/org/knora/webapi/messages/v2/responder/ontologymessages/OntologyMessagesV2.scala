@@ -2517,7 +2517,7 @@ case class ClassInfoContentV2(classIri: SmartIri,
   */
 object ClassInfoContentV2 {
 
-    // The predicates that are allowed in a class definition that is read from JSON-LD.
+    // The predicates that are allowed in a class definition that is read from JSON-LD representing client input.
     private val AllowedJsonLDClassPredicatesInClientInput = Set(
         JsonLDConstants.ID,
         JsonLDConstants.TYPE,
@@ -2526,7 +2526,7 @@ object ClassInfoContentV2 {
         OntologyConstants.Rdfs.Comment
     )
 
-    // The predicates that are allowed in an owl:Restriction that is read from JSON-LD.
+    // The predicates that are allowed in an owl:Restriction that is read from JSON-LD representing client input.
     private val AllowedJsonLDRestrictionPredicatesInClientInput = Set(
         JsonLDConstants.TYPE,
         OntologyConstants.Owl.Cardinality,
@@ -2551,19 +2551,25 @@ object ClassInfoContentV2 {
 
         // TODO: handle custom datatypes.
 
+        // Parse differently depending on parsing mode.
         val filteredClassDef: JsonLDObject = parsingMode match {
             case ClientInputParsingModeV2 =>
+                // In client input mode, only certain predicates are allowed.
                 val extraClassPredicates = jsonLDClassDef.value.keySet -- AllowedJsonLDClassPredicatesInClientInput
 
                 if (extraClassPredicates.nonEmpty) {
                     throw BadRequestException(s"The definition of $classIri contains one or more invalid predicates: ${extraClassPredicates.mkString(", ")}")
+                } else {
+                    jsonLDClassDef
                 }
 
+            case TestResponseParsingModeV2 =>
+                // In test response mode, we ignore predicates that wouldn't be allowed as client input.
+                JsonLDObject(jsonLDClassDef.value.filterKeys(AllowedJsonLDClassPredicatesInClientInput))
+
+            case KnoraOutputParsingModeV2 =>
+                // In Knora output parsing mode, we accept all predicates.
                 jsonLDClassDef
-
-            case TestResponseParsingModeV2 => JsonLDObject(jsonLDClassDef.value.filterKeys(AllowedJsonLDClassPredicatesInClientInput))
-
-            case KnoraOutputParsingModeV2 => jsonLDClassDef
         }
 
         val (subClassOf: Set[SmartIri], directCardinalities: Map[SmartIri, KnoraCardinalityInfo]) = filteredClassDef.maybeArray(OntologyConstants.Rdfs.SubClassOf) match {
@@ -2589,13 +2595,15 @@ object ClassInfoContentV2 {
                     case (acc, restriction) =>
                         val isInherited = restriction.value.get(OntologyConstants.KnoraApiV2WithValueObjects.IsInherited).contains(JsonLDBoolean(true))
 
+                        // If we're in client input mode and the client tries to submit an inherited cardinality, return
+                        // a helpful error message.
                         if (isInherited && parsingMode == ClientInputParsingModeV2) {
-                            // Return a helpful error message if the client tries to submit an inherited cardinality.
                             throw BadRequestException("Inherited cardinalities are not allowed in this request")
                         } else if (isInherited && parsingMode == TestResponseParsingModeV2) {
-                            // If this is an inherited cardinality and we're in test response parsing mode, ignore the cardinality.
+                            // In test response parsing mode, ignore inherited cardinalities.
                             acc
                         } else {
+                            // In client input mode, only certain predicates are allowed on owl:Restriction nodes.
                             if (parsingMode == ClientInputParsingModeV2) {
                                 val extraRestrictionPredicates = restriction.value.keySet -- AllowedJsonLDRestrictionPredicatesInClientInput
 
@@ -2769,7 +2777,7 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
   * Can read a [[PropertyInfoContentV2]] from JSON-LD, and provides constants used by that class.
   */
 object PropertyInfoContentV2 {
-    // The predicates allowed in a property definition that is read from JSON-LD.
+    // The predicates allowed in a property definition that is read from JSON-LD representing client input.
     private val AllowedJsonLDPropertyPredicatesInClientInput = Set(
         JsonLDConstants.ID,
         JsonLDConstants.TYPE,
@@ -2797,8 +2805,10 @@ object PropertyInfoContentV2 {
         val propertyIri: SmartIri = jsonLDPropertyDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = propertyIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid property IRI: $propertyIri"))
 
+        // Parse differently depending on the parsing mode.
         val filteredPropertyDef: JsonLDObject = parsingMode match {
             case ClientInputParsingModeV2 =>
+                // In client input mode, only certain predicates are allowed.
                 val extraPropertyPredicates = jsonLDPropertyDef.value.keySet -- AllowedJsonLDPropertyPredicatesInClientInput
 
                 if (extraPropertyPredicates.nonEmpty) {
@@ -2808,9 +2818,12 @@ object PropertyInfoContentV2 {
                 }
 
             case TestResponseParsingModeV2 =>
+                // In test response mode, we ignore predicates that wouldn't be allowed as client input.
                 JsonLDObject(jsonLDPropertyDef.value.filterKeys(AllowedJsonLDPropertyPredicatesInClientInput))
 
-            case KnoraOutputParsingModeV2 => jsonLDPropertyDef
+            case KnoraOutputParsingModeV2 =>
+                // In Knora output parsing mode, we accept all predicates.
+                jsonLDPropertyDef
         }
 
         val subPropertyOf: Set[SmartIri] = filteredPropertyDef.maybeArray(OntologyConstants.Rdfs.SubPropertyOf) match {
