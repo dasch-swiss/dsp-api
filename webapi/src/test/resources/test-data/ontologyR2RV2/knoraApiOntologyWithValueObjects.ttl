@@ -1,3 +1,4 @@
+@prefix knora-admin: <http://api.knora.org/ontology/knora-admin/v2#> .
 @prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -6,7 +7,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <http://api.knora.org/ontology/knora-api/v2> a owl:Ontology;
-  knora-api:attachedToProject <http://www.knora.org/ontology/knora-base#SystemProject>;
+  knora-api:attachedToProject <http://www.knora.org/ontology/knora-admin#SystemProject>;
   knora-api:isBuiltIn true;
   rdfs:label "The knora-api ontology in the complex schema" .
 
@@ -150,12 +151,12 @@ knora-api:arkUrl a owl:DatatypeProperty;
   rdfs:label "ARK URL" .
 
 knora-api:attachedToProject a owl:ObjectProperty;
-  knora-api:objectType knora-api:knoraProject;
+  knora-api:objectType knora-admin:knoraProject;
   rdfs:comment "Connects something to a project";
   rdfs:label "attached to project" .
 
 knora-api:attachedToUser a owl:ObjectProperty;
-  knora-api:objectType knora-api:User;
+  knora-api:objectType knora-admin:User;
   rdfs:comment "Connects something to a user";
   rdfs:label "attached to user" .
 
@@ -173,7 +174,7 @@ knora-api:deleteDate a owl:DatatypeProperty;
   rdfs:comment "Indicates when a resource or value was deleted" .
 
 knora-api:deletedBy a owl:ObjectProperty;
-  knora-api:objectType knora-api:User;
+  knora-api:objectType knora-admin:User;
   rdfs:comment "Indicates who deleted a resource or value" .
 
 knora-api:hasComment a owl:ObjectProperty;
@@ -2963,18 +2964,6 @@ knora-api:UriValue a owl:Class;
       owl:onProperty knora-api:valueHasComment
     ] .
 
-knora-api:User a owl:Class;
-  rdfs:comment "Represents a Knora user";
-  rdfs:subClassOf <http://xmlns.com/foaf/0.1/Person>, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:username
-    ] .
-
-knora-api:username a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType knora-api:User;
-  rdfs:comment "The username and login name of a user of Knora" .
-
 knora-api:XSLTransformation a owl:Class;
   knora-api:isResourceClass true;
   rdfs:comment "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff.  The transformation's result is ecptected to be HTML.";
@@ -3046,16 +3035,6 @@ knora-api:XSLTransformation a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty rdfs:label
-    ] .
-
-knora-api:knoraProject a owl:Class;
-  rdfs:comment "Represents a project that uses Knora";
-  rdfs:subClassOf <http://xmlns.com/foaf/0.1/Project>, [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:projectRestrictedViewSize
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:projectRestrictedViewWatermark
     ] .
 
 knora-api:valueHas a rdf:Property;
@@ -3173,16 +3152,6 @@ knora-api:isValueClass a owl:AnnotationProperty;
   knora-api:subjectType owl:Class;
   rdfs:comment "Indicates whether class is a subclass of Value.";
   rdfs:label "is value class" .
-
-knora-api:projectRestrictedViewSize a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType knora-api:knoraProject;
-  rdfs:comment "The size of the image (as defined by IIIF) returned for restricted view" .
-
-knora-api:projectRestrictedViewWatermark a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType knora-api:knoraProject;
-  rdfs:comment "Path to the restricted view watermark" .
 
 knora-api:linkValueHasTarget a owl:ObjectProperty;
   knora-api:objectType knora-api:Resource;
