@@ -230,10 +230,11 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
   * Represents the actual text that is going to be converted to the body of a TEI document.
   *
   * @param bodyInfo   the content of the text value that will be converted to TEI.
+  * @param standoffLinks the standoff links for the given text value.
   * @param teiMapping the mapping from standoff to TEI/XML.
   * @param bodyXSLT   the XSLT transformation that completes the generation of TEI/XML.
   */
-case class TEIBody(bodyInfo: TextValueContentV2, teiMapping: MappingXMLtoStandoff, bodyXSLT: String) {
+case class TEIBody(bodyInfo: TextValueContentV2, standoffLinks: Seq[ReadLinkValueV2], teiMapping: MappingXMLtoStandoff, bodyXSLT: String) {
 
     def toXML: String = {
         if (bodyInfo.standoffAndMapping.isEmpty) throw BadRequestException(s"text is expected to have standoff markup")

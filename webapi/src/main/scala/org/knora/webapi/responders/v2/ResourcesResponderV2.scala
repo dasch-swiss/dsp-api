@@ -1274,6 +1274,24 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 }
             }
 
+            // get standoff link values
+            standoffLinkValuesOption: Option[Seq[ReadValueV2]] = resource.values.get(OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri)
+
+            standoffLinkValues: Seq[ReadLinkValueV2] = standoffLinkValuesOption match {
+
+                case Some(valueSeq: Seq[ReadValueV2]) =>
+
+                    valueSeq.collect {
+
+                        case soLinkVal: ReadLinkValueV2 => soLinkVal
+
+                        case _ => throw AssertionException(s"value of ${OntologyConstants.KnoraBase.HasStandoffLinkToValue} is expected to be of type 'ReadLinkValueV2'")
+                    }
+
+                case None => Seq.empty[ReadLinkValueV2]
+
+            }
+
             tei = ResourceTEIGetResponseV2(
                 header = TEIHeader(
                     headerInfo = headerResource,
@@ -1282,6 +1300,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 ),
                 body = TEIBody(
                     bodyInfo = bodyTextValue,
+                    standoffLinks = standoffLinkValues,
                     bodyXSLT = bodyXslt,
                     teiMapping = teiMapping.mapping
                 )
