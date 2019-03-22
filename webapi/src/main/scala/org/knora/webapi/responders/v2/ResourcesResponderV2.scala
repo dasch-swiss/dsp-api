@@ -1217,8 +1217,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             _ = if (bodyTextValue.standoffAndMapping.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
 
             // get all the metadata but the text property for the TEI header
-            headerResource = resource.copy(
-                values = convertDateToGregorian(resource.values - textProperty)
+            headerResource: ReadResourceV2 = resource.copy(
+                values = convertDateToGregorian(resource.values - textProperty - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri)
             )
 
             // get the XSL transformation for the TEI header
