@@ -9,6 +9,8 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
         ?letter beol:hasText ?text .
 
+        ?letter knora-api:hasStandoffLinkTo ?standoffLinks .
+
         ?letter beol:hasAuthor ?person1 .
 
         ?person1 beol:hasFamilyName ?name1 .
@@ -34,6 +36,10 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
         ?letter beol:creationDate ?date .
 
         ?letter beol:hasText ?text .
+
+        OPTIONAL {
+           ?letter knora-api:hasStandoffLinkTo ?standoffLinks .
+        }
 
         OPTIONAL {
 
