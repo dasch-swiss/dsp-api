@@ -28,6 +28,13 @@
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/knora-base#StandoffLinkTag</classIri>
+            <attributes>
+                <attribute>
+                    <attributeName>type</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/knora-base#standoffLinkTagTargetHasType</propertyIri>
+                </attribute>
+            </attributes>
             <datatype>
                 <type>http://www.knora.org/ontology/knora-base#StandoffLinkTag</type>
                 <attributeName>ref</attributeName>
@@ -49,6 +56,11 @@
                     <attributeName>entityType</attributeName>
                     <namespace>noNamespace</namespace>
                     <propertyIri>http://www.knora.org/ontology/0801/beol#standoffEntityType</propertyIri>
+                </attribute>
+                <attribute>
+                    <attributeName>type</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/knora-base#standoffLinkTagTargetHasType</propertyIri>
                 </attribute>
             </attributes>
             <datatype>
@@ -492,6 +504,13 @@
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/0801/beol#StandoffFacsimileTag</classIri>
+            <attributes>
+                <attribute>
+                    <attributeName>type</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/knora-base#standoffLinkTagTargetHasType</propertyIri>
+                </attribute>
+            </attributes>
             <datatype>
                 <type>http://www.knora.org/ontology/knora-base#StandoffLinkTag</type>
                 <attributeName>src</attributeName>
@@ -508,6 +527,13 @@
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/0801/beol#StandoffFigureTag</classIri>
+            <attributes>
+                <attribute>
+                    <attributeName>type</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/knora-base#standoffLinkTagTargetHasType</propertyIri>
+                </attribute>
+            </attributes>
             <datatype>
                 <type>http://www.knora.org/ontology/knora-base#StandoffLinkTag</type>
                 <attributeName>src</attributeName>
