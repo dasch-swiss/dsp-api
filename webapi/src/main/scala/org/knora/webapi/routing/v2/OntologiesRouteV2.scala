@@ -47,15 +47,15 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     // This is the route used to dereference an actual ontology IRI. If the URL path looks like it
                     // belongs to a built-in API ontology (which has to contain "knora-api"), prefix it with
                     // http://api.knora.org to get the ontology IRI. Otherwise, if it looks like it belongs to a
-                    // project-specific API ontology, prefix it with settings.knoraApiHttpBaseUrl to get the ontology
-                    // IRI.
+                    // project-specific API ontology, prefix it with settings.externalOntologyIriHostAndPort to get the
+                    // ontology IRI.
 
                     val urlPath = requestContext.request.uri.path.toString
 
                     val requestedOntologyStr: IRI = if (stringFormatter.isBuiltInApiV2OntologyUrlPath(urlPath)) {
                         OntologyConstants.KnoraApi.ApiOntologyHostname + urlPath
                     } else if (stringFormatter.isProjectSpecificApiV2OntologyUrlPath(urlPath)) {
-                        settings.externalKnoraApiBaseUrl + urlPath
+                        "http://" + settings.externalOntologyIriHostAndPort + urlPath
                     } else {
                         throw BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath")
                     }
