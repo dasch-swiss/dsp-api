@@ -104,7 +104,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             properties.map {
                 case (propIri: IRI, values: Seq[CreateResourceValueV1]) =>
                     (stringFormatter.validateAndEscapeIri(propIri, throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
-                        case (givenValue: CreateResourceValueV1) =>
+                        givenValue: CreateResourceValueV1 =>
 
                             givenValue.getValueClassIri match {
                                 // create corresponding UpdateValueV1
@@ -254,7 +254,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 // and by the other POST route, either multipartConversionRequest or paramConversionRequest is set if a file should be attached to the resource, but not both.
                 _ = if (multipartConversionRequest.nonEmpty && paramConversionRequest.nonEmpty) throw BadRequestException("Binaries sent and file params set to route. This is illegal.")
 
-               // make the whole Map a Future
+                // make the whole Map a Future
                 valuesToBeCreated: Iterable[(IRI, Seq[CreateValueV1WithComment])] <- Future.traverse(valuesToBeCreatedWithFuture) {
                     case (propIri: IRI, valuesFuture: Future[Seq[CreateValueV1WithComment]]) =>
                         for {
@@ -295,7 +295,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             } yield OneOfMultipleResourceCreateRequestV1(
                 resourceTypeIri = resourceRequest.restype_id,
                 clientResourceID = resourceRequest.client_id,
-                label = resourceRequest.label,
+                label = stringFormatter.toSparqlEncodedString(resourceRequest.label, throw BadRequestException(s"The resource label is invalid: '${resourceRequest.label}'")),
                 values = valuesToBeCreated.toMap,
                 file = resourceRequest.file.map {
                     fileToRead =>
@@ -326,11 +326,12 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 } yield projectResponse.project.shortcode
 
                 resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] = resourceRequest.map {
-                    createResourceRequest => createOneResourceRequestFromXmlImport(
-                        resourceRequest = createResourceRequest,
-                        projectShortcode = projectShortcode,
-                        userProfile = userProfile
-                    )
+                    createResourceRequest =>
+                        createOneResourceRequestFromXmlImport(
+                            resourceRequest = createResourceRequest,
+                            projectShortcode = projectShortcode,
+                            userProfile = userProfile
+                        )
                 }
 
                 resToCreateCollection: Seq[OneOfMultipleResourceCreateRequestV1] <- Future.sequence(resourcesToCreate)
@@ -823,7 +824,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                 }
 
                             case None =>
-                                CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = Some(elementValue), language = language)))
+                                CreateResourceValueV1(
+                                    richtext_value = Some(
+                                        CreateRichtextV1(
+                                            utf8str = Some(stringFormatter.toSparqlEncodedString(elementValue, throw BadRequestException(s"Invalid text value: $elementValue"))),
+                                            language = language
+                                        )
+                                    )
+                                )
                         }
 
                     case "link_value" =>

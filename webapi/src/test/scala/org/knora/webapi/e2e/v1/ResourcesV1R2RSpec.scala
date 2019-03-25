@@ -1947,6 +1947,34 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
         }
 
+        "create a resource whose label ends in a double quote" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
+                   |    xmlns:p0001-anything="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <p0001-anything:Thing id="thing_with_string">
+                   |        <knoraXmlImport:label>Thing with "label"</knoraXmlImport:label>
+                   |    </p0001-anything:Thing>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+                val responseStr = responseAs[String]
+
+                assert(status == StatusCodes.OK, responseStr)
+                responseStr should include("createdResources")
+
+                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
+                thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+
+            }
+        }
+
         "create a resource with a custom creation date in a bulk import" in {
             val creationDateStr = "2019-01-09T15:45:54.502951Z"
 
