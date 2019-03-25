@@ -14,4 +14,3 @@ Also, please change the **HINT** to the appropriate level:
 
 ## HINT => MAJOR CHANGE
 
-- FIX: Unescape standoff string attributes when verifying text value update (@github[#1242](#1242))
