@@ -101,7 +101,4 @@ http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20180604T085622
 ```
 
 Without a timestamp, a Knora ARK URL refers to the latest version of the
-resource at the time when the URL is resolved. Knora currently returns only ARK URLs
-without timestamps, because querying past versions of resources is not yet
-implemented (@github[#1115](#1115)). When it is implemented, Knora will also return
-ARK URLs with timestamps.
+resource at the time when the URL is resolved.
