@@ -27,28 +27,14 @@ import requests
 import argparse
 import getpass
 import rdflib
+from rdflib.namespace import RDF
 import io
 from string import Template
 
 
-update_obj_template = """DELETE {
-    GRAPH ?g {
-        ?s ?p knora-base:$obj .
-    }
-} INSERT {
-    GRAPH ?g {
-        ?s ?p knora-admin:$obj .
-    }
-}
-USING <http://www.ontotext.com/explicit>
-WHERE
-{
-    GRAPH ?g {
-        ?s ?p knora-base:$obj .
-    }
-}"""
-
-update_pred_template = """DELETE {
+# A template for updating statements that have given predicate.
+update_pred_template = Template("""# Update statements with $pred as predicate.
+DELETE {
     GRAPH ?g {
         ?s knora-base:$pred ?o .
     }
@@ -63,49 +49,104 @@ WHERE
     GRAPH ?g {
         ?s knora-base:$pred ?o .
     }
-}"""
+}""")
 
+# A template for updating statements that have a given object.
+update_obj_template = Template("""# Update statements with $obj as object.
+DELETE {
+    GRAPH ?g {
+        ?s ?p knora-base:$obj .
+    }
+} INSERT {
+    GRAPH ?g {
+        ?s ?p knora-admin:$obj .
+    }
+}
+USING <http://www.ontotext.com/explicit>
+WHERE
+{
+    GRAPH ?g {
+        ?s ?p knora-base:$obj .
+    }
+}""")
 
-property_types = [
+# The property types used in knora-admin.
+property_types = {
     "http://www.w3.org/2002/07/owl#ObjectProperty",
     "http://www.w3.org/2002/07/owl#DatatypeProperty",
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
-]
+}
 
 
 # Makes a request to GraphDB to update the repository.
 def do_request(graphdb_url, username, password):
-    knora_admin = knora_ontology_to_ntriples("knora-admin.ttl")
-    knora_base = knora_ontology_to_ntriples("knora-base.ttl")
+    # Read knora-admin.
+    knora_admin_graph = rdflib.Graph()
+    knora_admin_graph.parse("../../knora-ontologies/knora-admin.ttl", format="turtle")
+    knora_admin_nt = knora_ontology_to_ntriples(knora_admin_graph)
+
+    # Read knora-base.
+    knora_base_graph = rdflib.Graph()
+    knora_base_graph.parse("../../knora-ontologies/knora-base.ttl", format="turtle")
+    knora_base_nt = knora_ontology_to_ntriples(knora_base_graph)
+
+    # From knora-admin, collect the property IRIs, and the IRIs of non-properties that can be used as objects in data.
+
+    knora_admin_properties = []
+    knora_admin_objects = []
+
+    # Iterate over all the statements in knora-admin.
+    for subject, predicate, obj in knora_admin_graph:
+        subject_str = str(subject)
+        subj_name = subject_str[subject_str.rfind("#") + 1:len(subject_str)]
+
+        # Is the predicate is rdf:type?
+        if predicate == RDF.type:
+            # Yes. Is the object a property type?
+            if str(obj) in property_types:
+                # Yes. Collect the subject as a property IRI.
+                knora_admin_properties.append(subj_name)
+            elif subject.__class__.__name__ == "URIRef":
+                # The object isn't a property type, and the subject is an IRI (not a blank node).
+                # Collect the subject as a non-property IRI that can be used as an object in data.
+                knora_admin_objects.append(subj_name)
+
+    # Use those IRIs to generate SPARQL using the templates update_pred_template and update_obj_template.
+
+    update_predicates = list(map(lambda knora_admin_prop: update_pred_template.substitute(pred=knora_admin_prop),
+                                 knora_admin_properties))
+    update_predicates_str = " ;\n\n".join(update_predicates)
+
+    update_objects = list(map(lambda knora_admin_obj: update_obj_template.substitute(obj=knora_admin_obj),
+                              knora_admin_objects))
+    update_objects_str = " ;\n\n".join(update_objects)
+
+    # Generate SPARQL using the main template file.
 
     with open("sparql/update-knora-admin.rq.tmpl", 'r') as sparql_template_file:
         sparql_template = Template(sparql_template_file.read())
 
-        # TODO
-        update_predicates = ""
-        update_objects = ""
-
         template_dict = {
-            "knoraAdmin": knora_admin,
-            "knoraBase": knora_base,
-            "updatePredicates": update_predicates,
-            "updateObjects": update_objects
+            "knoraAdmin": knora_admin_nt,
+            "knoraBase": knora_base_nt,
+            "updatePredicates": update_predicates_str,
+            "updateObjects": update_objects_str
         }
 
         sparql = sparql_template.substitute(template_dict)
 
-    data = {
-        "update": sparql
-    }
+        # Post the SPARQL to the triplestore.
 
-    r = requests.post(graphdb_url, data=data, auth=(username, password))
-    r.raise_for_status()
+        data = {
+            "update": sparql
+        }
+
+        r = requests.post(graphdb_url, data=data, auth=(username, password))
+        r.raise_for_status()
 
 
 # Reads an ontology from knora-ontologies and returns it in ntriples format.
-def knora_ontology_to_ntriples(filename):
-    graph = rdflib.Graph()
-    graph.parse("../../knora-ontologies/{}".format(filename), format="turtle")
+def knora_ontology_to_ntriples(graph):
     nt_bytes = io.BytesIO()
     graph.serialize(nt_bytes, format="ntriples")
     return nt_bytes.getvalue().decode("UTF-8")
@@ -118,9 +159,11 @@ def main():
 
     parser = argparse.ArgumentParser(description="Separates knora-admin from knora-base.")
     parser.add_argument("-g", "--graphdb", help="GraphDB host (default '{}')".format(default_graphdb_host), type=str)
-    parser.add_argument("-r", "--repository", help="GraphDB repository (default '{}')".format(defaut_repository), type=str)
+    parser.add_argument("-r", "--repository", help="GraphDB repository (default '{}')".format(defaut_repository),
+                        type=str)
     parser.add_argument("-u", "--username", help="GraphDB username", type=str, required=True)
-    parser.add_argument("-p", "--password", help="GraphDB password (if not provided, will prompt for password)", type=str)
+    parser.add_argument("-p", "--password", help="GraphDB password (if not provided, will prompt for password)",
+                        type=str)
 
     args = parser.parse_args()
     graphdb_host = args.graphdb

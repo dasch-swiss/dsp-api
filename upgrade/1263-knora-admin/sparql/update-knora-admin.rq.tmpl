@@ -53,5 +53,5 @@ WHERE
     }
 
     FILTER(REGEX(?oldPermissions, "knora-base"))
-    BIND(REPLACE(?o, "knora-base", "knora-admin") AS ?newPermissions)
+    BIND(REPLACE(?oldPermissions, "knora-base", "knora-admin") AS ?newPermissions)
 }
