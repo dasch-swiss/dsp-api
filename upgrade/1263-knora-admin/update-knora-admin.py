@@ -98,18 +98,25 @@ def do_request(graphdb_url, username, password):
     # Iterate over all the statements in knora-admin.
     for subject, predicate, obj in knora_admin_graph:
         subject_str = str(subject)
-        subj_name = subject_str[subject_str.rfind("#") + 1:len(subject_str)]
 
-        # Is the predicate is rdf:type?
-        if predicate == RDF.type:
-            # Yes. Is the object a property type?
-            if str(obj) in property_types:
-                # Yes. Collect the subject as a property IRI.
-                knora_admin_properties.append(subj_name)
-            elif subject.__class__.__name__ == "URIRef":
-                # The object isn't a property type, and the subject is an IRI (not a blank node).
-                # Collect the subject as a non-property IRI that can be used as an object in data.
-                knora_admin_objects.append(subj_name)
+        # Is this a statement about an ontology entity?
+
+        hash_pos = subject_str.rfind("#")
+
+        if hash_pos != -1:
+            # Yes. Get the local name of the subject.
+            subj_name = subject_str[hash_pos + 1:len(subject_str)]
+
+            # Is the predicate is rdf:type?
+            if predicate == RDF.type:
+                # Yes. Is the object a property type?
+                if str(obj) in property_types and subject_str != "forProject":
+                    # Yes. Collect the subject as a property IRI, unless it's "forProject".
+                    knora_admin_properties.append(subj_name)
+                elif subject.__class__.__name__ == "URIRef":
+                    # The object isn't a property type, and the subject is an IRI (not a blank node).
+                    # Collect the subject as a non-property IRI that can be used as an object in data.
+                    knora_admin_objects.append(subj_name)
 
     # Use those IRIs to generate SPARQL using the templates update_pred_template and update_obj_template.
 
@@ -134,6 +141,8 @@ def do_request(graphdb_url, username, password):
         }
 
         sparql = sparql_template.substitute(template_dict)
+
+        print(sparql)
 
         # Post the SPARQL to the triplestore.
 
