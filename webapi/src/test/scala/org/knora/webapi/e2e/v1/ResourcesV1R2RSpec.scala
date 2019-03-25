@@ -259,7 +259,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val expectedNumber = 11
 
-            println(resources)
+            // println(resources)
 
             assert(resources.length == expectedNumber, s"expected $expectedNumber results, but ${resources.length} given: $resources")
 
@@ -1516,7 +1516,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0000-example-box:Box>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject", "UTF-8")
+            val projectIri = URLEncoder.encode("http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject", "UTF-8")
 
             Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(superUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.BadRequest, response.toString)
