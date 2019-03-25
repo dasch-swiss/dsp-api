@@ -1217,8 +1217,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             _ = if (bodyTextValue.standoffAndMapping.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
 
             // get all the metadata but the text property for the TEI header
-            headerResource: ReadResourceV2 = resource.copy(
-                values = convertDateToGregorian(resource.values - textProperty - OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri)
+            headerResource = resource.copy(
+                values = convertDateToGregorian(resource.values - textProperty)
             )
 
             // get the XSL transformation for the TEI header
@@ -1274,24 +1274,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 }
             }
 
-            // get standoff link values
-            standoffLinkValuesOption: Option[Seq[ReadValueV2]] = resource.values.get(OntologyConstants.KnoraBase.HasStandoffLinkToValue.toSmartIri)
-
-            standoffLinkValues: Seq[ReadLinkValueV2] = standoffLinkValuesOption match {
-
-                case Some(valueSeq: Seq[ReadValueV2]) =>
-
-                    valueSeq.collect {
-
-                        case soLinkVal: ReadLinkValueV2 => soLinkVal
-
-                        case _ => throw AssertionException(s"value of ${OntologyConstants.KnoraBase.HasStandoffLinkToValue} is expected to be of type 'ReadLinkValueV2'")
-                    }
-
-                case None => Seq.empty[ReadLinkValueV2]
-
-            }
-
             tei = ResourceTEIGetResponseV2(
                 header = TEIHeader(
                     headerInfo = headerResource,
@@ -1300,7 +1282,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 ),
                 body = TEIBody(
                     bodyInfo = bodyTextValue,
-                    standoffLinks = standoffLinkValues,
                     bodyXSLT = bodyXslt,
                     teiMapping = teiMapping.mapping
                 )

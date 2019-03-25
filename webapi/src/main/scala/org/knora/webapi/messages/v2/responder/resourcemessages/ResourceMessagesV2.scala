@@ -33,14 +33,13 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses}
+import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.SearchResponderV2Constants
-import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
+import org.knora.webapi.util.{ActorUtil, KnoraIdUtil, SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -230,58 +229,17 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
 /**
   * Represents the actual text that is going to be converted to the body of a TEI document.
   *
-  * @param bodyInfo      the content of the text value that will be converted to TEI.
-  * @param standoffLinks the standoff links for the given text value.
-  * @param teiMapping    the mapping from standoff to TEI/XML.
-  * @param bodyXSLT      the XSLT transformation that completes the generation of TEI/XML.
+  * @param bodyInfo   the content of the text value that will be converted to TEI.
+  * @param teiMapping the mapping from standoff to TEI/XML.
+  * @param bodyXSLT   the XSLT transformation that completes the generation of TEI/XML.
   */
-case class TEIBody(bodyInfo: TextValueContentV2, standoffLinks: Seq[ReadLinkValueV2], teiMapping: MappingXMLtoStandoff, bodyXSLT: String) {
+case class TEIBody(bodyInfo: TextValueContentV2, teiMapping: MappingXMLtoStandoff, bodyXSLT: String) {
 
     def toXML: String = {
-
         if (bodyInfo.standoffAndMapping.isEmpty) throw BadRequestException(s"text is expected to have standoff markup")
 
-        val standoffTags: Seq[StandoffTagV2] = bodyInfo.standoffAndMapping.get.standoff.map {
-
-            standoffTag: StandoffTagV2 =>
-
-                standoffTag.dataType match {
-
-                    case Some(StandoffDataTypeClasses.StandoffLinkTag) =>
-
-                        standoffTag.attributes.headOption match {
-                            case Some(hasLinkToAttr: StandoffTagAttributeV2) if hasLinkToAttr.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink => {
-
-                                val standoffLinkVal: Option[ReadLinkValueV2] = standoffLinks.find {
-                                    standoffLink: ReadLinkValueV2 => standoffLink.valueContent.referredResourceIri == hasLinkToAttr.stringValue
-                                }
-
-                                standoffLinkVal match {
-
-                                    case Some(linkVal: ReadLinkValueV2) =>
-
-                                        standoffTag.copy(
-                                            attributes = StandoffTagIriAttributeV2(
-                                                standoffPropertyIri = OntologyConstants.KnoraBase.StandoffLinkTargetHasType,
-                                                value = linkVal.valueContent.nestedResource.get.resourceClassIri.toOntologySchema(ApiV2Simple).toString) +: standoffTag.attributes
-                                        )
-
-                                    case _ => standoffTag
-
-                                }
-
-                            }
-
-                            case _ => standoffTag
-                        }
-
-                    case _ => standoffTag
-
-                }
-        }
-
         // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
-        val tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(bodyInfo.valueHasString, standoffTags, teiMapping)
+        val tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(bodyInfo.valueHasString, bodyInfo.standoffAndMapping.get.standoff, teiMapping)
 
         XMLUtil.applyXSLTransformation(tmpXml, bodyXSLT)
     }

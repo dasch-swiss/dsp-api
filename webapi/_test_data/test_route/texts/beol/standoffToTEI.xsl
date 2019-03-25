@@ -48,7 +48,6 @@
     <xsl:template match="entity|entity2">
         <ref>
             <xsl:attribute name="target"><xsl:value-of select="@ref"/></xsl:attribute>
-            <xsl:attribute name="type"><xsl:value-of select="@type"/></xsl:attribute>
             <xsl:apply-templates/>
         </ref>
     </xsl:template>
@@ -446,7 +445,6 @@
             <xsl:when test="ancestor::p">
                 <ref>
                     <xsl:attribute name="target"><xsl:value-of select="@src"/></xsl:attribute>
-                    <xsl:attribute name="type"><xsl:value-of select="@type"/></xsl:attribute>
                     <xsl:apply-templates/>
                 </ref>
             </xsl:when>
@@ -454,7 +452,6 @@
                 <p>
                     <ref>
                         <xsl:attribute name="target"><xsl:value-of select="@src"/></xsl:attribute>
-                        <xsl:attribute name="type"><xsl:value-of select="@type"/></xsl:attribute>
                         <xsl:apply-templates/>
                     </ref>
                 </p>

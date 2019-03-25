@@ -509,15 +509,6 @@
 
                  :subjectClassConstraint :StandoffLinkTag .
 
-###  http://www.knora.org/ontology/knora-base#standoffLinkTagTargetHasType
-
-:standoffLinkTagTargetHasType rdf:type owl:ObjectProperty ;
-
-                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-                 :objectDatatypeConstraint xsd:string ;
-
-                 :subjectClassConstraint :StandoffLinkTag .
 
 ###  http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference
 
@@ -2284,11 +2275,7 @@
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :standoffTagHasLink ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
-                              ] ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :standoffLinkTagTargetHasType ;
-                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                              ];
+                              ] ;
 
               rdfs:comment "Represents a reference to a Knora resource in a TextValue"@en .
 
