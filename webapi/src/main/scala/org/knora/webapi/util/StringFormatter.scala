@@ -597,9 +597,11 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     // The host and port number that this Knora server is running on, and that should be used
     // when constructing IRIs for project-specific ontologies.
     private val knoraApiHostAndPort: Option[String] = if (initForTest) {
+        // Use the default host and port for automated testing.
         Some("0.0.0.0:3333")
     } else {
-        maybeSettings.map(_.externalKnoraApiHostPort)
+        // Use the configured host and port.
+        maybeSettings.map(_.externalOntologyIriHostAndPort)
     }
 
     // The protocol and host that the ARK resolver is running on.
