@@ -742,7 +742,7 @@
             knora-base:subjectClassConstraint :Permission .
 
 ### http://www.knora.org/ontology/knora-admin#forProperty
-:forProperty rdf:type rdf:property ;
+:forProperty rdf:type rdf:Property ;
             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
             rdfs:comment "Permission property pointing to a resource property."@en ;
             knora-base:subjectClassConstraint :Permission .

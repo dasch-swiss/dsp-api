@@ -28,21 +28,78 @@ import argparse
 import getpass
 import rdflib
 import io
+from string import Template
+
+
+update_obj_template = """DELETE {
+    GRAPH ?g {
+        ?s ?p knora-base:$obj .
+    }
+} INSERT {
+    GRAPH ?g {
+        ?s ?p knora-admin:$obj .
+    }
+}
+USING <http://www.ontotext.com/explicit>
+WHERE
+{
+    GRAPH ?g {
+        ?s ?p knora-base:$obj .
+    }
+}"""
+
+update_pred_template = """DELETE {
+    GRAPH ?g {
+        ?s knora-base:$pred ?o .
+    }
+} INSERT {
+    GRAPH ?g {
+        ?s knora-admin:$pred ?o .
+    }
+}
+USING <http://www.ontotext.com/explicit>
+WHERE
+{
+    GRAPH ?g {
+        ?s knora-base:$pred ?o .
+    }
+}"""
+
+
+property_types = [
+    "http://www.w3.org/2002/07/owl#ObjectProperty",
+    "http://www.w3.org/2002/07/owl#DatatypeProperty",
+    "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
+]
+
 
 # Makes a request to GraphDB to update the repository.
 def do_request(graphdb_url, username, password):
     knora_admin = knora_ontology_to_ntriples("knora-admin.ttl")
     knora_base = knora_ontology_to_ntriples("knora-base.ttl")
 
-#    with open("sparql/update-knora-admin.rq", 'r') as request_file:
-#        sparql = request_file.read()
+    with open("sparql/update-knora-admin.rq.tmpl", 'r') as sparql_template_file:
+        sparql_template = Template(sparql_template_file.read())
 
-#    data = {
-#        "update": sparql
-#    }
+        # TODO
+        update_predicates = ""
+        update_objects = ""
 
-#    r = requests.post(graphdb_url, data=data, auth=(username, password))
-#    r.raise_for_status()
+        template_dict = {
+            "knoraAdmin": knora_admin,
+            "knoraBase": knora_base,
+            "updatePredicates": update_predicates,
+            "updateObjects": update_objects
+        }
+
+        sparql = sparql_template.substitute(template_dict)
+
+    data = {
+        "update": sparql
+    }
+
+    r = requests.post(graphdb_url, data=data, auth=(username, password))
+    r.raise_for_status()
 
 
 # Reads an ontology from knora-ontologies and returns it in ntriples format.

@@ -10,37 +10,48 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 
+# Delete knora-base.
 DELETE {
     GRAPH <http://www.knora.org/ontology/knora-base> {
         ?oldKnoraBaseS ?oldKnoraBaseP ?oldKnoraBaseO .
     }
 } ;
+
+# Insert knora-admin.
 INSERT DATA {
     GRAPH <http://www.knora.org/ontology/knora-admin> {
         $knoraAdmin
     }
 } ;
+
+# Insert knora-base.
 INSERT DATA {
     GRAPH <http://www.knora.org/ontology/knora-base> {
         $knoraBase
     }
 } ;
+
+$updatePredicates ;
+
+$updateObjects ;
+
+# Update permission strings.
 DELETE {
     GRAPH ?g {
-        ?s ?p ?oldObj .
+        ?s knora-base:hasPermissions ?oldPermissions .
     }
 } INSERT {
     GRAPH ?g {
-        ?s ?p ?newObj .
+        ?s knora-base:hasPermissions ?newPermissions .
     }
 }
 USING <http://www.ontotext.com/explicit>
 WHERE
 {
     GRAPH ?g {
-        ?s ?p ?oldObj .
+        ?s knora-base:hasPermissions ?oldPermissions .
     }
 
-    FILTER(datatype(?oldObj) = xsd:dateTimeStamp)
-    BIND(STRDT(STR(?oldObj), xsd:dateTime) AS ?newObj)
+    FILTER(REGEX(?oldPermissions, "knora-base"))
+    BIND(REPLACE(?o, "knora-base", "knora-admin") AS ?newPermissions)
 }
