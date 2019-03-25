@@ -7,7 +7,7 @@
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV"
     },
     "knora-api:attachedToProject" : {
-      "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
+      "@id" : "http://www.knora.org/ontology/knora-admin#SystemProject"
     },
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/root"
