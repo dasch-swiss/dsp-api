@@ -17,7 +17,7 @@ Also, please change the **HINT** to the appropriate level:
 - FIX: Unescape standoff string attributes when verifying text value update (@github[#1242](#1242))
 
 - MAJOR: Change API v1 file uploads to work like API v2 (@github[#1233](#1233)). To enable
-  Knora and Sipi tow work without sharing a filesystem, the procedure
+  Knora and Sipi to work without sharing a filesystem, the procedure
   for uploading files in API v1 has changed; see
   @ref:[Adding Resources with Image Files](../03-apis/api-v1/adding-resources.md#adding-resources-with-image-files)
   and @ref:[Bulk Import with Image Files](../03-apis/api-v1/adding-resources.md#bulk-import-with-image-files).

@@ -51,6 +51,14 @@ class SettingsImpl(config: Config) extends Extension {
     val externalKnoraApiHostPort: String = externalKnoraApiHost + (if (externalKnoraApiPort != 80) ":" + externalKnoraApiPort else "")
     val externalKnoraApiBaseUrl: String = externalKnoraApiProtocol + "://" + externalKnoraApiHost + (if (externalKnoraApiPort != 80) ":" + externalKnoraApiPort else "")
 
+    // If the external hostname is localhost, include the configured external port number in ontology IRIs for manual testing.
+    val externalOntologyIriHostAndPort: String = if (externalKnoraApiHost == "0.0.0.0" || externalKnoraApiHost == "localhost") {
+        externalKnoraApiHostPort
+    } else {
+        // Otherwise, don't include any port number in IRIs, so the IRIs will work both with http
+        // and with https.
+        externalKnoraApiHost
+    }
 
     val salsah1BaseUrl: String = config.getString("app.salsah1.base-url")
     val salsah1ProjectIconsBasePath: String = config.getString("app.salsah1.project-icons-basepath")
