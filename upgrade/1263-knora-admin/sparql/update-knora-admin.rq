@@ -1,0 +1,46 @@
+@prefix : <http://www.knora.org/ontology/knora-admin#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix luc: <http://www.ontotext.com/owlim/lucene#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix standoff: <http://www.knora.org/ontology/standoff#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+DELETE {
+    GRAPH <http://www.knora.org/ontology/knora-base> {
+        ?oldKnoraBaseS ?oldKnoraBaseP ?oldKnoraBaseO .
+    }
+} ;
+INSERT DATA {
+    GRAPH <http://www.knora.org/ontology/knora-admin> {
+        $knoraAdmin
+    }
+} ;
+INSERT DATA {
+    GRAPH <http://www.knora.org/ontology/knora-base> {
+        $knoraBase
+    }
+} ;
+DELETE {
+    GRAPH ?g {
+        ?s ?p ?oldObj .
+    }
+} INSERT {
+    GRAPH ?g {
+        ?s ?p ?newObj .
+    }
+}
+USING <http://www.ontotext.com/explicit>
+WHERE
+{
+    GRAPH ?g {
+        ?s ?p ?oldObj .
+    }
+
+    FILTER(datatype(?oldObj) = xsd:dateTimeStamp)
+    BIND(STRDT(STR(?oldObj), xsd:dateTime) AS ?newObj)
+}
