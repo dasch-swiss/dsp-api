@@ -56,7 +56,7 @@ The tasks can be scoped by prefixing `salsah1/` or `webapi/`, e.g., to only run 
 for the `webapi` project, run:
 ```bash
 $ sbt webapi/docker:stage
-```` 
+```
 
 ## Running the Knora Stack (graphdb, webapi, salsah1, sipi)
 
