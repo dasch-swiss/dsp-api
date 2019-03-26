@@ -1200,7 +1200,7 @@ properties:
 
 Knora's concept of access control is that an object (a resource or
 value) can grant permissions to groups of users (but not to individual
-users). There are four built-in groups:
+users). There are several built-in groups:
 
 `knora-admin:UnknownUser`
 
@@ -1223,6 +1223,16 @@ users). There are four built-in groups:
 :   When checking a user's permissions on an object, the user is
     automatically assigned to this group if he is the creator of the
     object.
+
+`knora-admin:ProjectAdmin`
+
+:   When checking a user's permissions on an object, the user is
+    automatically assigned to this group if she is an administrator of the
+    project that the object belongs to.
+
+`knora-admin:SystemAdmin`
+
+:   The group of Knora system administrators.
 
 A user-created ontology can define additional groups, which must
 belong to the OWL class `knora-admin:UserGroup`.
