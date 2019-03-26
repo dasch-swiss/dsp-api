@@ -18,6 +18,8 @@ Also, please change the **HINT** to the appropriate level:
 
 - FEATURE: Remove persistent map code (@github[#1254](#1254))
 
+- FEATURE: Return user's permission on resources and values (@github[#1257](#1257))
+
 - MAJOR: Change API v1 file uploads to work like API v2 (@github[#1233](#1233)). To enable
   Knora and Sipi to work without sharing a filesystem, the procedure
   for uploading files in API v1 has changed; see

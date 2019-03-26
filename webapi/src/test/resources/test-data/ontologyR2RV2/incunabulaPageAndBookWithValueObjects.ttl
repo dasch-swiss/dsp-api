@@ -39,6 +39,10 @@ incunabula:book a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -61,13 +65,13 @@ incunabula:book a owl:Class;
       owl:minCardinality 0;
       owl:onProperty incunabula:hasAuthor
     ], [ a owl:Restriction;
-      salsah-gui:guiOrder 3;
-      owl:minCardinality 0;
-      owl:onProperty incunabula:publisher
-    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 3;
+      owl:minCardinality 0;
+      owl:onProperty incunabula:publisher
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 4;
       owl:maxCardinality 1;
@@ -192,6 +196,10 @@ incunabula:page a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
