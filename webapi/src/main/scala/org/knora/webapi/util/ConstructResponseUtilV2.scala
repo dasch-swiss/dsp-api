@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util.date.{CalendarNameV2, DatePrecisionV2}
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
@@ -55,20 +56,32 @@ object ConstructResponseUtilV2 {
       * @param valueObjectClass the type (class) of the value object.
       * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[isIncomingLink]]).
       * @param isIncomingLink   indicates if it is an incoming or outgoing link in case of a link value.
+      * @param userPermission   the permission that the requesting user has on the value.
       * @param assertions       the value objects assertions.
       * @param standoff         standoff assertions, if any.
       * @param listNode         assertions about the referred list node, if the value points to a list node.
       */
-    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, nestedResource: Option[ResourceWithValueRdfData] = None, isIncomingLink: Boolean = false, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]], listNode: Map[IRI, String])
+    case class ValueRdfData(valueObjectIri: IRI,
+                            valueObjectClass: IRI,
+                            nestedResource: Option[ResourceWithValueRdfData] = None,
+                            isIncomingLink: Boolean = false,
+                            userPermission: EntityPermission,
+                            assertions: Map[IRI, String],
+                            standoff: Map[IRI, Map[IRI, String]],
+                            listNode: Map[IRI, String])
 
     /**
       * Represents a resource and its values.
       *
       * @param resourceAssertions      assertions about the resource (direct statements).
       * @param isMainResource          indicates if this represents a top level resource or a referred resource (depending on the query).
+      * @param userPermission          the permission that the requesting user has on the resource.
       * @param valuePropertyAssertions assertions about value properties.
       */
-    case class ResourceWithValueRdfData(resourceAssertions: Seq[(IRI, String)], isMainResource: Boolean, valuePropertyAssertions: Map[IRI, Seq[ValueRdfData]])
+    case class ResourceWithValueRdfData(resourceAssertions: Seq[(IRI, String)],
+                                        isMainResource: Boolean,
+                                        userPermission: EntityPermission,
+                                        valuePropertyAssertions: Map[IRI, Seq[ValueRdfData]])
 
     /**
       * Represents a mapping including information about the standoff entities.
@@ -91,26 +104,30 @@ object ConstructResponseUtilV2 {
     def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, requestingUser: UserADM): Map[IRI, ResourceWithValueRdfData] = {
         // TODO: use SparqlExtendedConstructResponse for better type safety.
 
+        // An intermediate data structure containing RDF assertions about an entity and the user's permission on the entity.
+        case class RdfWithUserPermission(assertions: Seq[(IRI, String)], maybeUserPermission: Option[EntityPermission])
+
         // split statements about resources and other statements (value objects and standoff)
         // resources are identified by the triple "resourceIri a knora-base:Resource" which is an inferred information returned by the SPARQL Construct query.
         val (resourceStatements: Map[IRI, Seq[(IRI, String)]], nonResourceStatements: Map[IRI, Seq[(IRI, String)]]) = constructQueryResults.statements.partition {
-
-            case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
-
+            case (_: IRI, assertions: Seq[(IRI, String)]) =>
                 // check if the subject is a Knora resource
                 assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.Resource))
         }
 
-        // filter out the resources the user does not have permissions to see
-        val resourceStatementsVisible: Map[IRI, Seq[(IRI, String)]] = resourceStatements.filterNot {
-            case (resIri: IRI, assertions: Seq[(IRI, String)]) =>
-                // filter out those resources that the user has not sufficient permissions to see
-                // please note that this also applies to referred resources
-                PermissionUtilADM.getUserPermissionFromAssertionsADM(resIri, assertions, requestingUser).isEmpty
+        // filter out the resources the user does not have permissions to see, including dependent resources.
+
+        val resourceStatementsVisible: Map[IRI, RdfWithUserPermission] = resourceStatements.map {
+            case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
+                val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionFromAssertionsADM(resourceIri, assertions, requestingUser)
+                resourceIri -> RdfWithUserPermission(assertions, maybeUserPermission)
+        }.filter {
+            case (resourceIri: IRI, statements: RdfWithUserPermission) => statements.maybeUserPermission.nonEmpty
         }
 
         val flatResourcesWithValues: Map[IRI, ResourceWithValueRdfData] = resourceStatementsVisible.map {
-            case (resourceIri: IRI, assertions: Seq[(IRI, String)]) =>
+            case (resourceIri: IRI, resourceRdfWithUserPermission: RdfWithUserPermission) =>
+                val assertions = resourceRdfWithUserPermission.assertions
 
                 // remove inferred statements (non explicit) returned in the query result
                 // the query returns the following inferred information:
@@ -129,27 +146,27 @@ object ConstructResponseUtilV2 {
                 }
 
                 // Make a set of all the value object IRIs, because we're going to associate them with their properties.
-                val valueObjectIris: Set[String] = assertions.filter {
-                    case (pred, obj) => pred == OntologyConstants.KnoraBase.HasValue
+                val valueObjectIris: Set[IRI] = assertions.filter {
+                    case (pred, _: String) => pred == OntologyConstants.KnoraBase.HasValue
                 }.map {
-                    case (pred, obj) => obj
+                    case (_: IRI, obj: IRI) => obj
                 }.toSet
 
 
-                // create a map of (value) property IRIs to value object Iris (the same property may have several instances)
+                // create a map of (value) property IRIs to value object IRIs (the same property may have several instances)
                 val valuePropertyToObjectIris: Map[IRI, Seq[IRI]] = assertionsExplicit.filter {
                     case (_, obj: String) =>
                         // Get only the assertions in which the object is a value object IRI.
                         valueObjectIris(obj)
                 }.groupBy {
-                    case (pred: IRI, _) =>
+                    case (pred: IRI, _: String) =>
                         // Turn the sequence of assertions into a Map of predicate IRIs to assertions.
                         pred
                 }.map {
                     case (pred, assertions: Seq[(IRI, IRI)]) =>
                         // Replace the assertions with their objects, i.e. the value object IRIs.
-                        val objs = assertions.map {
-                            case (_, obj) => obj
+                        val objs: Seq[IRI] = assertions.map {
+                            case (_: IRI, obj: IRI) => obj
                         }
 
                         pred -> objs
@@ -163,51 +180,58 @@ object ConstructResponseUtilV2 {
                     case (property: IRI, valObjIris: Seq[IRI]) =>
 
                         // build all the property's value objects by mapping over the value object Iris
-                        val valueRdfData: Seq[ValueRdfData] = valObjIris.filter {
-                            // check if the user has sufficient permissions to see the value object
-                            valObjIri =>
+                        val valueRdfData: Seq[ValueRdfData] = valObjIris.map {
+                            valObjIri: IRI =>
                                 val valueObjAssertions: Seq[(IRI, String)] = nonResourceStatements(valObjIri)
 
                                 // get the resource's project
                                 // value objects belong to the parent resource's project
                                 val resourceProject: String = predicateMap(OntologyConstants.KnoraBase.AttachedToProject)
 
-                                // prepend the resource's project to the value's assertions
-                                PermissionUtilADM.getUserPermissionFromAssertionsADM(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: valueObjAssertions, requestingUser).nonEmpty
+                                // prepend the resource's project to the value's assertions, and get the user's permission on the value
+                                val maybeUserPermission = PermissionUtilADM.getUserPermissionFromAssertionsADM(valObjIri, (OntologyConstants.KnoraBase.AttachedToProject, resourceProject) +: valueObjAssertions, requestingUser)
+
+                                valObjIri -> RdfWithUserPermission(valueObjAssertions, maybeUserPermission)
+                        }.filter {
+                            // check if the user has sufficient permissions to see the value object
+                            case (valObjIri: IRI, rdfWithUserPermission: RdfWithUserPermission) =>
+                                rdfWithUserPermission.maybeUserPermission.nonEmpty
                         }.flatMap {
-                            valObjIri: IRI =>
+                            case (valObjIri: IRI, valueRdfWithUserPermission: RdfWithUserPermission) =>
+
+                                val valueStatements: Seq[(IRI, String)] = valueRdfWithUserPermission.assertions
 
                                 // get all list node Iris possibly belonging to this value object
-                                val listNodeIris: Set[IRI] = nonResourceStatements(valObjIri).filter {
-                                    case (pred: IRI, _) =>
+                                val listNodeIris: Set[IRI] = valueStatements.filter {
+                                    case (pred: IRI, _: String) =>
                                         pred == OntologyConstants.KnoraBase.ValueHasListNode
                                 }.map {
-                                    case (_, obj: IRI) =>
+                                    case (_: IRI, obj: IRI) =>
                                         // we are only interested in the list node IRI
                                         obj
                                 }.toSet
 
                                 // get all the standoff node Iris possibly belonging to this value object
                                 // do so by accessing the non resource statements using the value object IRI as a key
-                                val standoffNodeIris: Set[IRI] = nonResourceStatements(valObjIri).filter {
-                                    case (pred: IRI, _) =>
+                                val standoffNodeIris: Set[IRI] = valueStatements.filter {
+                                    case (pred: IRI, obj: String) =>
                                         pred == OntologyConstants.KnoraBase.ValueHasStandoff
                                 }.map {
-                                    case (_, obj: IRI) =>
+                                    case (pred: IRI, obj: IRI) =>
                                         // we are only interested in the standoff node IRI
                                         obj
                                 }.toSet
 
                                 // given the list node Iris, get the list node assertions
                                 val (listNodeAssertions: Map[IRI, Seq[(IRI, String)]], valueAssertionsWithStandoff: Map[IRI, Seq[(IRI, String)]]) = nonResourceStatements.partition {
-                                    case (subjIri: IRI, _) =>
+                                    case (subjIri: IRI, _: Seq[(IRI, String)]) =>
                                         listNodeIris(subjIri)
                                 }
 
                                 // given the standoff node Iris, get the standoff assertions
                                 // do so by accessing the non resource statements using the standoff node IRI as a key
                                 val (standoffAssertions: Map[IRI, Seq[(IRI, String)]], valueAssertions: Map[IRI, Seq[(IRI, String)]]) = valueAssertionsWithStandoff.partition {
-                                    case (subjIri: IRI, _) =>
+                                    case (subjIri: IRI, _: Seq[(IRI, String)]) =>
                                         standoffNodeIris(subjIri)
                                 }
 
@@ -222,6 +246,7 @@ object ConstructResponseUtilV2 {
                                     Some(ValueRdfData(
                                         valueObjectIri = valObjIri,
                                         valueObjectClass = valueObjectClass,
+                                        userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
                                         assertions = predicateMapForValueAssertions,
                                         standoff = Map.empty[IRI, Map[IRI, String]], // link value does not contain standoff
                                         listNode = Map.empty[IRI, String] // link value cannot point to a list node
@@ -233,6 +258,7 @@ object ConstructResponseUtilV2 {
                                     Some(ValueRdfData(
                                         valueObjectIri = valObjIri,
                                         valueObjectClass = valueObjectClass,
+                                        userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
                                         assertions = predicateMapForValueAssertions,
                                         standoff = standoffAssertions.map {
                                             case (standoffNodeIri: IRI, standoffAssertions: Seq[(IRI, String)]) =>
@@ -253,7 +279,12 @@ object ConstructResponseUtilV2 {
                 }
 
                 // create a map of resource Iris to a `ResourceWithValueRdfData`
-                (resourceIri, ResourceWithValueRdfData(resourceAssertions = assertionsExplicit, isMainResource = isMainResource, valuePropertyAssertions = valuePropertyToValueObject))
+                resourceIri -> ResourceWithValueRdfData(
+                    resourceAssertions = assertionsExplicit,
+                    isMainResource = isMainResource,
+                    userPermission = resourceRdfWithUserPermission.maybeUserPermission.get,
+                    valuePropertyAssertions = valuePropertyToValueObject
+                )
         }
 
         // get incoming links for each resource
@@ -436,10 +467,10 @@ object ConstructResponseUtilV2 {
 
                 // get mappings from linked resources
                 val mappingsFromReferredResources: Set[IRI] = valObjs.filter {
-                    (valObj: ValueRdfData) =>
+                    valObj: ValueRdfData =>
                         valObj.nestedResource.nonEmpty
                 }.flatMap {
-                    (valObj: ValueRdfData) =>
+                    valObj: ValueRdfData =>
                         val referredRes: ResourceWithValueRdfData = valObj.nestedResource.get
 
                         // recurse on the nested resource's values
@@ -841,6 +872,7 @@ object ConstructResponseUtilV2 {
                                     valueIri = valObj.valueObjectIri,
                                     attachedToUser = valObj.assertions(OntologyConstants.KnoraBase.AttachedToUser),
                                     permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
+                                    userPermission = valObj.userPermission,
                                     valueCreationDate = valueCreationDate,
                                     valueContent = linkValueContentV2,
                                     valueHasRefCount = valueHasRefCount,
@@ -853,6 +885,7 @@ object ConstructResponseUtilV2 {
                                     valueIri = valObj.valueObjectIri,
                                     attachedToUser = valObj.assertions(OntologyConstants.KnoraBase.AttachedToUser),
                                     permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
+                                    userPermission = valObj.userPermission,
                                     valueCreationDate = valueCreationDate,
                                     valueContent = nonLinkValueContentV2,
                                     deletionInfo = valueDeletionInfo
@@ -873,6 +906,7 @@ object ConstructResponseUtilV2 {
             attachedToUser = resourceAttachedToUser,
             projectADM = projectResponse.project,
             permissions = resourcePermissions,
+            userPermission = resourceWithValueRdfData.userPermission,
             values = valueObjects,
             creationDate = resourceCreationDate,
             lastModificationDate = resourceLastModificationDate,

@@ -43,6 +43,7 @@ object ResourcesResponseCheckerV2 {
                 assert(expectedResource.resourceIri == receivedResource.resourceIri, "resource Iri does not match")
                 assert(expectedResource.label == receivedResource.label, "label does not match")
                 assert(expectedResource.resourceClassIri == receivedResource.resourceClassIri, "resource class does not match")
+                assert(expectedResource.userPermission == receivedResource.userPermission, s"expected user permission ${expectedResource.userPermission} on resource ${receivedResource.resourceIri}, received ${receivedResource.userPermission}")
 
                 // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
                 // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
