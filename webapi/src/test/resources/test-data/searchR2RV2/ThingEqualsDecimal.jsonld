@@ -12,6 +12,7 @@
       "@value" : "2.1"
     },
     "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+    "knora-api:userHasPermission" : "M",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2017-07-25T07:13:16.732Z"
@@ -32,6 +33,7 @@
     "@value" : "2017-07-25T07:13:16.732Z"
   },
   "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+  "knora-api:userHasPermission" : "M",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/uqmMo72OQ2K2xe7mkIytlgf.20170725T071316732Z"

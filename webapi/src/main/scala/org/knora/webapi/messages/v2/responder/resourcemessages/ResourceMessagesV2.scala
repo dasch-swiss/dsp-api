@@ -37,6 +37,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.SearchResponderV2Constants
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.util.{ActorUtil, KnoraIdUtil, SmartIri, StringFormatter}
@@ -275,6 +276,7 @@ sealed trait ResourceV2 {
   * @param attachedToUser       the user that created the resource.
   * @param projectADM           the project that the resource belongs to.
   * @param permissions          the permissions that the resource grants to user groups.
+  * @param userPermission       the permission the the requesting user has on the resource.
   * @param values               a map of property IRIs to values.
   * @param creationDate         the date when this resource was created.
   * @param lastModificationDate the date when this resource was last modified.
@@ -288,6 +290,7 @@ case class ReadResourceV2(resourceIri: IRI,
                           attachedToUser: IRI,
                           projectADM: ProjectADM,
                           permissions: String,
+                          userPermission: EntityPermission,
                           values: Map[SmartIri, Seq[ReadValueV2]],
                           creationDate: Instant,
                           lastModificationDate: Option[Instant],
@@ -344,6 +347,7 @@ case class ReadResourceV2(resourceIri: IRI,
                 OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
                 OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
                 OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions),
+                OntologyConstants.KnoraApiV2WithValueObjects.UserHasPermission -> JsonLDString(userPermission.toString),
                 OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
                     value = creationDate.toString,
                     datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri

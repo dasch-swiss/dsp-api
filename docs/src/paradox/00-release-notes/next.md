@@ -18,5 +18,7 @@ Also, please change the **HINT** to the appropriate level:
 
 - FEATURE: Remove persistent map code (@github[#1254](#1254))
 
+- FEATURE: Return user's permission on resources and values (@github[#1257](#1257))
+
 - MAJOR: Separate the `knora-admin` ontology from `knora-api` (@github[#1263](#1263)).
   Existing repositories must be updated; see `upgrade/1263-knora-admin` for instructions.

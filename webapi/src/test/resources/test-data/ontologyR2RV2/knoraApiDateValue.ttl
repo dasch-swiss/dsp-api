@@ -42,6 +42,10 @@ knora-api:DateValue a owl:Class;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:valueAsString
     ], [ a owl:Restriction;

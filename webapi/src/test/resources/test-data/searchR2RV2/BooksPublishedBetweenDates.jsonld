@@ -14,6 +14,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1487,
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1487 CE:1490 CE",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -27,6 +28,7 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "De generatione Christi",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -39,6 +41,7 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -60,6 +63,7 @@
       "@value" : "2016-03-02T15:05:15Z"
     },
     "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c3f913666f0.20160302T150515Z"
@@ -80,6 +84,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1489,
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "GREGORIAN:1489 CE",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -93,6 +98,7 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Itinerarius sive peregrinarius Beatissime Virginis Marie",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -114,6 +120,7 @@
       "@value" : "2016-03-02T15:05:18Z"
     },
     "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1967a9933401n.20160302T150518Z"
@@ -134,6 +141,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1489,
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1489 CE",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -147,6 +155,7 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -168,6 +177,7 @@
       "@value" : "2016-03-02T15:05:15Z"
     },
     "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/41d01bd9fb0.20160302T150515Z"
@@ -188,6 +198,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1489,
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1489 CE",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -201,6 +212,7 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Bereitung zu dem Heiligen Sakrament",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -222,6 +234,7 @@
       "@value" : "2016-03-02T15:05:24Z"
     },
     "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9311a421b501n.20160302T150524Z"
@@ -242,6 +255,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1490,
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1490 CE",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -255,6 +269,7 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -267,6 +282,7 @@
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Horologium devotionis circa vitam Christi",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -288,6 +304,7 @@
       "@value" : "2016-03-02T15:05:23Z"
     },
     "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"
