@@ -700,6 +700,7 @@ object OntologyConstants {
         val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
         val HasStandoffLinkToValue: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkToValue"
         val HasPermissions: IRI = KnoraApiV2PrefixExpansion + "hasPermissions"
+        val UserHasPermission: String = KnoraApiV2PrefixExpansion + "userHasPermission"
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
         val VersionDate: IRI = KnoraApiV2PrefixExpansion + "versionDate"
