@@ -96,22 +96,30 @@ property_types = {
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
 }
 
-# Predicates and objects that can be used together.
+# knora-admin predicates and objects that can be used together.
 pred_obj_pairs = [
-    ("forProject", "SystemProject"),
-    ("forProject", "DefaultSharedOntologiesProject"),
-    ("isInGroup", "UnknownUser"),
-    ("isInGroup", "KnownUser"),
-    ("isInGroup", "Creator"),
-    ("isInGroup", "ProjectMember"),
-    ("isInGroup", "ProjectAdmin"),
-    ("isInGroup", "SystemAdmin"),
-    ("forGroup", "UnknownUser"),
-    ("forGroup", "KnownUser"),
+    ("belongsToProject", "DefaultSharedOntologiesProject"),
+    ("belongsToProject", "SystemProject"),
+    ("currentproject", "DefaultSharedOntologiesProject"),
+    ("currentproject", "SystemProject"),
     ("forGroup", "Creator"),
-    ("forGroup", "ProjectMember"),
+    ("forGroup", "KnownUser"),
     ("forGroup", "ProjectAdmin"),
-    ("forGroup", "SystemAdmin")
+    ("forGroup", "ProjectMember"),
+    ("forGroup", "SystemAdmin"),
+    ("forGroup", "UnknownUser"),
+    ("forProject", "DefaultSharedOntologiesProject"),
+    ("forProject", "SystemProject"),
+    ("isInGroup", "Creator"),
+    ("isInGroup", "KnownUser"),
+    ("isInGroup", "ProjectAdmin"),
+    ("isInGroup", "ProjectMember"),
+    ("isInGroup", "SystemAdmin"),
+    ("isInGroup", "UnknownUser"),
+    ("isInProject", "DefaultSharedOntologiesProject"),
+    ("isInProject", "SystemProject"),
+    ("isInProjectAdminGroup", "DefaultSharedOntologiesProject"),
+    ("isInProjectAdminGroup", "SystemProject")
 ]
 
 
