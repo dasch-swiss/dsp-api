@@ -12,6 +12,7 @@
       "@id" : "http://rdfh.ch/lists/0801/logarithmic_curves"
     },
     "knora-api:listValueAsListNodeLabel" : "Logarithmic curves",
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-06-25T09:23:12.035Z"
@@ -32,6 +33,7 @@
     "@value" : "2018-06-04T08:56:33.879Z"
   },
   "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:userHasPermission" : "V",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/_B3lQa6tSymIq7_7SowBsAD.20180604T085633879Z"
