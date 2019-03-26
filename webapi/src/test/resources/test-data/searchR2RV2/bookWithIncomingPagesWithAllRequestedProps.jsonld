@@ -8,6 +8,7 @@
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
@@ -20,6 +21,7 @@
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueAsString" : "Stultifera navis (...)",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
@@ -60,6 +62,7 @@
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/8be1b7cf7103"
         },
+        "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
           "@type" : "xsd:dateTimeStamp",
           "@value" : "2016-03-02T15:05:43Z"
@@ -73,6 +76,7 @@
         },
         "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
         "knora-api:intValueAsInt" : 1,
+        "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
           "@type" : "xsd:dateTimeStamp",
           "@value" : "2016-03-02T15:05:43Z"
@@ -111,23 +115,27 @@
           "@type" : "xsd:anyURI",
           "@value" : "http://0.0.0.0:1024/0803"
         },
+        "knora-api:userHasPermission" : "RV",
         "knora-api:valueCreationDate" : {
           "@type" : "xsd:dateTimeStamp",
           "@value" : "2012-11-21T16:50:50Z"
         }
       },
+      "knora-api:userHasPermission" : "RV",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
         "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/50e7460a72036.20160302T150543Z"
       },
       "rdfs:label" : "vorderer Spiegel"
     },
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:43Z"
     }
   },
   "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:userHasPermission" : "RV",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543Z"

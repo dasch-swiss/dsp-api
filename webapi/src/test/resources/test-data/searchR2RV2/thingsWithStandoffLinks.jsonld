@@ -13,6 +13,7 @@
       "knora-api:textValueHasMapping" : {
         "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
       },
+      "knora-api:userHasPermission" : "CR",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:54Z"
@@ -28,6 +29,7 @@
       "knora-api:textValueHasMapping" : {
         "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
       },
+      "knora-api:userHasPermission" : "CR",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:54Z"
@@ -48,6 +50,7 @@
       "@value" : "2016-03-02T15:05:10Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:ProjectMember",
+    "knora-api:userHasPermission" : "CR",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv.20160302T150510Z"
@@ -67,6 +70,7 @@
       "knora-api:textValueHasMapping" : {
         "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
       },
+      "knora-api:userHasPermission" : "CR",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:54Z"
@@ -87,6 +91,7 @@
       "@value" : "2016-03-02T15:05:10Z"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:ProjectMember",
+    "knora-api:userHasPermission" : "CR",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/project=thing=1m.20160302T150510Z"
