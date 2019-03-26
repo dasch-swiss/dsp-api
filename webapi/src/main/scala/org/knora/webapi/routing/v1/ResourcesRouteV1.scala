@@ -98,7 +98,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             properties.map {
                 case (propIri: IRI, values: Seq[CreateResourceValueV1]) =>
                     (stringFormatter.validateAndEscapeIri(propIri, throw BadRequestException(s"Invalid property IRI $propIri")), values.map {
-                        case (givenValue: CreateResourceValueV1) =>
+                        givenValue: CreateResourceValueV1 =>
 
                             givenValue.getValueClassIri match {
                                 // create corresponding UpdateValueV1
@@ -311,7 +311,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             } yield OneOfMultipleResourceCreateRequestV1(
                 resourceTypeIri = resourceRequest.restype_id,
                 clientResourceID = resourceRequest.client_id,
-                label = resourceRequest.label,
+                label = stringFormatter.toSparqlEncodedString(resourceRequest.label, throw BadRequestException(s"The resource label is invalid: '${resourceRequest.label}'")),
                 values = valuesToBeCreated.toMap,
                 file = convertedFile,
                 creationDate = resourceRequest.creationDate
@@ -822,7 +822,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                 }
 
                             case None =>
-                                CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = Some(elementValue), language = language)))
+                                CreateResourceValueV1(
+                                    richtext_value = Some(
+                                        CreateRichtextV1(
+                                            utf8str = Some(stringFormatter.toSparqlEncodedString(elementValue, throw BadRequestException(s"Invalid text value: $elementValue"))),
+                                            language = language
+                                        )
+                                    )
+                                )
                         }
 
                     case "link_value" =>
