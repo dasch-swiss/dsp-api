@@ -17,3 +17,6 @@ Also, please change the **HINT** to the appropriate level:
 - FIX: Unescape standoff string attributes when verifying text value update (@github[#1242](#1242))
 
 - FEATURE: Remove persistent map code (@github[#1254](#1254))
+
+- MAJOR: Separate the `knora-admin` ontology from `knora-api`. Existing repositories
+  must be updated; see `upgrade/1263-knora-admin` for instructions.

@@ -120,8 +120,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ### Restricted View Settings Operations
 
 Operates on the following properties:
- - `knora-base:projectRestrictedViewSize` - takes the IIIF size value
- - `knora-base:projectRestrictedViewWatermark` - takes the path to the watermark image. **Currently not used.**
+ - `knora-admin:projectRestrictedViewSize` - takes the IIIF size value
+ - `knora-admin:projectRestrictedViewWatermark` - takes the path to the watermark image. **Currently not used.**
 
 #### Get the restricted view settings:
 
@@ -135,17 +135,17 @@ The following is an example for project information stored in the `admin` named 
 
 ```
 <http://rdfh.ch/projects/00FF>
-    rdf:type knora-base:knoraProject ;
-    knora-base:projectShortname "images"^^xsd:string ;
-    knora-base:projectShortcode "00FF"^^xsd:string ;
-    knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
-    knora-base:projectDescription "A demo project of a collection of images"@en ;
-    knora-base:projectKeyword "images"^^xsd:string,
+    rdf:type knora-admin:knoraProject ;
+    knora-admin:projectShortname "images"^^xsd:string ;
+    knora-admin:projectShortcode "00FF"^^xsd:string ;
+    knora-admin:projectLongname "Image Collection Demo"^^xsd:string ;
+    knora-admin:projectDescription "A demo project of a collection of images"@en ;
+    knora-admin:projectKeyword "images"^^xsd:string,
                               "collection"^^xsd:string ;
-    knora-base:projectRestrictedViewSize "!512,512"^^xsd:string ;
-    knora-base:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
-    knora-base:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
-    knora-base:status "true"^^xsd:boolean ;
-    knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+    knora-admin:projectRestrictedViewSize "!512,512"^^xsd:string ;
+    knora-admin:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
+    knora-admin:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
+    knora-admin:status "true"^^xsd:boolean ;
+    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 ```
 

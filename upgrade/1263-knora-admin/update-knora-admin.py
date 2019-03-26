@@ -32,8 +32,26 @@ import io
 from string import Template
 
 
+update_pred_and_obj_template = Template("""# Update statements with '$pred $obj'.
+DELETE {
+    GRAPH ?g {
+        ?s knora-base:$pred knora-base:$obj .
+    }
+} INSERT {
+    GRAPH ?g {
+        ?s knora-admin:$pred knora-admin:$obj .
+    }
+}
+USING <http://www.ontotext.com/explicit>
+WHERE
+{
+    GRAPH ?g {
+        ?s knora-base:$pred knora-base:$obj .
+    }
+}""")
+
 # A template for updating statements that have given predicate.
-update_pred_template = Template("""# Update statements with $pred as predicate.
+update_pred_template = Template("""# Update statements with predicate '$pred'.
 DELETE {
     GRAPH ?g {
         ?s knora-base:$pred ?o .
@@ -52,7 +70,7 @@ WHERE
 }""")
 
 # A template for updating statements that have a given object.
-update_obj_template = Template("""# Update statements with $obj as object.
+update_obj_template = Template("""# Update statements with object '$obj'.
 DELETE {
     GRAPH ?g {
         ?s ?p knora-base:$obj .
@@ -77,6 +95,24 @@ property_types = {
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
 }
 
+# Predicates and objects that can be used together.
+pred_obj_pairs = [
+    ("forProject", "SystemProject"),
+    ("forProject", "DefaultSharedOntologiesProject"),
+    ("isInGroup", "UnknownUser"),
+    ("isInGroup", "KnownUser"),
+    ("isInGroup", "Creator"),
+    ("isInGroup", "ProjectMember"),
+    ("isInGroup", "ProjectAdmin"),
+    ("isInGroup", "SystemAdmin"),
+    ("forGroup", "UnknownUser"),
+    ("forGroup", "KnownUser"),
+    ("forGroup", "Creator"),
+    ("forGroup", "ProjectMember"),
+    ("forGroup", "ProjectAdmin"),
+    ("forGroup", "SystemAdmin")
+]
+
 
 # Makes a request to GraphDB to update the repository.
 def do_request(graphdb_url, username, password):
@@ -89,6 +125,16 @@ def do_request(graphdb_url, username, password):
     knora_base_graph = rdflib.Graph()
     knora_base_graph.parse("../../knora-ontologies/knora-base.ttl", format="turtle")
     knora_base_nt = knora_ontology_to_ntriples(knora_base_graph)
+
+    # Generate SPARQL to update statements in which both the predicate and the object need to be updated.
+
+    update_predicates_and_objects = list(map(lambda pred_obj_pair:
+                                             update_pred_and_obj_template.substitute(
+                                                 pred=pred_obj_pair[0],
+                                                 obj=pred_obj_pair[1]
+                                             ),
+                                             pred_obj_pairs))
+    update_predicates_and_objects_str = ";\n\n".join(update_predicates_and_objects)
 
     # From knora-admin, collect the property IRIs, and the IRIs of non-properties that can be used as objects in data.
 
@@ -136,6 +182,7 @@ def do_request(graphdb_url, username, password):
         template_dict = {
             "knoraAdmin": knora_admin_nt,
             "knoraBase": knora_base_nt,
+            "updatePredicatesAndObjects": update_predicates_and_objects_str,
             "updatePredicates": update_predicates_str,
             "updateObjects": update_objects_str
         }

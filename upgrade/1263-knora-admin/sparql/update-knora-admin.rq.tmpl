@@ -22,23 +22,7 @@ INSERT DATA {
     }
 } ;
 
-# Update statements with forProject as predicate and SystemProject as object.
-DELETE {
-    GRAPH ?g {
-        ?s knora-base:forProject knora-base:SystemProject .
-    }
-} INSERT {
-    GRAPH ?g {
-        ?s knora-admin:forProject knora-admin:SystemProject .
-    }
-}
-USING <http://www.ontotext.com/explicit>
-WHERE
-{
-    GRAPH ?g {
-        ?s knora-base:forProject knora-base:SystemProject .
-    }
-} ;
+$updatePredicatesAndObjects ;
 
 $updatePredicates ;
 

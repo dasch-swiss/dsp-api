@@ -13,7 +13,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Schramm Bd. XXI, S. 27"
     },
     {
@@ -22,7 +22,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "http://api.knora.org/ontology/knora-api/v2#valueAsString": "GW 4168"
     },
     {
@@ -31,7 +31,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#valueAsString": "ISTC ib00512000"
     }
   ],
@@ -41,7 +41,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/91e19f1e01"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
     "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167"
   },
   "http://0.0.0.0:3333/ontology/0803/incunabula/v2#physical_desc": {
@@ -50,7 +50,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/91e19f1e01"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
     "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Dimension: 8°"
   },
   "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate": {
@@ -64,7 +64,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": 1492,
     "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": "CE",
     "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": 1492,
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#valueAsString": "JULIAN:1492 CE"
   },
   "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publisher": {
@@ -73,7 +73,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/91e19f1e01"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Johann Amerbach"
   },
   "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc": {
@@ -82,7 +82,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/91e19f1e01"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Basel"
   },
   "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title": {
@@ -91,7 +91,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/91e19f1e01"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Zeitglöcklein des Lebens und Leidens Christi"
   },
   "http://0.0.0.0:3333/ontology/0803/incunabula/v2#url": {
@@ -100,7 +100,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/91e19f1e01"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#valueAsString": "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
   },
   "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -113,7 +113,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
     "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
     "@value": "2016-03-02T15:05:10Z"
   },
-  "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
   "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
 };
 
@@ -285,7 +285,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -299,7 +299,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -309,7 +309,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 1
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -322,7 +322,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/8a0b1e75/values/7e4ba672",
@@ -335,7 +335,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000002.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2613,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 3505,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -354,7 +354,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000002.jpg/full/95,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000002.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 95,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -374,7 +374,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -388,7 +388,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -398,7 +398,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 2
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -411,7 +411,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/4f11adaf/values/3d71f9ab",
@@ -424,7 +424,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000003.jpg/full/81,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000003.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 81,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -443,7 +443,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000003.jp2/full/1870,2937/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000003.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1870,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2937,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -463,7 +463,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -477,7 +477,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -487,7 +487,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 3
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -500,7 +500,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/14173cea/values/7ae2f25701",
@@ -513,7 +513,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000004.jp2/full/2033,2835/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000004.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2033,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2835,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -532,7 +532,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000004.jpg/full/91,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000004.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 91,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -552,7 +552,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -566,7 +566,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -576,7 +576,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 4
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -589,7 +589,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/d91ccb2401/values/3908469101",
@@ -602,7 +602,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000005.jpg/full/83,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000005.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 83,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -621,7 +621,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000005.jp2/full/1886,2903/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000005.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1886,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2903,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -641,7 +641,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -655,7 +655,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -665,7 +665,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 5
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -678,7 +678,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/9e225a5f01/values/76793f3d02",
@@ -691,7 +691,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000006.jp2/full/2053,2841/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000006.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2053,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2841,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -710,7 +710,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000006.jpg/full/92,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000006.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 92,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -730,7 +730,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -744,7 +744,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -754,7 +754,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 6
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -767,7 +767,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/6328e99901/values/359f927602",
@@ -780,7 +780,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000007.jpg/full/83,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000007.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 83,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -799,7 +799,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000007.jp2/full/1907,2926/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000007.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1907,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2926,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -819,7 +819,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -833,7 +833,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -843,7 +843,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 7
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -856,7 +856,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/282e78d401/values/72108c2203",
@@ -869,7 +869,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000008.jp2/full/2049,2825/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000008.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2049,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2825,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -888,7 +888,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000008.jpg/full/93,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000008.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 93,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -908,7 +908,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -922,7 +922,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -932,7 +932,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 8
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -945,7 +945,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/ed33070f02/values/3136df5b03",
@@ -958,7 +958,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000009.jpg/full/83,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000009.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 83,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -977,7 +977,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000009.jp2/full/1896,2911/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000009.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1896,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2911,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -997,7 +997,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1011,7 +1011,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -1021,7 +1021,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 9
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -1034,7 +1034,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/b239964902/values/6ea7d80704",
@@ -1047,7 +1047,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000010.jp2/full/2048,2830/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000010.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2048,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2830,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1066,7 +1066,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000010.jpg/full/92,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000010.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 92,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1086,7 +1086,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1100,7 +1100,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -1110,7 +1110,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 10
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -1123,7 +1123,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/773f258402/values/2dcd2b4104",
@@ -1136,7 +1136,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000011.jpg/full/84,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000011.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 84,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1155,7 +1155,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000011.jp2/full/1891,2880/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000011.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1891,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2880,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1175,7 +1175,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1189,7 +1189,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -1199,7 +1199,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 11
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -1212,7 +1212,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/3c45b4be02/values/6a3e25ed04",
@@ -1225,7 +1225,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000012.jp2/full/2048,2840/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000012.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2048,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2840,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1244,7 +1244,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000012.jpg/full/92,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000012.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 92,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1264,7 +1264,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1278,7 +1278,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -1288,7 +1288,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 12
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -1301,7 +1301,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/014b43f902/values/2964782605",
@@ -1314,7 +1314,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000013.jpg/full/82,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000013.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 82,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1333,7 +1333,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000013.jp2/full/1860,2905/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000013.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1860,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2905,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1353,7 +1353,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1367,7 +1367,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -1377,7 +1377,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 13
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -1390,7 +1390,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/c650d23303/values/66d571d205",
@@ -1403,7 +1403,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000014.jp2/full/2053,2830/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000014.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2053,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2830,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1422,7 +1422,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000014.jpg/full/93,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000014.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 93,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1442,7 +1442,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1456,7 +1456,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -1466,7 +1466,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 14
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -1479,7 +1479,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/8b56616e03/values/25fbc40b06",
@@ -1492,7 +1492,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000015.jpg/full/81,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000015.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 81,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1511,7 +1511,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000015.jp2/full/1859,2911/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000015.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1859,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2911,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1531,7 +1531,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1545,7 +1545,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -1555,7 +1555,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 15
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -1568,7 +1568,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/505cf0a803/values/626cbeb706",
@@ -1581,7 +1581,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000016.jp2/full/2052,2815/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000016.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2052,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2815,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1600,7 +1600,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000016.jpg/full/93,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000016.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 93,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1620,7 +1620,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1634,7 +1634,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -1644,7 +1644,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 16
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -1657,7 +1657,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/15627fe303/values/219211f106",
@@ -1670,7 +1670,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000017.jpg/full/82,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000017.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 82,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1689,7 +1689,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000017.jp2/full/1865,2901/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000017.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1865,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2901,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1709,7 +1709,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1723,7 +1723,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -1733,7 +1733,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 17
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -1746,7 +1746,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/da670e1e04/values/5e030b9d07",
@@ -1759,7 +1759,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000018.jp2/full/2037,2820/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000018.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2037,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2820,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1778,7 +1778,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000018.jpg/full/92,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000018.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 92,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1798,7 +1798,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1812,7 +1812,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -1822,7 +1822,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 18
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -1835,7 +1835,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/9f6d9d5804/values/1d295ed607",
@@ -1848,7 +1848,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000019.jpg/full/82,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000019.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 82,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1867,7 +1867,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000019.jp2/full/1871,2911/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000019.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1871,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2911,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1887,7 +1887,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1901,7 +1901,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -1911,7 +1911,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 19
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -1924,7 +1924,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/64732c9304/values/5a9a578208",
@@ -1937,7 +1937,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000020.jp2/full/2043,2815/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000020.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2043,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2815,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1956,7 +1956,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000020.jpg/full/93,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000020.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 93,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -1976,7 +1976,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -1990,7 +1990,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -2000,7 +2000,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 20
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -2013,7 +2013,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/2979bbcd04/values/19c0aabb08",
@@ -2026,7 +2026,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000021.jpg/full/82,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000021.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 82,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2045,7 +2045,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000021.jp2/full/1865,2906/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000021.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1865,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2906,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2065,7 +2065,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -2079,7 +2079,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -2089,7 +2089,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 21
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -2102,7 +2102,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/ee7e4a0805/values/5631a46709",
@@ -2115,7 +2115,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000022.jp2/full/2032,2825/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000022.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2032,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2825,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2134,7 +2134,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000022.jpg/full/92,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000022.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 92,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2154,7 +2154,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -2168,7 +2168,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -2178,7 +2178,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 22
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -2191,7 +2191,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/b384d94205/values/1557f7a009",
@@ -2204,7 +2204,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000023.jpg/full/82,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000023.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 82,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2223,7 +2223,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000023.jp2/full/1869,2911/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000023.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1869,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2911,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2243,7 +2243,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -2257,7 +2257,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -2267,7 +2267,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 23
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -2280,7 +2280,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/788a687d05/values/52c8f04c0a",
@@ -2293,7 +2293,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000024.jp2/full/2040,2816/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000024.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2040,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2816,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2312,7 +2312,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000024.jpg/full/92,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000024.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 92,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2332,7 +2332,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -2346,7 +2346,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -2356,7 +2356,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 24
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -2369,7 +2369,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/3d90f7b705/values/11ee43860a",
@@ -2382,7 +2382,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000025.jpg/full/82,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000025.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 82,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2401,7 +2401,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000025.jp2/full/1866,2893/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000025.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 1866,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2893,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2421,7 +2421,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
           "@id": "http://rdfh.ch/c5058f3a",
           "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -2435,7 +2435,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
             "@value": "2016-03-02T15:05:10Z"
           },
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
         }
       },
@@ -2445,7 +2445,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
           "@id": "http://rdfh.ch/users/91e19f1e01"
         },
-        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 25
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
@@ -2458,7 +2458,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-03-02T15:05:10Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue": [
         {
           "@id": "http://rdfh.ch/029686f205/values/4e5f3d320b",
@@ -2471,7 +2471,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000026.jp2/full/2048,2804/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000026.jp2",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 2048,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 2804,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2490,7 +2490,7 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://localhost:1024/knora/incunabula_0000000026.jpg/full/93,128/0/default.jpg"
           },
           "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename": "incunabula_0000000026.jpg",
-          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+          "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX": 93,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY": 128,
           "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": {
@@ -2515,7 +2515,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
       "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
     "http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean": true,
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
   },
   "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor": {
     "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/TAziKNP8QxuyhC4Qf9-b6w",
@@ -2524,7 +2524,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
       "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
     "http://api.knora.org/ontology/knora-api/v2#colorValueAsColor": "#ff3333",
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
   },
   "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate": {
     "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/-rG4F5FTTu2iB5mTBPVn5Q",
@@ -2541,7 +2541,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": "CE",
     "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": 5,
     "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": 2018,
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#valueAsString": "GREGORIAN:2018-05-13 CE"
   },
   "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal": {
@@ -2554,7 +2554,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
       "@type": "http://www.w3.org/2001/XMLSchema#decimal",
       "@value": "1.5"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
   },
   "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger": {
     "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg",
@@ -2562,7 +2562,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 1
   },
   "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval": {
@@ -2571,7 +2571,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#intervalValueHasEnd": {
       "@type": "http://www.w3.org/2001/XMLSchema#decimal",
       "@value": "216000"
@@ -2587,7 +2587,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
       "@id": "http://rdfh.ch/lists/0001/treeList01"
     },
@@ -2599,7 +2599,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
       "@id": "http://rdfh.ch/lists/0001/otherTreeList01"
     },
@@ -2611,7 +2611,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
       "@id": "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
       "@type": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
@@ -2625,7 +2625,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
         "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
         "@value": "2016-10-17T17:16:04.916Z"
       },
-      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "V knora-base:UnknownUser|M knora-base:ProjectMember",
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
       "http://www.w3.org/2000/01/rdf-schema#label": "Sierra"
     }
   },
@@ -2635,7 +2635,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>test with <strong>markup</strong></p></text>",
     "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": {
       "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
@@ -2647,7 +2647,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#valueAsString": "test"
   },
   "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri": {
@@ -2656,7 +2656,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
     "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
       "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "http://api.knora.org/ontology/knora-api/v2#uriValueAsUri": {
       "@type": "http://www.w3.org/2001/XMLSchema#anyURI",
       "@value": "http://www.google.ch"
@@ -2672,7 +2672,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
     "@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
     "@value": "2018-05-28T15:52:03.897Z"
   },
-  "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "http://api.knora.org/ontology/knora-api/v2#hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
   "http://www.w3.org/2000/01/rdf-schema#label": "testding"
 };
 

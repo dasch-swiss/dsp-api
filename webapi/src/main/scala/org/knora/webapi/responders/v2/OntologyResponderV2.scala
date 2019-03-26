@@ -1464,6 +1464,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 throw BadRequestException(s"The standoff ontology is not available in the API v2 simple schema")
             }
 
+            ontology = cacheData.ontologies.get(ontologyIri.toOntologySchema(InternalSchema)) match {
+                case Some(cachedOntology) => cachedOntology
+                case None => throw NotFoundException(s"Ontology not found: $ontologyIri")
+            }
+
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
                 // Just the user's preferred language.
@@ -1472,7 +1477,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // All available languages.
                 None
             }
-        } yield cacheData.ontologies(ontologyIri.toOntologySchema(InternalSchema)).copy(
+        } yield ontology.copy(
             userLang = userLang
         )
     }
