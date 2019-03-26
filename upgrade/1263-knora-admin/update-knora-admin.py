@@ -32,6 +32,7 @@ import io
 from string import Template
 
 
+# A template for updating statements that have a given predicate and a given object.
 update_pred_and_obj_template = Template("""# Update statements with '$pred $obj'.
 DELETE {
     GRAPH ?g {
