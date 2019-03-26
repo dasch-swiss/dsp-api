@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v2
 import java.time.Instant
 import java.util.UUID
 
-import akka.testkit.{ImplicitSender, TestActorRef}
+import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -2071,28 +2071,30 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val expectedProperties: Set[SmartIri] = Set(
-                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
-                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri"
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocument",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing"
             ).map(_.toSmartIri)
 
             expectMsgPF(timeout) {
