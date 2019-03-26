@@ -189,7 +189,7 @@ def do_request(graphdb_url, username, password):
 
         sparql = sparql_template.substitute(template_dict)
 
-        print(sparql)
+        # print(sparql)
 
         # Post the SPARQL to the triplestore.
 
