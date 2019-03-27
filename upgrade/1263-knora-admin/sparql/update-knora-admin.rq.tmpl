@@ -5,46 +5,86 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-# Delete knora-base.
-DROP GRAPH <http://www.knora.org/ontology/knora-base> ;
+DELETE {
+    GRAPH <http://www.knora.org/ontology/knora-base> {
+        ?oldKnoraBaseSubj ?oldKnoraBasePred ?oldKnoraBaseObj .
+    }
 
-# Insert knora-admin.
-INSERT DATA {
+    GRAPH ?graph1 {
+        ?subj1 ?oldPred1 ?oldObj1 .
+    }
+
+    GRAPH ?graph2 {
+        ?subj2 ?oldPred2 ?obj2 .
+    }
+
+    GRAPH ?graph3 {
+        ?subj3 ?pred3 ?oldObj3 .
+    }
+
+    GRAPH ?graph4 {
+        ?subj4 knora-base:hasPermissions ?oldPermissions .
+    }
+} INSERT {
     GRAPH <http://www.knora.org/ontology/knora-admin> {
         $knoraAdmin
     }
-} ;
 
-# Insert knora-base.
-INSERT DATA {
     GRAPH <http://www.knora.org/ontology/knora-base> {
         $knoraBase
     }
-} ;
 
-$updatePredicatesAndObjects ;
-
-$updatePredicates ;
-
-$updateObjects ;
-
-# Update permission strings.
-DELETE {
-    GRAPH ?g {
-        ?s knora-base:hasPermissions ?oldPermissions .
-    }
-} INSERT {
-    GRAPH ?g {
-        ?s knora-base:hasPermissions ?newPermissions .
-    }
-}
-USING <http://www.ontotext.com/explicit>
-WHERE
-{
-    GRAPH ?g {
-        ?s knora-base:hasPermissions ?oldPermissions .
+    GRAPH ?graph1 {
+        ?subj1 ?newPred1 ?newObj1 .
     }
 
-    FILTER(REGEX(?oldPermissions, "knora-base"))
-    BIND(REPLACE(?oldPermissions, "knora-base", "knora-admin") AS ?newPermissions)
+    GRAPH ?graph2 {
+        ?subj2 ?newPred2 ?obj2 .
+    }
+
+    GRAPH ?graph3 {
+        ?subj3 ?pred3 ?newObj3 .
+    }
+
+    GRAPH ?graph4 {
+        ?subj4 knora-base:hasPermissions ?newPermissions .
+    }
+} WHERE {
+    {
+        GRAPH <http://www.knora.org/ontology/knora-base> {
+            ?oldKnoraBaseSubj ?oldKnoraBasePred ?oldKnoraBaseObj .
+        }
+    } UNION {
+        VALUES (?oldPred1 ?oldObj1 ?newPred1 ?newObj1) { $preds_with_objs } .
+
+        GRAPH ?graph1 {
+            ?subj1 ?oldPred1 ?oldObj1 .
+        }
+
+        FILTER (?graph1 != <http://www.knora.org/ontology/knora-admin> && ?graph1 != <http://www.knora.org/ontology/knora-base>)
+    } UNION {
+        VALUES (?oldPred2 ?newPred2) { $predicates } .
+
+        GRAPH ?graph2 {
+            ?subj2 ?oldPred2 ?obj2 .
+        }
+
+        FILTER (?graph2 != <http://www.knora.org/ontology/knora-admin> && ?graph2 != <http://www.knora.org/ontology/knora-base>)
+    } UNION {
+        VALUES (?oldObj3 ?newObj3) { $objects } .
+
+        GRAPH ?graph3 {
+            ?subj3 ?pred3 ?oldObj3 .
+        }
+
+        FILTER (?graph3 != <http://www.knora.org/ontology/knora-admin> && ?graph3 != <http://www.knora.org/ontology/knora-base>)
+    } UNION {
+        GRAPH ?graph4 {
+            ?subj4 knora-base:hasPermissions ?oldPermissions .
+        }
+
+        FILTER (?graph4 != <http://www.knora.org/ontology/knora-admin> && ?graph4 != <http://www.knora.org/ontology/knora-base>)
+        FILTER(REGEX(?oldPermissions, "knora-base"))
+        BIND(REPLACE(?oldPermissions, "knora-base", "knora-admin") AS ?newPermissions)
+    }
 }

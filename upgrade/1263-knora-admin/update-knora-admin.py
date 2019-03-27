@@ -31,64 +31,6 @@ from rdflib.namespace import RDF
 import io
 from string import Template
 
-
-# A template for updating statements that have a given predicate and a given object.
-update_pred_and_obj_template = Template("""# Update statements with '$pred $obj'.
-DELETE {
-    GRAPH ?g {
-        ?s knora-base:$pred knora-base:$obj .
-    }
-} INSERT {
-    GRAPH ?g {
-        ?s knora-admin:$pred knora-admin:$obj .
-    }
-}
-USING <http://www.ontotext.com/explicit>
-WHERE
-{
-    GRAPH ?g {
-        ?s knora-base:$pred knora-base:$obj .
-    }
-}""")
-
-# A template for updating statements that have given predicate.
-update_pred_template = Template("""# Update statements with predicate '$pred'.
-DELETE {
-    GRAPH ?g {
-        ?s knora-base:$pred ?o .
-    }
-} INSERT {
-    GRAPH ?g {
-        ?s knora-admin:$pred ?o .
-    }
-}
-USING <http://www.ontotext.com/explicit>
-WHERE
-{
-    GRAPH ?g {
-        ?s knora-base:$pred ?o .
-    }
-}""")
-
-# A template for updating statements that have a given object.
-update_obj_template = Template("""# Update statements with object '$obj'.
-DELETE {
-    GRAPH ?g {
-        ?s ?p knora-base:$obj .
-    }
-} INSERT {
-    GRAPH ?g {
-        ?s ?p knora-admin:$obj .
-    }
-}
-USING <http://www.ontotext.com/explicit>
-WHERE
-{
-    GRAPH ?g {
-        ?s ?p knora-base:$obj .
-    }
-}""")
-
 # The property types used in knora-admin.
 property_types = {
     "http://www.w3.org/2002/07/owl#ObjectProperty",
@@ -96,7 +38,6 @@ property_types = {
     "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
 }
 
-# knora-admin predicates and objects that can be used together.
 pred_obj_pairs = [
     ("belongsToProject", "DefaultSharedOntologiesProject"),
     ("belongsToProject", "SystemProject"),
@@ -135,16 +76,6 @@ def do_request(graphdb_url, username, password):
     knora_base_graph.parse("../../knora-ontologies/knora-base.ttl", format="turtle")
     knora_base_nt = knora_ontology_to_ntriples(knora_base_graph)
 
-    # Generate SPARQL to update statements in which both the predicate and the object need to be updated.
-
-    update_predicates_and_objects = list(map(lambda pred_obj_pair:
-                                             update_pred_and_obj_template.substitute(
-                                                 pred=pred_obj_pair[0],
-                                                 obj=pred_obj_pair[1]
-                                             ),
-                                             pred_obj_pairs))
-    update_predicates_and_objects_str = ";\n\n".join(update_predicates_and_objects)
-
     # From knora-admin, collect the property IRIs, and the IRIs of non-properties that can be used as objects in data.
 
     knora_admin_properties = []
@@ -173,15 +104,22 @@ def do_request(graphdb_url, username, password):
                     # Collect the subject as a non-property IRI that can be used as an object in data.
                     knora_admin_objects.append(subj_name)
 
-    # Use those IRIs to generate SPARQL using the templates update_pred_template and update_obj_template.
+    # Use those IRIs to generate VALUES.
 
-    update_predicates = list(map(lambda knora_admin_prop: update_pred_template.substitute(pred=knora_admin_prop),
-                                 knora_admin_properties))
-    update_predicates_str = " ;\n\n".join(update_predicates)
+    predicates = list(map(lambda knora_admin_prop:
+                          "(knora-base:{prop} knora-admin:{prop})".format(prop=knora_admin_prop),
+                          knora_admin_properties))
+    predicates_str = " ".join(predicates)
 
-    update_objects = list(map(lambda knora_admin_obj: update_obj_template.substitute(obj=knora_admin_obj),
-                              knora_admin_objects))
-    update_objects_str = " ;\n\n".join(update_objects)
+    objects = list(map(lambda knora_admin_obj:
+                       "(knora-base:{obj} knora-admin:{obj})".format(obj=knora_admin_obj),
+                       knora_admin_objects))
+    objects_str = " ".join(objects)
+
+    preds_with_objs = list(map(lambda pred_and_obj:
+                               "(knora-base:{prop} knora-base:{obj} knora-admin:{prop} knora-admin:{obj})".format(
+                                   prop=pred_and_obj[0], obj=pred_and_obj[1]), pred_obj_pairs))
+    preds_with_objs_str = " ".join(preds_with_objs)
 
     # Generate SPARQL using the main template file.
 
@@ -191,14 +129,15 @@ def do_request(graphdb_url, username, password):
         template_dict = {
             "knoraAdmin": knora_admin_nt,
             "knoraBase": knora_base_nt,
-            "updatePredicatesAndObjects": update_predicates_and_objects_str,
-            "updatePredicates": update_predicates_str,
-            "updateObjects": update_objects_str
+            "predicates": predicates_str,
+            "objects": objects_str,
+            "preds_with_objs": preds_with_objs_str
         }
 
         sparql = sparql_template.substitute(template_dict)
 
-        # print(sparql)
+        with open("/Users/benjamingeer/Desktop/sparql.rq", "w") as sparql_file:
+            sparql_file.write(sparql)
 
         # Post the SPARQL to the triplestore.
 
@@ -206,8 +145,8 @@ def do_request(graphdb_url, username, password):
             "update": sparql
         }
 
-        r = requests.post(graphdb_url, data=data, auth=(username, password))
-        r.raise_for_status()
+        # r = requests.post(graphdb_url, data=data, auth=(username, password))
+        # r.raise_for_status()
 
 
 # Reads an ontology from knora-ontologies and returns it in ntriples format.
