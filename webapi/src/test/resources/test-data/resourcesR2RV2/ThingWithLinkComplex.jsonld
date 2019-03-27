@@ -26,12 +26,14 @@
         "@value" : "2016-10-17T17:16:04.916Z"
       },
       "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+      "knora-api:userHasPermission" : "V",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
         "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/LOV=6aLYQFW15jwdyS51YwF.20161017T171604916Z"
       },
       "rdfs:label" : "Uniform"
     },
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-10-17T17:16:04.916Z"
@@ -52,6 +54,7 @@
     "@value" : "2016-10-17T17:16:04.916Z"
   },
   "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+  "knora-api:userHasPermission" : "V",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20161017T171604916Z"

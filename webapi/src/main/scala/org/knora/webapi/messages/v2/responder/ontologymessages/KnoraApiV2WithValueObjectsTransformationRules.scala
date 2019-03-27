@@ -60,6 +60,26 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         objectType = Some(OntologyConstants.Xsd.String)
     )
 
+    private val UserHasPermission: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.UserHasPermission,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "user has permission",
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides the requesting user's maximum permission on a resource or value."
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.String)
+    )
+
     private val ArkUrl: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1260,7 +1280,8 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLinkValue -> Cardinality.MayHaveMany,
         OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2WithValueObjects.VersionArkUrl -> Cardinality.MustHaveOne,
-        OntologyConstants.KnoraApiV2WithValueObjects.VersionDate -> Cardinality.MayHaveOne
+        OntologyConstants.KnoraApiV2WithValueObjects.VersionDate -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.UserHasPermission -> Cardinality.MustHaveOne
     )
 
     private val DateBaseCardinalities = Map(
@@ -1301,7 +1322,8 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
     )
 
     private val ValueCardinalities = Map(
-        OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne
+        OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.UserHasPermission -> Cardinality.MustHaveOne
     )
 
     private val TextValueCardinalities = Map(
@@ -1507,6 +1529,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
       */
     override val knoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Result,
+        UserHasPermission,
         VersionDate,
         ArkUrl,
         VersionArkUrl,
