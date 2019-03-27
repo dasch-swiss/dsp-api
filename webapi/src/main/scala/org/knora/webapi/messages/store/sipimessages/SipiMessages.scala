@@ -56,7 +56,15 @@ case class GetImageMetadataRequest(fileUrl: String,
 case class GetImageMetadataResponseV2(originalFilename: String,
                                       originalMimeType: String,
                                       width: Int,
-                                      height: Int)
+                                      height: Int) {
+    if (originalFilename.isEmpty) {
+        throw SipiException(s"Sipi returned an empty originalFilename")
+    }
+
+    if (originalMimeType.isEmpty) {
+        throw SipiException(s"Sipi returned an empty originalMimeType")
+    }
+}
 
 object GetImageMetadataResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
     implicit val getImageMetadataResponseV2Format: RootJsonFormat[GetImageMetadataResponseV2] = jsonFormat4(GetImageMetadataResponseV2)
