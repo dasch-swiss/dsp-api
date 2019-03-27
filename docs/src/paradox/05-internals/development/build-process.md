@@ -78,6 +78,8 @@ The following SBT tasks are available:
 
 ## Building Documentation
 
+There are some prerequisites described in the [docs/Readme.md](https://github.com/dhlab-basel/Knora/blob/develop/docs/Readme.md).
+
 The complete Knora documentation site is built by invoking the following tasks:
 
 - `$ sbt docs/makeSite` - generates the documentation which can be found under `docs/target/site/`
