@@ -37,10 +37,12 @@ class UpdateException(Exception):
         self.message = message
 
 
-knora_base_context = "http://www.knora.org/ontology/knora-base"
-has_permissions = rdflib.URIRef("http://www.knora.org/ontology/knora-base#hasPermissions")
-knora_admin_context = "http://www.knora.org/ontology/knora-admin"
 knora_ontologies_dir = "../../knora-ontologies"
+knora_base_context = "http://www.knora.org/ontology/knora-base"
+knora_admin_context = "http://www.knora.org/ontology/knora-admin"
+knora_base_namespace = knora_base_context + "#"
+knora_admin_namespace = knora_admin_context + "#"
+has_permissions = rdflib.URIRef("http://www.knora.org/ontology/knora-base#hasPermissions")
 
 
 class GraphDBInfo:
@@ -108,20 +110,23 @@ class NamedGraph:
             for chunk in context_response.iter_content(chunk_size=1024):
                 downloaded_file.write(chunk)
 
-        print("Downloaded named graph {}".format(self.context))
-
     def transform(self, knora_admin_info, download_dir, upload_dir):
         print("Transforming named graph {}...".format(self.context))
         input_file_path = download_dir + "/" + self.filename
         input_graph = rdflib.Graph()
+        print("Parsing input file...")
         input_graph.parse(input_file_path, format="turtle")
+        graph_size = len(input_graph)
+        print("Number of statements:", graph_size)
 
         output_file_path = upload_dir + "/" + self.filename
         output_graph = rdflib.Graph()
 
+        statement_count = 0
+
         for subj, pred, obj in input_graph:
             if pred == has_permissions:
-                transformed_string = str(obj).replace(old="knora-base", new="knora-admin")
+                transformed_string = str(obj).replace("knora-base", "knora-admin")
                 transformed_obj = rdflib.Literal(transformed_string, datatype=XSD.string)
                 output_graph.add((subj, pred, transformed_obj))
             else:
@@ -129,15 +134,20 @@ class NamedGraph:
                 transformed_obj = transform_entity(obj, knora_admin_info.objects)
                 output_graph.add((subj, transformed_pred, transformed_obj))
 
+            statement_count += 1
+
+            if statement_count % 10000 == 0:
+                print("Transformed {} statements...".format(statement_count))
+
+        print("Writing transformed file...")
         output_graph.serialize(destination=output_file_path, format="turtle")
-        print("Transformed named graph {}".format(self.context))
 
     def upload(self, upload_dir):
         print("Uploading named graph {}...".format(self.context))
         upload_file_path = upload_dir + "/" + self.filename
 
         with open(upload_file_path, "r") as file_to_upload:
-            file_content = file_to_upload.read()
+            file_content = file_to_upload.read().encode("utf-8")
 
         upload_response = requests.post(self.graphdb_info.statements_url,
                                         params={"context": self.uri},
@@ -146,7 +156,6 @@ class NamedGraph:
                                         data=file_content)
 
         upload_response.raise_for_status()
-        print("Uploaded named graph {}".format(self.context))
 
 
 class Repository:
@@ -236,13 +245,10 @@ def split_namespace_and_local_name(entity):
 
 
 def transform_entity(entity, local_name_list):
-    knora_base_namespace = knora_base_context + "#"
-    knora_admin_namespace = knora_admin_context + "#"
-
     if entity.__class__.__name__ == "URIRef":
         namespace, local_name = split_namespace_and_local_name(entity)
 
-        if namespace == knora_base_namespace and local_name in local_name_list:
+        if local_name is not None and namespace == knora_base_namespace and local_name in local_name_list:
             return rdflib.URIRef(knora_admin_namespace + local_name)
         else:
             return entity
