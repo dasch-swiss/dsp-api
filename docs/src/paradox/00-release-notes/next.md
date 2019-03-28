@@ -20,6 +20,8 @@ Also, please change the **HINT** to the appropriate level:
 
 - FEATURE: Return user's permission on resources and values (@github[#1257](#1257))
 
+- FEATURE: Get resources in a particular class from a project (@github[#1251](#1251))
+
 - MAJOR: Change API v1 file uploads to work like API v2 (@github[#1233](#1233)). To enable
   Knora and Sipi to work without sharing a filesystem, the procedure
   for uploading files in API v1 has changed; see
