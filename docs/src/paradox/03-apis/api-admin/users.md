@@ -74,6 +74,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       "email": "donald.duck@example.org",
       "givenName": "Donald",
       "familyName": "Duck",
+      "username": "donald.duck",
       "password": "test",
       "status": true,
       "lang": "en",
