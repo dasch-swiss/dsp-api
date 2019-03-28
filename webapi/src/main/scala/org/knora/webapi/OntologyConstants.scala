@@ -689,7 +689,7 @@ object OntologyConstants {
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
-        val HasShortname: IRI = KnoraApiV2PrefixExpansion + "hasShortname"
+        val KnoraProject: IRI = KnoraApiV2PrefixExpansion + "knoraProject"
 
         val IsEditable: IRI = KnoraApiV2PrefixExpansion + "isEditable"
         val IsLinkProperty: IRI = KnoraApiV2PrefixExpansion + "isLinkProperty"
