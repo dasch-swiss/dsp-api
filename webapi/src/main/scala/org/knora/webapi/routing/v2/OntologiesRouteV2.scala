@@ -92,10 +92,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         } ~ path("v2" / "ontologies" / "metadata") {
             get {
                 requestContext => {
+                    val maybeProjectIri: Option[SmartIri] = RouteUtilV2.getProject(requestContext)
 
                     val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield OntologyMetadataGetByProjectRequestV2(requestingUser = requestingUser)
+                    } yield OntologyMetadataGetByProjectRequestV2(projectIris = maybeProjectIri.toSet, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageFuture,
@@ -312,7 +313,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 requestContext => {
 
                     val classesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalResourceClassIris.map {
-                        (classIriStr: IRI) =>
+                        classIriStr: IRI =>
                             val requestedClassIri: SmartIri = classIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid class IRI: $classIriStr"))
 
                             if (!requestedClassIri.isKnoraApiV2EntityIri) {

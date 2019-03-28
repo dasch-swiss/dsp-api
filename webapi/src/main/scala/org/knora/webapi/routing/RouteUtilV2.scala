@@ -21,7 +21,7 @@ package org.knora.webapi.routing
 
 import java.io.{StringReader, StringWriter}
 
-import akka.actor.{ActorRef}
+import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
@@ -33,6 +33,8 @@ import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
+import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.JsonLDDocument
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -63,6 +65,11 @@ object RouteUtilV2 {
     val COMPLEX_SCHEMA_NAME: String = "complex"
 
     /**
+      * The name of the HTTP header in which results from a project can be requested.
+      */
+    val PROJECT_HEADER: String = "x-knora-accept-project"
+
+    /**
       * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
       * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
       * If no schema is specified in the request, the default of [[ApiV2WithValueObjects]] is returned.
@@ -89,6 +96,20 @@ object RouteUtilV2 {
                     case Some(header) => nameToSchema(header.value)
                     case None => ApiV2WithValueObjects
                 }
+        }
+    }
+
+    /**
+      * Gets the project IRI specified in a Knora-specific HTTP header.
+      *
+      * @param requestContext the akka-http [[RequestContext]].
+      * @return the specified project IRI, or [[None]] if no project header was included in the request.
+      */
+    def getProject(requestContext: RequestContext)(implicit stringFormatter: StringFormatter): Option[SmartIri] = {
+        requestContext.request.headers.find(_.lowercaseName == PROJECT_HEADER).map {
+            header =>
+                val projectIriStr = header.value
+                projectIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $projectIriStr"))
         }
     }
 
