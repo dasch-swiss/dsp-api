@@ -47,15 +47,15 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     // This is the route used to dereference an actual ontology IRI. If the URL path looks like it
                     // belongs to a built-in API ontology (which has to contain "knora-api"), prefix it with
                     // http://api.knora.org to get the ontology IRI. Otherwise, if it looks like it belongs to a
-                    // project-specific API ontology, prefix it with settings.knoraApiHttpBaseUrl to get the ontology
-                    // IRI.
+                    // project-specific API ontology, prefix it with settings.externalOntologyIriHostAndPort to get the
+                    // ontology IRI.
 
                     val urlPath = requestContext.request.uri.path.toString
 
                     val requestedOntologyStr: IRI = if (stringFormatter.isBuiltInApiV2OntologyUrlPath(urlPath)) {
                         OntologyConstants.KnoraApi.ApiOntologyHostname + urlPath
                     } else if (stringFormatter.isProjectSpecificApiV2OntologyUrlPath(urlPath)) {
-                        settings.externalKnoraApiBaseUrl + urlPath
+                        "http://" + settings.externalOntologyIriHostAndPort + urlPath
                     } else {
                         throw BadRequestException(s"Invalid or unknown URL path for external ontology: $urlPath")
                     }
@@ -92,10 +92,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         } ~ path("v2" / "ontologies" / "metadata") {
             get {
                 requestContext => {
+                    val maybeProjectIri: Option[SmartIri] = RouteUtilV2.getProject(requestContext)
 
                     val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield OntologyMetadataGetByProjectRequestV2(requestingUser = requestingUser)
+                    } yield OntologyMetadataGetByProjectRequestV2(projectIris = maybeProjectIri.toSet, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageFuture,
@@ -136,7 +137,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     }
                 }
             }
-        } ~ path("v2" / "ontologies" / "metadata" / Segments) { (projectIris: List[IRI]) =>
+        } ~ path("v2" / "ontologies" / "metadata" / Segments) { projectIris: List[IRI] =>
             get {
                 requestContext => {
 
@@ -312,7 +313,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 requestContext => {
 
                     val classesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalResourceClassIris.map {
-                        (classIriStr: IRI) =>
+                        classIriStr: IRI =>
                             val requestedClassIri: SmartIri = classIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid class IRI: $classIriStr"))
 
                             if (!requestedClassIri.isKnoraApiV2EntityIri) {

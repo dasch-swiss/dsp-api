@@ -48,6 +48,10 @@ knora-api:Annotation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -133,6 +137,9 @@ knora-api:Resource a owl:Class;
     ], [ a owl:Restriction;
       owl:maxCardinality 1;
       owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
@@ -240,6 +247,11 @@ knora-api:isDeleted a owl:DatatypeProperty;
 knora-api:lastModificationDate a owl:DatatypeProperty;
   knora-api:objectType xsd:dateTimeStamp .
 
+knora-api:userHasPermission a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  rdfs:comment "Provides the requesting user's maximum permission on a resource or value.";
+  rdfs:label "user has permission" .
+
 knora-api:versionArkUrl a owl:DatatypeProperty;
   knora-api:objectType xsd:anyURI;
   rdfs:comment "Provides the ARK URL of a particular version of a resource.";
@@ -290,6 +302,10 @@ knora-api:AudioFileValue a owl:Class;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:valueAsString
     ], [ a owl:Restriction;
@@ -334,6 +350,10 @@ knora-api:FileValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:isDeleted
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -447,6 +467,10 @@ knora-api:AudioRepresentation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -520,6 +544,10 @@ knora-api:Representation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -589,6 +617,10 @@ knora-api:BooleanValue a owl:Class;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:valueAsString
     ], [ a owl:Restriction;
@@ -622,6 +654,9 @@ knora-api:Value a owl:Class;
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:isDeleted
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       owl:maxCardinality 1;
       owl:onProperty knora-api:valueAsString
@@ -679,6 +714,10 @@ knora-api:ColorValue a owl:Class;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:valueAsString
     ], [ a owl:Restriction;
@@ -728,6 +767,10 @@ knora-api:DDDFileValue a owl:Class;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:valueAsString
     ], [ a owl:Restriction;
@@ -745,6 +788,26 @@ knora-api:DDDRepresentation a owl:Class;
   rdfs:comment "Represents a file containg 3D data";
   rdfs:label "Representation (3D)";
   rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:versionArkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:versionDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:arkUrl
@@ -795,22 +858,6 @@ knora-api:DDDRepresentation a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:isDeleted
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:lastModificationDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:versionDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
     ] .
 
 knora-api:hasDDDFileValue a owl:ObjectProperty;
@@ -825,6 +872,12 @@ knora-api:hasDDDFileValue a owl:ObjectProperty;
 
 knora-api:DateBase a owl:Class;
   rdfs:subClassOf knora-api:ValueBase, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasCalendar
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasEndDay
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:dateValueHasEndEra
     ], [ a owl:Restriction;
@@ -845,12 +898,6 @@ knora-api:DateBase a owl:Class;
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:dateValueHasStartYear
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:dateValueHasCalendar
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:dateValueHasEndDay
     ] .
 
 knora-api:dateValueHasCalendar a owl:DatatypeProperty;
@@ -981,6 +1028,10 @@ knora-api:DateValue a owl:Class;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:valueAsString
     ], [ a owl:Restriction;
@@ -1039,6 +1090,10 @@ knora-api:DecimalValue a owl:Class;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:valueAsString
     ], [ a owl:Restriction;
@@ -1085,6 +1140,10 @@ knora-api:DocumentFileValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:isDeleted
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -1157,6 +1216,10 @@ knora-api:DocumentRepresentation a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -1243,6 +1306,10 @@ knora-api:ForbiddenResource a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -1284,6 +1351,10 @@ knora-api:GeomValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:isDeleted
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -1334,6 +1405,10 @@ knora-api:GeonameValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:isDeleted
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -1401,6 +1476,10 @@ knora-api:IntValue a owl:Class;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:valueAsString
     ], [ a owl:Restriction;
@@ -1457,6 +1536,10 @@ knora-api:IntervalValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:isDeleted
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -1541,6 +1624,10 @@ knora-api:LinkObj a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -1599,6 +1686,10 @@ knora-api:LinkValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:isDeleted
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -1664,6 +1755,10 @@ knora-api:ListValue a owl:Class;
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:listValueAsListNodeLabel
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -1742,6 +1837,10 @@ knora-api:MovingImageFileValue a owl:Class;
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:movingImageFileValueHasQualityLevel
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -1853,6 +1952,10 @@ knora-api:MovingImageRepresentation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -1947,6 +2050,10 @@ knora-api:Region a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2580,6 +2687,10 @@ knora-api:StillImageFileValue a owl:Class;
       owl:onProperty knora-api:stillImageFileValueHasIIIFBaseUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:valueAsString
     ], [ a owl:Restriction;
@@ -2675,6 +2786,10 @@ knora-api:StillImageRepresentation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2731,6 +2846,10 @@ knora-api:TextFileValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:isDeleted
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -2807,6 +2926,10 @@ knora-api:TextRepresentation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2869,6 +2992,10 @@ knora-api:TextValue a owl:Class;
     ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty knora-api:textValueHasStandoff
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -2949,6 +3076,10 @@ knora-api:UriValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:uriValueAsUri
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -3034,6 +3165,10 @@ knora-api:XSLTransformation a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:userHasPermission
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;

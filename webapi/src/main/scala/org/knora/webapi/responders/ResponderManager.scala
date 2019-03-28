@@ -25,9 +25,9 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderR
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
 import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
@@ -39,7 +39,6 @@ import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequest
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
 import org.knora.webapi.messages.v2.responder.listsmessages.ListsResponderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
-import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMapResponderRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
@@ -47,7 +46,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderReque
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
-import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, _}
+import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.{ActorMaker, KnoraDispatchers}
 
 import scala.concurrent.ExecutionContext
@@ -196,11 +195,6 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected final def makeDefaultValuesResponderV2: ValuesResponderV2 = new ValuesResponderV2(responderData)
 
     /**
-      * Constructs the default [[PersistentMapResponderV2]].
-      */
-    protected final def makeDefaultPersistentMapResponderV2: PersistentMapResponderV2 = new PersistentMapResponderV2(responderData)
-
-    /**
       * Constructs the default [[StandoffResponderV2]].
       */
     protected final def makeDefaultStandoffResponderV2: StandoffResponderV2 = new StandoffResponderV2(responderData)
@@ -229,11 +223,6 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
     protected val valuesResponderV2: ValuesResponderV2 = makeDefaultValuesResponderV2
-
-    /**
-      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
-      */
-    protected val persistentMapResponderV2: PersistentMapResponderV2 = makeDefaultPersistentMapResponderV2
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -344,7 +333,6 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
         case searchResponderRequestV2: SearchResponderRequestV2 => future2Message(sender(), searchResponderV2 receive searchResponderRequestV2, log)
         case resourcesResponderRequestV2: ResourcesResponderRequestV2 => future2Message(sender(), resourcesResponderV2 receive resourcesResponderRequestV2, log)
         case valuesResponderRequestV2: ValuesResponderRequestV2 => future2Message(sender(), valuesResponderV2 receive valuesResponderRequestV2, log)
-        case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => future2Message(sender(), persistentMapResponderV2 receive persistentMapResponderRequestV2, log)
         case standoffResponderRequestV2: StandoffResponderRequestV2 => future2Message(sender(), standoffResponderV2 receive standoffResponderRequestV2, log)
         case listsResponderRequestV2: ListsResponderRequestV2 => future2Message(sender(), listsResponderV2 receive listsResponderRequestV2, log)
 
