@@ -24,6 +24,8 @@
 
 
 import os
+import time
+from datetime import timedelta
 import tempfile
 import argparse
 import getpass
@@ -96,7 +98,7 @@ class KnoraAdminInfo:
         # Iterate over all the statements in knora-admin.
         for subject, predicate, obj in knora_admin_graph:
             # Is this a statement about an ontology entity?
-            subj_namespace, subj_name = split_namespace_and_local_name(subject)
+            _, subj_name = split_namespace_and_local_name(subject)
 
             if subj_name is not None:
                 # Is the predicate rdf:type?
@@ -298,12 +300,14 @@ def transform_entity(entity, local_name_list):
 
 # Updates a repository.
 def update_repository(graphdb_info, download_dir, upload_dir):
+    start = time.time()
     repository = Repository(graphdb_info)
     repository.download(download_dir)
     repository.transform(download_dir=download_dir, upload_dir=upload_dir)
     repository.empty()
     repository.upload(upload_dir)
-    print("Update complete.")
+    elapsed = time.time() - start
+    print("Update complete. Elapsed time: {}.".format(str(timedelta(seconds=elapsed))))
 
 
 # Command-line invocation.

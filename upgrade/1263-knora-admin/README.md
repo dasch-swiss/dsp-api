@@ -7,6 +7,6 @@ accordingly.
 
 ## Instructions
 
-Use `./update-knora-admin.py` in this directory to update your repository. You will
-need to specify some command-line options; type `./update-knora-admin.py --help` for
-details.
+First, back up your repository. Then run `./update-knora-admin.py` in this directory to
+update the repository. You will need to specify some command-line options; type
+`./update-knora-admin.py --help` for details. 
