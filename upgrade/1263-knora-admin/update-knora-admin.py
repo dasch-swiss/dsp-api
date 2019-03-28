@@ -131,6 +131,7 @@ class NamedGraph:
         context_response = requests.get(self.graphdb_info.statements_url,
                                         params={"infer": "false", "context": self.uri, "Accept": "text/turtle"},
                                         auth=(self.graphdb_info.username, self.graphdb_info.password))
+        context_response.raise_for_status()
         downloaded_file_path = download_dir + "/" + self.filename
 
         with open(downloaded_file_path, "wb") as downloaded_file:
@@ -202,6 +203,7 @@ class Repository:
 
         contexts_response = requests.get(self.graphdb_info.contexts_url,
                                          auth=(self.graphdb_info.username, self.graphdb_info.password))
+        contexts_response.raise_for_status()
         contexts = contexts_response.text.splitlines()
 
         if contexts[0] != "contextID":
@@ -270,6 +272,21 @@ class Repository:
 
         print("Uploaded named graphs.")
 
+    def update_lucene_index(self):
+        print("Updating Lucene index...")
+
+        sparql = """
+            PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
+            INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
+        """
+
+        update_lucene_index_response = requests.post(self.graphdb_info.statements_url,
+                                                     headers={"Content-Type": "application/sparql-update"},
+                                                     auth=(self.graphdb_info.username, self.graphdb_info.password),
+                                                     data=sparql)
+        update_lucene_index_response.raise_for_status()
+        print("Updated Lucene index.")
+
 
 # Given an IRI, returns a tuple containing the namespace and the local name. If there is
 # no local name, the second item of the tuple is None.
@@ -306,6 +323,7 @@ def update_repository(graphdb_info, download_dir, upload_dir):
     repository.transform(download_dir=download_dir, upload_dir=upload_dir)
     repository.empty()
     repository.upload(upload_dir)
+    repository.update_lucene_index()
     elapsed = time.time() - start
     print("Update complete. Elapsed time: {}.".format(str(timedelta(seconds=elapsed))))
 
