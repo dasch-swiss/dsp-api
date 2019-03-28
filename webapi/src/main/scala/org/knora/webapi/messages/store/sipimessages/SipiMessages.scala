@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.store.sipimessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.SipiException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import spray.json._
 
