@@ -23,11 +23,13 @@
 #######################################################################################
 
 
-import requests
+import os
+import tempfile
 import argparse
 import getpass
+import requests
 import rdflib
-from rdflib.namespace import RDF
+from rdflib.namespace import RDF, XSD
 
 
 class UpdateException(Exception):
@@ -35,20 +37,192 @@ class UpdateException(Exception):
         self.message = message
 
 
-# The property types used in knora-admin.
-property_types = {
-    "http://www.w3.org/2002/07/owl#ObjectProperty",
-    "http://www.w3.org/2002/07/owl#DatatypeProperty",
-    "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
-}
-
 knora_base_context = "http://www.knora.org/ontology/knora-base"
-knora_base_namespace = knora_base_context + "#"
+has_permissions = rdflib.URIRef("http://www.knora.org/ontology/knora-base#hasPermissions")
 knora_admin_context = "http://www.knora.org/ontology/knora-admin"
-knora_admin_namespace = knora_admin_context + "#"
+knora_ontologies_dir = "../../knora-ontologies"
 
-knora_admin_properties = []
-knora_admin_objects = []
+
+class GraphDBInfo:
+    def __init__(self, graphdb_host, repository, username, password):
+        self.graphdb_url = "http://{}:7200/repositories/{}".format(graphdb_host, repository)
+        self.contexts_url = self.graphdb_url + "/contexts"
+        self.statements_url = self.graphdb_url + "/statements"
+        self.username = username
+        self.password = password
+
+
+class KnoraAdminInfo:
+    def __init__(self):
+        # The property types used in knora-admin.
+        property_types = {
+            "http://www.w3.org/2002/07/owl#ObjectProperty",
+            "http://www.w3.org/2002/07/owl#DatatypeProperty",
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"
+        }
+
+        # Read knora-admin.
+        knora_admin_graph = rdflib.Graph()
+        knora_admin_graph.parse(knora_ontologies_dir + "/knora-admin.ttl", format="turtle")
+
+        self.properties = []
+        self.objects = []
+
+        # Iterate over all the statements in knora-admin.
+        for subject, predicate, obj in knora_admin_graph:
+            # Is this a statement about an ontology entity?
+            subj_namespace, subj_name = split_namespace_and_local_name(subject)
+
+            if subj_name is not None:
+                # Is the predicate rdf:type?
+                if predicate == RDF.type:
+                    # Yes. Is the object a property type?
+                    if str(obj) in property_types:
+                        # Yes. Collect the subject as a property IRI.
+                        self.properties.append(subj_name)
+                    elif subject.__class__.__name__ == "URIRef":
+                        # The object isn't a property type, and the subject is an IRI (not a blank node).
+                        # Collect the subject as a non-property IRI that can be used as an object in data.
+                        self.objects.append(subj_name)
+
+
+class NamedGraph:
+    def __init__(self, context, graphdb_info, filename=None):
+        self.context = context
+        self.uri = "<" + context + ">"
+        self.graphdb_info = graphdb_info
+
+        if filename is not None:
+            self.filename = filename
+        else:
+            self.filename = context.translate({ord(c): None for c in "/:"}) + ".ttl"
+
+    def download(self, download_dir):
+        print("Downloading named graph {}...".format(self.context))
+        context_response = requests.get(self.graphdb_info.statements_url,
+                                        params={"infer": "false", "context": self.uri, "Accept": "text/turtle"},
+                                        auth=(self.graphdb_info.username, self.graphdb_info.password))
+        downloaded_file_path = download_dir + "/" + self.filename
+
+        with open(downloaded_file_path, "wb") as downloaded_file:
+            for chunk in context_response.iter_content(chunk_size=1024):
+                downloaded_file.write(chunk)
+
+        print("Downloaded named graph {}".format(self.context))
+
+    def transform(self, knora_admin_info, download_dir, upload_dir):
+        print("Transforming named graph {}...".format(self.context))
+        input_file_path = download_dir + "/" + self.filename
+        input_graph = rdflib.Graph()
+        input_graph.parse(input_file_path, format="turtle")
+
+        output_file_path = upload_dir + "/" + self.filename
+        output_graph = rdflib.Graph()
+
+        for subj, pred, obj in input_graph:
+            if pred == has_permissions:
+                transformed_string = str(obj).replace(old="knora-base", new="knora-admin")
+                transformed_obj = rdflib.Literal(transformed_string, datatype=XSD.string)
+                output_graph.add((subj, pred, transformed_obj))
+            else:
+                transformed_pred = transform_entity(pred, knora_admin_info.properties)
+                transformed_obj = transform_entity(obj, knora_admin_info.objects)
+                output_graph.add((subj, transformed_pred, transformed_obj))
+
+        output_graph.serialize(destination=output_file_path, format="turtle")
+        print("Transformed named graph {}".format(self.context))
+
+    def upload(self, upload_dir):
+        print("Uploading named graph {}...".format(self.context))
+        upload_file_path = upload_dir + "/" + self.filename
+
+        with open(upload_file_path, "r") as file_to_upload:
+            file_content = file_to_upload.read()
+
+        upload_response = requests.post(self.graphdb_info.statements_url,
+                                        params={"context": self.uri},
+                                        headers={"Content-Type": "text/turtle"},
+                                        auth=(self.graphdb_info.username, self.graphdb_info.password),
+                                        data=file_content)
+
+        upload_response.raise_for_status()
+        print("Uploaded named graph {}".format(self.context))
+
+
+class Repository:
+    def __init__(self, graphdb_info):
+        self.graphdb_info = graphdb_info
+        self.named_graphs = []
+
+    def download(self, download_dir):
+        print("Downloading named graphs...")
+
+        contexts_response = requests.get(self.graphdb_info.contexts_url,
+                                         auth=(self.graphdb_info.username, self.graphdb_info.password))
+        contexts = contexts_response.text.splitlines()
+
+        if contexts[0] != "contextID":
+            raise UpdateException("Unexpected response from GraphDB: " + contexts_response.text)
+
+        contexts.pop(0)
+
+        for context in contexts:
+            if not (context == knora_base_context):
+                named_graph = NamedGraph(context=context, graphdb_info=self.graphdb_info)
+                named_graph.download(download_dir)
+                self.named_graphs.append(named_graph)
+
+        print("Downloaded named graphs to", download_dir)
+
+    def transform(self, download_dir, upload_dir):
+        print("Transforming downloaded data...")
+
+        knora_admin_info = KnoraAdminInfo()
+
+        for named_graph in self.named_graphs:
+            named_graph.transform(
+                knora_admin_info=knora_admin_info,
+                download_dir=download_dir,
+                upload_dir=upload_dir
+            )
+
+        print("Wrote transformed data to " + upload_dir)
+
+    def empty(self):
+        print("Emptying repository...")
+        drop_all_response = requests.post(self.graphdb_info.statements_url,
+                                          headers={"Content-Type": "application/sparql-update"},
+                                          auth=(self.graphdb_info.username, self.graphdb_info.password),
+                                          data="DROP ALL")
+        drop_all_response.raise_for_status()
+        print("Emptied repository.")
+
+    def upload(self, upload_dir):
+        print("Uploading named graphs...")
+
+        # Upload the new knora-admin and knora-base ontologies.
+
+        knora_admin_named_graph = NamedGraph(
+            context=knora_admin_context,
+            graphdb_info=self.graphdb_info,
+            filename="knora-admin.ttl"
+        )
+
+        knora_base_named_graph = NamedGraph(
+            context=knora_base_context,
+            graphdb_info=self.graphdb_info,
+            filename="knora-base.ttl"
+        )
+
+        knora_admin_named_graph.upload(knora_ontologies_dir)
+        knora_base_named_graph.upload(knora_ontologies_dir)
+
+        # Upload the transformed named graphs.
+
+        for named_graph in self.named_graphs:
+            named_graph.upload(upload_dir)
+
+        print("Uploaded named graphs.")
 
 
 def split_namespace_and_local_name(entity):
@@ -56,49 +230,15 @@ def split_namespace_and_local_name(entity):
     hash_pos = entity_str.rfind("#")
 
     if hash_pos != -1:
-        return entity_str[:hash_pos], entity_str[hash_pos + 1:len(entity_str)]
+        return entity_str[:hash_pos + 1], entity_str[hash_pos + 1:len(entity_str)]
     else:
         return entity_str, None
 
 
-# Read knora-base and knora-admin.
-def get_knora_admin_info():
-    # Read knora-admin.
-    knora_admin_graph = rdflib.Graph()
-    knora_admin_graph.parse("../../knora-ontologies/knora-admin.ttl", format="turtle")
-
-    # Iterate over all the statements in knora-admin.
-    for subject, predicate, obj in knora_admin_graph:
-        # Is this a statement about an ontology entity?
-        subj_namespace, subj_name = split_namespace_and_local_name(subject)
-
-        if subj_name is not None:
-            # Is the predicate rdf:type?
-            if predicate == RDF.type:
-                # Yes. Is the object a property type?
-                if str(obj) in property_types:
-                    # Yes. Collect the subject as a property IRI.
-                    knora_admin_properties.append(subj_name)
-                elif subject.__class__.__name__ == "URIRef":
-                    # The object isn't a property type, and the subject is an IRI (not a blank node).
-                    # Collect the subject as a non-property IRI that can be used as an object in data.
-                    knora_admin_objects.append(subj_name)
-
-
-def download_repository(graphdb_url, username, password):
-    contexts_response = requests.get(graphdb_url + "/contexts", params={"infer": "false"})
-    contexts_response_list = contexts_response.text.splitlines()
-
-    if contexts_response_list[0] != "contextID":
-        raise UpdateException("Unexpected response from GraphDB: " + contexts_response.text)
-
-    contexts = contexts_response_list.pop(0)
-
-    for context in contexts:
-        print(context)
-
-
 def transform_entity(entity, local_name_list):
+    knora_base_namespace = knora_base_context + "#"
+    knora_admin_namespace = knora_admin_context + "#"
+
     if entity.__class__.__name__ == "URIRef":
         namespace, local_name = split_namespace_and_local_name(entity)
 
@@ -110,12 +250,13 @@ def transform_entity(entity, local_name_list):
         return entity
 
 
-def update_repository(graphdb_url, username, password):
-    download_repository(
-        graphdb_url=graphdb_url,
-        username=args.username,
-        password=password
-    )
+def update_repository(graphdb_info, download_dir, upload_dir):
+    repository = Repository(graphdb_info)
+    repository.download(download_dir)
+    repository.transform(download_dir=download_dir, upload_dir=upload_dir)
+    repository.empty()
+    repository.upload(upload_dir)
+    print("Update complete.")
 
 
 # Command-line invocation.
@@ -142,17 +283,30 @@ def main():
     if not repository:
         repository = defaut_repository
 
-    graphdb_url = "http://{}:7200/repositories/{}".format(graphdb_host, repository)
-
     password = args.password
 
     if not password:
         password = getpass.getpass()
 
-    update_repository(
-        graphdb_url=graphdb_url,
+    graphdb_info = GraphDBInfo(
+        graphdb_host=graphdb_host,
+        repository=repository,
         username=args.username,
         password=password
+    )
+
+    temp_dir = tempfile.mkdtemp()
+    print("Using temporary directory", temp_dir)
+
+    download_dir = temp_dir + "/download"
+    upload_dir = temp_dir + "/upload"
+    os.mkdir(download_dir)
+    os.mkdir(upload_dir)
+
+    update_repository(
+        graphdb_info=graphdb_info,
+        download_dir=download_dir,
+        upload_dir=upload_dir
     )
 
 
