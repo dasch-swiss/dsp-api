@@ -37,14 +37,32 @@ class UpdateException(Exception):
         self.message = message
 
 
+# The directory in the Knora source tree where built-in Knora ontologies are stored.
 knora_ontologies_dir = "../../knora-ontologies"
+
+# The filename of the knora-base ontology.
+knora_base_filename = "knora-base.ttl"
+
+# The context of the named graph containing the knora-base ontology.
 knora_base_context = "http://www.knora.org/ontology/knora-base"
-knora_admin_context = "http://www.knora.org/ontology/knora-admin"
+
+# The namespace of the knora-base ontology.
 knora_base_namespace = knora_base_context + "#"
+
+# T/he filename of the knora-admin ontology.
+knora_admin_filename = "knora-admin.ttl"
+
+# The context of the named graph containing the knora-admin ontology.
+knora_admin_context = "http://www.knora.org/ontology/knora-admin"
+
+# The namespace of the knora-admin ontology.
 knora_admin_namespace = knora_admin_context + "#"
+
+# The IRI of the property knora-base:hasPermissions.
 has_permissions = rdflib.URIRef("http://www.knora.org/ontology/knora-base#hasPermissions")
 
 
+# Represents information about a GraphDB repository.
 class GraphDBInfo:
     def __init__(self, graphdb_host, repository, username, password):
         self.graphdb_url = "http://{}:7200/repositories/{}".format(graphdb_host, repository)
@@ -54,6 +72,11 @@ class GraphDBInfo:
         self.password = password
 
 
+# Represents the names of the entities in the knora-admin ontology. There are two kinds of
+# entities:
+#
+# - properties
+# - objects (anything that can be the object of a property)
 class KnoraAdminInfo:
     def __init__(self):
         # The property types used in knora-admin.
@@ -88,6 +111,7 @@ class KnoraAdminInfo:
                         self.objects.append(subj_name)
 
 
+# Represents a named graph.
 class NamedGraph:
     def __init__(self, context, graphdb_info, filename=None):
         self.context = context
@@ -99,6 +123,7 @@ class NamedGraph:
         else:
             self.filename = context.translate({ord(c): None for c in "/:"}) + ".ttl"
 
+    # Downloads the named graph from the repository to a file in download_dir.
     def download(self, download_dir):
         print("Downloading named graph {}...".format(self.context))
         context_response = requests.get(self.graphdb_info.statements_url,
@@ -110,26 +135,30 @@ class NamedGraph:
             for chunk in context_response.iter_content(chunk_size=1024):
                 downloaded_file.write(chunk)
 
+    # Transforms the named graph, writing the output to a file in upload_dir.
     def transform(self, knora_admin_info, download_dir, upload_dir):
-        print("Transforming named graph {}...".format(self.context))
+        print("Parsing input file for named graph {}...".format(self.context))
         input_file_path = download_dir + "/" + self.filename
         input_graph = rdflib.Graph()
-        print("Parsing input file...")
         input_graph.parse(input_file_path, format="turtle")
         graph_size = len(input_graph)
-        print("Number of statements:", graph_size)
 
+        print("Transforming {} statements...".format(graph_size))
         output_file_path = upload_dir + "/" + self.filename
         output_graph = rdflib.Graph()
-
         statement_count = 0
 
+        # Iterate over the statements in input_graph, transform them, and add the transformed
+        # statements to output_graph.
         for subj, pred, obj in input_graph:
+            # Is the predicate knora-base:hasPermissions?
             if pred == has_permissions:
+                # Yes. Replace knora-base with knora-admin in the object.
                 transformed_string = str(obj).replace("knora-base", "knora-admin")
                 transformed_obj = rdflib.Literal(transformed_string, datatype=XSD.string)
                 output_graph.add((subj, pred, transformed_obj))
             else:
+                # No. Transform the predicate and/or object if necessary.
                 transformed_pred = transform_entity(pred, knora_admin_info.properties)
                 transformed_obj = transform_entity(obj, knora_admin_info.objects)
                 output_graph.add((subj, transformed_pred, transformed_obj))
@@ -142,6 +171,7 @@ class NamedGraph:
         print("Writing transformed file...")
         output_graph.serialize(destination=output_file_path, format="turtle")
 
+    # Uploads the transformed file from upload_dir to the repository.
     def upload(self, upload_dir):
         print("Uploading named graph {}...".format(self.context))
         upload_file_path = upload_dir + "/" + self.filename
@@ -158,11 +188,13 @@ class NamedGraph:
         upload_response.raise_for_status()
 
 
+# Represents a repository.
 class Repository:
     def __init__(self, graphdb_info):
         self.graphdb_info = graphdb_info
         self.named_graphs = []
 
+    # Downloads the repository, saving the named graphs in files in download_dir.
     def download(self, download_dir):
         print("Downloading named graphs...")
 
@@ -183,6 +215,7 @@ class Repository:
 
         print("Downloaded named graphs to", download_dir)
 
+    # Transforms the named graphs, saving the output in files in upload_dir.
     def transform(self, download_dir, upload_dir):
         print("Transforming downloaded data...")
 
@@ -197,6 +230,7 @@ class Repository:
 
         print("Wrote transformed data to " + upload_dir)
 
+    # Deletes the contents of the repository.
     def empty(self):
         print("Emptying repository...")
         drop_all_response = requests.post(self.graphdb_info.statements_url,
@@ -206,6 +240,7 @@ class Repository:
         drop_all_response.raise_for_status()
         print("Emptied repository.")
 
+    # Uploads the transformed data to the repository.
     def upload(self, upload_dir):
         print("Uploading named graphs...")
 
@@ -214,13 +249,13 @@ class Repository:
         knora_admin_named_graph = NamedGraph(
             context=knora_admin_context,
             graphdb_info=self.graphdb_info,
-            filename="knora-admin.ttl"
+            filename=knora_admin_filename
         )
 
         knora_base_named_graph = NamedGraph(
             context=knora_base_context,
             graphdb_info=self.graphdb_info,
-            filename="knora-base.ttl"
+            filename=knora_base_filename
         )
 
         knora_admin_named_graph.upload(knora_ontologies_dir)
@@ -234,6 +269,8 @@ class Repository:
         print("Uploaded named graphs.")
 
 
+# Given an IRI, returns a tuple containing the namespace and the local name. If there is
+# no local name, the second item of the tuple is None.
 def split_namespace_and_local_name(entity):
     entity_str = str(entity)
     hash_pos = entity_str.rfind("#")
@@ -244,6 +281,9 @@ def split_namespace_and_local_name(entity):
         return entity_str, None
 
 
+# If the specified entity is an IRI in the knora-base namespace and its local name is
+# in local_name_list, returns the equivalent IRI in the knora-admin namespace.
+# Otherwise, returns the entity unchanged.
 def transform_entity(entity, local_name_list):
     if entity.__class__.__name__ == "URIRef":
         namespace, local_name = split_namespace_and_local_name(entity)
@@ -256,6 +296,7 @@ def transform_entity(entity, local_name_list):
         return entity
 
 
+# Updates a repository.
 def update_repository(graphdb_info, download_dir, upload_dir):
     repository = Repository(graphdb_info)
     repository.download(download_dir)
