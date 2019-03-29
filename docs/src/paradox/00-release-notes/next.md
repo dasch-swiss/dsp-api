@@ -15,3 +15,9 @@ Also, please change the **HINT** to the appropriate level:
 ## HINT => MAJOR CHANGE
 
 - FIX: Unescape standoff string attributes when verifying text value update (@github[#1242](#1242))
+
+- FEATURE: Remove persistent map code (@github[#1254](#1254))
+
+- FEATURE: Return user's permission on resources and values (@github[#1257](#1257))
+
+- FEATURE: Get resources in a particular class from a project (@github[#1251](#1251))

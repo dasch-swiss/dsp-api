@@ -137,7 +137,6 @@ object GravsearchQueryChecker {
     val forbiddenPredicates: Set[IRI] = Set(
         OntologyConstants.Rdfs.Label,
         OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser,
-        OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject,
         OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions,
         OntologyConstants.KnoraApiV2WithValueObjects.CreationDate,
         OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
