@@ -36,8 +36,8 @@ import org.knora.webapi.store.SipiConnectorActorName
 import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
 import org.knora.webapi.util._
+import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 

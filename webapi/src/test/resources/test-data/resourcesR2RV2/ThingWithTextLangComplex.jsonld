@@ -9,6 +9,7 @@
     },
     "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
     "knora-api:textValueHasLanguage" : "fr",
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueAsString" : "Bonjour",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
@@ -30,6 +31,7 @@
     "@value" : "2016-03-02T15:05:10Z"
   },
   "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+  "knora-api:userHasPermission" : "V",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB.20160302T150510Z"

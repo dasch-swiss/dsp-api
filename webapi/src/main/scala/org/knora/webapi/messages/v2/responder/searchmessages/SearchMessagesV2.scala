@@ -131,3 +131,17 @@ case class ResourceCountV2(numberOfResources: Int) extends KnoraResponseV2 {
         )
     }
 }
+
+/**
+  * Requests resources of the specified class from the specified project.
+  *
+  * @param projectIri      the IRI of the project.
+  * @param resourceClass   the IRI of the resource class, in the complex schema.
+  * @param orderByProperty the IRI of the property that the resources are to be ordered by, in the complex schema.
+  * @param page            the page number of the results page to be returned.
+  */
+case class SearchResourcesByProjectAndClassRequestV2(projectIri: SmartIri,
+                                                     resourceClass: SmartIri,
+                                                     orderByProperty: Option[SmartIri],
+                                                     page: Int,
+                                                     requestingUser: UserADM) extends SearchResponderRequestV2
