@@ -19,8 +19,8 @@
 
 package org.knora.webapi.util.clientapi
 
-case class ClientApiClass(filename: String, sourceCode: String)
+case class ClientClassSourceCode(filename: String, sourceCode: String)
 
 trait GeneratorBackEnd {
-    def generateClass(classDefinition: ClassDefinition): ClientApiClass
+    def generateClass(clientClassDefinition: ClientClassDefinition): ClientClassSourceCode
 }

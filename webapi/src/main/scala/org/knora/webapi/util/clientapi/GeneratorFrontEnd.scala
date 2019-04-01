@@ -19,6 +19,124 @@
 
 package org.knora.webapi.util.clientapi
 
-class GeneratorFrontEnd(baseApiUrl: String) {
+import org.knora.webapi.messages.v2.responder.ontologymessages.{ReadClassInfoV2, ReadPropertyInfoV2}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.{DataConversionException, InconsistentTriplestoreDataException, OntologyConstants}
 
+class GeneratorFrontEnd(baseApiUrl: String) {
+    def ontologyClassDef2ClientClassDef(ontologyClassDef: ReadClassInfoV2, ontologyPropertyDefs: Map[SmartIri, ReadPropertyInfoV2]): ClientClassDefinition = {
+        if (ontologyClassDef.isResourceClass) {
+            ontologyResourceClassDef2ClientClassDef(ontologyClassDef, ontologyPropertyDefs)
+        } else {
+            ontologyNonResourceClassDef2ClientClassDef(ontologyClassDef, ontologyPropertyDefs)
+        }
+    }
+
+    private def ontologyResourceClassDef2ClientClassDef(ontologyClassDef: ReadClassInfoV2, ontologyPropertyDefs: Map[SmartIri, ReadPropertyInfoV2]): ClientClassDefinition = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val propIrisWithoutLinkProps = ontologyClassDef.allCardinalities.keySet -- ontologyClassDef.linkProperties
+
+        val clientPropertyDefs: Vector[ClientPropertyDefinition] = ontologyClassDef.allCardinalities.filterKeys(propIrisWithoutLinkProps).map {
+            case (propertyIri, knoraCardinalityInfo) =>
+                if (propertyIri.isKnoraEntityIri) {
+                    val ontologyPropertyDef = ontologyPropertyDefs(propertyIri)
+                    val ontologyObjectType: SmartIri = ontologyPropertyDef.entityInfoContent.requireIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-api:objectType"))
+
+                    if (ontologyPropertyDef.isResourceProp) {
+                        val clientObjectType: ClientObjectType = if (ontologyClassDef.linkValueProperties.contains(propertyIri)) {
+                            ClientLinkValue(ontologyObjectType)
+                        } else {
+                            resourcePropObjectTypeToClientObjectType(ontologyObjectType)
+                        }
+
+                        ClientPropertyDefinition(
+                            propertyIri = propertyIri,
+                            objectType = clientObjectType,
+                            cardinality = knoraCardinalityInfo.cardinality,
+                            isEditable = ontologyPropertyDef.isEditable
+                        )
+                    } else {
+                        ClientPropertyDefinition(
+                            propertyIri = propertyIri,
+                            objectType = nonResourcePropObjectTypeToClientObjectType(ontologyObjectType),
+                            cardinality = knoraCardinalityInfo.cardinality,
+                            isEditable = ontologyPropertyDef.isEditable
+                        )
+                    }
+                } else {
+                    ClientPropertyDefinition(
+                        propertyIri = propertyIri,
+                        objectType = ClientStringLiteral,
+                        cardinality = knoraCardinalityInfo.cardinality,
+                        isEditable = propertyIri.toString == OntologyConstants.Rdfs.Label // Labels of resources are editable
+                    )
+                }
+        }.toVector.sortBy(_.propertyIri)
+
+        ClientClassDefinition(ontologyClassDef.entityInfoContent.classIri, clientPropertyDefs)
+    }
+
+    private def ontologyNonResourceClassDef2ClientClassDef(ontologyClassDef: ReadClassInfoV2, ontologyPropertyDefs: Map[SmartIri, ReadPropertyInfoV2]): ClientClassDefinition = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val clientPropertyDefs = ontologyClassDef.allCardinalities.map {
+            case (propertyIri, knoraCardinalityInfo) =>
+                if (propertyIri.isKnoraEntityIri) {
+                    val ontologyPropertyDef = ontologyPropertyDefs(propertyIri)
+                    val ontologyObjectType: SmartIri = ontologyPropertyDef.entityInfoContent.requireIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-api:objectType"))
+
+                    ClientPropertyDefinition(
+                        propertyIri = propertyIri,
+                        objectType = nonResourcePropObjectTypeToClientObjectType(ontologyObjectType),
+                        cardinality = knoraCardinalityInfo.cardinality,
+                        isEditable = true
+                    )
+                } else {
+                    ClientPropertyDefinition(
+                        propertyIri = propertyIri,
+                        objectType = ClientStringLiteral,
+                        cardinality = knoraCardinalityInfo.cardinality,
+                        isEditable = true
+                    )
+                }
+        }.toVector.sortBy(_.propertyIri)
+
+        ClientClassDefinition(ontologyClassDef.entityInfoContent.classIri, clientPropertyDefs)
+    }
+
+    private def resourcePropObjectTypeToClientObjectType(ontologyObjectType: SmartIri): ClientObjectType = {
+        ontologyObjectType.toString match {
+            case OntologyConstants.KnoraApiV2WithValueObjects.TextValue => ClientTextValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.IntValue => ClientIntValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue => ClientDecimalValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue => ClientBooleanValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.DateValue => ClientDateValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.GeomValue => ClientGeomValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue => ClientIntervalValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.ListValue => ClientListValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.UriValue => ClientUriValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue => ClientGeonameValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.ColorValue => ClientColorValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue => ClientStillImageFileValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue => ClientMovingImageFileValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue => ClientAudioFileValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.DDDFileValue => ClientDDDFileValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.TextFileValue => ClientTextFileValue
+            case OntologyConstants.KnoraApiV2WithValueObjects.DocumentFileValue => ClientDocumentFileValue
+            case _ => throw DataConversionException(s"Unexpected value type: $ontologyObjectType")
+        }
+    }
+
+    private def nonResourcePropObjectTypeToClientObjectType(ontologyObjectType: SmartIri): ClientObjectType = {
+        ontologyObjectType.toString match {
+            case OntologyConstants.Xsd.String => ClientStringLiteral
+            case OntologyConstants.Xsd.Boolean => ClientBooleanLiteral
+            case OntologyConstants.Xsd.Integer => ClientIntegerLiteral
+            case OntologyConstants.Xsd.Decimal => ClientDecimalLiteral
+            case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => ClientDateTimeStampLiteral
+            case _ => ClientIriLiteral(ontologyObjectType)
+        }
+    }
 }

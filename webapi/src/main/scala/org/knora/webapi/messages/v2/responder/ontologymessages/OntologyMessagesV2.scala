@@ -23,7 +23,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.{ActorRef}
+import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.apache.commons.lang3.builder.HashCodeBuilder

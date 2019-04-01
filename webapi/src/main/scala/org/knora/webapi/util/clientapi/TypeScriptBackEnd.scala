@@ -20,5 +20,5 @@
 package org.knora.webapi.util.clientapi
 
 class TypeScriptBackEnd extends GeneratorBackEnd {
-    def generateClass(classDefinition: ClassDefinition): ClientApiClass = ???
+    def generateClass(classDefinition: ClientClassDefinition): ClientClassSourceCode = ???
 }
