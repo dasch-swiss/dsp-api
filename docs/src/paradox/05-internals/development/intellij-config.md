@@ -29,10 +29,17 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ![screenshot 'Install Scala Plugin'](figures/install-scala-plugin.png)
 
-  - Import the `webapi` directory in the Knora source tree: `Import
+  - Import the root "Knora" directory from the source tree: `Import
     Project` -\> Choose the option `module SBT`
 
 ![screenshot 'import existing SBT project'](figures/import-from-sbt.png)
+
+  - SBT project configuration:
+![screenshot 'import SBT configuration'](figures/sbt-config.png)
+
+  - IntelliJ's window after the import is finished:
+
+![screenshot 'IntelliJ windows after import'](figures/intellij-after-import.png)
 
   - make sure that the tab size is set correctly to **4 spaces** (so you
     can use automatic code reformatting): `Preferences -> Code Style ->
@@ -57,11 +64,9 @@ correctly resolve the references to the template files.
 
 Fill in the configuration details:
 
-![screenshot 'change application
-configuration'](figures/app-config-setup.png)
+![screenshot 'change application configuration'](figures/app-config-setup.png)
 
-  - Click on the debugging symbol to start the application with a
-    debugger attached
+  - Click on the debugging symbol to start the application with a debugger attached:
 
 ![screenshot 'debug'](figures/debug.png)
 
