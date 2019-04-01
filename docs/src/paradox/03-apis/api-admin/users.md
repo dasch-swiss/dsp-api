@@ -22,6 +22,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ## Endpoint Overview
 
 **User Operations:**
+
 - `GET: /admin/users` : return all users
 - `GET: /admin/users/[iri | email | username]/<identifier>` : return single user identified by [IRI | email | username]
 - `POST: /admin/users/` : create new user
