@@ -97,10 +97,10 @@ triplestore.
 ### Creating and running the WEBAPI Server distribution package
 
 To create a deployment package for the WEBAPI Server, please run from
-inside the `knora/webapi` folder the following commands:
+inside the top level `knora` folder the following commands:
 
-    $ sbt stage
-    $ cd target/universal/stage
+    $ sbt webapi/stage
+    $ cd webapi/target/universal/stage
     $ ./bin/webapi -J-Xms1G J-Xmx1G
 
 ### Downloading and running Sipi

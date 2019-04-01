@@ -116,24 +116,24 @@ case class ChangeUserApiRequestADM(username: Option[String] = None,
     // change password case
     if (requesterPassword.isDefined || newPassword.isDefined) {
         if (parametersCount > 2) {
-            throw BadRequestException("To many parameters sent for password change.")
+            throw BadRequestException("Too many parameters sent for password change.")
         } else if (parametersCount < 2) {
-            throw BadRequestException("To few parameters sent for password change.")
+            throw BadRequestException("Too few parameters sent for password change.")
         }
     }
 
     // change status case
     if (status.isDefined) {
-        if (parametersCount > 1) throw BadRequestException("To many parameters sent for user status change.")
+        if (parametersCount > 1) throw BadRequestException("Too many parameters sent for user status change.")
     }
 
     // change system admin membership case
     if (systemAdmin.isDefined) {
-        if (parametersCount > 1) throw BadRequestException("To many parameters sent for system admin membership change.")
+        if (parametersCount > 1) throw BadRequestException("Too many parameters sent for system admin membership change.")
     }
 
     // change basic user information case
-    if (parametersCount > 5) throw BadRequestException("To many parameters sent for basic user information change.")
+    if (parametersCount > 5) throw BadRequestException("Too many parameters sent for basic user information change.")
 
     def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
 }
@@ -834,37 +834,37 @@ case class UserUpdatePayloadADM(username: Option[String] = None,
 
     // change password case
     if (password.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for password change.")
+        throw BadRequestException("Too many parameters sent for password change.")
     }
 
     // change status case
     if (status.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for user status change.")
+        throw BadRequestException("Too many parameters sent for user status change.")
     }
 
     // change system admin membership case
     if (systemAdmin.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for system admin membership change.")
+        throw BadRequestException("Too many parameters sent for system admin membership change.")
     }
 
     // change project memberships
     if (projects.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for project membership change.")
+        throw BadRequestException("Too many parameters sent for project membership change.")
     }
 
     // change projectAdmin memberships
     if (projectsAdmin.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for projectAdmin membership change.")
+        throw BadRequestException("Too many parameters sent for projectAdmin membership change.")
     }
 
     // change group memberships
     if (groups.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for group membership change.")
+        throw BadRequestException("Too many parameters sent for group membership change.")
     }
 
     // change basic user information case
     if (parametersCount > 4) {
-        throw BadRequestException("To many parameters sent for basic user information change.")
+        throw BadRequestException("Too many parameters sent for basic user information change.")
     }
 
 }
