@@ -56,7 +56,7 @@ The tasks can be scoped by prefixing `salsah1/` or `webapi/`, e.g., to only run 
 for the `webapi` project, run:
 ```bash
 $ sbt webapi/docker:stage
-```` 
+```
 
 ## Running the Knora Stack (graphdb, webapi, salsah1, sipi)
 
@@ -77,6 +77,8 @@ The following SBT tasks are available:
 
 
 ## Building Documentation
+
+There are some prerequisites described in the [docs/Readme.md](https://github.com/dhlab-basel/Knora/blob/develop/docs/Readme.md).
 
 The complete Knora documentation site is built by invoking the following tasks:
 
