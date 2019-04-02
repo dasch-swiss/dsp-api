@@ -404,7 +404,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not create a non-shared ontology in the shared ontologies project" in {
             responderManager ! CreateOntologyRequestV2(
                 ontologyName = "misplaced",
-                projectIri = OntologyConstants.KnoraBase.DefaultSharedOntologiesProject.toSmartIri,
+                projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.toSmartIri,
                 label = "The invalid non-shared ontology",
                 apiRequestID = UUID.randomUUID,
                 requestingUser = SharedTestDataADM.superUser
@@ -420,7 +420,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a shared ontology" in {
             responderManager ! CreateOntologyRequestV2(
                 ontologyName = "chair",
-                projectIri = OntologyConstants.KnoraBase.DefaultSharedOntologiesProject.toSmartIri,
+                projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.toSmartIri,
                 isShared = true,
                 label = "a chaired ontology",
                 apiRequestID = UUID.randomUUID,

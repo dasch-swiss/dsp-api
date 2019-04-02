@@ -22,13 +22,14 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 @base <http://www.knora.org/ontology/salsah-gui> .
 
 <http://www.knora.org/ontology/salsah-gui> rdf:type owl:Ontology ;
 
     rdfs:label "The salsah-gui ontology"@en ;
 
-    knora-base:attachedToProject knora-base:SystemProject .
+    knora-base:attachedToProject knora-admin:SystemProject .
 
 
 #################################################################

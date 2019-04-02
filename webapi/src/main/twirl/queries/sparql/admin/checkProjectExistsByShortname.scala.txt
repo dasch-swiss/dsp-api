@@ -28,10 +28,10 @@
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 ASK {
-    ?s rdf:type knora-base:knoraProject .
-    ?s knora-base:projectShortname "@shortname"^^xsd:string .
+    ?s rdf:type knora-admin:knoraProject .
+    ?s knora-admin:projectShortname "@shortname"^^xsd:string .
 }
 

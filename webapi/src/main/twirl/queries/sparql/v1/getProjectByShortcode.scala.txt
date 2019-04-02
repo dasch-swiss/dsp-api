@@ -20,10 +20,10 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all information about a single project, given the project's knora-base:projectShortname.
+ * Gets all information about a single project, given the project's knora-admin:projectShortname.
  *
  * @param triplestore the name of the triplestore being used.
- * @param shortcode the project's `knora-base:projectShortcode`.
+ * @param shortcode the project's `knora-admin:projectShortcode`.
  *@
 @(triplestore: String,
   shortcode: String)
@@ -31,7 +31,7 @@
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 SELECT ?s ?p ?o
 @* Ensure that inference is not used in this query. *@
@@ -40,8 +40,8 @@ SELECT ?s ?p ?o
 }
 WHERE {
 
-    ?s rdf:type knora-base:knoraProject .
-    ?s knora-base:projectShortcode "@shortcode"^^xsd:string .
+    ?s rdf:type knora-admin:knoraProject .
+    ?s knora-admin:projectShortcode "@shortcode"^^xsd:string .
     ?s ?p ?o .
 
 }

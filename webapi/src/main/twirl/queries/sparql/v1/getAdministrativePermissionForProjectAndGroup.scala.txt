@@ -30,7 +30,7 @@
   groupIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 SELECT ?s ?p ?o
 
@@ -40,8 +40,8 @@ SELECT ?s ?p ?o
 }
 
 WHERE {
-    ?s rdf:type knora-base:AdministrativePermission .
-    ?s knora-base:forProject <@projectIri> .
-    ?s knora-base:forGroup <@groupIri> .
+    ?s rdf:type knora-admin:AdministrativePermission .
+    ?s knora-admin:forProject <@projectIri> .
+    ?s knora-admin:forGroup <@groupIri> .
     ?s ?p ?o .
 }

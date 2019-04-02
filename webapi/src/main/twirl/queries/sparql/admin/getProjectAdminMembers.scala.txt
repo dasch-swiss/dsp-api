@@ -34,9 +34,9 @@
   maybeShortcode: Option[String])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
-CONSTRUCT {?s knora-base:isInProjectAdminGroup ?project . }
+CONSTRUCT {?s knora-admin:isInProjectAdminGroup ?project . }
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
@@ -48,18 +48,18 @@ WHERE {
     }
 
     @if(maybeShortname.nonEmpty) {
-        ?project knora-base:projectShortname "@maybeShortname.get"^^xsd:string .
+        ?project knora-admin:projectShortname "@maybeShortname.get"^^xsd:string .
     }
 
     @if(maybeShortcode.nonEmpty) {
-        ?project knora-base:projectShortcode "@maybeShortcode.get"^^xsd:string .
+        ?project knora-admin:projectShortcode "@maybeShortcode.get"^^xsd:string .
     }
 
-    ?project rdf:type knora-base:knoraProject .
+    ?project rdf:type knora-admin:knoraProject .
 
-    ?s knora-base:isInProjectAdminGroup ?project .
+    ?s knora-admin:isInProjectAdminGroup ?project .
 
-    ?s rdf:type knora-base:User .
+    ?s rdf:type knora-admin:User .
 
     FILTER(!(?s = IRI("@KnoraSystemInstances.Users.AnonymousUser.id") || ?s = IRI("@KnoraSystemInstances.Users.SystemUser.id")))
 }
