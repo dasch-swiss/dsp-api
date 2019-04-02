@@ -7,7 +7,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:valueAsString" : "IBB_1_002758921_0001.tif"
   },
   "incunabula:pagenum" : {
@@ -16,7 +16,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
     "knora-api:valueAsString" : "Vorsatzblatt, recto"
   },
   "incunabula:partOfValue" : {
@@ -25,7 +25,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasTarget" : {
       "@id" : "http://rdfh.ch/b6b5ff1eb703",
       "@type" : "incunabula:book",
@@ -39,7 +39,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "rdfs:label" : "[Das] Narrenschiff (lat.)"
     }
   },
@@ -49,7 +49,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:intValueAsInt" : 1
   },
   "knora-api:attachedToProject" : {
@@ -62,7 +62,7 @@
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2016-03-02T15:05:47Z"
   },
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
   "knora-api:hasStillImageFileValue" : [ {
     "@id" : "http://rdfh.ch/7bbb8e59b703/values/22bc3f713f07",
     "@type" : "knora-api:StillImageFileValue",
@@ -75,7 +75,7 @@
     },
     "knora-api:fileValueHasFilename" : "incunabula_0000004159.jp2",
     "knora-api:fileValueIsPreview" : false,
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:stillImageFileValueHasDimX" : 3625,
     "knora-api:stillImageFileValueHasDimY" : 5251,
     "knora-api:stillImageFileValueHasIIIFBaseUrl" : {
@@ -94,7 +94,7 @@
     },
     "knora-api:fileValueHasFilename" : "incunabula_0000004159.jpg",
     "knora-api:fileValueIsPreview" : true,
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:stillImageFileValueHasDimX" : 88,
     "knora-api:stillImageFileValueHasDimY" : 128,
     "knora-api:stillImageFileValueHasIIIFBaseUrl" : {

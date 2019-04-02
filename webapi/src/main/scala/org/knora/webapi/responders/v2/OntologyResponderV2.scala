@@ -1464,6 +1464,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 throw BadRequestException(s"The standoff ontology is not available in the API v2 simple schema")
             }
 
+            ontology = cacheData.ontologies.get(ontologyIri.toOntologySchema(InternalSchema)) match {
+                case Some(cachedOntology) => cachedOntology
+                case None => throw NotFoundException(s"Ontology not found: $ontologyIri")
+            }
+
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
                 // Just the user's preferred language.
@@ -1472,7 +1477,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // All available languages.
                 None
             }
-        } yield cacheData.ontologies(ontologyIri.toOntologySchema(InternalSchema)).copy(
+        } yield ontology.copy(
             userLang = userLang
         )
     }
@@ -1593,12 +1598,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         }
 
                         if (!internalOntologyIri.isKnoraBuiltInDefinitionIri) {
-                            if (projectIri.toString == OntologyConstants.KnoraBase.SystemProject) {
-                                throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri cannot be in project ${OntologyConstants.KnoraBase.SystemProject}")
+                            if (projectIri.toString == OntologyConstants.KnoraAdmin.SystemProject) {
+                                throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri cannot be in project ${OntologyConstants.KnoraAdmin.SystemProject}")
                             }
 
-                            if (internalOntologyIri.isKnoraSharedDefinitionIri && projectIri.toString != OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
-                                throw InconsistentTriplestoreDataException(s"Shared ontology $internalOntologyIri must be in project ${OntologyConstants.KnoraBase.DefaultSharedOntologiesProject}")
+                            if (internalOntologyIri.isKnoraSharedDefinitionIri && projectIri.toString != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
+                                throw InconsistentTriplestoreDataException(s"Shared ontology $internalOntologyIri must be in project ${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}")
                             }
                         }
 
@@ -1651,13 +1656,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 }
 
                 // If this is a shared ontology, make sure it's in the default shared ontologies project.
-                _ = if (createOntologyRequest.isShared && createOntologyRequest.projectIri.toString != OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
-                    throw BadRequestException(s"Shared ontologies must be created in project <${OntologyConstants.KnoraBase.DefaultSharedOntologiesProject}>")
+                _ = if (createOntologyRequest.isShared && createOntologyRequest.projectIri.toString != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
+                    throw BadRequestException(s"Shared ontologies must be created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}>")
                 }
 
                 // If it's in the default shared ontologies project, make sure it's a shared ontology.
-                _ = if (createOntologyRequest.projectIri.toString == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject && !createOntologyRequest.isShared) {
-                    throw BadRequestException(s"Ontologies created in project <${OntologyConstants.KnoraBase.DefaultSharedOntologiesProject}> must be shared")
+                _ = if (createOntologyRequest.projectIri.toString == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject && !createOntologyRequest.isShared) {
+                    throw BadRequestException(s"Ontologies created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}> must be shared")
                 }
 
                 // Create the ontology.

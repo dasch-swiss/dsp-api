@@ -34,7 +34,7 @@
   maybeEmail: Option[String])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 CONSTRUCT { ?s ?p ?o . }
 @* Ensure that inference is not used in this query. *@
@@ -48,14 +48,14 @@ WHERE {
     }
 
     @if(maybeUsername.nonEmpty) {
-        ?s knora-base:username "@maybeUsername.get"^^xsd:string .
+        ?s knora-admin:username "@maybeUsername.get"^^xsd:string .
     }
 
     @if(maybeEmail.nonEmpty) {
-        ?s knora-base:email "@maybeEmail.get"^^xsd:string .
+        ?s knora-admin:email "@maybeEmail.get"^^xsd:string .
     }
 
-    ?s rdf:type knora-base:User .
+    ?s rdf:type knora-admin:User .
     ?s ?p ?o .
 
     FILTER(!(?s = IRI("@KnoraSystemInstances.Users.AnonymousUser.id") || ?s = IRI("@KnoraSystemInstances.Users.SystemUser.id")))

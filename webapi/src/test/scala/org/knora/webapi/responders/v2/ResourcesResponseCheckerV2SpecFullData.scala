@@ -5,8 +5,8 @@ import java.time.Instant
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.PermissionUtilADM._
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.date.{CalendarNameJulian, DatePrecisionYear}
 import org.knora.webapi.{InternalSchema, SharedTestDataADM}
 
@@ -16,7 +16,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
     val expectedReadResourceV2ForReiseInsHeiligelandWrong = ReadResourceV2(
         label = "Reise ins Heilige Land",
         resourceIri = "http://rdfh.ch/2a6221216701",
-        permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = ChangeRightsPermission,
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
@@ -32,7 +32,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueHasString = "Extent: 1 Bd.; Dimensions: f\u00B0"
                 ),
                 valueIri = "http://rdfh.ch/2a6221216701/values/e94fa8a09205",
-                permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -48,7 +48,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Van der Haegen I: 9,14"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/7b4a9bf89305",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -63,7 +63,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Goff M165"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/3e74ee319405",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -78,7 +78,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "C 3833"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/019e416b9405",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -93,7 +93,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Klebs 651.2"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/c4c794a49405",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -108,7 +108,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Schr 4799"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/87f1e7dd9405",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -123,7 +123,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Schramm XXI p. 9 & 26"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/4a1b3b179505",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -138,7 +138,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "FairMur(G) 283"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/0d458e509505",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -153,7 +153,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "IBP 3556"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/d06ee1899505",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -168,7 +168,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Borm 1751"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/939834c39505",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -184,7 +184,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueHasString = "Bernhard Richel"
                 ),
                 valueIri = "http://rdfh.ch/2a6221216701/values/dda85bbb9105",
-                permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -199,7 +199,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueHasString = "Jean Mandeville"
                 ),
                 valueIri = "http://rdfh.ch/2a6221216701/values/1a7f08829105",
-                permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser",
+                permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser",
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -214,7 +214,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueHasString = "Katalogaufnahme anhand ISTC und v.d.Haegen"
                 ),
                 valueIri = "http://rdfh.ch/2a6221216701/values/56c287fc9505",
-                permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -229,7 +229,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueHasString = "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"
                 ),
                 valueIri = "http://rdfh.ch/2a6221216701/values/f89173afca2704",
-                permissions = "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                permissions = "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -245,7 +245,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "deutsch von Otto von Diemeringen"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/ac79fbd99205",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -260,7 +260,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Rubr. mit Init. J zu Beginn"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/6fa34e139305",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -275,7 +275,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Holzschnitte nicht koloriert"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/32cda14c9305",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -290,7 +290,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Besitzervermerke: Kartause, H. Zscheckenb\u00FCrlin"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/f5f6f4859305",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -305,7 +305,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/b82048bf9305",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -321,7 +321,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueHasString = "Basel UB, Sign: Aleph D III 13:1"
                 ),
                 valueIri = "http://rdfh.ch/2a6221216701/values/262655679205",
-                permissions = "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                permissions = "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -336,7 +336,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueHasString = "Basel"
                 ),
                 valueIri = "http://rdfh.ch/2a6221216701/values/a0d2aef49105",
-                permissions = "CR knora-base:Creator|V knora-base:ProjectMember,knora-base:KnownUser,knora-base:UnknownUser",
+                permissions = "CR knora-admin:Creator|V knora-admin:ProjectMember,knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -353,7 +353,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueHasEndPrecision = DatePrecisionYear
                 ),
                 valueIri = "http://rdfh.ch/2a6221216701/values/63fc012e9205",
-                permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -369,7 +369,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Reise ins Heilige Land"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/d1010fd69005",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -384,7 +384,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         valueHasString = "Reysen und wanderschafften durch das Gelobte Land"
                     ),
                     valueIri = "http://rdfh.ch/2a6221216701/values/942b620f9105",
-                    permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",

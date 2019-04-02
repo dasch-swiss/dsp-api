@@ -349,7 +349,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1
-            val permissions = "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+            val permissions = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             responderManager ! CreateValueRequestV2(
@@ -395,7 +395,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1024
-            val permissions = "M knora-base:Creator,V knora-base:KnownUser"
+            val permissions = "M knora-admin:Creator,V knora-admin:KnownUser"
 
             responderManager ! CreateValueRequestV2(
                 CreateValueV2(
@@ -422,7 +422,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1024
-            val permissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
+            val permissions = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
 
             responderManager ! CreateValueRequestV2(
                 CreateValueV2(
@@ -1844,7 +1844,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "update a value with custom permissions" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val permissions = "CR knora-base:Creator|V knora-base:ProjectMember"
+            val permissions = "CR knora-admin:Creator|V knora-admin:ProjectMember"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
             val intValue = 6
 
@@ -1891,7 +1891,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not update a value with custom permissions if the requesting user does not have ChangeRightsPermission on the value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val permissions = "CR knora-base:Creator"
+            val permissions = "CR knora-admin:Creator"
             val intValue = 10
 
             responderManager ! UpdateValueRequestV2(
@@ -1918,7 +1918,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not update a value with syntactically invalid custom permissions" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val permissions = "M knora-base:Creator,V knora-base:KnownUser"
+            val permissions = "M knora-admin:Creator,V knora-admin:KnownUser"
             val intValue = 7
 
             responderManager ! UpdateValueRequestV2(
@@ -1945,7 +1945,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not update a value with custom permissions referring to a nonexistent group" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val permissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
+            val permissions = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
             val intValue = 8
 
             responderManager ! UpdateValueRequestV2(

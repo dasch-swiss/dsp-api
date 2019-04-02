@@ -1118,26 +1118,6 @@
     "rdfs:comment" : "Specifies the required type of the objects of a property",
     "rdfs:label" : "Object type"
   }, {
-    "@id" : "knora-api:projectRestrictedViewSize",
-    "@type" : "owl:DatatypeProperty",
-    "knora-api:objectType" : {
-      "@id" : "xsd:string"
-    },
-    "knora-api:subjectType" : {
-      "@id" : "knora-api:knoraProject"
-    },
-    "rdfs:comment" : "The size of the image (as defined by IIIF) returned for restricted view"
-  }, {
-    "@id" : "knora-api:projectRestrictedViewWatermark",
-    "@type" : "owl:DatatypeProperty",
-    "knora-api:objectType" : {
-      "@id" : "xsd:string"
-    },
-    "knora-api:subjectType" : {
-      "@id" : "knora-api:knoraProject"
-    },
-    "rdfs:comment" : "Path to the restricted view watermark"
-  }, {
     "@id" : "knora-api:resourceIcon",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
@@ -1181,16 +1161,6 @@
     "@type" : "rdf:Property",
     "rdfs:comment" : "Specifies the required type of the subjects of a property",
     "rdfs:label" : "Subject type"
-  }, {
-    "@id" : "knora-api:username",
-    "@type" : "owl:DatatypeProperty",
-    "knora-api:objectType" : {
-      "@id" : "xsd:string"
-    },
-    "knora-api:subjectType" : {
-      "@id" : "knora-api:User"
-    },
-    "rdfs:comment" : "The username and login name of a user of Knora"
   }, {
     "@id" : "knora-api:versionArkUrl",
     "@type" : "owl:DatatypeProperty",

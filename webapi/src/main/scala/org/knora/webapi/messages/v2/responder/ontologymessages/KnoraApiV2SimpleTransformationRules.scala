@@ -34,7 +34,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
 
     override val ontologyMetadata = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
-        projectIri = Some(OntologyConstants.KnoraBase.SystemProject.toSmartIri),
+        projectIri = Some(OntologyConstants.KnoraAdmin.SystemProject.toSmartIri),
         label = Some("The knora-api ontology in the simple schema")
     )
 
@@ -432,39 +432,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         OntologyConstants.KnoraBase.ExtResProvider,
         OntologyConstants.KnoraBase.MapEntryKey,
         OntologyConstants.KnoraBase.MapEntryValue,
-        OntologyConstants.KnoraBase.IsInMap,
-        OntologyConstants.KnoraBase.ForProject, // TODO: remove admin stuff from here when it's moved to a separate ontology.
-        OntologyConstants.KnoraBase.ForGroup,
-        OntologyConstants.KnoraBase.ForResourceClass,
-        OntologyConstants.KnoraBase.ForProperty,
-        OntologyConstants.KnoraBase.Address,
-        OntologyConstants.KnoraBase.Email,
-        OntologyConstants.KnoraBase.GivenName,
-        OntologyConstants.KnoraBase.FamilyName,
-        OntologyConstants.KnoraBase.Password,
-        OntologyConstants.KnoraBase.UsersActiveProject,
-        OntologyConstants.KnoraBase.Status,
-        OntologyConstants.KnoraBase.PreferredLanguage,
-        OntologyConstants.KnoraBase.IsInProject,
-        OntologyConstants.KnoraBase.IsInProjectAdminGroup,
-        OntologyConstants.KnoraBase.IsInGroup,
-        OntologyConstants.KnoraBase.IsInSystemAdminGroup,
-        OntologyConstants.KnoraBase.InstitutionDescription,
-        OntologyConstants.KnoraBase.InstitutionName,
-        OntologyConstants.KnoraBase.InstitutionWebsite,
-        OntologyConstants.KnoraBase.Phone,
-        OntologyConstants.KnoraBase.KnoraProject,
-        OntologyConstants.KnoraBase.ProjectShortname,
-        OntologyConstants.KnoraBase.ProjectShortcode,
-        OntologyConstants.KnoraBase.ProjectLongname,
-        OntologyConstants.KnoraBase.ProjectDescription,
-        OntologyConstants.KnoraBase.ProjectKeyword,
-        OntologyConstants.KnoraBase.ProjectLogo,
-        OntologyConstants.KnoraBase.BelongsToInstitution,
-        OntologyConstants.KnoraBase.HasSelfJoinEnabled,
-        OntologyConstants.KnoraBase.GroupName,
-        OntologyConstants.KnoraBase.GroupDescription,
-        OntologyConstants.KnoraBase.BelongsToProject
+        OntologyConstants.KnoraBase.IsInMap
     ).map(_.toSmartIri)
 
     /**
@@ -494,7 +462,6 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         OntologyConstants.KnoraBase.LinkValue,
         OntologyConstants.KnoraBase.GeonameValue,
         OntologyConstants.KnoraBase.FileValue,
-        OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
         OntologyConstants.KnoraBase.MappingElement,
         OntologyConstants.KnoraBase.MappingComponent,
         OntologyConstants.KnoraBase.MappingStandoffDataTypeClass,
@@ -504,13 +471,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         OntologyConstants.KnoraBase.ExternalResValue,
         OntologyConstants.KnoraBase.Map,
         OntologyConstants.KnoraBase.MapEntry,
-        OntologyConstants.KnoraBase.User, // TODO: remove admin stuff from here when it's moved to a separate ontology.
-        OntologyConstants.KnoraBase.KnoraProject,
-        OntologyConstants.KnoraBase.ListNode,
-        OntologyConstants.KnoraBase.Permission,
-        OntologyConstants.KnoraBase.UserGroup,
-        OntologyConstants.KnoraBase.Institution,
-        OntologyConstants.KnoraBase.AdministrativePermission
+        OntologyConstants.KnoraBase.ListNode
     ).map(_.toSmartIri)
 
     /**

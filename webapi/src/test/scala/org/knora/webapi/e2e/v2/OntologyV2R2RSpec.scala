@@ -1255,7 +1255,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |    "knora-api:ontologyName": "useless",
                    |    "knora-api:attachedToProject": {
-                   |      "@id": "${OntologyConstants.KnoraBase.DefaultSharedOntologiesProject}"
+                   |      "@id": "${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}"
                    |    },
                    |    "knora-api:isShared": true,
                    |    "rdfs:label": "$label",

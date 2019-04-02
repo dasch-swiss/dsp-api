@@ -47,24 +47,24 @@ prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
 INSERT {
     GRAPH ?adminNamedGraphIri {
         ?groupIri rdf:type ?groupClassIri ;
 
-            knora-base:groupName "@name"^^xsd:string ;
+            knora-admin:groupName "@name"^^xsd:string ;
 
             @if(maybeDescription.nonEmpty) {
-                knora-base:groupDescription """@maybeDescription.get"""^^xsd:string ;
+                knora-admin:groupDescription """@maybeDescription.get"""^^xsd:string ;
             }
 
-            knora-base:belongsToProject ?projectIri ;
+            knora-admin:belongsToProject ?projectIri ;
 
-            knora-base:status "@status"^^xsd:boolean ;
+            knora-admin:status "@status"^^xsd:boolean ;
 
-            knora-base:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean.
+            knora-admin:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean.
     }
 }
 @*
@@ -87,5 +87,5 @@ WHERE {
     BIND(IRI("@groupClassIri") AS ?groupClassIri)
     BIND(IRI("@projectIri") AS ?projectIri)
 
-    FILTER NOT EXISTS { ?s knora-base:groupName "@name"^^xsd:string . }
+    FILTER NOT EXISTS { ?s knora-admin:groupName "@name"^^xsd:string . }
 }
