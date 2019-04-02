@@ -75,7 +75,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     val groupConcatVariableSuffix = "__Concat"
 
     // A set of types that can be treated as dates by the knora-api:toSimpleDate function.
-    val dateTypes: Set[IRI] = Set(OntologyConstants.KnoraApiV2WithValueObjects.DateValue, OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag)
+    private val dateTypes: Set[IRI] = Set(OntologyConstants.KnoraApiV2WithValueObjects.DateValue, OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag)
 
     /**
       * A container for a generated variable representing a value literal.
@@ -373,7 +373,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                         // it is not a sort criterion
                         None
                     }
-                    
+
                     Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted) ++ orderByStatement
                 } else {
                     // The variable doesn't refer to a value object. Just convert the statement pattern to the internal schema.
@@ -669,7 +669,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         val dateValStartStatementOption: Option[StatementPattern] = if (!dateValVarExists) {
             Some(StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar))
         } else {
-           None
+            None
         }
 
         // connects the value object with the periods end variable

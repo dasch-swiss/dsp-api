@@ -49,6 +49,9 @@ about all ontologies:
 HTTP GET to http://host/v2/ontologies/metadata
 ```
 
+If you submit a project IRI in the `X-Knora-Accept-Project` header, only the
+ontologies for that project will be returned.
+
 The response is in the complex API v2 schema. Sample response:
 
 ```jsonld
@@ -97,14 +100,16 @@ The response is in the complex API v2 schema. Sample response:
 }
 ```
 
-To get metadata about the ontologies that belong to a particular
-project:
+To get metadata about the ontologies that belong to one or more particular
+projects:
 
 ```
-HTTP GET to http://host/v2/ontologies/metadata/PROJECT_IRI
+HTTP GET to http://host/v2/ontologies/metadata/PROJECT_IRI[/PROJECT_IRI...]
 ```
 
-The project IRI must be URL-encoded. Example response for the `images` test project
+The project IRIs must be URL-encoded.
+
+Example response for the `images` test project
 (project IRI `http://rdfh.ch/projects/00FF`):
 
 ```jsonld

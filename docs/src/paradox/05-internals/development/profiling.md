@@ -19,10 +19,10 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Profiling Knora
 
-To run Knora with profiling, we first need to build the application. Please run the following from the `webapi` folder:
+To run Knora with profiling, we first need to build the application. Please run the following from the top `knora` folder:
 
 ```
-$ sbt stage
+$ sbt webapi/stage
 ```
 
 ## Profiling with [YourKit](http://yourkit.com):
