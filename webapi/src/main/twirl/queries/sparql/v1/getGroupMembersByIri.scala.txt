@@ -29,7 +29,7 @@
   groupIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 SELECT ?s
 @* Ensure that inference is not used in this query. *@
@@ -39,7 +39,7 @@ SELECT ?s
 WHERE {
     BIND(IRI("@groupIri") as ?group)
 
-    ?group rdf:type knora-base:UserGroup .
-    ?s rdf:type knora-base:User .
-    ?s knora-base:isInGroup ?group .
+    ?group rdf:type knora-admin:UserGroup .
+    ?s rdf:type knora-admin:User .
+    ?s knora-admin:isInGroup ?group .
 }

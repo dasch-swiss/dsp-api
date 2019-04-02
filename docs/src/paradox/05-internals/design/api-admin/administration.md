@@ -53,38 +53,38 @@ permissions, without the need to explicitly create them.
 A user becomes implicitly a member of such a group by satisfying certain
 conditions:
 
-  - **knora-base:UnknownUser**:  
+  - **knora-admin:UnknownUser**:  
     Any user who has not logged into Knora is
     automatically assigned to this group.
 
-  - **knora-base:KnownUser**:  
+  - **knora-admin:KnownUser**:  
     Any user who has logged into Knora is automatically
     assigned to this group.
 
-  - **knora-base:Creator**:  
+  - **knora-admin:Creator**:  
     When checking a user’s permissions on an object, the user is
     automatically assigned to this group if he is the creator of the
     object.
 
-  - **knora-base:ProjectMember**:  
+  - **knora-admin:ProjectMember**:  
     When checking a user’s permissions, the user is automatically
     assigned to this group by being a member of a project designated by
-    the `knora-base:isInProject` property.
+    the `knora-admin:isInProject` property.
 
-  - **knora-base:ProjectAdmin**:  
+  - **knora-admin:ProjectAdmin**:  
     When checking a user's permission, the user is automatically
     assigned to this group through the
-    `knora-base:isInProjectAdminGroup` property, which points to the
+    `knora-admin:isInProjectAdminGroup` property, which points to the
     project in question.
 
-  - **knora-base:SystemAdmin**:  
+  - **knora-admin:SystemAdmin**:  
     Membership is received by setting the property
-    `knora-base:isInSystemAdminGroup` to `true` on a `knora-base:User`.
+    `knora-admin:isInSystemAdminGroup` to `true` on a `knora-admin:User`.
 
 To use these build-in groups as values for properties (Object Access and
 Default Permissions), the IRI is constructed by appending the name of
-the built-in group to `knora-base`, e.g., `knora-base:KnownUser` where
-`knora-base` corresponds to `http://www.knora.org/ontology/knora-base#`.
+the built-in group to `knora-admin`, e.g., `knora-admin:KnownUser` where
+`knora-admin` corresponds to `http://www.knora.org/ontology/knora-admin#`.
 
 ## Permissions
 
@@ -93,9 +93,9 @@ called *object access permissions*, which contains permissions that
 point from explicit **objects** (resources/values) to groups. The second
 group of permissions called *administrative permissions*, and which
 contains permissions that are put on instances of
-**knora-base:Permission** objects directly affecting groups. There is
+**knora-admin:Permission** objects directly affecting groups. There is
 another, third group of permissions, called *default object access
-permissions* which is also put on instances of *knora-base:Permission*,
+permissions* which is also put on instances of *knora-admin:Permission*,
 and which also directly affect groups.
 
 ### Object Access Permissions
@@ -150,7 +150,7 @@ follows:
 - Each permission abbreviation is followed by a space, then a
   comma-separated list of groups that the permission is granted
   to.
-- The IRIs of built-in groups are shortened using the knora-base
+- The IRIs of built-in groups are shortened using the knora-admin
   prefix.
 - Multiple permissions are separated by a vertical bar (|).
 
@@ -159,18 +159,18 @@ users*, and modify permission to *project members*, the resulting
 permission literal would be:
     :
 
-    V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember
+    V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember
 
 ### Administrative Permissions
 
 The following permissions can be set via instances of
-`knora-base:AdministrativePermission` on any group belonging to a
+`knora-admin:AdministrativePermission` on any group belonging to a
 project. For users that are members of a number of groups with
 administrative permissions attached, the final set of permissions is
 additive and most permissive. The administrative permissions are stored
 in a compact format in a single string, which is the object of the
 predicate `knora-base:hasPermissions` attached to an instance of the
-`knora-base:AdministrativePermission` class. The following permission
+`knora-admin:AdministrativePermission` class. The following permission
 values can be used:
 
 1.  Resource / Value Creation Permissions:
@@ -216,7 +216,7 @@ values can be used:
         belonging to the project.
       - usage: used as a value for *knora-base:hasPermissions*
       - value: `ProjectGroupAdminRestrictedPermission` followed by
-        a comma-separated list of `knora-base:UserGroup`.
+        a comma-separated list of `knora-admin:UserGroup`.
 
     4)  **ProjectAdminRightsAllPermission**:
 
@@ -239,7 +239,7 @@ values can be used:
 The administrative permissions are stored in a compact format in a
 single string, which is the object of the predicate
 `knora-base:hasPermissions` attached to an instance of the
-`knora-base:AdministrativePermission` class.
+`knora-admin:AdministrativePermission` class.
 
   - The format of the object of `knora-base:hasPermissions` is as
     follows:
@@ -248,20 +248,20 @@ single string, which is the object of the predicate
       - Each permission is followed by a space, then if applicable, by a
         comma separated list of IRIs, as defined above.
       - The IRIs of built-in values (e.g., built-in groups, resource
-        classes, etc.) are shortened using the knora-base prefix
-        `knora-base:`.
+        classes, etc.) are shortened using the knora-admin prefix
+        `knora-admin:`.
       - Multiple permissions are separated by a vertical bar (|).
 
 For example, if an administrative permission grants the
-`knora-base:ProjectMember` group the permission to create all resources
+`knora-admin:ProjectMember` group the permission to create all resources
 (*ProjectResourceCreateAllPermission*), the resulting administrative
 permission object with the compact form literal would be: :
 
 ```
 <http://rdfh.ch/permissions/001
-        rdf:type knora-base:AdministrativePermission ;
-        knora-base:forProject <http://rdfh.ch/projects/00FF>;
-        knora-base:forGroup knora-base:ProjectMember ;
+        rdf:type knora-admin:AdministrativePermission ;
+        knora-admin:forProject <http://rdfh.ch/projects/00FF>;
+        knora-admin:forGroup knora-admin:ProjectMember ;
         knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
 ```
 
@@ -276,7 +276,7 @@ defined for resource classes and properties.
 
 The following default object access permissions can be attached to
 groups, resource classes and/or properties via instances of
-*knora-base:DefaultObjectAccessPermission* (described further bellow).
+*knora-admin:DefaultObjectAccessPermission* (described further bellow).
 The default object access permissions correspond to the earlier
 described object access permission:
 
@@ -285,28 +285,28 @@ described object access permission:
       - description: any object, created by a user inside a group
         holding this permission, is restricted to carry this permission
       - value: `RV` followed by a comma-separated list of
-        `knora-base:UserGroup`
+        `knora-admin:UserGroup`
 
 2.  **Default View Permission (V)**:
 
       - description: any object, created by a user inside a group
         holding this permission, is restricted to carry this permission
       - value: `V` followed by a comma-separated list of
-        `knora-base:UserGroup`
+        `knora-admin:UserGroup`
 
 3.  **Default Modify Permission (M)** accompanied by a list of groups.
 
       - description: any object, created by a user inside a group
         holding this permission, is restricted to carry this permission
       - value: `M` followed by a comma-separated list of
-        `knora-base:UserGroup`
+        `knora-admin:UserGroup`
 
 4.  **Default Delete Permission (D)** accompanied by a list of groups.
 
       - description: any object, created by a user inside a group
         holding this permission, is restricted to carry this permission
       - value: `D` followed by a comma-separated list of
-        `knora-base:UserGroup`
+        `knora-admin:UserGroup`
 
 5.  **Default Change Rights Permission (CR)** accompanied by a list of
     groups.
@@ -314,22 +314,22 @@ described object access permission:
       - description: any object, created by a user inside a group
         holding this permission, is restricted to carry this permission
       - value: `CR` followed by a comma-separated list of
-        `knora-base:UserGroup`
+        `knora-admin:UserGroup`
 
-A single instance of `knora-base:DefaultObjectAccessPermission` must
+A single instance of `knora-admin:DefaultObjectAccessPermission` must
 always reference a project, but can only reference **either** a group
-(`knora-base:forGroup` property), a resource class
-(`knora-base:forResourceClass`), a property (`knora-base:forProperty`),
+(`knora-admin:forGroup` property), a resource class
+(`knora-admin:forResourceClass`), a property (`knora-admin:forProperty`),
 or a combination of resource class **and** property.
 
 Example default object access permission instance:
 
 ```
 <http://rdfh.ch/permissions/002
-        rdf:type knora-base:DefaultObjectAccessPermission ;
-        knora-base:forProject <http://rdfh.ch/projects/00FF>;
-        knora-base:forGroup knora-base:ProjectMember ;
-        knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser"^^xsd:string .
+        rdf:type knora-admin:DefaultObjectAccessPermission ;
+        knora-admin:forProject <http://rdfh.ch/projects/00FF>;
+        knora-admin:forGroup knora-admin:ProjectMember ;
+        knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser"^^xsd:string .
 ```
 
 This instance is setting default object access permissions to the
@@ -348,17 +348,17 @@ group.
 The following list is sorted by the permission precedence level in
 descending order:
 
-  - permissions on `knora-base:ProjectAdmin` (highest level)
+  - permissions on `knora-admin:ProjectAdmin` (highest level)
   - permissions on resource classes and property combination (own
     project)
   - permissions on resource classes and property combination
-    (`knora-base:SystemProject`)
+    (`knora-admin:SystemProject`)
   - permissions on resource classes / properties (own project)
   - permissions on resource classes / properties
-    (`knora-base:SystemProject`)
+    (`knora-admin:SystemProject`)
   - permissions on custom groups
-  - permissions on `knora-base:ProjectMember`
-  - permissions on `knora-base:KnownUser` (lowest level)
+  - permissions on `knora-admin:ProjectMember`
+  - permissions on `knora-admin:KnownUser` (lowest level)
 
 The permissions on resource classes / properties are only relevant for
 default object access permissions.
@@ -387,15 +387,15 @@ to the project, the *default object access permissions* from the
 **ProjectAdmin**, **ProjectMember**, or **KnownUser** group will be
 applied in the order of precedence. If no permissions are defined on
 either of these groups, then the resulting permission will be `CR
-knora-base:Creator`.
+knora-admin:Creator`.
 
 Also, in the case that no *default object access permissions* are
 defined for the project, the resulting permission will be `CR
-knora-base:Creator`.
+knora-admin:Creator`.
 
 ## Implicit Permissions
 
-The `knora-base:SystemAdmin` group receives implicitly the following
+The `knora-admin:SystemAdmin` group receives implicitly the following
 permissions:
 
   - receives implicitly *ProjectAllAdminPermission* for all projects.
@@ -419,33 +419,33 @@ access permission. Currently, two different templates will be defined
 
 The *OPEN* template defines the following permissions:
 
-- The `knora-base:ProjectAdmin` group:
+- The `knora-admin:ProjectAdmin` group:
 
       - receives explicitly *ProjectResourceCreateAllPermission*.
       - receives explicitly *ProjectAllAdminPermission*.
 
-- The `knora-base:ProjectMember` group:
+- The `knora-admin:ProjectMember` group:
 
       - receives explicitly *ProjectResourceCreateAllPermission*.
-      - receives explicitly *CR* for the *knora-base:Creator* and
-        *knora-base:ProjectAdmin* group.
+      - receives explicitly *CR* for the *knora-admin:Creator* and
+        *knora-admin:ProjectAdmin* group.
       - receives explicitly *M* for the *ProjectMember* group.
-      - receives explicitly *V* for the *knora-base:KnownUser*
+      - receives explicitly *V* for the *knora-admin:KnownUser*
         group.
 
 ### Template: CLOSED
 
 The *CLOSED* template, defined the following permissions:
 
-- The `knora-base:ProjectAdmin` group:
+- The `knora-admin:ProjectAdmin` group:
 
       - receives explicitly *ProjectResourceCreateAllPermission*.
       - receives explicitly *ProjectAllAdminPermission*.
 
-- The `knora-base:ProjectMember` group:
+- The `knora-admin:ProjectMember` group:
 
       - receives explicitly *ProjectResourceCreateAllPermission*.
-      - receives explicitly *CR* for the *knora-base:ProjectAdmin*
+      - receives explicitly *CR* for the *knora-admin:ProjectAdmin*
         group.
       - receives explicitly *M* for the *ProjectMember* group.
 
@@ -500,9 +500,9 @@ different use cases are very broad. Potentially, we need to be able to
 define default permissions per project, per group, per resource class,
 per resource property, and all their possible combinations.
 
-For this reason, we introduce the *knora-base:Permission* class with two
-sub-classes, namely *knora-base:AdministrativePermission* and
-*knora-base:DefaultObjectAccessPermission*, which instances will carry
+For this reason, we introduce the *knora-admin:Permission* class with two
+sub-classes, namely *knora-admin:AdministrativePermission* and
+*knora-admin:DefaultObjectAccessPermission*, which instances will carry
 all the necessary information.
 
 ### Permission Class Hierarchy and Structure
@@ -521,9 +521,9 @@ permission class.
 and the same as RDF:
 
 ```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-     knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
-     knora-base:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
+<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:AdministrativePermission ;
+     knora-admin:forProject <http://rdfh.ch/projects/[shortcode]> ;
+     knora-admin:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
      knora-base:hasPermissions "ProjectResourceCreateAllPermission|
                                 ProjectResourceCreateRestrictedPermission "<Resource Class IRI>"|
                                 ProjectAdminAllPermission|
@@ -540,11 +540,11 @@ and the same as RDF:
 and the same as RDF:
 
 ```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
-     knora-base:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
-     knora-base:forResourceClass "Resource Class Name" ;
-     knora-base:forProperty "Resource Property Name" ;
+<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:DefaultObjectAccessPermission ;
+     knora-admin:forProject <http://rdfh.ch/projects/[shortcode]> ;
+     knora-admin:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
+     knora-admin:forResourceClass "Resource Class Name" ;
+     knora-admin:forProperty "Resource Property Name" ;
      knora-base:hasPermissions "RV <http://rdfh.ch/groups/[shortcode]/[UUID]>|
                                  V <http://rdfh.ch/groups/[shortcode]/[UUID]>|
                                  M <http://rdfh.ch/groups/[shortcode]/[UUID]>|
@@ -563,24 +563,24 @@ making it possible to extend or change the attached permissions.
 **Administrative Permission Instances**: For each group inside the
 project, there can be **zero** or **one** instance holding
 administrative permission information. Querying is straitforward by
-using the *knora-base:forProject* and *knora-base:forGroup* properties
+using the *knora-admin:forProject* and *knora-admin:forGroup* properties
 as the compound key.
 
 **Default Object Access Permission Instances**: For each group, resource
 class, or property inside the project, there can be **zero** or **one**
 instances holding default object access permission informations.
-Querying is straitforward by using the *knora-base:forProject* and
-either *knora-base:forGroup*, *knora-base:forResourceClass*, or
-*knora-base:forProperty* properties as part of the compound key.
+Querying is straitforward by using the *knora-admin:forProject* and
+either *knora-admin:forGroup*, *knora-admin:forResourceClass*, or
+*knora-admin:forProperty* properties as part of the compound key.
 
 ### Example Data stored in the permissions graph
 
 **Administrative permissions on a 'ProjectAdmin' group:**
 
 ```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-     knora-base:forProject <http://rdfh.ch/projects/00FF> ;
-     knora-base:forGroup knora-base:ProjectAdmin ;
+<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:AdministrativePermission ;
+     knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
+     knora-admin:forGroup knora-admin:ProjectAdmin ;
      knora-base:hasPermissions "ProjectResourceCreateAllPermission|
                                 ProjectAdminAllPermission"^^xsd:string .
 ```
@@ -588,79 +588,79 @@ either *knora-base:forGroup*, *knora-base:forResourceClass*, or
 **Administrative permissions on a 'ProjectMember' group:**
 
 ```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-     knora-base:forProject <http://rdfh.ch/projects/00FF> ;
-     knora-base:forGroup knora-base:ProjectMember ;
+<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:AdministrativePermission ;
+     knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
+     knora-admin:forGroup knora-admin:ProjectMember ;
      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
 ```
 
 **Administrative permission restricting project admin permission on a group:**
 
 ```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:Permission ;
-     knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
-     knora-base:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
+<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:Permission ;
+     knora-admin:forProject <http://rdfh.ch/projects/[shortcode]> ;
+     knora-admin:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
      knora-base:hasPermissions "ProjectGroupAdminRestrictedPermission <http://rdfh.ch/groups/[shortcode]/[UUID]>"^^xsd:string .
 ```
 **Administrative permission restricting resource creation for a group:**
 
 ```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:AdministrativePermission ;
-     knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
-     knora-base:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
+<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:AdministrativePermission ;
+     knora-admin:forProject <http://rdfh.ch/projects/[shortcode]> ;
+     knora-admin:forGroup <http://rdfh.ch/groups/[shortcode]/[UUID]> ;
      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission <http://www.knora.org/ontology/00FF/images#Person>"^^xsd:string .
 ```
 
 **Default object access permission on a 'ProjectMember' group:**
 
 ```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://rdfh.ch/projects/00FF> ;
-     knora-base:forGroup knora-base:ProjectMember ;
-     knora-base:hasPermissions "CR knora-base:Creator|
+<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:DefaultObjectAccessPermission ;
+     knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
+     knora-admin:forGroup knora-admin:ProjectMember ;
+     knora-base:hasPermissions "CR knora-admin:Creator|
                                  M <http://rdfh.ch/groups/[shortcode]/[UUID]>|
-                                 V knora-base:KnownUser"^^xsd:string .
+                                 V knora-admin:KnownUser"^^xsd:string .
 ```
 
 **Default object access permission on a resource class:**
 
 ```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
-     knora-base:forResourceClass <http://www.knora.org/ontology/00FF/images#person> ;
-     knora-base:hasPermissions "CR knora-base:Creator,knora-base:ProjectMember|
-                                 V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:DefaultObjectAccessPermission ;
+     knora-admin:forProject <http://rdfh.ch/projects/[shortcode]> ;
+     knora-admin:forResourceClass <http://www.knora.org/ontology/00FF/images#person> ;
+     knora-base:hasPermissions "CR knora-admin:Creator,knora-admin:ProjectMember|
+                                 V knora-admin:KnownUser,knora-admin:UnknownUser"^^xsd:string .
 ```
 
 **Default object access permission on a resource property:**
 
 ```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
-     knora-base:forProperty <http://www.knora.org/ontology/00FF/images#lastname> ;
-     knora-base:hasPermissions "D knora-base:ProjectMember,knora-base:Creator|
-                                V knora-base:KnownUser,knora-base:UnknownUser"^^ .
+<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:DefaultObjectAccessPermission ;
+     knora-admin:forProject <http://rdfh.ch/projects/[shortcode]> ;
+     knora-admin:forProperty <http://www.knora.org/ontology/00FF/images#lastname> ;
+     knora-base:hasPermissions "D knora-admin:ProjectMember,knora-admin:Creator|
+                                V knora-admin:KnownUser,knora-admin:UnknownUser"^^ .
 ```
 
 **Default object access permission on a resource class and property:**
 
 ```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject <http://rdfh.ch/projects/[shortcode]> ;
-     knora-base:forResourceClass <http://www.knora.org/ontology/00FF/images#person> ;
-     knora-base:forProperty <http://www.knora.org/ontology/00FF/images#lastname> ;
-     knora-base:hasPermissions "CR knora-base:Creator,knora-base:ProjectMember|
-                                 V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:DefaultObjectAccessPermission ;
+     knora-admin:forProject <http://rdfh.ch/projects/[shortcode]> ;
+     knora-admin:forResourceClass <http://www.knora.org/ontology/00FF/images#person> ;
+     knora-admin:forProperty <http://www.knora.org/ontology/00FF/images#lastname> ;
+     knora-base:hasPermissions "CR knora-admin:Creator,knora-admin:ProjectMember|
+                                 V knora-admin:KnownUser,knora-admin:UnknownUser"^^xsd:string .
 ```
-**Default object access permission on a knora-base property:**
+**Default object access permission on a knora-admin property:**
 
 ```
-<http://rdfh.ch/permissions/[UUID]> rdf:type knora-base:DefaultObjectAccessPermission ;
-     knora-base:forProject knora-base:SystemProject ;
-     knora-base:forProperty <http://www.knora.org/ontology/knora-base#hasStillImageFileValue> ;
-     knora-base:hasPermissions "RV knora-base:UnknownUser|
-                                 V knora-base:KnownUser|
-                                 M knora-base:ProjectMember,knora-base:Creator"^^xsd:string .
+<http://rdfh.ch/permissions/[UUID]> rdf:type knora-admin:DefaultObjectAccessPermission ;
+     knora-admin:forProject knora-admin:SystemProject ;
+     knora-admin:forProperty <http://www.knora.org/ontology/knora-admin#hasStillImageFileValue> ;
+     knora-base:hasPermissions "RV knora-admin:UnknownUser|
+                                 V knora-admin:KnownUser|
+                                 M knora-admin:ProjectMember,knora-admin:Creator"^^xsd:string .
 ```
 
 A the time the user's `UserProfile` is queried, all permissions for all
