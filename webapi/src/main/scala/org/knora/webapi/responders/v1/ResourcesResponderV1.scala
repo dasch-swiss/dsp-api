@@ -1279,7 +1279,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             resourceProjectIri: IRI = projectADM.id
 
-            _ = if (resourceProjectIri == OntologyConstants.KnoraBase.SystemProject || resourceProjectIri == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
+            _ = if (resourceProjectIri == OntologyConstants.KnoraAdmin.SystemProject || resourceProjectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
                 throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
             }
 
@@ -1971,7 +1971,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             resourceProjectIri: IRI = projectResponse.project.id
 
-            _ = if (resourceProjectIri == OntologyConstants.KnoraBase.SystemProject || resourceProjectIri == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
+            _ = if (resourceProjectIri == OntologyConstants.KnoraAdmin.SystemProject || resourceProjectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
                 throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
             }
 

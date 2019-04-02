@@ -22,6 +22,9 @@ Also, please change the **HINT** to the appropriate level:
 
 - FEATURE: Get resources in a particular class from a project (@github[#1251](#1251))
 
+- MAJOR: Separate the `knora-admin` ontology from `knora-api` (@github[#1263](#1263)).
+  Existing repositories must be updated; see `upgrade/1263-knora-admin` for instructions.
+
 - MAJOR: Change API v1 file uploads to work like API v2 (@github[#1233](#1233)). To enable
   Knora and Sipi to work without sharing a filesystem, the procedure
   for uploading files in API v1 has changed; see

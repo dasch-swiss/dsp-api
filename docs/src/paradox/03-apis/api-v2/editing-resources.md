@@ -75,7 +75,7 @@ For example, here is a request to create a resource with various value types:
   },
   "anything:hasInteger" : [ {
     "@type" : "knora-api:IntValue",
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
     "knora-api:intValueAsInt" : 5,
     "knora-api:valueHasComment" : "this is the number five"
   }, {
@@ -152,7 +152,7 @@ can be specified by adding `knora-api:creationDate`
     "@id" : "http://rdfh.ch/projects/0001"
   },
   "rdfs:label" : "test thing",
-  "knora-api:hasPermissions" : "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
   "knora-api:creationDate" : {
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2019-01-09T15:45:54.502951Z"
@@ -216,7 +216,7 @@ Here is an example:
   "@id" : "http://rdfh.ch/0001/a-thing",
   "@type" : "anything:Thing",
   "rdfs:label" : "this is the new label",
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:ProjectMember",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember",
   "knora-api:lastModificationDate" : {
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2017-11-20T15:55:17Z"

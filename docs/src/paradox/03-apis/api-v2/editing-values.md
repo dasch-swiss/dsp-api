@@ -77,7 +77,7 @@ Permissions for the new value can be given by adding `knora-api:hasPermissions`.
   "anything:hasInteger" : {
     "@type" : "knora-api:IntValue",
     "knora-api:intValueAsInt" : 4,
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
   },
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
