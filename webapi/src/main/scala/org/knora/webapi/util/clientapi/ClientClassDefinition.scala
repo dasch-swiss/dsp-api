@@ -76,6 +76,6 @@ case object ClientTextFileValue extends ClientKnoraValue
 
 case class ClientLinkValue(classIri: SmartIri) extends ClientKnoraValue
 
-case class ClientPropertyDefinition(propertyIri: SmartIri, objectType: ClientObjectType, cardinality: Cardinality, isEditable: Boolean)
+case class ClientPropertyDefinition(propertyName: String, propertyIri: SmartIri, objectType: ClientObjectType, cardinality: Cardinality, isEditable: Boolean)
 
-case class ClientClassDefinition(classIri: SmartIri, properties: Vector[ClientPropertyDefinition])
+case class ClientClassDefinition(className: String, classIri: SmartIri, properties: Vector[ClientPropertyDefinition])
