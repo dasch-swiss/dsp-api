@@ -48,9 +48,9 @@ object ResourcesResponderV2Spec {
 
     private val anythingUserProfile = SharedTestDataADM.anythingUser2
 
-    private val defaultAnythingResourcePermissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
+    private val defaultAnythingResourcePermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
     private val defaultAnythingValuePermissions = defaultAnythingResourcePermissions
-    private val defaultStillImageFileValuePermissions = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
+    private val defaultStillImageFileValuePermissions = "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
 
     private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
 
@@ -815,7 +815,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 label = "test thing",
                 values = Map.empty,
                 projectADM = SharedTestDataADM.anythingProject,
-                permissions = Some("CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
+                permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
             )
 
             responderManager ! CreateResourceRequestV2(
@@ -852,7 +852,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                             valueHasInteger = 5,
                             comment = Some("this is the number five")
                         ),
-                        permissions = Some("CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
+                        permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = IntegerValueContentV2(
@@ -1448,7 +1448,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 label = "invalid thing",
                 values = Map.empty,
                 projectADM = SharedTestDataADM.anythingProject,
-                permissions = Some("M knora-base:Creator,V knora-base:KnownUser")
+                permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser")
             )
 
             responderManager ! CreateResourceRequestV2(
@@ -1473,7 +1473,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                             valueHasInteger = 5,
                             comment = Some("this is the number five")
                         ),
-                        permissions = Some("M knora-base:Creator,V knora-base:KnownUser")
+                        permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser")
                     )
                 )
             )
@@ -1554,7 +1554,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "update a resource's metadata when it doesn't have a knora-base:lastModificationDate" in {
             val dateTimeStampBeforeUpdate = Instant.now
             val newLabel = "new test label"
-            val newPermissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:ProjectMember"
+            val newPermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
 
             val updateRequest = UpdateResourceMetadataRequestV2(
                 resourceIri = aThingIri,

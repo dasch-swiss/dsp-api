@@ -154,7 +154,7 @@
   "@id" : "http://api.knora.org/ontology/salsah-gui/v2",
   "@type" : "owl:Ontology",
   "knora-api:attachedToProject" : {
-    "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
+    "@id" : "http://www.knora.org/ontology/knora-admin#SystemProject"
   },
   "knora-api:isBuiltIn" : true,
   "rdfs:label" : "The salsah-gui ontology",

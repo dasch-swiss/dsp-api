@@ -82,13 +82,13 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         "return correct drawings-gods:QualityData resource permissions string for drawings-gods-test-ddd2 user" in {
             val qualityDataResourceClass = s"$drawingsGodsOntologyIri#QualityData"
             responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(drawingsGodsProjectIri, qualityDataResourceClass, targetUser = ddd2.get, requestingUser = KnoraSystemInstances.Users.SystemUser)
-            expectMsg(DefaultObjectAccessPermissionsStringResponseADM("CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings"))
+            expectMsg(DefaultObjectAccessPermissionsStringResponseADM("CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-admin:Creator|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators"))
         }
 
         "return correct drawings-gods:Person resource class permissions string for drawings-gods-test-ddd1 user" in {
             val personResourceClass = s"$drawingsGodsOntologyIri#Person"
             responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(drawingsGodsProjectIri, personResourceClass, targetUser = ddd1.get, requestingUser = KnoraSystemInstances.Users.SystemUser)
-            expectMsg(DefaultObjectAccessPermissionsStringResponseADM("CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-base:Creator|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|V knora-base:KnownUser,knora-base:UnknownUser,knora-base:ProjectMember"))
+            expectMsg(DefaultObjectAccessPermissionsStringResponseADM("CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-admin:Creator|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser"))
         }
 
         "return correct drawings-gods:hasLastname property permissions string for drawings-gods-test-ddd1 user" in {
@@ -102,14 +102,14 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
             val drawingPublicResourceClass = s"$drawingsGodsOntologyIri#DrawingPublic"
             val hasStillImageFileValue = OntologyConstants.KnoraBase.HasStillImageFileValue
             responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(drawingsGodsProjectIri, drawingPublicResourceClass, hasStillImageFileValue, targetUser = ddd1.get, requestingUser = KnoraSystemInstances.Users.SystemUser)
-            expectMsg(DefaultObjectAccessPermissionsStringResponseADM("CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings|V knora-base:KnownUser,knora-base:UnknownUser,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,knora-base:ProjectMember"))
+            expectMsg(DefaultObjectAccessPermissionsStringResponseADM("CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings|V http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser"))
         }
 
         "return correct drawings-gods:DrawingPrivate / knora-base:hasStillImageFileValue combination permissions string for drawings-gods-test-ddd1 user" in {
             val drawingPrivateResourceClass = s"$drawingsGodsOntologyIri#DrawingPrivate"
             val hasStillImageFileValue = OntologyConstants.KnoraBase.HasStillImageFileValue
             responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(drawingsGodsProjectIri, drawingPrivateResourceClass, hasStillImageFileValue, targetUser = ddd1.get, requestingUser = KnoraSystemInstances.Users.SystemUser)
-            expectMsg(DefaultObjectAccessPermissionsStringResponseADM("CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|M http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,http://rdfh.ch/groups/0105/drawings-gods-add-drawings|V knora-base:ProjectMember"))
+            expectMsg(DefaultObjectAccessPermissionsStringResponseADM("CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators|V knora-admin:ProjectMember"))
         }
 
         "allow drawings-gods-test-ddd1 user to create a resource, then query it and see its label and properties" in {

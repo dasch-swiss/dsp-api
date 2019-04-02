@@ -4451,19 +4451,6 @@
       }
     } ]
   }, {
-    "@id" : "knora-api:User",
-    "@type" : "owl:Class",
-    "rdfs:comment" : "Represents a Knora user",
-    "rdfs:subClassOf" : [ {
-      "@id" : "http://xmlns.com/foaf/0.1/Person"
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:username"
-      }
-    } ]
-  }, {
     "@id" : "knora-api:Value",
     "@type" : "owl:Class",
     "knora-api:isValueClass" : true,
@@ -4680,7 +4667,7 @@
     "@id" : "knora-api:attachedToProject",
     "@type" : "owl:ObjectProperty",
     "knora-api:objectType" : {
-      "@id" : "knora-api:knoraProject"
+      "@id" : "knora-admin:knoraProject"
     },
     "rdfs:comment" : "Connects something to a project",
     "rdfs:label" : "attached to project"
@@ -4688,7 +4675,7 @@
     "@id" : "knora-api:attachedToUser",
     "@type" : "owl:ObjectProperty",
     "knora-api:objectType" : {
-      "@id" : "knora-api:User"
+      "@id" : "knora-admin:User"
     },
     "rdfs:comment" : "Connects something to a user",
     "rdfs:label" : "attached to user"
@@ -4921,7 +4908,7 @@
     "@id" : "knora-api:deletedBy",
     "@type" : "owl:ObjectProperty",
     "knora-api:objectType" : {
-      "@id" : "knora-api:User"
+      "@id" : "knora-admin:User"
     },
     "rdfs:comment" : "Indicates who deleted a resource or value"
   }, {
@@ -5523,25 +5510,6 @@
     "rdfs:comment" : "Indicates whether class is a subclass of Value.",
     "rdfs:label" : "is value class"
   }, {
-    "@id" : "knora-api:knoraProject",
-    "@type" : "owl:Class",
-    "rdfs:comment" : "Represents a project that uses Knora",
-    "rdfs:subClassOf" : [ {
-      "@id" : "http://xmlns.com/foaf/0.1/Project"
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:maxCardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:projectRestrictedViewSize"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:maxCardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:projectRestrictedViewWatermark"
-      }
-    } ]
-  }, {
     "@id" : "knora-api:lastModificationDate",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
@@ -5702,26 +5670,6 @@
     },
     "rdfs:comment" : "Represents the short name of an ontology",
     "rdfs:label" : "ontology name"
-  }, {
-    "@id" : "knora-api:projectRestrictedViewSize",
-    "@type" : "owl:DatatypeProperty",
-    "knora-api:objectType" : {
-      "@id" : "xsd:string"
-    },
-    "knora-api:subjectType" : {
-      "@id" : "knora-api:knoraProject"
-    },
-    "rdfs:comment" : "The size of the image (as defined by IIIF) returned for restricted view"
-  }, {
-    "@id" : "knora-api:projectRestrictedViewWatermark",
-    "@type" : "owl:DatatypeProperty",
-    "knora-api:objectType" : {
-      "@id" : "xsd:string"
-    },
-    "knora-api:subjectType" : {
-      "@id" : "knora-api:knoraProject"
-    },
-    "rdfs:comment" : "Path to the restricted view watermark"
   }, {
     "@id" : "knora-api:resourceIcon",
     "@type" : "owl:DatatypeProperty",
@@ -6001,16 +5949,6 @@
     "rdfs:comment" : "Provides the requesting user's maximum permission on a resource or value.",
     "rdfs:label" : "user has permission"
   }, {
-    "@id" : "knora-api:username",
-    "@type" : "owl:DatatypeProperty",
-    "knora-api:objectType" : {
-      "@id" : "xsd:string"
-    },
-    "knora-api:subjectType" : {
-      "@id" : "knora-api:User"
-    },
-    "rdfs:comment" : "The username and login name of a user of Knora"
-  }, {
     "@id" : "knora-api:valueAsString",
     "@type" : "owl:ObjectProperty",
     "knora-api:objectType" : {
@@ -6071,13 +6009,14 @@
   "@id" : "http://api.knora.org/ontology/knora-api/v2",
   "@type" : "owl:Ontology",
   "knora-api:attachedToProject" : {
-    "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
+    "@id" : "http://www.knora.org/ontology/knora-admin#SystemProject"
   },
   "knora-api:isBuiltIn" : true,
   "rdfs:label" : "The knora-api ontology in the complex schema",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "knora-admin" : "http://api.knora.org/ontology/knora-admin/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
     "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",

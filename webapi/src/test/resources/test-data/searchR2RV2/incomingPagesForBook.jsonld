@@ -7,7 +7,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "M",
     "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)",
     "knora-api:valueCreationDate" : {
@@ -20,7 +20,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "M",
     "knora-api:valueAsString" : "Stultifera navis (...)",
     "knora-api:valueCreationDate" : {
@@ -48,7 +48,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/05c7acceb703",
       "@type" : "incunabula:page",
@@ -58,7 +58,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/b6b5ff1eb703"
         },
@@ -74,7 +74,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:intValueAsInt" : 3,
         "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
@@ -96,7 +96,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "M",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -115,7 +115,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/19dee8b8b803",
       "@type" : "incunabula:page",
@@ -125,7 +125,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/b6b5ff1eb703"
         },
@@ -141,7 +141,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:intValueAsInt" : 7,
         "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
@@ -163,7 +163,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "M",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -182,7 +182,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/40c11d94b703",
       "@type" : "incunabula:page",
@@ -192,7 +192,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/b6b5ff1eb703"
         },
@@ -208,7 +208,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:intValueAsInt" : 2,
         "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
@@ -230,7 +230,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "M",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -249,7 +249,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/54d8597eb803",
       "@type" : "incunabula:page",
@@ -259,7 +259,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/b6b5ff1eb703"
         },
@@ -275,7 +275,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:intValueAsInt" : 6,
         "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
@@ -297,7 +297,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "M",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -316,7 +316,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/68ef9568b903",
       "@type" : "incunabula:page",
@@ -326,7 +326,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/b6b5ff1eb703"
         },
@@ -342,7 +342,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:intValueAsInt" : 10,
         "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
@@ -364,7 +364,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "M",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -383,7 +383,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/7bbb8e59b703",
       "@type" : "incunabula:page",
@@ -393,7 +393,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/b6b5ff1eb703"
         },
@@ -409,7 +409,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:intValueAsInt" : 1,
         "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
@@ -431,7 +431,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "M",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -450,7 +450,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/8fd2ca43b803",
       "@type" : "incunabula:page",
@@ -460,7 +460,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/b6b5ff1eb703"
         },
@@ -476,7 +476,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:intValueAsInt" : 5,
         "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
@@ -498,7 +498,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "M",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -517,7 +517,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/a3e9062eb903",
       "@type" : "incunabula:page",
@@ -527,7 +527,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/b6b5ff1eb703"
         },
@@ -543,7 +543,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:intValueAsInt" : 9,
         "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
@@ -565,7 +565,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "M",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -584,7 +584,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/cacc3b09b803",
       "@type" : "incunabula:page",
@@ -594,7 +594,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/b6b5ff1eb703"
         },
@@ -610,7 +610,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:intValueAsInt" : 4,
         "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
@@ -632,7 +632,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "M",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -651,7 +651,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/dee377f3b803",
       "@type" : "incunabula:page",
@@ -661,7 +661,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/b6b5ff1eb703"
         },
@@ -677,7 +677,7 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:intValueAsInt" : 8,
         "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
@@ -699,7 +699,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "M",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -713,7 +713,7 @@
       "@value" : "2016-03-02T15:05:47Z"
     }
   } ],
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
   "knora-api:userHasPermission" : "M",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",

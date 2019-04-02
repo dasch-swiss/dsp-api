@@ -17,7 +17,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartMonth" : 3,
       "knora-api:dateValueHasStartYear" : 1471,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1471-03-21 CE",
       "knora-api:valueCreationDate" : {
@@ -31,7 +31,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Geschichte von der schönen Melusine",
       "knora-api:valueCreationDate" : {
@@ -53,7 +53,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:51Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -74,7 +74,7 @@
       "knora-api:dateValueHasEndYear" : 1499,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1475,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1475 CE:1499 CE",
       "knora-api:valueCreationDate" : {
@@ -88,7 +88,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Itinerarius seu peregrinatio beatae virginis Mariae",
       "knora-api:valueCreationDate" : {
@@ -110,7 +110,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:53Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -131,7 +131,7 @@
       "knora-api:dateValueHasEndYear" : 1481,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1481,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1481 CE",
       "knora-api:valueCreationDate" : {
@@ -145,7 +145,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Reise ins Heilige Land",
       "knora-api:valueCreationDate" : {
@@ -158,7 +158,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Reysen und wanderschafften durch das Gelobte Land",
       "knora-api:valueCreationDate" : {
@@ -171,7 +171,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Itinerarius",
       "knora-api:valueCreationDate" : {
@@ -193,7 +193,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:21Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -214,7 +214,7 @@
       "knora-api:dateValueHasEndYear" : 1490,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1487,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1487 CE:1490 CE",
       "knora-api:valueCreationDate" : {
@@ -228,7 +228,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "De generatione Christi",
       "knora-api:valueCreationDate" : {
@@ -241,7 +241,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae",
       "knora-api:valueCreationDate" : {
@@ -263,7 +263,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:15Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -284,7 +284,7 @@
       "knora-api:dateValueHasEndYear" : 1489,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1489,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "GREGORIAN:1489 CE",
       "knora-api:valueCreationDate" : {
@@ -298,7 +298,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Itinerarius sive peregrinarius Beatissime Virginis Marie",
       "knora-api:valueCreationDate" : {
@@ -320,7 +320,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:18Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -341,7 +341,7 @@
       "knora-api:dateValueHasEndYear" : 1489,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1489,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1489 CE",
       "knora-api:valueCreationDate" : {
@@ -355,7 +355,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens",
       "knora-api:valueCreationDate" : {
@@ -377,7 +377,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:15Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -398,7 +398,7 @@
       "knora-api:dateValueHasEndYear" : 1489,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1489,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1489 CE",
       "knora-api:valueCreationDate" : {
@@ -412,7 +412,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Bereitung zu dem Heiligen Sakrament",
       "knora-api:valueCreationDate" : {
@@ -434,7 +434,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:24Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -455,7 +455,7 @@
       "knora-api:dateValueHasEndYear" : 1490,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1490,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1490 CE",
       "knora-api:valueCreationDate" : {
@@ -469,7 +469,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi",
       "knora-api:valueCreationDate" : {
@@ -482,7 +482,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Horologium devotionis circa vitam Christi",
       "knora-api:valueCreationDate" : {
@@ -504,7 +504,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:23Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -529,7 +529,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartMonth" : 2,
       "knora-api:dateValueHasStartYear" : 1491,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1491-02-19 CE",
       "knora-api:valueCreationDate" : {
@@ -543,7 +543,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Die wunderbare Meerfahrt des hl. Brandan",
       "knora-api:valueCreationDate" : {
@@ -565,7 +565,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:53Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -590,7 +590,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartMonth" : 7,
       "knora-api:dateValueHasStartYear" : 1491,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1491-07-28 CE",
       "knora-api:valueCreationDate" : {
@@ -604,7 +604,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Postilla super epistolas et evangelia",
       "knora-api:valueCreationDate" : {
@@ -626,7 +626,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:30Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -647,7 +647,7 @@
       "knora-api:dateValueHasEndYear" : 1492,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1492,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "GREGORIAN:1492 CE",
       "knora-api:valueCreationDate" : {
@@ -661,7 +661,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Lob der Glieder Mariens",
       "knora-api:valueCreationDate" : {
@@ -683,7 +683,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:14Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -704,7 +704,7 @@
       "knora-api:dateValueHasEndYear" : 1492,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1492,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1492 CE",
       "knora-api:valueCreationDate" : {
@@ -718,7 +718,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi",
       "knora-api:valueCreationDate" : {
@@ -740,7 +740,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -761,7 +761,7 @@
       "knora-api:dateValueHasEndYear" : 1492,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1492,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1492 CE",
       "knora-api:valueCreationDate" : {
@@ -775,7 +775,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Orationes",
       "knora-api:valueCreationDate" : {
@@ -788,7 +788,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Sant Brigitten gebettly",
       "knora-api:valueCreationDate" : {
@@ -810,7 +810,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:14Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -831,7 +831,7 @@
       "knora-api:dateValueHasEndYear" : 1495,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1495,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1495 CE",
       "knora-api:valueCreationDate" : {
@@ -845,7 +845,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Quadragesimale de filio prodigo",
       "knora-api:valueCreationDate" : {
@@ -867,7 +867,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:34Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -892,7 +892,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartMonth" : 3,
       "knora-api:dateValueHasStartYear" : 1495,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1495-03-03 CE",
       "knora-api:valueCreationDate" : {
@@ -906,7 +906,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "[Das] Narrenschiff (dt.)",
       "knora-api:valueCreationDate" : {
@@ -928,7 +928,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:39Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -953,7 +953,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartMonth" : 9,
       "knora-api:dateValueHasStartYear" : 1496,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1496-09-20 CE",
       "knora-api:valueCreationDate" : {
@@ -967,7 +967,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Passio sancti Meynrhadi martyris et heremite",
       "knora-api:valueCreationDate" : {
@@ -989,7 +989,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:38Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -1014,7 +1014,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartMonth" : 3,
       "knora-api:dateValueHasStartYear" : 1497,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1497-03-01 CE",
       "knora-api:valueCreationDate" : {
@@ -1028,7 +1028,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)",
       "knora-api:valueCreationDate" : {
@@ -1041,7 +1041,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Stultifera navis (...)",
       "knora-api:valueCreationDate" : {
@@ -1063,7 +1063,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:43Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -1088,7 +1088,7 @@
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartMonth" : 8,
       "knora-api:dateValueHasStartYear" : 1497,
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "JULIAN:1497-08-01 CE",
       "knora-api:valueCreationDate" : {
@@ -1102,7 +1102,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)",
       "knora-api:valueCreationDate" : {
@@ -1115,7 +1115,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Stultifera navis (...)",
       "knora-api:valueCreationDate" : {
@@ -1137,7 +1137,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:47Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",

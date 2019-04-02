@@ -49,7 +49,7 @@
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 WITH <@adminNamedGraphIri>
 DELETE {
@@ -57,31 +57,31 @@ DELETE {
     @* Delete current values, for which we have a new one. *@
 
     @if(maybeShortname.nonEmpty) {
-        ?project knora-base:projectShortname ?currentShortname .
+        ?project knora-admin:projectShortname ?currentShortname .
     }
 
     @if(maybeLongname.nonEmpty) {
-        ?project knora-base:projectLongname ?currentLongname .
+        ?project knora-admin:projectLongname ?currentLongname .
     }
 
     @if(maybeDescriptions.nonEmpty) {
-        ?project knora-base:projectDescription ?currentDescription .
+        ?project knora-admin:projectDescription ?currentDescription .
     }
 
     @if(maybeKeywords.nonEmpty) {
-        ?project knora-base:projectKeyword ?currentKeywords .
+        ?project knora-admin:projectKeyword ?currentKeywords .
     }
 
     @if(maybeLogo.nonEmpty) {
-        ?project knora-base:projectLogo ?currentLogo .
+        ?project knora-admin:projectLogo ?currentLogo .
     }
 
     @if(maybeStatus.nonEmpty) {
-        ?project knora-base:status ?currentStatus .
+        ?project knora-admin:status ?currentStatus .
     }
 
     @if(maybeSelfjoin.nonEmpty) {
-        ?project knora-base:hasSelfJoinEnabled ?currentSelfjoin .
+        ?project knora-admin:hasSelfJoinEnabled ?currentSelfjoin .
     }
 
 
@@ -91,39 +91,39 @@ DELETE {
     @* Add the new values. *@
 
     @if(maybeShortname.nonEmpty) {
-        ?project knora-base:projectShortname "@maybeShortname.get"^^xsd:string .
+        ?project knora-admin:projectShortname "@maybeShortname.get"^^xsd:string .
     }
 
     @if(maybeLongname.nonEmpty) {
-        ?project knora-base:projectLongname """@maybeLongname.get"""^^xsd:string .
+        ?project knora-admin:projectLongname """@maybeLongname.get"""^^xsd:string .
     }
 
     @if(maybeDescriptions.nonEmpty) {
         @for(description <- maybeDescriptions.get) {
             @if(description.language.nonEmpty) {
-                ?project knora-base:projectDescription """@description.value"""@@@{description.language.get} .
+                ?project knora-admin:projectDescription """@description.value"""@@@{description.language.get} .
             } else {
-                ?project knora-base:projectDescription """@description.value"""^^xsd:string .
+                ?project knora-admin:projectDescription """@description.value"""^^xsd:string .
             }
         }
     }
 
     @if(maybeKeywords.nonEmpty) {
         @for(keyword <- maybeKeywords.get) {
-          ?project knora-base:projectKeyword "@keyword"^^xsd:string .
+          ?project knora-admin:projectKeyword "@keyword"^^xsd:string .
         }
     }
 
     @if(maybeLogo.nonEmpty) {
-        ?project knora-base:projectLogo "@maybeLogo.get"^^xsd:string .
+        ?project knora-admin:projectLogo "@maybeLogo.get"^^xsd:string .
     }
 
     @if(maybeStatus.nonEmpty) {
-        ?project knora-base:status "@maybeStatus.get"^^xsd:boolean .
+        ?project knora-admin:status "@maybeStatus.get"^^xsd:boolean .
     }
 
     @if(maybeSelfjoin.nonEmpty) {
-        ?project knora-base:hasSelfJoinEnabled "@maybeSelfjoin.get"^^xsd:boolean .
+        ?project knora-admin:hasSelfJoinEnabled "@maybeSelfjoin.get"^^xsd:boolean .
     }
 }
 
@@ -148,17 +148,17 @@ WHERE {
 
     @* Get all current defined values. *@
 
-    ?project knora-base:projectShortname ?currentShortname .
+    ?project knora-admin:projectShortname ?currentShortname .
 
-    optional {?project knora-base:projectLongname ?currentLongname .}
+    optional {?project knora-admin:projectLongname ?currentLongname .}
 
-    optional {?project knora-base:projectDescription ?currentDescription .}
+    optional {?project knora-admin:projectDescription ?currentDescription .}
 
-    optional {?project knora-base:projectKeyword ?currentKeywords .}
+    optional {?project knora-admin:projectKeyword ?currentKeywords .}
 
-    optional {?project knora-base:projectLogo ?currentLogo .}
+    optional {?project knora-admin:projectLogo ?currentLogo .}
 
-    ?project knora-base:status ?currentStatus .
+    ?project knora-admin:status ?currentStatus .
 
-    ?project knora-base:hasSelfJoinEnabled ?currentSelfjoin .
+    ?project knora-admin:hasSelfJoinEnabled ?currentSelfjoin .
 }
