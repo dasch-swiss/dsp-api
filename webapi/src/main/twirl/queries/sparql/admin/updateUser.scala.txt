@@ -57,7 +57,7 @@
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 WITH <@adminNamedGraphIri>
 DELETE {
@@ -65,47 +65,47 @@ DELETE {
     @* Delete current values, for which we have a new one. *@
 
     @if(maybeUsername.nonEmpty) {
-        ?user knora-base:username ?currentUsername .
+        ?user knora-admin:username ?currentUsername .
     }
 
     @if(maybeEmail.nonEmpty) {
-        ?user knora-base:email ?currentEmail .
+        ?user knora-admin:email ?currentEmail .
     }
 
     @if(maybeGivenName.nonEmpty) {
-        ?user knora-base:givenName ?currentGivenName .
+        ?user knora-admin:givenName ?currentGivenName .
     }
 
     @if(maybeFamilyName.nonEmpty) {
-        ?user knora-base:familyName ?currentFamilyName .
+        ?user knora-admin:familyName ?currentFamilyName .
     }
 
     @if(maybePassword.nonEmpty) {
-        ?user knora-base:password ?currentPassword .
+        ?user knora-admin:password ?currentPassword .
     }
 
     @if(maybeStatus.nonEmpty) {
-        ?user knora-base:status ?currentStatus .
+        ?user knora-admin:status ?currentStatus .
     }
 
     @if(maybeLang.nonEmpty) {
-        ?user knora-base:preferredLanguage ?currentPreferredLanguage .
+        ?user knora-admin:preferredLanguage ?currentPreferredLanguage .
     }
 
     @if(maybeProjects.nonEmpty) {
-        ?user knora-base:isInProject ?currentProjects .
+        ?user knora-admin:isInProject ?currentProjects .
     }
 
     @if(maybeProjectsAdmin.nonEmpty) {
-        ?user knora-base:isInProjectAdminGroup ?currentProjectsAdmin .
+        ?user knora-admin:isInProjectAdminGroup ?currentProjectsAdmin .
     }
 
     @if(maybeGroups.nonEmpty) {
-        ?user knora-base:isInGroup ?currentGroups .
+        ?user knora-admin:isInGroup ?currentGroups .
     }
 
     @if(maybeSystemAdmin.nonEmpty) {
-        ?user knora-base:isInSystemAdminGroup ?currentIsInSystemAdminGroup .
+        ?user knora-admin:isInSystemAdminGroup ?currentIsInSystemAdminGroup .
     }
 
 } INSERT {
@@ -113,53 +113,53 @@ DELETE {
     @* Add the new values. *@
 
     @if(maybeUsername.nonEmpty) {
-        ?user knora-base:username "@maybeUsername.get"^^xsd:string .
+        ?user knora-admin:username "@maybeUsername.get"^^xsd:string .
     }
 
     @if(maybeEmail.nonEmpty) {
-        ?user knora-base:email "@maybeEmail.get"^^xsd:string .
+        ?user knora-admin:email "@maybeEmail.get"^^xsd:string .
     }
 
     @if(maybeGivenName.nonEmpty) {
-        ?user knora-base:givenName "@maybeGivenName.get"^^xsd:string .
+        ?user knora-admin:givenName "@maybeGivenName.get"^^xsd:string .
     }
 
     @if(maybeFamilyName.nonEmpty) {
-        ?user knora-base:familyName "@maybeFamilyName.get"^^xsd:string .
+        ?user knora-admin:familyName "@maybeFamilyName.get"^^xsd:string .
     }
 
     @if(maybePassword.nonEmpty) {
-        ?user knora-base:password "@maybePassword.get"^^xsd:string .
+        ?user knora-admin:password "@maybePassword.get"^^xsd:string .
     }
 
     @if(maybeStatus.nonEmpty) {
-        ?user knora-base:status "@maybeStatus.get"^^xsd:boolean .
+        ?user knora-admin:status "@maybeStatus.get"^^xsd:boolean .
     }
 
     @if(maybeLang.nonEmpty) {
-        ?user knora-base:preferredLanguage "@maybeLang.get"^^xsd:string .
+        ?user knora-admin:preferredLanguage "@maybeLang.get"^^xsd:string .
     }
 
     @if(maybeProjects.nonEmpty) {
         @for(project <- maybeProjects.get) {
-          ?user knora-base:isInProject <@project> .
+          ?user knora-admin:isInProject <@project> .
         }
     }
 
     @if(maybeProjectsAdmin.nonEmpty) {
         @for(project <- maybeProjectsAdmin.get) {
-          ?user knora-base:isInProjectAdminGroup <@project> .
+          ?user knora-admin:isInProjectAdminGroup <@project> .
         }
     }
 
     @if(maybeGroups.nonEmpty) {
         @for(group <- maybeGroups.get) {
-          ?user knora-base:isInGroup <@group> .
+          ?user knora-admin:isInGroup <@group> .
         }
     }
 
     @if(maybeSystemAdmin.nonEmpty) {
-        ?user knora-base:isInSystemAdminGroup "@maybeSystemAdmin.get"^^xsd:boolean .
+        ?user knora-admin:isInSystemAdminGroup "@maybeSystemAdmin.get"^^xsd:boolean .
     }
 
 }
@@ -185,27 +185,27 @@ WHERE {
 
     @* Get all current defined values. *@
 
-    ?user knora-base:username ?currentUsername .
+    ?user knora-admin:username ?currentUsername .
 
-    ?user knora-base:email ?currentEmail .
+    ?user knora-admin:email ?currentEmail .
 
-    ?user knora-base:givenName ?currentGivenName .
+    ?user knora-admin:givenName ?currentGivenName .
 
-    ?user knora-base:familyName ?currentFamilyName .
+    ?user knora-admin:familyName ?currentFamilyName .
 
-    ?user knora-base:password ?currentPassword .
+    ?user knora-admin:password ?currentPassword .
 
-    ?user knora-base:status ?currentStatus .
+    ?user knora-admin:status ?currentStatus .
 
-    ?user knora-base:preferredLanguage ?currentPreferredLanguage .
+    ?user knora-admin:preferredLanguage ?currentPreferredLanguage .
 
-    optional {?user knora-base:isInProject ?currentProjects .}
+    optional {?user knora-admin:isInProject ?currentProjects .}
 
-    optional {?user knora-base:isInProjectAdminGroup ?currentProjectsAdmin .}
+    optional {?user knora-admin:isInProjectAdminGroup ?currentProjectsAdmin .}
 
-    optional {?user knora-base:isInGroup ?currentGroups .}
+    optional {?user knora-admin:isInGroup ?currentGroups .}
 
-    ?user knora-base:isInSystemAdminGroup ?currentIsInSystemAdminGroup .
+    ?user knora-admin:isInSystemAdminGroup ?currentIsInSystemAdminGroup .
 
     FILTER(!(?user = IRI("@KnoraSystemInstances.Users.AnonymousUser.id") || ?s = IRI("@KnoraSystemInstances.Users.SystemUser.id")))
 }

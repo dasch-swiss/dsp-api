@@ -55,7 +55,7 @@ For example:
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2016-03-02T15:05:21Z"
   },
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser",
   "rdfs:label" : "Reise ins Heilige Land",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

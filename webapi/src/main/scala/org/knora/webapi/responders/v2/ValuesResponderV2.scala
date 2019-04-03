@@ -360,7 +360,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                 sourceResourceInfo = resourceInfo,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                                 targetResourceIri = targetResourceIri,
-                                valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                 valuePermissions = standoffLinkValuePermissions,
                                 requestingUser = requestingUser
                             )
@@ -633,7 +633,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     linkTargetIri = targetIri,
                     currentReferenceCount = 0,
                     newReferenceCount = initialReferenceCount,
-                    newLinkValueCreator = OntologyConstants.KnoraBase.SystemUser,
+                    newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                     newLinkValuePermissions = standoffLinkValuePermissions
                 )
         }
@@ -954,7 +954,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                             sourceResourceInfo = resourceInfo,
                             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                             targetResourceIri = targetResourceIri,
-                            valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                            valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                             valuePermissions = standoffLinkValuePermissions,
                             requestingUser = requestingUser
                         )
@@ -967,7 +967,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                             sourceResourceInfo = resourceInfo,
                             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                             targetResourceIri = removedTargetResource,
-                            valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                            valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                             valuePermissions = standoffLinkValuePermissions,
                             requestingUser = requestingUser
                         )
@@ -1367,7 +1367,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                             sourceResourceInfo = resourceInfo,
                             linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                             targetResourceIri = removedTargetResource,
-                            valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                            valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                             valuePermissions = standoffLinkValuePermissions,
                             requestingUser = requestingUser
                         )
@@ -1854,8 +1854,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       */
     lazy val standoffLinkValuePermissions: String = {
         val permissions: Set[PermissionADM] = Set(
-            PermissionADM.changeRightsPermission(OntologyConstants.KnoraBase.SystemUser),
-            PermissionADM.viewPermission(OntologyConstants.KnoraBase.UnknownUser)
+            PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.SystemUser),
+            PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
 
         PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)

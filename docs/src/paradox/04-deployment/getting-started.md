@@ -97,10 +97,10 @@ triplestore.
 ### Creating and running the WEBAPI Server distribution package
 
 To create a deployment package for the WEBAPI Server, please run from
-inside the `knora/webapi` folder the following commands:
+inside the top level `knora` folder the following commands:
 
-    $ sbt stage
-    $ cd target/universal/stage
+    $ sbt webapi/stage
+    $ cd webapi/target/universal/stage
     $ ./bin/webapi -J-Xms1G J-Xmx1G
 
 ### Downloading and running Sipi
@@ -110,81 +110,6 @@ install from source by following the
 [Sipi Manual](https://dhlab-basel.github.io/Sipi/documentation/index.html).
 For running and setting up Sipi for Knora, please see
 @ref:[The Sipi Media Server](../07-sipi/index.md).
-
-## Transforming Data When Ontologies Change
-
-When there is a change in Knora's ontologies or in a project-specific
-ontology, it may be necessary to update existing data to conform to the
-new ontology. This can be done directly in SPARQL, but for simple
-transformations, Knora includes a command-line program that works on RDF
-data files in [Turtle](https://www.w3.org/TR/turtle/) format. You can
-run it from SBT:
-
-```
-    > runMain org.knora.webapi.util.TransformData --help
-    [info] Running org.knora.webapi.util.TransformData --help
-    [info]
-    [info] Updates the structure of Knora repository data to accommodate changes in Knora.
-    [info]
-    [info] Usage: org.knora.webapi.util.TransformData -t [deleted|permissions|strings|standoff|all] input output
-    [info]
-    [info]   -t, --transform  <arg>   Selects a transformation. Available transformations:
-    [info]                            'deleted' (adds missing 'knora-base:isDeleted'
-    [info]                            statements), 'permissions' (combines old-style
-    [info]                            multiple permission statements into single permission
-    [info]                            statements), 'strings' (adds missing valueHasString),
-    [info]                            'standoff' (transforms old-style standoff into
-    [info]                            new-style standoff), 'creator' (transforms existing
-    [info]                            'knora-base:Owner' group inside permissions to
-    [info]                            'knora-base:Creator'), 'owner' (gives
-    [info]                            'knora-base:Creator' CR permissions to correspond to
-    [info]                            the previous behaviour for owners - use with care as
-    [info]                            it will add permissions that where not there before),
-    [info]                            'all' (all of the above minus 'owner')
-    [info]       --help               Show help message
-    [info]
-    [info]  trailing arguments:
-    [info]   input (required)    Input Turtle file
-    [info]   output (required)   Output Turtle file
-```
-
-The currently available transformations are:
-
-  - deleted  
-    Adds `knora-base:isDeleted false` to resources and values that don't
-    have a `knora-base:isDeleted` predicate.
-
-  - permissions  
-    Combines old-style permission statements (`hasViewPermission`,
-    `hasModifyPermission`, etc.) into one `hasPermissions` statement per
-    resource or value, as described in @ref:[Permissions](../02-knora-ontologies/knora-base.md#permissions).
-
-  - strings  
-    Adds missing `valueHasString` statements to Knora value objects.
-
-  - standoff  
-    Transforms old-style standoff markup (containing tag names as
-    strings) to new-style standoff markup (using different OWL class
-    names for different tags).
-
-  - creator  
-    Transforms existing `knora-base:Owner` group inside permissions to
-    `knora-base:Creator`.
-
-  - owner  
-    Gives `knora-base:Creator` **CR permissions** to correspond to the
-    previous behaviour for owners. Use with care as it will add
-    permissions that where not there before.
-
-  - all  
-    Runs all of the above transformations.
-
-Transformations that are not needed have no effect, so it is safe to use
-`-t all`.
-
-The program uses the Turtle parsing and formatting library from
-[RDF4J](http://rdf4j.org/). Additional transformations can be
-implemented as subclasses of `org.eclipse.rdf4j.rio.RDFHandler`.
 
 ## Selectively Disabling Routes
 

@@ -21,3 +21,6 @@ Also, please change the **HINT** to the appropriate level:
 - FEATURE: Return user's permission on resources and values (@github[#1257](#1257))
 
 - FEATURE: Get resources in a particular class from a project (@github[#1251](#1251))
+
+- MAJOR: Separate the `knora-admin` ontology from `knora-api` (@github[#1263](#1263)).
+  Existing repositories must be updated; see `upgrade/1263-knora-admin` for instructions.

@@ -393,12 +393,12 @@ case class PermissionsDataADM(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[I
 
     /* Is the user a member of the SystemAdmin group */
     def isSystemAdmin: Boolean = {
-        groupsPerProject.getOrElse(OntologyConstants.KnoraBase.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraBase.SystemAdmin)
+        groupsPerProject.getOrElse(OntologyConstants.KnoraAdmin.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraAdmin.SystemAdmin)
     }
 
     /* Is the user a member of the ProjectAdmin group */
     def isProjectAdmin(projectIri: IRI): Boolean = {
-        groupsPerProject.getOrElse(projectIri, List.empty[IRI]).contains(OntologyConstants.KnoraBase.ProjectAdmin)
+        groupsPerProject.getOrElse(projectIri, List.empty[IRI]).contains(OntologyConstants.KnoraAdmin.ProjectAdmin)
     }
 
     /* Does the user have the 'ProjectAdminAllPermission' permission for the project */
@@ -597,7 +597,7 @@ object PermissionADM {
 
     val ProjectResourceCreateAllPermission: PermissionADM = {
         PermissionADM(
-            name = OntologyConstants.KnoraBase.ProjectResourceCreateAllPermission,
+            name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
             additionalInformation = None,
             permissionCode = None
         )
@@ -605,7 +605,7 @@ object PermissionADM {
 
     def projectResourceCreateRestrictedPermission(restriction: IRI): PermissionADM = {
         PermissionADM(
-            name = OntologyConstants.KnoraBase.ProjectResourceCreateRestrictedPermission,
+            name = OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission,
             additionalInformation = Some(restriction),
             permissionCode = None
         )
@@ -613,7 +613,7 @@ object PermissionADM {
 
     val ProjectAdminAllPermission: PermissionADM = {
         PermissionADM(
-            name = OntologyConstants.KnoraBase.ProjectAdminAllPermission,
+            name = OntologyConstants.KnoraAdmin.ProjectAdminAllPermission,
             additionalInformation = None,
             permissionCode = None
         )
@@ -621,7 +621,7 @@ object PermissionADM {
 
     val ProjectAdminGroupAllPermission: PermissionADM = {
         PermissionADM(
-            name = OntologyConstants.KnoraBase.ProjectAdminGroupAllPermission,
+            name = OntologyConstants.KnoraAdmin.ProjectAdminGroupAllPermission,
             additionalInformation = None,
             permissionCode = None
         )
@@ -629,7 +629,7 @@ object PermissionADM {
 
     def projectAdminGroupRestrictedPermission(restriction: IRI): PermissionADM = {
         PermissionADM(
-            name = OntologyConstants.KnoraBase.ProjectAdminGroupRestrictedPermission,
+            name = OntologyConstants.KnoraAdmin.ProjectAdminGroupRestrictedPermission,
             additionalInformation = Some(restriction),
             permissionCode = None
         )
@@ -637,7 +637,7 @@ object PermissionADM {
 
     val ProjectAdminRightsAllPermission: PermissionADM = {
         PermissionADM(
-            name = OntologyConstants.KnoraBase.ProjectAdminRightsAllPermission,
+            name = OntologyConstants.KnoraAdmin.ProjectAdminRightsAllPermission,
             additionalInformation = None,
             permissionCode = None
         )

@@ -27,10 +27,10 @@
 @(email: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 ASK {
-    ?user rdf:type knora-base:User .
-    ?user knora-base:email "@email"^^xsd:string .
+    ?user rdf:type knora-admin:User .
+    ?user knora-admin:email "@email"^^xsd:string .
 }
 

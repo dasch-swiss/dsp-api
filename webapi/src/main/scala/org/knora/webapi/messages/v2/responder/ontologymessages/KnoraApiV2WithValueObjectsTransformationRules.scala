@@ -33,7 +33,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
 
     override val ontologyMetadata = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
-        projectIri = Some(OntologyConstants.KnoraBase.SystemProject.toSmartIri),
+        projectIri = Some(OntologyConstants.KnoraAdmin.SystemProject.toSmartIri),
         label = Some("The knora-api ontology in the complex schema")
     )
 
@@ -1433,39 +1433,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         OntologyConstants.KnoraBase.ExtResProvider,
         OntologyConstants.KnoraBase.MapEntryKey,
         OntologyConstants.KnoraBase.MapEntryValue,
-        OntologyConstants.KnoraBase.IsInMap,
-        OntologyConstants.KnoraBase.ForProject, // TODO: remove admin stuff from here when it's moved to a separate ontology.
-        OntologyConstants.KnoraBase.ForGroup,
-        OntologyConstants.KnoraBase.ForResourceClass,
-        OntologyConstants.KnoraBase.ForProperty,
-        OntologyConstants.KnoraBase.Address,
-        OntologyConstants.KnoraBase.Email,
-        OntologyConstants.KnoraBase.GivenName,
-        OntologyConstants.KnoraBase.FamilyName,
-        OntologyConstants.KnoraBase.Password,
-        OntologyConstants.KnoraBase.UsersActiveProject,
-        OntologyConstants.KnoraBase.Status,
-        OntologyConstants.KnoraBase.PreferredLanguage,
-        OntologyConstants.KnoraBase.IsInProject,
-        OntologyConstants.KnoraBase.IsInProjectAdminGroup,
-        OntologyConstants.KnoraBase.IsInGroup,
-        OntologyConstants.KnoraBase.IsInSystemAdminGroup,
-        OntologyConstants.KnoraBase.InstitutionDescription,
-        OntologyConstants.KnoraBase.InstitutionName,
-        OntologyConstants.KnoraBase.InstitutionWebsite,
-        OntologyConstants.KnoraBase.Phone,
-        OntologyConstants.KnoraBase.KnoraProject,
-        OntologyConstants.KnoraBase.ProjectShortname,
-        OntologyConstants.KnoraBase.ProjectShortcode,
-        OntologyConstants.KnoraBase.ProjectLongname,
-        OntologyConstants.KnoraBase.ProjectDescription,
-        OntologyConstants.KnoraBase.ProjectKeyword,
-        OntologyConstants.KnoraBase.ProjectLogo,
-        OntologyConstants.KnoraBase.BelongsToInstitution,
-        OntologyConstants.KnoraBase.HasSelfJoinEnabled,
-        OntologyConstants.KnoraBase.GroupName,
-        OntologyConstants.KnoraBase.GroupDescription,
-        OntologyConstants.KnoraBase.BelongsToProject
+        OntologyConstants.KnoraBase.IsInMap
 
     ).map(_.toSmartIri)
 
@@ -1473,7 +1441,6 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
       * Classes to remove from `knora-base` before converting it to the [[ApiV2WithValueObjects]] schema.
       */
     override val knoraBaseClassesToRemove: Set[SmartIri] = Set(
-        OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
         OntologyConstants.KnoraBase.MappingElement,
         OntologyConstants.KnoraBase.MappingComponent,
         OntologyConstants.KnoraBase.MappingStandoffDataTypeClass,
@@ -1482,11 +1449,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         OntologyConstants.KnoraBase.ExternalResource,
         OntologyConstants.KnoraBase.ExternalResValue,
         OntologyConstants.KnoraBase.Map,
-        OntologyConstants.KnoraBase.MapEntry,
-        OntologyConstants.KnoraBase.Permission, // TODO: remove admin stuff from here when it's moved to a separate ontology.
-        OntologyConstants.KnoraBase.UserGroup,
-        OntologyConstants.KnoraBase.Institution,
-        OntologyConstants.KnoraBase.AdministrativePermission
+        OntologyConstants.KnoraBase.MapEntry
     ).map(_.toSmartIri)
 
     /**

@@ -70,11 +70,11 @@ Example Group Information stored in admin named graph: :
 
 ```
 <http://rdfh.ch/groups/[shortcode]/[UUID]>
-     rdf:type knora-base:UserGroup ;
-     knora-base:groupName "Name of the group" ;
-     knora-base:groupDescription "A description of the group" ;
-     knora-base:belongsToProject <http://rdfh.ch/projects/[UUID]> ;
-     knora-base:status "true"^^xsd:boolean ;
-     knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+     rdf:type knora-admin:UserGroup ;
+     knora-admin:groupName "Name of the group" ;
+     knora-admin:groupDescription "A description of the group" ;
+     knora-admin:belongsToProject <http://rdfh.ch/projects/[UUID]> ;
+     knora-admin:status "true"^^xsd:boolean ;
+     knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 ```
 
