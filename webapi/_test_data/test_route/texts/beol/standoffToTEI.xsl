@@ -441,22 +441,10 @@
     http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-ref.html
     -->
     <xsl:template match="facsimile|figure">
-        <xsl:choose>
-            <xsl:when test="ancestor::p">
-                <ref>
-                    <xsl:attribute name="target"><xsl:value-of select="@src"/></xsl:attribute>
-                    <xsl:apply-templates/>
-                </ref>
-            </xsl:when>
-            <xsl:otherwise>
-                <p>
-                    <ref>
-                        <xsl:attribute name="target"><xsl:value-of select="@src"/></xsl:attribute>
-                        <xsl:apply-templates/>
-                    </ref>
-                </p>
-            </xsl:otherwise>
-        </xsl:choose>
+        <ref>
+            <xsl:attribute name="target"><xsl:value-of select="@src"/></xsl:attribute>
+            <xsl:apply-templates/>
+        </ref>
     </xsl:template>
 
     <!--
