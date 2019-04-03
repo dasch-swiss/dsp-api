@@ -535,6 +535,11 @@ object OntologyConstants {
         val AnonymousUser: IRI = KnoraAdminPrefixExpansion + "AnonymousUser"
     }
 
+    object KnoraAdminV2 {
+        val VersionSegment = "/v2"
+        val KnoraAdminOntologyIri: IRI = KnoraApi.ApiOntologyHostname + KnoraAdmin.KnoraAdminOntologyLabel + VersionSegment
+    }
+
     object Standoff {
         val StandoffOntologyLabel: String = "standoff"
         val StandoffOntologyIri: IRI = KnoraInternal.InternalOntologyStart + "/" + StandoffOntologyLabel
@@ -658,7 +663,7 @@ object OntologyConstants {
         def getSubjectTypePredicate(apiV2Schema: ApiV2Schema): IRI = {
             apiV2Schema match {
                 case ApiV2Simple => KnoraApiV2Simple.SubjectType
-                case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.SubjectType
+                case ApiV2Complex => KnoraApiV2WithValueObjects.SubjectType
             }
         }
 
@@ -668,7 +673,7 @@ object OntologyConstants {
         def getObjectTypePredicate(apiV2Schema: ApiV2Schema): IRI = {
             apiV2Schema match {
                 case ApiV2Simple => KnoraApiV2Simple.ObjectType
-                case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.ObjectType
+                case ApiV2Complex => KnoraApiV2WithValueObjects.ObjectType
             }
         }
     }
@@ -678,7 +683,6 @@ object OntologyConstants {
         val VersionSegment = "/v2"
 
         val KnoraApiOntologyIri: IRI = KnoraApi.ApiOntologyStart + KnoraApi.KnoraApiOntologyLabel + VersionSegment
-
         val KnoraApiV2PrefixExpansion: IRI = KnoraApiOntologyIri + "#"
 
         val Result: IRI = KnoraApiV2PrefixExpansion + "result"
@@ -1005,7 +1009,7 @@ object OntologyConstants {
             KnoraBase.HasTextFileValue -> KnoraApiV2Simple.HasTextFile,
             KnoraBase.HasDocumentFileValue -> KnoraApiV2Simple.HasDocumentFile
         ),
-        (InternalSchema, ApiV2WithValueObjects) -> Map(
+        (InternalSchema, ApiV2Complex) -> Map(
             KnoraBase.SubjectClassConstraint -> KnoraApiV2WithValueObjects.SubjectType,
             KnoraBase.ObjectClassConstraint -> KnoraApiV2WithValueObjects.ObjectType,
             KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2WithValueObjects.ObjectType,
@@ -1040,7 +1044,7 @@ object OntologyConstants {
             KnoraApiV2Simple.HasDocumentFile -> KnoraBase.HasDocumentFileValue
 
         ),
-        (ApiV2WithValueObjects, InternalSchema) -> Map(
+        (ApiV2Complex, InternalSchema) -> Map(
             KnoraApiV2WithValueObjects.SubjectType -> KnoraBase.SubjectClassConstraint,
             KnoraApiV2WithValueObjects.ObjectType -> KnoraBase.ObjectClassConstraint,
             KnoraApiV2WithValueObjects.UriValueAsUri -> KnoraBase.ValueHasUri,

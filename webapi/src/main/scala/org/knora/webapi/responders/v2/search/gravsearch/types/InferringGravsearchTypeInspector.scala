@@ -505,7 +505,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         def getResourceTypeIriForSchema(querySchema: ApiV2Schema): SmartIri = {
             querySchema match {
                 case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri
-                case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri
+                case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri
             }
         }
 
@@ -517,7 +517,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         def getFileTypeForSchema(querySchema: ApiV2Schema): SmartIri = {
             querySchema match {
                 case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.File.toSmartIri
-                case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.FileValue.toSmartIri
+                case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.FileValue.toSmartIri
             }
         }
 

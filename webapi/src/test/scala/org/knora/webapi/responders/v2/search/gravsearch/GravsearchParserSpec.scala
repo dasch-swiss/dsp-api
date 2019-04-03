@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v2.search.gravsearch
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{ApiV2Simple, ApiV2WithValueObjects, CoreSpec, GravsearchException}
+import org.knora.webapi.{ApiV2Simple, ApiV2Complex, CoreSpec, GravsearchException}
 
 /**
   * Tests [[GravsearchParser]].
@@ -2097,9 +2097,9 @@ class GravsearchParserSpec extends CoreSpec() {
                     namedGraph = None
                 )
             ),
-            querySchema = Some(ApiV2WithValueObjects)
+            querySchema = Some(ApiV2Complex)
         ),
-        querySchema = Some(ApiV2WithValueObjects),
+        querySchema = Some(ApiV2Complex),
         offset = 0,
         orderBy = Nil,
         whereClause = WhereClause(
@@ -2194,7 +2194,7 @@ class GravsearchParserSpec extends CoreSpec() {
                     propertyPathOperator = None
                 )
             ),
-            querySchema = Some(ApiV2WithValueObjects)
+            querySchema = Some(ApiV2Complex)
         )
     )
 }
