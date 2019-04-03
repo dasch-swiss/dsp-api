@@ -25,25 +25,25 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.{ClientApiGenerationException, InconsistentTriplestoreDataException, OntologyConstants}
 
 class GeneratorFrontEnd {
-    def ontologyClassDef2ClientClassDef(ontologyClassDef: ClassInfoContentV2, ontologyKnoraPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
+    def rdfClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val isResourceClass = ontologyClassDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceClass.toSmartIri)
+        val isResourceClass = rdfClassDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceClass.toSmartIri)
 
         if (isResourceClass) {
-            ontologyResourceClassDef2ClientClassDef(ontologyClassDef, ontologyKnoraPropertyDefs)
+            rdfResourceClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
         } else {
-            ontologyNonResourceClassDef2ClientClassDef(ontologyClassDef, ontologyKnoraPropertyDefs)
+            rdfNonResourceClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
         }
     }
 
-    private def ontologyResourceClassDef2ClientClassDef(ontologyClassDef: ClassInfoContentV2, ontologyKnoraPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
+    private def rdfResourceClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val cardinalitiesWithoutLinkProps = ontologyClassDef.directCardinalities.filter {
+        val cardinalitiesWithoutLinkProps = rdfClassDef.directCardinalities.filter {
             case (propertyIri, _) =>
-                ontologyKnoraPropertyDefs.get(propertyIri) match {
-                    case Some(ontologyPropertyDef) => !ontologyPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty.toSmartIri)
+                rdfPropertyDefs.get(propertyIri) match {
+                    case Some(rdfPropertyDef) => !rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty.toSmartIri)
                     case None => true
                 }
         }
@@ -53,13 +53,13 @@ class GeneratorFrontEnd {
                 val propertyName = propertyIri.getEntityName
 
                 if (propertyIri.isKnoraEntityIri) {
-                    val ontologyPropertyDef = ontologyKnoraPropertyDefs(propertyIri)
-                    val ontologyObjectType: SmartIri = ontologyPropertyDef.requireIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-api:objectType"))
-                    val isResourceProp = ontologyPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceProperty.toSmartIri)
-                    val isEditable = ontologyPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsEditable.toSmartIri)
+                    val rdfPropertyDef = rdfPropertyDefs(propertyIri)
+                    val ontologyObjectType: SmartIri = rdfPropertyDef.requireIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-api:objectType"))
+                    val isResourceProp = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceProperty.toSmartIri)
+                    val isEditable = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsEditable.toSmartIri)
 
                     if (isResourceProp) {
-                        val isLinkValueProp = ontologyPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty.toSmartIri)
+                        val isLinkValueProp = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty.toSmartIri)
 
                         val clientObjectType: ClientObjectType = if (isLinkValueProp) {
                             ClientLinkValue(ontologyObjectType)
@@ -95,22 +95,22 @@ class GeneratorFrontEnd {
         }.toVector.sortBy(_.propertyIri)
 
         ClientClassDefinition(
-            className = makeClientClassName(ontologyClassDef.classIri),
-            classIri = ontologyClassDef.classIri,
+            className = makeClientClassName(rdfClassDef.classIri),
+            classIri = rdfClassDef.classIri,
             properties = clientPropertyDefs
         )
     }
 
-    private def ontologyNonResourceClassDef2ClientClassDef(ontologyClassDef: ClassInfoContentV2, ontologyKnoraPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
+    private def rdfNonResourceClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val clientPropertyDefs = ontologyClassDef.directCardinalities.map {
+        val clientPropertyDefs = rdfClassDef.directCardinalities.map {
             case (propertyIri, knoraCardinalityInfo) =>
                 val propertyName = propertyIri.getEntityName
 
                 if (propertyIri.isKnoraEntityIri) {
-                    val ontologyPropertyDef = ontologyKnoraPropertyDefs(propertyIri)
-                    val ontologyObjectType: SmartIri = ontologyPropertyDef.requireIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-api:objectType"))
+                    val rdfPropertyDef = rdfPropertyDefs(propertyIri)
+                    val ontologyObjectType: SmartIri = rdfPropertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri).getOrElse(OntologyConstants.Xsd.String.toSmartIri)
 
                     ClientPropertyDefinition(
                         propertyName = propertyName,
@@ -131,8 +131,8 @@ class GeneratorFrontEnd {
         }.toVector.sortBy(_.propertyIri)
 
         ClientClassDefinition(
-            className = makeClientClassName(ontologyClassDef.classIri),
-            classIri = ontologyClassDef.classIri,
+            className = makeClientClassName(rdfClassDef.classIri),
+            classIri = rdfClassDef.classIri,
             properties = clientPropertyDefs
         )
     }

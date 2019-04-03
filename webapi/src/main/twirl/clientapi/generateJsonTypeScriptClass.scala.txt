@@ -31,7 +31,7 @@
         case ClientIntegerLiteral => "number"
         case ClientDecimalLiteral => "number"
         case ClientDateTimeStampLiteral => "string"
-        case classRef: ClientClassReference => classRef.className
+        case classRef: ClientClassReference => "any"
         case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
     }
 }
@@ -52,7 +52,7 @@
     }
 }
 
-@addArrayForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
+@wrapInArrayForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
     if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
         s"[$typeScriptType]"
     } else {
@@ -60,11 +60,13 @@
     }
 }
 
-@addOptionalForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
+@addForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
     if (cardinality == MayHaveOne) {
-      s"$typeScriptType?"
+        s"$typeScriptType?"
+    } else if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
+        s"$typeScriptType[]"
     } else {
-      typeScriptType
+        typeScriptType
     }
 }
 
@@ -74,8 +76,8 @@ import { Any, JsonObject, JsonProperty } from "json2typescript";
 export class @{classDef.className} {
     @for(property <- classDef.properties) {
         @defining(makeTypeScriptType(property.objectType)) { typeScriptType =>
-            @@JsonProperty("@{property.propertyName}", @addArrayForCardinality(typeScriptType.capitalize, property.cardinality))
-            public @{property.propertyName}: @addOptionalForCardinality(typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
+            @@JsonProperty("@{property.propertyName}", @wrapInArrayForCardinality(typeScriptType.capitalize, property.cardinality))
+            public @{property.propertyName}: @addForCardinality(typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
         }
     }
 }

@@ -19,8 +19,23 @@
 
 package org.knora.webapi.util.clientapi
 
+/**
+  * Represents generated client API source code representing a class definition.
+  *
+  * @param filename the filename in which the class definition should be saved.
+  * @param sourceCode the source code.
+  */
 case class ClientClassSourceCode(filename: String, sourceCode: String)
 
+/**
+  * A trait for client API code generator back-ends.
+  */
 trait GeneratorBackEnd {
-    def generateClass(clientClassDefinition: ClientClassDefinition): ClientClassSourceCode
+    /**
+      * Generates client API class source code based on a [[ClientClassDefinition]].
+      *
+      * @param clientClassDef the definition of the client class.
+      * @return the generated source code.
+      */
+    def generateClientClassSourceCode(clientClassDef: ClientClassDefinition): ClientClassSourceCode
 }
