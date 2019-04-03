@@ -28,7 +28,7 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
 /**
   * Rules for converting `knora-admin` from the internal schema to the [[ApiV2Complex]] schema.
   */
-object KnoraAdminToV2ComplexTransformationRules extends OntologyTransformationRules {
+object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformationRules {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
     /**

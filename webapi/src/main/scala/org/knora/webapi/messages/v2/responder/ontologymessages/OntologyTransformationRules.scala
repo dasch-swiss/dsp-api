@@ -79,7 +79,7 @@ object OntologyTransformationRules {
         if (ontologyIri.toString == OntologyConstants.KnoraAdminV2.KnoraAdminOntologyIri) {
             targetSchema match {
                 case ApiV2Simple => throw BadRequestException(s"The knora-admin API is not available in the simple schema")
-                case ApiV2Complex => KnoraAdminToV2ComplexTransformationRules
+                case ApiV2Complex => KnoraAdminToApiV2ComplexTransformationRules
             }
         } else {
             // Otherwise, use the knora-base transformation rules.
