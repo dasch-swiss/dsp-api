@@ -1,0 +1,81 @@
+@*
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.util._
+@import org.knora.webapi.util.clientapi._
+@import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
+
+@(classDef: ClientClassDefinition)
+
+@makeTypeScriptType(objectType: ClientObjectType) = @{
+    objectType match {
+        case ClientStringLiteral => "string"
+        case ClientBooleanLiteral => "boolean"
+        case ClientIntegerLiteral => "number"
+        case ClientDecimalLiteral => "number"
+        case ClientDateTimeStampLiteral => "string"
+        case classRef: ClientClassReference => classRef.className
+        case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
+    }
+}
+
+@makeDefaultValue(objectType: ClientObjectType, cardinality: Cardinality) = @{
+    if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
+        "[]"
+    } else {
+        objectType match {
+           case ClientStringLiteral => "\"\""
+           case ClientBooleanLiteral => "false"
+           case ClientIntegerLiteral => "0"
+           case ClientDecimalLiteral => "0"
+           case ClientDateTimeStampLiteral => "\"\""
+           case classRef: ClientClassReference => "null"
+           case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
+        }
+    }
+}
+
+@addArrayForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
+    if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
+        s"[$typeScriptType]"
+    } else {
+        typeScriptType
+    }
+}
+
+@addOptionalForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
+    if (cardinality == MayHaveOne) {
+      s"$typeScriptType?"
+    } else {
+      typeScriptType
+    }
+}
+
+import { Any, JsonObject, JsonProperty } from "json2typescript";
+
+@@JsonObject("@{classDef.className}")
+export class @{classDef.className} {
+    @for(property <- classDef.properties) {
+        @defining(makeTypeScriptType(property.objectType)) { typeScriptType =>
+            @@JsonProperty("@{property.propertyName}", @addArrayForCardinality(typeScriptType.capitalize, property.cardinality))
+            public @{property.propertyName}: @addOptionalForCardinality(typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
+        }
+    }
+}

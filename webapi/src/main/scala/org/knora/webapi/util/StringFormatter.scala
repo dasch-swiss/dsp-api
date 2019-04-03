@@ -274,6 +274,18 @@ object StringFormatter {
     }
 
     /**
+      * Initialises the singleton instance of [[StringFormatter]] for use in a client program that will connect to Knora.
+      */
+    def initForClient(knoraHostAndPort: String): Unit = {
+        this.synchronized {
+            generalInstance match {
+                case Some(_) => ()
+                case None => generalInstance = Some(new StringFormatter(maybeKnoraHostAndPort = Some(knoraHostAndPort)))
+            }
+        }
+    }
+
+    /**
       * Initialises the singleton instance of [[StringFormatter]] for a test.
       */
     def initForTest(): Unit = {
@@ -590,7 +602,7 @@ object IriConversions {
 /**
   * Handles string parsing, formatting, conversion, and validation.
   */
-class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTest: Boolean = false) {
+class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, maybeKnoraHostAndPort: Option[String] = None, initForTest: Boolean = false) {
 
     import StringFormatter._
 
@@ -600,8 +612,10 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         // Use the default host and port for automated testing.
         Some("0.0.0.0:3333")
     } else {
-        // Use the configured host and port.
-        maybeSettings.map(_.externalOntologyIriHostAndPort)
+        maybeSettings match {
+            case Some(settings) => Some(settings.externalOntologyIriHostAndPort)
+            case None => maybeKnoraHostAndPort
+        }
     }
 
     // The protocol and host that the ARK resolver is running on.

@@ -34,9 +34,9 @@ case object ClientIntegerLiteral extends ClientLiteral
 
 case object ClientDecimalLiteral extends ClientLiteral
 
-case class ClientIriLiteral(classIri: SmartIri) extends ClientLiteral
-
 case object ClientDateTimeStampLiteral extends ClientLiteral
+
+case class ClientClassReference(className: String, classIri: SmartIri) extends ClientObjectType
 
 sealed trait ClientKnoraValue extends ClientObjectType
 
