@@ -21,11 +21,12 @@ package org.knora.webapi.e2e
 
 import java.net.URLEncoder
 
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{ClassInfoContentV2, InputOntologyV2, PropertyInfoContentV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.{IRI, OntologyConstants}
+import org.knora.webapi.{AssertionException, IRI, OntologyConstants}
 import spray.json._
 
 /**
@@ -50,9 +51,18 @@ object InstanceChecker {
   * @param instanceInspector an [[InstanceInspector]] for working with instances in a particular format.
   */
 class InstanceChecker(instanceInspector: InstanceInspector) {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     private case class Definitions(classDefs: Map[SmartIri, ClassInfoContentV2] = Map.empty,
-                                   propertyDefs: Map[SmartIri, PropertyInfoContentV2] = Map.empty)
+                                   propertyDefs: Map[SmartIri, PropertyInfoContentV2] = Map.empty) {
+        def getClassDef(classIri: SmartIri): ClassInfoContentV2 = {
+            classDefs.getOrElse(classIri, throw AssertionException(s"No definition for class <$classIri>"))
+        }
+
+        def getPropertyDef(propertyIri: SmartIri): PropertyInfoContentV2 = {
+            propertyDefs.getOrElse(propertyIri, throw AssertionException(s"No definition for property <$propertyIri>"))
+        }
+    }
 
     /**
       * Checks that an instance of an RDF class eturned in a Knora response corresponds to the class definition.
@@ -68,14 +78,59 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
     }
 
     /**
-      * Recursively checks whether instance elements and child elements correspond to their class definitions.
+      * Recursively checks whether instance elements and their property objects correspond to their class definitions.
       *
       * @param classIri        the class IRI.
       * @param instanceElement the instance to be checked.
       * @param definitions     definitions of the class and any other relevant classes and properties.
       */
     private def checkRec(classIri: SmartIri, instanceElement: InstanceElement, definitions: Definitions): Unit = {
-        
+        if (!instanceInspector.elementHasCompatibleType(element = instanceElement, elementTypeIri = classIri)) {
+            throw AssertionException(s"Element type ${instanceElement.elementType} is not compatible with class IRI <$classIri>")
+        }
+
+        val classDef: ClassInfoContentV2 = definitions.getClassDef(classIri)
+
+        val propertyIrisToInstancePropertyNames: Map[SmartIri, String] = classDef.directCardinalities.keySet.map {
+            propertyIri => propertyIri -> instanceInspector.propertyIriToInstancePropertyName(propertyIri)
+        }.toMap
+
+        val allowedInstancePropertyNames: Set[String] = propertyIrisToInstancePropertyNames.values.toSet
+        val extraInstancePropertyNames = instanceElement.propertyObjects.keySet -- allowedInstancePropertyNames
+
+        if (extraInstancePropertyNames.nonEmpty) {
+            throw AssertionException(s"One or more instance properties are not allowed by cardinalities: ${extraInstancePropertyNames.mkString(", ")}")
+        }
+
+        propertyIrisToInstancePropertyNames.foreach {
+            case (propertyIri, instancePropertyName) =>
+                val cardinality: Cardinality = classDef.directCardinalities(propertyIri).cardinality
+                val objectsOfProp: Vector[InstanceElement] = instanceElement.propertyObjects.getOrElse(instancePropertyName, Vector.empty)
+                val numberOfObjects = objectsOfProp.size
+
+                if ((cardinality == MustHaveOne && numberOfObjects != 1) ||
+                    (cardinality == MayHaveOne && numberOfObjects > 1) ||
+                    (cardinality == MustHaveSome && numberOfObjects == 0)) {
+                    throw AssertionException(s"Property $instancePropertyName has $numberOfObjects objects, but its cardinality is $cardinality")
+                }
+        }
+
+        propertyIrisToInstancePropertyNames.foreach {
+            case (propertyIri, instancePropertyName) =>
+                val objectType: SmartIri = if (propertyIri.isKnoraApiV2EntityIri) {
+                    val propertyDef = definitions.propertyDefs(propertyIri)
+                    propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri).getOrElse(OntologyConstants.Xsd.String.toSmartIri)
+                } else {
+                    OntologyConstants.Xsd.String.toSmartIri
+                }
+
+                val objectsOfProp: Vector[InstanceElement] = instanceElement.propertyObjects.getOrElse(instancePropertyName, Vector.empty)
+
+                for (obj <- objectsOfProp) {
+
+                }
+
+        }
     }
 
     private def getDefinitions(classIri: SmartIri, knoraRouteGet: String => String): Definitions = {
@@ -83,8 +138,6 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
     }
 
     private def getDefinitionsRec(classIri: SmartIri, knoraRouteGet: String => String, definitions: Definitions): Definitions = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
         // Get the definition of classIri.
         val classDef: ClassInfoContentV2 = getClassDef(classIri = classIri, knoraRouteGet = knoraRouteGet)
 
@@ -129,6 +182,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
     }
 
     private def getClassDef(classIri: SmartIri, knoraRouteGet: String => String): ClassInfoContentV2 = {
+        // TODO: make this get all base classes, not just the immediate ones.
         val urlPath = s"/v2/ontologies/classes/${URLEncoder.encode(classIri.toString, "UTF-8")}"
         val classDefStr: String = knoraRouteGet(urlPath)
         InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(classDefStr)).classes(classIri)
@@ -144,11 +198,11 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
 /**
   * Represents an instance of an RDF class, or an element of such an instance.
   *
-  * @param elementType the element type. This is an opaque string that only the [[InstanceInspector]] needs
-  *                    to understand.
-  * @param children    a map of property names to child elements.
+  * @param elementType     the element type. This is an opaque string that only the [[InstanceInspector]] needs
+  *                        to understand.
+  * @param propertyObjects a map of property names to their objects.
   */
-case class InstanceElement(elementType: String, children: Map[String, Vector[InstanceElement]] = Map.empty)
+case class InstanceElement(elementType: String, propertyObjects: Map[String, Vector[InstanceElement]] = Map.empty)
 
 /**
   * A trait for classes that help [[InstanceChecker]] check instances in different formats.
@@ -273,6 +327,8 @@ class JsonLDInstanceInspector extends InstanceInspector {
     }
 
     override def elementHasCompatibleType(element: InstanceElement, elementTypeIri: SmartIri): Boolean = {
+        // TODO: check whether the element belongs to a subclass of elementTyeIri.
+
         val elementTypeIriStr: IRI = elementTypeIri.toString
 
         element.elementType == elementTypeIriStr ||
