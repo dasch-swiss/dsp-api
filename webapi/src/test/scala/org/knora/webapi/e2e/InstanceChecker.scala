@@ -19,11 +19,29 @@
 
 package org.knora.webapi.e2e
 
-import org.knora.webapi.messages.v2.responder.ontologymessages.{ReadClassInfoV2, ReadPropertyInfoV2}
-import org.knora.webapi.util.SmartIri
+import java.net.URLEncoder
+
+import org.knora.webapi.messages.v2.responder.ontologymessages.{ClassInfoContentV2, InputOntologyV2, PropertyInfoContentV2}
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.{IRI, OntologyConstants}
 import spray.json._
+
+/**
+  * Constructs an [[InstanceChecker]] for a Knora response format.
+  */
+object InstanceChecker {
+    /**
+      * Returns an [[InstanceChecker]] for Knora responses in JSON format.
+      */
+    def getJsonChecker: InstanceChecker = new InstanceChecker(new JsonInstanceInspector)
+
+    /**
+      * Returns an [[InstanceChecker]] for Knora responses in JSON-LD format.
+      */
+    def getJsonLDChecker: InstanceChecker = new InstanceChecker(new JsonLDInstanceInspector)
+}
 
 /**
   * A test utility for checking whether an instance of an RDF class returned in a Knora response corresponds to the
@@ -32,16 +50,94 @@ import spray.json._
   * @param instanceInspector an [[InstanceInspector]] for working with instances in a particular format.
   */
 class InstanceChecker(instanceInspector: InstanceInspector) {
-    /**
-      * Checks whether an instance of an RDF class returned in a Knora response corresponds to the
-      * * the class definition.
-      *
-      * @param classDef        the class definition.
-      * @param propertyDefs    the definitions of the properties used in the class.
-      * @param instanceElement an [[InstanceElement]] representing the instance to be checked.
-      */
-    def checkInstance(classDef: ReadClassInfoV2, propertyDefs: Map[SmartIri, ReadPropertyInfoV2], instanceElement: InstanceElement): Unit = {
 
+    private case class Definitions(classDefs: Map[SmartIri, ClassInfoContentV2] = Map.empty,
+                                   propertyDefs: Map[SmartIri, PropertyInfoContentV2] = Map.empty)
+
+    /**
+      * Checks that an instance of an RDF class eturned in a Knora response corresponds to the class definition.
+      *
+      * @param classIri         the class IRI.
+      * @param instanceResponse a Knora response containing the instance to be checked.
+      * @param knoraRouteGet    a function that takes a Knora API URL path and returns a response from Knora.
+      */
+    def check(classIri: SmartIri, instanceResponse: String, knoraRouteGet: String => String): Unit = {
+        val instanceElement = instanceInspector.toElement(instanceResponse)
+        val definitions = getDefinitions(classIri = classIri, knoraRouteGet = knoraRouteGet)
+        checkRec(classIri = classIri, instanceElement = instanceElement, definitions = definitions)
+    }
+
+    /**
+      * Recursively checks whether instance elements and child elements correspond to their class definitions.
+      *
+      * @param classIri        the class IRI.
+      * @param instanceElement the instance to be checked.
+      * @param definitions     definitions of the class and any other relevant classes and properties.
+      */
+    private def checkRec(classIri: SmartIri, instanceElement: InstanceElement, definitions: Definitions): Unit = {
+        
+    }
+
+    private def getDefinitions(classIri: SmartIri, knoraRouteGet: String => String): Definitions = {
+        getDefinitionsRec(classIri = classIri, knoraRouteGet = knoraRouteGet, definitions = Definitions())
+    }
+
+    private def getDefinitionsRec(classIri: SmartIri, knoraRouteGet: String => String, definitions: Definitions): Definitions = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        // Get the definition of classIri.
+        val classDef: ClassInfoContentV2 = getClassDef(classIri = classIri, knoraRouteGet = knoraRouteGet)
+
+        // Get the IRIs of the Knora properties on which that class has cardinalities.
+        val propertyIrisFromCardinalities: Set[SmartIri] = (classDef.directCardinalities.keySet -- definitions.propertyDefs.keySet).filter(_.isKnoraApiV2EntityIri)
+
+        // Get the definitions of those properties.
+        val propertyDefsFromCardinalities: Map[SmartIri, PropertyInfoContentV2] = propertyIrisFromCardinalities.map {
+            propertyIri =>
+                propertyIri -> getPropertyDef(propertyIri = propertyIri, knoraRouteGet = knoraRouteGet)
+        }.toMap
+
+        // Get the IRIs of the object types of those properties.
+        val classIrisFromObjectTypes: Set[SmartIri] = propertyDefsFromCardinalities.values.foldLeft(Set.empty[SmartIri]) {
+            case (acc, propertyDef) =>
+                propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri) match {
+                    case Some(objectType) => acc + objectType
+                    case None => acc
+                }
+        } -- definitions.classDefs.keySet - classIri
+
+        // Update definitions with the class and property definitions we've got so far.
+        val updatedDefs: Definitions = definitions.copy(
+            classDefs = definitions.classDefs + (classIri -> classDef),
+            propertyDefs = definitions.propertyDefs ++ propertyDefsFromCardinalities
+        )
+
+        // Recursively add the definitions of the classes that we identified as object types.
+        classIrisFromObjectTypes.foldLeft(updatedDefs) {
+            case (acc, classIriFromObjectType) =>
+                val recDefinitions: Definitions = getDefinitionsRec(
+                    classIri = classIriFromObjectType,
+                    knoraRouteGet = knoraRouteGet,
+                    definitions = updatedDefs
+                )
+
+                acc.copy(
+                    classDefs = acc.classDefs ++ recDefinitions.classDefs,
+                    propertyDefs = acc.propertyDefs ++ recDefinitions.propertyDefs
+                )
+        }
+    }
+
+    private def getClassDef(classIri: SmartIri, knoraRouteGet: String => String): ClassInfoContentV2 = {
+        val urlPath = s"/v2/ontologies/classes/${URLEncoder.encode(classIri.toString, "UTF-8")}"
+        val classDefStr: String = knoraRouteGet(urlPath)
+        InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(classDefStr)).classes(classIri)
+    }
+
+    private def getPropertyDef(propertyIri: SmartIri, knoraRouteGet: String => String): PropertyInfoContentV2 = {
+        val urlPath = s"/v2/ontologies/properties/${URLEncoder.encode(propertyIri.toString, "UTF-8")}"
+        val propertyDefStr: String = knoraRouteGet(urlPath)
+        InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(propertyDefStr)).properties(propertyIri)
     }
 }
 
@@ -59,9 +155,9 @@ case class InstanceElement(elementType: String, children: Map[String, Vector[Ins
   */
 trait InstanceInspector {
     /**
-      * Converts a Knora response to an [[InstanceElement]].
+      * Converts a Knora response representing a class instance to an [[InstanceElement]].
       */
-    def toElement(response: String): InstanceElement
+    def toElement(instanceResponse: String): InstanceElement
 
     /**
       * Converts an RDF property IRI to the property name used in instances.
@@ -177,6 +273,9 @@ class JsonLDInstanceInspector extends InstanceInspector {
     }
 
     override def elementHasCompatibleType(element: InstanceElement, elementTypeIri: SmartIri): Boolean = {
-        element.elementType == elementTypeIri.toString
+        val elementTypeIriStr: IRI = elementTypeIri.toString
+
+        element.elementType == elementTypeIriStr ||
+            (element.elementType == OntologyConstants.Xsd.Integer && elementTypeIriStr == OntologyConstants.Xsd.Int)
     }
 }
