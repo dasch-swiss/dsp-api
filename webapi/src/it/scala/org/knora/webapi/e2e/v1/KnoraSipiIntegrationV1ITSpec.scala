@@ -762,8 +762,9 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                   |         <title>Testletter</title>
                   |      </titleStmt>
                   |      <publicationStmt>
-                  |         <p> This is the TEI/XML representation of the resource identified by the Iri
-                  |                        ${letterIri.get}. </p>
+                  |         <p>This is the TEI/XML representation of the resource identified by the Iri
+                  |                        ${letterIri.get}.
+                  |                    </p>
                   |      </publicationStmt>
                   |      <sourceDesc>
                   |         <p>Representation of the resource's text as TEI/XML</p>
@@ -772,11 +773,13 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                   |   <profileDesc>
                   |      <correspDesc ref="${letterIri.get}">
                   |         <correspAction type="sent">
-                  |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer, Johann Jacob</persName>
+                  |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer,
+                  |                Johann Jacob</persName>
                   |            <date when="1703-06-10"/>
                   |         </correspAction>
                   |         <correspAction type="received">
-                  |            <persName ref="http://d-nb.info/gnd/119112450">Hermann, Jacob</persName>
+                  |            <persName ref="http://d-nb.info/gnd/119112450">Hermann,
+                  |                Jacob</persName>
                   |         </correspAction>
                   |      </correspDesc>
                   |   </profileDesc>
