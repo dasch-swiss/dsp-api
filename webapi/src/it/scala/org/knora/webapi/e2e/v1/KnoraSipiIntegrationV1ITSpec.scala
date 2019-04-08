@@ -639,8 +639,9 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |         <title>Testletter</title>
                    |      </titleStmt>
                    |      <publicationStmt>
-                   |         <p> This is the TEI/XML representation of the resource identified by the Iri
-                   |                        ${letterIri.get}. </p>
+                   |         <p>This is the TEI/XML representation of the resource identified by the Iri
+                   |                        ${letterIri.get}.
+                   |                    </p>
                    |      </publicationStmt>
                    |      <sourceDesc>
                    |         <p>Representation of the resource's text as TEI/XML</p>
@@ -649,17 +650,19 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |   <profileDesc>
                    |      <correspDesc ref="${letterIri.get}">
                    |         <correspAction type="sent">
-                   |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer, Johann Jacob</persName>
+                   |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer,
+                   |                Johann Jacob</persName>
                    |            <date when="1703-06-10"/>
                    |         </correspAction>
                    |         <correspAction type="received">
-                   |            <persName ref="http://d-nb.info/gnd/119112450">Hermann, Jacob</persName>
+                   |            <persName ref="http://d-nb.info/gnd/119112450">Hermann,
+                   |                Jacob</persName>
                    |         </correspAction>
                    |      </correspDesc>
                    |   </profileDesc>
                    |</teiHeader>
                    |
-                  |<text><body>                <p>[...] Viro Clarissimo.</p>                <p>Dn. Jacobo Hermanno S. S. M. C. </p>                <p>et Ph. M.</p>                <p>S. P. D. </p>                <p>J. J. Sch.</p>                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>                </p>            </body></text>
+                   |<text><body>                <p>[...] Viro Clarissimo.</p>                <p>Dn. Jacobo Hermanno S. S. M. C. </p>                <p>et Ph. M.</p>                <p>S. P. D. </p>                <p>J. J. Sch.</p>                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>                </p>            </body></text>
                    |</TEI>
                    |
                 """.stripMargin
