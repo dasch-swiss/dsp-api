@@ -116,7 +116,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
       * @param definitions     definitions of the class and any other relevant classes and properties.
       */
     private def checkRec(instanceElement: InstanceElement, classIri: SmartIri, definitions: Definitions): Unit = {
-        if (!instanceInspector.elementHasCompatibleType(element = instanceElement, elementTypeIri = classIri, definitions = definitions)) {
+        if (!instanceInspector.elementHasCompatibleType(element = instanceElement, expectedType = classIri, definitions = definitions)) {
             throw AssertionException(s"Element type ${instanceElement.elementType} is not compatible with class IRI <$classIri>")
         }
 
@@ -158,13 +158,34 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
                 val objectsOfProp: Vector[InstanceElement] = instanceElement.propertyObjects.getOrElse(instancePropertyName, Vector.empty)
 
                 for (obj: InstanceElement <- objectsOfProp) {
-                    // If the object is supposed to be an instance of a Knora class, and it's not an IRI,
-                    // check recursively. Otherwise, just ask the inspector if its type is compatible with the expected one.
-                    // TODO: handle custom datatypes correctly.
-                    if (objectType.isKnoraApiV2EntityIri && !instanceInspector.elementIsIri(obj)) {
-                        checkRec(instanceElement = obj, classIri = objectType, definitions = definitions)
-                    } else if (!instanceInspector.elementHasCompatibleType(element = obj, elementTypeIri = objectType, definitions = definitions)) {
-                        throw AssertionException(s"Element type ${obj.elementType} is not compatible with type <$objectType>")
+                    // Determine the expected type that we're going to pass to the inspector, so it doesn't need
+                    // to know about custom datatypes.
+                    val expectedTypeForInspector: SmartIri = if (objectType.isKnoraApiV2EntityIri) {
+                        val objClassDef: ClassInfoContentV2 = definitions.getClassDef(objectType)
+                        val objClassRdfType = objClassDef.getRdfType
+
+                        if (objClassRdfType.toString == OntologyConstants.Rdfs.Datatype) {
+                            // If the real expected type is a custom datatype, tell the inspector it's xsd:string.
+                            OntologyConstants.Xsd.String.toSmartIri
+                        } else {
+                            objectType
+                        }
+                    } else {
+                        objectType
+                    }
+
+                    // Are we expecting a Knora class instance (not a custom datatype)?
+                    if (expectedTypeForInspector.isKnoraApiV2EntityIri) {
+                        // Yes. If the object is an IRI, accept it.
+                        if (!instanceInspector.elementIsIri(obj)) {
+                            // We're expecting a Knora class instance and the object isn't an IRI. Recurse.
+                            checkRec(instanceElement = obj, classIri = objectType, definitions = definitions)
+                        }
+                    } else {
+                        // We're expecting a literal. Ask the element inspector if we have a compatible one.
+                        if (!instanceInspector.elementHasCompatibleType(element = obj, expectedType = objectType, definitions = definitions)) {
+                            throw AssertionException(s"Element type ${obj.elementType} is not compatible with type <$objectType>")
+                        }
                     }
                 }
         }
@@ -269,7 +290,7 @@ trait InstanceInspector {
     /**
       * Checks, as far as possible, whether the type of an instance is compatible with the type IRI of its class.
       */
-    def elementHasCompatibleType(element: InstanceElement, elementTypeIri: SmartIri, definitions: InstanceChecker.Definitions): Boolean
+    def elementHasCompatibleType(element: InstanceElement, expectedType: SmartIri, definitions: InstanceChecker.Definitions): Boolean
 }
 
 /**
@@ -278,14 +299,16 @@ trait InstanceInspector {
 object JsonInstanceInspector {
     val STRING = "string"
     val IRI = "iri"
-    val NUMBER = "number"
+    val INTEGER = "integer"
+    val DECIMAL = "decimal"
     val BOOLEAN = "boolean"
     val OBJECT = "object"
 
     val LiteralTypeMap: Map[String, Set[IRI]] = Map(
         STRING -> Set(OntologyConstants.Xsd.String, OntologyConstants.Xsd.DateTimeStamp),
         IRI -> Set(OntologyConstants.Xsd.Uri),
-        NUMBER -> Set(OntologyConstants.Xsd.Int, OntologyConstants.Xsd.Integer, OntologyConstants.Xsd.NonNegativeInteger, OntologyConstants.Xsd.Decimal),
+        INTEGER -> Set(OntologyConstants.Xsd.Integer, OntologyConstants.Xsd.NonNegativeInteger),
+        DECIMAL -> Set(OntologyConstants.Xsd.Decimal),
         BOOLEAN -> Set(OntologyConstants.Xsd.Boolean)
     )
 
@@ -319,7 +342,15 @@ class JsonInstanceInspector extends InstanceInspector {
 
                 Vector(InstanceElement(strType))
 
-            case _: JsNumber => Vector(InstanceElement(NUMBER))
+            case jsNumber: JsNumber =>
+                val numericType = if (jsNumber.value.isWhole) {
+                    INTEGER
+                } else {
+                    DECIMAL
+                }
+
+                Vector(InstanceElement(numericType))
+
             case _: JsBoolean => Vector(InstanceElement(BOOLEAN))
         }
     }
@@ -340,10 +371,16 @@ class JsonInstanceInspector extends InstanceInspector {
         element.elementType == IRI
     }
 
-    override def elementHasCompatibleType(element: InstanceElement, elementTypeIri: SmartIri, definitions: InstanceChecker.Definitions): Boolean = {
+    override def elementHasCompatibleType(element: InstanceElement, expectedType: SmartIri, definitions: InstanceChecker.Definitions): Boolean = {
+        // Is the element a literal?
         LiteralTypeMap.get(element.elementType) match {
-            case Some(typeIris) => typeIris.contains(elementTypeIri.toString) || (elementIsIri(element) && !LiteralTypeIris.contains(elementTypeIri.toString))
-            case None => !LiteralTypeIris.contains(elementTypeIri.toString)
+            case Some(typeIris) =>
+                // Yes. It's compatible if the the expected type is one of the types that it could represent.
+                typeIris.contains(expectedType.toString)
+
+            case None =>
+                // No. It's compatible if the expected type isn't a literal type.
+                !LiteralTypeIris.contains(expectedType.toString)
         }
     }
 }
@@ -371,11 +408,19 @@ class JsonLDInstanceInspector extends InstanceInspector {
                     Vector(jsonLDObjectToElement(jsonLDObject))
                 }
 
-            case jsonLDArray: JsonLDArray => jsonLDArray.value.flatMap(jsonLDValue => jsonLDValueToElements(jsonLDValue)).toVector
+            case jsonLDArray: JsonLDArray =>
+                jsonLDArray.value.flatMap(jsonLDValue => jsonLDValueToElements(jsonLDValue)).toVector
 
             case _: JsonLDString => Vector(InstanceElement(OntologyConstants.Xsd.String))
 
-            case _: JsonLDInt => Vector(InstanceElement(OntologyConstants.Xsd.Integer))
+            case jsonLDInt: JsonLDInt =>
+                val intType = if (jsonLDInt.value >= 0) {
+                    OntologyConstants.Xsd.NonNegativeInteger
+                } else {
+                    OntologyConstants.Xsd.Integer
+                }
+
+                Vector(InstanceElement(intType))
 
             case _: JsonLDBoolean => Vector(InstanceElement(OntologyConstants.Xsd.Boolean))
         }
@@ -399,14 +444,18 @@ class JsonLDInstanceInspector extends InstanceInspector {
         element.elementType == OntologyConstants.Xsd.Uri
     }
 
-    override def elementHasCompatibleType(element: InstanceElement, elementTypeIri: SmartIri, definitions: InstanceChecker.Definitions): Boolean = {
-        val elementTypeIriStr: IRI = elementTypeIri.toString
+    override def elementHasCompatibleType(element: InstanceElement, expectedType: SmartIri, definitions: InstanceChecker.Definitions): Boolean = {
+        val expectedTypeStr: IRI = expectedType.toString
 
-        if (elementTypeIri.isKnoraApiV2EntityIri) {
-            definitions.getBaseClasses(element.elementType.toSmartIri).contains(elementTypeIri)
+        // Is the element's type a Knora class?
+        if (expectedType.isKnoraApiV2EntityIri) {
+            // Yes. It's compatible if its type is a subclass of the expected type.
+            definitions.getBaseClasses(element.elementType.toSmartIri).contains(expectedType)
         } else {
-            element.elementType == elementTypeIriStr ||
-                (element.elementType == OntologyConstants.Xsd.Int && elementTypeIriStr == OntologyConstants.Xsd.Integer)
+            // The element's type isn't a Knora class. It's compatible if it's the same as the expected type, or if
+            // we expected an xsd:integer and we got an xsd:nonNegativeInteger.
+            element.elementType == expectedTypeStr ||
+                (element.elementType == OntologyConstants.Xsd.NonNegativeInteger && expectedTypeStr == OntologyConstants.Xsd.Integer)
         }
     }
 }
