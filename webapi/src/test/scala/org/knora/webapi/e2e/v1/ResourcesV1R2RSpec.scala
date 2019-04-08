@@ -1516,7 +1516,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0000-example-box:Box>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject", "UTF-8")
+            val projectIri = URLEncoder.encode("http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject", "UTF-8")
 
             Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(superUserEmail, password)) ~> resourcesPathV1 ~> check {
                 assert(status == StatusCodes.BadRequest, response.toString)
@@ -1929,20 +1929,70 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     .asInstanceOf[JsObject].fields("http://www.knora.org/ontology/0001/anything#hasText")
                     .asInstanceOf[JsObject].fields("values")
                     .asInstanceOf[JsArray].elements.head
-                    .asInstanceOf[JsObject].fields("utf8str")
+                    .asInstanceOf[JsObject].fields("utf8str").asInstanceOf[JsString].value
 
-                assert(!(responseAs[String] contains "&amp;"))
-                assert(responseAs[String] contains "&")
+                assert(!(stringVal contains "&amp;"))
+                assert(stringVal contains "&")
 
-                assert(!(responseAs[String] contains "&lt;"))
-                assert(responseAs[String] contains "<")
+                assert(!(stringVal contains "&lt;"))
+                assert(stringVal contains "<")
 
-                assert(!(responseAs[String] contains "&gt;"))
-                assert(responseAs[String] contains ">")
+                assert(!(stringVal contains "&gt;"))
+                assert(stringVal contains ">")
 
-                assert(!(responseAs[String] contains "&apos;"))
-                assert(responseAs[String] contains "'")
+                assert(!(stringVal contains "&apos;"))
+                assert(stringVal contains "'")
 
+
+            }
+        }
+
+        "create a string value with a newline in a bulk import" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
+                   |    xmlns:p0001-anything="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <p0001-anything:Thing id="thing_with_string">
+                   |        <knoraXmlImport:label>Thing with string</knoraXmlImport:label>
+                   |        <p0001-anything:hasText knoraType="richtext_value">test
+                   |        test</p0001-anything:hasText>
+                   |    </p0001-anything:Thing>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+                val responseStr = responseAs[String]
+
+                assert(status == StatusCodes.OK, responseStr)
+                responseStr should include("createdResources")
+
+                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
+                thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+
+            }
+        }
+
+        "get the resource created by bulk import and check for the newline in the string value" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(thingWithString.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+
+                val stringVal = responseJson.fields("props")
+                    .asInstanceOf[JsObject].fields("http://www.knora.org/ontology/0001/anything#hasText")
+                    .asInstanceOf[JsObject].fields("values")
+                    .asInstanceOf[JsArray].elements.head
+                    .asInstanceOf[JsObject].fields("utf8str").asInstanceOf[JsString].value
+
+                assert(!(stringVal contains "\\n"))
+                assert(stringVal contains "\n")
 
             }
         }

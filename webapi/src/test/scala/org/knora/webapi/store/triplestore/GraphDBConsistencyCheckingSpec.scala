@@ -158,7 +158,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label0 ;
-          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -177,7 +177,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue0_1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue0_1 knora-base:valueHasOrder ?nextOrder0_1 ;
@@ -213,7 +213,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue0_2 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                 knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                 knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue0_2 knora-base:valueHasOrder ?nextOrder0_2 ;
@@ -253,7 +253,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue0_3 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                 knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                 knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue0_3 knora-base:valueHasOrder ?nextOrder0_3 ;
@@ -287,7 +287,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newLinkValue0_4 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                 knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                 knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?resource0 ?linkValueProperty0_4 ?newLinkValue0_4 .
@@ -310,7 +310,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue0_5 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue0_5 knora-base:valueHasOrder ?nextOrder0_5 ;
@@ -337,7 +337,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue0_6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue0_6 knora-base:valueHasOrder ?nextOrder0_6 ;
@@ -579,7 +579,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -605,7 +605,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newLinkValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |
@@ -677,7 +677,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -696,7 +696,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -729,7 +729,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -757,7 +757,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue2 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue2 knora-base:valueHasOrder ?nextOrder2 ;
@@ -783,7 +783,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue3 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue3 knora-base:valueHasOrder ?nextOrder3 ;
@@ -810,7 +810,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue4 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue4 knora-base:valueHasOrder ?nextOrder4 ;
@@ -865,7 +865,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue5 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue5 knora-base:valueHasOrder ?nextOrder5 ;
@@ -893,7 +893,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -921,7 +921,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue7 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue7 knora-base:valueHasOrder ?nextOrder7 ;
@@ -1175,7 +1175,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -1194,7 +1194,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -1227,7 +1227,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -1257,7 +1257,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -1381,7 +1381,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -1401,7 +1401,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -1433,7 +1433,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -1462,7 +1462,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -1585,7 +1585,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -1605,7 +1605,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -1635,7 +1635,7 @@ object GraphDBConsistencyCheckingSpec {
           |                                     knora-base:valueHasString "2015-12-03" .
           |
           |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -1663,7 +1663,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -1801,7 +1801,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -1819,7 +1819,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -1851,7 +1851,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -1878,7 +1878,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -1908,7 +1908,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue7 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue7 knora-base:valueHasOrder ?nextOrder7 ;
@@ -2049,7 +2049,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -2067,7 +2067,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue0 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue0 knora-base:valueHasOrder ?nextOrder0 ;
@@ -2099,7 +2099,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |            ?newValue1 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue1 knora-base:valueHasOrder ?nextOrder1 ;
@@ -2134,7 +2134,7 @@ object GraphDBConsistencyCheckingSpec {
           |                ?newValue6 knora-base:valueHasTest "3"^^xsd:integer . # No cardinality for this property, so it should cause an error.
           |
           |            ?newValue6 <http://www.knora.org/ontology/knora-base#attachedToUser> ?creatorIri ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |        ?newValue6 knora-base:valueHasOrder ?nextOrder6 ;
@@ -2258,7 +2258,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label0 ;
-          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |
@@ -2284,7 +2284,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:valueCreationDate ?currentTime .
           |
           |        ?newLinkValue0_0 knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-          |                knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+          |                knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
           |
           |
           |
@@ -2363,7 +2363,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label;
           |            rdfs:label "Second label not allowed" ;
-          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |    }
           |}
@@ -2408,7 +2408,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:attachedToUser ?creatorIri ;
           |            knora-base:attachedToProject ?projectIri ;
           |            rdfs:label ?label ;
-          |            knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
+          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
           |            knora-base:creationDate ?currentTime .
           |
           |

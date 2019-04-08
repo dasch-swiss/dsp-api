@@ -7,7 +7,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:linkValueHasTarget" : {
       "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
       "@type" : "anything:Thing",
@@ -25,7 +25,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-10-17T17:16:04.916Z"
       },
-      "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+      "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
       "knora-api:userHasPermission" : "V",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -53,7 +53,7 @@
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2016-10-17T17:16:04.916Z"
   },
-  "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+  "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
   "knora-api:userHasPermission" : "V",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",

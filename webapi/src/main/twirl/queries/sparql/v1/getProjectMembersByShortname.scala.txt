@@ -20,16 +20,16 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all members of a project, given the project's knora-base:projectShortname.
+ * Gets all members of a project, given the project's knora-admin:projectShortname.
  *
  * @param triplestore the name of the triplestore being used.
- * @param shortname the project's `knora-base:projectShortname`.
+ * @param shortname the project's `knora-admin:projectShortname`.
  *@
 @(triplestore: String,
   shortname: String)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 
 SELECT ?s
@@ -39,10 +39,10 @@ SELECT ?s
 }
 WHERE {
 
-    ?projectIri rdf:type knora-base:knoraProject .
-    ?projectIri knora-base:projectShortname "@shortname"^^xsd:string .
-    ?s rdf:type knora-base:User .
-    ?s knora-base:isInProject ?projectIri .
+    ?projectIri rdf:type knora-admin:knoraProject .
+    ?projectIri knora-admin:projectShortname "@shortname"^^xsd:string .
+    ?s rdf:type knora-admin:User .
+    ?s knora-admin:isInProject ?projectIri .
 
 
 }

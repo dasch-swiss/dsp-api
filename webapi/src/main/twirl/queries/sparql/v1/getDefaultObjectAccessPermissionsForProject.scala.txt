@@ -29,7 +29,7 @@
   projectIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 SELECT ?s ?p ?o
 
@@ -39,7 +39,7 @@ SELECT ?s ?p ?o
 }
 
 WHERE {
-    ?s rdf:type knora-base:DefaultObjectAccessPermission .
-    ?s knora-base:forProject <@projectIri> .
+    ?s rdf:type knora-admin:DefaultObjectAccessPermission .
+    ?s knora-admin:forProject <@projectIri> .
     ?s ?p ?o .
 }

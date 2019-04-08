@@ -27,11 +27,11 @@
 @(groupIri: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 ASK {
     BIND(IRI("@groupIri") AS ?group)
 
-    ?group rdf:type knora-base:UserGroup
+    ?group rdf:type knora-admin:UserGroup
 }
 

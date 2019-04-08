@@ -16,7 +16,7 @@
     "knora-api:dateValueHasStartEra" : "CE",
     "knora-api:dateValueHasStartMonth" : 6,
     "knora-api:dateValueHasStartYear" : 2018,
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "RV",
     "knora-api:valueAsString" : "GREGORIAN:2018-06-04 CE",
     "knora-api:valueCreationDate" : {
@@ -30,7 +30,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:linkValueHasTarget" : {
       "@id" : "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA",
       "@type" : "beol:person",
@@ -48,7 +48,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2018-06-04T08:55:34.086Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:userHasPermission" : "RV",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
@@ -76,7 +76,7 @@
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2018-06-04T08:56:33.879Z"
   },
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
   "knora-api:userHasPermission" : "RV",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
