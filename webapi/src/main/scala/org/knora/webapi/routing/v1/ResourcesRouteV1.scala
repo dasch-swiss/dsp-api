@@ -824,14 +824,8 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                 }
 
                             case None =>
-                                CreateResourceValueV1(
-                                    richtext_value = Some(
-                                        CreateRichtextV1(
-                                            utf8str = Some(stringFormatter.toSparqlEncodedString(elementValue, throw BadRequestException(s"Invalid text value: $elementValue"))),
-                                            language = language
-                                        )
-                                    )
-                                )
+                                // We don't escape the input string here, because it will be escaped by valuesToCreate().
+                                CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = Some(elementValue), language = language)))
                         }
 
                     case "link_value" =>
