@@ -9,6 +9,8 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
         ?letter beol:hasText ?text .
 
+        ?letter knora-api:hasStandoffLinkTo ?standoffLinks .
+
         ?letter beol:hasAuthor ?person1 .
 
         ?person1 beol:hasFamilyName ?name1 .
@@ -28,57 +30,39 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
     } WHERE {
         BIND(<$resourceIri> as ?letter)
-        ?letter a knora-api:Resource .
+
         ?letter a beol:letter .
 
         ?letter beol:creationDate ?date .
 
-        beol:creationDate knora-api:objectType knora-api:Date .
-        ?date a knora-api:Date .
-
         ?letter beol:hasText ?text .
 
-        beol:hasText knora-api:objectType xsd:string .
+        OPTIONAL {
+           ?letter knora-api:hasStandoffLinkTo ?standoffLinks .
+        }
 
-        ?text a xsd:string .
+        OPTIONAL {
 
-        ?letter beol:hasAuthor ?person1 .
+          ?letter beol:hasAuthor ?person1 .
 
-        ?person1 beol:hasFamilyName ?name1 .
+          ?person1 beol:hasFamilyName ?name1 .
 
-        ?person1 beol:hasGivenName ?givenName1 .
+          ?person1 beol:hasGivenName ?givenName1 .
 
-        ?person1 beol:hasIAFIdentifier ?iaf1 .
+          ?person1 beol:hasIAFIdentifier ?iaf1 .
 
-        ?name1 a xsd:string .
+        }
 
-        ?givenName1 a xsd:string .
+        OPTIONAL {
 
-        ?iaf1 a xsd:string .
+          ?letter beol:hasRecipient ?person2 .
 
-        ?person2 beol:hasFamilyName ?name2 .
+          ?person2 beol:hasFamilyName ?name2 .
 
-        ?person2 beol:hasGivenName ?givenName2 .
+          ?person2 beol:hasGivenName ?givenName2 .
 
-        ?person2 beol:hasIAFIdentifier ?iaf2 .
+          ?person2 beol:hasIAFIdentifier ?iaf2 .
 
-        ?name2 a xsd:string .
-
-        ?givenName2 a xsd:string .
-
-        ?iaf2 a xsd:string .
-
-        beol:hasGivenName knora-api:objectType xsd:string .
-        beol:hasFamilyName knora-api:objectType xsd:string .
-        beol:hasIAFIdentifier knora-api:objectType xsd:string .
-
-      	beol:hasAuthor knora-api:objectType knora-api:Resource .
-
-        ?letter beol:hasRecipient ?person2 .
-
-      	beol:hasRecipient knora-api:objectType knora-api:Resource .
-
-        ?person1 a knora-api:Resource .
-        ?person2 a knora-api:Resource .
+        }
 
     }
