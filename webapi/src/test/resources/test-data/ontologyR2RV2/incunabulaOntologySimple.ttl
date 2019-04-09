@@ -18,6 +18,9 @@ incunabula:Sideband a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:hasStillImageFile
     ], [ a owl:Restriction;
@@ -62,6 +65,12 @@ incunabula:book a owl:Class;
   rdfs:comment "Diese Resource-Klasse beschreibt ein Buch";
   rdfs:label "Book";
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
@@ -106,9 +115,6 @@ incunabula:book a owl:Class;
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
     ] .
 
 incunabula:title a owl:DatatypeProperty;
@@ -206,6 +212,9 @@ incunabula:page a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:hasStillImageFile
     ], [ a owl:Restriction;
@@ -262,6 +271,9 @@ incunabula:misc a owl:Class;
     ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl

@@ -366,7 +366,6 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
         OntologyConstants.KnoraBase.ObjectClassConstraint,
         OntologyConstants.KnoraBase.SubjectClassConstraint,
-        OntologyConstants.KnoraBase.HasStandoffLinkTo,
         OntologyConstants.KnoraBase.StandoffParentClassConstraint,
         OntologyConstants.KnoraBase.ValueHasLanguage,
         OntologyConstants.KnoraBase.ValueHasStandoff,

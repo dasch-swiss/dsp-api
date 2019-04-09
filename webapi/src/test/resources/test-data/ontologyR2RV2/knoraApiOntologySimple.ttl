@@ -20,6 +20,9 @@ knora-api:Annotation a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
       owl:minCardinality 1;
       owl:onProperty knora-api:isAnnotationOf
     ], [ a owl:Restriction;
@@ -39,6 +42,9 @@ knora-api:Resource a owl:Class;
     ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
@@ -66,6 +72,13 @@ knora-api:hasIncomingLink a owl:ObjectProperty;
   rdfs:label "has incoming link";
   rdfs:subPropertyOf knora-api:hasLinkTo .
 
+knora-api:hasStandoffLinkTo a owl:ObjectProperty;
+  knora-api:objectType knora-api:Resource;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "Represents a link in standoff markup from one resource to another.";
+  rdfs:label "has Standoff Link to";
+  rdfs:subPropertyOf knora-api:hasLinkTo .
+
 knora-api:isAnnotationOf a owl:ObjectProperty;
   knora-api:objectType knora-api:Resource;
   knora-api:subjectType knora-api:Annotation;
@@ -81,6 +94,12 @@ knora-api:AudioRepresentation a owl:Class;
   rdfs:comment "Represents a file containing audio data";
   rdfs:label "Representation (Audio)";
   rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:versionArkUrl
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty rdfs:label
     ], [ a owl:Restriction;
@@ -92,9 +111,6 @@ knora-api:AudioRepresentation a owl:Class;
     ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
     ] .
 
 knora-api:Representation a owl:Class;
@@ -109,6 +125,9 @@ knora-api:Representation a owl:Class;
     ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
@@ -147,6 +166,9 @@ knora-api:DDDRepresentation a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
@@ -183,6 +205,9 @@ knora-api:DocumentRepresentation a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
@@ -214,6 +239,9 @@ knora-api:ForbiddenResource a owl:Class;
     ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
@@ -264,6 +292,9 @@ knora-api:LinkObj a owl:Class;
       owl:minCardinality 1;
       owl:onProperty knora-api:hasLinkTo
     ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ], [ a owl:Restriction;
@@ -290,6 +321,9 @@ knora-api:MovingImageRepresentation a owl:Class;
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:hasMovingImageFile
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
@@ -324,6 +358,9 @@ knora-api:Region a owl:Class;
     ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:isRegionOf
@@ -373,6 +410,9 @@ knora-api:StillImageRepresentation a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:hasStillImageFile
     ], [ a owl:Restriction;
@@ -400,6 +440,9 @@ knora-api:TextRepresentation a owl:Class;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:hasTextFile
     ], [ a owl:Restriction;
@@ -426,6 +469,9 @@ knora-api:XSLTransformation a owl:Class;
     ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:hasTextFile
