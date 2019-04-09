@@ -1919,6 +1919,12 @@ object EntityInfoContentV2 {
                             objects = Seq(stringToLiteral(objStr))
                         )
 
+                    case JsonLDBoolean(objBoolean) =>
+                        PredicateInfoV2(
+                            predicateIri = predicateIri,
+                            objects = Seq(BooleanLiteralV2(objBoolean))
+                        )
+
                     case objObj: JsonLDObject =>
                         if (objObj.isIri) {
                             // This is a JSON-LD IRI value.

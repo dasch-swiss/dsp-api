@@ -682,6 +682,7 @@ object OntologyConstants {
         val KnoraApiV2PrefixExpansion: IRI = KnoraApiOntologyIri + "#"
 
         val Result: IRI = KnoraApiV2PrefixExpansion + "result"
+        val Error: IRI = KnoraApiV2PrefixExpansion + "error"
 
         val IsShared: IRI = KnoraApiV2PrefixExpansion + "isShared"
         val IsBuiltIn: IRI = KnoraApiV2PrefixExpansion + "isBuiltIn"
@@ -737,6 +738,14 @@ object OntologyConstants {
         val XMLToStandoffMapping: IRI = KnoraApiV2PrefixExpansion + "XMLToStandoffMapping"
         val ListNode: IRI = KnoraApiV2PrefixExpansion + "ListNode"
         val LinkObj: IRI = KnoraApiV2PrefixExpansion + "LinkObj"
+
+        val IntBase: IRI = KnoraApiV2PrefixExpansion + "IntBase"
+        val BooleanBase: IRI = KnoraApiV2PrefixExpansion + "BooleanBase"
+        val UriBase: IRI = KnoraApiV2PrefixExpansion + "UriBase"
+        val IntervalBase: IRI = KnoraApiV2PrefixExpansion + "IntervalBase"
+        val ColorBase: IRI = KnoraApiV2PrefixExpansion + "ColorBase"
+        val DateBase: IRI = KnoraApiV2PrefixExpansion + "DateBase"
+        val DecimalBase: IRI = KnoraApiV2PrefixExpansion + "DecimalBase"
 
         val Value: IRI = KnoraApiV2PrefixExpansion + "Value"
         val TextValue: IRI = KnoraApiV2PrefixExpansion + "TextValue"
@@ -1009,10 +1018,13 @@ object OntologyConstants {
             KnoraBase.SubjectClassConstraint -> KnoraApiV2WithValueObjects.SubjectType,
             KnoraBase.ObjectClassConstraint -> KnoraApiV2WithValueObjects.ObjectType,
             KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2WithValueObjects.ObjectType,
+            KnoraBase.ValueHasString -> KnoraApiV2WithValueObjects.ValueAsString,
             KnoraBase.ValueHasUri -> KnoraApiV2WithValueObjects.UriValueAsUri,
             KnoraBase.ValueHasInteger -> KnoraApiV2WithValueObjects.IntValueAsInt,
+            KnoraBase.ValueHasDecimal -> KnoraApiV2WithValueObjects.DecimalValueAsDecimal,
             KnoraBase.ValueHasBoolean -> KnoraApiV2WithValueObjects.BooleanValueAsBoolean,
-            KnoraBase.ValueHasString -> KnoraApiV2WithValueObjects.ValueAsString,
+            KnoraBase.ValueHasIntervalStart -> KnoraApiV2WithValueObjects.IntervalValueHasStart,
+            KnoraBase.ValueHasIntervalEnd -> KnoraApiV2WithValueObjects.IntervalValueHasEnd,
             KnoraBase.ValueHasLanguage -> KnoraApiV2WithValueObjects.TextValueHasLanguage,
             KnoraBase.ValueHasListNode -> KnoraApiV2WithValueObjects.ListValueAsListNode,
             KnoraBase.ValueHasGeonameCode -> KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode,
@@ -1047,6 +1059,8 @@ object OntologyConstants {
             KnoraApiV2WithValueObjects.IntValueAsInt -> KnoraBase.ValueHasInteger,
             KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> KnoraBase.ValueHasDecimal,
             KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> KnoraBase.ValueHasBoolean,
+            KnoraApiV2WithValueObjects.IntervalValueHasStart -> KnoraBase.ValueHasIntervalStart,
+            KnoraApiV2WithValueObjects.IntervalValueHasEnd -> KnoraBase.ValueHasIntervalEnd,
             KnoraApiV2WithValueObjects.ValueAsString -> KnoraBase.ValueHasString,
             KnoraApiV2WithValueObjects.TextValueHasLanguage -> KnoraBase.ValueHasLanguage,
             KnoraApiV2WithValueObjects.ListValueAsListNode -> KnoraBase.ValueHasListNode,

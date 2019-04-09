@@ -22,11 +22,11 @@ package org.knora.webapi.e2e
 import java.net.URLEncoder
 
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{ClassInfoContentV2, InputOntologyV2, PropertyInfoContentV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{ClassInfoContentV2, InputOntologyV2, KnoraApiV2WithValueObjectsTransformationRules, KnoraOutputParsingModeV2, PropertyInfoContentV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.{OntologyUtil, SmartIri, StringFormatter}
-import org.knora.webapi.{AssertionException, IRI, OntologyConstants}
+import org.knora.webapi.util.{MessageUtil, OntologyUtil, SmartIri, StringFormatter}
+import org.knora.webapi.{AssertionException, IRI, InternalSchema, OntologyConstants}
 import spray.json._
 
 /**
@@ -79,7 +79,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
 
     import InstanceChecker.Definitions
 
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * Checks that an instance of an RDF class returned in a Knora response corresponds to the class definition.
@@ -211,11 +211,17 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
                 propertyIri -> getPropertyDef(propertyIri = propertyIri, knoraRouteGet = knoraRouteGet)
         }.toMap
 
-        // Get the IRIs of the object types of those properties.
+        // Get the IRIs of the Knora classes that are object types of those properties.
         val classIrisFromObjectTypes: Set[SmartIri] = propertyDefsFromCardinalities.values.foldLeft(Set.empty[SmartIri]) {
             case (acc, propertyDef) =>
                 propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri) match {
-                    case Some(objectType) => acc + objectType
+                    case Some(objectType) =>
+                        if (objectType.isKnoraApiV2EntityIri && !KnoraApiV2WithValueObjectsTransformationRules.knoraBaseClassesToRemove.contains(objectType.toOntologySchema(InternalSchema))) {
+                            acc + objectType
+                        } else {
+                            acc
+                        }
+
                     case None => acc
                 }
         }
@@ -247,13 +253,27 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
     private def getClassDef(classIri: SmartIri, knoraRouteGet: String => String): ClassInfoContentV2 = {
         val urlPath = s"/v2/ontologies/classes/${URLEncoder.encode(classIri.toString, "UTF-8")}"
         val classDefStr: String = knoraRouteGet(urlPath)
-        InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(classDefStr)).classes(classIri)
+        val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(classDefStr)
+
+        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.Error) match {
+            case Some(error) => throw AssertionException(error)
+            case None => ()
+        }
+
+        InputOntologyV2.fromJsonLD(jsonLDDocument, parsingMode = KnoraOutputParsingModeV2).classes(classIri)
     }
 
     private def getPropertyDef(propertyIri: SmartIri, knoraRouteGet: String => String): PropertyInfoContentV2 = {
         val urlPath = s"/v2/ontologies/properties/${URLEncoder.encode(propertyIri.toString, "UTF-8")}"
         val propertyDefStr: String = knoraRouteGet(urlPath)
-        InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(propertyDefStr)).properties(propertyIri)
+        val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(propertyDefStr)
+
+        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.Error) match {
+            case Some(error) => throw AssertionException(error)
+            case None => ()
+        }
+
+        InputOntologyV2.fromJsonLD(jsonLDDocument, parsingMode = KnoraOutputParsingModeV2).properties(propertyIri)
     }
 }
 
@@ -322,7 +342,7 @@ class JsonInstanceInspector extends InstanceInspector {
 
     import JsonInstanceInspector._
 
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     override def toElement(response: String): InstanceElement = {
         jsObjectToElement(JsonParser(response).asJsObject)
@@ -352,6 +372,8 @@ class JsonInstanceInspector extends InstanceInspector {
                 Vector(InstanceElement(numericType))
 
             case _: JsBoolean => Vector(InstanceElement(BOOLEAN))
+
+            case JsNull => Vector.empty
         }
     }
 
@@ -389,7 +411,7 @@ class JsonInstanceInspector extends InstanceInspector {
   * An [[InstanceInspector]] that works with Knora responses in JSON-LD format.
   */
 class JsonLDInstanceInspector extends InstanceInspector {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     override def toElement(response: String): InstanceElement = {
         jsonLDObjectToElement(JsonLDUtil.parseJsonLD(response).body)
@@ -429,9 +451,9 @@ class JsonLDInstanceInspector extends InstanceInspector {
     private def jsonLDObjectToElement(jsonLDObject: JsonLDObject): InstanceElement = {
         val elementType = jsonLDObject.requireString(JsonLDConstants.TYPE)
 
-        val children = jsonLDObject.value.map {
+        val children: Map[String, Vector[InstanceElement]] = jsonLDObject.value.map {
             case (key, jsonLDValue: JsonLDValue) => key -> jsonLDValueToElements(jsonLDValue)
-        }
+        } - JsonLDConstants.ID - JsonLDConstants.TYPE
 
         InstanceElement(elementType, children)
     }
