@@ -747,6 +747,16 @@ object OntologyConstants {
         val DateBase: IRI = KnoraApiV2PrefixExpansion + "DateBase"
         val DecimalBase: IRI = KnoraApiV2PrefixExpansion + "DecimalBase"
 
+        val ValueBaseClasses: Set[IRI] = Set(
+            IntBase,
+            BooleanBase,
+            UriBase,
+            IntervalBase,
+            ColorBase,
+            DateBase,
+            DecimalBase
+        )
+
         val Value: IRI = KnoraApiV2PrefixExpansion + "Value"
         val TextValue: IRI = KnoraApiV2PrefixExpansion + "TextValue"
         val IntValue: IRI = KnoraApiV2PrefixExpansion + "IntValue"

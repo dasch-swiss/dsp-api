@@ -227,22 +227,35 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
                 getObjectType(propertyDef) match {
                     case Some(objectType) =>
                         if (objectType.isKnoraApiV2EntityIri) {
+                            // There are some Knora classes whose definitions we refer to but don't actually serve, e.g.
+                            // knora-api:XMLToStandoffMapping. Before we request a class definition, we need to make
+                            // sure Knora can serve it. The ontology transformation rules list the internal classes that
+                            // aren't available in each external schema. But these lists include knora-base classes
+                            // that are converted to custom datatypes in the simple schema, so we first need to check
+                            // if we're talking about one of those.
+
                             val objectTypeInternal = objectType.toOntologySchema(InternalSchema)
 
                             propertyDef.propertyIri.getOntologySchema.get match {
                                 case ApiV2Simple =>
                                     if (OntologyConstants.KnoraApiV2Simple.CustomDatatypes.contains(objectType.toString)) {
+                                        // It's a custom data type. Get its definition.
                                         acc + objectType
                                     } else if (!KnoraApiV2SimpleTransformationRules.knoraBaseClassesToRemove.contains(objectTypeInternal)) {
+                                        // It isn't a custom data type, and isn't one of the classes removed from the schema.
+                                        // Get its definition.
                                         acc + objectType
                                     } else {
+                                        // It's one of the classes removed from the schema. Don't get its definition.
                                         acc
                                     }
 
                                 case ApiV2WithValueObjects =>
                                     if (!KnoraApiV2WithValueObjectsTransformationRules.knoraBaseClassesToRemove.contains(objectTypeInternal)) {
+                                        // It isn't one of the classes removed from the schema. Get its definition.
                                         acc + objectType
                                     } else {
+                                        // It's one of the classes removed from the schema. Don't get its definition.
                                         acc
                                     }
 
