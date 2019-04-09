@@ -2130,6 +2130,30 @@
       }
     }, {
       "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:linkValueHasSource"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:linkValueHasSourceIri"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:linkValueHasTarget"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:linkValueHasTargetIri"
+      }
+    }, {
+      "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
@@ -2155,24 +2179,6 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:valueHasComment"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "rdf:object"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "rdf:predicate"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "rdf:subject"
       }
     } ]
   }, {
@@ -5550,6 +5556,34 @@
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:dateTimeStamp"
+    }
+  }, {
+    "@id" : "knora-api:linkValueHasSource",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:objectType" : {
+      "@id" : "knora-api:Resource"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:LinkValue"
+    },
+    "rdfs:comment" : "Represents the source resource of a link value.",
+    "rdfs:label" : "Link value has source",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
+    }
+  }, {
+    "@id" : "knora-api:linkValueHasSourceIri",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:anyURI"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:LinkValue"
+    },
+    "rdfs:comment" : "Represents the IRI of the source resource of a link value.",
+    "rdfs:label" : "Link value has source IRI",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
     }
   }, {
     "@id" : "knora-api:linkValueHasTarget",

@@ -812,6 +812,50 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         )
     )
 
+    private val LinkValueHasSource: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSource,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Link value has source"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents the source resource of a link value."
+                )
+            )
+        )
+    )
+
+    private val LinkValueHasSourceIri: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSourceIri,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Link value has source IRI"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents the IRI of the source resource of a link value."
+                )
+            )
+        )
+    )
+
     private val LinkValueHasTarget: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget,
         propertyType = OntologyConstants.Owl.ObjectProperty,
@@ -1400,6 +1444,13 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> Cardinality.MayHaveOne
     )
 
+    private val LinkValueCardinalities = Map(
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSource -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSourceIri -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> Cardinality.MayHaveOne
+    )
+
     private val GeomValueCardinalities = Map(
         OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry -> Cardinality.MustHaveOne
     )
@@ -1440,6 +1491,9 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
       * Properties to remove from `knora-base` before converting it to the [[ApiV2WithValueObjects]] schema.
       */
     override val knoraBasePropertiesToRemove: Set[SmartIri] = Set(
+        OntologyConstants.Rdf.Subject,
+        OntologyConstants.Rdf.Predicate,
+        OntologyConstants.Rdf.Object,
         OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted,
         OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
         OntologyConstants.KnoraBase.ObjectClassConstraint,
@@ -1517,28 +1571,29 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
       * added to the specified classes to obtain `knora-api`.
       */
     override val knoraApiCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
-        OntologyConstants.KnoraBase.Resource -> ResourceCardinalities,
-        OntologyConstants.KnoraBase.DateBase -> DateBaseCardinalities,
-        OntologyConstants.KnoraBase.UriBase -> UriBaseCardinalities,
-        OntologyConstants.KnoraBase.BooleanBase -> BooleanBaseCardinalities,
-        OntologyConstants.KnoraBase.IntBase -> IntBaseCardinalities,
-        OntologyConstants.KnoraBase.DecimalBase -> DecimalBaseCardinalities,
-        OntologyConstants.KnoraBase.IntervalBase -> IntervalBaseCardinalities,
-        OntologyConstants.KnoraBase.ColorBase -> ColorBaseCardinalities,
-        OntologyConstants.KnoraBase.Value -> ValueCardinalities,
-        OntologyConstants.KnoraBase.TextValue -> TextValueCardinalities,
-        OntologyConstants.KnoraBase.GeomValue -> GeomValueCardinalities,
-        OntologyConstants.KnoraBase.ListValue -> ListValueCardinalities,
-        OntologyConstants.KnoraBase.GeonameValue -> GeonameValueCardinalities,
-        OntologyConstants.KnoraBase.FileValue -> FileValueCardinalities,
-        OntologyConstants.KnoraBase.StillImageFileValue -> StillImageFileValueCardinalities,
-        OntologyConstants.KnoraBase.MovingImageFileValue -> MovingImageFileValueCardinalities,
-        OntologyConstants.KnoraBase.AudioFileValue -> AudioFileValueCardinalities
+        OntologyConstants.KnoraApiV2WithValueObjects.Resource -> ResourceCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.DateBase -> DateBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.UriBase -> UriBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.BooleanBase -> BooleanBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.IntBase -> IntBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.DecimalBase -> DecimalBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.IntervalBase -> IntervalBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.ColorBase -> ColorBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.Value -> ValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.TextValue -> TextValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValue -> LinkValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.GeomValue -> GeomValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.ListValue -> ListValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue -> GeonameValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.FileValue -> FileValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue -> StillImageFileValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue -> MovingImageFileValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue -> AudioFileValueCardinalities
     ).map {
         case (classIri, cardinalities) =>
-            classIri.toSmartIri.toOntologySchema(ApiV2WithValueObjects) -> cardinalities.map {
+            classIri.toSmartIri -> cardinalities.map {
                 case (propertyIri, cardinality) =>
-                    propertyIri.toSmartIri.toOntologySchema(ApiV2WithValueObjects) -> Cardinality.KnoraCardinalityInfo(cardinality)
+                    propertyIri.toSmartIri -> Cardinality.KnoraCardinalityInfo(cardinality)
             }
     }
 
@@ -1590,6 +1645,8 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         DateValueHasCalendar,
         IntervalValueHasStart,
         IntervalValueHasEnd,
+        LinkValueHasSource,
+        LinkValueHasSourceIri,
         LinkValueHasTarget,
         LinkValueHasTargetIri,
         IntValueAsInt,

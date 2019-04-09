@@ -351,6 +351,8 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
       * Properties to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema.
       */
     override val knoraBasePropertiesToRemove: Set[SmartIri] = Set(
+        OntologyConstants.KnoraBase.CreationDate,
+        OntologyConstants.KnoraBase.LastModificationDate,
         OntologyConstants.KnoraBase.IsEditable,
         OntologyConstants.KnoraBase.CanBeInstantiated,
         OntologyConstants.KnoraBase.HasPermissions,
@@ -364,6 +366,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
         OntologyConstants.KnoraBase.ObjectClassConstraint,
         OntologyConstants.KnoraBase.SubjectClassConstraint,
+        OntologyConstants.KnoraBase.HasStandoffLinkTo,
         OntologyConstants.KnoraBase.StandoffParentClassConstraint,
         OntologyConstants.KnoraBase.ValueHasLanguage,
         OntologyConstants.KnoraBase.ValueHasStandoff,

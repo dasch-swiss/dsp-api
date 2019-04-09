@@ -21,12 +21,12 @@ package org.knora.webapi.e2e
 
 import java.net.URLEncoder
 
+import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{ClassInfoContentV2, InputOntologyV2, KnoraApiV2WithValueObjectsTransformationRules, KnoraOutputParsingModeV2, PropertyInfoContentV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.{MessageUtil, OntologyUtil, SmartIri, StringFormatter}
-import org.knora.webapi.{AssertionException, IRI, InternalSchema, OntologyConstants}
+import org.knora.webapi.util.{OntologyUtil, SmartIri, StringFormatter}
 import spray.json._
 
 /**
@@ -117,7 +117,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
       */
     private def checkRec(instanceElement: InstanceElement, classIri: SmartIri, definitions: Definitions): Unit = {
         if (!instanceInspector.elementHasCompatibleType(element = instanceElement, expectedType = classIri, definitions = definitions)) {
-            throw AssertionException(s"Element type ${instanceElement.elementType} is not compatible with class IRI <$classIri>")
+            throw AssertionException(s"Element type ${instanceElement.elementType} is not compatible with expected class IRI <$classIri>")
         }
 
         val classDef: ClassInfoContentV2 = definitions.getClassDef(classIri)
@@ -149,8 +149,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
         propertyIrisToInstancePropertyNames.foreach {
             case (propertyIri, instancePropertyName) =>
                 val objectType: SmartIri = if (propertyIri.isKnoraApiV2EntityIri) {
-                    val propertyDef = definitions.propertyDefs(propertyIri)
-                    propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri).getOrElse(OntologyConstants.Xsd.String.toSmartIri)
+                    getObjectType(definitions.propertyDefs(propertyIri)).getOrElse(throw AssertionException(s"Property <$propertyIri> has no knora-api:objectType"))
                 } else {
                     OntologyConstants.Xsd.String.toSmartIri
                 }
@@ -184,7 +183,12 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
                     } else {
                         // We're expecting a literal. Ask the element inspector if we have a compatible one.
                         if (!instanceInspector.elementHasCompatibleType(element = obj, expectedType = objectType, definitions = definitions)) {
-                            throw AssertionException(s"Element type ${obj.elementType} is not compatible with type <$objectType>")
+                            val literalContentMsg = obj.literalContent match {
+                                case Some(literalContent) => s" with literal content '$literalContent'"
+                                case None => ""
+                            }
+
+                            throw AssertionException(s"Element type ${obj.elementType}$literalContentMsg is not compatible with expected type <$objectType> for property <$propertyIri>")
                         }
                     }
                 }
@@ -193,6 +197,11 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
 
     private def getDefinitions(classIri: SmartIri, knoraRouteGet: String => String): Definitions = {
         getDefinitionsRec(classIri = classIri, knoraRouteGet = knoraRouteGet, definitions = Definitions())
+    }
+
+    private def getObjectType(propertyDef: PropertyInfoContentV2): Option[SmartIri] = {
+        propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri).
+            orElse(propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri))
     }
 
     private def getDefinitionsRec(classIri: SmartIri, knoraRouteGet: String => String, definitions: Definitions): Definitions = {
@@ -211,13 +220,34 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
                 propertyIri -> getPropertyDef(propertyIri = propertyIri, knoraRouteGet = knoraRouteGet)
         }.toMap
 
-        // Get the IRIs of the Knora classes that are object types of those properties.
+        // Get the IRIs of the Knora classes that are object types of those properties and that are available in the
+        // class's ontology schema.
         val classIrisFromObjectTypes: Set[SmartIri] = propertyDefsFromCardinalities.values.foldLeft(Set.empty[SmartIri]) {
             case (acc, propertyDef) =>
-                propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri) match {
+                getObjectType(propertyDef) match {
                     case Some(objectType) =>
-                        if (objectType.isKnoraApiV2EntityIri && !KnoraApiV2WithValueObjectsTransformationRules.knoraBaseClassesToRemove.contains(objectType.toOntologySchema(InternalSchema))) {
-                            acc + objectType
+                        if (objectType.isKnoraApiV2EntityIri) {
+                            val objectTypeInternal = objectType.toOntologySchema(InternalSchema)
+
+                            propertyDef.propertyIri.getOntologySchema.get match {
+                                case ApiV2Simple =>
+                                    if (OntologyConstants.KnoraApiV2Simple.CustomDatatypes.contains(objectType.toString)) {
+                                        acc + objectType
+                                    } else if (!KnoraApiV2SimpleTransformationRules.knoraBaseClassesToRemove.contains(objectTypeInternal)) {
+                                        acc + objectType
+                                    } else {
+                                        acc
+                                    }
+
+                                case ApiV2WithValueObjects =>
+                                    if (!KnoraApiV2WithValueObjectsTransformationRules.knoraBaseClassesToRemove.contains(objectTypeInternal)) {
+                                        acc + objectType
+                                    } else {
+                                        acc
+                                    }
+
+                                case _ => throw AssertionException("Unreachable code")
+                            }
                         } else {
                             acc
                         }
@@ -282,9 +312,10 @@ class InstanceChecker(instanceInspector: InstanceInspector) {
   *
   * @param elementType     the element type. This is an opaque string that only the [[InstanceInspector]] needs
   *                        to understand.
+  * @param literalContent  the literal content of the element (if available), for debugging.
   * @param propertyObjects a map of property names to their objects.
   */
-case class InstanceElement(elementType: String, propertyObjects: Map[String, Vector[InstanceElement]] = Map.empty)
+case class InstanceElement(elementType: String, literalContent: Option[String] = None, propertyObjects: Map[String, Vector[InstanceElement]] = Map.empty)
 
 /**
   * A trait for classes that help [[InstanceChecker]] check instances in different formats.
@@ -360,7 +391,7 @@ class JsonInstanceInspector extends InstanceInspector {
                     STRING
                 }
 
-                Vector(InstanceElement(strType))
+                Vector(InstanceElement(elementType = strType, literalContent = Some(jsString.value)))
 
             case jsNumber: JsNumber =>
                 val numericType = if (jsNumber.value.isWhole) {
@@ -369,20 +400,21 @@ class JsonInstanceInspector extends InstanceInspector {
                     DECIMAL
                 }
 
-                Vector(InstanceElement(numericType))
+                Vector(InstanceElement(elementType = numericType, literalContent = Some(jsNumber.value.toString)))
 
-            case _: JsBoolean => Vector(InstanceElement(BOOLEAN))
+            case jsBoolean: JsBoolean =>
+                Vector(InstanceElement(elementType = BOOLEAN, literalContent = Some(jsBoolean.value.toString)))
 
             case JsNull => Vector.empty
         }
     }
 
     private def jsObjectToElement(jsObject: JsObject): InstanceElement = {
-        val children = jsObject.fields.map {
+        val propertyObjects = jsObject.fields.map {
             case (key: String, jsValue: JsValue) => key -> jsValueToElements(jsValue)
         }
 
-        InstanceElement(OBJECT, children)
+        InstanceElement(elementType = OBJECT, propertyObjects = propertyObjects)
     }
 
     override def propertyIriToInstancePropertyName(propertyIri: SmartIri): String = {
@@ -421,11 +453,15 @@ class JsonLDInstanceInspector extends InstanceInspector {
         jsonLDValue match {
             case jsonLDObject: JsonLDObject =>
                 if (jsonLDObject.isStringWithLang) {
-                    Vector(InstanceElement(OntologyConstants.Xsd.String))
+                    val literalContent = jsonLDObject.requireString(JsonLDConstants.VALUE)
+                    Vector(InstanceElement(elementType = OntologyConstants.Xsd.String, literalContent = Some(literalContent)))
                 } else if (jsonLDObject.isDatatypeValue) {
-                    Vector(InstanceElement(jsonLDObject.requireString(JsonLDConstants.TYPE)))
+                    val datatype = jsonLDObject.requireString(JsonLDConstants.TYPE)
+                    val literalContent = jsonLDObject.requireString(JsonLDConstants.VALUE)
+                    Vector(InstanceElement(elementType = datatype, literalContent = Some(literalContent)))
                 } else if (jsonLDObject.isIri) {
-                    Vector(InstanceElement(OntologyConstants.Xsd.Uri))
+                    val literalContent = jsonLDObject.requireString(JsonLDConstants.ID)
+                    Vector(InstanceElement(elementType = OntologyConstants.Xsd.Uri, literalContent = Some(literalContent)))
                 } else {
                     Vector(jsonLDObjectToElement(jsonLDObject))
                 }
@@ -433,7 +469,8 @@ class JsonLDInstanceInspector extends InstanceInspector {
             case jsonLDArray: JsonLDArray =>
                 jsonLDArray.value.flatMap(jsonLDValue => jsonLDValueToElements(jsonLDValue)).toVector
 
-            case _: JsonLDString => Vector(InstanceElement(OntologyConstants.Xsd.String))
+            case jsonLDString: JsonLDString =>
+                Vector(InstanceElement(OntologyConstants.Xsd.String, literalContent = Some(jsonLDString.value)))
 
             case jsonLDInt: JsonLDInt =>
                 val intType = if (jsonLDInt.value >= 0) {
@@ -442,27 +479,28 @@ class JsonLDInstanceInspector extends InstanceInspector {
                     OntologyConstants.Xsd.Integer
                 }
 
-                Vector(InstanceElement(intType))
+                Vector(InstanceElement(elementType = intType, literalContent = Some(jsonLDInt.value.toString)))
 
-            case _: JsonLDBoolean => Vector(InstanceElement(OntologyConstants.Xsd.Boolean))
+            case jsonLDBoolean: JsonLDBoolean =>
+                Vector(InstanceElement(elementType = OntologyConstants.Xsd.Boolean, literalContent = Some(jsonLDBoolean.value.toString)))
         }
     }
 
     private def jsonLDObjectToElement(jsonLDObject: JsonLDObject): InstanceElement = {
         val elementType = jsonLDObject.requireString(JsonLDConstants.TYPE)
 
-        val children: Map[String, Vector[InstanceElement]] = jsonLDObject.value.map {
+        val propertyObjects: Map[String, Vector[InstanceElement]] = jsonLDObject.value.map {
             case (key, jsonLDValue: JsonLDValue) => key -> jsonLDValueToElements(jsonLDValue)
         } - JsonLDConstants.ID - JsonLDConstants.TYPE
 
-        InstanceElement(elementType, children)
+        InstanceElement(elementType = elementType, propertyObjects = propertyObjects)
     }
 
     override def propertyIriToInstancePropertyName(propertyIri: SmartIri): String = {
         propertyIri.toString
     }
 
-    override def elementIsIri(element: InstanceElement): Boolean =  {
+    override def elementIsIri(element: InstanceElement): Boolean = {
         element.elementType == OntologyConstants.Xsd.Uri
     }
 

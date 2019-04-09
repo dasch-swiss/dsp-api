@@ -1702,6 +1702,18 @@ knora-api:LinkValue a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:linkValueHasSource
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:linkValueHasSourceIri
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:linkValueHasTarget
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:linkValueHasTargetIri
+    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:userHasPermission
@@ -1717,16 +1729,35 @@ knora-api:LinkValue a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:valueHasComment
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdf:object
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdf:predicate
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdf:subject
     ] .
+
+knora-api:linkValueHasSource a owl:ObjectProperty;
+  knora-api:objectType knora-api:Resource;
+  knora-api:subjectType knora-api:LinkValue;
+  rdfs:comment "Represents the source resource of a link value.";
+  rdfs:label "Link value has source";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:linkValueHasSourceIri a owl:DatatypeProperty;
+  knora-api:objectType xsd:anyURI;
+  knora-api:subjectType knora-api:LinkValue;
+  rdfs:comment "Represents the IRI of the source resource of a link value.";
+  rdfs:label "Link value has source IRI";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:linkValueHasTarget a owl:ObjectProperty;
+  knora-api:objectType knora-api:Resource;
+  knora-api:subjectType knora-api:LinkValue;
+  rdfs:comment "Represents the target resource of a link value.";
+  rdfs:label "Link value has target";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:linkValueHasTargetIri a owl:DatatypeProperty;
+  knora-api:objectType xsd:anyURI;
+  knora-api:subjectType knora-api:LinkValue;
+  rdfs:comment "Represents the IRI of the target resource of a link value.";
+  rdfs:label "Link value has target IRI";
+  rdfs:subPropertyOf knora-api:valueHas .
 
 knora-api:ListNode a owl:Class;
   rdfs:comment "Represents a flat or hierarchical list";
@@ -3306,20 +3337,6 @@ knora-api:isValueClass a owl:AnnotationProperty;
   knora-api:subjectType owl:Class;
   rdfs:comment "Indicates whether class is a subclass of Value.";
   rdfs:label "is value class" .
-
-knora-api:linkValueHasTarget a owl:ObjectProperty;
-  knora-api:objectType knora-api:Resource;
-  knora-api:subjectType knora-api:LinkValue;
-  rdfs:comment "Represents the target resource of a link value.";
-  rdfs:label "Link value has target";
-  rdfs:subPropertyOf knora-api:valueHas .
-
-knora-api:linkValueHasTargetIri a owl:DatatypeProperty;
-  knora-api:objectType xsd:anyURI;
-  knora-api:subjectType knora-api:LinkValue;
-  rdfs:comment "Represents the IRI of the target resource of a link value.";
-  rdfs:label "Link value has target IRI";
-  rdfs:subPropertyOf knora-api:valueHas .
 
 knora-api:mappingHasName a owl:DatatypeProperty;
   knora-api:objectType xsd:string;

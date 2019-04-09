@@ -1351,9 +1351,10 @@ object InputOntologyV2 {
 
         val ontologyLabel: Option[String] = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
-        val lastModificationDate: Option[Instant] =
-            ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2Simple.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant).
-                orElse(ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant))
+        val lastModificationDate: Option[Instant] = ontologyObj.maybeStringWithValidation(
+            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
+            stringFormatter.xsdDateTimeStampToInstant
+        )
 
         val ontologyMetadata = OntologyMetadataV2(
             ontologyIri = externalOntologyIri,
@@ -2578,8 +2579,6 @@ object ClassInfoContentV2 {
         val classIri: SmartIri = jsonLDClassDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = classIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid class IRI: $classIri"))
 
-        // TODO: handle custom datatypes.
-
         // Parse differently depending on parsing mode.
         val filteredClassDef: JsonLDObject = parsingMode match {
             case ClientInputParsingModeV2 =>
@@ -2615,9 +2614,14 @@ object ClassInfoContentV2 {
                     jsonLDObj => jsonLDObj.toIri(stringFormatter.toSmartIriWithErr)
                 }.toSet
 
-                // Any object of rdfs:subClassOf that isn't a base class should be an owl:Restriction.
+                // The restrictions are the object of rdfs:subClassOf that have type owl:Restriction.
                 val restrictions: Seq[JsonLDObject] = arrayElemsAsObjs.filter {
-                    jsonLDObj => !jsonLDObj.isIri
+                    jsonLDObj =>
+                        if (jsonLDObj.isIri) {
+                            false
+                        } else {
+                            jsonLDObj.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr).toString == OntologyConstants.Owl.Restriction
+                        }
                 }
 
                 val cardinalities: Map[SmartIri, KnoraCardinalityInfo] = restrictions.foldLeft(Map.empty[SmartIri, KnoraCardinalityInfo]) {
@@ -2639,12 +2643,6 @@ object ClassInfoContentV2 {
                                 if (extraRestrictionPredicates.nonEmpty) {
                                     throw BadRequestException(s"A cardinality in the definition of $classIri contains one or more invalid predicates: ${extraRestrictionPredicates.mkString(", ")}")
                                 }
-                            }
-
-                            val cardinalityType = restriction.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
-
-                            if (cardinalityType != OntologyConstants.Owl.Restriction.toSmartIri) {
-                                throw BadRequestException(s"A cardinality must be expressed as an owl:Restriction, but this type was found: $cardinalityType")
                             }
 
                             val (owlCardinalityIri: IRI, owlCardinalityValue: Int) = restriction.maybeInt(OntologyConstants.Owl.Cardinality) match {
@@ -3023,14 +3021,12 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
             labelStr => OntologyConstants.Rdfs.Label -> JsonLDString(labelStr)
         }
 
-        val lastModDateStatement: Option[(IRI, JsonLDString)] = lastModificationDate.map {
-            lastModDate =>
-                val lastModDateProp = targetSchema match {
-                    case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.LastModificationDate
-                    case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate
-                }
-
-                lastModDateProp -> JsonLDString(lastModDate.toString)
+        val lastModDateStatement: Option[(IRI, JsonLDString)] = if (targetSchema == ApiV2WithValueObjects) {
+            lastModificationDate.map {
+                lastModDate => OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> JsonLDString(lastModDate.toString)
+            }
+        } else {
+            None
         }
 
         Map(JsonLDConstants.ID -> JsonLDString(ontologyIri.toString),

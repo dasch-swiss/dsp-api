@@ -970,9 +970,15 @@ object OntologyConstants {
 
         val File: IRI = KnoraApiV2PrefixExpansion + "File"
 
-        val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
-        val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
-        val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
+        val CustomDatatypes: Set[IRI] = Set(
+            Date,
+            Geom,
+            Color,
+            Interval,
+            Geoname,
+            File
+        )
+
         val ArkUrl: IRI = KnoraApiV2PrefixExpansion + "arkUrl"
         val VersionArkUrl: IRI = KnoraApiV2PrefixExpansion + "versionArkUrl"
     }
