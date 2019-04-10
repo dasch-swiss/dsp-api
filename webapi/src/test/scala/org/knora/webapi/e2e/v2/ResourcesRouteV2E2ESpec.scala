@@ -563,14 +563,25 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(resourceIri.toSmartIri.isKnoraDataIri)
 
-            // Request the newly created resource, and check that it matches the ontology.
-            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)
-            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+            // Request the newly created resource in the complex schema, and check that it matches the ontology.
+            val resourceComplexGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
+            val resourceComplexGetResponseAsString = responseToString(resourceComplexGetResponse)
 
             instanceChecker.check(
-                instanceResponse = resourceGetResponseAsString,
+                instanceResponse = resourceComplexGetResponseAsString,
                 expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+
+            // Request the newly created resource in the simple schema, and check that it matches the ontology.
+            val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}").addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
+            val resourceSimpleGetResponseAsString = responseToString(resourceSimpleGetResponse)
+
+            instanceChecker.check(
+                instanceResponse = resourceSimpleGetResponseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
                 knoraRouteGet = doGetRequest
             )
         }

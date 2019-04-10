@@ -170,7 +170,7 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
                             }
                         } else if (!instanceInspector.elementIsIri(obj)) {
                             // It's a class that Knora doesn't serve. Accept the object only if it's an IRI.
-                            throwAndLogAssertionException(errorMsg)
+                            throwAndLogAssertionException(s"Property <$propertyIri> requires an IRI referring to an instance of <$objectType>, but object content was received instead")
                         }
                     } else {
                         // We're expecting a literal. Ask the element inspector if the object is compatible with
