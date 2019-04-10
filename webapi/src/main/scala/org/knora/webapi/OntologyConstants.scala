@@ -980,7 +980,7 @@ object OntologyConstants {
 
         val File: IRI = KnoraApiV2PrefixExpansion + "File"
 
-        val CustomDatatypes: Set[IRI] = Set(
+        val KnoraDatatypes: Set[IRI] = Set(
             Date,
             Geom,
             Color,
