@@ -41,12 +41,13 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker(log)
+    private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker(log)
+    private val jsonInstanceChecker: InstanceChecker = InstanceChecker.getJsonChecker(log)
 
     "The InstanceChecker" should {
         "reject a JSON-LD instance of anything:Thing (in the complex schema) with an extra property" in {
             assertThrows[AssertionException] {
-                instanceChecker.check(
+                jsonLDInstanceChecker.check(
                     instanceResponse = InstanceCheckerSpec.complexThingWithExtraProperty,
                     expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     knoraRouteGet = doGetRequest
@@ -56,7 +57,7 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
 
         "reject a JSON-LD instance of anything:Thing (in the complex schema) with an extra property object" in {
             assertThrows[AssertionException] {
-                instanceChecker.check(
+                jsonLDInstanceChecker.check(
                     instanceResponse = InstanceCheckerSpec.complexThingWithExtraPropertyObject,
                     expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     knoraRouteGet = doGetRequest
@@ -66,7 +67,7 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
 
         "reject a JSON-LD instance of anything:Thing (in the complex schema) with an invalid literal type" in {
             assertThrows[AssertionException] {
-                instanceChecker.check(
+                jsonLDInstanceChecker.check(
                     instanceResponse = InstanceCheckerSpec.complexThingWithInvalidLiteralType,
                     expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     knoraRouteGet = doGetRequest
@@ -76,7 +77,7 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
 
         "reject a JSON-LD instance of anything:Thing (in the complex schema) with an invalid object type" in {
             assertThrows[AssertionException] {
-                instanceChecker.check(
+                jsonLDInstanceChecker.check(
                     instanceResponse = InstanceCheckerSpec.complexThingWithInvalidObjectType,
                     expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     knoraRouteGet = doGetRequest
@@ -86,7 +87,7 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
 
         "reject a JSON-LD instance of anything:Thing (in the complex schema) with object content where an IRI is required" in {
             assertThrows[AssertionException] {
-                instanceChecker.check(
+                jsonLDInstanceChecker.check(
                     instanceResponse = InstanceCheckerSpec.complexThingWithInvalidUseOfObjectInsteadOfIri,
                     expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     knoraRouteGet = doGetRequest
@@ -96,7 +97,7 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
 
         "reject a JSON-LD instance of anything:Thing (in the simple schema) with an invalid datatype" in {
             assertThrows[AssertionException] {
-                instanceChecker.check(
+                jsonLDInstanceChecker.check(
                     instanceResponse = InstanceCheckerSpec.simpleThingWithInvalidDatatype,
                     expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
                     knoraRouteGet = doGetRequest
@@ -106,9 +107,47 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
 
         "reject a JSON-LD instance of anything:Thing (in the simple schema) without an rdfs:label" in {
             assertThrows[AssertionException] {
-                instanceChecker.check(
+                jsonLDInstanceChecker.check(
                     instanceResponse = InstanceCheckerSpec.simpleThingWithMissingLabel,
                     expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+                    knoraRouteGet = doGetRequest
+                )
+            }
+        }
+
+        "accept a correct JSON instance of an admin:User" in {
+            jsonInstanceChecker.check(
+                instanceResponse = InstanceCheckerSpec.correctUser,
+                expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+        }
+
+        "reject a JSON instance of an admin:User with an extra property" in {
+            assertThrows[AssertionException] {
+                jsonInstanceChecker.check(
+                    instanceResponse = InstanceCheckerSpec.userWithExtraProperty,
+                    expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
+                    knoraRouteGet = doGetRequest
+                )
+            }
+        }
+
+        "reject a JSON instance of an admin:User without a username" in {
+            assertThrows[AssertionException] {
+                jsonInstanceChecker.check(
+                    instanceResponse = InstanceCheckerSpec.userWithMissingUsername,
+                    expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
+                    knoraRouteGet = doGetRequest
+                )
+            }
+        }
+
+        "reject a JSON instance of an admin:User with an invalid literal object type" in {
+            assertThrows[AssertionException] {
+                jsonInstanceChecker.check(
+                    instanceResponse = InstanceCheckerSpec.userWithInvalidObjectType,
+                    expectedClassIri = "http://api.knora.org/ontology/knora-admin/v2#User".toSmartIri,
                     knoraRouteGet = doGetRequest
                 )
             }
@@ -434,6 +473,71 @@ object InstanceCheckerSpec {
           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
           |  }
+          |}
+        """.stripMargin
+
+    val correctUser: String =
+        """
+          |{
+          |  "username" : "test",
+          |  "email" : "test@example.org",
+          |  "familyName" : "Tester",
+          |  "givenName": "Test",
+          |  "password" : "test",
+          |  "preferredLanguage" : "en",
+          |  "status" : true,
+          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
+          |  "isInGroup" : [],
+          |  "isInSystemAdminGroup" : false
+          |}
+        """.stripMargin
+
+    val userWithExtraProperty: String =
+        """
+          |{
+          |  "username" : "test",
+          |  "extraProperty" : "test",
+          |  "email" : "test@example.org",
+          |  "familyName" : "Tester",
+          |  "givenName": "Test",
+          |  "password" : "test",
+          |  "preferredLanguage" : "en",
+          |  "status" : true,
+          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
+          |  "isInGroup" : [],
+          |  "isInSystemAdminGroup" : false
+          |}
+        """.stripMargin
+
+    val userWithMissingUsername: String =
+        """
+          |{
+          |  "email" : "test@example.org",
+          |  "familyName" : "Tester",
+          |  "givenName": "Test",
+          |  "password" : "test",
+          |  "preferredLanguage" : "en",
+          |  "status" : true,
+          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
+          |  "isInGroup" : [],
+          |  "isInSystemAdminGroup" : false
+          |}
+        """.stripMargin
+
+
+    val userWithInvalidObjectType: String =
+        """
+          |{
+          |  "username" : "test",
+          |  "email" : "test@example.org",
+          |  "familyName" : "Tester",
+          |  "givenName": "Test",
+          |  "password" : "test",
+          |  "preferredLanguage" : "en",
+          |  "status" : "invalidValue",
+          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
+          |  "isInGroup" : [],
+          |  "isInSystemAdminGroup" : false
           |}
         """.stripMargin
 }

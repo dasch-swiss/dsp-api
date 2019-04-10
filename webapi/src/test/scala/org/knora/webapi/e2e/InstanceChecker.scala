@@ -102,7 +102,7 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
       */
     private def checkRec(instanceElement: InstanceElement, classIri: SmartIri, definitions: Definitions): Unit = {
         if (!instanceInspector.elementHasCompatibleType(element = instanceElement, expectedType = classIri, definitions = definitions)) {
-            throwAndLogAssertionException(s"Element type ${instanceElement.elementType} is not compatible with expected class IRI <$classIri>")
+            throwAndLogAssertionException(s"Instance type ${instanceElement.elementType} is not compatible with expected class IRI $classIri")
         }
 
         val classDef: ClassInfoContentV2 = definitions.getClassDef(classIri, throwAndLogAssertionException)
@@ -141,7 +141,7 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
                 // Get the expected type of the property's objects.
                 val objectType: SmartIri = if (propertyIri.isKnoraApiV2EntityIri) {
                     val propertyDef = definitions.getPropertyDef(propertyIri, throwAndLogAssertionException)
-                    getObjectType(propertyDef).getOrElse(throwAndLogAssertionException(s"Property <$propertyIri> has no knora-api:objectType"))
+                    getObjectType(propertyDef).getOrElse(throwAndLogAssertionException(s"Property $propertyIri has no knora-api:objectType"))
                 } else {
                     OntologyConstants.Xsd.String.toSmartIri
                 }
@@ -158,7 +158,7 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
                         case None => ""
                     }
 
-                    val errorMsg = s"Element type ${obj.elementType}$literalContentMsg is not compatible with expected type <$objectType> for property <$propertyIri>"
+                    val errorMsg = s"Property $instancePropertyName has an object of type ${obj.elementType}$literalContentMsg, but type $objectType was expected"
 
                     // Are we expecting an instance of a Knora class that isn't a datatype?
                     if (objectType.isKnoraApiV2EntityIri && !objectTypeIsKnoraDatatype) {
@@ -170,7 +170,7 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
                             }
                         } else if (!instanceInspector.elementIsIri(obj)) {
                             // It's a class that Knora doesn't serve. Accept the object only if it's an IRI.
-                            throwAndLogAssertionException(s"Property <$propertyIri> requires an IRI referring to an instance of <$objectType>, but object content was received instead")
+                            throwAndLogAssertionException(s"Property $propertyIri requires an IRI referring to an instance of $objectType, but object content was received instead")
                         }
                     } else {
                         // We're expecting a literal. Ask the element inspector if the object is compatible with
@@ -397,12 +397,12 @@ trait InstanceInspector {
   * Constants for working with instances parsed from JSON.
   */
 object JsonInstanceInspector {
-    val STRING = "string"
-    val IRI = "iri"
-    val INTEGER = "integer"
-    val DECIMAL = "decimal"
-    val BOOLEAN = "boolean"
-    val OBJECT = "object"
+    val STRING = "String"
+    val IRI = "IRI"
+    val INTEGER = "Integer"
+    val DECIMAL = "Decimal"
+    val BOOLEAN = "Boolean"
+    val OBJECT = "Object"
 
     val LiteralTypeMap: Map[String, Set[IRI]] = Map(
         STRING ->
@@ -601,12 +601,12 @@ case class Definitions(classDefs: Map[SmartIri, ClassInfoContentV2] = Map.empty,
                        subClassOf: Map[SmartIri, Set[SmartIri]] = Map.empty) {
     def getClassDef(classIri: SmartIri,
                     errorFun: String => Nothing): ClassInfoContentV2 = {
-        classDefs.getOrElse(classIri, errorFun(s"No definition for class <$classIri>"))
+        classDefs.getOrElse(classIri, errorFun(s"No definition for class $classIri"))
     }
 
     def getPropertyDef(propertyIri: SmartIri,
                        errorFun: String => Nothing): PropertyInfoContentV2 = {
-        propertyDefs.getOrElse(propertyIri, errorFun(s"No definition for property <$propertyIri>"))
+        propertyDefs.getOrElse(propertyIri, errorFun(s"No definition for property $propertyIri"))
     }
 
     def getBaseClasses(classIri: SmartIri): Set[SmartIri] = {
