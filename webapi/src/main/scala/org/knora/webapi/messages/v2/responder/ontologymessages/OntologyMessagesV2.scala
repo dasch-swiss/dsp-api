@@ -1919,6 +1919,12 @@ object EntityInfoContentV2 {
                             objects = Seq(stringToLiteral(objStr))
                         )
 
+                    case JsonLDBoolean(objBoolean) =>
+                        PredicateInfoV2(
+                            predicateIri = predicateIri,
+                            objects = Seq(BooleanLiteralV2(objBoolean))
+                        )
+
                     case objObj: JsonLDObject =>
                         if (objObj.isIri) {
                             // This is a JSON-LD IRI value.
@@ -2572,8 +2578,6 @@ object ClassInfoContentV2 {
         val classIri: SmartIri = jsonLDClassDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = classIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid class IRI: $classIri"))
 
-        // TODO: handle custom datatypes.
-
         // Parse differently depending on parsing mode.
         val filteredClassDef: JsonLDObject = parsingMode match {
             case ClientInputParsingModeV2 =>
@@ -2609,9 +2613,14 @@ object ClassInfoContentV2 {
                     jsonLDObj => jsonLDObj.toIri(stringFormatter.toSmartIriWithErr)
                 }.toSet
 
-                // Any object of rdfs:subClassOf that isn't a base class should be an owl:Restriction.
+                // The restrictions are the object of rdfs:subClassOf that have type owl:Restriction.
                 val restrictions: Seq[JsonLDObject] = arrayElemsAsObjs.filter {
-                    jsonLDObj => !jsonLDObj.isIri
+                    jsonLDObj =>
+                        if (jsonLDObj.isIri) {
+                            false
+                        } else {
+                            jsonLDObj.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr).toString == OntologyConstants.Owl.Restriction
+                        }
                 }
 
                 val cardinalities: Map[SmartIri, KnoraCardinalityInfo] = restrictions.foldLeft(Map.empty[SmartIri, KnoraCardinalityInfo]) {
@@ -2633,12 +2642,6 @@ object ClassInfoContentV2 {
                                 if (extraRestrictionPredicates.nonEmpty) {
                                     throw BadRequestException(s"A cardinality in the definition of $classIri contains one or more invalid predicates: ${extraRestrictionPredicates.mkString(", ")}")
                                 }
-                            }
-
-                            val cardinalityType = restriction.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
-
-                            if (cardinalityType != OntologyConstants.Owl.Restriction.toSmartIri) {
-                                throw BadRequestException(s"A cardinality must be expressed as an owl:Restriction, but this type was found: $cardinalityType")
                             }
 
                             val (owlCardinalityIri: IRI, owlCardinalityValue: Int) = restriction.maybeInt(OntologyConstants.Owl.Cardinality) match {
