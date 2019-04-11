@@ -5,6 +5,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
 import org.knora.webapi.http.{ApiStatusCodesV1, ApiStatusCodesV2}
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDString}
 import spray.json.{JsNumber, JsObject, JsString, JsValue}
 
 /**
@@ -116,19 +117,24 @@ object KnoraExceptionHandler {
       * @return an [[HttpResponse]] in JSON format.
       */
     private def exceptionToJsonHttpResponseV2(ex: Throwable, settings: SettingsImpl): HttpResponse = {
-
         // Get the HTTP status code that corresponds to the exception.
         val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
 
-        // Generate an HTTP response containing the error message ...
-        val responseFields: Map[String, JsValue] = Map(
-            "error" -> JsString(makeClientErrorMessage(ex, settings))
+        // Generate an HTTP response containing the error message...
+
+        val jsonLDDocument = JsonLDDocument(
+            body = JsonLDObject(
+                Map(OntologyConstants.KnoraApiV2WithValueObjects.Error -> JsonLDString(makeClientErrorMessage(ex, settings)))
+            ),
+            context = JsonLDObject(
+                Map(OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion))
+            )
         )
 
         // ... and the HTTP status code.
         HttpResponse(
             status = httpStatus,
-            entity = HttpEntity(ContentType(MediaTypes.`application/json`), JsObject(responseFields).compactPrint)
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`), jsonLDDocument.toCompactString)
         )
     }
 

@@ -95,7 +95,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -246,7 +246,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -644,7 +644,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -923,7 +923,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }

@@ -540,8 +540,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                     case Some(subjectType: SmartIri) =>
                         val subjectTypeStr = subjectType.toString
 
-                        // Is it knora-api:Value?
-                        if (subjectTypeStr == OntologyConstants.KnoraApiV2WithValueObjects.Value) {
+                        // Is it knora-api:Value or one of the knora-api:ValueBase classes?
+                        if (subjectTypeStr == OntologyConstants.KnoraApiV2WithValueObjects.Value || OntologyConstants.KnoraApiV2WithValueObjects.ValueBaseClasses.contains(subjectTypeStr)) {
                             // Yes. Don't use it.
                             None
                         } else if (OntologyConstants.KnoraApiV2WithValueObjects.FileValueClasses.contains(subjectTypeStr)) {
