@@ -62,7 +62,7 @@ object ResourcesResponderV2Spec {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
             startPosition = 0,
             endPosition = 26,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
         ),
@@ -70,7 +70,7 @@ object ResourcesResponderV2Spec {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
             startPosition = 0,
             endPosition = 12,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 1,
             startParentIndex = Some(0)
@@ -79,7 +79,7 @@ object ResourcesResponderV2Spec {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
             startPosition = 0,
             endPosition = 7,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 2,
             startParentIndex = Some(1)
@@ -1279,7 +1279,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
                     startPosition = 0,
                     endPosition = 26,
-                    uuid = UUID.randomUUID().toString,
+                    uuid = UUID.randomUUID(),
                     originalXMLID = None,
                     startIndex = 0
                 ),
@@ -1288,7 +1288,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                     startPosition = 0,
                     endPosition = 12,
-                    uuid = UUID.randomUUID().toString,
+                    uuid = UUID.randomUUID(),
                     originalXMLID = None,
                     startIndex = 1,
                     attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/0001/nonexistent-thing")),
@@ -1298,7 +1298,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                     startPosition = 0,
                     endPosition = 7,
-                    uuid = UUID.randomUUID().toString,
+                    uuid = UUID.randomUUID(),
                     originalXMLID = None,
                     startIndex = 2,
                     startParentIndex = Some(1)
