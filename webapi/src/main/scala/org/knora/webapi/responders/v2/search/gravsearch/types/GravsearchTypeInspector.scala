@@ -19,6 +19,7 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.types
 
+import akka.actor.ActorSystem
 import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.ResponderData
@@ -33,12 +34,12 @@ import scala.concurrent.{ExecutionContext, Future}
   * entities in the WHERE clause of a Gravsearch query, then runs the next inspector in the pipeline.
   *
   * @param nextInspector the next type inspector in the pipeline, or `None` if this is the last one.
-  * @param system        the Akka actor system.
+  * @param responderData the Knora responder data.
   */
 abstract class GravsearchTypeInspector(protected val nextInspector: Option[GravsearchTypeInspector],
                                        responderData: ResponderData) {
 
-    protected val system = responderData.system
+    protected val system: ActorSystem = responderData.system
     protected val settings: SettingsImpl = Settings(system)
     protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
     protected implicit val timeout: Timeout = settings.defaultTimeout

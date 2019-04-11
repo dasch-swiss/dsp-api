@@ -80,7 +80,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryGeneratorSpec extends CoreS
 
     }
 
-    val inputQueryWithDecimalOptionalSortCriterionAndFilter =
+    val inputQueryWithDecimalOptionalSortCriterionAndFilter: String =
         """
           |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
