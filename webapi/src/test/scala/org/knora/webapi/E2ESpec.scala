@@ -133,6 +133,12 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
         Await.result(responseBodyFuture, 5.seconds)
     }
 
+    protected def doGetRequest(urlPath: String): String = {
+        val request = Get(s"$baseApiUrl$urlPath")
+        val response: HttpResponse = singleAwaitingRequest(request)
+        responseToString(response)
+    }
+
     protected def parseTurtle(turtleStr: String): Model = {
         Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE)
     }
