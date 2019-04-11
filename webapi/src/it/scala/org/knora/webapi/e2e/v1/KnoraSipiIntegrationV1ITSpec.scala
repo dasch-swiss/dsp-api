@@ -29,14 +29,13 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
-import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.{FileUtil, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-import scala.io.Source
 import scala.xml._
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 
@@ -127,8 +126,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                     case res: JsObject =>
                         res.fields.get("clientResourceID") match {
                             case Some(JsString(id)) if id == clientID => true
-
-                            case other => false
+                            case _ => false
                         }
                     case _ => false
                 }
@@ -384,14 +382,12 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // get the Iri of the XSL transformation
             val resId: String = responseJson.fields.get("res_id") match {
                 case Some(JsString(resid: String)) => resid
-                case other => throw InvalidApiJsonException("member 'res_id' was expected")
+                case _ => throw InvalidApiJsonException("member 'res_id' was expected")
             }
-
-            val mappingWithXSLT = new File(pathToMappingWithXSLT)
 
             // add a mapping referring to the XSLT as the default XSL transformation
 
-            val mapping = Source.fromFile(mappingWithXSLT).getLines.mkString
+            val mapping = FileUtil.readTextFile(new File(pathToMappingWithXSLT))
 
             val updatedMapping = addXSLTIriToMapping(mapping, resId)
 
@@ -427,7 +423,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         "create a sample BEOL letter" ignore {
             // TODO: fix this when we can upload non-image files to Sipi (PR #1206).
 
-            val mapping = Source.fromFile(pathToBEOLLetterMapping).getLines.mkString
+            val mapping = FileUtil.readTextFile(new File(pathToBEOLLetterMapping))
 
             val paramsForMapping =
                 s"""
@@ -454,11 +450,11 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // send mapping xml to route
             val knoraPostRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
-            val mappingResponse: JsValue = getResponseJson(knoraPostRequest)
+            getResponseJson(knoraPostRequest)
 
             // create a letter via bulk import
 
-            val bulkXML = Source.fromFile(pathToBEOLBulkXML).getLines.mkString
+            val bulkXML = FileUtil.readTextFile(new File(pathToBEOLBulkXML))
 
             val bulkRequest = Post(baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8"), HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), bulkXML)) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
@@ -504,14 +500,12 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // get the Iri of the XSL transformation
             val resId: String = bodyXSLTJson.fields.get("res_id") match {
                 case Some(JsString(resid: String)) => resid
-                case other => throw InvalidApiJsonException("member 'res_id' was expected")
+                case _ => throw InvalidApiJsonException("member 'res_id' was expected")
             }
-
-            val mappingWithXSLT = new File(pathToBEOLStandoffTEIMapping)
 
             // add a mapping referring to the XSLT as the default XSL transformation
 
-            val mapping = Source.fromFile(mappingWithXSLT).getLines.mkString
+            val mapping = FileUtil.readTextFile(new File(pathToBEOLStandoffTEIMapping))
 
             val updatedMapping = addXSLTIriToMapping(mapping, resId)
 
@@ -540,7 +534,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // send mapping xml to route
             val mappingRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
-            val mappingJSON = getResponseJson(mappingRequest)
+            getResponseJson(mappingRequest)
 
             // create an XSL transformation
             val gravsearchTemplateParams = JsObject(
@@ -632,39 +626,47 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val xmlExpected =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
-                   |<teiHeader>
-                   |   <fileDesc>
-                   |      <titleStmt>
-                   |         <title>Testletter</title>
-                   |      </titleStmt>
-                   |      <publicationStmt>
-                   |         <p>This is the TEI/XML representation of the resource identified by the Iri
-                   |                        ${letterIri.get}.
-                   |                    </p>
-                   |      </publicationStmt>
-                   |      <sourceDesc>
-                   |         <p>Representation of the resource's text as TEI/XML</p>
-                   |      </sourceDesc>
-                   |   </fileDesc>
-                   |   <profileDesc>
-                   |      <correspDesc ref="${letterIri.get}">
-                   |         <correspAction type="sent">
-                   |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer,
-                   |                Johann Jacob</persName>
-                   |            <date when="1703-06-10"/>
-                   |         </correspAction>
-                   |         <correspAction type="received">
-                   |            <persName ref="http://d-nb.info/gnd/119112450">Hermann,
-                   |                Jacob</persName>
-                   |         </correspAction>
-                   |      </correspDesc>
-                   |   </profileDesc>
-                   |</teiHeader>
-                   |
-                   |<text><body>                <p>[...] Viro Clarissimo.</p>                <p>Dn. Jacobo Hermanno S. S. M. C. </p>                <p>et Ph. M.</p>                <p>S. P. D. </p>                <p>J. J. Sch.</p>                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>                </p>            </body></text>
-                   |</TEI>
-                   |
+                  |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
+                  |<teiHeader>
+                  |   <fileDesc>
+                  |      <titleStmt>
+                  |         <title>Testletter</title>
+                  |      </titleStmt>
+                  |      <publicationStmt>
+                  |         <p>This is the TEI/XML representation of the resource identified by the Iri
+                  |                        ${letterIri.get}.
+                  |                    </p>
+                  |      </publicationStmt>
+                  |      <sourceDesc>
+                  |         <p>Representation of the resource's text as TEI/XML</p>
+                  |      </sourceDesc>
+                  |   </fileDesc>
+                  |   <profileDesc>
+                  |      <correspDesc ref="${letterIri.get}">
+                  |         <correspAction type="sent">
+                  |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer,
+                  |                Johann Jacob</persName>
+                  |            <date when="1703-06-10"/>
+                  |         </correspAction>
+                  |         <correspAction type="received">
+                  |            <persName ref="http://d-nb.info/gnd/119112450">Hermann,
+                  |                Jacob</persName>
+                  |         </correspAction>
+                  |      </correspDesc>
+                  |   </profileDesc>
+                  |</teiHeader>
+                  |
+                  |<text><body>
+                  |                <p>[...] Viro Clarissimo.</p>
+                  |                <p>Dn. Jacobo Hermanno S. S. M. C. </p>
+                  |                <p>et Ph. M.</p>
+                  |                <p>S. P. D. </p>
+                  |                <p>J. J. Sch.</p>
+                  |                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>
+                  |                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>
+                  |                </p>
+                  |            </body></text>
+                  |</TEI>
                 """.stripMargin
 
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(letterResponseBodyXML)).withTest(Input.fromString(xmlExpected)).build()

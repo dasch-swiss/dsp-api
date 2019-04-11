@@ -255,7 +255,9 @@
 
 :givenName rdf:type owl:DatatypeProperty ;
 
-      rdfs:subPropertyOf foaf:givenName, :objectCannotBeMarkedAsDeleted .
+      rdfs:subPropertyOf foaf:givenName, :objectCannotBeMarkedAsDeleted ;
+
+      knora-base:objectDatatypeConstraint xsd:string .
 
 
 
@@ -263,7 +265,9 @@
 
 :familyName rdf:type owl:DatatypeProperty ;
 
-      rdfs:subPropertyOf foaf:familyName, :objectCannotBeMarkedAsDeleted .
+      rdfs:subPropertyOf foaf:familyName, :objectCannotBeMarkedAsDeleted ;
+
+      knora-base:objectDatatypeConstraint xsd:string .
 
 
 

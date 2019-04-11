@@ -104,6 +104,7 @@
     <!-- Spec Logging -->
 
     <logger name="org.knora.webapi.E2ESpec" level="DEBUG"/>
+    <logger name="org.knora.webapi.e2e.InstanceCheckerSpec" level="DEBUG"/>
 
     <!-- V1 -->
     <logger name="org.knora.webapi.responders.v1.ListsResponderV1Spec" level="INFO"/>

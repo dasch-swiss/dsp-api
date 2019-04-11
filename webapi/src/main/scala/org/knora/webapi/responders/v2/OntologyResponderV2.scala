@@ -235,20 +235,20 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         val allClassIris = allClassDefs.keySet
         val allPropertyIris = allPropertyDefs.keySet
 
-        // A map in which each resource class IRI points to the full set of its base classes. A class is also
+        // A map in which each class IRI points to the full set of its base classes. A class is also
         // a subclass of itself.
         val allSubClassOfRelations: Map[SmartIri, Set[SmartIri]] = allClassIris.map {
-            classIri => (classIri, getAllBaseDefs(classIri, directSubClassOfRelations) + classIri)
+            classIri => (classIri, OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations) + classIri)
         }.toMap
 
-        // A map in which each resource class IRI points to the full set of its subclasses. A class is also
+        // A map in which each class IRI points to the full set of its subclasses. A class is also
         // a subclass of itself.
         val allSuperClassOfRelations: Map[SmartIri, Set[SmartIri]] = calculateSuperClassOfRelations(allSubClassOfRelations)
 
         // Make a map in which each property IRI points to the full set of its base properties. A property is also
         // a subproperty of itself.
         val allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]] = allPropertyIris.map {
-            propertyIri => (propertyIri, getAllBaseDefs(propertyIri, directSubPropertyOfRelations) + propertyIri)
+            propertyIri => (propertyIri, OntologyUtil.getAllBaseDefs(propertyIri, directSubPropertyOfRelations) + propertyIri)
         }.toMap
 
         // A set of all subproperties of knora-base:resourceProperty.
@@ -4040,33 +4040,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             case (baseClass: SmartIri, baseClassAndSubClasses: Vector[(SmartIri, SmartIri)]) =>
                 baseClass -> baseClassAndSubClasses.map(_._2).toSet
         }
-    }
-
-    /**
-      * Recursively walks up an entity hierarchy read from the triplestore, collecting the IRIs of all base entities.
-      *
-      * @param iri             the IRI of an entity.
-      * @param directRelations a map of entities to their direct base entities.
-      * @return all the base entities of the specified entity.
-      */
-    private def getAllBaseDefs(iri: SmartIri, directRelations: Map[SmartIri, Set[SmartIri]]): Set[SmartIri] = {
-        def getAllBaseDefsRec(initialIri: SmartIri, currentIri: SmartIri): Set[SmartIri] = {
-            directRelations.get(currentIri) match {
-                case Some(baseDefs) =>
-                    baseDefs ++ baseDefs.flatMap {
-                        baseDef =>
-                            if (baseDef == initialIri) {
-                                throw InconsistentTriplestoreDataException(s"Entity $initialIri has an inheritance cycle with entity $baseDef")
-                            } else {
-                                getAllBaseDefsRec(initialIri, baseDef)
-                            }
-                    }
-
-                case None => Set.empty[SmartIri]
-            }
-        }
-
-        getAllBaseDefsRec(initialIri = iri, currentIri = iri)
     }
 
     /**
