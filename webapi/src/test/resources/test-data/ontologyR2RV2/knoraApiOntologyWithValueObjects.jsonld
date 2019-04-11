@@ -106,7 +106,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -211,7 +211,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -338,7 +338,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -444,7 +444,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -543,7 +543,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -635,7 +635,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -762,7 +762,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -972,7 +972,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -1071,7 +1071,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -1162,7 +1162,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -1288,7 +1288,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -1384,7 +1384,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -1511,7 +1511,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -1602,7 +1602,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -1685,7 +1685,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -1784,7 +1784,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -1896,7 +1896,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -2037,7 +2037,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -2124,9 +2124,33 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:linkValueHasSource"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:linkValueHasSourceIri"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:linkValueHasTarget"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:linkValueHasTargetIri"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -2155,24 +2179,6 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:valueHasComment"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "rdf:object"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "rdf:predicate"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "rdf:subject"
       }
     } ]
   }, {
@@ -2236,7 +2242,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -2340,7 +2346,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -2497,7 +2503,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -2645,7 +2651,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -2791,7 +2797,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -2905,7 +2911,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -3833,7 +3839,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -3978,7 +3984,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -4077,7 +4083,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -4204,7 +4210,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -4288,7 +4294,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -4410,7 +4416,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -4489,7 +4495,7 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -4615,7 +4621,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -4708,7 +4714,7 @@
       "@id" : "xsd:boolean"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:BooleanValue"
+      "@id" : "knora-api:BooleanBase"
     },
     "rdfs:comment" : "Represents the literal boolean value of a BooleanValue.",
     "rdfs:label" : "Boolean value as decimal",
@@ -4733,7 +4739,7 @@
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:ColorValue"
+      "@id" : "knora-api:ColorBase"
     },
     "rdfs:comment" : "Represents the literal RGB value of a ColorValue.",
     "rdfs:label" : "Color value as color",
@@ -4757,7 +4763,7 @@
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:DateValue"
+      "@id" : "knora-api:DateBase"
     },
     "rdfs:comment" : "Represents the calendar of a date value.",
     "rdfs:label" : "Date value has calendar",
@@ -4771,7 +4777,7 @@
       "@id" : "xsd:integer"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:DateValue"
+      "@id" : "knora-api:DateBase"
     },
     "rdfs:comment" : "Represents the end day of a date value.",
     "rdfs:label" : "Date value has end day",
@@ -4785,7 +4791,7 @@
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:DateValue"
+      "@id" : "knora-api:DateBase"
     },
     "rdfs:comment" : "Represents the end era of a date value.",
     "rdfs:label" : "Date value has end era",
@@ -4799,7 +4805,7 @@
       "@id" : "xsd:integer"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:DateValue"
+      "@id" : "knora-api:DateBase"
     },
     "rdfs:comment" : "Represents the end month of a date value.",
     "rdfs:label" : "Date value has end month",
@@ -4813,7 +4819,7 @@
       "@id" : "xsd:integer"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:DateValue"
+      "@id" : "knora-api:DateBase"
     },
     "rdfs:comment" : "Represents the end year of a date value.",
     "rdfs:label" : "Date value has end year",
@@ -4827,7 +4833,7 @@
       "@id" : "xsd:integer"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:DateValue"
+      "@id" : "knora-api:DateBase"
     },
     "rdfs:comment" : "Represents the start day of a date value.",
     "rdfs:label" : "Date value has start day",
@@ -4841,7 +4847,7 @@
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:DateValue"
+      "@id" : "knora-api:DateBase"
     },
     "rdfs:comment" : "Represents the start era of a date value.",
     "rdfs:label" : "Date value has start era",
@@ -4855,7 +4861,7 @@
       "@id" : "xsd:integer"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:DateValue"
+      "@id" : "knora-api:DateBase"
     },
     "rdfs:comment" : "Represents the start month of a date value.",
     "rdfs:label" : "Date value has start month",
@@ -4869,7 +4875,7 @@
       "@id" : "xsd:integer"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:DateValue"
+      "@id" : "knora-api:DateBase"
     },
     "rdfs:comment" : "Represents the start year of a date value.",
     "rdfs:label" : "Date value has start year",
@@ -4883,7 +4889,7 @@
       "@id" : "xsd:decimal"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:DecimalValue"
+      "@id" : "knora-api:DecimalBase"
     },
     "rdfs:comment" : "Represents the literal decimal value of a DecimalValue.",
     "rdfs:label" : "Decimal value as decimal",
@@ -4911,6 +4917,14 @@
       "@id" : "knora-admin:User"
     },
     "rdfs:comment" : "Indicates who deleted a resource or value"
+  }, {
+    "@id" : "knora-api:error",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:string"
+    },
+    "rdfs:comment" : "Provides an error message",
+    "rdfs:label" : "error"
   }, {
     "@id" : "knora-api:fileValueAsUrl",
     "@type" : "owl:DatatypeProperty",
@@ -5297,10 +5311,38 @@
       "@id" : "xsd:integer"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:IntValue"
+      "@id" : "knora-api:IntBase"
     },
     "rdfs:comment" : "Represents the literal integer value of an IntValue.",
     "rdfs:label" : "Integer value as integer",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
+    }
+  }, {
+    "@id" : "knora-api:intervalValueHasEnd",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:decimal"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:IntervalBase"
+    },
+    "rdfs:comment" : "Represents the end position of an interval.",
+    "rdfs:label" : "interval value has end",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
+    }
+  }, {
+    "@id" : "knora-api:intervalValueHasStart",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:decimal"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:IntervalBase"
+    },
+    "rdfs:comment" : "Represents the start position of an interval.",
+    "rdfs:label" : "interval value has start",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:valueHas"
     }
@@ -5514,6 +5556,34 @@
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:dateTimeStamp"
+    }
+  }, {
+    "@id" : "knora-api:linkValueHasSource",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:objectType" : {
+      "@id" : "knora-api:Resource"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:LinkValue"
+    },
+    "rdfs:comment" : "Represents the source resource of a link value.",
+    "rdfs:label" : "Link value has source",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
+    }
+  }, {
+    "@id" : "knora-api:linkValueHasSourceIri",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:anyURI"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:LinkValue"
+    },
+    "rdfs:comment" : "Represents the IRI of the source resource of a link value.",
+    "rdfs:label" : "Link value has source IRI",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
     }
   }, {
     "@id" : "knora-api:linkValueHasTarget",
@@ -5933,7 +6003,7 @@
       "@id" : "xsd:anyURI"
     },
     "knora-api:subjectType" : {
-      "@id" : "knora-api:UriValue"
+      "@id" : "knora-api:UriBase"
     },
     "rdfs:comment" : "Represents the literal URI value of a UriValue.",
     "rdfs:label" : "URI value as URI",
