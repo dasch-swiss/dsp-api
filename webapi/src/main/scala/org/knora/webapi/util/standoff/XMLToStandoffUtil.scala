@@ -497,7 +497,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
             case (acc, hierarchicalTag: HierarchicalStandoffTag) =>
                 acc :+ hierarchicalTag
 
-            // It seems as if the following line should work, but it doesn't. See https://issues.scala-lang.org/browse/SI-10100
+            // It seems as if the following line should work, but it doesn't. See https://github.com/scala/bug/issues/10100
             // case (_, clixTag: ClixMilestoneTag) => throw AssertionException(s"CLIX tag $clixTag cannot be in TextWithStandoff") // This should never happen
 
             // Workaround:
