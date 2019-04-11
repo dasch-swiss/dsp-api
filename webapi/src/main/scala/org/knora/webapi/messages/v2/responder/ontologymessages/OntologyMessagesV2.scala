@@ -1351,9 +1351,10 @@ object InputOntologyV2 {
 
         val ontologyLabel: Option[String] = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
-        val lastModificationDate: Option[Instant] =
-            ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2Simple.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant).
-                orElse(ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant))
+        val lastModificationDate: Option[Instant] = ontologyObj.maybeStringWithValidation(
+            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
+            stringFormatter.xsdDateTimeStampToInstant
+        )
 
         val ontologyMetadata = OntologyMetadataV2(
             ontologyIri = externalOntologyIri,
@@ -3020,14 +3021,12 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
             labelStr => OntologyConstants.Rdfs.Label -> JsonLDString(labelStr)
         }
 
-        val lastModDateStatement: Option[(IRI, JsonLDString)] = lastModificationDate.map {
-            lastModDate =>
-                val lastModDateProp = targetSchema match {
-                    case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.LastModificationDate
-                    case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate
-                }
-
-                lastModDateProp -> JsonLDString(lastModDate.toString)
+        val lastModDateStatement: Option[(IRI, JsonLDString)] = if (targetSchema == ApiV2WithValueObjects) {
+            lastModificationDate.map {
+                lastModDate => OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> JsonLDString(lastModDate.toString)
+            }
+        } else {
+            None
         }
 
         Map(JsonLDConstants.ID -> JsonLDString(ontologyIri.toString),
