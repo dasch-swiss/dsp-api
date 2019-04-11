@@ -584,6 +584,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                 expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
                 knoraRouteGet = doGetRequest
             )
+
+            // Check that the text value with standoff is correct in the simple schema.
+            val resourceSimpleAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceSimpleGetResponseAsString)
+            val text: String = resourceSimpleAsJsonLD.body.requireString("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasRichtext")
+            assert(text == "this is text with standoff")
         }
 
         "create a resource with a custom creation date" in {
