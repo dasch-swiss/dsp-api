@@ -1113,16 +1113,19 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
     override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
+                // Remove INFORMATION SEPARATOR TWO, which is used only internally.
+                val textForSimpleSchema = valueHasString.replace(StringFormatter.INFORMATION_SEPARATOR_TWO.toString, "")
+
                 valueHasLanguage match {
                     case Some(lang) =>
                         // In the simple schema, if this text value specifies a language, return it using a JSON-LD
                         // @language key as per <https://json-ld.org/spec/latest/json-ld/#string-internationalization>.
                         JsonLDUtil.objectWithLangToJsonLDObject(
-                            obj = valueHasString,
+                            obj = textForSimpleSchema,
                             lang = lang
                         )
 
-                    case None => JsonLDString(valueHasString)
+                    case None => JsonLDString(textForSimpleSchema)
                 }
 
             case ApiV2Complex =>
