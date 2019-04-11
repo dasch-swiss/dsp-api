@@ -30,7 +30,7 @@ incunabula:book a owl:Class;
       owl:onProperty knora-api:hasStandoffLinkToValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
-      owl:cardinality 1;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -190,7 +190,7 @@ incunabula:page a owl:Class;
       owl:onProperty knora-api:hasStillImageFileValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
-      owl:cardinality 1;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
