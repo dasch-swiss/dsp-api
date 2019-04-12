@@ -38,9 +38,9 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.SearchResponderV2Constants
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
+import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.util.{ActorUtil, KnoraIdUtil, SmartIri, StringFormatter, UserUtilADM}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -571,8 +571,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                             }
 
                             for {
-                                valueContent: ValueContentV2 <-
-                                ValueContentV2.fromJsonLDObject(
+                                valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
                                     jsonLDObject = valueJsonLDObject,
                                     requestingUser = requestingUser,
                                     responderManager = responderManager,
