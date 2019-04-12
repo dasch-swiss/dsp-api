@@ -20,10 +20,11 @@
 package org.knora.webapi.util
 
 import akka.actor.ActorRef
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetRequestADM, UserIdentifierADM, UserResponseADM}
-import org.knora.webapi.{ForbiddenException, IRI}
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetRequestADM, UserIdentifierADM, UserInformationTypeADM, UserResponseADM}
+import org.knora.webapi.{ForbiddenException, IRI, KnoraSystemInstances}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -48,17 +49,18 @@ object UserUtilADM {
                      responderManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        for {
-            _ <- Future {
-                if (requestedUserIri.nonEmpty && !(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(projectIri.toString))) {
-                    throw ForbiddenException(s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can perform an operation as another user")
-                }
-            }
-
-            userResponse: UserResponseADM <- (responderManager ? UserGetRequestADM(
-                identifier = UserIdentifierADM(maybeIri = Some(requestedUserIri)),
-                requestingUser = requestingUser
-            )).mapTo[UserResponseADM]
-        } yield userResponse.user
+        if (requestingUser.id == requestedUserIri) {
+            FastFuture.successful(requestingUser)
+        } else if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(projectIri.toString))) {
+            Future.failed(ForbiddenException(s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can perform an operation as another user"))
+        } else {
+            for {
+                userResponse: UserResponseADM <- (responderManager ? UserGetRequestADM(
+                    identifier = UserIdentifierADM(maybeIri = Some(requestedUserIri)),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )).mapTo[UserResponseADM]
+            } yield userResponse.user
+        }
     }
 }

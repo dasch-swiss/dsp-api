@@ -551,6 +551,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                     JsonLDConstants.TYPE,
                     OntologyConstants.Rdfs.Label,
                     OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject,
+                    OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser,
                     OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions,
                     OntologyConstants.KnoraApiV2WithValueObjects.CreationDate
                 )
