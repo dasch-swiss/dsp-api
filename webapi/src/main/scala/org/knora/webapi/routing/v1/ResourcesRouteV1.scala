@@ -1206,11 +1206,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             userADM <- getUserADM(requestContext)
 
                             _ = if (userADM.isAnonymousUser) {
-                                throw BadRequestException("You are not logged in, and only a system administrator or project administrator can perform a bulk import")
+                                throw ForbiddenException("You are not logged in, and only a system administrator or project administrator can perform a bulk import")
                             }
 
                             _ = if (!(userADM.permissions.isSystemAdmin || userADM.permissions.isProjectAdmin(projectId))) {
-                                throw BadRequestException(s"You are logged in as ${userADM.email}, but only a system administrator or project administrator can perform a bulk import")
+                                throw ForbiddenException(s"You are logged in as ${userADM.email}, but only a system administrator or project administrator can perform a bulk import")
                             }
 
                             // Parse the submitted XML.
