@@ -51,7 +51,7 @@ object UserUtilADM {
 
         if (requestingUser.id == requestedUserIri) {
             FastFuture.successful(requestingUser)
-        } else if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(projectIri.toString))) {
+        } else if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(projectIri))) {
             Future.failed(ForbiddenException(s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can perform an operation as another user"))
         } else {
             for {
