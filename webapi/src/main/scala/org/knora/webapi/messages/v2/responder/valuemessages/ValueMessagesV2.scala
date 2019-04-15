@@ -144,7 +144,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 case class CreateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
-    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         if (targetSchema != ApiV2Complex) {
             throw AssertionException(s"CreateValueResponseV2 can only be returned in the complex schema")
         }
@@ -252,7 +252,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
 case class UpdateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
-    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         if (targetSchema != ApiV2Complex) {
             throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex schema")
         }

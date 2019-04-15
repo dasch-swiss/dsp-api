@@ -25,7 +25,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString}
-import org.knora.webapi.{ApiV2Schema, IRI, OntologyConstants, SettingsImpl}
+import org.knora.webapi.{ApiV2Schema, IRI, OntologyConstants, SchemaOption, SettingsImpl}
 
 /**
   * An abstract trait for messages that can be sent to `SearchResponderV2`.
@@ -120,7 +120,7 @@ case class SearchResourceByLabelRequestV2(searchValue: String,
   * Represents the number of resources found by a search query.
   */
 case class ResourceCountV2(numberOfResources: Int) extends KnoraResponseV2 {
-    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         JsonLDDocument(
             body = JsonLDObject(Map(
                 OntologyConstants.SchemaOrg.NumberOfItems -> JsonLDInt(numberOfResources)

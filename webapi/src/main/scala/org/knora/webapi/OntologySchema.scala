@@ -46,4 +46,24 @@ case object ApiV2Simple extends ApiV2Schema
   * schema always represents values as objects.
   */
 case object ApiV2Complex extends ApiV2Schema
+
+/**
+  * A trait representing options that can be submitted to configure an ontology schema.
+  */
+sealed trait SchemaOption
+
+/**
+  * A trait representing options that affect the rendering of standoff markup when text values are returned.
+  */
+sealed trait StandoffRendering extends SchemaOption
+
+/**
+  * Indicates that standoff markup should be rendered as XML when text values are returned.
+  */
+case object StandoffAsXml extends StandoffRendering
+
+/**
+  * Indicates that standoff markup should not be returned with text values.
+  */
+case object NoStandoff extends StandoffRendering
 // #OntologySchema

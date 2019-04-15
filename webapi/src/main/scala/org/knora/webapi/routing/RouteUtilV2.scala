@@ -70,6 +70,28 @@ object RouteUtilV2 {
     val PROJECT_HEADER: String = "x-knora-accept-project"
 
     /**
+      * The name of the URL parameter that can be used to specify how standoff markup should be returned
+      * with text values.
+      */
+    val STANDOFF_PARAM: String = "standoff"
+
+    /**
+      * The name of the HTTP header that can be used to specify how standoff markup should be returned with
+      * text values.
+      */
+    val STANDOFF_HEADER: String = "x-knora-standoff"
+
+    /**
+      * Indicates that standoff markup should be returned as XML (currently the default).
+      */
+    val STANDOFF_XML: String = "xml"
+
+    /**
+      * Indicates that standoff markup should not be returned with text values.
+      */
+    val STANDOFF_NONE: String = "none"
+
+    /**
       * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
       * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
       * If no schema is specified in the request, the default of [[ApiV2Complex]] is returned.
@@ -100,6 +122,47 @@ object RouteUtilV2 {
     }
 
     /**
+      * Gets the type of standoff rendering that should be used when returning text with standoff.
+      * The name of the standoff rendering can be specified either in the HTTP header [[STANDOFF_HEADER]]
+      * or in the URL parameter [[STANDOFF_PARAM]]. If no rendering is specified in the request, the
+      * default of [[StandoffAsXml]] is returned.
+      *
+      * @param requestContext the akka-http [[RequestContext]].
+      * @return the specified standoff rendering, or [[StandoffAsXml]] if no rendering was specified
+      *         in the request.
+      */
+    private def getStandoffRendering(requestContext: RequestContext): Option[StandoffRendering] = {
+        def nameToStandoffRendering(standoffRenderingName: String): StandoffRendering = {
+            standoffRenderingName match {
+                case STANDOFF_XML => StandoffAsXml
+                case STANDOFF_NONE => NoStandoff
+                case _ => throw BadRequestException(s"Unrecognised standoff rendering: $standoffRenderingName")
+            }
+        }
+
+        val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+        params.get(STANDOFF_PARAM) match {
+            case Some(schemaParam) => Some(nameToStandoffRendering(schemaParam))
+
+            case None =>
+                requestContext.request.headers.find(_.lowercaseName == STANDOFF_HEADER).map {
+                    header => nameToStandoffRendering(header.value)
+                }
+        }
+    }
+
+    /**
+      * Gets the schema options submitted in the request.
+      *
+      * @param requestContext the request context.
+      * @return the set of schema options submitted in the request.
+      */
+    def getSchemaOptions(requestContext: RequestContext): Set[SchemaOption] = {
+        getStandoffRendering(requestContext).toSet
+    }
+
+    /**
       * Gets the project IRI specified in a Knora-specific HTTP header.
       *
       * @param requestContext the akka-http [[RequestContext]].
@@ -127,12 +190,13 @@ object RouteUtilV2 {
       * @return a [[Future]] containing a [[RouteResult]].
       */
     private def runRdfRoute(requestMessage: KnoraRequestV2,
-                    requestContext: RequestContext,
-                    settings: SettingsImpl,
-                    responderManager: ActorRef,
-                    log: LoggingAdapter,
-                    responseSchema: ApiV2Schema)
-                   (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
+                            requestContext: RequestContext,
+                            settings: SettingsImpl,
+                            responderManager: ActorRef,
+                            log: LoggingAdapter,
+                            responseSchema: ApiV2Schema,
+                            schemaOptions: Set[SchemaOption])
+                           (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
             log.debug(requestMessage.toString)
@@ -162,7 +226,8 @@ object RouteUtilV2 {
                 knoraResponse = knoraResponse,
                 responseMediaType = responseMediaType,
                 responseSchema = responseSchema,
-                settings = settings
+                settings = settings,
+                schemaOptions = schemaOptions
             )
 
             // The request was successful
@@ -237,7 +302,8 @@ object RouteUtilV2 {
                               settings: SettingsImpl,
                               responderManager: ActorRef,
                               log: LoggingAdapter,
-                              responseSchema: ApiV2Schema)
+                              responseSchema: ApiV2Schema,
+                              schemaOptions: Set[SchemaOption] = Set.empty)
                              (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         for {
             requestMessage <- requestMessageF
@@ -247,7 +313,8 @@ object RouteUtilV2 {
                 settings = settings,
                 responderManager = responderManager,
                 log = log,
-                responseSchema = responseSchema
+                responseSchema = responseSchema,
+                schemaOptions = schemaOptions
             )
 
         } yield routeResult
@@ -310,12 +377,14 @@ object RouteUtilV2 {
       * @param knoraResponse     the response message.
       * @param responseMediaType the media type selected for the response (must be one of the types in [[RdfMediaTypes]]).
       * @param responseSchema    the response schema.
+      * @param schemaOptions     the schema options.
       * @param settings          the application settings.
       * @return an HTTP response.
       */
     private def formatResponse(knoraResponse: KnoraResponseV2,
                                responseMediaType: MediaType.NonBinary,
                                responseSchema: ApiV2Schema,
+                               schemaOptions: Set[SchemaOption],
                                settings: SettingsImpl): HttpResponse = {
         // Find the most specific media type that is compatible with the one requested.
         val specificMediaType = RdfMediaTypes.toMostSpecificMediaType(responseMediaType)
@@ -324,7 +393,11 @@ object RouteUtilV2 {
         val contentType = RdfMediaTypes.toUTF8ContentType(responseMediaType)
 
         // Generate a JSON-LD data structure from the API response message.
-        val jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(responseSchema, settings)
+        val jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(
+            targetSchema = responseSchema,
+            settings = settings,
+            schemaOptions = schemaOptions
+        )
 
         // Is the response format JSON or JSON-LD?
         specificMediaType match {
@@ -349,7 +422,7 @@ object RouteUtilV2 {
                     case RdfMediaTypes.`text/turtle` =>
                         val turtleWriter = Rio.createWriter(RDFFormat.TURTLE, stringWriter)
                         turtleWriter.getWriterConfig.set[java.lang.Boolean](BasicWriterSettings.INLINE_BLANK_NODES, true).
-                                set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true)
+                            set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true)
                         turtleWriter
 
                     case RdfMediaTypes.`application/rdf+xml` => new RDFXMLPrettyWriter(stringWriter)
