@@ -26,7 +26,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Knora
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, CoreSpec}
+import org.knora.webapi.{ApiV2Complex, BadRequestException, CoreSpec}
 
 /**
   * Tests [[InputOntologyV2]].
@@ -219,7 +219,7 @@ object InputOntologyV2Spec {
                 "http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri,
                 "http://schema.org/name".toSmartIri
             ),
-            ontologySchema = ApiV2WithValueObjects
+            ontologySchema = ApiV2Complex
         ))
     )
 
@@ -240,7 +240,7 @@ object InputOntologyV2Spec {
                 )
             ),
             classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             directCardinalities = Map("http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
             subClassOf = Set("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
         )),

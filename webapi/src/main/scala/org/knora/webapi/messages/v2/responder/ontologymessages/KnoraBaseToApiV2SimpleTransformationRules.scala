@@ -26,9 +26,9 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
-  * Rules for converting `knora-base` into `knora-api` in the [[ApiV2Simple]] schema.
+  * Rules for converting `knora-base` (or an ontology based on it) into `knora-api` in the [[ApiV2Simple]] schema.
   */
-object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules {
+object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationRules {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
@@ -350,7 +350,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
     /**
       * Properties to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema.
       */
-    override val knoraBasePropertiesToRemove: Set[SmartIri] = Set(
+    override val internalPropertiesToRemove: Set[SmartIri] = Set(
         OntologyConstants.KnoraBase.CreationDate,
         OntologyConstants.KnoraBase.LastModificationDate,
         OntologyConstants.KnoraBase.IsEditable,
@@ -441,7 +441,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
       * Classes to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema. Standoff classes
       * are removed, too, but aren't included here, because this is taken care of in [[ReadOntologyV2]].
       */
-    override val knoraBaseClassesToRemove: Set[SmartIri] = Set(
+    override val internalClassesToRemove: Set[SmartIri] = Set(
         OntologyConstants.KnoraBase.ValueBase,
         OntologyConstants.KnoraBase.DateBase,
         OntologyConstants.KnoraBase.UriBase,
@@ -480,7 +480,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
       * After `knora-base` has been converted to the [[ApiV2Simple]] schema, these cardinalities must be
       * added to the specified classes to obtain `knora-api`.
       */
-    override val knoraApiCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
+    override val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
         OntologyConstants.KnoraBase.Resource -> ResourceCardinalites
     ).map {
         case (classIri, cardinalities) =>
@@ -493,7 +493,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
     /**
       * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2Simple]] schema, to obtain `knora-api`.
       */
-    override val knoraApiClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
+    override val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
         File,
         Date,
         Color,
@@ -507,7 +507,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
     /**
       * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2Simple]] schema, to obtain `knora-api`.
       */
-    override val knoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
+    override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Result,
         Error,
         ArkUrl,
