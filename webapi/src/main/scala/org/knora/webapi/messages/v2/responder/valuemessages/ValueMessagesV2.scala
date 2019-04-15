@@ -494,10 +494,15 @@ sealed trait ReadValueV2 extends IOValueV2 {
       * @param settings     the application settings.
       * @return a JSON-LD representation of this value.
       */
-    def toJsonLD(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    def toJsonLD(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val valueContentAsJsonLD = valueContent.toJsonLDValue(targetSchema, projectADM, settings)
+        val valueContentAsJsonLD = valueContent.toJsonLDValue(
+            targetSchema = targetSchema,
+            projectADM = projectADM,
+            settings = settings,
+            schemaOptions = schemaOptions
+        )
 
         // In the complex schema, add the value's IRI and type to the JSON-LD object that represents it.
         targetSchema match {
@@ -679,7 +684,7 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
       * @param settings     the configuration options.
       * @return a [[JsonLDValue]] that can be used to generate JSON-LD representing this value.
       */
-    def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue
+    def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue
 
     /**
       * Undoes the SPARQL-escaping of strings in this [[ValueContentV2]].
@@ -864,7 +869,7 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): DateValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -1108,35 +1113,44 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
+    /**
+      * The content of the text value without standoff, suitable for returning in API responses. This removes
+      * INFORMATION SEPARATOR TWO, which is used only internally.
+      */
+    lazy val valueHasStringWithoutStandoff: String = valueHasString.replace(StringFormatter.INFORMATION_SEPARATOR_TWO.toString, "")
+
     override def toOntologySchema(targetSchema: OntologySchema): TextValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
-                // Remove INFORMATION SEPARATOR TWO, which is used only internally.
-                val textForSimpleSchema = valueHasString.replace(StringFormatter.INFORMATION_SEPARATOR_TWO.toString, "")
-
                 valueHasLanguage match {
                     case Some(lang) =>
                         // In the simple schema, if this text value specifies a language, return it using a JSON-LD
                         // @language key as per <https://json-ld.org/spec/latest/json-ld/#string-internationalization>.
                         JsonLDUtil.objectWithLangToJsonLDObject(
-                            obj = textForSimpleSchema,
+                            obj = valueHasStringWithoutStandoff,
                             lang = lang
                         )
 
-                    case None => JsonLDString(textForSimpleSchema)
+                    case None => JsonLDString(valueHasStringWithoutStandoff)
                 }
 
             case ApiV2Complex =>
-                val objectMap: Map[IRI, JsonLDValue] = if (standoffAndMapping.nonEmpty) {
-
-                    val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueHasString, standoffAndMapping.get.standoff, standoffAndMapping.get.mapping)
+                val objectMap: Map[IRI, JsonLDValue] = if (standoffAndMapping.nonEmpty && !schemaOptions.contains(NoStandoff)) {
+                    val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(
+                        utf8str = valueHasString,
+                        standoff = standoffAndMapping.get.standoff,
+                        mappingXMLtoStandoff = standoffAndMapping.get.mapping
+                    )
 
                     // check if there is an XSL transformation
                     if (standoffAndMapping.get.xslt.nonEmpty) {
 
-                        val xmlTransformed: String = XMLUtil.applyXSLTransformation(xmlFromStandoff, standoffAndMapping.get.xslt.get)
+                        val xmlTransformed: String = XMLUtil.applyXSLTransformation(
+                            xml = xmlFromStandoff,
+                            xslt = standoffAndMapping.get.xslt.get
+                        )
 
                         // the xml was converted to HTML
                         Map(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> JsonLDString(xmlTransformed))
@@ -1149,8 +1163,8 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                     }
 
                 } else {
-                    // no markup given
-                    Map(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString))
+                    // no markup given, or text without markup requested
+                    Map(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasStringWithoutStandoff))
                 }
 
                 // In the complex schema, if this text value specifies a language, return it using the predicate
@@ -1414,7 +1428,7 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): IntegerValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple => JsonLDInt(valueHasInteger)
 
@@ -1502,7 +1516,7 @@ case class DecimalValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): DecimalValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val decimalValueAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueHasDecimal.toString,
             datatype = OntologyConstants.Xsd.Decimal.toSmartIri
@@ -1598,7 +1612,7 @@ case class BooleanValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): BooleanValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple => JsonLDBoolean(valueHasBoolean)
 
@@ -1683,7 +1697,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): GeomValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -1780,7 +1794,7 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): IntervalValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -1899,7 +1913,7 @@ case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): HierarchicalListValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 listNodeLabel match {
@@ -2003,7 +2017,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): ColorValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -2097,7 +2111,7 @@ case class UriValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): UriValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val uriAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueHasUri,
             datatype = OntologyConstants.Xsd.Uri.toSmartIri
@@ -2197,7 +2211,7 @@ case class GeonameValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): GeonameValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -2331,7 +2345,7 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): StillImageFileValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val fileUrl: String = s"${settings.externalSipiIIIFGetUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
 
         targetSchema match {
@@ -2428,7 +2442,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): TextFileValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val fileUrl: String = s"${settings.externalSipiFileServerGetUrl}/${fileValue.internalFilename}"
 
         targetSchema match {
@@ -2520,7 +2534,7 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
         )
     }
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple => JsonLDUtil.iriToJsonLDObject(referredResourceIri)
 
@@ -2531,7 +2545,8 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
                         // include the nested resource in the response
                         val referredResourceAsJsonLDValue: JsonLDObject = targetResource.toJsonLD(
                             targetSchema = targetSchema,
-                            settings = settings
+                            settings = settings,
+                            schemaOptions = schemaOptions
                         )
 
                         // check whether the nested resource is the target or the source of the link

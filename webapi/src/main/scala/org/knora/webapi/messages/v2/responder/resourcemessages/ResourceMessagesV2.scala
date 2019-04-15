@@ -329,7 +329,7 @@ case class ReadResourceV2(resourceIri: IRI,
         )
     }
 
-    def toJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDObject = {
+    def toJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDObject = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         if (!resourceClassIri.getOntologySchema.contains(targetSchema)) {
@@ -338,7 +338,15 @@ case class ReadResourceV2(resourceIri: IRI,
 
         val propertiesAndValuesAsJsonLD: Map[IRI, JsonLDArray] = values.map {
             case (propIri: SmartIri, readValues: Seq[ReadValueV2]) =>
-                val valuesAsJsonLD: Seq[JsonLDValue] = readValues.map(_.toJsonLD(targetSchema, projectADM, settings))
+                val valuesAsJsonLD: Seq[JsonLDValue] = readValues.map {
+                    readValue => readValue.toJsonLD(
+                        targetSchema = targetSchema,
+                        projectADM = projectADM,
+                        settings = settings,
+                        schemaOptions = schemaOptions
+                    )
+                }
+
                 propIri.toString -> JsonLDArray(valuesAsJsonLD)
         }
 
@@ -788,14 +796,18 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
     }
 
     // #generateJsonLD
-    private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         // #generateJsonLD
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Generate JSON-LD for the resources.
 
         val resourcesJsonObjects: Seq[JsonLDObject] = resources.map {
-            resource: ReadResourceV2 => resource.toJsonLD(targetSchema = targetSchema, settings = settings)
+            resource: ReadResourceV2 => resource.toJsonLD(
+                targetSchema = targetSchema,
+                settings = settings,
+                schemaOptions = schemaOptions
+            )
         }
 
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
@@ -839,10 +851,13 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
     }
 
     // #toJsonLDDocument
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption] = Set.empty): JsonLDDocument = {
-        toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption] = Set.empty): JsonLDDocument = {
+        toOntologySchema(targetSchema).generateJsonLD(
+            targetSchema = targetSchema,
+            settings = settings,
+            schemaOptions = schemaOptions
+        )
     }
-
     // #toJsonLDDocument
 
     /**
