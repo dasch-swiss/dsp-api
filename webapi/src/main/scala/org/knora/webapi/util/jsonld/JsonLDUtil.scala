@@ -446,7 +446,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
 
         val typeIri = requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
-        if (!(typeIri.isKnoraEntityIri && typeIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+        if (!(typeIri.isKnoraEntityIri && typeIri.getOntologySchema.contains(ApiV2Complex))) {
             throw BadRequestException(s"Invalid Knora type IRI: $typeIri")
         }
 
@@ -476,7 +476,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
             case (key: IRI, jsonLDValue: JsonLDValue) =>
                 val propertyIri = key.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $key"))
 
-                if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2Complex))) {
                     throw BadRequestException(s"Invalid property IRI: $propertyIri")
                 }
 

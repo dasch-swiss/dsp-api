@@ -106,7 +106,7 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        if (targetSchema != ApiV2WithValueObjects) {
+        if (targetSchema != ApiV2Complex) {
             throw AssertionException("Version history can be returned only in the complex schema")
         }
 
@@ -187,7 +187,7 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
 
         if (headerXSLT.nonEmpty) {
 
-            val headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerInfo)).toJsonLDDocument(ApiV2WithValueObjects, settings)
+            val headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerInfo)).toJsonLDDocument(ApiV2Complex, settings)
 
             val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
             val stringReader = new StringReader(headerJSONLD.toCompactString)
@@ -342,7 +342,7 @@ case class ReadResourceV2(resourceIri: IRI,
                 propIri.toString -> JsonLDArray(valuesAsJsonLD)
         }
 
-        val metadataForComplexSchema: Map[IRI, JsonLDValue] = if (targetSchema == ApiV2WithValueObjects) {
+        val metadataForComplexSchema: Map[IRI, JsonLDValue] = if (targetSchema == ApiV2Complex) {
             val requiredMetadataForComplexSchema: Map[IRI, JsonLDValue] = Map(
                 OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
                 OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
@@ -355,7 +355,7 @@ case class ReadResourceV2(resourceIri: IRI,
             )
 
             val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
-                case Some(definedDeletionInfo) => definedDeletionInfo.toJsonLDFields(ApiV2WithValueObjects)
+                case Some(definedDeletionInfo) => definedDeletionInfo.toJsonLDFields(ApiV2Complex)
                 case None => Map.empty[IRI, JsonLDValue]
             }
 
@@ -386,7 +386,7 @@ case class ReadResourceV2(resourceIri: IRI,
 
         val arkUrlProp: IRI = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.ArkUrl
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl
+            case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl
         }
 
         val arkUrlAsJsonLD: (IRI, JsonLDObject) =
@@ -399,7 +399,7 @@ case class ReadResourceV2(resourceIri: IRI,
 
         val versionArkUrlProp: IRI = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.VersionArkUrl
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.VersionArkUrl
+            case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.VersionArkUrl
         }
 
         val arkTimestamp = versionDate.getOrElse(lastModificationDate.getOrElse(creationDate))
@@ -815,7 +815,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 
         val knoraApiPrefixExpansion = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
+            case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
         }
 
         // Make the JSON-LD document.
@@ -962,7 +962,7 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 
         val knoraApiPrefixExpansion = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
+            case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
         }
 
         // Make the JSON-LD context.

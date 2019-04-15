@@ -26,9 +26,9 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
-  * Rules for converting `knora-base` into `knora-api` in the [[ApiV2WithValueObjects]] schema.
+  * Rules for converting `knora-base` (or an ontology based on it) into `knora-api` in the [[ApiV2Complex]] schema.
   */
-object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransformationRules {
+object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformationRules {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
     override val ontologyMetadata = OntologyMetadataV2(
@@ -1488,9 +1488,9 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
     )
 
     /**
-      * Properties to remove from `knora-base` before converting it to the [[ApiV2WithValueObjects]] schema.
+      * Properties to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
       */
-    override val knoraBasePropertiesToRemove: Set[SmartIri] = Set(
+    override val internalPropertiesToRemove: Set[SmartIri] = Set(
         OntologyConstants.Rdf.Subject,
         OntologyConstants.Rdf.Predicate,
         OntologyConstants.Rdf.Object,
@@ -1554,9 +1554,9 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
     ).map(_.toSmartIri)
 
     /**
-      * Classes to remove from `knora-base` before converting it to the [[ApiV2WithValueObjects]] schema.
+      * Classes to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
       */
-    override val knoraBaseClassesToRemove: Set[SmartIri] = Set(
+    override val internalClassesToRemove: Set[SmartIri] = Set(
         OntologyConstants.KnoraBase.MappingElement,
         OntologyConstants.KnoraBase.MappingComponent,
         OntologyConstants.KnoraBase.MappingStandoffDataTypeClass,
@@ -1567,10 +1567,10 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
     ).map(_.toSmartIri)
 
     /**
-      * After `knora-base` has been converted to the [[ApiV2WithValueObjects]] schema, these cardinalities must be
+      * After `knora-base` has been converted to the [[ApiV2Complex]] schema, these cardinalities must be
       * added to the specified classes to obtain `knora-api`.
       */
-    override val knoraApiCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
+    override val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
         OntologyConstants.KnoraApiV2WithValueObjects.Resource -> ResourceCardinalities,
         OntologyConstants.KnoraApiV2WithValueObjects.DateBase -> DateBaseCardinalities,
         OntologyConstants.KnoraApiV2WithValueObjects.UriBase -> UriBaseCardinalities,
@@ -1598,14 +1598,14 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
     }
 
     /**
-      * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2WithValueObjects]] schema, to obtain `knora-api`.
+      * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2Complex]] schema, to obtain `knora-api`.
       */
-    override val knoraApiClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2]
+    override val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2]
 
     /**
-      * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2WithValueObjects]] schema, to obtain `knora-api`.
+      * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2Complex]] schema, to obtain `knora-api`.
       */
-    override val knoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
+    override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Result,
         Error,
         UserHasPermission,
@@ -1745,7 +1745,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         ReadPropertyInfoV2(
             entityInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri.toSmartIri,
-                ontologySchema = ApiV2WithValueObjects,
+                ontologySchema = ApiV2Complex,
                 predicates = predsWithTypes.map {
                     pred => pred.predicateIri -> pred
                 }.toMap,
