@@ -126,7 +126,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             case Some(standoffClassIriStr: String) =>
                 val externalStandoffClassIri = standoffClassIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid standoff class IRI: $limitToStandoffClassIriStr"))
 
-                if (!externalStandoffClassIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                if (!externalStandoffClassIri.getOntologySchema.contains(ApiV2Complex)) {
                     throw BadRequestException(s"$externalStandoffClassIri is not a valid standoff class IRI")
                 }
 

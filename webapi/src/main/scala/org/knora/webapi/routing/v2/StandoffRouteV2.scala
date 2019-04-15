@@ -29,7 +29,7 @@ import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException}
+import org.knora.webapi.{ApiV2Complex, BadRequestException}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -108,7 +108,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                             settings,
                             responderManager,
                             log,
-                            ApiV2WithValueObjects
+                            ApiV2Complex
                         )
                 }
             }
