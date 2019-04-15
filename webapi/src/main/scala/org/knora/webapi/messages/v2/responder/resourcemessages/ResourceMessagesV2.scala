@@ -38,9 +38,9 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.SearchResponderV2Constants
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
+import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.util.{ActorUtil, KnoraIdUtil, SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -526,7 +526,23 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
             // Get the resource's permissions.
-            permissions = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+            permissions: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+
+            // Get the user who should be indicated as the creator of the resource, if specified.
+
+            maybeAttachedToUserIri: Option[SmartIri] = jsonLDDocument.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser, stringFormatter.toSmartIriWithErr)
+
+            maybeAttachedToUserFuture: Option[Future[UserADM]] = maybeAttachedToUserIri.map {
+                attachedToUserIri =>
+                    UserUtilADM.switchToUser(
+                        requestingUser = requestingUser,
+                        requestedUserIri = attachedToUserIri.toString,
+                        projectIri = projectIri.toString,
+                        responderManager = responderManager
+                    )
+            }
+
+            maybeAttachedToUser: Option[UserADM] <- ActorUtil.optionFuture2FutureOption(maybeAttachedToUserFuture)
 
             // Get the resource's creation date.
             creationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
@@ -543,6 +559,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                     JsonLDConstants.TYPE,
                     OntologyConstants.Rdfs.Label,
                     OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject,
+                    OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser,
                     OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions,
                     OntologyConstants.KnoraApiV2WithValueObjects.CreationDate
                 )
@@ -562,15 +579,14 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                             }
 
                             for {
-                                valueContent: ValueContentV2 <-
-                                    ValueContentV2.fromJsonLDObject(
-                                        jsonLDObject = valueJsonLDObject,
-                                        requestingUser = requestingUser,
-                                        responderManager = responderManager,
-                                        storeManager = storeManager,
-                                        settings = settings,
-                                        log = log
-                                    )
+                                valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
+                                    jsonLDObject = valueJsonLDObject,
+                                    requestingUser = requestingUser,
+                                    responderManager = responderManager,
+                                    storeManager = storeManager,
+                                    settings = settings,
+                                    log = log
+                                )
 
                                 _ = if (valueJsonLDObject.value.get(JsonLDConstants.ID).nonEmpty) {
                                     throw BadRequestException("The @id of a value cannot be given in a request to create the value")
@@ -606,7 +622,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                 permissions = permissions,
                 creationDate = creationDate
             ),
-            requestingUser = requestingUser,
+            requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
             apiRequestID = apiRequestID
         )
     }
