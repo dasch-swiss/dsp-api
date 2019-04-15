@@ -140,8 +140,8 @@ object GravsearchParser {
                     )
             }
 
-            val querySchema = if (allIris.exists(_.getOntologySchema.contains(ApiV2WithValueObjects))) {
-                ApiV2WithValueObjects
+            val querySchema = if (allIris.exists(_.getOntologySchema.contains(ApiV2Complex))) {
+                ApiV2Complex
             } else {
                 ApiV2Simple
             }
