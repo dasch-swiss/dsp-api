@@ -45,5 +45,5 @@ case object ApiV2Simple extends ApiV2Schema
   * The default (or complex) schema for representing Knora ontologies and entities. This
   * schema always represents values as objects.
   */
-case object ApiV2WithValueObjects extends ApiV2Schema
+case object ApiV2Complex extends ApiV2Schema
 // #OntologySchema

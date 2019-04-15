@@ -50,7 +50,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                         settings,
                         responderManager,
                         log,
-                        ApiV2WithValueObjects
+                        ApiV2Complex
                     )
 
             }
@@ -71,7 +71,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                         settings,
                         responderManager,
                         log,
-                        ApiV2WithValueObjects
+                        ApiV2Complex
                     )
             }
         }
