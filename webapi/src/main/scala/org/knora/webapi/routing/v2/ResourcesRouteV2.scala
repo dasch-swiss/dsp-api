@@ -155,7 +155,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             settings = settings,
                             responderManager = responderManager,
                             log = log,
-                            responseSchema = ApiV2WithValueObjects
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
@@ -183,7 +183,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             settings = settings,
                             responderManager = responderManager,
                             log = log,
-                            responseSchema = ApiV2WithValueObjects
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
@@ -197,7 +197,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     val resourceClassStr: String = params.getOrElse("resourceClass", throw BadRequestException(s"This route requires the parameter 'resourceClass'"))
                     val resourceClass: SmartIri = resourceClassStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr"))
 
-                    if (!(resourceClass.isKnoraApiV2EntityIri && resourceClass.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                    if (!(resourceClass.isKnoraApiV2EntityIri && resourceClass.getOntologySchema.contains(ApiV2Complex))) {
                         throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr")
                     }
 
@@ -206,11 +206,11 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         orderByPropertyStr =>
                             val orderByProperty = orderByPropertyStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr"))
 
-                            if (!(orderByProperty.isKnoraApiV2EntityIri && orderByProperty.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                            if (!(orderByProperty.isKnoraApiV2EntityIri && orderByProperty.getOntologySchema.contains(ApiV2Complex))) {
                                 throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr")
                             }
 
-                            orderByProperty.toOntologySchema(ApiV2WithValueObjects)
+                            orderByProperty.toOntologySchema(ApiV2Complex)
                     }
 
                     val pageStr: String = params.getOrElse("page", throw BadRequestException(s"This route requires the parameter 'page'"))
@@ -220,7 +220,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         requestingUser <- getUserADM(requestContext)
                     } yield SearchResourcesByProjectAndClassRequestV2(
                         projectIri = projectIri,
-                        resourceClass = resourceClass.toOntologySchema(ApiV2WithValueObjects),
+                        resourceClass = resourceClass.toOntologySchema(ApiV2Complex),
                         orderByProperty = maybeOrderByProperty,
                         page = page,
                         requestingUser = requestingUser
@@ -232,7 +232,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         settings,
                         responderManager,
                         log,
-                        responseSchema = ApiV2WithValueObjects
+                        responseSchema = ApiV2Complex
                     )
                 }
             }
@@ -259,7 +259,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
-                        responseSchema = ApiV2WithValueObjects
+                        responseSchema = ApiV2Complex
                     )
                 }
             }
@@ -443,7 +443,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             settings = settings,
                             responderManager = responderManager,
                             log = log,
-                            responseSchema = ApiV2WithValueObjects
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
