@@ -66,7 +66,7 @@ object GravsearchQueryChecker {
 
                                     // If it's a variable that doesn't represent a property, and we're using the complex schema and the statement
                                     // is in the CONSTRUCT clause, check that it refers to a resource or value.
-                                    if (inConstructClause && querySchema == ApiV2WithValueObjects) {
+                                    if (inConstructClause && querySchema == ApiV2Complex) {
                                         val typeIriStr = nonPropertyTypeInfo.typeIri.toString
 
                                         if (!(typeIriStr == OntologyConstants.KnoraApiV2WithValueObjects.Resource || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(typeIriStr))) {

@@ -384,7 +384,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             }
         } else {
             // The subject isn't a resource, so it must be a value object or standoff node. Is the query in the complex schema?
-            if (querySchema == ApiV2WithValueObjects) {
+            if (querySchema == ApiV2Complex) {
                 // Yes. If the subject is a standoff tag and the object is a resource, that's an error, because the client
                 // has to use the knora-api:standoffLink function instead.
                 if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri) && objectIsResource) {
@@ -903,7 +903,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       */
     private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspectionResult: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
-        if (querySchema == ApiV2WithValueObjects) {
+        if (querySchema == ApiV2Complex) {
             throw GravsearchException(s"The lang function is not allowed in a Gravsearch query that uses the API v2 complex schema")
         }
 
@@ -968,7 +968,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspectionResult: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
         // If the query uses the API v2 complex schema, leave the function call as it is.
-        if (querySchema == ApiV2WithValueObjects) {
+        if (querySchema == ApiV2Complex) {
             TransformedFilterPattern(Some(regexFunctionCall))
         } else {
             // If the query uses only the simple schema, transform the function call.
@@ -1029,7 +1029,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     private def handleMatchFunctionInSimpleSchema(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
         val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
-        if (querySchema == ApiV2WithValueObjects) {
+        if (querySchema == ApiV2Complex) {
             throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2WithValueObjects.MatchFunction.toSmartIri.toSparql} instead")
         }
 

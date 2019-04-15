@@ -238,8 +238,8 @@ object StringFormatter {
     /**
       * The instance of [[StringFormatter]] that can be used as soon as the JVM starts, but
       * can't parse project-specific API v2 ontology IRIs. This instance is used
-      * only to initialise the hard-coded API v2 ontologies [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2SimpleTransformationRules]]
-      * and [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2WithValueObjectsTransformationRules]].
+      * only to initialise the hard-coded API v2 ontologies [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2SimpleTransformationRules]]
+      * and [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraBaseToApiV2ComplexTransformationRules]].
       */
     private val instanceForConstantOntologies = new StringFormatter(None)
 
@@ -845,7 +845,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             if (lastTwoSegments == Vector("simple", "v2")) {
                 ApiV2Simple
             } else if (lastSegment == "v2") {
-                ApiV2WithValueObjects
+                ApiV2Complex
             } else {
                 errorFun
             }
@@ -954,7 +954,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
                         // Determine the length of the version segment, if any.
                         val versionSegmentsLength = ontologySchema match {
                             case Some(InternalSchema) => 0
-                            case Some(ApiV2WithValueObjects) => 1
+                            case Some(ApiV2Complex) => 1
                             case Some(ApiV2Simple) => 2
                             case None => throw AssertionException("Unreachable code")
                         }
@@ -1188,7 +1188,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         private def getVersionSegment(targetSchema: ApiV2Schema): String = {
             targetSchema match {
                 case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.VersionSegment
-                case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment
+                case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment
             }
         }
 

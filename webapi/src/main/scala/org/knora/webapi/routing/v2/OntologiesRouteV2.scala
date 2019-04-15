@@ -104,7 +104,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         settings,
                         responderManager,
                         log,
-                        responseSchema = ApiV2WithValueObjects
+                        responseSchema = ApiV2Complex
                     )
                 }
             } ~ put {
@@ -132,7 +132,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                             settings,
                             responderManager,
                             log,
-                            responseSchema = ApiV2WithValueObjects
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
@@ -152,7 +152,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         settings,
                         responderManager,
                         log,
-                        responseSchema = ApiV2WithValueObjects
+                        responseSchema = ApiV2Complex
                     )
                 }
             }
@@ -214,7 +214,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                             settings,
                             responderManager,
                             log,
-                            responseSchema = ApiV2WithValueObjects
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
@@ -243,7 +243,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                             settings,
                             responderManager,
                             log,
-                            responseSchema = ApiV2WithValueObjects
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
@@ -274,7 +274,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                             settings,
                             responderManager,
                             log,
-                            responseSchema = ApiV2WithValueObjects
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
@@ -303,7 +303,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                             settings,
                             responderManager,
                             log,
-                            responseSchema = ApiV2WithValueObjects
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
@@ -373,7 +373,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                     val classIri = classIriStr.toSmartIri
 
-                    if (!classIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                    if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
                         throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
                     }
 
@@ -395,7 +395,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         settings,
                         responderManager,
                         log,
-                        responseSchema = ApiV2WithValueObjects
+                        responseSchema = ApiV2Complex
                     )
                 }
             }
@@ -425,7 +425,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                             settings,
                             responderManager,
                             log,
-                            responseSchema = ApiV2WithValueObjects
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
@@ -454,7 +454,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                             settings,
                             responderManager,
                             log,
-                            responseSchema = ApiV2WithValueObjects
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
@@ -524,7 +524,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                     val propertyIri = propertyIriStr.toSmartIri
 
-                    if (!propertyIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                    if (!propertyIri.getOntologySchema.contains(ApiV2Complex)) {
                         throw BadRequestException(s"Invalid property IRI for request: $propertyIri")
                     }
 
@@ -546,7 +546,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         settings,
                         responderManager,
                         log,
-                        responseSchema = ApiV2WithValueObjects
+                        responseSchema = ApiV2Complex
                     )
                 }
             }
@@ -576,7 +576,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                             settings,
                             responderManager,
                             log,
-                            responseSchema = ApiV2WithValueObjects
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
@@ -587,7 +587,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                     val ontologyIri = ontologyIriStr.toSmartIri
 
-                    if (!ontologyIri.isKnoraOntologyIri || ontologyIri.isKnoraBuiltInDefinitionIri || !ontologyIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                    if (!ontologyIri.isKnoraOntologyIri || ontologyIri.isKnoraBuiltInDefinitionIri || !ontologyIri.getOntologySchema.contains(ApiV2Complex)) {
                         throw BadRequestException(s"Invalid ontology IRI for request: $ontologyIri")
                     }
 
@@ -609,7 +609,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         settings,
                         responderManager,
                         log,
-                        responseSchema = ApiV2WithValueObjects
+                        responseSchema = ApiV2Complex
                     )
                 }
             }

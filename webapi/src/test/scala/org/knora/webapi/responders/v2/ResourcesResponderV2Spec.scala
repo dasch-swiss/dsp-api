@@ -459,7 +459,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <${resourceInfo.resourceIri}>")
         }
 
-        resourceInfo.toOntologySchema(ApiV2WithValueObjects)
+        resourceInfo.toOntologySchema(ApiV2Complex)
     }
 
     private def checkCreateResource(inputResource: CreateResourceV2,
@@ -848,7 +848,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = IntegerValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasInteger = 5,
                             comment = Some("this is the number five")
                         ),
@@ -856,7 +856,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = IntegerValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasInteger = 6
                         )
                     )
@@ -864,7 +864,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "this is text without standoff"
                         )
                     )
@@ -872,7 +872,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "this is text with standoff",
                             standoffAndMapping = Some(StandoffAndMapping(
                                 standoff = sampleStandoff,
@@ -885,7 +885,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = DecimalValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasDecimal = BigDecimal("100000000000000.000000000000001")
                         )
                     )
@@ -893,7 +893,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = DateValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasCalendar = CalendarNameGregorian,
                             valueHasStartJDN = 2264907,
                             valueHasStartPrecision = DatePrecisionYear,
@@ -905,7 +905,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = BooleanValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasBoolean = true
                         )
                     )
@@ -913,7 +913,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = GeomValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasGeometry = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
                         )
                     )
@@ -921,7 +921,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = IntervalValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasIntervalStart = BigDecimal("1.2"),
                             valueHasIntervalEnd = BigDecimal("3.4")
                         )
@@ -930,7 +930,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = HierarchicalListValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasListNode = "http://rdfh.ch/lists/0001/treeList03"
                         )
                     )
@@ -938,7 +938,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = ColorValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasColor = "#ff3333"
                         )
                     )
@@ -946,7 +946,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = UriValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasUri = "https://www.knora.org"
                         )
                     )
@@ -954,7 +954,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = GeonameValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasGeonameCode = "2661604"
                         )
                     )
@@ -962,7 +962,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = LinkValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             referredResourceIri = "http://rdfh.ch/0001/a-thing"
                         )
                     )
@@ -1007,7 +1007,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = StillImageFileValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             fileValue = FileValueV2(
                                 internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
                                 internalMimeType = "image/jp2",
@@ -1079,7 +1079,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title"
                         )
                     )
@@ -1087,13 +1087,13 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test publoc 1"
                         )
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test publoc 2"
                         )
                     )
@@ -1126,7 +1126,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title"
                         )
                     )
@@ -1134,7 +1134,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test pagenum"
                         )
                     )
@@ -1167,19 +1167,19 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title 1"
                         )
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title 2"
                         )
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title 1"
                         )
                     )
@@ -1212,7 +1212,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title"
                         )
                     )
@@ -1245,7 +1245,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = LinkValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             referredResourceIri = "http://rdfh.ch/0001/nonexistent-thing"
                         )
                     )
@@ -1309,7 +1309,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "this is text with standoff",
                             standoffAndMapping = Some(StandoffAndMapping(
                                 standoff = standoffWithInvalidLink,
@@ -1347,7 +1347,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = HierarchicalListValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasListNode = "http://rdfh.ch/lists/0001/nonexistent-list-node"
                         )
                     )
@@ -1380,7 +1380,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "invalid text value"
                         )
                     )
@@ -1413,7 +1413,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = LinkValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             referredResourceIri = zeitglöckleinIri
                         )
                     )
@@ -1469,7 +1469,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = IntegerValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasInteger = 5,
                             comment = Some("this is the number five")
                         ),

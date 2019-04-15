@@ -109,7 +109,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             assert(response.ontologies.size == 1)
             val metadata = response.ontologies.head
             assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
-            fooIri.set(metadata.ontologyIri.toOntologySchema(ApiV2WithValueObjects).toString)
+            fooIri.set(metadata.ontologyIri.toOntologySchema(ApiV2Complex).toString)
             fooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
         }
 
@@ -220,7 +220,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
             assert(metadataResponse.ontologies.size == 2)
-            anythingLastModDate = metadataResponse.toOntologySchema(ApiV2WithValueObjects).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
+            anythingLastModDate = metadataResponse.toOntologySchema(ApiV2Complex).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
 
             responderManager ! DeleteOntologyRequestV2(
                 ontologyIri = AnythingOntologyIri,
@@ -431,7 +431,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             assert(response.ontologies.size == 1)
             val metadata = response.ontologies.head
             assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/shared/chair")
-            chairIri.set(metadata.ontologyIri.toOntologySchema(ApiV2WithValueObjects).toString)
+            chairIri.set(metadata.ontologyIri.toOntologySchema(ApiV2Complex).toString)
             chairLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
         }
 
@@ -444,7 +444,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
             assert(metadataResponse.ontologies.size == 2)
-            anythingLastModDate = metadataResponse.toOntologySchema(ApiV2WithValueObjects).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
+            anythingLastModDate = metadataResponse.toOntologySchema(ApiV2Complex).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
 
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
@@ -479,7 +479,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri, OntologyConstants.SchemaOrg.Name.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -505,7 +505,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
             assert(metadataResponse.ontologies.size == 2)
-            anythingLastModDate = metadataResponse.toOntologySchema(ApiV2WithValueObjects).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
+            anythingLastModDate = metadataResponse.toOntologySchema(ApiV2Complex).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
 
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
@@ -540,7 +540,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri, OntologyConstants.SchemaOrg.Name.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -552,7 +552,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     val property = externalOntology.properties(propertyIri)
                     property.entityInfoContent should ===(propertyInfoContent)
                     val metadata = externalOntology.ontologyMetadata
@@ -574,7 +574,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.properties.size == 1)
                     val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
                     readPropertyInfo.entityInfoContent should ===(propertyInfoContent)
@@ -590,7 +590,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
             assert(metadataResponse.ontologies.size == 2)
-            anythingLastModDate = metadataResponse.toOntologySchema(ApiV2WithValueObjects).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
+            anythingLastModDate = metadataResponse.toOntologySchema(ApiV2Complex).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
 
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasInterestingThing")
 
@@ -623,7 +623,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -635,7 +635,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     val property = externalOntology.properties(propertyIri)
                     assert(property.isLinkProp)
                     assert(!property.isLinkValueProp)
@@ -658,7 +658,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.properties.size == 1)
                     val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
                     assert(readPropertyInfo.entityInfoContent.propertyIri == linkValuePropIri)
@@ -679,7 +679,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.properties.size == 1)
                     val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
                     assert(readPropertyInfo.isLinkProp)
@@ -695,7 +695,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.properties.size == 1)
                     val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
                     assert(readPropertyInfo.entityInfoContent.propertyIri == linkValuePropIri)
@@ -734,7 +734,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -784,7 +784,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -834,7 +834,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -884,7 +884,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(AnythingOntologyIri.makeEntityIri("nonexistentProperty")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -934,7 +934,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set("http://xmlns.com/foaf/0.1/name".toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -987,7 +987,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     AnythingOntologyIri.makeEntityIri("hasText"),
                     AnythingOntologyIri.makeEntityIri("hasOtherThing")
                 ),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1037,7 +1037,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1087,7 +1087,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1137,7 +1137,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(AnythingOntologyIri.makeEntityIri("hasInteger")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1187,7 +1187,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1237,7 +1237,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1287,7 +1287,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1337,7 +1337,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1387,7 +1387,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1437,7 +1437,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1487,7 +1487,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1537,7 +1537,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(AnythingOntologyIri.makeEntityIri("hasText")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1588,7 +1588,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(AnythingOntologyIri.makeEntityIri("hasBlueThing")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1647,7 +1647,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1705,7 +1705,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -1769,7 +1769,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.properties.size == 1)
                     val readPropertyInfo = externalOntology.properties(propertyIri)
                     readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(newObjects)
@@ -1833,7 +1833,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.properties.size == 1)
                     val readPropertyInfo = externalOntology.properties(propertyIri)
                     readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(newObjectsUnescaped)
@@ -1870,7 +1870,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne, guiOrder = Some(20))
                 ),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -1911,7 +1911,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     AnythingOntologyIri.makeEntityIri("hasBlueThing") -> KnoraCardinalityInfo(cardinality = Cardinality.MustHaveOne)
                 ),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -1952,7 +1952,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     AnythingOntologyIri.makeEntityIri("hasInterestingThingValue") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
                 ),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -1992,7 +1992,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     AnythingOntologyIri.makeEntityIri("hasInterestingThing") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
                 ),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2004,7 +2004,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     Set(AnythingOntologyIri.makeEntityIri("hasInterestingThing"), AnythingOntologyIri.makeEntityIri("hasInterestingThingValue")).subsetOf(readClassInfo.allResourcePropertyCardinalities.keySet) should ===(true)
@@ -2060,7 +2060,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne, guiOrder = Some(20))
                 ),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2097,7 +2097,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
@@ -2137,7 +2137,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2154,7 +2154,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
@@ -2210,7 +2210,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(newObjects)
@@ -2270,7 +2270,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(newObjectsUnescaped)
@@ -2306,7 +2306,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2347,7 +2347,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2388,7 +2388,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("NonexistentClass")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2429,7 +2429,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subClassOf = Set("http://xmlns.com/foaf/0.1/Person".toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2471,7 +2471,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ),
                 directCardinalities = Map(AnythingOntologyIri.makeEntityIri("nonexistentProperty") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
                 subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2513,7 +2513,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ),
                 directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
                 subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2555,7 +2555,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ),
                 directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(Cardinality.MustHaveOne)),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2567,7 +2567,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
@@ -2605,7 +2605,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ),
                 directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(Cardinality.MayHaveMany)),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2754,7 +2754,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -2766,7 +2766,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.properties.size == 1)
                     val property = externalOntology.properties(propertyIri)
                     property.entityInfoContent should ===(propertyInfoContent)
@@ -2810,7 +2810,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -2851,7 +2851,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2888,7 +2888,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subClassOf = Set(AnythingOntologyIri.makeEntityIri("Nothing")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -2900,7 +2900,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
@@ -2926,7 +2926,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 directCardinalities = Map(
                     AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
                 ),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! AddCardinalitiesToClassRequestV2(
@@ -2994,7 +2994,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 directCardinalities = Map(
                     AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne, guiOrder = Some(0))
                 ),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! AddCardinalitiesToClassRequestV2(
@@ -3043,7 +3043,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -3055,7 +3055,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -3073,7 +3073,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 directCardinalities = Map(
                     propertyIri -> KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne, guiOrder = Some(0))
                 ),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! AddCardinalitiesToClassRequestV2(
@@ -3097,7 +3097,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(expectedDirectCardinalities)
@@ -3124,7 +3124,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 directCardinalities = Map(
                     AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne, guiOrder = Some(0))
                 ),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! AddCardinalitiesToClassRequestV2(
@@ -3150,7 +3150,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(expectedDirectCardinalities)
@@ -3177,7 +3177,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 directCardinalities = Map(
                     AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
                 ),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! AddCardinalitiesToClassRequestV2(
@@ -3228,7 +3228,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -3240,7 +3240,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.properties.size == 1)
                     val property = externalOntology.properties(propertyIri)
 
@@ -3266,7 +3266,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 directCardinalities = Map(
                     AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne, guiOrder = Some(1))
                 ),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! AddCardinalitiesToClassRequestV2(
@@ -3294,7 +3294,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(expectedDirectCardinalities)
@@ -3322,7 +3322,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 directCardinalities = Map(
                     AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne, guiOrder = Some(0))
                 ),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! ChangeCardinalitiesRequestV2(
@@ -3352,7 +3352,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 directCardinalities = Map(
                     AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne, guiOrder = Some(0))
                 ),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! ChangeCardinalitiesRequestV2(
@@ -3370,7 +3370,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
@@ -3449,7 +3449,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
                     )
                 ),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! ChangeCardinalitiesRequestV2(
@@ -3477,7 +3477,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
                     )
                 ),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! ChangeCardinalitiesRequestV2(
@@ -3494,7 +3494,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
@@ -3619,7 +3619,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subClassOf = Set(IncunabulaOntologyIri.makeEntityIri("book")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -3657,7 +3657,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ),
                 subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
                 directCardinalities = Map(IncunabulaOntologyIri.makeEntityIri("description") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -3703,7 +3703,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(IncunabulaOntologyIri.makeEntityIri("description")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -3753,7 +3753,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -3799,7 +3799,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -3836,7 +3836,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -3848,7 +3848,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
@@ -3901,7 +3901,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ),
                 subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
                 directCardinalities = Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreateClassRequestV2(
@@ -3913,7 +3913,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
@@ -3969,7 +3969,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(ExampleSharedOntologyIri.makeEntityIri("hasName")),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -3981,7 +3981,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.properties.size == 1)
                     val property = externalOntology.properties(propertyIri)
 
@@ -4041,7 +4041,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -4053,7 +4053,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.properties.size == 1)
                     val property = externalOntology.properties(propertyIri)
 
@@ -4109,7 +4109,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
-                ontologySchema = ApiV2WithValueObjects
+                ontologySchema = ApiV2Complex
             )
 
             responderManager ! CreatePropertyRequestV2(
@@ -4121,7 +4121,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
-                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.properties.size == 1)
                     val property = externalOntology.properties(propertyIri)
 

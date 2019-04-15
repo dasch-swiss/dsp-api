@@ -183,9 +183,9 @@ class StringFormatterSpec extends CoreSpec() {
                 internalOntologyIri.isKnoraBuiltInDefinitionIri &&
                 internalOntologyIri.getProjectCode.isEmpty)
 
-            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Complex)
             externalOntologyIri.toString should ===("http://api.knora.org/ontology/knora-api/v2")
-            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalOntologyIri.isKnoraOntologyIri &&
                 externalOntologyIri.isKnoraBuiltInDefinitionIri &&
                 externalOntologyIri.getProjectCode.isEmpty)
@@ -198,9 +198,9 @@ class StringFormatterSpec extends CoreSpec() {
                 internalEntityIri.isKnoraBuiltInDefinitionIri &&
                 internalEntityIri.getProjectCode.isEmpty)
 
-            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Complex)
             externalEntityIri.toString should ===("http://api.knora.org/ontology/knora-api/v2#Resource")
-            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalEntityIri.isKnoraApiV2EntityIri &&
                 externalEntityIri.isKnoraBuiltInDefinitionIri &&
                 externalEntityIri.getProjectCode.isEmpty)
@@ -238,7 +238,7 @@ class StringFormatterSpec extends CoreSpec() {
 
         "convert http://api.knora.org/ontology/knora-api/v2 to http://www.knora.org/ontology/knora-base" in {
             val externalOntologyIri = "http://api.knora.org/ontology/knora-api/v2".toSmartIri
-            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalOntologyIri.isKnoraOntologyIri &&
                 externalOntologyIri.isKnoraBuiltInDefinitionIri &&
                 externalOntologyIri.getProjectCode.isEmpty)
@@ -253,7 +253,7 @@ class StringFormatterSpec extends CoreSpec() {
 
         "convert http://api.knora.org/ontology/knora-api/v2#Resource to http://www.knora.org/ontology/knora-base#Resource" in {
             val externalEntityIri = "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
-            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalEntityIri.isKnoraApiV2EntityIri &&
                 externalEntityIri.isKnoraBuiltInDefinitionIri &&
                 externalEntityIri.getProjectCode.isEmpty)
@@ -306,9 +306,9 @@ class StringFormatterSpec extends CoreSpec() {
                 !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
                 internalOntologyIri.getProjectCode.contains("00FF"))
 
-            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Complex)
             externalOntologyIri.toString should ===("http://0.0.0.0:3333/ontology/00FF/images/v2")
-            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalOntologyIri.isKnoraOntologyIri &&
                 !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
                 externalOntologyIri.getProjectCode.contains("00FF"))
@@ -321,9 +321,9 @@ class StringFormatterSpec extends CoreSpec() {
                 !internalEntityIri.isKnoraBuiltInDefinitionIri &&
                 internalEntityIri.getProjectCode.contains("00FF"))
 
-            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Complex)
             externalEntityIri.toString should ===("http://0.0.0.0:3333/ontology/00FF/images/v2#bild")
-            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalEntityIri.isKnoraApiV2EntityIri &&
                 !externalEntityIri.isKnoraBuiltInDefinitionIri &&
                 externalEntityIri.getProjectCode.contains("00FF"))
@@ -361,7 +361,7 @@ class StringFormatterSpec extends CoreSpec() {
 
         "convert http://0.0.0.0:3333/ontology/00FF/images/v2 to http://www.knora.org/ontology/00FF/images" in {
             val externalOntologyIri = "http://0.0.0.0:3333/ontology/00FF/images/v2".toSmartIri
-            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalOntologyIri.isKnoraOntologyIri &&
                 !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
                 externalOntologyIri.getProjectCode.contains("00FF"))
@@ -376,7 +376,7 @@ class StringFormatterSpec extends CoreSpec() {
 
         "convert http://0.0.0.0:3333/ontology/00FF/images/v2#bild to http://www.knora.org/ontology/00FF/images#bild" in {
             val externalEntityIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bild".toSmartIri
-            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalEntityIri.isKnoraApiV2EntityIri &&
                 !externalEntityIri.isKnoraBuiltInDefinitionIri &&
                 externalEntityIri.getProjectCode.contains("00FF"))
@@ -444,9 +444,9 @@ class StringFormatterSpec extends CoreSpec() {
                 internalOntologyIri.isKnoraSharedDefinitionIri &&
                 internalOntologyIri.getProjectCode.contains("0000"))
 
-            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Complex)
             externalOntologyIri.toString should ===("http://api.knora.org/ontology/shared/example/v2")
-            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalOntologyIri.isKnoraOntologyIri &&
                 !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
                 externalOntologyIri.isKnoraSharedDefinitionIri &&
@@ -460,9 +460,9 @@ class StringFormatterSpec extends CoreSpec() {
                 internalEntityIri.isKnoraSharedDefinitionIri &&
                 internalEntityIri.getProjectCode.contains("0000"))
 
-            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Complex)
             externalEntityIri.toString should ===("http://api.knora.org/ontology/shared/example/v2#Person")
-            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalEntityIri.isKnoraApiV2EntityIri &&
                 !externalEntityIri.isKnoraBuiltInDefinitionIri &&
                 externalEntityIri.isKnoraSharedDefinitionIri &&
@@ -503,7 +503,7 @@ class StringFormatterSpec extends CoreSpec() {
 
         "convert http://api.knora.org/ontology/shared/example/v2 to http://www.knora.org/ontology/shared/example" in {
             val externalOntologyIri = "http://api.knora.org/ontology/shared/example/v2".toSmartIri
-            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalOntologyIri.isKnoraOntologyIri &&
                 !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
                 externalOntologyIri.isKnoraSharedDefinitionIri &&
@@ -520,7 +520,7 @@ class StringFormatterSpec extends CoreSpec() {
 
         "convert http://api.knora.org/ontology/shared/example/v2#Person to http://www.knora.org/ontology/shared/example#Person" in {
             val externalEntityIri = "http://api.knora.org/ontology/shared/example/v2#Person".toSmartIri
-            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
                 !externalEntityIri.isKnoraBuiltInDefinitionIri &&
                 externalEntityIri.isKnoraSharedDefinitionIri &&
                 externalEntityIri.getProjectCode.contains("0000"))
@@ -577,9 +577,9 @@ class StringFormatterSpec extends CoreSpec() {
                 internalOntologyIri.isKnoraSharedDefinitionIri &&
                 internalOntologyIri.getProjectCode.contains("0111"))
 
-            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Complex)
             externalOntologyIri.toString should ===("http://api.knora.org/ontology/shared/0111/example/v2")
-            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalOntologyIri.isKnoraOntologyIri &&
                 !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
                 externalOntologyIri.isKnoraSharedDefinitionIri &&
@@ -593,9 +593,9 @@ class StringFormatterSpec extends CoreSpec() {
                 internalEntityIri.isKnoraSharedDefinitionIri &&
                 internalEntityIri.getProjectCode.contains("0111"))
 
-            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Complex)
             externalEntityIri.toString should ===("http://api.knora.org/ontology/shared/0111/example/v2#Person")
-            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalEntityIri.isKnoraApiV2EntityIri &&
                 !externalEntityIri.isKnoraBuiltInDefinitionIri &&
                 externalEntityIri.isKnoraSharedDefinitionIri &&
@@ -636,7 +636,7 @@ class StringFormatterSpec extends CoreSpec() {
 
         "convert http://api.knora.org/ontology/shared/0111/example/v2 to http://www.knora.org/ontology/shared/0111/example" in {
             val externalOntologyIri = "http://api.knora.org/ontology/shared/0111/example/v2".toSmartIri
-            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Complex) &&
                 externalOntologyIri.isKnoraOntologyIri &&
                 !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
                 externalOntologyIri.isKnoraSharedDefinitionIri &&
@@ -653,7 +653,7 @@ class StringFormatterSpec extends CoreSpec() {
 
         "convert http://api.knora.org/ontology/shared/0111/example/v2#Person to http://www.knora.org/ontology/shared/0111/example#Person" in {
             val externalEntityIri = "http://api.knora.org/ontology/shared/0111/example/v2#Person".toSmartIri
-            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Complex) &&
                 !externalEntityIri.isKnoraBuiltInDefinitionIri &&
                 externalEntityIri.isKnoraSharedDefinitionIri &&
                 externalEntityIri.getProjectCode.contains("0111"))
