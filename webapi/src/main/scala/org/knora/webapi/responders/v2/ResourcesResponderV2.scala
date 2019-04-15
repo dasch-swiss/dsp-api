@@ -220,7 +220,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             internalResourceClassIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.toOntologySchema(InternalSchema)
 
             _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri, None)) {
-                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.email} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
+                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
