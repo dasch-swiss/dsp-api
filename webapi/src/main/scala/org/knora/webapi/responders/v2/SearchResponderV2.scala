@@ -58,11 +58,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       */
     def receive(msg: SearchResponderRequestV2) = msg match {
         case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser)
-        case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser)
+        case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, schemaOptions, requestingUser) => fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, schemaOptions, requestingUser)
         case GravsearchCountRequestV2(query, requestingUser) => gravsearchCountV2(inputQuery = query, requestingUser = requestingUser)
-        case GravsearchRequestV2(query, requestingUser) => gravsearchV2(inputQuery = query, requestingUser = requestingUser)
+        case GravsearchRequestV2(query, schemaOptions, requestingUser) => gravsearchV2(inputQuery = query, schemaOptions = schemaOptions, requestingUser = requestingUser)
         case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser)
-        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser)
+        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, schemaOptions, requestingUser) => searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, schemaOptions, requestingUser)
         case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 => searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
@@ -135,7 +135,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       * @param requestingUser       the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], schemaOptions: Set[SchemaOption], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
         import FullTextMainQueryGenerator.FullTextSearchConstants
 
         val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
@@ -192,7 +192,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 val allValueObjectIris = valueObjectIrisPerResource.values.flatten.toSet
 
                 // create CONSTRUCT queries to query resources and their values
-                val mainQuery = FullTextMainQueryGenerator.createMainQuery(resourceIris.toSet, allValueObjectIris)
+                val mainQuery = FullTextMainQueryGenerator.createMainQuery(
+                    resourceIris = resourceIris.toSet,
+                    valueObjectIris = allValueObjectIris,
+                    schemaOptions = schemaOptions
+                )
 
                 val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
                     if (settings.triplestoreType.startsWith("graphdb")) {
@@ -370,7 +374,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def gravsearchV2(inputQuery: ConstructQuery, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def gravsearchV2(inputQuery: ConstructQuery, schemaOptions: Set[SchemaOption], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
         import org.knora.webapi.responders.v2.search.MainQueryResultProcessor
         import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 
@@ -469,7 +473,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 val mainQuery: ConstructQuery = GravsearchMainQueryGenerator.createMainQuery(
                     mainResourceIris = mainResourceIris.map(iri => IriRef(iri.toSmartIri)).toSet,
                     dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
-                    valueObjectIris = allValueObjectIris
+                    valueObjectIris = allValueObjectIris,
+                    schemaOptions = schemaOptions
                 )
 
                 val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
@@ -624,6 +629,9 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResponse]
             mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
 
+            // Check whether the request asked for standoff in the response.
+            queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(resourcesInProjectGetRequestV2.schemaOptions)
+
             // Are there any matching resources?
             resources: Vector[ReadResourceV2] <- if (mainResourceIris.nonEmpty) {
                 for {
@@ -633,7 +641,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         resourceIris = mainResourceIris,
                         preview = false,
                         maybePropertyIri = None,
-                        maybeVersionDate = None
+                        maybeVersionDate = None,
+                        queryStandoff = queryStandoff
                     ).toString())
 
                     // _ = println(resourceRequestSparql)
@@ -729,7 +738,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       * @param requestingUser       the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], schemaOptions: Set[SchemaOption], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 

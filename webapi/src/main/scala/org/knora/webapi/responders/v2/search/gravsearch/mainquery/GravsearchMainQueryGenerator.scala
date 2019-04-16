@@ -23,7 +23,7 @@ import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{GravsearchException, IRI, OntologyConstants}
+import org.knora.webapi.{GravsearchException, IRI, NoStandoff, OntologyConstants, SchemaOption, SchemaOptions}
 
 object GravsearchMainQueryGenerator {
 
@@ -158,9 +158,10 @@ object GravsearchMainQueryGenerator {
       * @param mainResourceIris      IRIs of main resources to be queried.
       * @param dependentResourceIris IRIs of dependent resources to be queried.
       * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
+      * @param schemaOptions         the schema options submitted with the request.
       * @return the main [[ConstructQuery]] query to be executed.
       */
-    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI]): ConstructQuery = {
+    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI], schemaOptions: Set[SchemaOption]): ConstructQuery = {
         import GravsearchConstants._
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -214,18 +215,29 @@ object GravsearchMainQueryGenerator {
                 StatementPattern(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
             )
 
+            // Check whether the request asked for standoff in the response.
+            val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(schemaOptions)
+
             // WHERE patterns for standoff belonging to value objects (if any)
-            val wherePatternsForStandoff = Seq(
-                mainAndDependentResourcesValueObjectsValuePattern,
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
-                StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
-            )
+            val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {
+                Seq(
+                    mainAndDependentResourcesValueObjectsValuePattern,
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
+                    StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+                )
+            } else {
+                Seq.empty[QueryPattern]
+            }
 
             // return standoff assertions
-            val constructPatternsForStandoff = Seq(
-                StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
-                StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
-            )
+            val constructPatternsForStandoff: Seq[StatementPattern] = if (queryStandoff) {
+                Seq(
+                    StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
+                    StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+                )
+            } else {
+                Seq.empty[StatementPattern]
+            }
 
             // WHERE patterns for list node pointed to by value objects (if any)
             val wherePatternsForListNode = Seq(
@@ -248,7 +260,7 @@ object GravsearchMainQueryGenerator {
                 whereClause = WhereClause(
                     Seq(
                         UnionPattern(
-                            Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff, wherePatternsForListNode)
+                            Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff, wherePatternsForListNode).filter(_.nonEmpty)
                         )
                     )
                 )

@@ -60,11 +60,13 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   * @param resourceIris   the IRIs of the resources to be queried.
   * @param propertyIri    if defined, requests only the values of the specified explicit property.
   * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
+  * @param schemaOptions  the schema options submitted with the request.
   * @param requestingUser the user making the request.
   */
 case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  propertyIri: Option[SmartIri] = None,
                                  versionDate: Option[Instant] = None,
+                                 schemaOptions: Set[SchemaOption] = Set.empty,
                                  requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
@@ -339,12 +341,13 @@ case class ReadResourceV2(resourceIri: IRI,
         val propertiesAndValuesAsJsonLD: Map[IRI, JsonLDArray] = values.map {
             case (propIri: SmartIri, readValues: Seq[ReadValueV2]) =>
                 val valuesAsJsonLD: Seq[JsonLDValue] = readValues.map {
-                    readValue => readValue.toJsonLD(
-                        targetSchema = targetSchema,
-                        projectADM = projectADM,
-                        settings = settings,
-                        schemaOptions = schemaOptions
-                    )
+                    readValue =>
+                        readValue.toJsonLD(
+                            targetSchema = targetSchema,
+                            projectADM = projectADM,
+                            settings = settings,
+                            schemaOptions = schemaOptions
+                        )
                 }
 
                 propIri.toString -> JsonLDArray(valuesAsJsonLD)
@@ -819,11 +822,12 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         // Generate JSON-LD for the resources.
 
         val resourcesJsonObjects: Seq[JsonLDObject] = resources.map {
-            resource: ReadResourceV2 => resource.toJsonLD(
-                targetSchema = targetSchema,
-                settings = settings,
-                schemaOptions = schemaOptions
-            )
+            resource: ReadResourceV2 =>
+                resource.toJsonLD(
+                    targetSchema = targetSchema,
+                    settings = settings,
+                    schemaOptions = schemaOptions
+                )
         }
 
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
@@ -874,6 +878,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
             schemaOptions = schemaOptions
         )
     }
+
     // #toJsonLDDocument
 
     /**

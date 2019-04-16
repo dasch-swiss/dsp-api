@@ -66,4 +66,20 @@ case object StandoffAsXml extends StandoffRendering
   * Indicates that standoff markup should not be returned with text values.
   */
 case object NoStandoff extends StandoffRendering
+
+/**
+  * Utility functions for working with schema options.
+  */
+object SchemaOptions {
+    /**
+      * Determines whether standoff should be queried when a text value is queried,
+      * given the specified schema options.
+      *
+      * @param schemaOptions the schema options to be used when processing the request.
+      * @return `true` if standoff should be queried.
+      */
+    def queryStandoffWithTextValues(schemaOptions: Set[SchemaOption]): Boolean = {
+        !schemaOptions.contains(NoStandoff)
+    }
+}
 // #OntologySchema

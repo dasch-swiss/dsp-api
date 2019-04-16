@@ -63,12 +63,13 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
                         // #specify-response-schema
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            responseSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                         // #specify-response-schema
                     }
@@ -92,12 +93,13 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            responseSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -122,12 +124,13 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            responseSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }

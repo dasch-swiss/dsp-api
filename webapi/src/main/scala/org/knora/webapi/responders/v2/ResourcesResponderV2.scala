@@ -68,7 +68,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
       */
     def receive(msg: ResourcesResponderRequestV2) = msg match {
-        case ResourcesGetRequestV2(resIris, propertyIri, versionDate, requestingUser) => getResourcesV2(resIris, propertyIri, versionDate, requestingUser)
+        case ResourcesGetRequestV2(resIris, propertyIri, versionDate, schemaOptions, requestingUser) => getResourcesV2(resIris, propertyIri, versionDate, schemaOptions, requestingUser)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreviewV2(resIris, requestingUser)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
@@ -819,7 +819,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         for {
             resourcesResponse: ReadResourcesSequenceV2 <- getResourcesV2(
                 resourceIris = Seq(resourceIri),
-                requestingUser = requestingUser
+                requestingUser = requestingUser,
+                schemaOptions = Set(StandoffAsXml)
             )
 
             resource: ReadResourceV2 = try {
@@ -914,16 +915,21 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param preview      `true` if a preview of the resource is requested.
       * @param versionDate  if defined, requests the state of the resources at the specified time in the past.
       *                     Cannot be used in conjunction with `preview`.
+      * @param schemaOptions the schema options submitted with the request.
       * @return a map of resource IRIs to RDF data.
       */
     private def getResourcesFromTriplestore(resourceIris: Seq[IRI],
                                             preview: Boolean,
                                             propertyIri: Option[SmartIri],
                                             versionDate: Option[Instant],
+                                            schemaOptions: Set[SchemaOption],
                                             requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
+
+        // Determine whether to query standoff.
+        val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(schemaOptions)
 
         for {
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
@@ -931,7 +937,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 resourceIris = resourceIrisDistinct,
                 preview = preview,
                 maybePropertyIri = propertyIri,
-                maybeVersionDate = versionDate
+                maybeVersionDate = versionDate,
+                queryStandoff = queryStandoff
             ).toString())
 
             // _ = println(resourceRequestSparql)
@@ -957,11 +964,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param resourceIris   the resources to query for.
       * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
       * @param requestingUser the the client making the request.
+      * @param schemaOptions  the schema options submitted with the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
     private def getResourcesV2(resourceIris: Seq[IRI],
                                propertyIri: Option[SmartIri] = None,
                                versionDate: Option[Instant] = None,
+                               schemaOptions: Set[SchemaOption],
                                requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
@@ -974,6 +983,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 preview = false,
                 propertyIri = propertyIri,
                 versionDate = versionDate,
+                schemaOptions = schemaOptions,
                 requestingUser = requestingUser
             )
 
@@ -1016,6 +1026,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 preview = true,
                 propertyIri = None,
                 versionDate = None,
+                schemaOptions = Set(NoStandoff),
                 requestingUser = requestingUser
             )
 
@@ -1047,7 +1058,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM): Future[String] = {
 
         val gravsearchUrlFuture = for {
-            resources: ReadResourcesSequenceV2 <- getResourcesV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)
+            resources: ReadResourcesSequenceV2 <- getResourcesV2(resourceIris = Vector(gravsearchTemplateIri), schemaOptions = Set(NoStandoff), requestingUser = requestingUser)
             resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
             _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
@@ -1194,7 +1205,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     constructQuery: ConstructQuery = GravsearchParser.parseQuery(gravsearchQuery)
 
                     // do a request to the SearchResponder
-                    gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+                    gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, schemaOptions = Set(StandoffAsXml), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
                 } yield gravSearchResponse.toResource(resourceIri)
 
             } else {
@@ -1205,7 +1216,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 for {
                     // get requested resource
-                    resource <- getResourcesV2(resourceIris = Vector(resourceIri), requestingUser = requestingUser).map(_.toResource(resourceIri))
+                    resource <- getResourcesV2(resourceIris = Vector(resourceIri), schemaOptions = Set(StandoffAsXml), requestingUser = requestingUser).map(_.toResource(resourceIri))
 
                 } yield resource
             }

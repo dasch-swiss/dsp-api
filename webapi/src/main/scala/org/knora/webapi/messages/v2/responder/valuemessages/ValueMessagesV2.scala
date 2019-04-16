@@ -1137,7 +1137,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                 }
 
             case ApiV2Complex =>
-                val objectMap: Map[IRI, JsonLDValue] = if (standoffAndMapping.nonEmpty && !schemaOptions.contains(NoStandoff)) {
+                val objectMap: Map[IRI, JsonLDValue] = if (standoffAndMapping.nonEmpty && schemaOptions.contains(StandoffAsXml)) {
                     val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(
                         utf8str = valueHasString,
                         standoff = standoffAndMapping.get.standoff,

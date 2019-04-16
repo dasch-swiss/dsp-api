@@ -34,12 +34,14 @@
  *                         Cannot be used in conjunction with preview.
  * @param maybeVersionDate if defined, requests the state of the resources at the specified
  *                         time in the past. Cannot be used in conjunction with preview.
+ * @param queryStandoff    if true, include standoff in the response.
  *@
 @(triplestore: String,
   resourceIris: Seq[IRI],
   preview: Boolean,
   maybePropertyIri: Option[SmartIri],
-  maybeVersionDate: Option[Instant])
+  maybeVersionDate: Option[Instant],
+  queryStandoff: Boolean)
 
 
 @*

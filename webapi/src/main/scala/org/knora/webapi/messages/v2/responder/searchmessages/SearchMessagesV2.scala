@@ -56,6 +56,7 @@ case class FullTextSearchCountRequestV2(searchValue: String,
   * @param offset               the offset to be used for paging.
   * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
+  * @param schemaOptions        the schema options submitted with the request.
   * @param requestingUser       the user making the request.
   */
 case class FulltextSearchRequestV2(searchValue: String,
@@ -63,6 +64,7 @@ case class FulltextSearchRequestV2(searchValue: String,
                                    limitToProject: Option[IRI],
                                    limitToResourceClass: Option[SmartIri],
                                    limitToStandoffClass: Option[SmartIri],
+                                   schemaOptions: Set[SchemaOption],
                                    requestingUser: UserADM) extends SearchResponderRequestV2
 
 
@@ -82,14 +84,16 @@ case class GravsearchCountRequestV2(constructQuery: ConstructQuery,
   * Performs a Gravsearch query. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param constructQuery a Sparql construct query provided by the client.
+  * @param schemaOptions  the schema options submitted with the request.
   * @param requestingUser the user making the request.
   */
 case class GravsearchRequestV2(constructQuery: ConstructQuery,
+                               schemaOptions: Set[SchemaOption],
                                requestingUser: UserADM) extends SearchResponderRequestV2
 
 
 /**
-  * Requests a search of resources by their label. A successful response will be a [[ReadResourcesSequenceV2]].
+  * Requests a search of resources by their label. A successful response will be a [[ResourceCountV2]].
   *
   * @param searchValue          the values to search for.
   * @param limitToProject       limit search to given project.
@@ -108,12 +112,14 @@ case class SearchResourceByLabelCountRequestV2(searchValue: String,
   * @param offset               the offset to be used for paging.
   * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
+  * @param schemaOptions        the schema options submitted with the request.
   * @param requestingUser       the user making the request.
   */
 case class SearchResourceByLabelRequestV2(searchValue: String,
                                           offset: Int,
                                           limitToProject: Option[IRI],
                                           limitToResourceClass: Option[SmartIri],
+                                          schemaOptions: Set[SchemaOption],
                                           requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
@@ -139,9 +145,12 @@ case class ResourceCountV2(numberOfResources: Int) extends KnoraResponseV2 {
   * @param resourceClass   the IRI of the resource class, in the complex schema.
   * @param orderByProperty the IRI of the property that the resources are to be ordered by, in the complex schema.
   * @param page            the page number of the results page to be returned.
+  * @param schemaOptions   the schema options submitted with the request.
+  * @param requestingUser  the user making the request.
   */
 case class SearchResourcesByProjectAndClassRequestV2(projectIri: SmartIri,
                                                      resourceClass: SmartIri,
                                                      orderByProperty: Option[SmartIri],
                                                      page: Int,
+                                                     schemaOptions: Set[SchemaOption],
                                                      requestingUser: UserADM) extends SearchResponderRequestV2

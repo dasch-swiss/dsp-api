@@ -103,12 +103,13 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         )
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            responseSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                 }
             }

@@ -167,12 +167,13 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        RouteUtilV2.getOntologySchema(requestContext)
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = RouteUtilV2.getOntologySchema(requestContext),
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
             }
         } ~ path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
@@ -195,6 +196,8 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
                     val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
 
+                    val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
                     val requestMessage: Future[FulltextSearchRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield FulltextSearchRequestV2(
@@ -203,16 +206,18 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         limitToProject = limitToProject,
                         limitToResourceClass = limitToResourceClass,
                         limitToStandoffClass,
-                        requestingUser = requestingUser
+                        requestingUser = requestingUser,
+                        schemaOptions = schemaOptions
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        RouteUtilV2.getOntologySchema(requestContext)
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = RouteUtilV2.getOntologySchema(requestContext),
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }
@@ -226,12 +231,13 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         } yield GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            RouteUtilV2.getOntologySchema(requestContext)
+                            requestMessageF = requestMessage,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            responseSchema = RouteUtilV2.getOntologySchema(requestContext),
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -247,12 +253,13 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     } yield GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        RouteUtilV2.getOntologySchema(requestContext)
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = RouteUtilV2.getOntologySchema(requestContext),
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }
@@ -261,17 +268,24 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 entity(as[String]) { gravsearchQuery =>
                     requestContext => {
                         val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
+                        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
                         val requestMessage: Future[GravsearchRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
-                        } yield GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
+                        } yield GravsearchRequestV2(
+                            constructQuery = constructQuery,
+                            schemaOptions = schemaOptions,
+                            requestingUser = requestingUser
+                        )
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            RouteUtilV2.getOntologySchema(requestContext)
+                            requestMessageF = requestMessage,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            responseSchema = RouteUtilV2.getOntologySchema(requestContext),
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -281,17 +295,24 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
                 requestContext => {
                     val constructQuery = GravsearchParser.parseQuery(sparql)
+                    val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
                     val requestMessage: Future[GravsearchRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
+                    } yield GravsearchRequestV2(
+                        constructQuery = constructQuery,
+                        schemaOptions = schemaOptions,
+                        requestingUser = requestingUser
+                    )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        RouteUtilV2.getOntologySchema(requestContext)
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = RouteUtilV2.getOntologySchema(requestContext),
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
 
@@ -324,12 +345,13 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        RouteUtilV2.getOntologySchema(requestContext)
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = RouteUtilV2.getOntologySchema(requestContext),
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }
@@ -351,6 +373,8 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
                     val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
+                    val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
                     val requestMessage: Future[SearchResourceByLabelRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield SearchResourceByLabelRequestV2(
@@ -358,16 +382,18 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         offset = offset,
                         limitToProject = limitToProject,
                         limitToResourceClass = limitToResourceClass,
+                        schemaOptions = schemaOptions,
                         requestingUser = requestingUser
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        RouteUtilV2.getOntologySchema(requestContext)
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = RouteUtilV2.getOntologySchema(requestContext),
+                        schemaOptions = schemaOptions
                     )
                 }
             }

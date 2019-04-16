@@ -1479,8 +1479,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       * @return a [[ReadResourceV2]] containing only the resource's metadata and its values for the specified property.
       */
     private def getResourceWithPropertyValues(resourceIri: IRI, propertyInfo: ReadPropertyInfoV2, requestingUser: UserADM): Future[ReadResourceV2] = {
-        // TODO: when text values in Gravsearch query results are shortened, make a way for this query to get the complete value.
-
         for {
             // Get the property's object class constraint.
             objectClassConstraint: SmartIri <- Future(propertyInfo.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint")))
@@ -1504,7 +1502,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             // Run the query.
 
             parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
-            searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, requestingUser)).mapTo[ReadResourcesSequenceV2]
+            searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, Set(StandoffAsXml), requestingUser)).mapTo[ReadResourcesSequenceV2]
         } yield searchResponse.toResource(resourceIri)
     }
 

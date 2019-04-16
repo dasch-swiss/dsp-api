@@ -131,7 +131,7 @@ object RouteUtilV2 {
       * @return the specified standoff rendering, or [[StandoffAsXml]] if no rendering was specified
       *         in the request.
       */
-    private def getStandoffRendering(requestContext: RequestContext): Option[StandoffRendering] = {
+    private def getStandoffRendering(requestContext: RequestContext): StandoffRendering = {
         def nameToStandoffRendering(standoffRenderingName: String): StandoffRendering = {
             standoffRenderingName match {
                 case STANDOFF_XML => StandoffAsXml
@@ -143,11 +143,12 @@ object RouteUtilV2 {
         val params: Map[String, String] = requestContext.request.uri.query().toMap
 
         params.get(STANDOFF_PARAM) match {
-            case Some(schemaParam) => Some(nameToStandoffRendering(schemaParam))
+            case Some(schemaParam) => nameToStandoffRendering(schemaParam)
 
             case None =>
-                requestContext.request.headers.find(_.lowercaseName == STANDOFF_HEADER).map {
-                    header => nameToStandoffRendering(header.value)
+                requestContext.request.headers.find(_.lowercaseName == STANDOFF_HEADER) match {
+                    case Some(header) => nameToStandoffRendering(header.value)
+                    case None => StandoffAsXml
                 }
         }
     }
@@ -156,10 +157,10 @@ object RouteUtilV2 {
       * Gets the schema options submitted in the request.
       *
       * @param requestContext the request context.
-      * @return the set of schema options submitted in the request.
+      * @return the set of schema options submitted in the request, including default options.
       */
     def getSchemaOptions(requestContext: RequestContext): Set[SchemaOption] = {
-        getStandoffRendering(requestContext).toSet
+        Set(getStandoffRendering(requestContext))
     }
 
     /**
@@ -293,6 +294,7 @@ object RouteUtilV2 {
       * @param responderManager a reference to the responder manager.
       * @param log              a logging adapter.
       * @param responseSchema   the API schema that should be used in the response.
+      * @param schemaOptions    the schema options that should be used when processing the request.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
@@ -303,7 +305,7 @@ object RouteUtilV2 {
                               responderManager: ActorRef,
                               log: LoggingAdapter,
                               responseSchema: ApiV2Schema,
-                              schemaOptions: Set[SchemaOption] = Set.empty)
+                              schemaOptions: Set[SchemaOption])
                              (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         for {
             requestMessage <- requestMessageF

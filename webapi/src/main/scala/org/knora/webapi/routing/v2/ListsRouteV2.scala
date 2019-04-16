@@ -45,12 +45,13 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                     } yield ListGetRequestV2(listIri, requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        ApiV2Complex
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = ApiV2Complex,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
 
             }
@@ -66,12 +67,13 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                     } yield NodeGetRequestV2(nodeIri, requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        ApiV2Complex
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = ApiV2Complex,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
             }
         }
