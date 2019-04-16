@@ -25,7 +25,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString}
-import org.knora.webapi.{ApiV2Schema, IRI, OntologyConstants, SchemaOption, SettingsImpl}
+import org.knora.webapi.{ApiV2Complex, ApiV2Schema, IRI, OntologyConstants, SchemaOption, SettingsImpl}
 
 /**
   * An abstract trait for messages that can be sent to `SearchResponderV2`.
@@ -56,6 +56,7 @@ case class FullTextSearchCountRequestV2(searchValue: String,
   * @param offset               the offset to be used for paging.
   * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
+  * @param targetSchema         the target API schema.
   * @param schemaOptions        the schema options submitted with the request.
   * @param requestingUser       the user making the request.
   */
@@ -64,6 +65,7 @@ case class FulltextSearchRequestV2(searchValue: String,
                                    limitToProject: Option[IRI],
                                    limitToResourceClass: Option[SmartIri],
                                    limitToStandoffClass: Option[SmartIri],
+                                   targetSchema: ApiV2Schema,
                                    schemaOptions: Set[SchemaOption],
                                    requestingUser: UserADM) extends SearchResponderRequestV2
 
@@ -84,11 +86,13 @@ case class GravsearchCountRequestV2(constructQuery: ConstructQuery,
   * Performs a Gravsearch query. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param constructQuery a Sparql construct query provided by the client.
+  * @param targetSchema         the target API schema.
   * @param schemaOptions  the schema options submitted with the request.
   * @param requestingUser the user making the request.
   */
 case class GravsearchRequestV2(constructQuery: ConstructQuery,
-                               schemaOptions: Set[SchemaOption],
+                               targetSchema: ApiV2Schema = ApiV2Complex,
+                               schemaOptions: Set[SchemaOption] = Set.empty[SchemaOption],
                                requestingUser: UserADM) extends SearchResponderRequestV2
 
 
@@ -112,14 +116,12 @@ case class SearchResourceByLabelCountRequestV2(searchValue: String,
   * @param offset               the offset to be used for paging.
   * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
-  * @param schemaOptions        the schema options submitted with the request.
   * @param requestingUser       the user making the request.
   */
 case class SearchResourceByLabelRequestV2(searchValue: String,
                                           offset: Int,
                                           limitToProject: Option[IRI],
                                           limitToResourceClass: Option[SmartIri],
-                                          schemaOptions: Set[SchemaOption],
                                           requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**

@@ -4324,7 +4324,13 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:minCardinality" : 0,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:textValueHasMaxStandoffStartIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:textValueHasStandoff"
       }
@@ -5983,15 +5989,29 @@
       "@id" : "knora-api:valueHas"
     }
   }, {
-    "@id" : "knora-api:textValueHasStandoff",
-    "@type" : "owl:ObjectProperty",
+    "@id" : "knora-api:textValueHasMaxStandoffStartIndex",
+    "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
-      "@id" : "knora-api:StandoffTag"
+      "@id" : "xsd:integer"
     },
     "knora-api:subjectType" : {
       "@id" : "knora-api:TextValue"
     },
-    "rdfs:comment" : "Standoff markup attached to a text value.",
+    "rdfs:comment" : "The maximum knora-api:standoffTagHasStartIndex in a text value.",
+    "rdfs:label" : "text value has max standoff start index",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
+    }
+  }, {
+    "@id" : "knora-api:textValueHasStandoff",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:boolean"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:TextValue"
+    },
+    "rdfs:comment" : "True if a text value has standoff markup.",
     "rdfs:label" : "text value has standoff",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:valueHas"

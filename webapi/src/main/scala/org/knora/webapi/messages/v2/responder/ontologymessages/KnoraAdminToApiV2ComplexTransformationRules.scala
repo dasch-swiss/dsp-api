@@ -113,7 +113,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         val maybeSubjectTypePred = subjectType.map {
             subjType =>
                 makePredicate(
-                    predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
+                    predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType,
                     objects = Seq(SmartIriLiteralV2(subjType.toSmartIri))
                 )
         }
@@ -121,7 +121,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         val maybeObjectTypePred = objectType.map {
             objType =>
                 makePredicate(
-                    predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
+                    predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType,
                     objects = Seq(SmartIriLiteralV2(objType.toSmartIri))
                 )
         }

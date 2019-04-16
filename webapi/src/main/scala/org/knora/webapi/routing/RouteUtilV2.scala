@@ -70,26 +70,27 @@ object RouteUtilV2 {
     val PROJECT_HEADER: String = "x-knora-accept-project"
 
     /**
-      * The name of the URL parameter that can be used to specify how standoff markup should be returned
+      * The name of the URL parameter that can be used to specify how markup should be returned
       * with text values.
       */
-    val STANDOFF_PARAM: String = "standoff"
+    val MARKUP_PARAM: String = "markup"
 
     /**
-      * The name of the HTTP header that can be used to specify how standoff markup should be returned with
+      * The name of the HTTP header that can be used to specify how markup should be returned with
       * text values.
       */
-    val STANDOFF_HEADER: String = "x-knora-standoff"
+    val MARKUP_HEADER: String = "x-knora-markup"
 
     /**
-      * Indicates that standoff markup should be returned as XML (currently the default).
+      * Indicates that standoff markup should be returned as XML with text values.
       */
-    val STANDOFF_XML: String = "xml"
+    val MARKUP_XML: String = "xml"
 
     /**
-      * Indicates that standoff markup should not be returned with text values.
+      * Indicates that markup should not be returned with text values, because it will be requested
+      * separately as standoff.
       */
-    val STANDOFF_NONE: String = "none"
+    val MARKUP_STANDOFF: String = "standoff"
 
     /**
       * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
@@ -123,32 +124,31 @@ object RouteUtilV2 {
 
     /**
       * Gets the type of standoff rendering that should be used when returning text with standoff.
-      * The name of the standoff rendering can be specified either in the HTTP header [[STANDOFF_HEADER]]
-      * or in the URL parameter [[STANDOFF_PARAM]]. If no rendering is specified in the request, the
-      * default of [[StandoffAsXml]] is returned.
+      * The name of the standoff rendering can be specified either in the HTTP header [[MARKUP_HEADER]]
+      * or in the URL parameter [[MARKUP_PARAM]]. If no rendering is specified in the request, the
+      * default of [[MarkupAsXml]] is returned.
       *
       * @param requestContext the akka-http [[RequestContext]].
-      * @return the specified standoff rendering, or [[StandoffAsXml]] if no rendering was specified
+      * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
       *         in the request.
       */
-    private def getStandoffRendering(requestContext: RequestContext): StandoffRendering = {
-        def nameToStandoffRendering(standoffRenderingName: String): StandoffRendering = {
+    private def getStandoffRendering(requestContext: RequestContext): Option[MarkupRendering] = {
+        def nameToStandoffRendering(standoffRenderingName: String): MarkupRendering = {
             standoffRenderingName match {
-                case STANDOFF_XML => StandoffAsXml
-                case STANDOFF_NONE => NoStandoff
+                case MARKUP_XML => MarkupAsXml
+                case MARKUP_STANDOFF => MarkupAsStandoff
                 case _ => throw BadRequestException(s"Unrecognised standoff rendering: $standoffRenderingName")
             }
         }
 
         val params: Map[String, String] = requestContext.request.uri.query().toMap
 
-        params.get(STANDOFF_PARAM) match {
-            case Some(schemaParam) => nameToStandoffRendering(schemaParam)
+        params.get(MARKUP_PARAM) match {
+            case Some(schemaParam) => Some(nameToStandoffRendering(schemaParam))
 
             case None =>
-                requestContext.request.headers.find(_.lowercaseName == STANDOFF_HEADER) match {
-                    case Some(header) => nameToStandoffRendering(header.value)
-                    case None => StandoffAsXml
+                requestContext.request.headers.find(_.lowercaseName == MARKUP_HEADER).map {
+                    header => nameToStandoffRendering(header.value)
                 }
         }
     }
@@ -160,7 +160,7 @@ object RouteUtilV2 {
       * @return the set of schema options submitted in the request, including default options.
       */
     def getSchemaOptions(requestContext: RequestContext): Set[SchemaOption] = {
-        Set(getStandoffRendering(requestContext))
+        getStandoffRendering(requestContext).toSet
     }
 
     /**
@@ -185,7 +185,7 @@ object RouteUtilV2 {
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
       * @param log              a logging adapter.
-      * @param responseSchema   the API schema that should be used in the response.
+      * @param targetSchema   the API schema that should be used in the response.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
@@ -195,7 +195,7 @@ object RouteUtilV2 {
                             settings: SettingsImpl,
                             responderManager: ActorRef,
                             log: LoggingAdapter,
-                            responseSchema: ApiV2Schema,
+                            targetSchema: ApiV2Schema,
                             schemaOptions: Set[SchemaOption])
                            (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
@@ -226,7 +226,7 @@ object RouteUtilV2 {
             formattedResponse: HttpResponse = formatResponse(
                 knoraResponse = knoraResponse,
                 responseMediaType = responseMediaType,
-                responseSchema = responseSchema,
+                targetSchema = targetSchema,
                 settings = settings,
                 schemaOptions = schemaOptions
             )
@@ -245,7 +245,7 @@ object RouteUtilV2 {
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
       * @param log              a logging adapter.
-      * @param responseSchema   the API schema that should be used in the response.
+      * @param targetSchema   the API schema that should be used in the response.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
@@ -255,7 +255,7 @@ object RouteUtilV2 {
                        settings: SettingsImpl,
                        responderManager: ActorRef,
                        log: LoggingAdapter,
-                       responseSchema: ApiV2Schema)
+                       targetSchema: ApiV2Schema)
                       (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
 
         val contentType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)
@@ -293,7 +293,7 @@ object RouteUtilV2 {
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
       * @param log              a logging adapter.
-      * @param responseSchema   the API schema that should be used in the response.
+      * @param targetSchema   the API schema that should be used in the response.
       * @param schemaOptions    the schema options that should be used when processing the request.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -304,7 +304,7 @@ object RouteUtilV2 {
                               settings: SettingsImpl,
                               responderManager: ActorRef,
                               log: LoggingAdapter,
-                              responseSchema: ApiV2Schema,
+                              targetSchema: ApiV2Schema,
                               schemaOptions: Set[SchemaOption])
                              (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         for {
@@ -315,7 +315,7 @@ object RouteUtilV2 {
                 settings = settings,
                 responderManager = responderManager,
                 log = log,
-                responseSchema = responseSchema,
+                targetSchema = targetSchema,
                 schemaOptions = schemaOptions
             )
 
@@ -378,14 +378,14 @@ object RouteUtilV2 {
       *
       * @param knoraResponse     the response message.
       * @param responseMediaType the media type selected for the response (must be one of the types in [[RdfMediaTypes]]).
-      * @param responseSchema    the response schema.
+      * @param targetSchema    the response schema.
       * @param schemaOptions     the schema options.
       * @param settings          the application settings.
       * @return an HTTP response.
       */
     private def formatResponse(knoraResponse: KnoraResponseV2,
                                responseMediaType: MediaType.NonBinary,
-                               responseSchema: ApiV2Schema,
+                               targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption],
                                settings: SettingsImpl): HttpResponse = {
         // Find the most specific media type that is compatible with the one requested.
@@ -396,7 +396,7 @@ object RouteUtilV2 {
 
         // Generate a JSON-LD data structure from the API response message.
         val jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(
-            targetSchema = responseSchema,
+            targetSchema = targetSchema,
             settings = settings,
             schemaOptions = schemaOptions
         )

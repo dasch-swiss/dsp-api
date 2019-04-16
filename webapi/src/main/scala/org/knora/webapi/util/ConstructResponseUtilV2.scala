@@ -880,14 +880,34 @@ object ConstructResponseUtilV2 {
                                     deletionInfo = valueDeletionInfo
                                 )
 
-                            case nonLinkValueContentV2: NonLinkValueContentV2 =>
-                                ReadNonLinkValueV2(
+                            case textValueContentV2: TextValueContentV2 =>
+                                val maybeValueHasMaxStandoffStartIndexStr: Option[String] = valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex)
+
+                                val maybeValueHasMaxStandoffStartIndex: Option[Int] = maybeValueHasMaxStandoffStartIndexStr.map {
+                                    valueHasMaxStandoffStartIndexStr => stringFormatter.validateInt(
+                                        valueHasMaxStandoffStartIndexStr,
+                                        throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueHasMaxStandoffStartIndex in value <${valObj.valueObjectIri}>: $valueHasMaxStandoffStartIndexStr"))
+                                }
+
+                                ReadTextValueV2(
                                     valueIri = valObj.valueObjectIri,
                                     attachedToUser = valObj.assertions(OntologyConstants.KnoraBase.AttachedToUser),
                                     permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
                                     userPermission = valObj.userPermission,
                                     valueCreationDate = valueCreationDate,
-                                    valueContent = nonLinkValueContentV2,
+                                    valueContent = textValueContentV2,
+                                    valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
+                                    deletionInfo = valueDeletionInfo
+                                )
+
+                            case otherValueContentV2: OtherValueContentV2 =>
+                                ReadOtherValueV2(
+                                    valueIri = valObj.valueObjectIri,
+                                    attachedToUser = valObj.assertions(OntologyConstants.KnoraBase.AttachedToUser),
+                                    permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
+                                    userPermission = valObj.userPermission,
+                                    valueCreationDate = valueCreationDate,
+                                    valueContent = otherValueContentV2,
                                     deletionInfo = valueDeletionInfo
                                 )
                         }

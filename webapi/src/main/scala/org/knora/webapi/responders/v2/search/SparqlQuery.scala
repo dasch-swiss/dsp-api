@@ -501,6 +501,16 @@ case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
     override def toSparql: String = s"MINUS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
 }
 
+/**
+  * Represents a subquery in a query.
+  *
+  * @param selectQuery the SELECT query to be run in a subquery.
+  */
+case class SubQueryPattern(selectQuery: SelectQuery) extends QueryPattern {
+    override def toSparql: String = {
+        s"{\n${selectQuery.toSparql}}"
+    }
+}
 
 /**
   * Represents a CONSTRUCT clause in a query.

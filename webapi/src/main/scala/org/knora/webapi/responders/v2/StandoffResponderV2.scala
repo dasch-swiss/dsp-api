@@ -80,7 +80,9 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
         val xsltUrlFuture = for {
 
-            textRepresentationResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(xslTransformationIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+            textRepresentationResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
+                resourceIris = Vector(xslTransformationIri),
+                requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
             resource = textRepresentationResponseV2.toResource(xslTransformationIri)
 
             _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.XSLTransformation) {
@@ -405,8 +407,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // group attributes by their namespace
                 val attributeNodesByNamespace: Map[String, Seq[MappingXMLAttribute]] = attributeNodes.groupBy {
-                    (attr: MappingXMLAttribute) =>
-                        attr.namespace
+                    attr: MappingXMLAttribute => attr.namespace
                 }
 
                 // create attribute entries for each given namespace

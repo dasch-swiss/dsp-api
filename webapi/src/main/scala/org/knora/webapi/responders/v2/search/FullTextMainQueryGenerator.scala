@@ -21,7 +21,7 @@ package org.knora.webapi.responders.v2.search
 
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{IRI, NoStandoff, OntologyConstants, SchemaOption, SchemaOptions}
+import org.knora.webapi.{ApiV2Schema, IRI, MarkupAsStandoff, OntologyConstants, SchemaOption, SchemaOptions}
 
 object FullTextMainQueryGenerator {
 
@@ -71,10 +71,11 @@ object FullTextMainQueryGenerator {
       *
       * @param resourceIris    the IRIs of the resources to be queried.
       * @param valueObjectIris the IRIs of the value objects to be queried.
+      * @param targetSchema the target API schema.
       * @param schemaOptions   the schema options submitted with the request.
       * @return a [[ConstructQuery]].
       */
-    def createMainQuery(resourceIris: Set[IRI], valueObjectIris: Set[IRI], schemaOptions: Set[SchemaOption]): ConstructQuery = {
+    def createMainQuery(resourceIris: Set[IRI], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): ConstructQuery = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         import FullTextSearchConstants._
@@ -113,8 +114,13 @@ object FullTextMainQueryGenerator {
                 StatementPattern(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
             )
 
-            // Check whether the request asked for standoff in the response.
-            val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(schemaOptions)
+            // Check whether the response should include standoff.
+            val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
+
+            // Check whether the response should include knora-base:valueHasMaxStandoffStartIndex.
+            val queryMaxStandoffStartIndex: Boolean = SchemaOptions.queryMaxStandoffStartIndex(targetSchema, schemaOptions)
+
+            // TODO: add a subquery to get knora-base:valueHasMaxStandoffStartIndex.
 
             // WHERE patterns for standoff belonging to value objects (if any)
             val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {

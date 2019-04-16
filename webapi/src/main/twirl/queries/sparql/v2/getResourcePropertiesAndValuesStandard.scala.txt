@@ -27,21 +27,33 @@
  *
  * This template is used only by getResourcePropertiesAndValues.scala.txt.
  *
- * @param triplestore      the name of the triplestore being used.
- * @param resourceIris     the IRIs of the requested resources.
- * @param preview          indicates if the request should only return preview information.
- * @param maybePropertyIri if defined, only returns values of the specified explicit property.
- *                         Cannot be used in conjunction with preview.
- * @param maybeVersionDate if defined, requests the state of the resources at the specified
- *                         time in the past. Cannot be used in conjunction with preview.
- * @param queryStandoff    if true, include standoff in the response.
+ * @param triplestore                the name of the triplestore being used.
+ * @param resourceIris               the IRIs of the requested resources.
+ * @param preview                    indicates if the request should only return preview information.
+ * @param maybePropertyIri           if defined, only returns values of the specified explicit property.
+ *                                   Cannot be used in conjunction with preview.
+ * @param maybeVersionDate           if defined, requests the state of the resources at the specified
+ *                                   time in the past. Cannot be used in conjunction with preview.
+ * @param maybeValueIri              if defined, the specified value will be the only value returned.
+ * @param queryValueHasString        if true, knora-base:valueHasString will be returned.
+ * @param queryStandoff              if true, standoff will be returned if available.
+ * @param queryMaxStandoffStartIndex if true, knora-base:valueHasMaxStandoffStartIndex will be returned.
+ * @param maybeStandoffMinStartIndex if defined, the minimum knora-base:standoffTagHasStartIndex to be returned.
+ *                                   Requires maybeValueIri and maybeStandoffMaxStartIndex.
+ * @param maybeStandoffMaxStartIndex if defined, the maximum knora-base:standoffTagHasStartIndex to be returned.
+                                     Requires maybeValueIri and maybeStandoffMinStartIndex.
  *@
 @(triplestore: String,
   resourceIris: Seq[IRI],
   preview: Boolean,
   maybePropertyIri: Option[SmartIri],
   maybeVersionDate: Option[Instant],
-  queryStandoff: Boolean)
+  maybeValueIri: Option[IRI],
+  queryValueHasString: Boolean,
+  queryStandoff: Boolean,
+  queryMaxStandoffStartIndex: Boolean,
+  maybeStandoffMinStartIndex: Option[Int],
+  maybeStandoffMaxStartIndex: Option[Int])
 
 
 @*

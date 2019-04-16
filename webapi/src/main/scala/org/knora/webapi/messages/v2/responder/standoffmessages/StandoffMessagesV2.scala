@@ -88,9 +88,9 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
 
         val label: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
-        val projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
+        val projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2Complex.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
-        val mappingName: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.MappingHasName, stringFormatter.toSparqlEncodedString)
+        val mappingName: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.MappingHasName, stringFormatter.toSparqlEncodedString)
 
         CreateMappingRequestMetadataV2(
             label = label,
@@ -124,7 +124,7 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
             JsonLDConstants.ID -> JsonLDString(mappingIri),
             JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString),
             "rdfs:label" -> JsonLDString(label),
-            OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDUtil.iriToJsonLDObject(projectIri.toString)
+            OntologyConstants.KnoraApiV2Complex.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDUtil.iriToJsonLDObject(projectIri.toString)
         ))
 
         val context = JsonLDObject(Map(

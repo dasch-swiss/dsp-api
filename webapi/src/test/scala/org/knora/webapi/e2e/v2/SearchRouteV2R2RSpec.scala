@@ -7517,7 +7517,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                    |    "rdfs:label": "mapping for HTML",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
                    |    }
                    |}
                 """.stripMargin

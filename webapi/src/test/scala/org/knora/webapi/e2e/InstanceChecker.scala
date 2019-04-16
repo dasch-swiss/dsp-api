@@ -316,7 +316,7 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
         val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(classDefStr)
 
         // If Knora returned an error, get the error message and throw an exception.
-        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.Error) match {
+        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2Complex.Error) match {
             case Some(error) => throwAndLogAssertionException(error)
             case None => ()
         }
@@ -337,7 +337,7 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
         val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(propertyDefStr)
 
         // If Knora returned an error, get the error message and throw an exception.
-        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.Error) match {
+        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2Complex.Error) match {
             case Some(error) => throwAndLogAssertionException(error)
             case None => ()
         }
@@ -352,7 +352,7 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
       * @return the property's `knora-api:objectType`, if it has one.
       */
     private def getObjectType(propertyDef: PropertyInfoContentV2): Option[SmartIri] = {
-        propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri).
+        propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri).
             orElse(propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri))
     }
 }

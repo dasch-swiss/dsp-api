@@ -3036,7 +3036,10 @@ knora-api:TextValue a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty knora-api:textValueHasMapping
     ], [ a owl:Restriction;
-      owl:minCardinality 0;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:textValueHasMaxStandoffStartIndex
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:textValueHasStandoff
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -3084,10 +3087,17 @@ knora-api:textValueHasMapping a owl:ObjectProperty;
   rdfs:label "Text value has mapping";
   rdfs:subPropertyOf knora-api:valueHas .
 
-knora-api:textValueHasStandoff a owl:ObjectProperty;
-  knora-api:objectType knora-api:StandoffTag;
+knora-api:textValueHasMaxStandoffStartIndex a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
   knora-api:subjectType knora-api:TextValue;
-  rdfs:comment "Standoff markup attached to a text value.";
+  rdfs:comment "The maximum knora-api:standoffTagHasStartIndex in a text value.";
+  rdfs:label "text value has max standoff start index";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:textValueHasStandoff a owl:DatatypeProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType knora-api:TextValue;
+  rdfs:comment "True if a text value has standoff markup.";
   rdfs:label "text value has standoff";
   rdfs:subPropertyOf knora-api:valueHas .
 

@@ -721,7 +721,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     private val ApiV2OntologyUrlPathRegex: Regex = (
             "^" + "/ontology/((" +
                     ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
-                    OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
+                    OntologyConstants.KnoraApiV2Complex.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
             ).r
 
     // The start of the IRI of a project-specific API v2 ontology that is served by this API server.
@@ -1188,7 +1188,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         private def getVersionSegment(targetSchema: ApiV2Schema): String = {
             targetSchema match {
                 case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.VersionSegment
-                case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment
+                case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.VersionSegment
             }
         }
 

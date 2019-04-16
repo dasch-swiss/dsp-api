@@ -124,10 +124,10 @@ object KnoraExceptionHandler {
 
         val jsonLDDocument = JsonLDDocument(
             body = JsonLDObject(
-                Map(OntologyConstants.KnoraApiV2WithValueObjects.Error -> JsonLDString(makeClientErrorMessage(ex, settings)))
+                Map(OntologyConstants.KnoraApiV2Complex.Error -> JsonLDString(makeClientErrorMessage(ex, settings)))
             ),
             context = JsonLDObject(
-                Map(OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion))
+                Map(OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion))
             )
         )
 

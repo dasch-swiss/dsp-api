@@ -23,7 +23,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:21Z"),
         values = Map(
-            "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(ReadNonLinkValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
                     ontologySchema = InternalSchema,
@@ -31,6 +31,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     comment = None,
                     valueHasString = "Extent: 1 Bd.; Dimensions: f\u00B0"
                 ),
+                valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/2a6221216701/values/e94fa8a09205",
                 permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
@@ -39,7 +40,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#citation".toSmartIri -> Vector(
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -47,6 +48,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Van der Haegen I: 9,14"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/7b4a9bf89305",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -54,7 +56,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -62,6 +64,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Goff M165"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/3e74ee319405",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -69,7 +72,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -77,6 +80,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "C 3833"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/019e416b9405",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -84,7 +88,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -92,6 +96,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Klebs 651.2"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/c4c794a49405",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -99,7 +104,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -107,6 +112,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Schr 4799"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/87f1e7dd9405",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -114,7 +120,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -122,6 +128,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Schramm XXI p. 9 & 26"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/4a1b3b179505",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -129,7 +136,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -137,6 +144,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "FairMur(G) 283"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/0d458e509505",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -144,7 +152,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -152,6 +160,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "IBP 3556"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/d06ee1899505",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -159,7 +168,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -167,6 +176,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Borm 1751"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/939834c39505",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -175,7 +185,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     deletionInfo = None
                 )
             ),
-            "http://www.knora.org/ontology/0803/incunabula#publisher".toSmartIri -> Vector(ReadNonLinkValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#publisher".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
                     ontologySchema = InternalSchema,
@@ -183,6 +193,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     comment = None,
                     valueHasString = "Bernhard Richel"
                 ),
+                valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/2a6221216701/values/dda85bbb9105",
                 permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
@@ -190,7 +201,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 deletionInfo = None
             )),
-            "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(ReadNonLinkValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
                     ontologySchema = InternalSchema,
@@ -198,6 +209,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     comment = None,
                     valueHasString = "Jean Mandeville"
                 ),
+                valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/2a6221216701/values/1a7f08829105",
                 permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser",
                 userPermission = ChangeRightsPermission,
@@ -205,7 +217,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 deletionInfo = None
             )),
-            "http://www.knora.org/ontology/0803/incunabula#book_comment".toSmartIri -> Vector(ReadNonLinkValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#book_comment".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
                     ontologySchema = InternalSchema,
@@ -213,6 +225,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     comment = None,
                     valueHasString = "Katalogaufnahme anhand ISTC und v.d.Haegen"
                 ),
+                valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/2a6221216701/values/56c287fc9505",
                 permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
@@ -220,7 +233,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 deletionInfo = None
             )),
-            "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(ReadNonLinkValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
                     ontologySchema = InternalSchema,
@@ -228,6 +241,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     comment = None,
                     valueHasString = "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"
                 ),
+                valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/2a6221216701/values/f89173afca2704",
                 permissions = "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
@@ -236,7 +250,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#note".toSmartIri -> Vector(
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -244,6 +258,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "deutsch von Otto von Diemeringen"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/ac79fbd99205",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -251,7 +266,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -259,6 +274,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Rubr. mit Init. J zu Beginn"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/6fa34e139305",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -266,7 +282,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -274,6 +290,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Holzschnitte nicht koloriert"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/32cda14c9305",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -281,7 +298,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -289,6 +306,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Besitzervermerke: Kartause, H. Zscheckenb\u00FCrlin"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/f5f6f4859305",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -296,7 +314,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -304,6 +322,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/b82048bf9305",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -312,7 +331,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     deletionInfo = None
                 )
             ),
-            "http://www.knora.org/ontology/0803/incunabula#location".toSmartIri -> Vector(ReadNonLinkValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#location".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
                     ontologySchema = InternalSchema,
@@ -320,6 +339,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     comment = None,
                     valueHasString = "Basel UB, Sign: Aleph D III 13:1"
                 ),
+                valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/2a6221216701/values/262655679205",
                 permissions = "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
@@ -327,7 +347,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 deletionInfo = None
             )),
-            "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(ReadNonLinkValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
                     ontologySchema = InternalSchema,
@@ -335,6 +355,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     comment = None,
                     valueHasString = "Basel"
                 ),
+                valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/2a6221216701/values/a0d2aef49105",
                 permissions = "CR knora-admin:Creator|V knora-admin:ProjectMember,knora-admin:KnownUser,knora-admin:UnknownUser",
                 userPermission = ChangeRightsPermission,
@@ -342,7 +363,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 deletionInfo = None
             )),
-            "http://www.knora.org/ontology/0803/incunabula#pubdate".toSmartIri -> Vector(ReadNonLinkValueV2(
+            "http://www.knora.org/ontology/0803/incunabula#pubdate".toSmartIri -> Vector(ReadOtherValueV2(
                 valueContent = DateValueContentV2(
                     valueHasEndJDN = 2262358,
                     valueHasStartJDN = 2261994,
@@ -360,7 +381,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -368,6 +389,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Reise ins Heilige Land"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/d1010fd69005",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,
@@ -375,7 +397,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
                 ),
-                ReadNonLinkValueV2(
+                ReadTextValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
                         ontologySchema = InternalSchema,
@@ -383,6 +405,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                         comment = None,
                         valueHasString = "Reysen und wanderschafften durch das Gelobte Land"
                     ),
+                    valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/2a6221216701/values/942b620f9105",
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ChangeRightsPermission,

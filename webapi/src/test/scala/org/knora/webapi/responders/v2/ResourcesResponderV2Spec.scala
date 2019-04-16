@@ -693,7 +693,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 depth = 6,
                 inbound = true,
                 outbound = true,
-                excludeProperty = Some(OntologyConstants.KnoraApiV2WithValueObjects.IsPartOf.toSmartIri),
+                excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
                 requestingUser = SharedTestDataADM.anythingUser1
             )
 
@@ -711,7 +711,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 depth = 6,
                 inbound = true,
                 outbound = true,
-                excludeProperty = Some(OntologyConstants.KnoraApiV2WithValueObjects.IsPartOf.toSmartIri),
+                excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
                 requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
             )
 
@@ -729,7 +729,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 depth = 4,
                 inbound = true,
                 outbound = true,
-                excludeProperty = Some(OntologyConstants.KnoraApiV2WithValueObjects.IsPartOf.toSmartIri),
+                excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
                 requestingUser = SharedTestDataADM.anythingUser1
             )
 
@@ -744,7 +744,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 depth = 4,
                 inbound = true,
                 outbound = true,
-                excludeProperty = Some(OntologyConstants.KnoraApiV2WithValueObjects.IsPartOf.toSmartIri),
+                excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
                 requestingUser = SharedTestDataADM.anythingUser1
             )
 
@@ -1004,7 +1004,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-                OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri -> Seq(
+                OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = StillImageFileValueContentV2(
                             ontologySchema = ApiV2Complex,

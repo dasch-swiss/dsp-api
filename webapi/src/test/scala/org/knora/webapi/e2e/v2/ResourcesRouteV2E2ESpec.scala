@@ -336,7 +336,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                 entry match {
                     case jsonLDObject: JsonLDObject =>
                         val versionDate: Instant = jsonLDObject.requireDatatypeValueInObject(
-                            key = OntologyConstants.KnoraApiV2WithValueObjects.VersionDate,
+                            key = OntologyConstants.KnoraApiV2Complex.VersionDate,
                             expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                             validationFun = stringFormatter.xsdDateTimeStampToInstant
                         )
@@ -626,7 +626,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(resourceIri.toSmartIri.isKnoraDataIri)
 
             val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
-                key = OntologyConstants.KnoraApiV2WithValueObjects.CreationDate,
+                key = OntologyConstants.KnoraApiV2Complex.CreationDate,
                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                 validationFun = stringFormatter.xsdDateTimeStampToInstant
             )
@@ -665,7 +665,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(resourceIri.toSmartIri.isKnoraDataIri)
 
-            val savedAttachedToUser: IRI = responseJsonDoc.body.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser, stringFormatter.validateAndEscapeIri)
+            val savedAttachedToUser: IRI = responseJsonDoc.body.requireIriInObject(OntologyConstants.KnoraApiV2Complex.AttachedToUser, stringFormatter.validateAndEscapeIri)
             assert(savedAttachedToUser == SharedTestDataADM.anythingUser1.id)
         }
 
@@ -747,11 +747,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
             val updatedLabel: String = previewJsonLD.requireString(OntologyConstants.Rdfs.Label)
             assert(updatedLabel == newLabel)
-            val updatedPermissions: String = previewJsonLD.requireString(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions)
+            val updatedPermissions: String = previewJsonLD.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
             assert(PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions))
 
             val lastModificationDate: Instant = previewJsonLD.requireDatatypeValueInObject(
-                key = OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
+                key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                 validationFun = stringFormatter.xsdDateTimeStampToInstant
             )

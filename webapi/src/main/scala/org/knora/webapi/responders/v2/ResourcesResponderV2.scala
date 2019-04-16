@@ -68,7 +68,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
       */
     def receive(msg: ResourcesResponderRequestV2) = msg match {
-        case ResourcesGetRequestV2(resIris, propertyIri, versionDate, schemaOptions, requestingUser) => getResourcesV2(resIris, propertyIri, versionDate, schemaOptions, requestingUser)
+        case ResourcesGetRequestV2(resIris, propertyIri, versionDate, targetSchema, schemaOptions, requestingUser) => getResourcesV2(resIris, propertyIri, versionDate, targetSchema, schemaOptions, requestingUser)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreviewV2(resIris, requestingUser)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
@@ -249,7 +249,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         def makeTaskFuture: Future[SuccessResponseV2] = {
             for {
                 // Get the metadata of the resource to be updated.
-                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
+                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
+                    resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
+                    requestingUser = updateResourceMetadataRequestV2.requestingUser
+                )
+
                 resource: ReadResourceV2 = resourcesSeq.toResource(updateResourceMetadataRequestV2.resourceIri)
                 internalResourceClassIri = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
 
@@ -300,7 +304,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Verify that the resource was updated correctly.
 
-                updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
+                updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
+                    resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
+                    requestingUser = updateResourceMetadataRequestV2.requestingUser
+                )
 
                 _ = if (updatedResourcesSeq.numberOfResources != 1) {
                     throw AssertionException(s"Expected one resource, got ${resourcesSeq.numberOfResources}")
@@ -346,7 +353,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         def makeTaskFuture: Future[SuccessResponseV2] = {
             for {
                 // Get the metadata of the resource to be updated.
-                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(Seq(deleteResourceV2.resourceIri), deleteResourceV2.requestingUser)
+                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
+                    resourceIris = Seq(deleteResourceV2.resourceIri),
+                    requestingUser = deleteResourceV2.requestingUser
+                )
+
                 resource: ReadResourceV2 = resourcesSeq.toResource(deleteResourceV2.resourceIri)
                 internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
 
@@ -551,7 +562,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         for {
             // Get information about the existing resources that are targets of links.
-            existingTargets: ReadResourcesSequenceV2 <- getResourcePreviewV2(existingTargets.toSeq, requestingUser)
+            existingTargets: ReadResourcesSequenceV2 <- getResourcePreviewV2(
+                resourceIris = existingTargets.toSeq,
+                requestingUser = requestingUser
+            )
 
             // Make a map of the IRIs of existing target resources to their class IRIs.
             classesOfExistingTargets: Map[IRI, SmartIri] = existingTargets.resources.map(resource => resource.resourceIri -> resource.resourceClassIri).toMap
@@ -820,7 +834,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourcesResponse: ReadResourcesSequenceV2 <- getResourcesV2(
                 resourceIris = Seq(resourceIri),
                 requestingUser = requestingUser,
-                schemaOptions = Set(StandoffAsXml)
+                targetSchema = ApiV2Complex,
+                schemaOptions = SchemaOptions.ForStandoffWithTextValues
             )
 
             resource: ReadResourceV2 = try {
@@ -915,6 +930,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param preview      `true` if a preview of the resource is requested.
       * @param versionDate  if defined, requests the state of the resources at the specified time in the past.
       *                     Cannot be used in conjunction with `preview`.
+      * @param targetSchema the target API schema.
       * @param schemaOptions the schema options submitted with the request.
       * @return a map of resource IRIs to RDF data.
       */
@@ -922,14 +938,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                             preview: Boolean,
                                             propertyIri: Option[SmartIri],
                                             versionDate: Option[Instant],
+                                            targetSchema: ApiV2Schema,
                                             schemaOptions: Set[SchemaOption],
                                             requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
-        // Determine whether to query standoff.
-        val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(schemaOptions)
+        // Check whether the response should include standoff.
+        val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
+
+        // Check whether the response should include knora-base:valueHasMaxStandoffStartIndex.
+        val queryMaxStandoffStartIndex: Boolean = SchemaOptions.queryMaxStandoffStartIndex(targetSchema, schemaOptions)
 
         for {
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
@@ -938,7 +958,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 preview = preview,
                 maybePropertyIri = propertyIri,
                 maybeVersionDate = versionDate,
-                queryStandoff = queryStandoff
+                queryValueHasString = true,
+                queryStandoff = queryStandoff,
+                queryMaxStandoffStartIndex = queryMaxStandoffStartIndex
             ).toString())
 
             // _ = println(resourceRequestSparql)
@@ -970,6 +992,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     private def getResourcesV2(resourceIris: Seq[IRI],
                                propertyIri: Option[SmartIri] = None,
                                versionDate: Option[Instant] = None,
+                               targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption],
                                requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
@@ -983,6 +1006,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 preview = false,
                 propertyIri = propertyIri,
                 versionDate = versionDate,
+                targetSchema = targetSchema,
                 schemaOptions = schemaOptions,
                 requestingUser = requestingUser
             )
@@ -1026,7 +1050,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 preview = true,
                 propertyIri = None,
                 versionDate = None,
-                schemaOptions = Set(NoStandoff),
+                targetSchema = ApiV2Complex, // This has no effect, because we are not querying values.
+                schemaOptions = Set(NoMarkup), // This has no effect, because we are not querying values.
                 requestingUser = requestingUser
             )
 
@@ -1058,7 +1083,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM): Future[String] = {
 
         val gravsearchUrlFuture = for {
-            resources: ReadResourcesSequenceV2 <- getResourcesV2(resourceIris = Vector(gravsearchTemplateIri), schemaOptions = Set(NoStandoff), requestingUser = requestingUser)
+            resources: ReadResourcesSequenceV2 <- getResourcesV2(resourceIris = Vector(gravsearchTemplateIri), targetSchema = ApiV2Complex, schemaOptions = Set(MarkupAsStandoff), requestingUser = requestingUser)
             resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
             _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
@@ -1149,7 +1174,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         // convert all dates to Gregorian calendar dates (standardization)
                         valueObj: ReadValueV2 =>
                             valueObj match {
-                                case readNonLinkValueV2: ReadNonLinkValueV2 =>
+                                case readNonLinkValueV2: ReadOtherValueV2 =>
                                     readNonLinkValueV2.valueContent match {
                                         case dateContent: DateValueContentV2 =>
                                             // date value
@@ -1205,7 +1230,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     constructQuery: ConstructQuery = GravsearchParser.parseQuery(gravsearchQuery)
 
                     // do a request to the SearchResponder
-                    gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, schemaOptions = Set(StandoffAsXml), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+                    gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(
+                        constructQuery = constructQuery,
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                        requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
                 } yield gravSearchResponse.toResource(resourceIri)
 
             } else {
@@ -1216,7 +1245,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 for {
                     // get requested resource
-                    resource <- getResourcesV2(resourceIris = Vector(resourceIri), schemaOptions = Set(StandoffAsXml), requestingUser = requestingUser).map(_.toResource(resourceIri))
+                    resource <- getResourcesV2(
+                        resourceIris = Vector(resourceIri),
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                        requestingUser = requestingUser).map(_.toResource(resourceIri))
 
                 } yield resource
             }

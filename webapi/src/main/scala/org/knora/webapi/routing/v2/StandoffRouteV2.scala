@@ -108,7 +108,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                             settings = settings,
                             responderManager = responderManager,
                             log = log,
-                            responseSchema = ApiV2Complex,
+                            targetSchema = ApiV2Complex,
                             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                 }

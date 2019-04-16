@@ -98,7 +98,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 }
 
                 // Don't accept knora-api:hasStandoffLinkToValue.
-                _ = if (createValueRequest.createValue.propertyIri.toString == OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue) {
+                _ = if (createValueRequest.createValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
                     throw BadRequestException(s"Values of <${createValueRequest.createValue.propertyIri}> cannot be created directly")
                 }
 
@@ -676,7 +676,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 }
 
                 // Don't accept knora-api:hasStandoffLinkToValue.
-                _ = if (updateValueRequest.updateValue.propertyIri.toString == OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue) {
+                _ = if (updateValueRequest.updateValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
                     throw BadRequestException(s"Values of <${updateValueRequest.updateValue.propertyIri}> cannot be updated directly")
                 }
 
@@ -1117,7 +1117,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 }
 
                 // Don't accept knora-api:hasStandoffLinkToValue.
-                _ = if (deleteValueRequest.propertyIri.toString == OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue) {
+                _ = if (deleteValueRequest.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
                     throw BadRequestException(s"Values of <${deleteValueRequest.propertyIri}> cannot be deleted directly")
                 }
 
@@ -1415,7 +1415,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         if (propertyInfoForSubmittedProperty.isLinkValueProp) {
             maybeSubmittedValueType match {
                 case Some(submittedValueType) =>
-                    if (submittedValueType.toString != OntologyConstants.KnoraApiV2WithValueObjects.LinkValue) {
+                    if (submittedValueType.toString != OntologyConstants.KnoraApiV2Complex.LinkValue) {
                         FastFuture.failed(BadRequestException(s"A value of type <$submittedValueType> cannot be an object of property <$submittedPropertyIri>"))
                     }
 
@@ -1502,7 +1502,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             // Run the query.
 
             parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
-            searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, Set(StandoffAsXml), requestingUser)).mapTo[ReadResourcesSequenceV2]
+            searchResponse <- (responderManager ? GravsearchRequestV2(
+                constructQuery = parsedGravsearchQuery,
+                targetSchema = ApiV2Complex,
+                schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
         } yield searchResponse.toResource(resourceIri)
     }
 

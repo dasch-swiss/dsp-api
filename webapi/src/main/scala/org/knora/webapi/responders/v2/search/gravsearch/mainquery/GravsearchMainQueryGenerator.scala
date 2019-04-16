@@ -23,7 +23,7 @@ import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{GravsearchException, IRI, NoStandoff, OntologyConstants, SchemaOption, SchemaOptions}
+import org.knora.webapi._
 
 object GravsearchMainQueryGenerator {
 
@@ -158,10 +158,11 @@ object GravsearchMainQueryGenerator {
       * @param mainResourceIris      IRIs of main resources to be queried.
       * @param dependentResourceIris IRIs of dependent resources to be queried.
       * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
+      * @param targetSchema the target API schema.
       * @param schemaOptions         the schema options submitted with the request.
       * @return the main [[ConstructQuery]] query to be executed.
       */
-    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI], schemaOptions: Set[SchemaOption]): ConstructQuery = {
+    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): ConstructQuery = {
         import GravsearchConstants._
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -215,8 +216,13 @@ object GravsearchMainQueryGenerator {
                 StatementPattern(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
             )
 
-            // Check whether the request asked for standoff in the response.
-            val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(schemaOptions)
+            // Check whether the response should include standoff.
+            val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
+
+            // Check whether the response should include knora-base:valueHasMaxStandoffStartIndex.
+            val queryMaxStandoffStartIndex: Boolean = SchemaOptions.queryMaxStandoffStartIndex(targetSchema, schemaOptions)
+
+            // TODO: add a subquery to get knora-base:valueHasMaxStandoffStartIndex.
 
             // WHERE patterns for standoff belonging to value objects (if any)
             val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {

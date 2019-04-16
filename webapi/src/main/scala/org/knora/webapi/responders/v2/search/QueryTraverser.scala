@@ -234,6 +234,19 @@ object QueryTraverser {
             case valuesPattern: ValuesPattern => Seq(valuesPattern)
 
             case bindPattern: BindPattern => Seq(bindPattern)
+
+            case subQueryPattern: SubQueryPattern =>
+                Seq(subQueryPattern.copy(
+                    selectQuery = subQueryPattern.selectQuery.copy(
+                        whereClause = subQueryPattern.selectQuery.whereClause.copy(
+                            patterns = transformWherePatterns(
+                                patterns = subQueryPattern.selectQuery.whereClause.patterns,
+                                whereTransformer = whereTransformer,
+                                inputOrderBy = subQueryPattern.selectQuery.orderBy
+                            )
+                        )
+                    )
+                ))
         }
     }
 

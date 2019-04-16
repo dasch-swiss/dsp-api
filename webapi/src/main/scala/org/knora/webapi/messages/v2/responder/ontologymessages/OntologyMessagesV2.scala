@@ -108,10 +108,10 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
                                requestingUser: UserADM): CreateOntologyRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val ontologyName: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
+        val ontologyName: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
         val label: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
-        val projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
-        val isShared: Boolean = jsonLDDocument.maybeBoolean(OntologyConstants.KnoraApiV2WithValueObjects.IsShared).exists(identity)
+        val projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2Complex.AttachedToProject, stringFormatter.toSmartIriWithErr)
+        val isShared: Boolean = jsonLDDocument.maybeBoolean(OntologyConstants.KnoraApiV2Complex.IsShared).exists(identity)
 
         CreateOntologyRequestV2(
             ontologyName = ontologyName,
@@ -389,7 +389,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
 
         // Check that the knora-api:subjectType (if provided) and the knora-api:objectType point to valid entity IRIs.
 
-        propertyInfoContent.predicates.get(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri).foreach {
+        propertyInfoContent.predicates.get(OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri).foreach {
             subjectTypePred =>
                 val subjectType = subjectTypePred.requireIriObject(throw BadRequestException(s"Missing or invalid object for predicate knora-api:subjectType"))
 
@@ -398,7 +398,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
                 }
         }
 
-        val objectType = propertyInfoContent.requireIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw BadRequestException(s"Missing knora-api:objectType"))
+        val objectType = propertyInfoContent.requireIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri, throw BadRequestException(s"Missing knora-api:objectType"))
 
         if (!(objectType.isKnoraApiV2EntityIri && objectType.getOntologySchema.contains(ApiV2Complex))) {
             throw BadRequestException(s"Invalid knora-api:objectType: $objectType")
@@ -1157,8 +1157,8 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                 val entityIris = property.entityInfoContent.subPropertyOf ++
                     property.entityInfoContent.getPredicateIriObjects(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri) ++
                     property.entityInfoContent.getPredicateIriObjects(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri) ++
-                    property.entityInfoContent.getPredicateIriObjects(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri) ++
-                    property.entityInfoContent.getPredicateIriObjects(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri)
+                    property.entityInfoContent.getPredicateIriObjects(OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri) ++
+                    property.entityInfoContent.getPredicateIriObjects(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri)
 
                 entityIris.flatMap {
                     entityIri =>
@@ -1174,7 +1174,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         // Determine which ontology to use as the knora-api prefix expansion.
         val knoraApiPrefixExpansion = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
-            case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
+            case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
         }
 
         // Add a salsah-gui prefix only if we're using the complex schema.
@@ -1347,12 +1347,12 @@ object InputOntologyV2 {
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
         }
 
-        val projectIri: Option[SmartIri] = ontologyObj.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
+        val projectIri: Option[SmartIri] = ontologyObj.maybeIriInObject(OntologyConstants.KnoraApiV2Complex.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
         val ontologyLabel: Option[String] = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
         val lastModificationDate: Option[Instant] = ontologyObj.maybeStringWithValidation(
-            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
+            OntologyConstants.KnoraApiV2Complex.LastModificationDate,
             stringFormatter.xsdDateTimeStampToInstant
         )
 
@@ -1443,7 +1443,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends K
     private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         val knoraApiOntologyPrefixExpansion = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
-            case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
+            case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
         }
 
         val context = JsonLDObject(Map(
@@ -2204,7 +2204,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
 
                 // If we're using the complex schema and the cardinality is inherited, add an annotation to say so.
                 val isInheritedStatement = if (targetSchema == ApiV2Complex && !entityInfoContent.directCardinalities.contains(propertyIri)) {
-                    Some(OntologyConstants.KnoraApiV2WithValueObjects.IsInherited -> JsonLDBoolean(true))
+                    Some(OntologyConstants.KnoraApiV2Complex.IsInherited -> JsonLDBoolean(true))
                 } else {
                     None
                 }
@@ -2227,7 +2227,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
 
         val resourceIconPred = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.ResourceIcon
-            case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.ResourceIcon
+            case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.ResourceIcon
         }
 
         val resourceIconStatement: Option[(IRI, JsonLDString)] = entityInfoContent.getPredicateStringLiteralObjectsWithoutLang(resourceIconPred.toSmartIri).headOption.map {
@@ -2256,25 +2256,25 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         }
 
         val isKnoraResourceClassStatement: Option[(IRI, JsonLDBoolean)] = if (isResourceClass && targetSchema == ApiV2Complex) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceClass -> JsonLDBoolean(true))
+            Some(OntologyConstants.KnoraApiV2Complex.IsResourceClass -> JsonLDBoolean(true))
         } else {
             None
         }
 
         val isStandoffClassStatement: Option[(IRI, JsonLDBoolean)] = if (isStandoffClass && targetSchema == ApiV2Complex) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsStandoffClass -> JsonLDBoolean(true))
+            Some(OntologyConstants.KnoraApiV2Complex.IsStandoffClass -> JsonLDBoolean(true))
         } else {
             None
         }
 
         val canBeInstantiatedStatement: Option[(IRI, JsonLDBoolean)] = if (canBeInstantiated && targetSchema == ApiV2Complex) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.CanBeInstantiated -> JsonLDBoolean(true))
+            Some(OntologyConstants.KnoraApiV2Complex.CanBeInstantiated -> JsonLDBoolean(true))
         } else {
             None
         }
 
         val isValueClassStatement: Option[(IRI, JsonLDBoolean)] = if (isValueClass && targetSchema == ApiV2Complex) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsValueClass -> JsonLDBoolean(true))
+            Some(OntologyConstants.KnoraApiV2Complex.IsValueClass -> JsonLDBoolean(true))
         } else {
             None
         }
@@ -2318,7 +2318,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         // Get the correct knora-api:subjectType and knora-api:objectType predicates for the target API schema.
         val (subjectTypePred: IRI, objectTypePred: IRI) = targetSchema match {
             case ApiV2Simple => (OntologyConstants.KnoraApiV2Simple.SubjectType, OntologyConstants.KnoraApiV2Simple.ObjectType)
-            case ApiV2Complex => (OntologyConstants.KnoraApiV2WithValueObjects.SubjectType, OntologyConstants.KnoraApiV2WithValueObjects.ObjectType)
+            case ApiV2Complex => (OntologyConstants.KnoraApiV2Complex.SubjectType, OntologyConstants.KnoraApiV2Complex.ObjectType)
         }
 
         // Get the property's knora-api:subjectType and knora-api:objectType, if provided.
@@ -2330,8 +2330,8 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
                     entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri))
 
             case ApiV2Complex =>
-                (entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri),
-                    entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri))
+                (entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri),
+                    entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri))
         }
 
         // Make the property's knora-api:subjectType and knora-api:objectType statements.
@@ -2349,25 +2349,25 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         }
 
         val isResourcePropStatement: Option[(IRI, JsonLDBoolean)] = if (isResourceProp && targetSchema == ApiV2Complex) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceProperty -> JsonLDBoolean(true))
+            Some(OntologyConstants.KnoraApiV2Complex.IsResourceProperty -> JsonLDBoolean(true))
         } else {
             None
         }
 
         val isEditableStatement: Option[(IRI, JsonLDBoolean)] = if (isEditable && targetSchema == ApiV2Complex) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsEditable -> JsonLDBoolean(true))
+            Some(OntologyConstants.KnoraApiV2Complex.IsEditable -> JsonLDBoolean(true))
         } else {
             None
         }
 
         val isLinkValuePropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkValueProp && targetSchema == ApiV2Complex) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty -> JsonLDBoolean(true))
+            Some(OntologyConstants.KnoraApiV2Complex.IsLinkValueProperty -> JsonLDBoolean(true))
         } else {
             None
         }
 
         val isLinkPropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkProp && targetSchema == ApiV2Complex) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty -> JsonLDBoolean(true))
+            Some(OntologyConstants.KnoraApiV2Complex.IsLinkProperty -> JsonLDBoolean(true))
         } else {
             None
         }
@@ -2626,7 +2626,7 @@ object ClassInfoContentV2 {
 
                 val cardinalities: Map[SmartIri, KnoraCardinalityInfo] = restrictions.foldLeft(Map.empty[SmartIri, KnoraCardinalityInfo]) {
                     case (acc, restriction) =>
-                        val isInherited = restriction.value.get(OntologyConstants.KnoraApiV2WithValueObjects.IsInherited).contains(JsonLDBoolean(true))
+                        val isInherited = restriction.value.get(OntologyConstants.KnoraApiV2Complex.IsInherited).contains(JsonLDBoolean(true))
 
                         // If we're in client input mode and the client tries to submit an inherited cardinality, return
                         // a helpful error message.
@@ -2810,8 +2810,8 @@ object PropertyInfoContentV2 {
         JsonLDConstants.TYPE,
         OntologyConstants.KnoraApiV2Simple.SubjectType,
         OntologyConstants.KnoraApiV2Simple.ObjectType,
-        OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
-        OntologyConstants.KnoraApiV2WithValueObjects.ObjectType,
+        OntologyConstants.KnoraApiV2Complex.SubjectType,
+        OntologyConstants.KnoraApiV2Complex.ObjectType,
         OntologyConstants.Rdfs.SubPropertyOf,
         OntologyConstants.Rdfs.Label,
         OntologyConstants.Rdfs.Comment,
@@ -2999,20 +2999,20 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
 
         val projectIriStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {
             projectIri.map {
-                definedProjectIri => OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(definedProjectIri.toString)
+                definedProjectIri => OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(definedProjectIri.toString)
             }
         } else {
             None
         }
 
         val isSharedStatement: Option[(IRI, JsonLDBoolean)] = if (ontologyIri.isKnoraSharedDefinitionIri && targetSchema == ApiV2Complex) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsShared -> JsonLDBoolean(true))
+            Some(OntologyConstants.KnoraApiV2Complex.IsShared -> JsonLDBoolean(true))
         } else {
             None
         }
 
         val isBuiltInStatement: Option[(IRI, JsonLDBoolean)] = if (ontologyIri.isKnoraBuiltInDefinitionIri && targetSchema == ApiV2Complex) {
-            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsBuiltIn -> JsonLDBoolean(true))
+            Some(OntologyConstants.KnoraApiV2Complex.IsBuiltIn -> JsonLDBoolean(true))
         } else {
             None
         }
@@ -3023,7 +3023,7 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
 
         val lastModDateStatement: Option[(IRI, JsonLDString)] = if (targetSchema == ApiV2Complex) {
             lastModificationDate.map {
-                lastModDate => OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> JsonLDString(lastModDate.toString)
+                lastModDate => OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDString(lastModDate.toString)
             }
         } else {
             None
