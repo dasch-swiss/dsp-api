@@ -1942,13 +1942,14 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     def getResourceIrisFromStandoffTags(standoffTags: Seq[StandoffTagV2]): Set[IRI] = {
         standoffTags.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
+                if (standoffNode.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
+                    val maybeTargetIri: Option[IRI] = standoffNode.attributes.collectFirst {
+                        case iriTagAttr: StandoffTagIriAttributeV2 if iriTagAttr.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasLink => iriTagAttr.value
+                    }
 
-                standoffNode match {
-
-                    case node: StandoffTagV2 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
-                        acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
-
-                    case _ => acc
+                    acc + maybeTargetIri.getOrElse(throw NotFoundException(s"No link found in $standoffNode"))
+                } else {
+                    acc
                 }
         }
     }

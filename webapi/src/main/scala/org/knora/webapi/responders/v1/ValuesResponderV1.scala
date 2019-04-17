@@ -2530,13 +2530,14 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // because we want a double check (the function has already been called in the route or in standoff responder)
         val resourceRefsInStandoff: Set[IRI] = textValue.standoff.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
+                if (standoffNode.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
+                    val maybeTargetIri: Option[IRI] = standoffNode.attributes.collectFirst {
+                        case iriTagAttr: StandoffTagIriAttributeV2 if iriTagAttr.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasLink => iriTagAttr.value
+                    }
 
-                standoffNode match {
-
-                    case node: StandoffTagV2 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
-                        acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
-
-                    case _ => acc
+                    acc + maybeTargetIri.getOrElse(throw NotFoundException(s"No link found in $standoffNode"))
+                } else {
+                    acc
                 }
         }
 
