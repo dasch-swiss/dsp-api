@@ -671,7 +671,6 @@
           :objectClassConstraint :Value .
 
 
-
 ###  http://www.knora.org/ontology/knora-base#isAnnotationOf
 
 :isAnnotationOf rdf:type owl:ObjectProperty ;
@@ -2599,6 +2598,10 @@
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasStandoff ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger
+                           ],
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :valueHasMaxStandoffStartIndex ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ],
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasLanguage ;

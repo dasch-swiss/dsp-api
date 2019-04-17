@@ -504,12 +504,34 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
     )
 
-    private val TextValueHasStandoff: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff,
+    private val TextValueHasMarkup: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Complex.TextValueHasMarkup,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2Complex.TextValue),
         objectType = Some(OntologyConstants.Xsd.Boolean),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "text value has markup"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "True if a text value has markup."
+                )
+            )
+        )
+    )
+
+    private val TextValueHasStandoff: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2Complex.TextValue),
+        objectType = Some(OntologyConstants.KnoraApiV2Complex.StandoffTag),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -520,7 +542,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "True if a text value has standoff markup."
+                    LanguageCodes.EN -> "Standoff markup attached to a text value."
                 )
             )
         )
@@ -1458,7 +1480,8 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     )
 
     private val TextValueCardinalities = Map(
-        OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff -> Cardinality.MayHaveMany,
+        OntologyConstants.KnoraApiV2Complex.TextValueHasMarkup -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraApiV2Complex.TextValueHasLanguage -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraApiV2Complex.TextValueAsXml -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraApiV2Complex.TextValueAsHtml -> Cardinality.MayHaveOne,
@@ -1652,6 +1675,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         HasIncomingLinkValue,
         SubjectType,
         ObjectType,
+        TextValueHasMarkup,
         TextValueHasStandoff,
         TextValueHasMaxStandoffStartIndex,
         TextValueHasLanguage,

@@ -586,7 +586,7 @@ case class ReadTextValueV2(valueIri: IRI,
         )
 
         // If this is the complex schema and separate standoff has been requested, and the text value has
-        // valueHasMaxStandoffStartIndex, add it along with textValueHasStandoff to the metadata returned with the value.
+        // valueHasMaxStandoffStartIndex, add it along with textValueHasMarkup to the metadata returned with the value.
         targetSchema match {
             case ApiV2Complex =>
                 if (SchemaOptions.renderMarkupAsStandoff(targetSchema = ApiV2Complex, schemaOptions = schemaOptions)) {
@@ -599,7 +599,7 @@ case class ReadTextValueV2(valueIri: IRI,
 
                             JsonLDObject(
                                 valueAsJsonLDObject.value ++ Map(
-                                    OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff -> JsonLDBoolean(true),
+                                    OntologyConstants.KnoraApiV2Complex.TextValueHasMarkup -> JsonLDBoolean(true),
                                     OntologyConstants.KnoraApiV2Complex.TextValueHasMaxStandoffStartIndex -> JsonLDInt(maxStartIndex)
                                 )
                             )

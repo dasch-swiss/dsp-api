@@ -842,6 +842,7 @@ object OntologyConstants {
         val DateValueHasCalendar: IRI = KnoraApiV2PrefixExpansion + "dateValueHasCalendar"
 
         val TextValueHasStandoff: IRI = KnoraApiV2PrefixExpansion + "textValueHasStandoff"
+        val TextValueHasMarkup: IRI = KnoraApiV2PrefixExpansion + "textValueHasMarkup"
         val TextValueHasMaxStandoffStartIndex: IRI = KnoraApiV2PrefixExpansion + "textValueHasMaxStandoffStartIndex"
         val TextValueAsHtml: IRI = KnoraApiV2PrefixExpansion + "textValueAsHtml"
         val TextValueAsXml: IRI = KnoraApiV2PrefixExpansion + "textValueAsXml"
