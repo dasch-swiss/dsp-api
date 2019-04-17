@@ -257,6 +257,7 @@
   knora-base:valueHasStandoff <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg/standoff/L1mUExPVSUqM__ok3EXY9g>,
     <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg/standoff/_K6W1r0fSd6CiHITtgsK5g>,
     <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg/standoff/hfHugu9ITy6s_ER7O0DVVA>;
+  knora-base:valueHasMaxStandoffStartIndex "2"^^xsd:nonNegativeInteger;
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
   knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
@@ -565,6 +566,7 @@
   knora-base:valueHasOrder 0;
   knora-base:valueHasStandoff <http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/HNhqZ6fdQP26Tgmt7MTeQg>,
     <http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/3km_kXVuQQiD9WKmA7J6cw>;
+  knora-base:valueHasMaxStandoffStartIndex "1"^^xsd:nonNegativeInteger;
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
   knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTime;
   knora-base:hasPermissions "CR knora-admin:Creator" .
@@ -592,6 +594,7 @@
   knora-base:valueHasOrder 0;
   knora-base:valueHasStandoff <http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/Ht76B6DqTDCWHo_WICC1Xg>,
     <http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/snoDk5pHQze0-8A_Kck51A>;
+  knora-base:valueHasMaxStandoffStartIndex "1"^^xsd:nonNegativeInteger;
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
   knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTime;
   knora-base:hasPermissions "CR knora-admin:Creator" .
@@ -817,6 +820,7 @@
   knora-base:valueHasOrder 0;
   knora-base:valueHasStandoff <http://rdfh.ch/0001/project-thing-1/values/2/standoff/NEDbEA85RgO1L1qkDXOVwg>,
     <http://rdfh.ch/0001/project-thing-1/values/2/standoff/tlSUd3aPSBOf1dA1XVfo2Q>;
+  knora-base:valueHasMaxStandoffStartIndex "1"^^xsd:nonNegativeInteger;
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
   knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTime;
   knora-base:hasPermissions "CR knora-admin:Creator" .
@@ -862,6 +866,7 @@
     <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/9pE-0bn_Tjy5ZBVtH_Lxeg>,
     <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/3MOCIz94Q2qaUOLHEy7sag>,
     <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/9ERnVHlVQbG5HnitnB8QTQ>;
+  knora-base:valueHasMaxStandoffStartIndex "7"^^xsd:nonNegativeInteger;
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
   knora-base:valueCreationDate "2018-05-30T13:44:11.749Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
@@ -1246,6 +1251,7 @@
   knora-base:valueHasStandoff <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff1>,
     <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff2>, <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff3>,
     <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff4>;
+  knora-base:valueHasMaxStandoffStartIndex "3"^^xsd:nonNegativeInteger;
   knora-base:valueHasString "This is a test that contains marked up elements. This is interesting text in italics. This is boring text in italics." .
 
 <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff1> a standoff:StandoffRootTag;

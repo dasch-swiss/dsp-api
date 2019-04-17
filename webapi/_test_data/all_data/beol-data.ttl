@@ -81,6 +81,7 @@
   knora-base:isDeleted false;
   knora-base:valueHasStandoff <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/vLsZ6o56REqn3wpEPu1ppQ>,
     <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/n8MWj2r3TRuzpKL5K9vPxw>;
+  knora-base:valueHasMaxStandoffStartIndex "1"^^xsd:nonNegativeInteger;
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
   knora-base:valueCreationDate "2018-06-04T08:56:33.879Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
