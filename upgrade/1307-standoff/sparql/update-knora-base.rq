@@ -19,14 +19,19 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-# Gets the IRIs and filenames of image preview files from the triplestore.
+# Add the property knora-base:valueHasMaxStandoffStartIndex.
+INSERT DATA {
+    GRAPH <http://www.knora.org/ontology/knora-base> {
+        knora-base:valueHasMaxStandoffStartIndex rdf:type owl:DatatypeProperty ;
+            rdfs:subPropertyOf knora-base:valueHas ;
+            knora-base:subjectClassConstraint knora-base:Value ;
+            knora-base:objectDatatypeConstraint xsd:integer .
 
-SELECT ?fileValue ?filename
-FROM <http://www.ontotext.com/explicit>
-WHERE {
-	?fileValue a knora-base:StillImageFileValue ;
-        knora-base:isPreview true ;
-        knora-base:internalFilename ?filename .
+        knora-base:TextValue rdfs:subClassOf
+            [ rdf:type owl:Restriction ;
+              owl:onProperty knora-base:valueHasMaxStandoffStartIndex ;
+              owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+    }
 }
-ORDER BY ?fileValue

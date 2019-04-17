@@ -16,17 +16,27 @@
 # License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX owl: <http://www.w3.org/2002/07/owl#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-# Gets the IRIs and filenames of image preview files from the triplestore.
-
-SELECT ?fileValue ?filename
-FROM <http://www.ontotext.com/explicit>
-WHERE {
-	?fileValue a knora-base:StillImageFileValue ;
-        knora-base:isPreview true ;
-        knora-base:internalFilename ?filename .
+# Add knora-base:valueHasMaxStandoffStartIndex to all text values that have standoff markup.
+INSERT {
+    GRAPH ?g {
+        ?textValue knora-base:valueHasMaxStandoffStartIndex ?maxStandoffStartIndex .
+    }
 }
-ORDER BY ?fileValue
+USING <http://www.ontotext.com/explicit>
+WHERE {
+    GRAPH ?g {
+        ?textValue a knora-base:TextValue .
+    }
+
+    {
+        SELECT ?someTextValue (MAX(?someStartIndex) AS ?maxStandoffStartIndex)
+        WHERE {
+            ?someTextValue knora-base:valueHasStandoff ?someStandoffNode .
+            ?someStandoffNode knora-base:standoffTagHasStartIndex ?someStartIndex .
+        }
+        GROUP BY ?someTextValue
+    }
+
+    FILTER(?textValue = ?someTextValue)
+}
