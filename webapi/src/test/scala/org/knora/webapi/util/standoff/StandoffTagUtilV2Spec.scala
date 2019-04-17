@@ -20,23 +20,16 @@
 package org.knora.webapi.util.standoff
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.twirl.{StandoffTagStringAttributeV2, StandoffTagV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter
 
 /**
   * Tests [[StandoffTagUtilV2]].
   */
 class StandoffTagUtilV2Spec extends CoreSpec {
-    "StandoffTagUtilV2" should {
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        "compare standoff when the order of attributes is different" in {
-            val comparableStandoff1 = StandoffTagUtilV2.makeComparableStandoffCollection(StandoffTagUtilV2Spec.standoff1)
-            val comparableStandoff2 = StandoffTagUtilV2.makeComparableStandoffCollection(StandoffTagUtilV2Spec.standoff2)
-            assert(comparableStandoff1 == comparableStandoff2)
-        }
-    }
-}
-
-object StandoffTagUtilV2Spec {
     val standoff1: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
             endParentIndex = None,
@@ -49,7 +42,7 @@ object StandoffTagUtilV2Spec {
             endIndex = None,
             dataType = None,
             startPosition = 0,
-            standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+            standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri
         ),
         StandoffTagV2(
             endParentIndex = None,
@@ -59,11 +52,11 @@ object StandoffTagUtilV2Spec {
             startParentIndex = Some(0),
             attributes = Vector(
                 StandoffTagStringAttributeV2(
-                    standoffPropertyIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasFix",
+                    standoffPropertyIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasFix".toSmartIri,
                     value = "correction"
                 ),
                 StandoffTagStringAttributeV2(
-                    standoffPropertyIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasTitle",
+                    standoffPropertyIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasTitle".toSmartIri,
                     value = "titre"
                 )
             ),
@@ -71,7 +64,7 @@ object StandoffTagUtilV2Spec {
             endIndex = None,
             dataType = None,
             startPosition = 0,
-            standoffTagClassIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#StandoffEditionTag"
+            standoffTagClassIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#StandoffEditionTag".toSmartIri
         )
     )
 
@@ -87,7 +80,7 @@ object StandoffTagUtilV2Spec {
             endIndex = None,
             dataType = None,
             startPosition = 0,
-            standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+            standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri
         ),
         StandoffTagV2(
             endParentIndex = None,
@@ -97,11 +90,11 @@ object StandoffTagUtilV2Spec {
             startParentIndex = Some(0),
             attributes = Vector(
                 StandoffTagStringAttributeV2(
-                    standoffPropertyIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasTitle",
+                    standoffPropertyIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasTitle".toSmartIri,
                     value = "titre"
                 ),
                 StandoffTagStringAttributeV2(
-                    standoffPropertyIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasFix",
+                    standoffPropertyIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#standoffEditionTagHasFix".toSmartIri,
                     value = "correction"
                 )
             ),
@@ -109,7 +102,16 @@ object StandoffTagUtilV2Spec {
             endIndex = None,
             dataType = None,
             startPosition = 0,
-            standoffTagClassIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#StandoffEditionTag"
+            standoffTagClassIri = "http://www.knora.org/ontology/0113/lumieres-lausanne#StandoffEditionTag".toSmartIri
         )
     )
+
+    "StandoffTagUtilV2" should {
+
+        "compare standoff when the order of attributes is different" in {
+            val comparableStandoff1 = StandoffTagUtilV2.makeComparableStandoffCollection(standoff1)
+            val comparableStandoff2 = StandoffTagUtilV2.makeComparableStandoffCollection(standoff2)
+            assert(comparableStandoff1 == comparableStandoff2)
+        }
+    }
 }

@@ -29,12 +29,11 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.store.SipiConnectorActorName
 import org.knora.webapi.store.iiif.MockSipiConnector
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
@@ -56,35 +55,6 @@ object ResourcesResponderV2Spec {
 
     private val aThingIri = "http://rdfh.ch/0001/a-thing"
     private var aThingLastModificationDate = Instant.now
-
-    private val sampleStandoff: Vector[StandoffTagV2] = Vector(
-        StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
-            startPosition = 0,
-            endPosition = 26,
-            uuid = UUID.randomUUID().toString,
-            originalXMLID = None,
-            startIndex = 0
-        ),
-        StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
-            startPosition = 0,
-            endPosition = 12,
-            uuid = UUID.randomUUID().toString,
-            originalXMLID = None,
-            startIndex = 1,
-            startParentIndex = Some(0)
-        ),
-        StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
-            startPosition = 0,
-            endPosition = 7,
-            uuid = UUID.randomUUID().toString,
-            originalXMLID = None,
-            startIndex = 2,
-            startParentIndex = Some(1)
-        )
-    )
 }
 
 class GraphTestData {
@@ -429,6 +399,35 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    )
+
+    private val sampleStandoff: Vector[StandoffTagV2] = Vector(
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
+            startPosition = 0,
+            endPosition = 26,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 0
+        ),
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
+            startPosition = 0,
+            endPosition = 12,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 1,
+            startParentIndex = Some(0)
+        ),
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
+            startPosition = 0,
+            endPosition = 7,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 2,
+            startParentIndex = Some(1)
+        )
     )
 
     private def getResource(resourceIri: IRI, requestingUser: UserADM): ReadResourceV2 = {
@@ -1276,7 +1275,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val standoffWithInvalidLink: Vector[StandoffTagV2] = Vector(
                 StandoffTagV2(
-                    standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
+                    standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
                     startPosition = 0,
                     endPosition = 26,
                     uuid = UUID.randomUUID().toString,
@@ -1284,18 +1283,18 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     startIndex = 0
                 ),
                 StandoffTagV2(
-                    standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                    standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                     startPosition = 0,
                     endPosition = 12,
                     uuid = UUID.randomUUID().toString,
                     originalXMLID = None,
                     startIndex = 1,
-                    attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/0001/nonexistent-thing")),
+                    attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = "http://rdfh.ch/0001/nonexistent-thing")),
                     startParentIndex = Some(0)
                 ),
                 StandoffTagV2(
-                    standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+                    standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
                     startPosition = 0,
                     endPosition = 7,
                     uuid = UUID.randomUUID().toString,

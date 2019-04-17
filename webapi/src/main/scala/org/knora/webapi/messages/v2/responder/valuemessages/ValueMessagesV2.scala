@@ -32,7 +32,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{GetImageMetadataRequestV2, GetImageMetadataResponseV2}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses, StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagIriAttributeV2, StandoffTagStringAttributeV2, StandoffTagV2}
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
@@ -665,7 +665,7 @@ case class ReadOtherValueV2(valueIri: IRI,
                             permissions: String,
                             userPermission: EntityPermission,
                             valueCreationDate: Instant,
-                            valueContent: OtherValueContentV2,
+                            valueContent: ValueContentV2,
                             deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadOtherValueV2] {
     /**
       * Converts this value to the specified ontology schema.
@@ -782,10 +782,6 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
       * @return `true` if this [[ValueContentV2]] would duplicate `currentVersion`.
       */
     def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean
-}
-
-sealed trait OtherValueContentV2 extends ValueContentV2 {
-    override def toOntologySchema(targetSchema: OntologySchema): OtherValueContentV2
 }
 
 /**
@@ -908,7 +904,7 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
                               valueHasStartPrecision: DatePrecisionV2,
                               valueHasEndPrecision: DatePrecisionV2,
                               valueHasCalendar: CalendarNameV2,
-                              comment: Option[String] = None) extends OtherValueContentV2 {
+                              comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.DateValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1145,7 +1141,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                               valueHasString: String,
                               valueHasLanguage: Option[String] = None,
                               standoffAndMapping: Option[StandoffAndMapping] = None,
-                              comment: Option[String] = None) extends OtherValueContentV2 {
+                              comment: Option[String] = None) extends ValueContentV2 {
     private val knoraIdUtil = new KnoraIdUtil
 
     override def valueType: SmartIri = {
@@ -1499,7 +1495,7 @@ case class StandoffAndMapping(standoff: Seq[StandoffTagV2], mappingIri: IRI, map
   */
 case class IntegerValueContentV2(ontologySchema: OntologySchema,
                                  valueHasInteger: Int,
-                                 comment: Option[String] = None) extends OtherValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.IntValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1587,7 +1583,7 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
   */
 case class DecimalValueContentV2(ontologySchema: OntologySchema,
                                  valueHasDecimal: BigDecimal,
-                                 comment: Option[String] = None) extends OtherValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.DecimalValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1683,7 +1679,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
   */
 case class BooleanValueContentV2(ontologySchema: OntologySchema,
                                  valueHasBoolean: Boolean,
-                                 comment: Option[String] = None) extends OtherValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.BooleanValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1768,7 +1764,7 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
   */
 case class GeomValueContentV2(ontologySchema: OntologySchema,
                               valueHasGeometry: String,
-                              comment: Option[String] = None) extends OtherValueContentV2 {
+                              comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.GeomValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1865,7 +1861,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
 case class IntervalValueContentV2(ontologySchema: OntologySchema,
                                   valueHasIntervalStart: BigDecimal,
                                   valueHasIntervalEnd: BigDecimal,
-                                  comment: Option[String] = None) extends OtherValueContentV2 {
+                                  comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.IntervalValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1984,7 +1980,7 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
 case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
                                           valueHasListNode: IRI,
                                           listNodeLabel: Option[String] = None,
-                                          comment: Option[String] = None) extends OtherValueContentV2 {
+                                          comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.ListValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -2088,7 +2084,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
   */
 case class ColorValueContentV2(ontologySchema: OntologySchema,
                                valueHasColor: String,
-                               comment: Option[String] = None) extends OtherValueContentV2 {
+                               comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.ColorValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -2182,7 +2178,7 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
   */
 case class UriValueContentV2(ontologySchema: OntologySchema,
                              valueHasUri: String,
-                             comment: Option[String] = None) extends OtherValueContentV2 {
+                             comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.UriValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -2282,7 +2278,7 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
   */
 case class GeonameValueContentV2(ontologySchema: OntologySchema,
                                  valueHasGeonameCode: String,
-                                 comment: Option[String] = None) extends OtherValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.GeonameValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -2379,7 +2375,7 @@ case class FileValueV2(internalFilename: String,
 /**
   * A trait for case classes representing different types of file values.
   */
-sealed trait FileValueContentV2 extends OtherValueContentV2 {
+sealed trait FileValueContentV2 extends ValueContentV2 {
     /**
       * The basic metadata about the file value.
       */

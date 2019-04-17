@@ -28,7 +28,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, PredicateInfoV2, ReadPropertyInfoV2, StandoffEntityInfoGetResponseV2}
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{DateUtilV1, SmartIri, StringFormatter}
 
@@ -98,11 +97,11 @@ object StandoffTagUtilV2 {
                         case Some(namespace) => namespace
                     }
 
-                    val standoffTagPropIri: IRI = xmlToStandoffMapping.attributesToProps.getOrElse(xmlNamespace, throw BadRequestException(s"namespace $xmlNamespace unknown for attribute ${attr.key} in mapping")).getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided"))
-                    val propPredicates: Map[SmartIri, PredicateInfoV2] = standoffPropertyEntities(standoffTagPropIri.toSmartIri).entityInfoContent.predicates
+                    val standoffTagPropIri: SmartIri = xmlToStandoffMapping.attributesToProps.getOrElse(xmlNamespace, throw BadRequestException(s"namespace $xmlNamespace unknown for attribute ${attr.key} in mapping")).getOrElse(attr.key, throw BadRequestException(s"mapping for attr '${attr.key}' not provided")).toSmartIri
+                    val propPredicates: Map[SmartIri, PredicateInfoV2] = standoffPropertyEntities(standoffTagPropIri).entityInfoContent.predicates
 
                     // check if a cardinality exists for the current attribute
-                    if (classSpecificProps.get(standoffTagPropIri.toSmartIri).isEmpty) {
+                    if (classSpecificProps.get(standoffTagPropIri).isEmpty) {
                         throw BadRequestException(s"no cardinality defined for attr '${attr.key}'")
                     }
 
@@ -136,7 +135,7 @@ object StandoffTagUtilV2 {
 
             }.toList
 
-            val attrsGroupedByPropIri: Map[IRI, Seq[StandoffTagAttributeV2]] = attrs.groupBy(attr => attr.standoffPropertyIri)
+            val attrsGroupedByPropIri: Map[SmartIri, Seq[StandoffTagAttributeV2]] = attrs.groupBy(attr => attr.standoffPropertyIri)
 
             // filter all the required props
             val mustExistOnce: Set[SmartIri] = classSpecificProps.filter {
@@ -147,7 +146,7 @@ object StandoffTagUtilV2 {
             // check if all the min cardinalities are respected
             mustExistOnce.foreach {
                 propIri =>
-                    attrsGroupedByPropIri.get(propIri.toString) match {
+                    attrsGroupedByPropIri.get(propIri) match {
                         case Some(attrs: Seq[StandoffTagAttributeV2]) => ()
 
                         case None => throw BadRequestException(s"the min cardinalities were not respected for the property $propIri (missing attribute for element ${standoffNodeFromXML.tagName})")
@@ -163,7 +162,7 @@ object StandoffTagUtilV2 {
             // check if all the max cardinalities are respected
             mayExistOnce.foreach {
                 propIri =>
-                    attrsGroupedByPropIri.get(propIri.toString) match {
+                    attrsGroupedByPropIri.get(propIri) match {
                         case Some(attrs: Seq[StandoffTagAttributeV2]) =>
                             if (attrs.size > 1) {
                                 throw BadRequestException(s"the max cardinalities were not respected for $propIri (for element ${standoffNodeFromXML.tagName})")
@@ -322,10 +321,10 @@ object StandoffTagUtilV2 {
                     .getOrElse(standoffNodeFromXML.tagName, throw BadRequestException(s"the standoff class for the tag '${standoffNodeFromXML.tagName}' could not be found in the provided mapping"))
                     .getOrElse(classname, throw BadRequestException(s"the standoff class for the classname $classname in combination with the tag '${standoffNodeFromXML.tagName}' could not be found in the provided mapping")).mapping
 
-                val standoffClassIri: IRI = standoffDefFromMapping.standoffClassIri
+                val standoffClassIri: SmartIri = standoffDefFromMapping.standoffClassIri.toSmartIri
 
                 // get the cardinalities of the current standoff class
-                val cardinalities: Map[SmartIri, KnoraCardinalityInfo] = standoffEntities.standoffClassInfoMap.getOrElse(standoffClassIri.toSmartIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not found in ontology")).allCardinalities
+                val cardinalities: Map[SmartIri, KnoraCardinalityInfo] = standoffEntities.standoffClassInfoMap.getOrElse(standoffClassIri, throw NotFoundException(s"information about standoff class $standoffClassIri was not found in ontology")).allCardinalities
 
                 // create a standoff base tag with the information available from standoff util
                 val standoffBaseTagV2: StandoffTagV2 = standoffNodeFromXML match {
@@ -366,13 +365,13 @@ object StandoffTagUtilV2 {
                 }
 
                 // check the data type of the given standoff class
-                standoffEntities.standoffClassInfoMap(standoffClassIri.toSmartIri).standoffDataType match {
+                standoffEntities.standoffClassInfoMap(standoffClassIri).standoffDataType match {
 
                     case Some(StandoffDataTypeClasses.StandoffLinkTag) =>
 
                         val linkString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffLinkTag, standoffNodeFromXML)
 
-                        val internalLink: StandoffTagAttributeV2 = StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = stringFormatter.validateStandoffLinkResourceReference(linkString, acceptStandoffLinksToClientIDs, throw BadRequestException(s"Invalid standoff resource reference: $linkString")))
+                        val internalLink: StandoffTagAttributeV2 = StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = stringFormatter.validateStandoffLinkResourceReference(linkString, acceptStandoffLinksToClientIDs, throw BadRequestException(s"Invalid standoff resource reference: $linkString")))
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.linkProperties.map(_.toSmartIri)
 
@@ -396,7 +395,7 @@ object StandoffTagUtilV2 {
 
                         val internalReferenceString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffInternalReferenceTag, standoffNodeFromXML)
 
-                        val internalReference = StandoffTagInternalReferenceAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasInternalReference, value = getTargetIDFromInternalReference(internalReferenceString))
+                        val internalReference = StandoffTagInternalReferenceAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasInternalReference.toSmartIri, value = getTargetIDFromInternalReference(internalReferenceString))
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.internalReferenceProperties.map(_.toSmartIri)
 
@@ -421,7 +420,7 @@ object StandoffTagUtilV2 {
 
                         val colorString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffColorTag, standoffNodeFromXML)
 
-                        val colorValue = StandoffTagStringAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasColor, value = stringFormatter.validateColor(colorString, throw BadRequestException(s"Color invalid: $colorString")))
+                        val colorValue = StandoffTagStringAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasColor.toSmartIri, value = stringFormatter.validateColor(colorString, throw BadRequestException(s"Color invalid: $colorString")))
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.colorProperties.map(_.toSmartIri)
 
@@ -445,7 +444,7 @@ object StandoffTagUtilV2 {
 
                         val uriString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffUriTag, standoffNodeFromXML)
 
-                        val uriValue = StandoffTagUriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri, value = stringFormatter.validateAndEscapeIri(uriString, throw BadRequestException(s"URI invalid: $uriString")))
+                        val uriValue = StandoffTagUriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasUri.toSmartIri, value = stringFormatter.validateAndEscapeIri(uriString, throw BadRequestException(s"URI invalid: $uriString")))
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.uriProperties.map(_.toSmartIri)
 
@@ -470,7 +469,7 @@ object StandoffTagUtilV2 {
 
                         val integerString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffIntegerTag, standoffNodeFromXML)
 
-                        val integerValue = StandoffTagIntegerAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasInteger, value = stringFormatter.validateInt(integerString, throw BadRequestException(s"Integer value invalid: $integerString")))
+                        val integerValue = StandoffTagIntegerAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasInteger.toSmartIri, value = stringFormatter.validateInt(integerString, throw BadRequestException(s"Integer value invalid: $integerString")))
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.integerProperties.map(_.toSmartIri)
 
@@ -494,7 +493,7 @@ object StandoffTagUtilV2 {
 
                         val decimalString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffDecimalTag, standoffNodeFromXML)
 
-                        val decimalValue = StandoffTagDecimalAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasDecimal, value = stringFormatter.validateBigDecimal(decimalString, throw BadRequestException(s"Decimal value invalid: $decimalString")))
+                        val decimalValue = StandoffTagDecimalAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasDecimal.toSmartIri, value = stringFormatter.validateBigDecimal(decimalString, throw BadRequestException(s"Decimal value invalid: $decimalString")))
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.decimalProperties.map(_.toSmartIri)
 
@@ -518,7 +517,7 @@ object StandoffTagUtilV2 {
 
                         val booleanString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffBooleanTag, standoffNodeFromXML)
 
-                        val booleanValue = StandoffTagBooleanAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasBoolean, value = stringFormatter.validateBoolean(booleanString, throw BadRequestException(s"Boolean value invalid: $booleanString")))
+                        val booleanValue = StandoffTagBooleanAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasBoolean.toSmartIri, value = stringFormatter.validateBoolean(booleanString, throw BadRequestException(s"Boolean value invalid: $booleanString")))
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.booleanProperties.map(_.toSmartIri)
 
@@ -548,9 +547,9 @@ object StandoffTagUtilV2 {
                             throw BadRequestException(s"interval string $intervalString is invalid, it should contain two decimals separated by a comma")
                         }
 
-                        val intervalStart = StandoffTagDecimalAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasIntervalStart, value = stringFormatter.validateBigDecimal(interval(0), throw BadRequestException(s"Decimal value invalid: ${interval(0)}")))
+                        val intervalStart = StandoffTagDecimalAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasIntervalStart.toSmartIri, value = stringFormatter.validateBigDecimal(interval(0), throw BadRequestException(s"Decimal value invalid: ${interval(0)}")))
 
-                        val intervalEnd = StandoffTagDecimalAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasIntervalEnd, value = stringFormatter.validateBigDecimal(interval(1), throw BadRequestException(s"Decimal value invalid: ${interval(1)}")))
+                        val intervalEnd = StandoffTagDecimalAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasIntervalEnd.toSmartIri, value = stringFormatter.validateBigDecimal(interval(1), throw BadRequestException(s"Decimal value invalid: ${interval(1)}")))
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.intervalProperties.map(_.toSmartIri)
 
@@ -576,15 +575,15 @@ object StandoffTagUtilV2 {
 
                         val dateValue = DateUtilV1.createJDNValueV1FromDateString(dateString)
 
-                        val dateCalendar = StandoffTagStringAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasCalendar, value = dateValue.calendar.toString)
+                        val dateCalendar = StandoffTagStringAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasCalendar.toSmartIri, value = dateValue.calendar.toString)
 
-                        val dateStart = StandoffTagIntegerAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN, value = dateValue.dateval1)
+                        val dateStart = StandoffTagIntegerAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri, value = dateValue.dateval1)
 
-                        val dateEnd = StandoffTagIntegerAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN, value = dateValue.dateval2)
+                        val dateEnd = StandoffTagIntegerAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri, value = dateValue.dateval2)
 
-                        val dateStartPrecision = StandoffTagStringAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasStartPrecision, value = dateValue.dateprecision1.toString)
+                        val dateStartPrecision = StandoffTagStringAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasStartPrecision.toSmartIri, value = dateValue.dateprecision1.toString)
 
-                        val dateEndPrecision = StandoffTagStringAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasEndPrecision, value = dateValue.dateprecision2.toString)
+                        val dateEndPrecision = StandoffTagStringAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasEndPrecision.toSmartIri, value = dateValue.dateprecision2.toString)
 
                         val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.dateProperties.map(_.toSmartIri)
 
@@ -710,7 +709,7 @@ object StandoffTagUtilV2 {
                 // create a sequence of `StandoffTagAttributeV2` from the given attributes
                 val attributes: Seq[StandoffTagAttributeV2] = (standoffNodes -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
                     case (propIri: IRI, value) =>
-
+                        val propSmartIri = propIri.toSmartIri
                         val propPredicates: Map[SmartIri, PredicateInfoV2] = standoffEntities.standoffPropertyInfoMap(propIri.toSmartIri).entityInfoContent.predicates
 
                         // check if the given property has an object type constraint (linking property) or an object data type constraint
@@ -727,10 +726,10 @@ object StandoffTagUtilV2 {
                                 val originalId: String = standoffAssertions(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
 
                                 // recreate the original id reference
-                                StandoffTagStringAttributeV2(standoffPropertyIri = propIri, value = StandoffTagUtilV2.internalLinkMarker + originalId)
+                                StandoffTagStringAttributeV2(standoffPropertyIri = propSmartIri, value = StandoffTagUtilV2.internalLinkMarker + originalId)
                             } else {
                                 // it refers to a knora resource
-                                StandoffTagIriAttributeV2(standoffPropertyIri = propIri, value = value)
+                                StandoffTagIriAttributeV2(standoffPropertyIri = propSmartIri, value = value)
                             }
                         } else if (propPredicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri).isDefined) {
 
@@ -739,19 +738,19 @@ object StandoffTagUtilV2 {
 
                             propDataType.objects.headOption match {
                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.String))) =>
-                                    StandoffTagStringAttributeV2(standoffPropertyIri = propIri, value = value)
+                                    StandoffTagStringAttributeV2(standoffPropertyIri = propSmartIri, value = value)
 
                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Integer))) =>
-                                    StandoffTagIntegerAttributeV2(standoffPropertyIri = propIri, value = value.toInt)
+                                    StandoffTagIntegerAttributeV2(standoffPropertyIri = propSmartIri, value = value.toInt)
 
                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Decimal))) =>
-                                    StandoffTagDecimalAttributeV2(standoffPropertyIri = propIri, value = BigDecimal(value))
+                                    StandoffTagDecimalAttributeV2(standoffPropertyIri = propSmartIri, value = BigDecimal(value))
 
                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Boolean))) =>
-                                    StandoffTagBooleanAttributeV2(standoffPropertyIri = propIri, value = value.toBoolean)
+                                    StandoffTagBooleanAttributeV2(standoffPropertyIri = propSmartIri, value = value.toBoolean)
 
                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Uri))) =>
-                                    StandoffTagUriAttributeV2(standoffPropertyIri = propIri, value = value)
+                                    StandoffTagUriAttributeV2(standoffPropertyIri = propSmartIri, value = value)
 
                                 case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri")
 
@@ -765,7 +764,7 @@ object StandoffTagUtilV2 {
                 }.toVector
 
                 StandoffTagV2(
-                    standoffTagClassIri = standoffNodes(OntologyConstants.Rdf.Type),
+                    standoffTagClassIri = standoffNodes(OntologyConstants.Rdf.Type).toSmartIri,
                     startPosition = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
                     endPosition = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
                     dataType = standoffEntities.standoffClassInfoMap(standoffNodes(OntologyConstants.Rdf.Type).toSmartIri).standoffDataType,
@@ -803,7 +802,7 @@ object StandoffTagUtilV2 {
         attributes.map {
             attr =>
 
-                val attrItem: XMLAttrItem = mapping.getOrElse(attr.standoffPropertyIri, throw NotFoundException(s"property IRI ${attr.standoffPropertyIri} could not be found in mapping"))
+                val attrItem: XMLAttrItem = mapping.getOrElse(attr.standoffPropertyIri.toString, throw NotFoundException(s"property IRI ${attr.standoffPropertyIri} could not be found in mapping"))
 
                 StandoffTagAttribute(
                     key = attrItem.attrname,
@@ -834,7 +833,7 @@ object StandoffTagUtilV2 {
         val standoffTags: Seq[StandoffTag] = standoff.map {
             standoffTagV2: StandoffTagV2 =>
 
-                val xmlItemForStandoffClass: XMLTagItem = mappingStandoffToXML.getOrElse(standoffTagV2.standoffTagClassIri, throw NotFoundException(s"standoff class IRI ${standoffTagV2.standoffTagClassIri} not found in mapping"))
+                val xmlItemForStandoffClass: XMLTagItem = mappingStandoffToXML.getOrElse(standoffTagV2.standoffTagClassIri.toString, throw NotFoundException(s"standoff class IRI ${standoffTagV2.standoffTagClassIri} not found in mapping"))
 
                 // recreate data type specific attributes (optional)
                 val attributes: Seq[StandoffTagAttribute] = standoffTagV2.dataType match {
@@ -842,72 +841,72 @@ object StandoffTagUtilV2 {
                     case Some(StandoffDataTypeClasses.StandoffLinkTag) =>
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
-                        val linkIri = standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).get.stringValue
+                        val linkIri = standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasLink).get.stringValue
 
-                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.linkProperties.contains(attr.standoffPropertyIri))
+                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.linkProperties.contains(attr.standoffPropertyIri.toString))
 
                         convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = linkIri, xmlNamespace = None)
 
                     case Some(StandoffDataTypeClasses.StandoffInternalReferenceTag) =>
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
-                        val internalRefTarget = standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasInternalReference).get.stringValue
+                        val internalRefTarget = standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasInternalReference).get.stringValue
 
-                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.internalReferenceProperties.contains(attr.standoffPropertyIri))
+                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.internalReferenceProperties.contains(attr.standoffPropertyIri.toString))
 
                         convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = internalRefTarget, xmlNamespace = None)
 
                     case Some(StandoffDataTypeClasses.StandoffColorTag) =>
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
-                        val colorString = standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasColor).get.stringValue
+                        val colorString = standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasColor).get.stringValue
 
-                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.colorProperties.contains(attr.standoffPropertyIri))
+                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.colorProperties.contains(attr.standoffPropertyIri.toString))
 
                         convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = colorString, xmlNamespace = None)
 
                     case Some(StandoffDataTypeClasses.StandoffUriTag) =>
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
-                        val uriRef = standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasUri).get.stringValue
+                        val uriRef = standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasUri).get.stringValue
 
-                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.uriProperties.contains(attr.standoffPropertyIri))
+                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.uriProperties.contains(attr.standoffPropertyIri.toString))
 
                         convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = uriRef, xmlNamespace = None)
 
                     case Some(StandoffDataTypeClasses.StandoffIntegerTag) =>
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
-                        val integerString = standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasInteger).get.stringValue
+                        val integerString = standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasInteger).get.stringValue
 
-                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.integerProperties.contains(attr.standoffPropertyIri))
+                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.integerProperties.contains(attr.standoffPropertyIri.toString))
 
                         convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = integerString, xmlNamespace = None)
 
                     case Some(StandoffDataTypeClasses.StandoffDecimalTag) =>
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
-                        val decimalString = standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasDecimal).get.stringValue
+                        val decimalString = standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasDecimal).get.stringValue
 
-                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.decimalProperties.contains(attr.standoffPropertyIri))
+                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.decimalProperties.contains(attr.standoffPropertyIri.toString))
 
                         convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = decimalString, xmlNamespace = None)
 
                     case Some(StandoffDataTypeClasses.StandoffBooleanTag) =>
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
-                        val booleanString = standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasBoolean).get.stringValue
+                        val booleanString = standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasBoolean).get.stringValue
 
-                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.booleanProperties.contains(attr.standoffPropertyIri))
+                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.booleanProperties.contains(attr.standoffPropertyIri.toString))
 
                         convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = booleanString, xmlNamespace = None)
 
                     case Some(StandoffDataTypeClasses.StandoffIntervalTag) =>
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
-                        val intervalString = Vector(standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasIntervalStart).get.stringValue, standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasIntervalEnd).get.stringValue).mkString(",")
+                        val intervalString = Vector(standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasIntervalStart).get.stringValue, standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasIntervalEnd).get.stringValue).mkString(",")
 
-                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.intervalProperties.contains(attr.standoffPropertyIri))
+                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.intervalProperties.contains(attr.standoffPropertyIri.toString))
 
                         convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = intervalString, xmlNamespace = None)
 
@@ -915,17 +914,17 @@ object StandoffTagUtilV2 {
                         // create one attribute from date properties
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
 
-                        val calendar = KnoraCalendarV1.lookup(standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasCalendar).get.stringValue)
+                        val calendar = KnoraCalendarV1.lookup(standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasCalendar).get.stringValue)
 
                         val julianDayCountValueV1: UpdateValueV1 = JulianDayNumberValueV1(
-                            dateval1 = standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasStartJDN).get.stringValue.toInt,
-                            dateval2 = standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasEndJDN).get.stringValue.toInt,
-                            dateprecision1 = KnoraPrecisionV1.lookup(standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasStartPrecision).get.stringValue),
-                            dateprecision2 = KnoraPrecisionV1.lookup(standoffTagV2.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.ValueHasEndPrecision).get.stringValue),
+                            dateval1 = standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasStartJDN).get.stringValue.toInt,
+                            dateval2 = standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasEndJDN).get.stringValue.toInt,
+                            dateprecision1 = KnoraPrecisionV1.lookup(standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasStartPrecision).get.stringValue),
+                            dateprecision2 = KnoraPrecisionV1.lookup(standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasEndPrecision).get.stringValue),
                             calendar = calendar
                         )
 
-                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.dateProperties.contains(attr.standoffPropertyIri))
+                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.dateProperties.contains(attr.standoffPropertyIri.toString))
 
                         convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = Vector(calendar.toString, julianDayCountValueV1.toString).mkString(":"), xmlNamespace = None)
 

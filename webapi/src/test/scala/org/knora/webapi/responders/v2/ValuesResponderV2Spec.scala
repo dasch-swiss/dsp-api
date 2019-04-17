@@ -35,7 +35,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.store.SipiConnectorActorName
 import org.knora.webapi.store.iiif.MockSipiConnector
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
 import org.knora.webapi.util.{MutableTestIri, PermissionUtilADM, SmartIri, StringFormatter}
@@ -93,7 +92,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val sampleStandoff: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
             startPosition = 0,
             endPosition = 7,
             uuid = UUID.randomUUID().toString,
@@ -101,7 +100,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             startIndex = 0
         ),
         StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
             startPosition = 0,
             endPosition = 10,
             uuid = UUID.randomUUID().toString,
@@ -112,7 +111,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val sampleStandoffModified: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
             startPosition = 1,
             endPosition = 7,
             uuid = UUID.randomUUID().toString,
@@ -120,7 +119,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             startIndex = 0
         ),
         StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
             startPosition = 0,
             endPosition = 10,
             uuid = UUID.randomUUID().toString,
@@ -131,17 +130,17 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val sampleStandoffWithLink: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
             dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
             startPosition = 0,
             endPosition = 7,
             uuid = UUID.randomUUID().toString,
             originalXMLID = None,
             startIndex = 0,
-            attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = aThingIri)),
+            attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = aThingIri)),
         ),
         StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
             startPosition = 0,
             endPosition = 10,
             uuid = UUID.randomUUID().toString,
@@ -1593,10 +1592,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val standoffAndMapping = Some(StandoffAndMapping(
                 standoff = Seq(StandoffTagV2(
                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                    standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                    standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
                     startPosition = 31,
                     endPosition = 39,
-                    attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                    attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
                     uuid = UUID.randomUUID().toString,
                     originalXMLID = None,
                     startIndex = 0
@@ -1682,10 +1681,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val standoffAndMapping = Some(StandoffAndMapping(
                 standoff = Seq(StandoffTagV2(
                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                    standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                    standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
                     startPosition = 30,
                     endPosition = 38,
-                    attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                    attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
                     uuid = UUID.randomUUID().toString,
                     originalXMLID = None,
                     startIndex = 0

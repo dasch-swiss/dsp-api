@@ -31,7 +31,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
+import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, StandoffTagV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
@@ -900,7 +900,7 @@ object ConstructResponseUtilV2 {
                                     deletionInfo = valueDeletionInfo
                                 )
 
-                            case otherValueContentV2: OtherValueContentV2 =>
+                            case otherValueContentV2: ValueContentV2 =>
                                 ReadOtherValueV2(
                                     valueIri = valObj.valueObjectIri,
                                     attachedToUser = valObj.assertions(OntologyConstants.KnoraBase.AttachedToUser),

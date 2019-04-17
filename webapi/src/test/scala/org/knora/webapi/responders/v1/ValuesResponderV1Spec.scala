@@ -23,7 +23,7 @@ import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
@@ -31,11 +31,11 @@ import org.knora.webapi.messages.store.sipimessages.SipiConversionFileRequestV1
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.store.SipiConnectorActorName
 import org.knora.webapi.store.iiif.MockSipiConnector
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
-import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.{MutableTestIri, StringFormatter}
+import org.knora.webapi.util.IriConversions._
 
 import scala.concurrent.duration._
 
@@ -43,8 +43,9 @@ import scala.concurrent.duration._
   * Static data for testing [[ValuesResponderV1]].
   */
 object ValuesResponderV1Spec {
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
@@ -111,7 +112,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     // a sample set of standoff tags
     private val sampleStandoff: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
             startPosition = 0,
             endPosition = 7,
             uuid = UUID.randomUUID().toString,
@@ -119,7 +120,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             startIndex = 0
         ),
         StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
             startPosition = 0,
             endPosition = 10,
             uuid = UUID.randomUUID().toString,
@@ -139,8 +140,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         if (standoff.nonEmpty) {
             response.value match {
                 case textValueWithStandoff: TextValueWithStandoffV1 =>
-                    assert(textValueWithStandoff.standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)), "standoff did not match")
-                case _ => assert(false) // response should be of type TextValueWithStandoffV1
+                    assert(textValueWithStandoff.standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)) == standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)), "standoff did not match")
+                case _ => throw AssertionException("response should be of type TextValueWithStandoffV1")
             }
         }
 
@@ -161,14 +162,14 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         // expected Standoff information for <http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04> in incunabula-data.ttl
         val standoff = Vector(
             StandoffTagV2(
-                standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
+                standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
                 startPosition = 0,
                 endPosition = 62,
                 uuid = "4800e53e-3835-498e-b658-6cc4f93ab894",
                 originalXMLID = None,
                 startIndex = 0
             ), StandoffTagV2(
-                standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+                standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
                 startPosition = 21,
                 endPosition = 25,
                 uuid = "4bc24696-5dde-4ced-9687-6f8e4519efe8",
@@ -190,8 +191,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         if (standoff.nonEmpty) {
             response.value match {
                 case textValueWithStandoff: TextValueWithStandoffV1 =>
-                    assert(textValueWithStandoff.standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)), "standoff did not match")
-                case _ => assert(false) // response should be of type TextValueWithStandoffV1
+                    assert(textValueWithStandoff.standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)) == standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)), "standoff did not match")
+                case _ => throw AssertionException("response should be of type TextValueWithStandoffV1")
             }
         }
 
@@ -217,7 +218,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             case expectedWithStandoff: TextValueWithStandoffV1 =>
                 assert(received.asInstanceOf[TextValueWithStandoffV1].resource_reference == expectedWithStandoff.resource_reference)
                 assert(received.asInstanceOf[TextValueWithStandoffV1].standoff.map(_.standoffTagClassIri).sorted == expectedWithStandoff.standoff.map(_.standoffTagClassIri).sorted)
-                assert(received.asInstanceOf[TextValueWithStandoffV1].standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)) == expectedWithStandoff.standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri, standoffTag.startPosition)))
+                assert(received.asInstanceOf[TextValueWithStandoffV1].standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)) == expectedWithStandoff.standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)))
             case _ =>
         }
 
@@ -762,10 +763,10 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 standoff = Vector(
                     StandoffTagV2(
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
                         startPosition = 31,
                         endPosition = 39,
-                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None,
                         startIndex = 0
@@ -840,20 +841,20 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 standoff = Vector(
                         StandoffTagV2(
                             dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
                             startPosition = 39,
                             endPosition = 47,
-                            attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                            attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
                             uuid = UUID.randomUUID().toString,
                             originalXMLID = None,
                             startIndex = 0
                         ),
                         StandoffTagV2(
                             dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
                             startPosition = 0,
                             endPosition = 4,
-                            attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                            attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
                             uuid = UUID.randomUUID().toString,
                             originalXMLID = None,
                             startIndex = 0
@@ -925,10 +926,10 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 standoff = Vector(
                     StandoffTagV2(
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
                         startPosition = 30,
                         endPosition = 38,
-                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None,
                         startIndex = 0
@@ -1125,10 +1126,10 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 standoff = Vector(
                     StandoffTagV2(
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
                         startPosition = 45,
                         endPosition = 53,
-                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None,
                         startIndex = 0
@@ -1928,12 +1929,12 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 utf8str = "This comment refers to another resource",
                 standoff = Vector(
                     StandoffTagV2(
-                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         startPosition = 31,
                         endPosition = 39,
                         startIndex = 0,
-                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = nonexistentIri)),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = nonexistentIri)),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None
                     )

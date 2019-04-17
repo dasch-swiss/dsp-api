@@ -29,8 +29,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiConversionRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.{DateUtilV1, KnoraIdUtil, StringFormatter}
 import spray.json._
@@ -656,7 +655,7 @@ case class TextValueWithStandoffV1(utf8str: String,
                                    mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
     private val knoraIdUtil = new KnoraIdUtil
-    private val stringFormatter = StringFormatter.getGeneralInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     def valueTypeIri: IRI = OntologyConstants.KnoraBase.TextValue
 

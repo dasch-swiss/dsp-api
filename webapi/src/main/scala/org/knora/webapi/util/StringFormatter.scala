@@ -34,8 +34,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.twirl.StandoffTagV2
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.JavaUtil.Optional
 import spray.json._
 

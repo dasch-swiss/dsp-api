@@ -8,7 +8,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM._
 import org.knora.webapi.util.StringFormatter
@@ -777,7 +776,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                     endIndex = None,
                                     dataType = None,
                                     startPosition = 0,
-                                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+                                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri
                                 ),
                                 StandoffTagV2(
                                     endParentIndex = None,
@@ -786,14 +785,14 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                     endPosition = 19,
                                     startParentIndex = Some(0),
                                     attributes = Vector(StandoffTagIriAttributeV2(
-                                        standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink",
+                                        standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink".toSmartIri,
                                         value = "http://rdfh.ch/0001/a-thing"
                                     )),
                                     startIndex = 1,
                                     endIndex = None,
                                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                                     startPosition = 14,
-                                    standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
+                                    standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag".toSmartIri
                                 )
                             ),
                             mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
@@ -1101,7 +1100,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                     endIndex = None,
                                     dataType = None,
                                     startPosition = 0,
-                                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+                                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag".toSmartIri
                                 ),
                                 StandoffTagV2(
                                     endParentIndex = None,
@@ -1110,14 +1109,14 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                     endPosition = 16,
                                     startParentIndex = Some(0),
                                     attributes = Vector(StandoffTagIriAttributeV2(
-                                        standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink",
+                                        standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink".toSmartIri,
                                         value = "http://rdfh.ch/0001/a-thing"
                                     )),
                                     startIndex = 1,
                                     endIndex = None,
                                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                                     startPosition = 11,
-                                    standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
+                                    standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag".toSmartIri
                                 )
                             ),
                             mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",

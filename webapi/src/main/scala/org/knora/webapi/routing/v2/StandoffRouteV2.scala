@@ -26,10 +26,12 @@ import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2, GetStandoffRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi.{ApiV2Complex, BadRequestException}
+import org.knora.webapi.{ApiV2Complex, BadRequestException, IRI, SchemaOption}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.SmartIri
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -43,7 +45,44 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
     def knoraApiPath: Route = {
 
-        path("v2" / "mapping") {
+        path("v2" / "standoff" / Segment / Segment / Segment) { (resourceIriStr: String, valueIriStr: String, offsetStr: String) =>
+            get {
+                requestContext => {
+                    val resourceIri: SmartIri = resourceIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
+
+                    if (!resourceIri.isKnoraResourceIri) {
+                        throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
+                    }
+
+                    val valueIri: SmartIri = valueIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid value IRI: $valueIriStr"))
+
+                    if (!valueIri.isKnoraValueIri) {
+                        throw BadRequestException(s"Invalid value IRI: $valueIriStr")
+                    }
+
+                    val offset: Int = stringFormatter.validateInt(offsetStr, throw BadRequestException(s"Invalid offset: $offsetStr"))
+
+                    val requestMessageFuture: Future[GetStandoffRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield GetStandoffRequestV2(
+                        resourceIri = resourceIri.toString,
+                        valueIri = valueIri.toString,
+                        offset = offset,
+                        requestingUser = requestingUser
+                    )
+
+                    RouteUtilV2.runRdfRouteWithFuture(
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                    )
+                }
+            }
+        } ~ path("v2" / "mapping") {
             post {
                 entity(as[Multipart.FormData]) { formdata: Multipart.FormData =>
                     requestContext =>
