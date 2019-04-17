@@ -94,19 +94,6 @@ object SchemaOptions {
     }
 
     /**
-      * Determines whether `knora-api:textValueHasMaxStandoffStartIndex` should be
-      * returned with text values.
-      *
-      * @param targetSchema the target API schema.
-      * @param schemaOptions the schema options submitted with the request.
-      * @return `true` if `knora-api:textValueHasMaxStandoffStartIndex` should be
-      *         returned with text values.
-      */
-    def queryMaxStandoffStartIndex(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): Boolean = {
-        targetSchema == ApiV2Complex && schemaOptions.contains(MarkupAsStandoff)
-    }
-
-    /**
       * Determines whether markup should be rendered as XML.
       *
       * @param targetSchema the target API schema.

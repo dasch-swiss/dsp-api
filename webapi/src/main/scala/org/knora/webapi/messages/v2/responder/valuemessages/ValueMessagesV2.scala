@@ -1189,6 +1189,14 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
       */
     lazy val valueHasStringWithoutStandoff: String = valueHasString.replace(StringFormatter.INFORMATION_SEPARATOR_TWO.toString, "")
 
+    /**
+      * The maximum start index in the standoff attached to this [[TextValueContentV2]]. This is used
+      * only when writing a text value to the triplestore.
+      */
+    lazy val computedMaxStandoffStartIndex: Option[Int] = standoffAndMapping.map {
+        definedStandoffAndMapping => definedStandoffAndMapping.standoff.map(_.startIndex).max
+    }
+
     override def toOntologySchema(targetSchema: OntologySchema): TextValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {

@@ -117,11 +117,6 @@ object FullTextMainQueryGenerator {
             // Check whether the response should include standoff.
             val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
 
-            // Check whether the response should include knora-base:valueHasMaxStandoffStartIndex.
-            val queryMaxStandoffStartIndex: Boolean = SchemaOptions.queryMaxStandoffStartIndex(targetSchema, schemaOptions)
-
-            // TODO: add a subquery to get knora-base:valueHasMaxStandoffStartIndex.
-
             // WHERE patterns for standoff belonging to value objects (if any)
             val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {
                 Seq(

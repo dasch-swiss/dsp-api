@@ -37,7 +37,6 @@
  * @param maybeValueIri              if defined, the specified value will be the only value returned.
  * @param queryValueHasString        if true, knora-base:valueHasString will be returned.
  * @param queryStandoff              if true, standoff will be returned if available.
- * @param queryMaxStandoffStartIndex if true, knora-base:valueHasMaxStandoffStartIndex will be returned.
  * @param maybeStandoffMinStartIndex if defined, the minimum knora-base:standoffTagHasStartIndex to be returned.
  *                                   Requires maybeValueIri and maybeStandoffMaxStartIndex.
  * @param maybeStandoffMaxStartIndex if defined, the maximum knora-base:standoffTagHasStartIndex to be returned.
@@ -51,7 +50,6 @@
   maybeValueIri: Option[IRI],
   queryValueHasString: Boolean,
   queryStandoff: Boolean,
-  queryMaxStandoffStartIndex: Boolean,
   maybeStandoffMinStartIndex: Option[Int],
   maybeStandoffMaxStartIndex: Option[Int])
 

@@ -502,17 +502,6 @@ case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
 }
 
 /**
-  * Represents a subquery in a query.
-  *
-  * @param selectQuery the SELECT query to be run in a subquery.
-  */
-case class SubQueryPattern(selectQuery: SelectQuery) extends QueryPattern {
-    override def toSparql: String = {
-        s"{\n${selectQuery.toSparql}}"
-    }
-}
-
-/**
   * Represents a CONSTRUCT clause in a query.
   *
   * @param statements  the statements in the CONSTRUCT clause.

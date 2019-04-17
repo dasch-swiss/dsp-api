@@ -45,7 +45,8 @@
 
                         @* Create a Standoff node for each standoff tag. *@
 
-                        <@newValueIri> knora-base:valueHasMapping <@standoffAndMapping.mappingIri> .
+                        <@newValueIri> knora-base:valueHasMapping <@standoffAndMapping.mappingIri> ;
+                            knora-base:valueHasMaxStandoffStartIndex <@textValue.computedMaxStandoffStartIndex> .
 
                         @for((createStandoff: CreateStandoffTagV2InTriplestore, standoffNodeIndex) <- textValue.prepareForSparqlInsert(newValueIri).zipWithIndex) {
 

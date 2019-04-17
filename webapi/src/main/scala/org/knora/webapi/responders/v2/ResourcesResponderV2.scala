@@ -948,9 +948,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // Check whether the response should include standoff.
         val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
 
-        // Check whether the response should include knora-base:valueHasMaxStandoffStartIndex.
-        val queryMaxStandoffStartIndex: Boolean = SchemaOptions.queryMaxStandoffStartIndex(targetSchema, schemaOptions)
-
         for {
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
@@ -959,8 +956,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 maybePropertyIri = propertyIri,
                 maybeVersionDate = versionDate,
                 queryValueHasString = true,
-                queryStandoff = queryStandoff,
-                queryMaxStandoffStartIndex = queryMaxStandoffStartIndex
+                queryStandoff = queryStandoff
             ).toString())
 
             // _ = println(resourceRequestSparql)

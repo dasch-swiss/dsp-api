@@ -651,9 +651,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             // Check whether the response should include standoff.
             queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(ApiV2Complex, resourcesInProjectGetRequestV2.schemaOptions)
 
-            // Check whether the response should include knora-base:valueHasMaxStandoffStartIndex.
-            queryMaxStandoffStartIndex: Boolean = SchemaOptions.queryMaxStandoffStartIndex(ApiV2Complex, resourcesInProjectGetRequestV2.schemaOptions)
-
             // Are there any matching resources?
             resources: Vector[ReadResourceV2] <- if (mainResourceIris.nonEmpty) {
                 for {
@@ -664,7 +661,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         preview = false,
                         queryValueHasString = true,
                         queryStandoff = queryStandoff,
-                        queryMaxStandoffStartIndex = queryMaxStandoffStartIndex,
                         maybePropertyIri = None,
                         maybeVersionDate = None
                     ).toString())

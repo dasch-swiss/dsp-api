@@ -1078,7 +1078,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                         comment = None,
                         valueHasString = "Ich liebe die Dinge, sie sind alles f\u00FCr mich."
                     ),
-                    valueHasMaxStandoffStartIndex = None,
+                    valueHasMaxStandoffStartIndex = Some(1),
                     valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
                     permissions = "CR knora-admin:Creator",
                     userPermission = ChangeRightsPermission,
@@ -1402,7 +1402,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                         comment = None,
                         valueHasString = "Na ja, die Dinge sind OK."
                     ),
-                    valueHasMaxStandoffStartIndex = None,
+                    valueHasMaxStandoffStartIndex = Some(1),
                     valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
                     permissions = "CR knora-admin:Creator",
                     userPermission = ChangeRightsPermission,
