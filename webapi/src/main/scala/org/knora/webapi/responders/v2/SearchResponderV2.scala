@@ -53,6 +53,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     // A Gravsearch type inspection runner.
     private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(responderData)
 
+    private val knoraIdUtil = new KnoraIdUtil
+
     /**
       * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
       */
@@ -280,6 +282,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 mappings = mappingsAsMap,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
+                knoraIdUtil = knoraIdUtil,
                 requestingUser = requestingUser
             )
 
@@ -541,6 +544,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 mappings = mappingsAsMap,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
+                knoraIdUtil = knoraIdUtil,
                 requestingUser = requestingUser
             )
 
@@ -662,6 +666,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         mappings = mappings,
                         forbiddenResource = forbiddenResourceOption,
                         responderManager = responderManager,
+                        knoraIdUtil = knoraIdUtil,
                         requestingUser = resourcesInProjectGetRequestV2.requestingUser
                     )
                 } yield searchResponse
@@ -787,6 +792,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 orderByResourceIri = mainResourceIris.toSeq.sorted,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
+                knoraIdUtil = knoraIdUtil,
                 requestingUser = requestingUser
             )
 

@@ -381,7 +381,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 linkUpdates = standoffLinkUpdates,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
-                creationDate = currentTime
+                creationDate = currentTime,
+                knoraIdUtil = knoraIdUtil
             ).toString()
 
             /*
@@ -568,7 +569,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     valueCreator = requestingUser.id,
                     valuePermissions = valueToCreate.permissions,
                     creationDate = creationDate,
-                    maybeValueHasOrder = Some(valueHasOrder)
+                    maybeValueHasOrder = Some(valueHasOrder),
+                    knoraIdUtil = knoraIdUtil
                 ).toString()
         }
 
@@ -997,7 +999,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 maybeComment = newValueVersion.comment,
                 linkUpdates = standoffLinkUpdates,
                 currentTime = currentTime,
-                requestingUser = requestingUser.id
+                requestingUser = requestingUser.id,
+                knoraIdUtil = knoraIdUtil
             ).toString())
 
             /*

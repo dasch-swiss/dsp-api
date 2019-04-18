@@ -18,6 +18,7 @@
  *@
 
 @import org.knora.webapi._
+@import org.knora.webapi.util.KnoraIdUtil
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 
@@ -39,6 +40,7 @@
  *        updated for resource references in standoff markup.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
  * @param requestingUser the IRI of the user making the request.
+ * @param knoraIdUtil a [[KnoraIdUtil]].
  *
  * This operation will do nothing if `currentValueIri` is not in fact the most recent version, if `valueTypeIri` is
  * the wrong type for the property, or if the resource or the current value are nonexistent or marked as deleted. To
@@ -57,7 +59,8 @@
   maybeComment: Option[String],
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   currentTime: String,
-  requestingUser: IRI)
+  requestingUser: IRI,
+  knoraIdUtil: KnoraIdUtil)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -148,7 +151,7 @@ DELETE {
                         }
 
                         knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
-                        knora-base:standoffTagHasUUID """@createStandoff.standoffNode.uuid""" ;
+                        knora-base:standoffTagHasUUID "@{knoraIdUtil.base64EncodeUuid(createStandoff.standoffNode.uuid)}" ;
                         knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
                         knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
                         rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .
