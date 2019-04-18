@@ -24,7 +24,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{KnoraDispatchers, Settings, UnexpectedMessageException}
+import org.knora.webapi.{KnoraDispatchers, Settings, SettingsImpl, UnexpectedMessageException}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -76,7 +76,7 @@ abstract class Responder(responderData: ResponderData) {
     /**
       * The application settings.
       */
-    protected val settings = Settings(system)
+    protected val settings: SettingsImpl = Settings(system)
 
     /**
       * The reference to the responder manager.
@@ -86,12 +86,12 @@ abstract class Responder(responderData: ResponderData) {
     /**
       * The reference to the store manager.
       */
-    protected val storeManager = responderData.storeManager
+    protected val storeManager: ActorRef = responderData.storeManager
 
     /**
       * The reference to the application state actor
       */
-    protected val applicationStateActor = responderData.applicationStateActor
+    protected val applicationStateActor: ActorRef = responderData.applicationStateActor
 
     /**
       * A string formatter.
