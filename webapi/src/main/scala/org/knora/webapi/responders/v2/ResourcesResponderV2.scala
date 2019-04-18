@@ -54,6 +54,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     /* actor materializer needed for http requests */
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
+    private val knoraIdUtil = new KnoraIdUtil
+
     /**
       * Represents a resource that is ready to be created and whose contents can be verified afterwards.
       *
@@ -988,6 +990,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         mappings = mappingsAsMap,
                         versionDate = versionDate,
                         responderManager = responderManager,
+                        knoraIdUtil = knoraIdUtil,
                         requestingUser = requestingUser
                     )
             }.toVector
@@ -1027,6 +1030,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         mappings = Map.empty[IRI, MappingAndXSLTransformation],
                         versionDate = None,
                         responderManager = responderManager,
+                        knoraIdUtil = knoraIdUtil,
                         requestingUser = requestingUser
                     )
             }.toVector

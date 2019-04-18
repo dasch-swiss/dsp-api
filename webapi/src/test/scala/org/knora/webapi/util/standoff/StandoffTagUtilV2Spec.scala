@@ -19,6 +19,7 @@
 
 package org.knora.webapi.util.standoff
 
+import java.util.UUID
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.twirl.{StandoffTagStringAttributeV2, StandoffTagV2}
 
@@ -41,7 +42,7 @@ object StandoffTagUtilV2Spec {
         StandoffTagV2(
             endParentIndex = None,
             originalXMLID = None,
-            uuid = "e8c2c060-a41d-4403-ac7d-d0f84f772378",
+            uuid = UUID.fromString("e8c2c060-a41d-4403-ac7d-d0f84f772378"),
             endPosition = 5,
             startParentIndex = None,
             attributes = Nil,
@@ -54,7 +55,7 @@ object StandoffTagUtilV2Spec {
         StandoffTagV2(
             endParentIndex = None,
             originalXMLID = None,
-            uuid = "1d250370-9692-497f-a28b-bd20ebafe171",
+            uuid = UUID.fromString("1d250370-9692-497f-a28b-bd20ebafe171"),
             endPosition = 4,
             startParentIndex = Some(0),
             attributes = Vector(
@@ -79,7 +80,7 @@ object StandoffTagUtilV2Spec {
         StandoffTagV2(
             endParentIndex = None,
             originalXMLID = None,
-            uuid = "e8c2c060-a41d-4403-ac7d-d0f84f772378",
+            uuid = UUID.fromString("e8c2c060-a41d-4403-ac7d-d0f84f772378"),
             endPosition = 5,
             startParentIndex = None,
             attributes = Nil,
@@ -92,7 +93,7 @@ object StandoffTagUtilV2Spec {
         StandoffTagV2(
             endParentIndex = None,
             originalXMLID = None,
-            uuid = "1d250370-9692-497f-a28b-bd20ebafe171",
+            uuid = UUID.fromString("1d250370-9692-497f-a28b-bd20ebafe171"),
             endPosition = 4,
             startParentIndex = Some(0),
             attributes = Vector(

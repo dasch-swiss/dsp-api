@@ -510,7 +510,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                             valueCreator = userIri,
                                             valuePermissions = defaultPropertyAccessPermissions,
                                             creationDate = createMultipleValuesRequest.creationDate,
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
+                                            knoraIdUtil = knoraIdUtil
                                         ).toString()
                                 }
 
@@ -2071,7 +2072,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 maybeComment = comment,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
-                creationDate = creationDate
+                creationDate = creationDate,
+                knoraIdUtil = knoraIdUtil
             ).toString()
 
             /*
@@ -2311,7 +2313,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 maybeComment = comment,
                 linkUpdates = standoffLinkUpdates,
                 currentTime = currentTime,
-                requestingUser = userProfile.id
+                requestingUser = userProfile.id,
+                knoraIdUtil = knoraIdUtil
             ).toString()
 
             /*

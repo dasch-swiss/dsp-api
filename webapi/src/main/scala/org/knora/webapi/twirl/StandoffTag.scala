@@ -162,7 +162,7 @@ case class StandoffTagBooleanAttributeV2(standoffPropertyIri: IRI, value: Boolea
   */
 case class StandoffTagV2(standoffTagClassIri: IRI,
                          dataType: Option[StandoffDataTypeClasses.Value] = None,
-                         uuid: String,
+                         uuid: UUID,
                          originalXMLID: Option[String],
                          startPosition: Int,
                          endPosition: Int,
