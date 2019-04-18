@@ -19,7 +19,7 @@
 
 @import java.time.Instant
 @import org.knora.webapi._
-@import org.knora.webapi.util.SmartIri
+@import org.knora.webapi.util.{KnoraIdUtil, SmartIri}
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v2.responder.valuemessages._
 
@@ -39,6 +39,7 @@
  * @param valuePermissions the permissions that should be attached to the value.
  * @param creationDate an xsd:dateTimeStamp that will be attached to the value.
  * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
+ * @param knoraIdUtil a [[KnoraIdUtil]].
  *@
 @(resourceIri: IRI,
   propertyIri: SmartIri,
@@ -48,7 +49,8 @@
   valueCreator: IRI,
   valuePermissions: String,
   creationDate: Instant,
-  maybeValueHasOrder: Option[Int])
+  maybeValueHasOrder: Option[Int],
+  knoraIdUtil: KnoraIdUtil)
 
         # Value: @newValueIri
         # Property: @propertyIri
@@ -60,7 +62,8 @@
 
         @{
             queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,
-                                                                          newValueIri = newValueIri)
+                                                                          newValueIri = newValueIri,
+                                                                          knoraIdUtil = knoraIdUtil)
         }
 
         @* Insert the value's comment, if given. *@
