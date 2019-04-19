@@ -115,7 +115,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
             startPosition = 0,
             endPosition = 7,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
         ),
@@ -123,7 +123,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
             startPosition = 0,
             endPosition = 10,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
         )
@@ -165,14 +165,14 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
                 startPosition = 0,
                 endPosition = 62,
-                uuid = "4800e53e-3835-498e-b658-6cc4f93ab894",
+                uuid = UUID.fromString("4800e53e-3835-498e-b658-6cc4f93ab894"),
                 originalXMLID = None,
                 startIndex = 0
             ), StandoffTagV2(
                 standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
                 startPosition = 21,
                 endPosition = 25,
-                uuid = "4bc24696-5dde-4ced-9687-6f8e4519efe8",
+                uuid = UUID.fromString("4bc24696-5dde-4ced-9687-6f8e4519efe8"),
                 originalXMLID = None,
                 startIndex = 1,
                 startParentIndex = Some(0)
@@ -767,7 +767,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                         startPosition = 31,
                         endPosition = 39,
                         attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
-                        uuid = UUID.randomUUID().toString,
+                        uuid = UUID.randomUUID(),
                         originalXMLID = None,
                         startIndex = 0
                     )
@@ -845,7 +845,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                             startPosition = 39,
                             endPosition = 47,
                             attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
-                            uuid = UUID.randomUUID().toString,
+                            uuid = UUID.randomUUID(),
                             originalXMLID = None,
                             startIndex = 0
                         ),
@@ -855,7 +855,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                             startPosition = 0,
                             endPosition = 4,
                             attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
-                            uuid = UUID.randomUUID().toString,
+                            uuid = UUID.randomUUID(),
                             originalXMLID = None,
                             startIndex = 0
                         )
@@ -930,7 +930,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                         startPosition = 30,
                         endPosition = 38,
                         attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
-                        uuid = UUID.randomUUID().toString,
+                        uuid = UUID.randomUUID(),
                         originalXMLID = None,
                         startIndex = 0
                     )
@@ -1130,7 +1130,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                         startPosition = 45,
                         endPosition = 53,
                         attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
-                        uuid = UUID.randomUUID().toString,
+                        uuid = UUID.randomUUID(),
                         originalXMLID = None,
                         startIndex = 0
                     )
@@ -1935,7 +1935,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                         endPosition = 39,
                         startIndex = 0,
                         attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = nonexistentIri)),
-                        uuid = UUID.randomUUID().toString,
+                        uuid = UUID.randomUUID(),
                         originalXMLID = None
                     )
                 ),

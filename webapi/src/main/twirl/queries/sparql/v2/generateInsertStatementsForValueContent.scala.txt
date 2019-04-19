@@ -18,7 +18,7 @@
  *@
 
 @import org.knora.webapi._
-@import org.knora.webapi.util.SmartIri
+@import org.knora.webapi.util.{KnoraIdUtil, SmartIri}
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v2.responder.valuemessages._
 
@@ -27,9 +27,11 @@
  *
  * @param value the value to insert.
  * @param newValueIri the IRI of the new value.
+ * @param knoraIdUtil a [[KnoraIdUtil]].
  *@
 @(value: ValueContentV2,
-  newValueIri: IRI)
+  newValueIri: IRI,
+  knoraIdUtil: KnoraIdUtil)
 
         @value match {
 
@@ -88,7 +90,7 @@
                                     }
 
                                     knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
-                                    knora-base:standoffTagHasUUID """@createStandoff.standoffNode.uuid""" ;
+                                    knora-base:standoffTagHasUUID "@{knoraIdUtil.base64EncodeUuid(createStandoff.standoffNode.uuid)}" ;
                                     knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
                                     knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
                                     rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .

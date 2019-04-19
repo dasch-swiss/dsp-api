@@ -1,6 +1,7 @@
 package org.knora.webapi.responders.v2
 
 import java.time.Instant
+import java.util.UUID
 
 import akka.actor.ActorSystem
 import org.knora.webapi._
@@ -768,7 +769,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                 StandoffTagV2(
                                     endParentIndex = None,
                                     originalXMLID = None,
-                                    uuid = "2e136103-2a4b-4e59-ac8f-79a53f54b496",
+                                    uuid = UUID.fromString("2e136103-2a4b-4e59-ac8f-79a53f54b496"),
                                     endPosition = 45,
                                     startParentIndex = None,
                                     attributes = Nil,
@@ -781,7 +782,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                 StandoffTagV2(
                                     endParentIndex = None,
                                     originalXMLID = None,
-                                    uuid = "80133696-26a1-4941-967b-6bf210d7d5e1",
+                                    uuid = UUID.fromString("80133696-26a1-4941-967b-6bf210d7d5e1"),
                                     endPosition = 19,
                                     startParentIndex = Some(0),
                                     attributes = Vector(StandoffTagIriAttributeV2(
@@ -1092,7 +1093,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                 StandoffTagV2(
                                     endParentIndex = None,
                                     originalXMLID = None,
-                                    uuid = "fd583868-2a3c-4941-a330-990f5a972f71",
+                                    uuid = UUID.fromString("fd583868-2a3c-4941-a330-990f5a972f71"),
                                     endPosition = 25,
                                     startParentIndex = None,
                                     attributes = Nil,
@@ -1105,7 +1106,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                 StandoffTagV2(
                                     endParentIndex = None,
                                     originalXMLID = None,
-                                    uuid = "59a36237-95a9-4acc-8361-7c8fac311063",
+                                    uuid = UUID.fromString("59a36237-95a9-4acc-8361-7c8fac311063"),
                                     endPosition = 16,
                                     startParentIndex = Some(0),
                                     attributes = Vector(StandoffTagIriAttributeV2(

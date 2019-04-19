@@ -41,6 +41,7 @@
  *        updated for resource references in standoff markup.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
  * @param requestingUser the IRI of the user making the request.
+ * @param knoraIdUtil a [[KnoraIdUtil]].
  *
  * This operation will do nothing if `currentValueIri` is not in fact the most recent version, if `valueTypeIri` is
  * the wrong type for the property, or if the resource or the current value are nonexistent or marked as deleted. To
@@ -59,7 +60,8 @@
   maybeComment: Option[String],
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   currentTime: Instant,
-  requestingUser: IRI)
+  requestingUser: IRI,
+  knoraIdUtil: KnoraIdUtil)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -96,7 +98,8 @@ DELETE {
 
         @{
             queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,
-                                                                          newValueIri = newValueIri)
+                                                                          newValueIri = newValueIri,
+                                                                          knoraIdUtil = knoraIdUtil)
         }
 
         @* Insert the value's comment, if given. *@

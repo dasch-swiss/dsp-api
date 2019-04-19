@@ -1065,7 +1065,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         endPosition = 39,
                         startIndex = 0,
                         attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = nonexistentIri)),
-                        uuid = UUID.randomUUID().toString,
+                        uuid = UUID.randomUUID(),
                         originalXMLID = None
                     )
                 ),
@@ -1113,7 +1113,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
                         startPosition = 5,
                         endPosition = 13,
-                        uuid = UUID.randomUUID().toString,
+                        uuid = UUID.randomUUID(),
                         originalXMLID = None,
                         startIndex = 0
                     ),
@@ -1123,7 +1123,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         startPosition = 32,
                         endPosition = 40,
                         attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = "http://rdfh.ch/0803/c5058f3a")),
-                        uuid = UUID.randomUUID().toString,
+                        uuid = UUID.randomUUID(),
                         originalXMLID = None,
                         startIndex = 0
                     )

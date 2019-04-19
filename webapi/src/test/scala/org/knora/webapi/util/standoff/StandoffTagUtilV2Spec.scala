@@ -19,6 +19,7 @@
 
 package org.knora.webapi.util.standoff
 
+import java.util.UUID
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.IriConversions._
@@ -34,7 +35,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
         StandoffTagV2(
             endParentIndex = None,
             originalXMLID = None,
-            uuid = "e8c2c060-a41d-4403-ac7d-d0f84f772378",
+            uuid = UUID.fromString("e8c2c060-a41d-4403-ac7d-d0f84f772378"),
             endPosition = 5,
             startParentIndex = None,
             attributes = Nil,
@@ -47,7 +48,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
         StandoffTagV2(
             endParentIndex = None,
             originalXMLID = None,
-            uuid = "1d250370-9692-497f-a28b-bd20ebafe171",
+            uuid = UUID.fromString("1d250370-9692-497f-a28b-bd20ebafe171"),
             endPosition = 4,
             startParentIndex = Some(0),
             attributes = Vector(
@@ -72,7 +73,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
         StandoffTagV2(
             endParentIndex = None,
             originalXMLID = None,
-            uuid = "e8c2c060-a41d-4403-ac7d-d0f84f772378",
+            uuid = UUID.fromString("e8c2c060-a41d-4403-ac7d-d0f84f772378"),
             endPosition = 5,
             startParentIndex = None,
             attributes = Nil,
@@ -85,7 +86,7 @@ class StandoffTagUtilV2Spec extends CoreSpec {
         StandoffTagV2(
             endParentIndex = None,
             originalXMLID = None,
-            uuid = "1d250370-9692-497f-a28b-bd20ebafe171",
+            uuid = UUID.fromString("1d250370-9692-497f-a28b-bd20ebafe171"),
             endPosition = 4,
             startParentIndex = Some(0),
             attributes = Vector(
