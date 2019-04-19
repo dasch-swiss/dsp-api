@@ -28,10 +28,10 @@ import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2, GetStandoffRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi.{ApiV2Complex, BadRequestException, IRI, SchemaOption}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.jsonld.JsonLDUtil
+import org.knora.webapi.{ApiV2Complex, BadRequestException}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
