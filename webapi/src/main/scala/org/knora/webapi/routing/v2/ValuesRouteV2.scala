@@ -68,7 +68,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             settings,
                             responderManager,
                             log,
-                            ApiV2WithValueObjects
+                            ApiV2Complex
                         )
                         // #specify-response-schema
                     }
@@ -97,7 +97,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             settings,
                             responderManager,
                             log,
-                            ApiV2WithValueObjects
+                            ApiV2Complex
                         )
                     }
                 }
@@ -127,7 +127,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             settings,
                             responderManager,
                             log,
-                            ApiV2WithValueObjects
+                            ApiV2Complex
                         )
                     }
                 }

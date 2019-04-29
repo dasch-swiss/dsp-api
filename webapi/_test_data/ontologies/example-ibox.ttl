@@ -16,7 +16,7 @@
 
 <http://www.knora.org/ontology/shared/example-ibox> rdf:type owl:Ontology ;
     rdfs:label "An example of a shared ontology that uses another shared ontology" ;
-    knora-base:attachedToProject <http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject> ;
+    knora-base:attachedToProject <http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject> ;
     knora-base:lastModificationDate "2018-09-10T14:53:00.000Z"^^xsd:dateTime .
 
 :iBox rdf:type owl:Class ;

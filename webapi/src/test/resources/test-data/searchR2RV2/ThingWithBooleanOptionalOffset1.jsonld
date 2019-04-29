@@ -16,7 +16,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-10-17T17:16:04.915Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -40,7 +40,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-10-17T17:16:04.914Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -64,7 +64,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-10-17T17:16:04.917Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -88,7 +88,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-10-17T17:16:04.911Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -112,7 +112,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "CR",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -136,7 +136,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "CR",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -160,7 +160,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-05-30T13:44:11.749Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -184,7 +184,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-10-17T17:16:04.914Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -208,7 +208,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-10-17T17:16:04.913Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -232,7 +232,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-10-17T17:16:04.903Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -256,7 +256,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-10-17T17:16:04.912Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -280,7 +280,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2019-02-08T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
     "knora-api:lastModificationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2019-02-13T09:05:10Z"
@@ -308,7 +308,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-01-31T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -332,7 +332,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-01-31T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -356,7 +356,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-01-31T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -380,7 +380,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-01-31T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -404,7 +404,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-01-31T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -421,7 +421,7 @@
         "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
       },
       "knora-api:booleanValueAsBoolean" : true,
-      "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+      "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
       "knora-api:userHasPermission" : "M",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -442,7 +442,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2017-07-25T07:13:16.732Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "M",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",

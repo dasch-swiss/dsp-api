@@ -26,14 +26,14 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
-  * Rules for converting `knora-base` into `knora-api` in the [[ApiV2WithValueObjects]] schema.
+  * Rules for converting `knora-base` (or an ontology based on it) into `knora-api` in the [[ApiV2Complex]] schema.
   */
-object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransformationRules {
+object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformationRules {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
     override val ontologyMetadata = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
-        projectIri = Some(OntologyConstants.KnoraBase.SystemProject.toSmartIri),
+        projectIri = Some(OntologyConstants.KnoraAdmin.SystemProject.toSmartIri),
         label = Some("The knora-api ontology in the complex schema")
     )
 
@@ -54,6 +54,26 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Provides a message indicating that an operation was successful"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.String)
+    )
+
+    private val Error: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.Error,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "error"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides an error message"
                 )
             )
         ),
@@ -598,7 +618,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateBase),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
@@ -620,7 +640,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateBase),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
@@ -642,7 +662,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateBase),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
@@ -664,7 +684,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateBase),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
@@ -686,7 +706,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateBase),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
@@ -708,7 +728,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateBase),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
@@ -730,7 +750,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateBase),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
@@ -752,7 +772,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateBase),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
@@ -774,7 +794,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DateBase),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
@@ -787,6 +807,50 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Represents the calendar of a date value."
+                )
+            )
+        )
+    )
+
+    private val LinkValueHasSource: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSource,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Link value has source"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents the source resource of a link value."
+                )
+            )
+        )
+    )
+
+    private val LinkValueHasSourceIri: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSourceIri,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue),
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Link value has source IRI"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents the IRI of the source resource of a link value."
                 )
             )
         )
@@ -840,7 +904,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntBase),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
@@ -862,7 +926,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.DecimalBase),
         objectType = Some(OntologyConstants.Xsd.Decimal),
         predicates = Seq(
             makePredicate(
@@ -880,11 +944,55 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         )
     )
 
+    private val IntervalValueHasStart: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntervalBase),
+        objectType = Some(OntologyConstants.Xsd.Decimal),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "interval value has start"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents the start position of an interval."
+                )
+            )
+        )
+    )
+
+    private val IntervalValueHasEnd: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.IntervalBase),
+        objectType = Some(OntologyConstants.Xsd.Decimal),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "interval value has end"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents the end position of an interval."
+                )
+            )
+        )
+    )
+
     private val BooleanValueAsBoolean: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.BooleanBase),
         objectType = Some(OntologyConstants.Xsd.Boolean),
         predicates = Seq(
             makePredicate(
@@ -972,7 +1080,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ColorValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.ColorBase),
         objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
@@ -994,7 +1102,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.UriValue),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.UriBase),
         objectType = Some(OntologyConstants.Xsd.Uri),
         predicates = Seq(
             makePredicate(
@@ -1281,7 +1389,8 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2WithValueObjects.VersionArkUrl -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2WithValueObjects.VersionDate -> Cardinality.MayHaveOne,
-        OntologyConstants.KnoraApiV2WithValueObjects.UserHasPermission -> Cardinality.MustHaveOne
+        OntologyConstants.KnoraApiV2WithValueObjects.UserHasPermission -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.IsDeleted -> Cardinality.MayHaveOne
     )
 
     private val DateBaseCardinalities = Map(
@@ -1323,7 +1432,8 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
 
     private val ValueCardinalities = Map(
         OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> Cardinality.MayHaveOne,
-        OntologyConstants.KnoraApiV2WithValueObjects.UserHasPermission -> Cardinality.MustHaveOne
+        OntologyConstants.KnoraApiV2WithValueObjects.UserHasPermission -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.IsDeleted -> Cardinality.MayHaveOne
     )
 
     private val TextValueCardinalities = Map(
@@ -1332,6 +1442,13 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> Cardinality.MayHaveOne
+    )
+
+    private val LinkValueCardinalities = Map(
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSource -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSourceIri -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> Cardinality.MayHaveOne
     )
 
     private val GeomValueCardinalities = Map(
@@ -1371,9 +1488,12 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
     )
 
     /**
-      * Properties to remove from `knora-base` before converting it to the [[ApiV2WithValueObjects]] schema.
+      * Properties to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
       */
-    override val knoraBasePropertiesToRemove: Set[SmartIri] = Set(
+    override val internalPropertiesToRemove: Set[SmartIri] = Set(
+        OntologyConstants.Rdf.Subject,
+        OntologyConstants.Rdf.Predicate,
+        OntologyConstants.Rdf.Object,
         OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted,
         OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
         OntologyConstants.KnoraBase.ObjectClassConstraint,
@@ -1430,105 +1550,64 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         OntologyConstants.KnoraBase.HasExtResValue,
         OntologyConstants.KnoraBase.ExtResAccessInfo,
         OntologyConstants.KnoraBase.ExtResId,
-        OntologyConstants.KnoraBase.ExtResProvider,
-        OntologyConstants.KnoraBase.MapEntryKey,
-        OntologyConstants.KnoraBase.MapEntryValue,
-        OntologyConstants.KnoraBase.IsInMap,
-        OntologyConstants.KnoraBase.ForProject, // TODO: remove admin stuff from here when it's moved to a separate ontology.
-        OntologyConstants.KnoraBase.ForGroup,
-        OntologyConstants.KnoraBase.ForResourceClass,
-        OntologyConstants.KnoraBase.ForProperty,
-        OntologyConstants.KnoraBase.Address,
-        OntologyConstants.KnoraBase.Email,
-        OntologyConstants.KnoraBase.GivenName,
-        OntologyConstants.KnoraBase.FamilyName,
-        OntologyConstants.KnoraBase.Password,
-        OntologyConstants.KnoraBase.UsersActiveProject,
-        OntologyConstants.KnoraBase.Status,
-        OntologyConstants.KnoraBase.PreferredLanguage,
-        OntologyConstants.KnoraBase.IsInProject,
-        OntologyConstants.KnoraBase.IsInProjectAdminGroup,
-        OntologyConstants.KnoraBase.IsInGroup,
-        OntologyConstants.KnoraBase.IsInSystemAdminGroup,
-        OntologyConstants.KnoraBase.InstitutionDescription,
-        OntologyConstants.KnoraBase.InstitutionName,
-        OntologyConstants.KnoraBase.InstitutionWebsite,
-        OntologyConstants.KnoraBase.Phone,
-        OntologyConstants.KnoraBase.KnoraProject,
-        OntologyConstants.KnoraBase.ProjectShortname,
-        OntologyConstants.KnoraBase.ProjectShortcode,
-        OntologyConstants.KnoraBase.ProjectLongname,
-        OntologyConstants.KnoraBase.ProjectDescription,
-        OntologyConstants.KnoraBase.ProjectKeyword,
-        OntologyConstants.KnoraBase.ProjectLogo,
-        OntologyConstants.KnoraBase.BelongsToInstitution,
-        OntologyConstants.KnoraBase.HasSelfJoinEnabled,
-        OntologyConstants.KnoraBase.GroupName,
-        OntologyConstants.KnoraBase.GroupDescription,
-        OntologyConstants.KnoraBase.BelongsToProject
-
+        OntologyConstants.KnoraBase.ExtResProvider
     ).map(_.toSmartIri)
 
     /**
-      * Classes to remove from `knora-base` before converting it to the [[ApiV2WithValueObjects]] schema.
+      * Classes to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
       */
-    override val knoraBaseClassesToRemove: Set[SmartIri] = Set(
-        OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
+    override val internalClassesToRemove: Set[SmartIri] = Set(
         OntologyConstants.KnoraBase.MappingElement,
         OntologyConstants.KnoraBase.MappingComponent,
         OntologyConstants.KnoraBase.MappingStandoffDataTypeClass,
         OntologyConstants.KnoraBase.MappingXMLAttribute,
         OntologyConstants.KnoraBase.XMLToStandoffMapping,
         OntologyConstants.KnoraBase.ExternalResource,
-        OntologyConstants.KnoraBase.ExternalResValue,
-        OntologyConstants.KnoraBase.Map,
-        OntologyConstants.KnoraBase.MapEntry,
-        OntologyConstants.KnoraBase.Permission, // TODO: remove admin stuff from here when it's moved to a separate ontology.
-        OntologyConstants.KnoraBase.UserGroup,
-        OntologyConstants.KnoraBase.Institution,
-        OntologyConstants.KnoraBase.AdministrativePermission
+        OntologyConstants.KnoraBase.ExternalResValue
     ).map(_.toSmartIri)
 
     /**
-      * After `knora-base` has been converted to the [[ApiV2WithValueObjects]] schema, these cardinalities must be
+      * After `knora-base` has been converted to the [[ApiV2Complex]] schema, these cardinalities must be
       * added to the specified classes to obtain `knora-api`.
       */
-    override val knoraApiCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
-        OntologyConstants.KnoraBase.Resource -> ResourceCardinalities,
-        OntologyConstants.KnoraBase.DateBase -> DateBaseCardinalities,
-        OntologyConstants.KnoraBase.UriBase -> UriBaseCardinalities,
-        OntologyConstants.KnoraBase.BooleanBase -> BooleanBaseCardinalities,
-        OntologyConstants.KnoraBase.IntBase -> IntBaseCardinalities,
-        OntologyConstants.KnoraBase.DecimalBase -> DecimalBaseCardinalities,
-        OntologyConstants.KnoraBase.IntervalBase -> IntervalBaseCardinalities,
-        OntologyConstants.KnoraBase.ColorBase -> ColorBaseCardinalities,
-        OntologyConstants.KnoraBase.Value -> ValueCardinalities,
-        OntologyConstants.KnoraBase.TextValue -> TextValueCardinalities,
-        OntologyConstants.KnoraBase.GeomValue -> GeomValueCardinalities,
-        OntologyConstants.KnoraBase.ListValue -> ListValueCardinalities,
-        OntologyConstants.KnoraBase.GeonameValue -> GeonameValueCardinalities,
-        OntologyConstants.KnoraBase.FileValue -> FileValueCardinalities,
-        OntologyConstants.KnoraBase.StillImageFileValue -> StillImageFileValueCardinalities,
-        OntologyConstants.KnoraBase.MovingImageFileValue -> MovingImageFileValueCardinalities,
-        OntologyConstants.KnoraBase.AudioFileValue -> AudioFileValueCardinalities
+    override val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
+        OntologyConstants.KnoraApiV2WithValueObjects.Resource -> ResourceCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.DateBase -> DateBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.UriBase -> UriBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.BooleanBase -> BooleanBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.IntBase -> IntBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.DecimalBase -> DecimalBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.IntervalBase -> IntervalBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.ColorBase -> ColorBaseCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.Value -> ValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.TextValue -> TextValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValue -> LinkValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.GeomValue -> GeomValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.ListValue -> ListValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue -> GeonameValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.FileValue -> FileValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue -> StillImageFileValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue -> MovingImageFileValueCardinalities,
+        OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue -> AudioFileValueCardinalities
     ).map {
         case (classIri, cardinalities) =>
-            classIri.toSmartIri.toOntologySchema(ApiV2WithValueObjects) -> cardinalities.map {
+            classIri.toSmartIri -> cardinalities.map {
                 case (propertyIri, cardinality) =>
-                    propertyIri.toSmartIri.toOntologySchema(ApiV2WithValueObjects) -> Cardinality.KnoraCardinalityInfo(cardinality)
+                    propertyIri.toSmartIri -> Cardinality.KnoraCardinalityInfo(cardinality)
             }
     }
 
     /**
-      * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2WithValueObjects]] schema, to obtain `knora-api`.
+      * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2Complex]] schema, to obtain `knora-api`.
       */
-    override val knoraApiClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2]
+    override val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Map.empty[SmartIri, ReadClassInfoV2]
 
     /**
-      * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2WithValueObjects]] schema, to obtain `knora-api`.
+      * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2Complex]] schema, to obtain `knora-api`.
       */
-    override val knoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
+    override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Result,
+        Error,
         UserHasPermission,
         VersionDate,
         ArkUrl,
@@ -1564,6 +1643,10 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         DateValueHasStartEra,
         DateValueHasEndEra,
         DateValueHasCalendar,
+        IntervalValueHasStart,
+        IntervalValueHasEnd,
+        LinkValueHasSource,
+        LinkValueHasSourceIri,
         LinkValueHasTarget,
         LinkValueHasTargetIri,
         IntValueAsInt,
@@ -1662,7 +1745,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         ReadPropertyInfoV2(
             entityInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri.toSmartIri,
-                ontologySchema = ApiV2WithValueObjects,
+                ontologySchema = ApiV2Complex,
                 predicates = predsWithTypes.map {
                     pred => pred.predicateIri -> pred
                 }.toMap,

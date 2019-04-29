@@ -240,7 +240,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 1
-            val customPermissions: String = "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+            val customPermissions: String = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
             val jsonLDEntity =

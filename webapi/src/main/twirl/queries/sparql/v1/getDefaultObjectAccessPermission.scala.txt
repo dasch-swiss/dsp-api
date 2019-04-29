@@ -35,7 +35,7 @@
   maybePropertyIri: Option[IRI])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 SELECT ?s ?p ?o
 
@@ -45,24 +45,24 @@ SELECT ?s ?p ?o
 }
 
 WHERE {
-    ?s rdf:type knora-base:DefaultObjectAccessPermission .
-    ?s knora-base:forProject <@projectIri> .
+    ?s rdf:type knora-admin:DefaultObjectAccessPermission .
+    ?s knora-admin:forProject <@projectIri> .
 
     @if(maybeGroupIri.nonEmpty) {
-        ?s knora-base:forGroup <@maybeGroupIri.get> .
+        ?s knora-admin:forGroup <@maybeGroupIri.get> .
     }
 
     @if(maybeResourceClassIri.nonEmpty) {
-        ?s knora-base:forResourceClass <@maybeResourceClassIri.get> .
+        ?s knora-admin:forResourceClass <@maybeResourceClassIri.get> .
     } else {
-        OPTIONAL { ?s knora-base:forResourceClass ?class } .
+        OPTIONAL { ?s knora-admin:forResourceClass ?class } .
         FILTER ( !bound(?class) )
     }
 
     @if(maybePropertyIri.nonEmpty) {
-        ?s knora-base:forProperty <@maybePropertyIri.get> .
+        ?s knora-admin:forProperty <@maybePropertyIri.get> .
     } else {
-        OPTIONAL { ?s knora-base:forProperty ?prop } .
+        OPTIONAL { ?s knora-admin:forProperty ?prop } .
         FILTER ( !bound(?prop) )
     }
 

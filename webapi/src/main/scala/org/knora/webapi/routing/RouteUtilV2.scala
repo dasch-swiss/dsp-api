@@ -72,16 +72,16 @@ object RouteUtilV2 {
     /**
       * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
       * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
-      * If no schema is specified in the request, the default of [[ApiV2WithValueObjects]] is returned.
+      * If no schema is specified in the request, the default of [[ApiV2Complex]] is returned.
       *
       * @param requestContext the akka-http [[RequestContext]].
-      * @return the specified schema, or [[ApiV2WithValueObjects]] if no schema was specified in the request.
+      * @return the specified schema, or [[ApiV2Complex]] if no schema was specified in the request.
       */
     def getOntologySchema(requestContext: RequestContext): ApiV2Schema = {
         def nameToSchema(schemaName: String): ApiV2Schema = {
             schemaName match {
                 case SIMPLE_SCHEMA_NAME => ApiV2Simple
-                case COMPLEX_SCHEMA_NAME => ApiV2WithValueObjects
+                case COMPLEX_SCHEMA_NAME => ApiV2Complex
                 case _ => throw BadRequestException(s"Unrecognised ontology schema name: $schemaName")
             }
         }
@@ -94,7 +94,7 @@ object RouteUtilV2 {
             case None =>
                 requestContext.request.headers.find(_.lowercaseName == SCHEMA_HEADER) match {
                     case Some(header) => nameToSchema(header.value)
-                    case None => ApiV2WithValueObjects
+                    case None => ApiV2Complex
                 }
         }
     }

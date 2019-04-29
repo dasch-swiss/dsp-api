@@ -29,7 +29,7 @@
   projectIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 SELECT ?s
 @* Ensure that inference is not used in this query. *@
@@ -39,7 +39,7 @@ SELECT ?s
 WHERE {
     BIND(IRI("@projectIri") as ?projectIri)
 
-    ?projectIri rdf:type knora-base:knoraProject .
-    ?s knora-base:isInProject ?projectIri .
-    ?s rdf:type knora-base:User .
+    ?projectIri rdf:type knora-admin:knoraProject .
+    ?s knora-admin:isInProject ?projectIri .
+    ?s rdf:type knora-admin:User .
 }

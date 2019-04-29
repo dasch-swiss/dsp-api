@@ -109,7 +109,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - BODY:
     ```
     {
-      "oldPassword": "test",
+      "requesterPassword": "test",
       "newPassword": "test1234"
     }
     ```
@@ -199,15 +199,15 @@ The following is an example for user information stored in the `admin` named gra
 
 ```
 <http://rdfh.ch/users/c266a56709>
-    rdf:type knora-base:User ;
-    knora-base:username "user01.user1"^^xsd:string ;
-    knora-base:email "user01.user1@example.com"^^xsd:string ;
-    knora-base:givenName "User01"^^xsd:string ;
-    knora-base:familyName "User"^^xsd:string ;
-    knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
-    knora-base:preferredLanguage "de"^^xsd:string ;
-    knora-base:status "true"^^xsd:boolean ;
-    knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
-    knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
-    knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/00FF> .
+    rdf:type knora-admin:User ;
+    knora-admin:username "user01.user1"^^xsd:string ;
+    knora-admin:email "user01.user1@example.com"^^xsd:string ;
+    knora-admin:givenName "User01"^^xsd:string ;
+    knora-admin:familyName "User"^^xsd:string ;
+    knora-admin:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+    knora-admin:preferredLanguage "de"^^xsd:string ;
+    knora-admin:status "true"^^xsd:boolean ;
+    knora-admin:isInProject <http://rdfh.ch/projects/00FF> ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/00FF> .
 ```

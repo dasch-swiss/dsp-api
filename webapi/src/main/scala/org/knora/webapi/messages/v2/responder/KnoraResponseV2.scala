@@ -50,7 +50,7 @@ case class SuccessResponseV2(message: String) extends KnoraResponseV2 {
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         val (ontologyPrefixExpansion, resultProp) = targetSchema match {
             case ApiV2Simple => (OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion, OntologyConstants.KnoraApiV2Simple.Result)
-            case ApiV2WithValueObjects => (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion, OntologyConstants.KnoraApiV2WithValueObjects.Result)
+            case ApiV2Complex => (OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion, OntologyConstants.KnoraApiV2WithValueObjects.Result)
         }
 
         JsonLDDocument(

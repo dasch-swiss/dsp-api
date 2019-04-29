@@ -377,7 +377,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             linkTargetIri = realTargetIri,
                             currentReferenceCount = 0,
                             newReferenceCount = initialReferenceCount,
-                            newLinkValueCreator = OntologyConstants.KnoraBase.SystemUser,
+                            newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                             newLinkValuePermissions = standoffLinkValuePermissions
                         )
                 }
@@ -508,7 +508,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                             valueCreator = userIri,
                                             valuePermissions = defaultPropertyAccessPermissions,
                                             creationDate = createMultipleValuesRequest.creationDate,
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
+                                            knoraIdUtil = knoraIdUtil
                                         ).toString()
                                 }
 
@@ -1124,7 +1125,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                         sourceResourceIri = findResourceWithValueResult.resourceIri,
                                         linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                         targetResourceIri = targetResourceIri,
-                                        valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                        valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                         valuePermissions = standoffLinkValuePermissions,
                                         userProfile = deleteValueRequest.userProfile
                                     )
@@ -2066,7 +2067,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                     sourceResourceIri = resourceIri,
                                     linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                     targetResourceIri = targetResourceIri,
-                                    valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                    valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                     valuePermissions = standoffLinkValuePermissions,
                                     userProfile = userProfile
                                 )
@@ -2090,7 +2091,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 maybeComment = comment,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
-                creationDate = creationDate
+                creationDate = creationDate,
+                knoraIdUtil = knoraIdUtil
             ).toString()
 
             /*
@@ -2275,7 +2277,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                 sourceResourceIri = resourceIri,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = targetResourceIri,
-                                valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                 valuePermissions = standoffLinkValuePermissions,
                                 userProfile = userProfile
                             )
@@ -2288,7 +2290,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                 sourceResourceIri = resourceIri,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = removedTargetResource,
-                                valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                 valuePermissions = standoffLinkValuePermissions,
                                 userProfile = userProfile
                             )
@@ -2330,7 +2332,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 maybeComment = comment,
                 linkUpdates = standoffLinkUpdates,
                 currentTime = currentTime,
-                requestingUser = userProfile.id
+                requestingUser = userProfile.id,
+                knoraIdUtil = knoraIdUtil
             ).toString()
 
             /*
@@ -2620,8 +2623,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       */
     lazy val standoffLinkValuePermissions: String = {
         val permissions: Set[PermissionADM] = Set(
-            PermissionADM.changeRightsPermission(OntologyConstants.KnoraBase.SystemUser),
-            PermissionADM.viewPermission(OntologyConstants.KnoraBase.UnknownUser)
+            PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.SystemUser),
+            PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
 
         PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)

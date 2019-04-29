@@ -347,7 +347,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 response.status should be(StatusCodes.OK)
 
                 val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
-                result.permissions.groupsPerProject.get("http://www.knora.org/ontology/knora-base#SystemProject").head should equal(List("http://www.knora.org/ontology/knora-base#SystemAdmin"))
+                result.permissions.groupsPerProject.get("http://www.knora.org/ontology/knora-admin#SystemProject").head should equal(List("http://www.knora.org/ontology/knora-admin#SystemAdmin"))
                 // log.debug(jsonResult)
 
             }

@@ -89,7 +89,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
+      "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:isDeleted"
       }
@@ -157,7 +157,7 @@
   "@id" : "http://api.knora.org/ontology/shared/example-box/v2",
   "@type" : "owl:Ontology",
   "knora-api:attachedToProject" : {
-    "@id" : "http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject"
+    "@id" : "http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject"
   },
   "knora-api:isShared" : true,
   "knora-api:lastModificationDate" : "2018-09-10T14:53:00Z",

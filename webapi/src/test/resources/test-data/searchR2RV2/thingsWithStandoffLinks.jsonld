@@ -8,7 +8,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator",
       "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
       "knora-api:textValueHasMapping" : {
         "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
@@ -24,7 +24,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator",
       "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
       "knora-api:textValueHasMapping" : {
         "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
@@ -49,7 +49,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "CR",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
@@ -65,7 +65,7 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator",
       "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>This is a <a href=\"http://rdfh.ch/0001/project-thing-2\" class=\"salsah-link\">standoff link</a>.</text>",
       "knora-api:textValueHasMapping" : {
         "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
@@ -90,7 +90,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:ProjectMember",
     "knora-api:userHasPermission" : "CR",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",

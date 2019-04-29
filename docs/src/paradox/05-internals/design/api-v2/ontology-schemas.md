@@ -58,7 +58,7 @@ Knora's `StringFormatter` class (see @ref:[Smart IRIs](smart-iris.md#implementat
 
 Each of these rule objects implements this trait:
 
-@@snip [KnoraBaseTransformationRules.scala]($src$/org/knora/webapi/messages/v2/responder/ontologymessages/KnoraBaseTransformationRules.scala) { #KnoraBaseTransformationRules }
+@@snip [OntologyTransformationRules.scala]($src$/org/knora/webapi/messages/v2/responder/ontologymessages/OntologyTransformationRules.scala) { #OntologyTransformationRules }
 
 These rules are applied to `knora-base` as well as to user-created ontologies.
 For example, `knora-base:Resource` has different cardinalities depending on its
