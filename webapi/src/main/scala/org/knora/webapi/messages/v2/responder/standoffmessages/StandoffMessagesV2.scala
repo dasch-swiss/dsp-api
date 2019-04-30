@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInf
 import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.{KnoraIdUtil, SmartIri, StringFormatter}
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.{ExecutionContext, Future}
@@ -547,9 +547,33 @@ case class StandoffTagV2(standoffTagClassIri: SmartIri,
         copy(attributes = attributes.map(_.toOntologySchema(targetSchema)))
     }
 
-    def toJsonLDValue(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    def toJsonLDValue(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption], knoraIdUtil: KnoraIdUtil): JsonLDValue = {
         val attributesAsJsonLD: Map[IRI, JsonLDValue] = attributes.map(_.toJsonLD(targetSchema = targetSchema, schemaOptions = schemaOptions)).toMap
 
-        JsonLDObject(attributesAsJsonLD) // TODO
+        val contentMap: Map[IRI, JsonLDValue] = Map(
+            JsonLDConstants.TYPE -> JsonLDUtil.iriToJsonLDObject(standoffTagClassIri.toString),
+            OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID -> JsonLDString(knoraIdUtil.base64EncodeUuid(uuid)),
+            OntologyConstants.KnoraApiV2Complex.StandoffTagHasStart -> JsonLDInt(startPosition),
+            OntologyConstants.KnoraApiV2Complex.StandoffTagHasEnd -> JsonLDInt(endPosition),
+            OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartIndex -> JsonLDInt(startIndex)
+        )
+
+        val endIndexStatement: Option[(IRI, JsonLDInt)] = endIndex.map {
+            definedEndIndex => OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndIndex -> JsonLDInt(definedEndIndex)
+        }
+
+        val startParentIndexStatement: Option[(IRI, JsonLDInt)] = startParentIndex.map {
+            definedStartParentIndex => OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartParent -> JsonLDInt(definedStartParentIndex)
+        }
+
+        val endParentIndexStatement: Option[(IRI, JsonLDInt)] = endParentIndex.map {
+            definedEndParentIndex => OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndParent -> JsonLDInt(definedEndParentIndex)
+        }
+
+        val originalXMLIDStatement: Option[(IRI, JsonLDString)] = originalXMLID.map {
+            definedOriginalXMLID => OntologyConstants.KnoraApiV2Complex.StandoffTagHasOriginalXMLID -> JsonLDString(definedOriginalXMLID)
+        }
+
+        JsonLDObject(contentMap ++ attributesAsJsonLD ++ endIndexStatement ++ startParentIndexStatement ++ endParentIndexStatement ++ originalXMLIDStatement)
     }
 }

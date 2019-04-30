@@ -851,6 +851,12 @@ object OntologyConstants {
         val StandoffTag: IRI = KnoraApiV2PrefixExpansion + "StandoffTag"
         val StandoffTagHasStartParent: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasStartParent"
         val StandoffTagHasEndParent: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasEndParent"
+        val StandoffTagHasStart: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasStart"
+        val StandoffTagHasEnd: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasEnd"
+        val StandoffTagHasStartIndex: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasStartIndex"
+        val StandoffTagHasEndIndex: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasEndIndex"
+        val StandoffTagHasUUID: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasUUID"
+        val StandoffTagHasOriginalXMLID: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasOriginalXMLID"
 
         val IntValueAsInt: IRI = KnoraApiV2PrefixExpansion + "intValueAsInt"
 
