@@ -627,7 +627,8 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
                     iri: IRI => iri.toSmartIri
                 },
                 ontologySchema = ApiV2Simple
-            )
+            ),
+            allBaseClasses = subClassOf.map(_.toSmartIri).toSet + datatypeIri.toSmartIri
         )
     }
 }
