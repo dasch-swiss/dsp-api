@@ -2077,7 +2077,7 @@ sealed trait ReadEntityInfoV2 {
   * @param fileValueProperties     a [[Set]] of IRIs of properties in `allCardinalities` that point to `FileValue` objects.
   */
 case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
-                           allBaseClasses: Set[SmartIri] = Set.empty[SmartIri],
+                           allBaseClasses: Set[SmartIri],
                            isResourceClass: Boolean = false,
                            isStandoffClass: Boolean = false,
                            isValueClass: Boolean = false,

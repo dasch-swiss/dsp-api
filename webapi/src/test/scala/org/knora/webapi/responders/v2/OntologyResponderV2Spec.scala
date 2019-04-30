@@ -2095,11 +2095,18 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri"
             ).map(_.toSmartIri)
 
+            val expectedAllBaseClasses: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri
+            )
+
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
                     val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
+                    readClassInfo.allBaseClasses should ===(expectedAllBaseClasses)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
                     readClassInfo.inheritedCardinalities.keySet.contains("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri) should ===(false)
                     readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
@@ -3095,11 +3102,17 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIri.fromLinkPropToLinkValueProp
             )
 
+            val expectedAllBaseClasses: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
+            )
+
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
                     val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
+                    assert(readClassInfo.allBaseClasses == expectedAllBaseClasses)
                     readClassInfo.entityInfoContent.directCardinalities should ===(expectedDirectCardinalities)
                     readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
@@ -3368,11 +3381,17 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 AnythingOntologyIri.makeEntityIri("hasEmptiness")
             )
 
+            val expectedAllBaseClasses: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri
+            )
+
             expectMsgPF(timeout) {
                 case msg: ReadOntologyV2 =>
                     val externalOntology = msg.toOntologySchema(ApiV2Complex)
                     assert(externalOntology.classes.size == 1)
                     val readClassInfo = externalOntology.classes(classIri)
+                    assert(readClassInfo.allBaseClasses == expectedAllBaseClasses)
                     readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
                     readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
