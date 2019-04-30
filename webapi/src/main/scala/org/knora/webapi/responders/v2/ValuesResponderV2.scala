@@ -151,7 +151,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // Check that the resource class has a cardinality for the submitted property.
 
                 classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
-                cardinalityInfo: Cardinality.KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(submittedInternalPropertyIri, throw BadRequestException(s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"))
+                cardinalityInfo: Cardinality.KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(submittedInternalPropertyIri, throw BadRequestException(s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"))
 
                 // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
                 // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -175,11 +175,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 currentValuesForProp: Seq[ReadValueV2] = resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
                 _ = if ((cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome) && currentValuesForProp.isEmpty) {
-                    throw InconsistentTriplestoreDataException(s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property")
+                    throw InconsistentTriplestoreDataException(s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property")
                 }
 
                 _ = if (cardinalityInfo.cardinality == Cardinality.MustHaveOne || (cardinalityInfo.cardinality == Cardinality.MayHaveOne && currentValuesForProp.nonEmpty)) {
-                    throw OntologyConstraintException(s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, and this does not allow a value to be added for that property to resource <${createValueRequest.createValue.resourceIri}>")
+                    throw OntologyConstraintException(s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, and this does not allow a value to be added for that property to resource <${createValueRequest.createValue.resourceIri}>")
                 }
 
                 // Check that the new value would not duplicate an existing value.
@@ -381,7 +381,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 linkUpdates = standoffLinkUpdates,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
-                creationDate = currentTime
+                creationDate = currentTime,
+                knoraIdUtil = knoraIdUtil
             ).toString()
 
             /*
@@ -568,7 +569,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     valueCreator = requestingUser.id,
                     valuePermissions = valueToCreate.permissions,
                     creationDate = creationDate,
-                    maybeValueHasOrder = Some(valueHasOrder)
+                    maybeValueHasOrder = Some(valueHasOrder),
+                    knoraIdUtil = knoraIdUtil
                 ).toString()
         }
 
@@ -672,7 +674,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 // Don't accept link properties.
                 _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
-                    throw BadRequestException(s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
+                    throw BadRequestException(s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link.")
                 }
 
                 // Don't accept knora-api:hasStandoffLinkToValue.
@@ -749,7 +751,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 // Check that the current value and the submitted value have the same type.
                 _ = if (currentValue.valueContent.valueType != submittedInternalValueContent.valueType) {
-                    throw BadRequestException(s"Value <${updateValueRequest.updateValue.valueIri}> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2WithValueObjects)}>, but the submitted new version has type <${updateValueRequest.updateValue.valueContent.valueType}>")
+                    throw BadRequestException(s"Value <${updateValueRequest.updateValue.valueIri}> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted new version has type <${updateValueRequest.updateValue.valueContent.valueType}>")
                 }
 
                 // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
@@ -997,7 +999,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 maybeComment = newValueVersion.comment,
                 linkUpdates = standoffLinkUpdates,
                 currentTime = currentTime,
-                requestingUser = requestingUser.id
+                requestingUser = requestingUser.id,
+                knoraIdUtil = knoraIdUtil
             ).toString())
 
             /*
@@ -1113,7 +1116,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 // Don't accept link properties.
                 _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
-                    throw BadRequestException(s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
+                    throw BadRequestException(s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link.")
                 }
 
                 // Don't accept knora-api:hasStandoffLinkToValue.
@@ -1185,14 +1188,14 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 classInfoResponse: ReadOntologyV2 <- (responderManager ? classInfoRequest).mapTo[ReadOntologyV2]
                 classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
-                cardinalityInfo: Cardinality.KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(submittedInternalPropertyIri, throw InconsistentTriplestoreDataException(s"Resource <${deleteValueRequest.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}>, which has no cardinality for property <${deleteValueRequest.propertyIri}>"))
+                cardinalityInfo: Cardinality.KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(submittedInternalPropertyIri, throw InconsistentTriplestoreDataException(s"Resource <${deleteValueRequest.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${deleteValueRequest.propertyIri}>"))
 
                 // Check that the resource class's cardinality for the submitted property allows this value to be deleted.
 
                 currentValuesForProp: Seq[ReadValueV2] = resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
                 _ = if ((cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome) && currentValuesForProp.size == 1) {
-                    throw OntologyConstraintException(s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${deleteValueRequest.propertyIri}>, and this does not allow a value to be deleted for that property from resource <${deleteValueRequest.resourceIri}>")
+                    throw OntologyConstraintException(s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${deleteValueRequest.propertyIri}>, and this does not allow a value to be deleted for that property from resource <${deleteValueRequest.resourceIri}>")
                 }
 
                 // Get information about the project that the resource is in, so we know which named graph to do the update in.
@@ -1493,7 +1496,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             }
 
             // Convert the property IRIs to be queried to the API v2 complex schema for Gravsearch.
-            propertyIrisForGravsearchQuery: Seq[SmartIri] = (Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri).map(_.toOntologySchema(ApiV2WithValueObjects))
+            propertyIrisForGravsearchQuery: Seq[SmartIri] = (Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri).map(_.toOntologySchema(ApiV2Complex))
 
             // Make a Gravsearch query from a template.
             gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
@@ -1656,7 +1659,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                     // Check that the property whose object class constraint is to be checked is actually a link property.
                     if (!propertyInfo.isLinkProp) {
-                        throw BadRequestException(s"Property <${propertyInfo.entityInfoContent.propertyIri.toOntologySchema(ApiV2WithValueObjects)}> is not a link property")
+                        throw BadRequestException(s"Property <${propertyInfo.entityInfoContent.propertyIri.toOntologySchema(ApiV2Complex)}> is not a link property")
                     }
 
                     // Check that the user has permission to view the target resource, and that the target resource has the correct type.

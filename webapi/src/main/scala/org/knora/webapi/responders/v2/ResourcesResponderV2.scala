@@ -54,6 +54,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     /* actor materializer needed for http requests */
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
+    private val knoraIdUtil = new KnoraIdUtil
+
     /**
       * Represents a resource that is ready to be created and whose contents can be verified afterwards.
       *
@@ -218,7 +220,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             internalResourceClassIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.toOntologySchema(InternalSchema)
 
             _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri, None)) {
-                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.email} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
+                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
@@ -449,10 +451,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
                     val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
 
-                    val cardinalityInfo = knoraPropertyCardinalities.getOrElse(internalPropertyIri, throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> has no cardinality for property <$propertyIri>"))
+                    val cardinalityInfo = knoraPropertyCardinalities.getOrElse(internalPropertyIri, throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}> has no cardinality for property <$propertyIri>"))
 
                     if ((cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1) {
-                        throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> does not allow more than one value for property <$propertyIri>")
+                        throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}> does not allow more than one value for property <$propertyIri>")
                     }
             }
 
@@ -465,8 +467,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             internalPropertyIris: Set[SmartIri] = internalCreateResource.values.keySet
 
             _ = if (!requiredProps.subsetOf(internalPropertyIris)) {
-                val missingProps = (requiredProps -- internalPropertyIris).map(iri => s"<${iri.toOntologySchema(ApiV2WithValueObjects)}>").mkString(", ")
-                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}>: $missingProps")
+                val missingProps = (requiredProps -- internalPropertyIris).map(iri => s"<${iri.toOntologySchema(ApiV2Complex)}>").mkString(", ")
+                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}>: $missingProps")
             }
 
             // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
@@ -580,7 +582,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     val secondValue: ValueContentV2 = valueCombination(1).valueContent
 
                     if (firstValue.wouldDuplicateOtherValue(secondValue)) {
-                        throw DuplicateValueException(s"${resourceIDForErrorMsg}Duplicate values for property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
+                        throw DuplicateValueException(s"${resourceIDForErrorMsg}Duplicate values for property <${propertyIri.toOntologySchema(ApiV2Complex)}>")
                     }
                 }
         }
@@ -609,7 +611,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Don't accept link properties.
                 if (propertyInfo.isLinkProp) {
-                    throw BadRequestException(s"${resourceIDForErrorMsg}Invalid property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
+                    throw BadRequestException(s"${resourceIDForErrorMsg}Invalid property <${propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link.")
                 }
 
                 // Get the property's object class constraint. If this is a link value property, we want the object
@@ -633,7 +635,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                             // It's a link value.
 
                             if (!propertyInfo.isLinkValueProp) {
-                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2Complex)}>")
                             }
 
                             // Does the resource that's the target of the link belongs to a subclass of the
@@ -651,14 +653,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                     s"'${clientResourceIDs(linkValueContentV2.referredResourceIri)}'"
                                 }
 
-                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>, because it does not belong to class <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint.toOntologySchema(ApiV2Complex)}>, because it does not belong to class <${objectClassConstraint.toOntologySchema(ApiV2Complex)}>")
                             }
 
                         case otherValueContentV2: ValueContentV2 =>
                             // It's not a link value. Check that its type is equal to the property's object
                             // class constraint.
                             if (otherValueContentV2.valueType != objectClassConstraint) {
-                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2Complex)}>")
                             }
                     }
                 }
@@ -988,6 +990,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         mappings = mappingsAsMap,
                         versionDate = versionDate,
                         responderManager = responderManager,
+                        knoraIdUtil = knoraIdUtil,
                         requestingUser = requestingUser
                     )
             }.toVector
@@ -1027,6 +1030,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         mappings = Map.empty[IRI, MappingAndXSLTransformation],
                         versionDate = None,
                         responderManager = responderManager,
+                        knoraIdUtil = knoraIdUtil,
                         requestingUser = requestingUser
                     )
             }.toVector

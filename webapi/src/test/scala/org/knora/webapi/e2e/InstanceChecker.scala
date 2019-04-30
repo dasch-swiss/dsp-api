@@ -278,7 +278,7 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
                     if (OntologyConstants.KnoraApiV2Simple.KnoraDatatypes.contains(classIri.toString)) {
                         // It's a custom data type.
                         true
-                    } else if (!KnoraApiV2SimpleTransformationRules.knoraBaseClassesToRemove.contains(objectTypeInternal)) {
+                    } else if (!KnoraBaseToApiV2SimpleTransformationRules.internalClassesToRemove.contains(objectTypeInternal)) {
                         // It isn't a custom data type, and isn't one of the classes removed from the schema.
                         true
                     } else {
@@ -286,8 +286,9 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
                         false
                     }
 
-                case ApiV2WithValueObjects =>
-                    if (!KnoraApiV2WithValueObjectsTransformationRules.knoraBaseClassesToRemove.contains(objectTypeInternal)) {
+                case ApiV2Complex =>
+                    if (!(KnoraBaseToApiV2ComplexTransformationRules.internalClassesToRemove.contains(objectTypeInternal) ||
+                        KnoraAdminToApiV2ComplexTransformationRules.internalClassesToRemove.contains(objectTypeInternal))) {
                         // It isn't one of the classes removed from the schema.
                         true
                     } else {
