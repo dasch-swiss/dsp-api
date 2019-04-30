@@ -40,6 +40,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
+import org.knora.webapi.util.ConstructResponseUtilV2.ResourceWithValueRdfData
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
@@ -57,10 +58,13 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     /* actor materializer needed for http requests */
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
+    private val knoraIdUtil = new KnoraIdUtil
+
     /**
       * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
       */
     def receive(msg: StandoffResponderRequestV2) = msg match {
+        case getStandoffRequestV2: GetStandoffRequestV2 => getStandoffV2(getStandoffRequestV2)
         case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) => createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, requestingUser, uuid)
         case GetMappingRequestV2(mappingIri, requestingUser) => getMappingV2(mappingIri, requestingUser)
         case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) => getXSLTransformation(xsltTextReprIri, requestingUser)
@@ -68,6 +72,54 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     private val xsltCacheName = "xsltCache"
+
+    private def getStandoffV2(getStandoffRequestV2: GetStandoffRequestV2): Future[GetStandoffResponseV2] = {
+        for {
+            resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
+                triplestore = settings.triplestoreType,
+                resourceIris = Seq(getStandoffRequestV2.resourceIri),
+                preview = false,
+                maybePropertyIri = None,
+                maybeVersionDate = None,
+                queryValueHasString = false,
+                queryStandoff = true,
+                maybeValueIri = Some(getStandoffRequestV2.valueIri),
+                maybeStandoffMinStartIndex = Some(getStandoffRequestV2.offset),
+                maybeStandoffMaxStartIndex = Some(getStandoffRequestV2.offset + settings.maxResultsPerSearchResultPage - 1)
+            ).toString())
+
+            resourceRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourceRequestSparql)).mapTo[SparqlConstructResponse]
+
+            // separate resources and values
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = getStandoffRequestV2.requestingUser)
+
+            _ = if (queryResultsSeparated.keySet != Set(getStandoffRequestV2.resourceIri)) {
+                throw NotFoundException(s"Resource <${getStandoffRequestV2.resourceIri}> was not found (maybe you do not have permission to see it, or it is marked as deleted)")
+            }
+
+            readResourceV2: ReadResourceV2 <- ConstructResponseUtilV2.createFullResourceResponse(
+                resourceIri = getStandoffRequestV2.resourceIri,
+                resourceRdfData = queryResultsSeparated(getStandoffRequestV2.resourceIri),
+                mappings = Map.empty,
+                versionDate = None,
+                responderManager = responderManager,
+                knoraIdUtil = knoraIdUtil,
+                requestingUser = getStandoffRequestV2.requestingUser
+            )
+
+            valueObj: ReadValueV2 = readResourceV2.values.values.flatten.find(_.valueIri == getStandoffRequestV2.valueIri).getOrElse(throw NotFoundException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> (maybe you do not have permission to see it, or it is marked as deleted)"))
+
+            textValueObj: ReadTextValueV2 = valueObj match {
+                case textVal: ReadTextValueV2 => textVal
+                case _ => throw BadRequestException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> is not a text value")
+            }
+
+            standoff = textValueObj.valueContent.standoffAndMapping.getOrElse(throw NotFoundException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> does not have the requested standoff")).standoff
+        } yield GetStandoffResponseV2(
+            valueIri = textValueObj.valueIri,
+            standoff = standoff
+        )
+    }
 
     /**
       * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.

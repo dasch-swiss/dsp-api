@@ -31,7 +31,7 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi.{ApiV2Complex, BadRequestException}
+import org.knora.webapi.{ApiV2Complex, BadRequestException, SchemaOption, SchemaOptions}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -61,6 +61,11 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                     }
 
                     val offset: Int = stringFormatter.validateInt(offsetStr, throw BadRequestException(s"Invalid offset: $offsetStr"))
+                    val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
+                    if (!SchemaOptions.renderMarkupAsStandoff(ApiV2Complex, schemaOptions)) {
+                        throw BadRequestException(s"Standoff markup cannot be returned with the specified schema options")
+                    }
 
                     val requestMessageFuture: Future[GetStandoffRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
@@ -78,7 +83,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         responderManager = responderManager,
                         log = log,
                         targetSchema = ApiV2Complex,
-                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                        schemaOptions = schemaOptions
                     )
                 }
             }

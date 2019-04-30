@@ -53,11 +53,13 @@ case class GetStandoffRequestV2(resourceIri: IRI, valueIri: IRI, offset: Int, re
 /**
   * A response to a [[GetStandoffRequestV2]], representing a page of standoff tags from a text value.
   *
-  * @param resourceIri the IRI of the resource containing the value.
-  * @param valueIri    the IRI of the value.
-  * @param standoff    a page of standoff tags from the value.
+  * @param valueIri the IRI of the value.
+  * @param standoff a page of standoff tags from the value.
   */
-case class GetStandoffResponseV2(resourceIri: IRI, valueIri: IRI, standoff: Seq[StandoffTagV2]) extends KnoraResponseV2 {
+case class GetStandoffResponseV2(valueIri: IRI,
+                                 standoff: Seq[StandoffTagV2]) extends KnoraResponseV2 {
+    private val knoraIdUtil = new KnoraIdUtil
+
     /**
       * Converts the response to a data structure that can be used to generate JSON-LD.
       *
@@ -65,7 +67,33 @@ case class GetStandoffResponseV2(resourceIri: IRI, valueIri: IRI, standoff: Seq[
       * @return a [[JsonLDDocument]] representing the response.
       */
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
-        JsonLDDocument(body = JsonLDObject(Map.empty)) // TODO
+        if (targetSchema != ApiV2Complex) {
+            throw AssertionException(s"Standoff is available only in the complex schema")
+        }
+
+        val standoffInTargetSchema: Seq[StandoffTagV2] = standoff.map(_.toOntologySchema(targetSchema))
+        val projectSpecificOntologiesUsed: Set[SmartIri] = standoffInTargetSchema.flatMap(_.getOntologyIrisUsed).toSet.filter(!_.isKnoraBuiltInDefinitionIri)
+        val standoffAsJsonLD: Seq[JsonLDValue] = standoffInTargetSchema.map(_.toJsonLDValue(targetSchema = targetSchema, knoraIdUtil = knoraIdUtil))
+
+        val body: JsonLDObject = JsonLDObject(
+            Map(
+                JsonLDConstants.ID -> JsonLDString(valueIri),
+                JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.KnoraApiV2Complex.TextValue.toString),
+                OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff -> JsonLDArray(standoffAsJsonLD)
+            )
+        )
+
+        val context: JsonLDObject = JsonLDUtil.makeContext(
+            fixedPrefixes = Map(
+                "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
+                "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+                "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
+                OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+            ),
+            knoraOntologiesNeedingPrefixes = projectSpecificOntologiesUsed
+        )
+
+        JsonLDDocument(body = body, context = context)
     }
 }
 
@@ -358,7 +386,7 @@ trait StandoffTagAttributeV2 extends KnoraContentV2[StandoffTagAttributeV2] {
 
     def rdfValue: String
 
-    def toJsonLD(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): (IRI, JsonLDValue)
+    def toJsonLD: (IRI, JsonLDValue)
 }
 
 /**
@@ -379,7 +407,7 @@ case class StandoffTagIriAttributeV2(standoffPropertyIri: SmartIri, value: IRI, 
         copy(standoffPropertyIri = standoffPropertyIri.toOntologySchema(targetSchema))
     }
 
-    override def toJsonLD(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): (IRI, JsonLDValue) = {
+    override def toJsonLD: (IRI, JsonLDValue) = {
         standoffPropertyIri.toString -> JsonLDUtil.iriToJsonLDObject(value)
     }
 }
@@ -400,7 +428,7 @@ case class StandoffTagUriAttributeV2(standoffPropertyIri: SmartIri, value: Strin
         copy(standoffPropertyIri = standoffPropertyIri.toOntologySchema(targetSchema))
     }
 
-    override def toJsonLD(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): (IRI, JsonLDValue) = {
+    override def toJsonLD: (IRI, JsonLDValue) = {
         standoffPropertyIri.toString -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = value,
             datatype = OntologyConstants.Xsd.Uri.toSmartIri
@@ -424,7 +452,7 @@ case class StandoffTagInternalReferenceAttributeV2(standoffPropertyIri: SmartIri
         copy(standoffPropertyIri = standoffPropertyIri.toOntologySchema(targetSchema))
     }
 
-    override def toJsonLD(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): (IRI, JsonLDValue) = {
+    override def toJsonLD: (IRI, JsonLDValue) = {
         standoffPropertyIri.toString -> JsonLDUtil.iriToJsonLDObject(value)
     }
 }
@@ -445,7 +473,7 @@ case class StandoffTagStringAttributeV2(standoffPropertyIri: SmartIri, value: St
         copy(standoffPropertyIri = standoffPropertyIri.toOntologySchema(targetSchema))
     }
 
-    override def toJsonLD(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): (IRI, JsonLDValue) = {
+    override def toJsonLD: (IRI, JsonLDValue) = {
         standoffPropertyIri.toString -> JsonLDString(value)
     }
 }
@@ -466,7 +494,7 @@ case class StandoffTagIntegerAttributeV2(standoffPropertyIri: SmartIri, value: I
         copy(standoffPropertyIri = standoffPropertyIri.toOntologySchema(targetSchema))
     }
 
-    override def toJsonLD(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): (IRI, JsonLDValue) = {
+    override def toJsonLD: (IRI, JsonLDValue) = {
         standoffPropertyIri.toString -> JsonLDInt(value)
     }
 }
@@ -487,7 +515,7 @@ case class StandoffTagDecimalAttributeV2(standoffPropertyIri: SmartIri, value: B
         copy(standoffPropertyIri = standoffPropertyIri.toOntologySchema(targetSchema))
     }
 
-    override def toJsonLD(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): (IRI, JsonLDValue) = {
+    override def toJsonLD: (IRI, JsonLDValue) = {
         standoffPropertyIri.toString -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = value.toString,
             datatype = OntologyConstants.Xsd.Decimal.toSmartIri
@@ -511,7 +539,7 @@ case class StandoffTagBooleanAttributeV2(standoffPropertyIri: SmartIri, value: B
         copy(standoffPropertyIri = standoffPropertyIri.toOntologySchema(targetSchema))
     }
 
-    override def toJsonLD(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): (IRI, JsonLDValue) = {
+    override def toJsonLD: (IRI, JsonLDValue) = {
         standoffPropertyIri.toString -> JsonLDBoolean(value)
     }
 }
@@ -544,14 +572,22 @@ case class StandoffTagV2(standoffTagClassIri: SmartIri,
                          endParentIndex: Option[Int] = None,
                          attributes: Seq[StandoffTagAttributeV2] = Seq.empty[StandoffTagAttributeV2]) extends KnoraContentV2[StandoffTagV2] {
     override def toOntologySchema(targetSchema: OntologySchema): StandoffTagV2 = {
+        if (targetSchema != ApiV2Complex) {
+            throw AssertionException(s"Standoff is available only in the complex schema")
+        }
+
         copy(attributes = attributes.map(_.toOntologySchema(targetSchema)))
     }
 
-    def toJsonLDValue(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption], knoraIdUtil: KnoraIdUtil): JsonLDValue = {
-        val attributesAsJsonLD: Map[IRI, JsonLDValue] = attributes.map(_.toJsonLD(targetSchema = targetSchema, schemaOptions = schemaOptions)).toMap
+    def toJsonLDValue(targetSchema: OntologySchema, knoraIdUtil: KnoraIdUtil): JsonLDValue = {
+        if (targetSchema != ApiV2Complex) {
+            throw AssertionException(s"Standoff is available only in the complex schema")
+        }
+
+        val attributesAsJsonLD: Map[IRI, JsonLDValue] = attributes.map(_.toJsonLD).toMap
 
         val contentMap: Map[IRI, JsonLDValue] = Map(
-            JsonLDConstants.TYPE -> JsonLDUtil.iriToJsonLDObject(standoffTagClassIri.toString),
+            JsonLDConstants.TYPE -> JsonLDString(standoffTagClassIri.toString),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID -> JsonLDString(knoraIdUtil.base64EncodeUuid(uuid)),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasStart -> JsonLDInt(startPosition),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasEnd -> JsonLDInt(endPosition),
@@ -574,6 +610,17 @@ case class StandoffTagV2(standoffTagClassIri: SmartIri,
             definedOriginalXMLID => OntologyConstants.KnoraApiV2Complex.StandoffTagHasOriginalXMLID -> JsonLDString(definedOriginalXMLID)
         }
 
-        JsonLDObject(contentMap ++ attributesAsJsonLD ++ endIndexStatement ++ startParentIndexStatement ++ endParentIndexStatement ++ originalXMLIDStatement)
+        JsonLDObject(
+            contentMap ++
+                attributesAsJsonLD ++
+                endIndexStatement ++
+                startParentIndexStatement ++
+                endParentIndexStatement ++
+                originalXMLIDStatement
+        )
+    }
+
+    def getOntologyIrisUsed: Set[SmartIri] = {
+        attributes.map(_.standoffPropertyIri.getOntologyFromEntity).toSet + standoffTagClassIri.getOntologyFromEntity
     }
 }
