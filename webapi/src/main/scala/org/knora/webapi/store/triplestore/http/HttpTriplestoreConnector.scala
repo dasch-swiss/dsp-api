@@ -46,7 +46,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.SparqlResultProtocol._
-import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
+import org.knora.webapi.util.{FakeTriplestore, FileUtil, StringFormatter}
 import spray.json._
 
 import scala.collection.JavaConverters._
@@ -231,6 +231,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             parseTry match {
                 case Success(parsed) => Success(parsed)
                 case Failure(e) =>
+                    FileUtil.writeTextFile(new java.io.File("/Users/benjamingeer/Desktop/request.rq"), sparql)
+                    FileUtil.writeTextFile(new java.io.File("/Users/benjamingeer/Desktop/incomplete-response.txt"), turtleStr)
                     log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
                     Failure(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
             }
