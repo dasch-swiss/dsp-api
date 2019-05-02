@@ -857,6 +857,7 @@ object OntologyConstants {
         val StandoffTagHasEndIndex: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasEndIndex"
         val StandoffTagHasUUID: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasUUID"
         val StandoffTagHasOriginalXMLID: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasOriginalXMLID"
+        val NextStandoffStartIndex: IRI = KnoraApiV2PrefixExpansion + "nextStandoffStartIndex"
 
         val IntValueAsInt: IRI = KnoraApiV2PrefixExpansion + "intValueAsInt"
 

@@ -53,11 +53,13 @@ case class GetStandoffRequestV2(resourceIri: IRI, valueIri: IRI, offset: Int, re
 /**
   * A response to a [[GetStandoffRequestV2]], representing a page of standoff tags from a text value.
   *
-  * @param valueIri the IRI of the value.
-  * @param standoff a page of standoff tags from the value.
+  * @param valueIri   the IRI of the value.
+  * @param standoff   a page of standoff tags from the value.
+  * @param nextOffset the next available offset.
   */
 case class GetStandoffResponseV2(valueIri: IRI,
-                                 standoff: Seq[StandoffTagV2]) extends KnoraResponseV2 {
+                                 standoff: Seq[StandoffTagV2],
+                                 nextOffset: Option[Int]) extends KnoraResponseV2 {
     private val knoraIdUtil = new KnoraIdUtil
 
     /**
@@ -75,13 +77,18 @@ case class GetStandoffResponseV2(valueIri: IRI,
         val projectSpecificOntologiesUsed: Set[SmartIri] = standoffInTargetSchema.flatMap(_.getOntologyIrisUsed).toSet.filter(!_.isKnoraBuiltInDefinitionIri)
         val standoffAsJsonLD: Seq[JsonLDValue] = standoffInTargetSchema.map(_.toJsonLDValue(targetSchema = targetSchema, knoraIdUtil = knoraIdUtil))
 
-        val body: JsonLDObject = JsonLDObject(
-            Map(
-                JsonLDConstants.ID -> JsonLDString(valueIri),
-                JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.KnoraApiV2Complex.TextValue.toString),
-                OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff -> JsonLDArray(standoffAsJsonLD)
-            )
+
+        val contentMap: Map[IRI, JsonLDValue] = Map(
+            JsonLDConstants.ID -> JsonLDString(valueIri),
+            JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.KnoraApiV2Complex.TextValue.toString),
+            OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff -> JsonLDArray(standoffAsJsonLD)
         )
+
+        val nextOffsetStatement: Option[(IRI, JsonLDInt)] = nextOffset.map {
+            definedNextOffset => OntologyConstants.KnoraApiV2Complex.NextStandoffStartIndex -> JsonLDInt(definedNextOffset)
+        }
+
+        val body: JsonLDObject = JsonLDObject(contentMap ++ nextOffsetStatement)
 
         val context: JsonLDObject = JsonLDUtil.makeContext(
             fixedPrefixes = Map(

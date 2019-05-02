@@ -5740,6 +5740,20 @@
     "rdfs:comment" : "Specifies the new modification date of a resource",
     "rdfs:label" : "new modification date"
   }, {
+    "@id" : "knora-api:nextStandoffStartIndex",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:integer"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:TextValue"
+    },
+    "rdfs:comment" : "The next knora-api:standoffTagHasStartIndex in a text value.",
+    "rdfs:label" : "next standoff start index",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
+    }
+  }, {
     "@id" : "knora-api:objectType",
     "@type" : "rdf:Property",
     "rdfs:comment" : "Specifies the required type of the objects of a property",

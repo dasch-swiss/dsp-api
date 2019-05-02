@@ -569,6 +569,29 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
             )
         )
     )
+
+    private val NextStandoffStartIndex: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Complex.NextStandoffStartIndex,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2Complex.TextValue),
+        objectType = Some(OntologyConstants.Xsd.Integer),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "next standoff start index"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The next knora-api:standoffTagHasStartIndex in a text value."
+                )
+            )
+        )
+    )
+
     private val TextValueHasLanguage: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Complex.TextValueHasLanguage,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1678,6 +1701,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         TextValueHasMarkup,
         TextValueHasStandoff,
         TextValueHasMaxStandoffStartIndex,
+        NextStandoffStartIndex,
         TextValueHasLanguage,
         TextValueAsXml,
         TextValueAsHtml,

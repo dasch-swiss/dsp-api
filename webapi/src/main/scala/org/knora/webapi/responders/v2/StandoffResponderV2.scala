@@ -24,6 +24,7 @@ import java.util.UUID
 
 import akka.pattern._
 import akka.stream.ActorMaterializer
+import akka.util.Timeout
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
@@ -47,7 +48,7 @@ import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.XMLTagItem
 import org.xml.sax.SAXException
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{Elem, Node, NodeSeq, XML}
 
 /**
@@ -74,6 +75,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     private val xsltCacheName = "xsltCache"
 
     private def getStandoffV2(getStandoffRequestV2: GetStandoffRequestV2): Future[GetStandoffResponseV2] = {
+        val requestMaxStartIndex = getStandoffRequestV2.offset + settings.maxResultsPerSearchResultPage - 1
+
         for {
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
@@ -85,7 +88,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 queryStandoff = true,
                 maybeValueIri = Some(getStandoffRequestV2.valueIri),
                 maybeStandoffMinStartIndex = Some(getStandoffRequestV2.offset),
-                maybeStandoffMaxStartIndex = Some(getStandoffRequestV2.offset + settings.maxResultsPerSearchResultPage - 1)
+                maybeStandoffMaxStartIndex = Some(requestMaxStartIndex)
             ).toString())
 
             resourceRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourceRequestSparql)).mapTo[SparqlConstructResponse]
@@ -114,10 +117,22 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 case _ => throw BadRequestException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> is not a text value")
             }
 
-            standoff = textValueObj.valueContent.standoffAndMapping.getOrElse(throw NotFoundException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> does not have the requested standoff")).standoff
+            standoff: Seq[StandoffTagV2] = textValueObj.valueContent.standoffAndMapping.getOrElse(throw NotFoundException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> does not have the requested standoff")).standoff
+
+            nextOffset: Option[Int] = textValueObj.valueHasMaxStandoffStartIndex match {
+                case Some(definedMaxIndex) =>
+                    if (requestMaxStartIndex >= definedMaxIndex) {
+                        None
+                    } else {
+                        Some(requestMaxStartIndex + 1)
+                    }
+
+                case None => None
+            }
         } yield GetStandoffResponseV2(
             valueIri = textValueObj.valueIri,
-            standoff = standoff
+            standoff = standoff,
+            nextOffset = nextOffset
         )
     }
 
@@ -798,6 +813,69 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             standoffPropertyInfoMap = standoffPropertyEntities.standoffPropertyInfoMap
         )
 
+    }
+
+    /**
+      * A [[TaskResult]] containing a page of standoff queried from a text value.
+      *
+      * @param underlyingResult the underlying standoff result.
+      * @param nextTask         the next task, or `None` if there is no more standoff to query in the text value.
+      */
+    case class StandoffTaskResult(underlyingResult: StandoffTaskUnderlyingResult,
+                                  nextTask: Option[GetStandoffTask]) extends TaskResult[StandoffTaskUnderlyingResult]
+
+    /**
+      * The underlying result type contained in a [[StandoffTaskResult]].
+      *
+      * @param standoff the standoff that was queried.
+      */
+    case class StandoffTaskUnderlyingResult(standoff: Vector[StandoffTagV2])
+
+    /**
+      * A task that gets a page of standoff from a text value.
+      *
+      * @param resourceIri    the IRI of the resource containing the value.
+      * @param valueIri       the IRI of the value.
+      * @param offset         the start index of the first standoff tag to be returned.
+      * @param requestingUser the user making the request.
+      */
+    case class GetStandoffTask(resourceIri: IRI,
+                               valueIri: IRI,
+                               offset: Int,
+                               requestingUser: UserADM) extends Task[StandoffTaskUnderlyingResult] {
+        override def runTask(previousResult: Option[TaskResult[StandoffTaskUnderlyingResult]])(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TaskResult[StandoffTaskUnderlyingResult]] = {
+            for {
+                // Get a page of standoff.
+                standoffResponse <- getStandoffV2(
+                    GetStandoffRequestV2(
+                        resourceIri = resourceIri,
+                        valueIri = valueIri,
+                        offset = offset,
+                        requestingUser = requestingUser)
+                )
+
+                // Add it to the standoff that has already been collected.
+                collectedStandoff = previousResult match {
+                    case Some(definedPreviousResult) => definedPreviousResult.underlyingResult.standoff ++ standoffResponse.standoff
+                    case None => standoffResponse.standoff.toVector
+                }
+            } yield standoffResponse.nextOffset match {
+                case Some(definedNextOffset) =>
+                    // There is more standoff to query. Return the collected standoff and the next task.
+                    StandoffTaskResult(
+                        underlyingResult = StandoffTaskUnderlyingResult(collectedStandoff),
+                        nextTask = Some(copy(offset = definedNextOffset)
+                        )
+                    )
+
+                case None =>
+                    // There is no more standoff to query. Just return the collected standoff.
+                    StandoffTaskResult(
+                        underlyingResult = StandoffTaskUnderlyingResult(collectedStandoff),
+                        nextTask = None
+                    )
+            }
+        }
     }
 
 }
