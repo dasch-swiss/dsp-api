@@ -36,8 +36,8 @@ import org.knora.webapi.store.SipiConnectorActorName
 import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
 import org.knora.webapi.util._
+import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -48,9 +48,9 @@ object ResourcesResponderV2Spec {
 
     private val anythingUserProfile = SharedTestDataADM.anythingUser2
 
-    private val defaultAnythingResourcePermissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
+    private val defaultAnythingResourcePermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
     private val defaultAnythingValuePermissions = defaultAnythingResourcePermissions
-    private val defaultStillImageFileValuePermissions = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
+    private val defaultStillImageFileValuePermissions = "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
 
     private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
 
@@ -62,7 +62,7 @@ object ResourcesResponderV2Spec {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
             startPosition = 0,
             endPosition = 26,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
         ),
@@ -70,7 +70,7 @@ object ResourcesResponderV2Spec {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
             startPosition = 0,
             endPosition = 12,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 1,
             startParentIndex = Some(0)
@@ -79,7 +79,7 @@ object ResourcesResponderV2Spec {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
             startPosition = 0,
             endPosition = 7,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 2,
             startParentIndex = Some(1)
@@ -459,7 +459,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <${resourceInfo.resourceIri}>")
         }
 
-        resourceInfo.toOntologySchema(ApiV2WithValueObjects)
+        resourceInfo.toOntologySchema(ApiV2Complex)
     }
 
     private def checkCreateResource(inputResource: CreateResourceV2,
@@ -815,7 +815,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 label = "test thing",
                 values = Map.empty,
                 projectADM = SharedTestDataADM.anythingProject,
-                permissions = Some("CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
+                permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
             )
 
             responderManager ! CreateResourceRequestV2(
@@ -848,15 +848,15 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = IntegerValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasInteger = 5,
                             comment = Some("this is the number five")
                         ),
-                        permissions = Some("CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
+                        permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = IntegerValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasInteger = 6
                         )
                     )
@@ -864,7 +864,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "this is text without standoff"
                         )
                     )
@@ -872,7 +872,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "this is text with standoff",
                             standoffAndMapping = Some(StandoffAndMapping(
                                 standoff = sampleStandoff,
@@ -885,7 +885,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = DecimalValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasDecimal = BigDecimal("100000000000000.000000000000001")
                         )
                     )
@@ -893,7 +893,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = DateValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasCalendar = CalendarNameGregorian,
                             valueHasStartJDN = 2264907,
                             valueHasStartPrecision = DatePrecisionYear,
@@ -905,7 +905,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = BooleanValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasBoolean = true
                         )
                     )
@@ -913,7 +913,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = GeomValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasGeometry = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
                         )
                     )
@@ -921,7 +921,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = IntervalValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasIntervalStart = BigDecimal("1.2"),
                             valueHasIntervalEnd = BigDecimal("3.4")
                         )
@@ -930,7 +930,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = HierarchicalListValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasListNode = "http://rdfh.ch/lists/0001/treeList03"
                         )
                     )
@@ -938,7 +938,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = ColorValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasColor = "#ff3333"
                         )
                     )
@@ -946,7 +946,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = UriValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasUri = "https://www.knora.org"
                         )
                     )
@@ -954,7 +954,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = GeonameValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasGeonameCode = "2661604"
                         )
                     )
@@ -962,7 +962,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = LinkValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             referredResourceIri = "http://rdfh.ch/0001/a-thing"
                         )
                     )
@@ -1007,7 +1007,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = StillImageFileValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             fileValue = FileValueV2(
                                 internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
                                 internalMimeType = "image/jp2",
@@ -1079,7 +1079,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title"
                         )
                     )
@@ -1087,13 +1087,13 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test publoc 1"
                         )
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test publoc 2"
                         )
                     )
@@ -1126,7 +1126,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title"
                         )
                     )
@@ -1134,7 +1134,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test pagenum"
                         )
                     )
@@ -1167,19 +1167,19 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title 1"
                         )
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title 2"
                         )
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title 1"
                         )
                     )
@@ -1212,7 +1212,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "test title"
                         )
                     )
@@ -1245,7 +1245,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = LinkValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             referredResourceIri = "http://rdfh.ch/0001/nonexistent-thing"
                         )
                     )
@@ -1279,7 +1279,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
                     startPosition = 0,
                     endPosition = 26,
-                    uuid = UUID.randomUUID().toString,
+                    uuid = UUID.randomUUID(),
                     originalXMLID = None,
                     startIndex = 0
                 ),
@@ -1288,7 +1288,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                     startPosition = 0,
                     endPosition = 12,
-                    uuid = UUID.randomUUID().toString,
+                    uuid = UUID.randomUUID(),
                     originalXMLID = None,
                     startIndex = 1,
                     attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/0001/nonexistent-thing")),
@@ -1298,7 +1298,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                     startPosition = 0,
                     endPosition = 7,
-                    uuid = UUID.randomUUID().toString,
+                    uuid = UUID.randomUUID(),
                     originalXMLID = None,
                     startIndex = 2,
                     startParentIndex = Some(1)
@@ -1309,7 +1309,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "this is text with standoff",
                             standoffAndMapping = Some(StandoffAndMapping(
                                 standoff = standoffWithInvalidLink,
@@ -1347,7 +1347,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = HierarchicalListValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasListNode = "http://rdfh.ch/lists/0001/nonexistent-list-node"
                         )
                     )
@@ -1380,7 +1380,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasString = "invalid text value"
                         )
                     )
@@ -1413,7 +1413,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = LinkValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             referredResourceIri = zeitglöckleinIri
                         )
                     )
@@ -1448,7 +1448,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 label = "invalid thing",
                 values = Map.empty,
                 projectADM = SharedTestDataADM.anythingProject,
-                permissions = Some("M knora-base:Creator,V knora-base:KnownUser")
+                permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser")
             )
 
             responderManager ! CreateResourceRequestV2(
@@ -1469,11 +1469,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
                     CreateValueInNewResourceV2(
                         valueContent = IntegerValueContentV2(
-                            ontologySchema = ApiV2WithValueObjects,
+                            ontologySchema = ApiV2Complex,
                             valueHasInteger = 5,
                             comment = Some("this is the number five")
                         ),
-                        permissions = Some("M knora-base:Creator,V knora-base:KnownUser")
+                        permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser")
                     )
                 )
             )
@@ -1554,7 +1554,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "update a resource's metadata when it doesn't have a knora-base:lastModificationDate" in {
             val dateTimeStampBeforeUpdate = Instant.now
             val newLabel = "new test label"
-            val newPermissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:ProjectMember"
+            val newPermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
 
             val updateRequest = UpdateResourceMetadataRequestV2(
                 resourceIri = aThingIri,

@@ -22,6 +22,7 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @base <http://www.knora.org/ontology/standoff> .
 
@@ -31,7 +32,7 @@
 
     rdfs:label "The standoff ontology"@en ;
 
-    knora-base:attachedToProject knora-base:SystemProject .
+    knora-base:attachedToProject knora-admin:SystemProject .
 
 
 #################################################################

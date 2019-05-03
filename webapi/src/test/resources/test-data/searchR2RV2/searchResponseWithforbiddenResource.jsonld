@@ -7,7 +7,7 @@
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV"
     },
     "knora-api:attachedToProject" : {
-      "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
+      "@id" : "http://www.knora.org/ontology/knora-admin#SystemProject"
     },
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/root"
@@ -16,7 +16,8 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2017-10-06T11:05:37Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|V knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "V",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0000/forbiddenResourceV.20171006T110537Z"
@@ -39,7 +40,8 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:10Z"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+    "knora-api:userHasPermission" : "V",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB.20160302T150510Z"
@@ -54,7 +56,8 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Text:\nEnde des 33. Kapitels. Beginn des 34. Kapitels: \"Dis vorgeschriben vn(d) sunst vil | andre ding vnd  heilige stette sint in der stat zu(o) Jherusalem (...)\". Rubrizierung in Rot.",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -75,7 +78,8 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:21Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/6ad3e2c47501O.20160302T150521Z"
@@ -90,7 +94,8 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Zwei neue Textabschnitte: \"Das pfullment.| Hilff mir herr iesu christe/| mit andacht vnd nachuolgen | seliclich betrachten/ dine bu(o)ß|werck ...\"; \"SCho(e)ppfer der zitt/ ewi-|ger gott/ der alle ding | in geordneter zal maß | vnd wag ordnest ...\".\nInitiale \"S\" (Kolorierung in Blau und Gelb).\nBordüre mit Meerwesen, Holzschnitt.\nKolorierung: Rot, Blau, Grün, Gelb, Braun, Grau.",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -111,7 +116,8 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:11Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/7e4cfc5417g.20160302T150511Z"
@@ -126,7 +132,8 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Besitznachweis und Inhaltsangabe (Feder, dunkelbraun): \"Jn diesem bu(o)ch so den Cartusern zu(o) mind(er)n | basel gehörtt stand diß nachgeschrib(e)n ding (...)\". Die vierte Position mit einem Zettel überklebt, auf dem ein neuer Eintrag in hellerer Tinte steht. Unten späterer Besitznachweis von anderer Hand, ebenfalls in hellerer Tinte, mit zweimaliger Datierung \"1545\" und der Namensnennung \"Johannes Bachtaler von Lörach\"; darunter, in der unteren rechten Ecke ein Bibliotheksstempel (Queroval, schwarz): \"BIBL. PUBL. | BASILEENSIS.\"\n ",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -147,7 +154,8 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:39Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ad88963d2703=.20160302T150539Z"
@@ -162,7 +170,8 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+      "knora-api:userHasPermission" : "V",
       "knora-api:valueAsString" : "Ende des 8. Kapitels.\nBeginn des 9. Kapitels: \"Als ouch vil lute geren horten | wunderliche ding die sie nicht gesehen hand. dorumb will ich sagen ein | wunder das in der inselen ist zu(o) Langho von Ypocras tochter.(...)\".\nRubrizierung in Rot.",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -183,7 +192,8 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:21Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "RV",
     "knora-api:versionArkUrl" : {
       "@type" : "xsd:anyURI",
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b603c6886d01T.20160302T150521Z"

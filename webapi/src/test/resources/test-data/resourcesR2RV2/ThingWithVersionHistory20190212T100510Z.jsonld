@@ -7,8 +7,9 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
     "knora-api:intValueAsInt" : 2,
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2019-02-12T09:05:10Z"
@@ -20,10 +21,11 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
     },
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:linkValueHasTargetIri" : {
       "@id" : "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ"
     },
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2019-02-10T10:30:10Z"
@@ -35,7 +37,8 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueAsString" : "three",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
@@ -56,11 +59,12 @@
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2019-02-08T15:05:10Z"
   },
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
   "knora-api:lastModificationDate" : {
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2019-02-13T09:05:10Z"
   },
+  "knora-api:userHasPermission" : "V",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO.20190212T100510Z"

@@ -75,7 +75,7 @@ For example, here is a request to create a resource with various value types:
   },
   "anything:hasInteger" : [ {
     "@type" : "knora-api:IntValue",
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
     "knora-api:intValueAsInt" : 5,
     "knora-api:valueHasComment" : "this is the number five"
   }, {
@@ -137,9 +137,10 @@ For example, here is a request to create a resource with various value types:
 }
 ```
 
-Permissions for the new resource can be given by adding `knora-api:hasPermissions`, and a custom creation date
+Permissions for the new resource can be given by adding `knora-api:hasPermissions`, a custom creation date
 can be specified by adding `knora-api:creationDate`
-(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)). For example:
+(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)), and the
+resource's creator can be specfied by adding `knora-api:attachedToUser`. For example:
 
 ```jsonld
 {
@@ -151,8 +152,11 @@ can be specified by adding `knora-api:creationDate`
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0001"
   },
+  "knora-api:attachedToUser" : {
+    "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+  },
   "rdfs:label" : "test thing",
-  "knora-api:hasPermissions" : "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
   "knora-api:creationDate" : {
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2019-01-09T15:45:54.502951Z"
@@ -173,7 +177,13 @@ The format of the object of `knora-api:hasPermissions` is described in
 If permissions are not given, configurable default permissions are used
 (see @ref:[Default Object Access Permissions](../../05-internals/design/api-admin/administration.md#default-object-access-permissions)).
 
-To create a resource, the user must have permission to create resources in the specified project.
+To create a resource, the user must have permission to create resources
+of that class in that project.
+
+The predicate `knora-api:attachedToUser` can be used to specify a creator other
+than the requesting user only if the requesting user is an administrator of the
+project or a system administrator. The specified creator must also
+have permission to create resources of that class in that project.
 
 The response is a JSON-LD document containing a
 @ref:[preview](reading-and-searching-resources.md#get-the-preview-of-a-resource-by-its-iri)
@@ -216,7 +226,7 @@ Here is an example:
   "@id" : "http://rdfh.ch/0001/a-thing",
   "@type" : "anything:Thing",
   "rdfs:label" : "this is the new label",
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:ProjectMember",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember",
   "knora-api:lastModificationDate" : {
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2017-11-20T15:55:17Z"

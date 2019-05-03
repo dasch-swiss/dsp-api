@@ -35,7 +35,7 @@ object KnoraSystemInstances {
           * Represents the anonymous user.
           */
         val AnonymousUser = UserADM(
-            id = OntologyConstants.KnoraBase.AnonymousUser,
+            id = OntologyConstants.KnoraAdmin.AnonymousUser,
             username = "anonymous",
             email = "anonymous@localhost",
             password = None,
@@ -54,7 +54,7 @@ object KnoraSystemInstances {
           * Represents the system user used internally.
           */
         val SystemUser = UserADM(
-            id = OntologyConstants.KnoraBase.SystemUser,
+            id = OntologyConstants.KnoraAdmin.SystemUser,
             username = "system",
             email = "system@localhost",
             password = None,

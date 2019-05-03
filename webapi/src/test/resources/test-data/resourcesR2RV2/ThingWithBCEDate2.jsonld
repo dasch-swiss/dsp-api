@@ -16,7 +16,8 @@
     "knora-api:dateValueHasStartEra" : "BCE",
     "knora-api:dateValueHasStartMonth" : 1,
     "knora-api:dateValueHasStartYear" : 10,
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueAsString" : "JULIAN:0010-01-10 BCE:0010-01-10 CE",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
@@ -37,7 +38,8 @@
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2018-01-31T15:05:10Z"
   },
-  "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+  "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+  "knora-api:userHasPermission" : "V",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S.20180131T150510Z"

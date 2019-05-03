@@ -117,6 +117,19 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "search by project and resource class" in {
+            responderManager ! SearchResourcesByProjectAndClassRequestV2(
+                projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
+                resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
+                page = 0,
+                requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 => response.numberOfResources should ===(19)
+            }
+        }
 
     }
 

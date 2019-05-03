@@ -54,6 +54,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     /* actor materializer needed for http requests */
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
+    private val knoraIdUtil = new KnoraIdUtil
+
     /**
       * Represents a resource that is ready to be created and whose contents can be verified afterwards.
       *
@@ -68,9 +70,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
       */
     def receive(msg: ResourcesResponderRequestV2) = msg match {
-        case ResourcesGetRequestV2(resIris, propertyIri, versionDate, requestingUser) => getResources(resIris, propertyIri, versionDate, requestingUser)
-        case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreview(resIris, requestingUser)
-        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
+        case ResourcesGetRequestV2(resIris, propertyIri, versionDate, requestingUser) => getResourcesV2(resIris, propertyIri, versionDate, requestingUser)
+        case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreviewV2(resIris, requestingUser)
+        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
         case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
         case deleteResourceRequestV2: DeleteResourceRequestV2 => deleteResourceV2(deleteResourceRequestV2)
@@ -197,7 +199,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             projectIri = createResourceRequestV2.createResource.projectADM.id
 
-            _ = if (projectIri == OntologyConstants.KnoraBase.SystemProject || projectIri == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
+            _ = if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
                 throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
             }
 
@@ -218,7 +220,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             internalResourceClassIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.toOntologySchema(InternalSchema)
 
             _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri, None)) {
-                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.email} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
+                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
@@ -249,7 +251,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         def makeTaskFuture: Future[SuccessResponseV2] = {
             for {
                 // Get the metadata of the resource to be updated.
-                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
+                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
                 resource: ReadResourceV2 = resourcesSeq.toResource(updateResourceMetadataRequestV2.resourceIri)
                 internalResourceClassIri = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
 
@@ -300,7 +302,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Verify that the resource was updated correctly.
 
-                updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
+                updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
 
                 _ = if (updatedResourcesSeq.numberOfResources != 1) {
                     throw AssertionException(s"Expected one resource, got ${resourcesSeq.numberOfResources}")
@@ -346,7 +348,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         def makeTaskFuture: Future[SuccessResponseV2] = {
             for {
                 // Get the metadata of the resource to be updated.
-                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(deleteResourceV2.resourceIri), deleteResourceV2.requestingUser)
+                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(Seq(deleteResourceV2.resourceIri), deleteResourceV2.requestingUser)
                 resource: ReadResourceV2 = resourcesSeq.toResource(deleteResourceV2.resourceIri)
                 internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
 
@@ -449,10 +451,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
                     val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
 
-                    val cardinalityInfo = knoraPropertyCardinalities.getOrElse(internalPropertyIri, throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> has no cardinality for property <$propertyIri>"))
+                    val cardinalityInfo = knoraPropertyCardinalities.getOrElse(internalPropertyIri, throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}> has no cardinality for property <$propertyIri>"))
 
                     if ((cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1) {
-                        throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> does not allow more than one value for property <$propertyIri>")
+                        throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}> does not allow more than one value for property <$propertyIri>")
                     }
             }
 
@@ -465,8 +467,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             internalPropertyIris: Set[SmartIri] = internalCreateResource.values.keySet
 
             _ = if (!requiredProps.subsetOf(internalPropertyIris)) {
-                val missingProps = (requiredProps -- internalPropertyIris).map(iri => s"<${iri.toOntologySchema(ApiV2WithValueObjects)}>").mkString(", ")
-                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}>: $missingProps")
+                val missingProps = (requiredProps -- internalPropertyIris).map(iri => s"<${iri.toOntologySchema(ApiV2Complex)}>").mkString(", ")
+                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}>: $missingProps")
             }
 
             // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
@@ -551,7 +553,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         for {
             // Get information about the existing resources that are targets of links.
-            existingTargets: ReadResourcesSequenceV2 <- getResourcePreview(existingTargets.toSeq, requestingUser)
+            existingTargets: ReadResourcesSequenceV2 <- getResourcePreviewV2(existingTargets.toSeq, requestingUser)
 
             // Make a map of the IRIs of existing target resources to their class IRIs.
             classesOfExistingTargets: Map[IRI, SmartIri] = existingTargets.resources.map(resource => resource.resourceIri -> resource.resourceClassIri).toMap
@@ -580,7 +582,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     val secondValue: ValueContentV2 = valueCombination(1).valueContent
 
                     if (firstValue.wouldDuplicateOtherValue(secondValue)) {
-                        throw DuplicateValueException(s"${resourceIDForErrorMsg}Duplicate values for property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
+                        throw DuplicateValueException(s"${resourceIDForErrorMsg}Duplicate values for property <${propertyIri.toOntologySchema(ApiV2Complex)}>")
                     }
                 }
         }
@@ -609,7 +611,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Don't accept link properties.
                 if (propertyInfo.isLinkProp) {
-                    throw BadRequestException(s"${resourceIDForErrorMsg}Invalid property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
+                    throw BadRequestException(s"${resourceIDForErrorMsg}Invalid property <${propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link.")
                 }
 
                 // Get the property's object class constraint. If this is a link value property, we want the object
@@ -633,7 +635,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                             // It's a link value.
 
                             if (!propertyInfo.isLinkValueProp) {
-                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2Complex)}>")
                             }
 
                             // Does the resource that's the target of the link belongs to a subclass of the
@@ -651,14 +653,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                     s"'${clientResourceIDs(linkValueContentV2.referredResourceIri)}'"
                                 }
 
-                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>, because it does not belong to class <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint.toOntologySchema(ApiV2Complex)}>, because it does not belong to class <${objectClassConstraint.toOntologySchema(ApiV2Complex)}>")
                             }
 
                         case otherValueContentV2: ValueContentV2 =>
                             // It's not a link value. Check that its type is equal to the property's object
                             // class constraint.
                             if (otherValueContentV2.valueType != objectClassConstraint) {
-                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2Complex)}>")
                             }
                     }
                 }
@@ -817,7 +819,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
 
         for {
-            resourcesResponse: ReadResourcesSequenceV2 <- getResources(
+            resourcesResponse: ReadResourcesSequenceV2 <- getResourcesV2(
                 resourceIris = Seq(resourceIri),
                 requestingUser = requestingUser
             )
@@ -959,10 +961,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResources(resourceIris: Seq[IRI],
-                             propertyIri: Option[SmartIri] = None,
-                             versionDate: Option[Instant] = None,
-                             requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def getResourcesV2(resourceIris: Seq[IRI],
+                               propertyIri: Option[SmartIri] = None,
+                               versionDate: Option[Instant] = None,
+                               requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -988,6 +990,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         mappings = mappingsAsMap,
                         versionDate = versionDate,
                         responderManager = responderManager,
+                        knoraIdUtil = knoraIdUtil,
                         requestingUser = requestingUser
                     )
             }.toVector
@@ -1005,7 +1008,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResourcePreview(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def getResourcePreviewV2(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -1027,6 +1030,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         mappings = Map.empty[IRI, MappingAndXSLTransformation],
                         versionDate = None,
                         responderManager = responderManager,
+                        knoraIdUtil = knoraIdUtil,
                         requestingUser = requestingUser
                     )
             }.toVector
@@ -1047,7 +1051,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM): Future[String] = {
 
         val gravsearchUrlFuture = for {
-            resources: ReadResourcesSequenceV2 <- getResources(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)
+            resources: ReadResourcesSequenceV2 <- getResourcesV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)
             resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
             _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
@@ -1099,7 +1103,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param requestingUser        the user making the request.
       * @return a [[ResourceTEIGetResponseV2]].
       */
-    private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], headerXSLTIri: Option[String], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
+    private def getResourceAsTeiV2(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], headerXSLTIri: Option[String], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
 
         /**
           * Extract the text value to be converted to TEI/XML.
@@ -1205,7 +1209,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 for {
                     // get requested resource
-                    resource <- getResources(resourceIris = Vector(resourceIri), requestingUser = requestingUser).map(_.toResource(resourceIri))
+                    resource <- getResourcesV2(resourceIris = Vector(resourceIri), requestingUser = requestingUser).map(_.toResource(resourceIri))
 
                 } yield resource
             }
@@ -1301,7 +1305,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         if (targetResourceIris.isEmpty) {
             FastFuture.successful(())
         } else {
-            getResourcePreview(targetResourceIris.toSeq, requestingUser).map(_ => ())
+            getResourcePreviewV2(targetResourceIris.toSeq, requestingUser).map(_ => ())
         }
     }
 
@@ -1617,7 +1621,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             // Get the resource preview, to make sure the user has permission to see the resource, and to get
             // its creation date.
 
-            resourcePreviewResponse: ReadResourcesSequenceV2 <- getResourcePreview(
+            resourcePreviewResponse: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                 resourceIris = Seq(resourceHistoryRequest.resourceIri),
                 requestingUser = resourceHistoryRequest.requestingUser
             )

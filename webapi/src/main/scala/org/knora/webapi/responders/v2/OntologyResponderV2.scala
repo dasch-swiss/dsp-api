@@ -46,7 +46,7 @@ import scala.concurrent.Future
   * The API v2 ontology responder reads ontologies from two sources:
   *
   * - The triplestore.
-  * - The constant knora-api v2 ontologies that are defined in Scala rather than in the triplestore, [[KnoraApiV2SimpleTransformationRules]] and [[KnoraApiV2WithValueObjectsTransformationRules]].
+  * - The constant knora-api v2 ontologies that are defined in Scala rather than in the triplestore, [[KnoraBaseToApiV2SimpleTransformationRules]] and [[KnoraBaseToApiV2ComplexTransformationRules]].
   *
   * It maintains an in-memory cache of all ontology data. This cache can be refreshed by sending a [[LoadOntologiesRequestV2]].
   *
@@ -55,7 +55,7 @@ import scala.concurrent.Future
   * in which case the response will be in the requested API v2 schema.
   *
   * In API v2, the ontology responder can also create and update ontologies. Update requests must contain
-  * [[ApiV2WithValueObjects]] IRIs and definitions.
+  * [[ApiV2Complex]] IRIs and definitions.
   *
   * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
   */
@@ -235,20 +235,20 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         val allClassIris = allClassDefs.keySet
         val allPropertyIris = allPropertyDefs.keySet
 
-        // A map in which each resource class IRI points to the full set of its base classes. A class is also
+        // A map in which each class IRI points to the full set of its base classes. A class is also
         // a subclass of itself.
         val allSubClassOfRelations: Map[SmartIri, Set[SmartIri]] = allClassIris.map {
-            classIri => (classIri, getAllBaseDefs(classIri, directSubClassOfRelations) + classIri)
+            classIri => (classIri, OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations) + classIri)
         }.toMap
 
-        // A map in which each resource class IRI points to the full set of its subclasses. A class is also
+        // A map in which each class IRI points to the full set of its subclasses. A class is also
         // a subclass of itself.
         val allSuperClassOfRelations: Map[SmartIri, Set[SmartIri]] = calculateSuperClassOfRelations(allSubClassOfRelations)
 
         // Make a map in which each property IRI points to the full set of its base properties. A property is also
         // a subproperty of itself.
         val allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]] = allPropertyIris.map {
-            propertyIri => (propertyIri, getAllBaseDefs(propertyIri, directSubPropertyOfRelations) + propertyIri)
+            propertyIri => (propertyIri, OntologyUtil.getAllBaseDefs(propertyIri, directSubPropertyOfRelations) + propertyIri)
         }.toMap
 
         // A set of all subproperties of knora-base:resourceProperty.
@@ -1095,15 +1095,15 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             classesUnavailableInSchema: Set[SmartIri] = classIris.foldLeft(Set.empty[SmartIri]) {
                 case (acc, classIri) =>
                     // Is this class IRI hard-coded in the requested schema?
-                    if (KnoraApiV2SimpleTransformationRules.knoraApiClassesToAdd.contains(classIri) || KnoraApiV2WithValueObjectsTransformationRules.knoraApiClassesToAdd.contains(classIri)) {
+                    if (KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.contains(classIri) || KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.contains(classIri)) {
                         // Yes, so it's available.
                         acc
                     } else {
-                        // No. Is it among the classes removed from knora-base to create the requested schema?
+                        // No. Is it among the classes removed from the internal ontology in the requested schema?
                         classIri.getOntologySchema.get match {
                             case apiV2Schema: ApiV2Schema =>
                                 val internalClassIri = classIri.toOntologySchema(InternalSchema)
-                                val knoraBaseClassesToRemove = KnoraBaseTransformationRules.getTransformationRules(apiV2Schema).knoraBaseClassesToRemove
+                                val knoraBaseClassesToRemove = OntologyTransformationRules.getTransformationRules(classIri.getOntologyFromEntity, apiV2Schema).internalClassesToRemove
 
                                 if (knoraBaseClassesToRemove.contains(internalClassIri)) {
                                     // Yes. Include it in the set of unavailable classes.
@@ -1121,7 +1121,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             propertiesUnavailableInSchema: Set[SmartIri] = propertyIris.foldLeft(Set.empty[SmartIri]) {
                 case (acc, propertyIri) =>
                     // Is this property IRI hard-coded in the requested schema?
-                    if (KnoraApiV2SimpleTransformationRules.knoraApiPropertiesToAdd.contains(propertyIri) || KnoraApiV2WithValueObjectsTransformationRules.knoraApiPropertiesToAdd.contains(propertyIri)) {
+                    if (KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.contains(propertyIri) || KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.contains(propertyIri)) {
                         // Yes, so it's available.
                         acc
                     } else {
@@ -1134,9 +1134,9 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                 if (apiV2Schema == ApiV2Simple && isLinkValueProp(internalPropertyIri, cacheData)) {
                                     acc + propertyIri
                                 } else {
-                                    // Is it among the properties removed from knora-base to create the requested schema?
+                                    // Is it among the properties removed from the internal ontology in the requested schema?
 
-                                    val knoraBasePropertiesToRemove = KnoraBaseTransformationRules.getTransformationRules(apiV2Schema).knoraBasePropertiesToRemove
+                                    val knoraBasePropertiesToRemove = OntologyTransformationRules.getTransformationRules(propertyIri.getOntologyFromEntity, apiV2Schema).internalPropertiesToRemove
 
                                     if (knoraBasePropertiesToRemove.contains(internalPropertyIri)) {
                                         // Yes. Include it in the set of unavailable properties.
@@ -1160,11 +1160,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
             // See if any of the requested entities are hard-coded for knora-api.
 
-            hardCodedKnoraApiClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraApiV2SimpleTransformationRules.knoraApiClassesToAdd.filterKeys(classIris) ++
-                KnoraApiV2WithValueObjectsTransformationRules.knoraApiClassesToAdd.filterKeys(classIris)
+            hardCodedKnoraApiClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.filterKeys(classIris) ++
+                KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.filterKeys(classIris)
 
-            hardCodedKnoraApiPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraApiV2SimpleTransformationRules.knoraApiPropertiesToAdd.filterKeys(propertyIris) ++
-                KnoraApiV2WithValueObjectsTransformationRules.knoraApiPropertiesToAdd.filterKeys(propertyIris)
+            hardCodedKnoraApiPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris) ++
+                KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris)
 
             // Convert the remaining external entity IRIs to internal ones.
 
@@ -1464,6 +1464,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 throw BadRequestException(s"The standoff ontology is not available in the API v2 simple schema")
             }
 
+            ontology = cacheData.ontologies.get(ontologyIri.toOntologySchema(InternalSchema)) match {
+                case Some(cachedOntology) => cachedOntology
+                case None => throw NotFoundException(s"Ontology not found: $ontologyIri")
+            }
+
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
                 // Just the user's preferred language.
@@ -1472,7 +1477,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 // All available languages.
                 None
             }
-        } yield cacheData.ontologies(ontologyIri.toOntologySchema(InternalSchema)).copy(
+        } yield ontology.copy(
             userLang = userLang
         )
     }
@@ -1593,12 +1598,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         }
 
                         if (!internalOntologyIri.isKnoraBuiltInDefinitionIri) {
-                            if (projectIri.toString == OntologyConstants.KnoraBase.SystemProject) {
-                                throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri cannot be in project ${OntologyConstants.KnoraBase.SystemProject}")
+                            if (projectIri.toString == OntologyConstants.KnoraAdmin.SystemProject) {
+                                throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri cannot be in project ${OntologyConstants.KnoraAdmin.SystemProject}")
                             }
 
-                            if (internalOntologyIri.isKnoraSharedDefinitionIri && projectIri.toString != OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
-                                throw InconsistentTriplestoreDataException(s"Shared ontology $internalOntologyIri must be in project ${OntologyConstants.KnoraBase.DefaultSharedOntologiesProject}")
+                            if (internalOntologyIri.isKnoraSharedDefinitionIri && projectIri.toString != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
+                                throw InconsistentTriplestoreDataException(s"Shared ontology $internalOntologyIri must be in project ${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}")
                             }
                         }
 
@@ -1647,17 +1652,17 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(internalOntologyIri)
 
                 _ = if (existingOntologyMetadata.nonEmpty) {
-                    throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} cannot be created, because it already exists")
+                    throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} cannot be created, because it already exists")
                 }
 
                 // If this is a shared ontology, make sure it's in the default shared ontologies project.
-                _ = if (createOntologyRequest.isShared && createOntologyRequest.projectIri.toString != OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
-                    throw BadRequestException(s"Shared ontologies must be created in project <${OntologyConstants.KnoraBase.DefaultSharedOntologiesProject}>")
+                _ = if (createOntologyRequest.isShared && createOntologyRequest.projectIri.toString != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
+                    throw BadRequestException(s"Shared ontologies must be created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}>")
                 }
 
                 // If it's in the default shared ontologies project, make sure it's a shared ontology.
-                _ = if (createOntologyRequest.projectIri.toString == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject && !createOntologyRequest.isShared) {
-                    throw BadRequestException(s"Ontologies created in project <${OntologyConstants.KnoraBase.DefaultSharedOntologiesProject}> must be shared")
+                _ = if (createOntologyRequest.projectIri.toString == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject && !createOntologyRequest.isShared) {
+                    throw BadRequestException(s"Ontologies created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}> must be shared")
                 }
 
                 // Create the ontology.
@@ -1901,6 +1906,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = unescapedClassDefWithLinkValueProps,
+                    allBaseClasses = allBaseClassIris,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -2013,7 +2019,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         val propertyDefsForDirectCardinalities: Set[ReadPropertyInfoV2] = internalClassDef.directCardinalities.keySet.map {
             propertyIri =>
                 if (!isKnoraResourceProperty(propertyIri, cacheData) || propertyIri.toString == OntologyConstants.KnoraBase.ResourceProperty || propertyIri.toString == OntologyConstants.KnoraBase.HasValue) {
-                    throw NotFoundException(s"Invalid property for cardinality: <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
+                    throw NotFoundException(s"Invalid property for cardinality: <${propertyIri.toOntologySchema(ApiV2Complex)}>")
                 }
 
                 cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri)
@@ -2026,7 +2032,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Don't allow link value prop cardinalities to be included in the request.
 
         if (newLinkValuePropsInClass.nonEmpty) {
-            throw BadRequestException(s"In class ${internalClassDef.classIri.toOntologySchema(ApiV2WithValueObjects)}, cardinalities have been submitted for one or more link value properties: ${newLinkValuePropsInClass.map(_.toOntologySchema(ApiV2WithValueObjects)).mkString(", ")}. Just submit the link properties, and the link value properties will be included automatically.")
+            throw BadRequestException(s"In class ${internalClassDef.classIri.toOntologySchema(ApiV2Complex)}, cardinalities have been submitted for one or more link value properties: ${newLinkValuePropsInClass.map(_.toOntologySchema(ApiV2Complex)).mkString(", ")}. Just submit the link properties, and the link value properties will be included automatically.")
         }
 
         // Add a link value prop cardinality for each new link prop cardinality.
@@ -2067,7 +2073,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             thisClassCardinalities = thisClassKnoraCardinalities,
             inheritableCardinalities = inheritableKnoraCardinalities,
             allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
-            errorSchema = ApiV2WithValueObjects,
+            errorSchema = ApiV2Complex,
             { msg: String => throw BadRequestException(msg) }
         ).map {
             case (propertyIri, owlCardinalityInfo) => propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString, owlCardinality = owlCardinalityInfo)
@@ -2091,7 +2097,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             internalClassDef = classDefWithAddedLinkValueProps,
             allBaseClassIris = allBaseClassIris,
             allClassCardinalityKnoraPropertyDefs = allClassCardinalityKnoraPropertyDefs,
-            errorSchema = ApiV2WithValueObjects,
+            errorSchema = ApiV2Complex,
             errorFun = { msg: String => throw BadRequestException(msg) }
         )
 
@@ -2104,7 +2110,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         maybePropertyAndSubproperty match {
             case Some((basePropertyIri, propertyIri)) =>
-                throw BadRequestException(s"Class <${classDefWithAddedLinkValueProps.classIri.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality on property <${basePropertyIri.toOntologySchema(ApiV2WithValueObjects)}> and on its subproperty <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
+                throw BadRequestException(s"Class <${classDefWithAddedLinkValueProps.classIri.toOntologySchema(ApiV2Complex)}> has a cardinality on property <${basePropertyIri.toOntologySchema(ApiV2Complex)}> and on its subproperty <${propertyIri.toOntologySchema(ApiV2Complex)}>")
 
             case None => ()
         }
@@ -2264,6 +2270,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = newInternalClassDefWithLinkValueProps,
+                    allBaseClasses = allBaseClassIris,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -2428,6 +2435,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = newInternalClassDefWithLinkValueProps,
+                    allBaseClasses = allBaseClassIris,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -2656,7 +2664,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     case Some(internalLinkValuePropertyIri) =>
                         isEntityUsed(
                             entityIri = internalLinkValuePropertyIri,
-                            errorFun = throw BadRequestException(s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because the corresponding link value property, ${internalLinkValuePropertyIri.toOntologySchema(ApiV2WithValueObjects)}, is used in data or ontologies")
+                            errorFun = throw BadRequestException(s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because the corresponding link value property, ${internalLinkValuePropertyIri.toOntologySchema(ApiV2Complex)}, is used in data or ontologies")
                         )
 
                     case None => FastFuture.successful(())
@@ -2764,7 +2772,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         row => row.rowMap("s")
                     }.map(s => "<" + s + ">").toVector.sorted
 
-                    throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} cannot be deleted, because of subjects that refer to it: ${subjects.mkString(", ")}")
+                    throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} cannot be deleted, because of subjects that refer to it: ${subjects.mkString(", ")}")
                 }
 
                 // Delete everything in the ontology's named graph.
@@ -2781,10 +2789,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 maybeOntologyMetadata <- loadOntologyMetadata(internalOntologyIri)
 
                 _ = if (maybeOntologyMetadata.nonEmpty) {
-                    throw UpdateNotPerformedException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} was not deleted. Please report this as a possible bug.")
+                    throw UpdateNotPerformedException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not deleted. Please report this as a possible bug.")
                 }
 
-            } yield SuccessResponseV2(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} has been deleted")
+            } yield SuccessResponseV2(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been deleted")
         }
 
         for {
@@ -2914,7 +2922,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 _ = maybeSubjectClassConstraint.foreach {
                     subjectClassConstraint =>
                         if (!isKnoraInternalResourceClass(subjectClassConstraint, cacheData)) {
-                            throw BadRequestException(s"Invalid subject class constraint: ${subjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
+                            throw BadRequestException(s"Invalid subject class constraint: ${subjectClassConstraint.toOntologySchema(ApiV2Complex)}")
                         }
                 }
 
@@ -2926,7 +2934,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 _ = if (!isLinkProp) {
                     if (objectClassConstraint.toString == OntologyConstants.KnoraBase.LinkValue ||
                         OntologyConstants.KnoraBase.FileValueClasses.contains(objectClassConstraint.toString)) {
-                        throw BadRequestException(s"Invalid object class constraint for value property: ${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}")
+                        throw BadRequestException(s"Invalid object class constraint for value property: ${objectClassConstraint.toOntologySchema(ApiV2Complex)}")
                     }
                 }
 
@@ -2940,7 +2948,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             constraintPredicateIri = OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri,
                             constraintValueToBeChecked = subjectClassConstraint,
                             allSuperPropertyIris = allKnoraSuperPropertyIris,
-                            errorSchema = ApiV2WithValueObjects,
+                            errorSchema = ApiV2Complex,
                             errorFun = { msg: String => throw BadRequestException(msg) }
                         )
 
@@ -2955,7 +2963,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     constraintPredicateIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
                     constraintValueToBeChecked = objectClassConstraint,
                     allSuperPropertyIris = allKnoraSuperPropertyIris,
-                    errorSchema = ApiV2WithValueObjects,
+                    errorSchema = ApiV2Complex,
                     errorFun = { msg: String => throw BadRequestException(msg) }
                 )
 
@@ -3786,7 +3794,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         checkOntologyLastModificationDate(
             internalOntologyIri = internalOntologyIri,
             expectedLastModificationDate = expectedLastModificationDate,
-            errorFun = throw EditConflictException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} has been modified by another user, please reload it and try again.")
+            errorFun = throw EditConflictException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been modified by another user, please reload it and try again.")
         )
     }
 
@@ -3801,7 +3809,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         checkOntologyLastModificationDate(
             internalOntologyIri = internalOntologyIri,
             expectedLastModificationDate = expectedLastModificationDate,
-            errorFun = throw UpdateNotPerformedException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} was not updated. Please report this as a possible bug.")
+            errorFun = throw UpdateNotPerformedException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not updated. Please report this as a possible bug.")
         )
     }
 
@@ -3828,7 +3836,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         case None => throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has no ${OntologyConstants.KnoraBase.LastModificationDate}")
                     }
 
-                case None => throw NotFoundException(s"Ontology $internalOntologyIri (corresponding to ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)}) not found")
+                case None => throw NotFoundException(s"Ontology $internalOntologyIri (corresponding to ${internalOntologyIri.toOntologySchema(ApiV2Complex)}) not found")
             }
         } yield ()
     }
@@ -3846,7 +3854,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
             projectIri = cacheData.ontologies.getOrElse(
                 internalOntologyIri,
-                throw NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} not found")
+                throw NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} not found")
             ).ontologyMetadata.projectIri.get
 
             _ = if (!requestingUser.permissions.isProjectAdmin(projectIri.toString) && !requestingUser.permissions.isSystemAdmin) {
@@ -3867,7 +3875,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     private def checkExternalOntologyIriForUpdate(externalOntologyIri: SmartIri): Future[Unit] = {
         if (!externalOntologyIri.isKnoraOntologyIri) {
             FastFuture.failed(throw BadRequestException(s"Invalid ontology IRI for request: $externalOntologyIri}"))
-        } else if (!externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+        } else if (!externalOntologyIri.getOntologySchema.contains(ApiV2Complex)) {
             FastFuture.failed(throw BadRequestException(s"Invalid ontology schema for request: $externalOntologyIri"))
         } else if (externalOntologyIri.isKnoraBuiltInDefinitionIri) {
             FastFuture.failed(throw BadRequestException(s"Ontology $externalOntologyIri cannot be modified via the Knora API"))
@@ -3885,7 +3893,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     private def checkExternalEntityIriForUpdate(externalEntityIri: SmartIri): Future[Unit] = {
         if (!externalEntityIri.isKnoraApiV2EntityIri) {
             FastFuture.failed(throw BadRequestException(s"Invalid entity IRI for request: $externalEntityIri"))
-        } else if (!externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+        } else if (!externalEntityIri.getOntologySchema.contains(ApiV2Complex)) {
             FastFuture.failed(throw BadRequestException(s"Invalid ontology schema for request: $externalEntityIri"))
         } else {
             FastFuture.successful(())
@@ -4035,33 +4043,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             case (baseClass: SmartIri, baseClassAndSubClasses: Vector[(SmartIri, SmartIri)]) =>
                 baseClass -> baseClassAndSubClasses.map(_._2).toSet
         }
-    }
-
-    /**
-      * Recursively walks up an entity hierarchy read from the triplestore, collecting the IRIs of all base entities.
-      *
-      * @param iri             the IRI of an entity.
-      * @param directRelations a map of entities to their direct base entities.
-      * @return all the base entities of the specified entity.
-      */
-    private def getAllBaseDefs(iri: SmartIri, directRelations: Map[SmartIri, Set[SmartIri]]): Set[SmartIri] = {
-        def getAllBaseDefsRec(initialIri: SmartIri, currentIri: SmartIri): Set[SmartIri] = {
-            directRelations.get(currentIri) match {
-                case Some(baseDefs) =>
-                    baseDefs ++ baseDefs.flatMap {
-                        baseDef =>
-                            if (baseDef == initialIri) {
-                                throw InconsistentTriplestoreDataException(s"Entity $initialIri has an inheritance cycle with entity $baseDef")
-                            } else {
-                                getAllBaseDefsRec(initialIri, baseDef)
-                            }
-                    }
-
-                case None => Set.empty[SmartIri]
-            }
-        }
-
-        getAllBaseDefsRec(initialIri = iri, currentIri = iri)
     }
 
     /**

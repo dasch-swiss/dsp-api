@@ -14,6 +14,8 @@ scripts:
 
 - The Python `requests` library (type `pip3 install requests` to install it)
 
+- The Python `rdflib` library (type `pip3 install rdflib` to install it)
+
 ## General Instructions
 
 ### Before Updating Repositories

@@ -7,8 +7,9 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:intValueAsInt" : 10,
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:47Z"
@@ -28,7 +29,8 @@
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2016-03-02T15:05:47Z"
   },
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+  "knora-api:userHasPermission" : "RV",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/68ef9568b903O.20160302T150547Z"

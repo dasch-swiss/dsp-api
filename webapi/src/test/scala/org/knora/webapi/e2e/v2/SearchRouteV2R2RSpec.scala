@@ -2578,7 +2578,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 """.stripMargin
 
 
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -4946,7 +4946,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 """.stripMargin
 
 
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -6942,7 +6942,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 """.stripMargin
 
 
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -7491,7 +7491,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 

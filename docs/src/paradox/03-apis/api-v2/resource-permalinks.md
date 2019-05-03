@@ -55,7 +55,7 @@ For example:
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2016-03-02T15:05:21Z"
   },
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser",
   "rdfs:label" : "Reise ins Heilige Land",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -101,7 +101,4 @@ http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20180604T085622
 ```
 
 Without a timestamp, a Knora ARK URL refers to the latest version of the
-resource at the time when the URL is resolved. Knora currently returns only ARK URLs
-without timestamps, because querying past versions of resources is not yet
-implemented (@github[#1115](#1115)). When it is implemented, Knora will also return
-ARK URLs with timestamps.
+resource at the time when the URL is resolved.

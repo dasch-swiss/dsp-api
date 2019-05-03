@@ -7,7 +7,8 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
@@ -19,7 +20,8 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueAsString" : "Stultifera navis (...)",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
@@ -46,7 +48,7 @@
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasSource" : {
       "@id" : "http://rdfh.ch/0803/50e7460a7203",
       "@type" : "incunabula:page",
@@ -56,10 +58,11 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:linkValueHasTargetIri" : {
           "@id" : "http://rdfh.ch/0803/8be1b7cf7103"
         },
+        "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
           "@type" : "xsd:dateTimeStamp",
           "@value" : "2016-03-02T15:05:43Z"
@@ -71,8 +74,9 @@
         "knora-api:attachedToUser" : {
           "@id" : "http://rdfh.ch/users/91e19f1e01"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "knora-api:intValueAsInt" : 1,
+        "knora-api:userHasPermission" : "V",
         "knora-api:valueCreationDate" : {
           "@type" : "xsd:dateTimeStamp",
           "@value" : "2016-03-02T15:05:43Z"
@@ -92,7 +96,7 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:43Z"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
       "knora-api:hasStillImageFileValue" : {
         "@id" : "http://rdfh.ch/0803/50e7460a7203/values/7ead1231b806",
         "@type" : "knora-api:StillImageFileValue",
@@ -104,30 +108,34 @@
           "@value" : "http://0.0.0.0:1024/0803/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg"
         },
         "knora-api:fileValueHasFilename" : "incunabula_0000003856.jp2",
-        "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         "knora-api:stillImageFileValueHasDimX" : 1904,
         "knora-api:stillImageFileValueHasDimY" : 2700,
         "knora-api:stillImageFileValueHasIIIFBaseUrl" : {
           "@type" : "xsd:anyURI",
           "@value" : "http://0.0.0.0:1024/0803"
         },
+        "knora-api:userHasPermission" : "RV",
         "knora-api:valueCreationDate" : {
           "@type" : "xsd:dateTimeStamp",
           "@value" : "2012-11-21T16:50:50Z"
         }
       },
+      "knora-api:userHasPermission" : "RV",
       "knora-api:versionArkUrl" : {
         "@type" : "xsd:anyURI",
         "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/50e7460a72036.20160302T150543Z"
       },
       "rdfs:label" : "vorderer Spiegel"
     },
+    "knora-api:userHasPermission" : "V",
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:43Z"
     }
   },
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+  "knora-api:userHasPermission" : "RV",
   "knora-api:versionArkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543Z"

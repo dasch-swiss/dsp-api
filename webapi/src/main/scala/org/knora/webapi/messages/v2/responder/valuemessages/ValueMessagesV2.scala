@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util._
 import org.knora.webapi.util.date._
 import org.knora.webapi.util.jsonld._
@@ -144,7 +145,7 @@ case class CreateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
-        if (targetSchema != ApiV2WithValueObjects) {
+        if (targetSchema != ApiV2Complex) {
             throw AssertionException(s"CreateValueResponseV2 can only be returned in the complex schema")
         }
 
@@ -152,7 +153,7 @@ case class CreateValueResponseV2(valueIri: IRI,
             body = JsonLDObject(
                 Map(
                     JsonLDConstants.ID -> JsonLDString(valueIri),
-                    JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2WithValueObjects).toString)
+                    JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString)
                 )
             )
         )
@@ -252,7 +253,7 @@ case class UpdateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
-        if (targetSchema != ApiV2WithValueObjects) {
+        if (targetSchema != ApiV2Complex) {
             throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex schema")
         }
 
@@ -260,7 +261,7 @@ case class UpdateValueResponseV2(valueIri: IRI,
             body = JsonLDObject(
                 Map(
                     JsonLDConstants.ID -> JsonLDString(valueIri),
-                    JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2WithValueObjects).toString)
+                    JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString)
                 )
             )
         )
@@ -423,7 +424,7 @@ trait IOValueV2 {
 case class DeletionInfo(deleteDate: Instant,
                         deleteComment: String) {
     def toJsonLDFields(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
-        if (targetSchema != ApiV2WithValueObjects) {
+        if (targetSchema != ApiV2Complex) {
             throw AssertionException("DeletionInfo is available in JSON-LD only in the complex schema")
         }
 
@@ -458,6 +459,11 @@ sealed trait ReadValueV2 extends IOValueV2 {
       * The value's permissions.
       */
     def permissions: String
+
+    /**
+      * The permission that the requesting user has on the value.
+      */
+    def userPermission: EntityPermission
 
     /**
       * The date when the value was created.
@@ -495,7 +501,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
 
         // In the complex schema, add the value's IRI and type to the JSON-LD object that represents it.
         targetSchema match {
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 // In the complex schema, the value must be represented as a JSON-LD object.
                 valueContentAsJsonLD match {
                     case jsonLDObject: JsonLDObject =>
@@ -506,6 +512,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
                             JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString),
                             OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
                             OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions),
+                            OntologyConstants.KnoraApiV2WithValueObjects.UserHasPermission -> JsonLDString(userPermission.toString),
                             OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
                                 value = valueCreationDate.toString,
                                 datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
@@ -517,7 +524,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
                         }
 
                         val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
-                            case Some(definedDeletionInfo) => definedDeletionInfo.toJsonLDFields(ApiV2WithValueObjects)
+                            case Some(definedDeletionInfo) => definedDeletionInfo.toJsonLDFields(ApiV2Complex)
                             case None => Map.empty[IRI, JsonLDValue]
                         }
 
@@ -538,6 +545,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
   * @param valueIri       the IRI of the value.
   * @param attachedToUser the user that created the value.
   * @param permissions    the permissions that the value grants to user groups.
+  * @param userPermission the permission that the requesting user has on the value.
   * @param valueContent   the content of the value.
   * @param deletionInfo   if this value has been marked as deleted, provides the date when it was
   *                       deleted and the reason why it was deleted.
@@ -545,6 +553,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
 case class ReadNonLinkValueV2(valueIri: IRI,
                               attachedToUser: IRI,
                               permissions: String,
+                              userPermission: EntityPermission,
                               valueCreationDate: Instant,
                               valueContent: NonLinkValueContentV2,
                               deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadNonLinkValueV2] {
@@ -565,6 +574,7 @@ case class ReadNonLinkValueV2(valueIri: IRI,
   * @param valueIri         the IRI of the value.
   * @param attachedToUser   the user that created the value.
   * @param permissions      the permissions that the value grants to user groups.
+  * @param userPermission   the permission that the requesting user has on the value.
   * @param valueContent     the content of the value.
   * @param valueHasRefCount if this is a link value, its reference count.  Not returned in API responses, but needed
   *                         here for testing.
@@ -576,6 +586,7 @@ case class ReadNonLinkValueV2(valueIri: IRI,
 case class ReadLinkValueV2(valueIri: IRI,
                            attachedToUser: IRI,
                            permissions: String,
+                           userPermission: EntityPermission,
                            valueCreationDate: Instant,
                            valueContent: LinkValueContentV2,
                            valueHasRefCount: Int,
@@ -861,7 +872,7 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
                     datatype = OntologyConstants.KnoraApiV2Simple.Date.toSmartIri
                 )
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 val startCalendarDate: CalendarDateV2 = asCalendarDateRange.startCalendarDate
                 val endCalendarDate: CalendarDateV2 = asCalendarDateRange.endCalendarDate
 
@@ -1026,7 +1037,7 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
         val (startJDN: Int, endJDN: Int) = dateRange.toJulianDayRange
 
         DateValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             valueHasStartJDN = startJDN,
             valueHasEndJDN = endJDN,
             valueHasStartPrecision = startCalendarDate.precision,
@@ -1102,19 +1113,22 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
     override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
+                // Remove INFORMATION SEPARATOR TWO, which is used only internally.
+                val textForSimpleSchema = valueHasString.replace(StringFormatter.INFORMATION_SEPARATOR_TWO.toString, "")
+
                 valueHasLanguage match {
                     case Some(lang) =>
                         // In the simple schema, if this text value specifies a language, return it using a JSON-LD
                         // @language key as per <https://json-ld.org/spec/latest/json-ld/#string-internationalization>.
                         JsonLDUtil.objectWithLangToJsonLDObject(
-                            obj = valueHasString,
+                            obj = textForSimpleSchema,
                             lang = lang
                         )
 
-                    case None => JsonLDString(valueHasString)
+                    case None => JsonLDString(textForSimpleSchema)
                 }
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 val objectMap: Map[IRI, JsonLDValue] = if (standoffAndMapping.nonEmpty) {
 
                     val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueHasString, standoffAndMapping.get.standoff, standoffAndMapping.get.mapping)
@@ -1334,7 +1348,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                 case (Some(valueAsString), None, None) =>
                     // Text without standoff.
                     TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueAsString,
                         comment = getComment(jsonLDObject)
                     )
@@ -1357,7 +1371,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                     )
 
                     TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw BadRequestException("Text value contains invalid characters")),
                         valueHasLanguage = maybeValueHasLanguage,
                         standoffAndMapping = Some(standoffAndMapping),
@@ -1404,7 +1418,7 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema,
         targetSchema match {
             case ApiV2Simple => JsonLDInt(valueHasInteger)
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt -> JsonLDInt(valueHasInteger)))
 
         }
@@ -1463,7 +1477,7 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
         val intValueAsInt: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt)
 
         IntegerValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             valueHasInteger = intValueAsInt,
             comment = getComment(jsonLDObject)
         )
@@ -1497,7 +1511,7 @@ case class DecimalValueContentV2(ontologySchema: OntologySchema,
         targetSchema match {
             case ApiV2Simple => decimalValueAsJsonLDObject
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> decimalValueAsJsonLDObject))
         }
     }
@@ -1559,7 +1573,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
         )
 
         DecimalValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             valueHasDecimal = decimalValueAsDecimal,
             comment = getComment(jsonLDObject)
         )
@@ -1588,7 +1602,7 @@ case class BooleanValueContentV2(ontologySchema: OntologySchema,
         targetSchema match {
             case ApiV2Simple => JsonLDBoolean(valueHasBoolean)
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> JsonLDBoolean(valueHasBoolean)))
         }
     }
@@ -1644,7 +1658,7 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
         val booleanValueAsBoolean: Boolean = jsonLDObject.requireBoolean(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean)
 
         BooleanValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             valueHasBoolean = booleanValueAsBoolean,
             comment = getComment(jsonLDObject)
         )
@@ -1677,7 +1691,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema,
                     datatype = OntologyConstants.KnoraApiV2Simple.Geom.toSmartIri
                 )
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry -> JsonLDString(valueHasGeometry)))
         }
     }
@@ -1738,7 +1752,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
         val geometryValueAsGeometry: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry, stringFormatter.validateGeometryString)
 
         GeomValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             valueHasGeometry = geometryValueAsGeometry,
             comment = getComment(jsonLDObject)
         )
@@ -1774,7 +1788,7 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
                     datatype = OntologyConstants.KnoraApiV2Simple.Interval.toSmartIri
                 )
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 JsonLDObject(Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart ->
                         JsonLDUtil.datatypeValueToJsonLDObject(
@@ -1857,7 +1871,7 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
         )
 
         IntervalValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             valueHasIntervalStart = intervalValueHasStart,
             valueHasIntervalEnd = intervalValueHasEnd,
             comment = getComment(jsonLDObject)
@@ -1894,7 +1908,7 @@ case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
 
                 }
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 JsonLDObject(
                     Map(
                         OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode -> JsonLDUtil.iriToJsonLDObject(valueHasListNode)
@@ -1963,7 +1977,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
         }
 
         HierarchicalListValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             valueHasListNode = listValueAsListNode.toString,
             comment = getComment(jsonLDObject)
         )
@@ -1997,7 +2011,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema,
                     datatype = OntologyConstants.KnoraApiV2Simple.Color.toSmartIri
                 )
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor -> JsonLDString(valueHasColor)))
         }
     }
@@ -2058,7 +2072,7 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
         val colorValueAsColor: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor, stringFormatter.toSparqlEncodedString)
 
         ColorValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             valueHasColor = colorValueAsColor,
             comment = getComment(jsonLDObject)
         )
@@ -2092,7 +2106,7 @@ case class UriValueContentV2(ontologySchema: OntologySchema,
         targetSchema match {
             case ApiV2Simple => uriAsJsonLDObject
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri -> uriAsJsonLDObject))
         }
     }
@@ -2157,7 +2171,7 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
         )
 
         UriValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             valueHasUri = uriValueAsUri,
             comment = getComment(jsonLDObject)
         )
@@ -2191,7 +2205,7 @@ case class GeonameValueContentV2(ontologySchema: OntologySchema,
                     datatype = OntologyConstants.KnoraApiV2Simple.Geoname.toSmartIri
                 )
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode -> JsonLDString(valueHasGeonameCode)))
         }
     }
@@ -2252,7 +2266,7 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
         val geonameValueAsGeonameCode: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode, stringFormatter.toSparqlEncodedString)
 
         GeonameValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             valueHasGeonameCode = geonameValueAsGeonameCode,
             comment = getComment(jsonLDObject)
         )
@@ -2323,7 +2337,7 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
         targetSchema match {
             case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 JsonLDObject(toJsonLDObjectMapInComplexSchema(fileUrl) ++ Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX -> JsonLDInt(dimX),
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY -> JsonLDInt(dimY),
@@ -2387,7 +2401,7 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
                 originalMimeType = imageMetadataResponse.originalMimeType
             )
         } yield StillImageFileValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             fileValue = fileValue,
             dimX = imageMetadataResponse.width,
             dimY = imageMetadataResponse.height,
@@ -2420,7 +2434,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
         targetSchema match {
             case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 JsonLDObject(toJsonLDObjectMapInComplexSchema(fileUrl))
         }
     }
@@ -2510,7 +2524,7 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
         targetSchema match {
             case ApiV2Simple => JsonLDUtil.iriToJsonLDObject(referredResourceIri)
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 // check if the referred resource has to be included in the JSON response
                 val objectMap: Map[IRI, JsonLDValue] = nestedResource match {
                     case Some(targetResource: ReadResourceV2) =>
@@ -2588,7 +2602,7 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
         }
 
         LinkValueContentV2(
-            ontologySchema = ApiV2WithValueObjects,
+            ontologySchema = ApiV2Complex,
             referredResourceIri = targetIri.toString,
             comment = getComment(jsonLDObject)
         )

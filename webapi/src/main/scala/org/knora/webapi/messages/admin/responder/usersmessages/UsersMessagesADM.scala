@@ -116,24 +116,24 @@ case class ChangeUserApiRequestADM(username: Option[String] = None,
     // change password case
     if (requesterPassword.isDefined || newPassword.isDefined) {
         if (parametersCount > 2) {
-            throw BadRequestException("To many parameters sent for password change.")
+            throw BadRequestException("Too many parameters sent for password change.")
         } else if (parametersCount < 2) {
-            throw BadRequestException("To few parameters sent for password change.")
+            throw BadRequestException("Too few parameters sent for password change.")
         }
     }
 
     // change status case
     if (status.isDefined) {
-        if (parametersCount > 1) throw BadRequestException("To many parameters sent for user status change.")
+        if (parametersCount > 1) throw BadRequestException("Too many parameters sent for user status change.")
     }
 
     // change system admin membership case
     if (systemAdmin.isDefined) {
-        if (parametersCount > 1) throw BadRequestException("To many parameters sent for system admin membership change.")
+        if (parametersCount > 1) throw BadRequestException("Too many parameters sent for system admin membership change.")
     }
 
     // change basic user information case
-    if (parametersCount > 5) throw BadRequestException("To many parameters sent for basic user information change.")
+    if (parametersCount > 5) throw BadRequestException("Too many parameters sent for basic user information change.")
 
     def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
 }
@@ -561,12 +561,12 @@ case class UserADM(id: IRI,
       * Is the user a member of the SystemAdmin group
       */
     def isSystemAdmin: Boolean = {
-        permissions.groupsPerProject.getOrElse(OntologyConstants.KnoraBase.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraBase.SystemAdmin)
+        permissions.groupsPerProject.getOrElse(OntologyConstants.KnoraAdmin.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraAdmin.SystemAdmin)
     }
 
-    def isSystemUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraBase.SystemUser)
+    def isSystemUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.SystemUser)
 
-    def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraBase.AnonymousUser)
+    def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
 
     def fullname: String = givenName + " " + familyName
 
@@ -612,7 +612,7 @@ case class UserADM(id: IRI,
 
             val v1Groups: Seq[IRI] = groups.map(_.id)
 
-            val projectsWithoutBuiltinProjects = projects.filter(_.id != OntologyConstants.KnoraBase.SystemProject).filter(_.id != OntologyConstants.KnoraBase.DefaultSharedOntologiesProject)
+            val projectsWithoutBuiltinProjects = projects.filter(_.id != OntologyConstants.KnoraAdmin.SystemProject).filter(_.id != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject)
             val projectInfosV1 = projectsWithoutBuiltinProjects.map(_.asProjectInfoV1)
             val projects_info_v1: Map[IRI, ProjectInfoV1] = projectInfosV1.map(_.id).zip(projectInfosV1).toMap[IRI, ProjectInfoV1]
 
@@ -834,37 +834,37 @@ case class UserUpdatePayloadADM(username: Option[String] = None,
 
     // change password case
     if (password.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for password change.")
+        throw BadRequestException("Too many parameters sent for password change.")
     }
 
     // change status case
     if (status.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for user status change.")
+        throw BadRequestException("Too many parameters sent for user status change.")
     }
 
     // change system admin membership case
     if (systemAdmin.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for system admin membership change.")
+        throw BadRequestException("Too many parameters sent for system admin membership change.")
     }
 
     // change project memberships
     if (projects.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for project membership change.")
+        throw BadRequestException("Too many parameters sent for project membership change.")
     }
 
     // change projectAdmin memberships
     if (projectsAdmin.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for projectAdmin membership change.")
+        throw BadRequestException("Too many parameters sent for projectAdmin membership change.")
     }
 
     // change group memberships
     if (groups.isDefined && parametersCount > 1) {
-        throw BadRequestException("To many parameters sent for group membership change.")
+        throw BadRequestException("Too many parameters sent for group membership change.")
     }
 
     // change basic user information case
     if (parametersCount > 4) {
-        throw BadRequestException("To many parameters sent for basic user information change.")
+        throw BadRequestException("Too many parameters sent for basic user information change.")
     }
 
 }
