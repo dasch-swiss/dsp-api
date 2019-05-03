@@ -31,9 +31,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, StandoffTagV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetAllStandoffFromTextValueRequestV2, GetStandoffPageRequestV2, GetStandoffResponseV2, MappingXMLtoStandoff, StandoffTagV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util.date.{CalendarNameV2, DatePrecisionV2}
@@ -488,15 +487,18 @@ object ConstructResponseUtilV2 {
       * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
       * @param valueCommentOption        the value's comment, if any.
       * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+      * @param queryStandoff             if `true`, make separate queries to get the standoff for the text value.
       * @param responderManager          the Knora responder manager.
       * @param knoraIdUtil               a [[KnoraIdUtil]].
       * @param requestingUser            the user making the request.
       * @return a [[TextValueContentV2]].
       */
-    private def makeTextValueContentV2(valueObject: ValueRdfData,
-                                       valueObjectValueHasString: String,
+    private def makeTextValueContentV2(resourceIri: IRI,
+                                       valueObject: ValueRdfData,
+                                       valueObjectValueHasString: Option[String],
                                        valueCommentOption: Option[String],
                                        mappings: Map[IRI, MappingAndXSLTransformation],
+                                       queryStandoff: Boolean,
                                        responderManager: ActorRef,
                                        knoraIdUtil: KnoraIdUtil,
                                        requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
@@ -518,7 +520,7 @@ object ConstructResponseUtilV2 {
 
             FastFuture.successful(TextValueContentV2(
                 ontologySchema = InternalSchema,
-                valueHasString = valueObjectValueHasString,
+                maybeValueHasString = valueObjectValueHasString,
                 valueHasLanguage = valueLanguageOption,
                 standoffAndMapping = Some(
                     StandoffAndMapping(
@@ -531,11 +533,33 @@ object ConstructResponseUtilV2 {
                 comment = valueCommentOption
             ))
 
+        } else if (queryStandoff && valueObject.assertions.contains(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex)) {
+            // Standoff was not returned in this query result, but we're supposed to query it separately.
+
+            val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
+            val mapping: MappingAndXSLTransformation = mappings(mappingIri)
+
+            for {
+                standoffResponse <- (responderManager ? GetAllStandoffFromTextValueRequestV2(resourceIri = resourceIri, valueIri = valueObject.valueObjectIri, requestingUser = requestingUser)).mapTo[GetStandoffResponseV2]
+            } yield TextValueContentV2(
+                ontologySchema = InternalSchema,
+                maybeValueHasString = valueObjectValueHasString,
+                valueHasLanguage = valueLanguageOption,
+                standoffAndMapping = Some(
+                    StandoffAndMapping(
+                        standoff = standoffResponse.standoff,
+                        mappingIri = mappingIri,
+                        mapping = mapping.mapping,
+                        xslt = mapping.XSLTransformation
+                    )
+                ),
+                comment = valueCommentOption
+            )
         } else {
             // no standoff nodes given
             FastFuture.successful(TextValueContentV2(
                 ontologySchema = InternalSchema,
-                valueHasString = valueObjectValueHasString,
+                maybeValueHasString = valueObjectValueHasString,
                 valueHasLanguage = valueLanguageOption,
                 standoffAndMapping = None,
                 comment = valueCommentOption
@@ -597,6 +621,7 @@ object ConstructResponseUtilV2 {
       * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
       * @param valueCommentOption        the value's comment, if any.
       * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+      * @param queryStandoff             if `true`, make separate queries to get the standoff for text values.
       * @param versionDate               if defined, represents the requested time in the the resources' version history.
       * @param responderManager          the Knora responder manager.
       * @param knoraIdUtil               a [[KnoraIdUtil]].
@@ -607,6 +632,7 @@ object ConstructResponseUtilV2 {
                                        valueObjectValueHasString: String,
                                        valueCommentOption: Option[String],
                                        mappings: Map[IRI, MappingAndXSLTransformation],
+                                       queryStandoff: Boolean,
                                        versionDate: Option[Instant],
                                        responderManager: ActorRef,
                                        knoraIdUtil: KnoraIdUtil,
@@ -636,6 +662,7 @@ object ConstructResponseUtilV2 {
                         resourceIri = referredResourceIri,
                         resourceWithValueRdfData = nestedResourceAssertions,
                         mappings = mappings,
+                        queryStandoff = queryStandoff,
                         versionDate = versionDate,
                         responderManager = responderManager,
                         requestingUser = requestingUser,
@@ -653,21 +680,24 @@ object ConstructResponseUtilV2 {
     /**
       * Given a [[ValueRdfData]], constructs a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
       *
-      * @param valueObject the given [[ValueRdfData]].
-      * @param mappings    the mappings needed for standoff conversions and XSL transformations.
-      * @param versionDate if defined, represents the requested time in the the resources' version history.
+      * @param valueObject   the given [[ValueRdfData]].
+      * @param mappings      the mappings needed for standoff conversions and XSL transformations.
+      * @param queryStandoff if `true`, make separate queries to get the standoff for text values.
+      * @param versionDate   if defined, represents the requested time in the the resources' version history.
       * @return a [[ValueContentV2]] representing a value.
       */
-    private def createValueContentV2FromValueRdfData(valueObject: ValueRdfData,
+    private def createValueContentV2FromValueRdfData(resourceIri: IRI,
+                                                     valueObject: ValueRdfData,
                                                      mappings: Map[IRI, MappingAndXSLTransformation],
+                                                     queryStandoff: Boolean,
                                                      versionDate: Option[Instant] = None,
                                                      responderManager: ActorRef,
                                                      knoraIdUtil: KnoraIdUtil,
                                                      requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        // every knora-base:Value (any of its subclasses) has a string representation
-        val valueObjectValueHasString: String = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString)
+        // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
+        val valueObjectValueHasString: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasString)
 
         // every knora-base:value (any of its subclasses) may have a comment
         val valueCommentOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasComment)
@@ -677,10 +707,12 @@ object ConstructResponseUtilV2 {
         valueType match {
             case OntologyConstants.KnoraBase.TextValue =>
                 makeTextValueContentV2(
+                    resourceIri = resourceIri,
                     valueObject = valueObject,
                     valueObjectValueHasString = valueObjectValueHasString,
                     valueCommentOption = valueCommentOption,
                     mappings = mappings,
+                    queryStandoff = queryStandoff,
                     responderManager = responderManager,
                     requestingUser = requestingUser,
                     knoraIdUtil = knoraIdUtil
@@ -775,9 +807,10 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.LinkValue =>
                 makeLinkValueContentV2(
                     valueObject = valueObject,
-                    valueObjectValueHasString = valueObjectValueHasString,
+                    valueObjectValueHasString = valueObjectValueHasString.getOrElse(throw AssertionException(s"Value <${valueObject.valueObjectIri}> has no knora-base:valueHasString")),
                     valueCommentOption = valueCommentOption,
                     mappings = mappings,
+                    queryStandoff = queryStandoff,
                     versionDate = versionDate,
                     responderManager = responderManager,
                     requestingUser = requestingUser,
@@ -788,7 +821,7 @@ object ConstructResponseUtilV2 {
                 makeFileValueContentV2(
                     valueType = fileValueClass,
                     valueObject = valueObject,
-                    valueObjectValueHasString = valueObjectValueHasString,
+                    valueObjectValueHasString = valueObjectValueHasString.getOrElse(throw AssertionException(s"Value <${valueObject.valueObjectIri}> has no knora-base:valueHasString")),
                     valueCommentOption = valueCommentOption,
                     mappings = mappings,
                     responderManager = responderManager,
@@ -806,12 +839,14 @@ object ConstructResponseUtilV2 {
       * @param resourceIri              the IRI of the resource.
       * @param resourceWithValueRdfData the Rdf data belonging to the resource.
       * @param mappings                 the mappings needed for standoff conversions and XSL transformations.
+      * @param queryStandoff            if `true`, make separate queries to get the standoff for text values.
       * @param versionDate              if defined, represents the requested time in the the resources' version history.
       * @return a [[ReadResourceV2]].
       */
     private def constructReadResourceV2(resourceIri: IRI,
                                         resourceWithValueRdfData: ResourceWithValueRdfData,
                                         mappings: Map[IRI, MappingAndXSLTransformation],
+                                        queryStandoff: Boolean,
                                         versionDate: Option[Instant],
                                         responderManager: ActorRef,
                                         knoraIdUtil: KnoraIdUtil,
@@ -866,8 +901,10 @@ object ConstructResponseUtilV2 {
                     valObj: ValueRdfData =>
                         for {
                             valueContent: ValueContentV2 <- createValueContentV2FromValueRdfData(
+                                resourceIri = resourceIri,
                                 valueObject = valObj,
                                 mappings = mappings,
+                                queryStandoff = queryStandoff,
                                 responderManager = responderManager,
                                 requestingUser = requestingUser,
                                 knoraIdUtil = knoraIdUtil
@@ -898,9 +935,10 @@ object ConstructResponseUtilV2 {
                                 val maybeValueHasMaxStandoffStartIndexStr: Option[String] = valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex)
 
                                 val maybeValueHasMaxStandoffStartIndex: Option[Int] = maybeValueHasMaxStandoffStartIndexStr.map {
-                                    valueHasMaxStandoffStartIndexStr => stringFormatter.validateInt(
-                                        valueHasMaxStandoffStartIndexStr,
-                                        throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueHasMaxStandoffStartIndex in value <${valObj.valueObjectIri}>: $valueHasMaxStandoffStartIndexStr"))
+                                    valueHasMaxStandoffStartIndexStr =>
+                                        stringFormatter.validateInt(
+                                            valueHasMaxStandoffStartIndexStr,
+                                            throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueHasMaxStandoffStartIndex in value <${valObj.valueObjectIri}>: $valueHasMaxStandoffStartIndexStr"))
                                 }
 
                                 ReadTextValueV2(
@@ -955,12 +993,14 @@ object ConstructResponseUtilV2 {
       * @param resourceIri     the IRI of the requested resource.
       * @param resourceRdfData the results returned by the triplestore.
       * @param mappings        the mappings needed for standoff conversions and XSL transformations.
+      * @param queryStandoff   if `true`, make separate queries to get the standoff for text values.
       * @param versionDate     if defined, represents the requested time in the the resources' version history.
       * @return a [[ReadResourceV2]].
       */
     def createFullResourceResponse(resourceIri: IRI,
                                    resourceRdfData: ResourceWithValueRdfData,
                                    mappings: Map[IRI, MappingAndXSLTransformation],
+                                   queryStandoff: Boolean,
                                    versionDate: Option[Instant],
                                    responderManager: ActorRef,
                                    knoraIdUtil: KnoraIdUtil,
@@ -970,6 +1010,7 @@ object ConstructResponseUtilV2 {
             resourceIri = resourceIri,
             resourceWithValueRdfData = resourceRdfData,
             mappings = mappings,
+            queryStandoff = queryStandoff,
             versionDate = versionDate,
             responderManager = responderManager,
             requestingUser = requestingUser,
@@ -982,11 +1023,13 @@ object ConstructResponseUtilV2 {
       *
       * @param searchResults      the resources that matched the query and the client has permissions to see.
       * @param orderByResourceIri the order in which the resources should be returned.
+      * @param queryStandoff      if `true`, make separate queries to get the standoff for text values.
       * @return a collection of [[ReadResourceV2]] representing the search results.
       */
     def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData],
                              orderByResourceIri: Seq[IRI],
                              mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation],
+                             queryStandoff: Boolean,
                              forbiddenResource: Option[ReadResourceV2],
                              responderManager: ActorRef,
                              knoraIdUtil: KnoraIdUtil,
@@ -1008,6 +1051,7 @@ object ConstructResponseUtilV2 {
                             resourceIri = resourceIri,
                             resourceWithValueRdfData = assertions,
                             mappings = mappings,
+                            queryStandoff = queryStandoff,
                             versionDate = None,
                             responderManager = responderManager,
                             knoraIdUtil = knoraIdUtil,

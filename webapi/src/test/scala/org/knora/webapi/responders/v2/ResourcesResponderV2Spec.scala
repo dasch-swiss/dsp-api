@@ -864,7 +864,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "this is text without standoff"
+                            maybeValueHasString = Some("this is text without standoff")
                         )
                     )
                 ),
@@ -872,7 +872,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "this is text with standoff",
+                            maybeValueHasString = Some("this is text with standoff"),
                             standoffAndMapping = Some(StandoffAndMapping(
                                 standoff = sampleStandoff,
                                 mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
@@ -1079,7 +1079,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "test title"
+                            maybeValueHasString = Some("test title")
                         )
                     )
                 ),
@@ -1087,13 +1087,13 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "test publoc 1"
+                            maybeValueHasString = Some("test publoc 1")
                         )
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "test publoc 2"
+                            maybeValueHasString = Some("test publoc 2")
                         )
                     )
                 )
@@ -1126,7 +1126,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "test title"
+                            maybeValueHasString = Some("test title")
                         )
                     )
                 ),
@@ -1134,7 +1134,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "test pagenum"
+                            maybeValueHasString = Some("test pagenum")
                         )
                     )
                 )
@@ -1167,19 +1167,19 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "test title 1"
+                            maybeValueHasString = Some("test title 1")
                         )
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "test title 2"
+                            maybeValueHasString = Some("test title 2")
                         )
                     ),
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "test title 1"
+                            maybeValueHasString = Some("test title 1")
                         )
                     )
                 )
@@ -1212,7 +1212,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "test title"
+                            maybeValueHasString = Some("test title")
                         )
                     )
                 )
@@ -1309,7 +1309,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "this is text with standoff",
+                            maybeValueHasString = Some("this is text with standoff"),
                             standoffAndMapping = Some(StandoffAndMapping(
                                 standoff = standoffWithInvalidLink,
                                 mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
@@ -1380,7 +1380,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     CreateValueInNewResourceV2(
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
-                            valueHasString = "invalid text value"
+                            maybeValueHasString = Some("invalid text value")
                         )
                     )
                 )

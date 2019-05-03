@@ -293,10 +293,13 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(mappingsAsMap)
 
+            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+
             resources: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = resourceIris,
                 mappings = mappingsAsMap,
+                queryStandoff = queryStandoff,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,
@@ -562,10 +565,13 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
 
+            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+
             resources <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = mainResourceIris,
                 mappings = mappingsAsMap,
+                queryStandoff = queryStandoff,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,
@@ -664,7 +670,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         resourceIris = mainResourceIris,
                         preview = false,
                         queryValueHasString = true,
-                        queryStandoff = queryStandoff,
                         maybePropertyIri = None,
                         maybeVersionDate = None
                     ).toString())
@@ -693,6 +698,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         searchResults = queryResultsSeparated,
                         orderByResourceIri = mainResourceIris,
                         mappings = mappings,
+                        queryStandoff = queryStandoff,
                         forbiddenResource = forbiddenResourceOption,
                         responderManager = responderManager,
                         knoraIdUtil = knoraIdUtil,
@@ -823,6 +829,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             resources <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparated,
                 orderByResourceIri = mainResourceIris.toSeq.sorted,
+                queryStandoff = false,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,

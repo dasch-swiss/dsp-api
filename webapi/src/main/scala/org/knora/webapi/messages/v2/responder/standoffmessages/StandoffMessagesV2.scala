@@ -48,14 +48,24 @@ sealed trait StandoffResponderRequestV2 extends KnoraRequestV2
   * @param valueIri    the IRI of the value.
   * @param offset      the start index of the first standoff tag to be returned.
   */
-case class GetStandoffRequestV2(resourceIri: IRI, valueIri: IRI, offset: Int, requestingUser: UserADM) extends StandoffResponderRequestV2
+case class GetStandoffPageRequestV2(resourceIri: IRI, valueIri: IRI, offset: Int, requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
-  * A response to a [[GetStandoffRequestV2]], representing a page of standoff tags from a text value.
+  * Requests all the standoff markup from a text value. A successful response will be a [[GetStandoffResponseV2]].
+  *
+  * @param resourceIri    the IRI of the resource containing the text value.
+  * @param valueIri       the IRI of the text value.
+  * @param requestingUser the user making the request.
+  */
+case class GetAllStandoffFromTextValueRequestV2(resourceIri: IRI, valueIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
+
+/**
+  * A response to a [[GetStandoffPageRequestV2]] or a [[GetAllStandoffFromTextValueRequestV2]], representing standoff
+  * tags from a text value.
   *
   * @param valueIri   the IRI of the value.
-  * @param standoff   a page of standoff tags from the value.
-  * @param nextOffset the next available offset.
+  * @param standoff   standoff tags from the value.
+  * @param nextOffset the next available offset, if any.
   */
 case class GetStandoffResponseV2(valueIri: IRI,
                                  standoff: Seq[StandoffTagV2],

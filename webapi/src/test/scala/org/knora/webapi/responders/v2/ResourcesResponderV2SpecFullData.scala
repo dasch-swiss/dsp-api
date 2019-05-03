@@ -29,7 +29,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Dimension: 8\u00B0"
+                    maybeValueHasString = Some("Dimension: 8\u00B0")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/c5058f3a/values/5524469101",
@@ -46,7 +46,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Schramm Bd. XXI, S. 27"
+                        maybeValueHasString = Some("Schramm Bd. XXI, S. 27")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/c5058f3a/values/184e99ca01",
@@ -62,7 +62,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "GW 4168"
+                        maybeValueHasString = Some("GW 4168")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/c5058f3a/values/db77ec0302",
@@ -78,7 +78,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "ISTC ib00512000"
+                        maybeValueHasString = Some("ISTC ib00512000")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/c5058f3a/values/9ea13f3d02",
@@ -95,7 +95,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Johann Amerbach"
+                    maybeValueHasString = Some("Johann Amerbach")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/c5058f3a/values/497df9ab",
@@ -111,7 +111,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Berthold, der Bruder"
+                    maybeValueHasString = Some("Berthold, der Bruder")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/c5058f3a/values/8653a672",
@@ -127,7 +127,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
+                    maybeValueHasString = Some("http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/c5058f3a/values/10e00c7acc2704",
@@ -143,7 +143,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Universit\u00E4ts- und Stadtbibliothek K\u00F6ln, Sign: AD+S167"
+                    maybeValueHasString = Some("Universit\u00E4ts- und Stadtbibliothek K\u00F6ln, Sign: AD+S167")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/c5058f3a/values/92faf25701",
@@ -159,7 +159,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Basel"
+                    maybeValueHasString = Some("Basel")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/c5058f3a/values/0ca74ce5",
@@ -192,7 +192,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
+                    maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
@@ -239,7 +239,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Extent: 1 Bd.; Dimensions: f\u00B0"
+                    maybeValueHasString = Some("Extent: 1 Bd.; Dimensions: f\u00B0")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/2a6221216701/values/e94fa8a09205",
@@ -256,7 +256,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Van der Haegen I: 9,14"
+                        maybeValueHasString = Some("Van der Haegen I: 9,14")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/7b4a9bf89305",
@@ -272,7 +272,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Goff M165"
+                        maybeValueHasString = Some("Goff M165")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/3e74ee319405",
@@ -288,7 +288,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "C 3833"
+                        maybeValueHasString = Some("C 3833")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/019e416b9405",
@@ -304,7 +304,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Klebs 651.2"
+                        maybeValueHasString = Some("Klebs 651.2")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/c4c794a49405",
@@ -320,7 +320,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Schr 4799"
+                        maybeValueHasString = Some("Schr 4799")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/87f1e7dd9405",
@@ -336,7 +336,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Schramm XXI p. 9 & 26"
+                        maybeValueHasString = Some("Schramm XXI p. 9 & 26")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/4a1b3b179505",
@@ -352,7 +352,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "FairMur(G) 283"
+                        maybeValueHasString = Some("FairMur(G) 283")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/0d458e509505",
@@ -368,7 +368,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "IBP 3556"
+                        maybeValueHasString = Some("IBP 3556")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/d06ee1899505",
@@ -384,7 +384,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Borm 1751"
+                        maybeValueHasString = Some("Borm 1751")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/939834c39505",
@@ -401,7 +401,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Bernhard Richel"
+                    maybeValueHasString = Some("Bernhard Richel")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/2a6221216701/values/dda85bbb9105",
@@ -417,7 +417,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Jean Mandeville"
+                    maybeValueHasString = Some("Jean Mandeville")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/2a6221216701/values/1a7f08829105",
@@ -433,7 +433,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Katalogaufnahme anhand ISTC und v.d.Haegen"
+                    maybeValueHasString = Some("Katalogaufnahme anhand ISTC und v.d.Haegen")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/2a6221216701/values/56c287fc9505",
@@ -449,7 +449,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"
+                    maybeValueHasString = Some("http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/2a6221216701/values/f89173afca2704",
@@ -466,7 +466,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "deutsch von Otto von Diemeringen"
+                        maybeValueHasString = Some("deutsch von Otto von Diemeringen")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/ac79fbd99205",
@@ -482,7 +482,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Rubr. mit Init. J zu Beginn"
+                        maybeValueHasString = Some("Rubr. mit Init. J zu Beginn")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/6fa34e139305",
@@ -498,7 +498,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Holzschnitte nicht koloriert"
+                        maybeValueHasString = Some("Holzschnitte nicht koloriert")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/32cda14c9305",
@@ -514,7 +514,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Besitzervermerke: Kartause, H. Zscheckenb\u00FCrlin"
+                        maybeValueHasString = Some("Besitzervermerke: Kartause, H. Zscheckenb\u00FCrlin")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/f5f6f4859305",
@@ -530,7 +530,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516"
+                        maybeValueHasString = Some("Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/b82048bf9305",
@@ -547,7 +547,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Basel UB, Sign: Aleph D III 13:1"
+                    maybeValueHasString = Some("Basel UB, Sign: Aleph D III 13:1")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/2a6221216701/values/262655679205",
@@ -563,7 +563,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
-                    valueHasString = "Basel"
+                    maybeValueHasString = Some("Basel")
                 ),
                 valueHasMaxStandoffStartIndex = None,
                 valueIri = "http://rdfh.ch/0803/2a6221216701/values/a0d2aef49105",
@@ -597,7 +597,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Reise ins Heilige Land"
+                        maybeValueHasString = Some("Reise ins Heilige Land")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/d1010fd69005",
@@ -613,7 +613,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Reysen und wanderschafften durch das Gelobte Land"
+                        maybeValueHasString = Some("Reysen und wanderschafften durch das Gelobte Land")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/942b620f9105",
@@ -629,7 +629,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
-                        valueHasString = "Itinerarius"
+                        maybeValueHasString = Some("Itinerarius")
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2a6221216701/values/5755b5489105",
@@ -693,7 +693,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                             valueHasLanguage = None,
                             ontologySchema = InternalSchema,
                             comment = None,
-                            valueHasString = "two"
+                            maybeValueHasString = Some("two")
                         ),
                         valueHasMaxStandoffStartIndex = None,
                         valueIri = "http://rdfh.ch/0001/thing-with-history/values/2b",

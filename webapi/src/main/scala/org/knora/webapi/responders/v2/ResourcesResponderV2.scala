@@ -947,9 +947,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
-        // Check whether the response should include standoff.
-        val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
-
         for {
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
@@ -957,8 +954,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 preview = preview,
                 maybePropertyIri = propertyIri,
                 maybeVersionDate = versionDate,
-                queryValueHasString = true,
-                queryStandoff = queryStandoff
+                queryValueHasString = true
             ).toString())
 
             // _ = println(resourceRequestSparql)
@@ -997,6 +993,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
+        val queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+
         for {
 
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(
@@ -1018,6 +1016,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         resourceIri = resIri,
                         resourceRdfData = queryResultsSeparated(resIri),
                         mappings = mappingsAsMap,
+                        queryStandoff = queryStandoff,
                         versionDate = versionDate,
                         responderManager = responderManager,
                         knoraIdUtil = knoraIdUtil,
@@ -1060,6 +1059,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         resourceIri = resIri,
                         resourceRdfData = queryResultsSeparated(resIri),
                         mappings = Map.empty[IRI, MappingAndXSLTransformation],
+                        queryStandoff = false,
                         versionDate = None,
                         responderManager = responderManager,
                         knoraIdUtil = knoraIdUtil,

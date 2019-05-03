@@ -1133,12 +1133,12 @@ case class CreateStandoffTagV2InTriplestore(standoffNode: StandoffTagV2, standof
 /**
   * Represents a Knora text value.
   *
-  * @param valueHasString     the string representation of the text (without markup).
+  * @param maybeValueHasString the string representation of this text value, if available.
   * @param standoffAndMapping a [[StandoffAndMapping]], if any.
   * @param comment            a comment on this `TextValueContentV2`, if any.
   */
 case class TextValueContentV2(ontologySchema: OntologySchema,
-                              valueHasString: String,
+                              maybeValueHasString: Option[String],
                               valueHasLanguage: Option[String] = None,
                               standoffAndMapping: Option[StandoffAndMapping] = None,
                               comment: Option[String] = None) extends ValueContentV2 {
@@ -1178,6 +1178,8 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
             case None => Set.empty[StandoffTagIriAttributeV2]
         }
     }
+
+    override def valueHasString: String = maybeValueHasString.getOrElse(throw AssertionException("Text value has no valueHasString"))
 
     /**
       * The content of the text value without standoff, suitable for returning in API responses. This removes
@@ -1351,7 +1353,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
         }
 
         copy(
-            valueHasString = stringFormatter.fromSparqlEncodedString(valueHasString),
+            maybeValueHasString = maybeValueHasString.map(str => stringFormatter.fromSparqlEncodedString(str)),
             standoffAndMapping = unescapedStandoffAndMapping,
             comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr))
         )
@@ -1440,7 +1442,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                     // Text without standoff.
                     TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueAsString,
+                        maybeValueHasString = Some(valueAsString),
                         comment = getComment(jsonLDObject)
                     )
 
@@ -1463,7 +1465,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
 
                     TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw BadRequestException("Text value contains invalid characters")),
+                        maybeValueHasString = Some(stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw BadRequestException("Text value contains invalid characters"))),
                         valueHasLanguage = maybeValueHasLanguage,
                         standoffAndMapping = Some(standoffAndMapping),
                         comment = getComment(jsonLDObject)

@@ -510,7 +510,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString
+                        maybeValueHasString = Some(valueHasString)
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -533,7 +533,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             valueFromTriplestore.valueContent match {
-                case savedValue: TextValueContentV2 => savedValue.valueHasString should ===(valueHasString)
+                case savedValue: TextValueContentV2 => assert(savedValue.valueHasString.contains(valueHasString))
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
             }
         }
@@ -549,7 +549,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString
+                        maybeValueHasString = Some(valueHasString)
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -574,7 +574,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString,
+                        maybeValueHasString = Some(valueHasString),
                         comment = Some(valueHasComment)
                     )
                 ),
@@ -599,7 +599,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             valueFromTriplestore.valueContent match {
                 case savedValue: TextValueContentV2 =>
-                    savedValue.valueHasString should ===(valueHasString)
+                    assert(savedValue.valueHasString.contains(valueHasString))
                     savedValue.comment should ===(Some(valueHasComment))
 
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
@@ -625,7 +625,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString,
+                        maybeValueHasString = Some(valueHasString),
                         standoffAndMapping = standoffAndMapping
                     )
                 ),
@@ -650,7 +650,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             valueFromTriplestore.valueContent match {
                 case savedValue: TextValueContentV2 =>
-                    savedValue.valueHasString should ===(valueHasString)
+                    assert(savedValue.valueHasString.contains(valueHasString))
                     savedValue.standoffAndMapping should ===(standoffAndMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
@@ -675,7 +675,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString,
+                        maybeValueHasString = Some(valueHasString),
                         standoffAndMapping = standoffAndMapping
                     )
                 ),
@@ -1475,7 +1475,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString
+                        maybeValueHasString = Some(valueHasString)
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -1526,7 +1526,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = "this is not a date"
+                        maybeValueHasString = Some("this is not a date")
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -1611,7 +1611,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString,
+                        maybeValueHasString = Some(valueHasString),
                         standoffAndMapping = standoffAndMapping
                     )
                 ),
@@ -1645,7 +1645,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             textValueFromTriplestore.valueContent match {
                 case savedTextValue: TextValueContentV2 =>
-                    savedTextValue.valueHasString should ===(valueHasString)
+                    assert(savedTextValue.valueHasString.contains(valueHasString))
                     savedTextValue.standoffAndMapping should ===(standoffAndMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $textValueFromTriplestore")
@@ -1700,7 +1700,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString,
+                        maybeValueHasString = Some(valueHasString),
                         standoffAndMapping = standoffAndMapping
                     )
                 ),
@@ -1734,7 +1734,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             textValueFromTriplestore.valueContent match {
                 case savedTextValue: TextValueContentV2 =>
-                    savedTextValue.valueHasString should ===(valueHasString)
+                    assert(savedTextValue.valueHasString.contains(valueHasString))
                     savedTextValue.standoffAndMapping should ===(standoffAndMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $textValueFromTriplestore")
@@ -2062,7 +2062,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString
+                        maybeValueHasString = Some(valueHasString)
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -2085,7 +2085,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             valueFromTriplestore.valueContent match {
-                case savedValue: TextValueContentV2 => savedValue.valueHasString should ===(valueHasString)
+                case savedValue: TextValueContentV2 => assert(savedValue.valueHasString.contains(valueHasString))
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
             }
         }
@@ -2110,7 +2110,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueIri = zeitglöckleinCommentWithStandoffIri.get,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString,
+                        maybeValueHasString = Some(valueHasString),
                         standoffAndMapping = standoffAndMapping
                     )
                 ),
@@ -2135,7 +2135,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             valueFromTriplestore.valueContent match {
                 case savedValue: TextValueContentV2 =>
-                    savedValue.valueHasString should ===(valueHasString)
+                    assert(savedValue.valueHasString.contains(valueHasString))
                     savedValue.standoffAndMapping should ===(standoffAndMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
@@ -2179,7 +2179,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString
+                        maybeValueHasString = Some(valueHasString)
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -2210,7 +2210,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString,
+                        maybeValueHasString = Some(valueHasString),
                         standoffAndMapping = standoffAndMapping
                     )
                 ),
@@ -2235,7 +2235,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             valueFromTriplestore.valueContent match {
                 case savedValue: TextValueContentV2 =>
-                    savedValue.valueHasString should ===(valueHasString)
+                    assert(savedValue.valueHasString.contains(valueHasString))
                     savedValue.standoffAndMapping should ===(standoffAndMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
@@ -2261,7 +2261,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueIri = zeitglöckleinCommentWithStandoffIri.get,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString,
+                        maybeValueHasString = Some(valueHasString),
                         standoffAndMapping = standoffAndMapping
                     )
                 ),
@@ -2294,7 +2294,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString,
+                        maybeValueHasString = Some(valueHasString),
                         standoffAndMapping = standoffAndMapping
                     )
                 ),
@@ -2320,7 +2320,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             valueFromTriplestore.valueContent match {
                 case savedValue: TextValueContentV2 =>
-                    savedValue.valueHasString should ===(valueHasString)
+                    assert(savedValue.valueHasString.contains(valueHasString))
                     savedValue.standoffAndMapping should ===(standoffAndMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
@@ -2346,7 +2346,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueIri = zeitglöckleinCommentWithStandoffIri.get,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString,
+                        maybeValueHasString = Some(valueHasString),
                         standoffAndMapping = standoffAndMapping
                     )
                 ),
@@ -2371,7 +2371,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueHasString
+                        maybeValueHasString = Some(valueHasString)
                     )
                 ),
                 requestingUser = incunabulaUser,

@@ -65,7 +65,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
       */
     def receive(msg: StandoffResponderRequestV2) = msg match {
-        case getStandoffRequestV2: GetStandoffRequestV2 => getStandoffV2(getStandoffRequestV2)
+        case getStandoffPageRequestV2: GetStandoffPageRequestV2 => getStandoffV2(getStandoffPageRequestV2)
+        case getAllStandoffFromTextValueRequestV2: GetAllStandoffFromTextValueRequestV2 => getAllStandoffFromTextValueV2(getAllStandoffFromTextValueRequestV2)
         case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) => createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, requestingUser, uuid)
         case GetMappingRequestV2(mappingIri, requestingUser) => getMappingV2(mappingIri, requestingUser)
         case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) => getXSLTransformation(xsltTextReprIri, requestingUser)
@@ -74,8 +75,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
     private val xsltCacheName = "xsltCache"
 
-    private def getStandoffV2(getStandoffRequestV2: GetStandoffRequestV2): Future[GetStandoffResponseV2] = {
-        val requestMaxStartIndex = getStandoffRequestV2.offset + settings.maxResultsPerSearchResultPage - 1
+    private def getStandoffV2(getStandoffRequestV2: GetStandoffPageRequestV2): Future[GetStandoffResponseV2] = {
+        val requestMaxStartIndex = getStandoffRequestV2.offset + settings.standoffPerPage - 1
 
         for {
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
@@ -85,7 +86,6 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 maybePropertyIri = None,
                 maybeVersionDate = None,
                 queryValueHasString = false,
-                queryStandoff = true,
                 maybeValueIri = Some(getStandoffRequestV2.valueIri),
                 maybeStandoffMinStartIndex = Some(getStandoffRequestV2.offset),
                 maybeStandoffMaxStartIndex = Some(requestMaxStartIndex)
@@ -104,6 +104,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 resourceIri = getStandoffRequestV2.resourceIri,
                 resourceRdfData = queryResultsSeparated(getStandoffRequestV2.resourceIri),
                 mappings = Map.empty,
+                queryStandoff = false,
                 versionDate = None,
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,
@@ -847,7 +848,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             for {
                 // Get a page of standoff.
                 standoffResponse <- getStandoffV2(
-                    GetStandoffRequestV2(
+                    GetStandoffPageRequestV2(
                         resourceIri = resourceIri,
                         valueIri = valueIri,
                         offset = offset,
@@ -864,8 +865,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                     // There is more standoff to query. Return the collected standoff and the next task.
                     StandoffTaskResult(
                         underlyingResult = StandoffTaskUnderlyingResult(collectedStandoff),
-                        nextTask = Some(copy(offset = definedNextOffset)
-                        )
+                        nextTask = Some(copy(offset = definedNextOffset))
                     )
 
                 case None =>
@@ -878,4 +878,22 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
         }
     }
 
+    /**
+      * Returns all standoff markup for a text value, by querying it one page at a time.
+      *
+      * @param getAllStandoffFromTextValueRequestV2 the request message.
+      * @return the text value's standoff markup.
+      */
+    private def getAllStandoffFromTextValueV2(getAllStandoffFromTextValueRequestV2: GetAllStandoffFromTextValueRequestV2): Future[GetStandoffResponseV2] = {
+        val firstTask = GetStandoffTask(
+            resourceIri = getAllStandoffFromTextValueRequestV2.resourceIri,
+            valueIri = getAllStandoffFromTextValueRequestV2.valueIri,
+            offset = 0,
+            requestingUser = getAllStandoffFromTextValueRequestV2.requestingUser
+        )
+
+        for {
+            result: TaskResult[StandoffTaskUnderlyingResult] <- ActorUtil.runTasks(firstTask)
+        } yield GetStandoffResponseV2(valueIri = getAllStandoffFromTextValueRequestV2.valueIri, standoff = result.underlyingResult.standoff, nextOffset = None)
+    }
 }

@@ -26,7 +26,7 @@ import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2, GetStandoffRequestV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2, GetStandoffPageRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.SmartIri
@@ -67,9 +67,9 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                         throw BadRequestException(s"Standoff markup cannot be returned with the specified schema options")
                     }
 
-                    val requestMessageFuture: Future[GetStandoffRequestV2] = for {
+                    val requestMessageFuture: Future[GetStandoffPageRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield GetStandoffRequestV2(
+                    } yield GetStandoffPageRequestV2(
                         resourceIri = resourceIri.toString,
                         valueIri = valueIri.toString,
                         offset = offset,
