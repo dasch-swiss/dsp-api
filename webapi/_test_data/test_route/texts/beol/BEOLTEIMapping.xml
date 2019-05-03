@@ -44,6 +44,13 @@
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/0801/beol#StandoffEntityTag</classIri>
+            <attributes>
+                <attribute>
+                    <attributeName>entityType</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffEntityType</propertyIri>
+                </attribute>
+            </attributes>
             <datatype>
                 <type>http://www.knora.org/ontology/knora-base#StandoffLinkTag</type>
                 <attributeName>ref</attributeName>
@@ -311,6 +318,11 @@
                     <namespace>noNamespace</namespace>
                     <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasColumnSpan</propertyIri>
                 </attribute>
+                <attribute>
+                    <attributeName>cellstyle</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasStyle</propertyIri>
+                </attribute>
             </attributes>
         </standoffClass>
     </mappingElement>
@@ -536,6 +548,25 @@
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/0801/beol#StandoffSmallTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>font</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/0801/beol#StandoffFontTag</classIri>
+            <attributes>
+                <attribute>
+                    <attributeName>fontType</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffFontType</propertyIri>
+                </attribute>
+            </attributes>
         </standoffClass>
     </mappingElement>
 

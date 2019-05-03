@@ -19,6 +19,9 @@
 
 package org.knora.webapi.util.standoff
 
+import java.io.File
+
+import org.knora.webapi.util.FileUtil
 import org.knora.webapi.{CoreSpec, StandoffConversionException}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
@@ -88,6 +91,18 @@ class XMLUtilSpec extends CoreSpec {
                 val transformed: String = XMLUtil.applyXSLTransformation(xml, xsltInvalid)
             }
 
+        }
+
+        "demonstrate how to handle resources that may or may not be embedded" in {
+            val xmlWithNestedResource = FileUtil.readTextFile(new File("_test_data/test_route/texts/beol/xml-with-nested-resources.xml"))
+            val xmlWithNonNestedResource = FileUtil.readTextFile(new File("_test_data/test_route/texts/beol/xml-with-non-nested-resources.xml"))
+            val xslt = FileUtil.readTextFile(new File("_test_data/test_route/texts/beol/header.xsl"))
+
+            val transformedXmlWithNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNestedResource, xslt)
+            val transformedXmlWithNonNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNonNestedResource, xslt)
+
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(transformedXmlWithNestedResource)).withTest(Input.fromString(transformedXmlWithNonNestedResource)).build()
+            xmlDiff.hasDifferences should be(false)
         }
     }
 }

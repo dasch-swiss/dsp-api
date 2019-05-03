@@ -446,7 +446,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
 
         val typeIri = requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
-        if (!(typeIri.isKnoraEntityIri && typeIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+        if (!(typeIri.isKnoraEntityIri && typeIri.getOntologySchema.contains(ApiV2Complex))) {
             throw BadRequestException(s"Invalid Knora type IRI: $typeIri")
         }
 
@@ -476,7 +476,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
             case (key: IRI, jsonLDValue: JsonLDValue) =>
                 val propertyIri = key.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $key"))
 
-                if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2Complex))) {
                     throw BadRequestException(s"Invalid property IRI: $propertyIri")
                 }
 
@@ -676,7 +676,7 @@ object JsonLDUtil {
       * @param knoraOntologiesNeedingPrefixes a set of IRIs of other Knora ontologies that need prefixes.
       * @return a JSON-LD context.
       */
-    def makeContext(fixedPrefixes: Map[String, String], knoraOntologiesNeedingPrefixes: Set[SmartIri]): JsonLDObject = {
+    def makeContext(fixedPrefixes: Map[String, String], knoraOntologiesNeedingPrefixes: Set[SmartIri] = Set.empty): JsonLDObject = {
         /**
           * Given a function that makes a prefix from a Knora ontology IRI, returns an association list in which
           * each element is a prefix associated with a namespace.

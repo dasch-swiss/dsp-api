@@ -32,7 +32,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingReques
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, KnoraIdUtil, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,6 +43,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ValueUtilV1(private val settings: SettingsImpl) {
 
     private val stringFormatter = StringFormatter.getGeneralInstance
+    private val knoraIdUtil = new KnoraIdUtil
 
     /**
       * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
@@ -552,7 +553,11 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             // v2 responder is used here directly, v1 responder would inernally use v2 responder anyway and do unnecessary back and forth conversions
             mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, requestingUser = userProfile)).mapTo[GetMappingResponseV2]
 
-            standoffTags: Seq[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(mappingResponse.standoffEntities, valueProps.standoff)
+            standoffTags: Seq[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(
+                standoffEntities = mappingResponse.standoffEntities,
+                standoffAssertions = valueProps.standoff,
+                knoraIdUtil = knoraIdUtil
+            )
 
         } yield TextValueWithStandoffV1(
             utf8str = utf8str,
@@ -645,18 +650,13 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     private def makeStillImageValue(valueProps: ValueProps, projectShortcode: String, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
 
-        val isPreviewStr = predicates.get(OntologyConstants.KnoraBase.IsPreview).flatMap(_.literals.headOption)
-        val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
-
         Future(StillImageFileValueV1(
             internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
             internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
             originalFilename = predicates(OntologyConstants.KnoraBase.OriginalFilename).literals.head,
             projectShortcode = projectShortcode,
             dimX = predicates(OntologyConstants.KnoraBase.DimX).literals.head.toInt,
-            dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt,
-            qualityLevel = predicates(OntologyConstants.KnoraBase.QualityLevel).literals.head.toInt,
-            isPreview = isPreview
+            dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt
         ))
     }
 

@@ -28,6 +28,9 @@ try:
                       auth=('t.schweizer@unibas.ch', 'test'),
                       proxies={'http': 'http://localhost:3333'})
 
+
+    print(r.text)
+
     r.raise_for_status()
 
     result = r.json()
@@ -54,7 +57,9 @@ try:
 
     mappingParams = {
         "http://api.knora.org/ontology/knora-api/v2#mappingHasName": "BEOLTEIMapping",
-        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+        },
         "http://www.w3.org/2000/01/rdf-schema#label": "TEI mapping"
     }
 
@@ -114,8 +119,12 @@ try:
 
     h.raise_for_status()
 
-    print("&mappingIri=" + urllib.parse.quote_plus("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLTEIMapping") + "&gravsearchTemplateIri=" + urllib.parse.quote_plus(g.json()['res_id']) + "&teiHeaderXSLTIri=" + urllib.parse.quote_plus(h.json()['res_id']))
+    print("?textProperty=" + urllib.parse.quote_plus("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText") + "&mappingIri=" + urllib.parse.quote_plus("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLTEIMapping") + "&gravsearchTemplateIri=" + urllib.parse.quote_plus(g.json()['res_id']) + "&teiHeaderXSLTIri=" + urllib.parse.quote_plus(h.json()['res_id']))
 
+    print("textProp "  + "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText")
+    print("mappingIRI: " + "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLTEIMapping")
+    print("gravsearchTemplateIri: " + g.json()['res_id'])
+    print("teiHeaderXSLTIri " + h.json()['res_id'])
 
 
 

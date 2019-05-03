@@ -44,7 +44,7 @@
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 
 WITH <@adminNamedGraphIri>
 DELETE {
@@ -52,23 +52,23 @@ DELETE {
     @* Delete current values, for which we have a new one. *@
 
     @if(maybeName.nonEmpty) {
-        ?group knora-base:groupName ?currentName .
+        ?group knora-admin:groupName ?currentName .
     }
 
     @if(maybeDescription.nonEmpty) {
-        ?group knora-base:groupDescription ?currentDescription .
+        ?group knora-admin:groupDescription ?currentDescription .
     }
 
     @if(maybeProject.nonEmpty) {
-        ?group knora-base:belongsToProject ?currentProject .
+        ?group knora-admin:belongsToProject ?currentProject .
     }
 
     @if(maybeStatus.nonEmpty) {
-        ?group knora-base:status ?currentStatus .
+        ?group knora-admin:status ?currentStatus .
     }
 
     @if(maybeSelfjoin.nonEmpty) {
-        ?group knora-base:hasSelfJoinEnabled ?currentSelfjoin .
+        ?group knora-admin:hasSelfJoinEnabled ?currentSelfjoin .
     }
 
 
@@ -78,23 +78,23 @@ DELETE {
     @* Add the new values. *@
 
     @if(maybeName.nonEmpty) {
-        ?group knora-base:groupName "@maybeName.get"^^xsd:string .
+        ?group knora-admin:groupName "@maybeName.get"^^xsd:string .
     }
 
     @if(maybeDescription.nonEmpty) {
-        ?group knora-base:groupDescription """@maybeDescription.get"""^^xsd:string .
+        ?group knora-admin:groupDescription """@maybeDescription.get"""^^xsd:string .
     }
 
     @if(maybeProject.nonEmpty) {
-        ?group knora-base:belongsToProject <@maybeProject.get> .
+        ?group knora-admin:belongsToProject <@maybeProject.get> .
     }
 
     @if(maybeStatus.nonEmpty) {
-        ?group knora-base:status "@maybeStatus.get"^^xsd:boolean .
+        ?group knora-admin:status "@maybeStatus.get"^^xsd:boolean .
     }
 
     @if(maybeSelfjoin.nonEmpty) {
-        ?group knora-base:hasSelfJoinEnabled "@maybeSelfjoin.get"^^xsd:boolean .
+        ?group knora-admin:hasSelfJoinEnabled "@maybeSelfjoin.get"^^xsd:boolean .
     }
 }
 
@@ -119,13 +119,13 @@ WHERE {
 
     @* Get all current defined values. *@
 
-    ?group knora-base:groupName ?currentName .
+    ?group knora-admin:groupName ?currentName .
 
-    optional {?group knora-base:groupDescription ?currentDescription .}
+    optional {?group knora-admin:groupDescription ?currentDescription .}
 
-    ?group knora-base:belongsToProject ?currentProject .
+    ?group knora-admin:belongsToProject ?currentProject .
 
-    ?group knora-base:status ?currentStatus .
+    ?group knora-admin:status ?currentStatus .
 
-    ?group knora-base:hasSelfJoinEnabled ?currentSelfjoin .
+    ?group knora-admin:hasSelfJoinEnabled ?currentSelfjoin .
 }

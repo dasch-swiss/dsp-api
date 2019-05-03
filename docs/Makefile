@@ -11,7 +11,7 @@ TYPEDOC         = typedoc
 
 # User-friendly check for typedoc
 ifeq ($(shell which $(TYPEDOC) >/dev/null 2>&1; echo $$?), 1)
-$(error The '$(TYPEDOC)' command was not found. Make sure you have Typedoc installed.
+$(error The '$(TYPEDOC)' command was not found. Make sure you have Typedoc installed.)
 endif
 
 # Graphviz diagrams to be converted to PNG

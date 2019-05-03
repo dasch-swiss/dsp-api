@@ -41,8 +41,6 @@
        rdfs:comment """Titel"""@de ,
                     """Title"""@en;
 
-       knora-base:subjectClassConstraint :writtenSource ;
-
        knora-base:objectClassConstraint knora-base:TextValue ;
 
        salsah-gui:guiElement salsah-gui:SimpleText ;
@@ -311,7 +309,7 @@
                 rdfs:subPropertyOf knora-base:hasLinkTo ;
 
                 rdfs:label "erwähnte Person"@de ,
-                           "Mentioned person"@en ;
+                           "Mentioned Person"@en ;
 
                 rdfs:comment """erwähnte Person"""@de ,
                              """mentioned person"""@en ;
@@ -506,8 +504,6 @@
         rdfs:comment """Diese Property bezeichnet die Position in einer geordneten Reihenfolge"""@de ,
                      """Cette \"property\" dénote la position dans un séquence."""@fr ,
                      """This property stands for the position within a set of rdered items (resoucres)"""@en ;
-
-        knora-base:subjectClassConstraint :documentImage ;
 
         knora-base:objectClassConstraint knora-base:IntValue ;
 
@@ -891,9 +887,9 @@
 :hasBirthPlace rdf:type owl:ObjectProperty ;
 
                rdfs:label "Geburtsort"@de ,
-                         "Birth Place"@en ;
+                         "Place of birth"@en ;
 
-               rdfs:comment """Represents a birth place."""@en ;
+               rdfs:comment """Represents a place of birth."""@en ;
 
                knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -1311,6 +1307,134 @@
                    rdfs:comment """Der Brief ist publiziert"""@de ,
                               """Letter is published"""@en .
 
+### ###########################################
+### beol:transcriptionOf
+
+    :transcriptionOf rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+           rdfs:comment "Transkription von"@de ,
+                        "Transcription of"@en ;
+
+           rdfs:label  "Transkription von"@de ,
+                       "Transcription of"@en ;
+
+           knora-base:subjectClassConstraint :transcription ;
+
+           knora-base:objectClassConstraint :manuscriptEntry ;
+
+           salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:transcriptionOfValue
+
+:transcriptionOfValue rdf:type owl:ObjectProperty ;
+
+                knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                knora-base:subjectClassConstraint :transcription ;
+
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                rdfs:comment "Transkription von"@de ,
+                             "Transcription of"@en ;
+
+                rdfs:label  "Transkription von"@de ,
+                            "Transcription of"@en .
+
+### ###########################################
+### beol:belongsToRegion
+
+    :belongsToRegion rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+           rdfs:comment "Bezug zu Region"@de ,
+                        "belongs to region"@en ;
+
+           rdfs:label  "Bezug zu Region"@de ,
+                       "belongs to region"@en ;
+
+           knora-base:subjectClassConstraint :transcription ;
+
+           knora-base:objectClassConstraint knora-base:Region ;
+
+           salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:belongsToRegionValue
+
+:belongsToRegionValue rdf:type owl:ObjectProperty ;
+
+                knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                knora-base:subjectClassConstraint :transcription ;
+
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                rdfs:comment "Bezug zu Region"@de ,
+                             "belongs to region"@en ;
+
+                rdfs:label  "Bezug zu Region"@de ,
+                            "belongs to region"@en .
+
+### ###########################################
+### beol:layer
+
+:layer rdf:type owl:ObjectProperty ;
+
+       knora-base:objectClassConstraint knora-base:IntValue ;
+
+       knora-base:subjectClassConstraint :transcription ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:comment "Schicht"@de ,
+                    "Layer"@en ;
+
+       rdfs:label  "Schicht"@de ,
+                   "Layer"@en .
+
+
+### ###########################################
+### beol:manuscriptEntryOf
+
+:manuscriptEntryOf rdf:type owl:ObjectProperty ;
+
+                rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                rdfs:comment "Manuskripteintrag in"@de ,
+                             "Manuscript entry in"@en ;
+
+                rdfs:label  "Manuskripteintrag in"@de ,
+                            "Manuscript entry in"@en ;
+
+                knora-base:subjectClassConstraint :manuscriptEntry ;
+
+                knora-base:objectClassConstraint :manuscript ;
+
+                salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:manuscriptEntryOfValue
+
+:manuscriptEntryOfValue rdf:type owl:ObjectProperty ;
+
+                knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                knora-base:subjectClassConstraint :manuscriptEntry ;
+
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                rdfs:comment "Manuskripteintrag in"@de ,
+                             "Manuscript entry in"@en ;
+
+                rdfs:label  "Manuskripteintrag in"@de ,
+                            "Manuscript entry in"@en .
 
 ### ###########################################
 ### beol:externalRepository
@@ -1328,7 +1452,6 @@
 
                    rdfs:comment """Dieser Brief ist auch vorhanden in"""@de ,
                               """Letter is also available at"""@en .
-
 
 ##########################################################
 #
@@ -1585,13 +1708,13 @@
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasOriginal ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                            salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                         ] ,
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasOriginalValue ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                            salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                            salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                         ] ,
                         [
                             rdf:type owl:Restriction ;
@@ -1895,6 +2018,91 @@
     rdfs:label "schriftliche Quelle"@de ,
                 "Written source"@en .
 
+### ###########################################
+### beol:transcription
+
+:transcription rdf:type owl:Class ;
+
+         rdfs:subClassOf knora-base:Resource ,
+
+         [
+            rdf:type owl:Restriction ;
+            owl:onProperty :hasText ;
+            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+         ],
+         [
+            rdf:type owl:Restriction ;
+            owl:onProperty :transcriptionOf ;
+            owl:cardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+         ],
+         [
+            rdf:type owl:Restriction ;
+            owl:onProperty :transcriptionOfValue ;
+            owl:cardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+         ],
+         [
+            rdf:type owl:Restriction ;
+            owl:onProperty :belongsToRegion ;
+            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+         ],
+         [
+            rdf:type owl:Restriction ;
+            owl:onProperty :belongsToRegionValue ;
+            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+         ],
+         [
+           rdf:type owl:Restriction ;
+           owl:onProperty :layer ;
+           owl:cardinality "1"^^xsd:nonNegativeInteger ;
+           salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+         ];
+
+         rdfs:comment "Transkription"@de ,
+                      "Transcription"@en ;
+
+         rdfs:label "Transkription"@de ,
+                    "Transcription"@en .
+
+### ###########################################
+### beol:manuscriptEntry
+
+:manuscriptEntry rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:Resource ,
+        [
+            rdf:type owl:Restriction ;
+            owl:onProperty :title ;
+            owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+        ] ,
+        [
+            rdf:type owl:Restriction ;
+            owl:onProperty :seqnum ;
+            owl:cardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+        ] ,
+        [
+            rdf:type owl:Restriction ;
+            owl:onProperty :manuscriptEntryOf ;
+            owl:cardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+        ] ,
+        [
+            rdf:type owl:Restriction ;
+            owl:onProperty :manuscriptEntryOfValue ;
+            owl:cardinality "1"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+        ] ;
+
+        rdfs:label "Eintrag in einem Manuskript"@de ,
+                   "Entry in a manuscript"@en ;
+
+        rdfs:comment "An entry in a manuscript"@en .
 
 ### ###########################################
 ### beol:person
@@ -2083,6 +2291,13 @@
 #
 ##########################################################
 
+###  http://www.knora.org/ontology/0801/beol#StandoffHtmlTag
+:StandoffHtmlTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents a HTML tag in MediaWiki"@en .
+
 ###  http://www.knora.org/ontology/0801/beol#StandoffFacsimileTag
 
 :StandoffFacsimileTag rdf:type owl:Class ;
@@ -2091,14 +2306,71 @@
 
                       rdfs:comment "a URI referring to a facsimile"@en .
 
+:StandoffRegionTag rdf:type owl:Class ;
+
+                   rdfs:subClassOf standoff:StandoffRootTag ,
+                   [ rdf:type owl:Restriction ;
+                     owl:onProperty :standoffRegionTagHasBorder ;
+                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                   ] ;
+
+                   rdfs:comment "represent a region in the manuscript"@en .
+
+###  http://www.knora.org/ontology/0801/beol#standoffMathTagHasBorder
+:standoffRegionTagHasBorder rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                rdfs:comment "border settings of a region"@en ;
+
+                knora-base:subjectClassConstraint :StandoffRegionTag ;
+
+                knora-base:objectDatatypeConstraint xsd:string .
 
 ###  http://www.knora.org/ontology/0801/beol#StandoffMathTag
 
 :StandoffMathTag rdf:type owl:Class ;
 
-                 rdfs:subClassOf knora-base:StandoffTag ;
+                 rdfs:subClassOf knora-base:StandoffTag,
+                 [ rdf:type owl:Restriction ;
+                   owl:onProperty :standoffMathTagHasBorder ;
+                   owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                 ] ;
 
                  rdfs:comment "mathematical notation encoded in LaTeX"@en .
+
+
+###  http://www.knora.org/ontology/0801/beol#standoffMathTagHasBorder
+:standoffMathTagHasBorder rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                rdfs:comment "border settings of mathematical notation"@en ;
+
+                knora-base:subjectClassConstraint :StandoffMathTag ;
+
+                knora-base:objectDatatypeConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/0801/beol#StandoffGapTag
+
+:StandoffGapTag rdf:type owl:Class ;
+
+                 rdfs:subClassOf knora-base:StandoffTag ,
+                 [ rdf:type owl:Restriction ;
+                   owl:onProperty :standoffTagUnsureAttribute ;
+                   owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                 ] ;
+
+                 rdfs:comment "Gap in the manuscript"@en .
+
+###  http://www.knora.org/ontology/0801/beol#StandoffMarginalTag
+
+:StandoffMarginalTag rdf:type owl:Class ;
+
+                 rdfs:subClassOf knora-base:StandoffTag ;
+
+                 rdfs:comment "text in margins of the page"@en .
 
 ###  http://www.knora.org/ontology/0801/beol#StandoffHrTag
 
@@ -2123,14 +2395,6 @@
               rdfs:subClassOf knora-base:StandoffTag ;
 
               rdfs:comment "represents a page break"@en .
-
-###  http://www.knora.org/ontology/0801/beol#StandoffHtmlTag
-:StandoffHtmlTag rdf:type owl:Class ;
-
-            rdfs:subClassOf knora-base:StandoffTag ;
-
-            rdfs:comment "represents a HTML tag in MediaWiki"@en .
-
 
 ###  http://www.knora.org/ontology/0801/beol#StandoffReferenceTag
 :StandoffReferenceTag  rdf:type owl:Class ;
@@ -2346,3 +2610,161 @@
             rdfs:subClassOf knora-base:StandoffTag ;
 
             rdfs:comment "represents a html figcaption tag"@en .
+
+### http://www.knora.org/ontology/0801/beol#StandoffCenterTag
+:StandoffCenterTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents text that is to be centered"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffExpansionTag
+:StandoffExpansionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents an abbreviation in a text that can be expanded"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffAbbreviationMarkerTag
+:StandoffAbbreviationMarkerTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents an abbreviation marker in a text"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffExpansionMarkerTag
+:StandoffExpansionMarkerTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ,
+            [
+                 rdf:type owl:Restriction ;
+                 owl:onProperty :standoffTagUnsureAttribute ;
+                 owl:maxCardinality "1"^^xsd:nonNegativeInteger
+            ] ;
+
+            rdfs:comment "identifies an expansion marker in a text"@en .
+
+### http://www.knora.org/ontology/0801/beol#StandoffCorrectionTag
+:StandoffCorrectionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents an editorial corrrection in a text"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffOriginalMarkerTag
+:StandoffOriginalMarkerTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ,
+            [ rdf:type owl:Restriction ;
+              owl:onProperty :standoffOriginalMarkerTagSic ;
+              owl:maxCardinality "1"^^xsd:nonNegativeInteger
+            ] ;
+
+            rdfs:comment "represents an original reading in a  text"@en .
+
+###  http://www.knora.org/ontology/0801/beol#standoffOriginalMarkerTagSic
+:standoffOriginalMarkerTagSic rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                rdfs:comment "original reading is marked as 'sic'"@en ;
+
+                knora-base:subjectClassConstraint :StandoffOriginalMarkerTag ;
+
+                knora-base:objectDatatypeConstraint xsd:boolean .
+
+###  http://www.knora.org/ontology/0801/beol#standoffTagUnsureAttribute
+:standoffTagUnsureAttribute rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                rdfs:comment "standoff tag annotation is unsure"@en ;
+
+                knora-base:subjectClassConstraint knora-base:StandoffTag ;
+
+                knora-base:objectDatatypeConstraint xsd:boolean .
+
+### http://www.knora.org/ontology/0801/beol#StandoffInterventionMarkerTag
+:StandoffInterventionMarkerTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ,
+            [
+              rdf:type owl:Restriction ;
+              owl:onProperty :standoffTagUnsureAttribute ;
+              owl:maxCardinality "1"^^xsd:nonNegativeInteger
+            ] ;
+
+            rdfs:comment "represents an editorial intervention in a text"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffAdditionTag
+:StandoffAdditionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents text that was added"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffDeletionTag
+:StandoffDeletionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents text that was deleted"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffSubstitutionTag
+:StandoffSubstitutionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents a substitution of text"@en .
+
+### http://www.knora.org/ontology/0801/beol#StandoffSubstitutionDeletionTag
+:StandoffSubstitutionDeletionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents a substituted text"@en .
+
+### http://www.knora.org/ontology/0801/beol#StandoffSubstitutionAdditionTag
+:StandoffSubstitutionAdditionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents substituting text"@en .
+
+### http://www.knora.org/ontology/0801/beol#StandoffUnclearTag
+:StandoffUnclearTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents unreadable text"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffForeignTag
+:StandoffForeignTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag,
+            [ rdf:type owl:Restriction ;
+              owl:onProperty :standoffForeignTagHasLanguage ;
+              owl:cardinality "1"^^xsd:nonNegativeInteger
+            ] ;
+
+            rdfs:comment "represents text written in another language"@en .
+
+
+###  http://www.knora.org/ontology/0801/beol#standoffForeignTagHasLanguage
+:standoffForeignTagHasLanguage rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                rdfs:comment "language of a foreign tag"@en ;
+
+                knora-base:subjectClassConstraint :StandoffForeignTag ;
+
+                knora-base:objectDatatypeConstraint xsd:string .

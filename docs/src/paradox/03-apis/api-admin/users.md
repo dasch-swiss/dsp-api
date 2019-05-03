@@ -22,6 +22,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ## Endpoint Overview
 
 **User Operations:**
+
 - `GET: /admin/users` : return all users
 - `GET: /admin/users/[iri | email | username]/<identifier>` : return single user identified by [IRI | email | username]
 - `POST: /admin/users/` : create new user
@@ -74,6 +75,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
       "email": "donald.duck@example.org",
       "givenName": "Donald",
       "familyName": "Duck",
+      "username": "donald.duck",
       "password": "test",
       "status": true,
       "lang": "en",
@@ -85,19 +87,13 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
   - Required permission: SystemAdmin / self
   - Changeable information: email, given name, family name,
-    password, status, SystemAdmin membership
-  - Remark: There are four distinct use case / payload combination.
-    It is not possible to mix cases, e.g., sending `newUserStatus`
-    and basic user information at the same time will result in an
-    error: (1) change password: oldPassword, newPassword, (2) change
-    status: newUserStatus, (3) change system admin membership:
-    newSystemAdminMembershipStatus, and (4) change basic user
-    information: email, givenName, familyName, lang
-  - TypeScript Docs: userFormats - ChangeUserApiRequestV1
+    password, status, SystemAdmin membership 
+  - TypeScript Docs: userFormats - ChangeUserApiRequestADM
   - PUT: `/admin/users/iri/<userIri>/BasicUserInformation`
   - BODY:
     ```
     {
+      "username": "donald.big.duck",
       "email": "donald.big.duck@example.org",
       "givenName": "Big Donald",
       "familyName": "Duckmann",
@@ -113,7 +109,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - BODY:
     ```
     {
-      "oldPassword": "test",
+      "requesterPassword": "test",
       "newPassword": "test1234"
     }
     ```
@@ -152,7 +148,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
     project self-assignment is enabled)
   - Required information: project IRI, user IRI
   - Effects: `knora-base:isInProject` user property
-  - POST / DELETE: `/admin/users/iri/<userIri>/projects/<projectIri>`
+  - POST / DELETE: `/admin/users/iri/<userIri>/project-memberships/<projectIri>`
   - BODY: empty
 
 ## User's group membership operations
@@ -203,15 +199,15 @@ The following is an example for user information stored in the `admin` named gra
 
 ```
 <http://rdfh.ch/users/c266a56709>
-    rdf:type knora-base:User ;
-    knora-base:username "user01.user1"^^xsd:string ;
-    knora-base:email "user01.user1@example.com"^^xsd:string ;
-    knora-base:givenName "User01"^^xsd:string ;
-    knora-base:familyName "User"^^xsd:string ;
-    knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
-    knora-base:preferredLanguage "de"^^xsd:string ;
-    knora-base:status "true"^^xsd:boolean ;
-    knora-base:isInProject <http://rdfh.ch/projects/00FF> ;
-    knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
-    knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/00FF> .
+    rdf:type knora-admin:User ;
+    knora-admin:username "user01.user1"^^xsd:string ;
+    knora-admin:email "user01.user1@example.com"^^xsd:string ;
+    knora-admin:givenName "User01"^^xsd:string ;
+    knora-admin:familyName "User"^^xsd:string ;
+    knora-admin:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+    knora-admin:preferredLanguage "de"^^xsd:string ;
+    knora-admin:status "true"^^xsd:boolean ;
+    knora-admin:isInProject <http://rdfh.ch/projects/00FF> ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/00FF> .
 ```

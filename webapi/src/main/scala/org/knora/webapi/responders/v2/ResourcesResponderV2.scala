@@ -54,6 +54,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     /* actor materializer needed for http requests */
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
+    private val knoraIdUtil = new KnoraIdUtil
+
     /**
       * Represents a resource that is ready to be created and whose contents can be verified afterwards.
       *
@@ -68,13 +70,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
       */
     def receive(msg: ResourcesResponderRequestV2) = msg match {
-        case ResourcesGetRequestV2(resIris, requestingUser) => getResources(resIris, requestingUser)
-        case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreview(resIris, requestingUser)
-        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
+        case ResourcesGetRequestV2(resIris, propertyIri, versionDate, requestingUser) => getResourcesV2(resIris, propertyIri, versionDate, requestingUser)
+        case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreviewV2(resIris, requestingUser)
+        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
         case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
         case deleteResourceRequestV2: DeleteResourceRequestV2 => deleteResourceV2(deleteResourceRequestV2)
         case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
+        case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 => getResourceHistoryV2(resourceHistoryRequest)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -142,7 +145,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(internalCreateResource.resourceClassIri)
 
-                // Make a timestamp for the resource and its values.
+                // Make a versionDate for the resource and its values.
                 creationDate: Instant = internalCreateResource.creationDate.getOrElse(Instant.now)
 
                 // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
@@ -196,7 +199,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             projectIri = createResourceRequestV2.createResource.projectADM.id
 
-            _ = if (projectIri == OntologyConstants.KnoraBase.SystemProject || projectIri == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
+            _ = if (projectIri == OntologyConstants.KnoraAdmin.SystemProject || projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
                 throw BadRequestException(s"Resources cannot be created in project <$projectIri>")
             }
 
@@ -217,7 +220,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             internalResourceClassIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.toOntologySchema(InternalSchema)
 
             _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri, None)) {
-                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.email} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
+                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
@@ -248,7 +251,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         def makeTaskFuture: Future[SuccessResponseV2] = {
             for {
                 // Get the metadata of the resource to be updated.
-                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
+                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
                 resource: ReadResourceV2 = resourcesSeq.toResource(updateResourceMetadataRequestV2.resourceIri)
                 internalResourceClassIri = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
 
@@ -299,7 +302,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Verify that the resource was updated correctly.
 
-                updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
+                updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
 
                 _ = if (updatedResourcesSeq.numberOfResources != 1) {
                     throw AssertionException(s"Expected one resource, got ${resourcesSeq.numberOfResources}")
@@ -345,7 +348,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         def makeTaskFuture: Future[SuccessResponseV2] = {
             for {
                 // Get the metadata of the resource to be updated.
-                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(deleteResourceV2.resourceIri), deleteResourceV2.requestingUser)
+                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(Seq(deleteResourceV2.resourceIri), deleteResourceV2.requestingUser)
                 resource: ReadResourceV2 = resourcesSeq.toResource(deleteResourceV2.resourceIri)
                 internalResourceClassIri = deleteResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
 
@@ -375,7 +378,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     dataNamedGraph = dataNamedGraph,
                     resourceIri = deleteResourceV2.resourceIri,
                     maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
-                    currentTime = Instant.now
+                    currentTime = Instant.now,
+                    requestingUser = deleteResourceV2.requestingUser.id
                 ).toString()
 
                 // Do the update.
@@ -422,7 +426,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param defaultResourcePermissions the default permissions to be given to the resource, if it does not have custom permissions.
       * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
       *                                   have custom permissions. This is a map of property IRIs to permission strings.
-      * @param creationDate               the timestamp to be attached to the resource and its values.
+      * @param creationDate               the versionDate to be attached to the resource and its values.
       * @param requestingUser             the user making the request.
       * @return a [[ResourceReadyToCreate]].
       */
@@ -447,10 +451,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
                     val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
 
-                    val cardinalityInfo = knoraPropertyCardinalities.getOrElse(internalPropertyIri, throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> has no cardinality for property <$propertyIri>"))
+                    val cardinalityInfo = knoraPropertyCardinalities.getOrElse(internalPropertyIri, throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}> has no cardinality for property <$propertyIri>"))
 
                     if ((cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1) {
-                        throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> does not allow more than one value for property <$propertyIri>")
+                        throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}> does not allow more than one value for property <$propertyIri>")
                     }
             }
 
@@ -463,8 +467,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             internalPropertyIris: Set[SmartIri] = internalCreateResource.values.keySet
 
             _ = if (!requiredProps.subsetOf(internalPropertyIris)) {
-                val missingProps = (requiredProps -- internalPropertyIris).map(iri => s"<${iri.toOntologySchema(ApiV2WithValueObjects)}>").mkString(", ")
-                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}>: $missingProps")
+                val missingProps = (requiredProps -- internalPropertyIris).map(iri => s"<${iri.toOntologySchema(ApiV2Complex)}>").mkString(", ")
+                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2Complex)}>: $missingProps")
             }
 
             // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
@@ -549,7 +553,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         for {
             // Get information about the existing resources that are targets of links.
-            existingTargets: ReadResourcesSequenceV2 <- getResourcePreview(existingTargets.toSeq, requestingUser)
+            existingTargets: ReadResourcesSequenceV2 <- getResourcePreviewV2(existingTargets.toSeq, requestingUser)
 
             // Make a map of the IRIs of existing target resources to their class IRIs.
             classesOfExistingTargets: Map[IRI, SmartIri] = existingTargets.resources.map(resource => resource.resourceIri -> resource.resourceClassIri).toMap
@@ -578,7 +582,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     val secondValue: ValueContentV2 = valueCombination(1).valueContent
 
                     if (firstValue.wouldDuplicateOtherValue(secondValue)) {
-                        throw DuplicateValueException(s"${resourceIDForErrorMsg}Duplicate values for property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
+                        throw DuplicateValueException(s"${resourceIDForErrorMsg}Duplicate values for property <${propertyIri.toOntologySchema(ApiV2Complex)}>")
                     }
                 }
         }
@@ -607,7 +611,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Don't accept link properties.
                 if (propertyInfo.isLinkProp) {
-                    throw BadRequestException(s"${resourceIDForErrorMsg}Invalid property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
+                    throw BadRequestException(s"${resourceIDForErrorMsg}Invalid property <${propertyIri.toOntologySchema(ApiV2Complex)}>. Use a link value property to submit a link.")
                 }
 
                 // Get the property's object class constraint. If this is a link value property, we want the object
@@ -631,7 +635,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                             // It's a link value.
 
                             if (!propertyInfo.isLinkValueProp) {
-                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2Complex)}>")
                             }
 
                             // Does the resource that's the target of the link belongs to a subclass of the
@@ -649,14 +653,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                     s"'${clientResourceIDs(linkValueContentV2.referredResourceIri)}'"
                                 }
 
-                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>, because it does not belong to class <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint.toOntologySchema(ApiV2Complex)}>, because it does not belong to class <${objectClassConstraint.toOntologySchema(ApiV2Complex)}>")
                             }
 
                         case otherValueContentV2: ValueContentV2 =>
                             // It's not a link value. Check that its type is equal to the property's object
                             // class constraint.
                             if (otherValueContentV2.valueType != objectClassConstraint) {
-                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2Complex)}>")
                             }
                     }
                 }
@@ -815,7 +819,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
 
         for {
-            resourcesResponse: ReadResourcesSequenceV2 <- getResources(
+            resourcesResponse: ReadResourcesSequenceV2 <- getResourcesV2(
                 resourceIris = Seq(resourceIri),
                 requestingUser = requestingUser
             )
@@ -909,9 +913,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Gets the requested resources from the triplestore.
       *
       * @param resourceIris the Iris of the requested resources.
-      * @return a [[Map[IRI, ResourceWithValueRdfData]]] representing the resources.
+      * @param preview      `true` if a preview of the resource is requested.
+      * @param versionDate  if defined, requests the state of the resources at the specified time in the past.
+      *                     Cannot be used in conjunction with `preview`.
+      * @return a map of resource IRIs to RDF data.
       */
-    private def getResourcesFromTriplestore(resourceIris: Seq[IRI], preview: Boolean, requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
+    private def getResourcesFromTriplestore(resourceIris: Seq[IRI],
+                                            preview: Boolean,
+                                            propertyIri: Option[SmartIri],
+                                            versionDate: Option[Instant],
+                                            requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -920,7 +931,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
                 resourceIris = resourceIrisDistinct,
-                preview
+                preview = preview,
+                maybePropertyIri = propertyIri,
+                maybeVersionDate = versionDate
             ).toString())
 
             // _ = println(resourceRequestSparql)
@@ -944,17 +957,27 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Get one or several resources and return them as a sequence.
       *
       * @param resourceIris   the resources to query for.
+      * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResources(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def getResourcesV2(resourceIris: Seq[IRI],
+                               propertyIri: Option[SmartIri] = None,
+                               versionDate: Option[Instant] = None,
+                               requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
 
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = false, requestingUser = requestingUser)
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(
+                resourceIris = resourceIris,
+                preview = false,
+                propertyIri = propertyIri,
+                versionDate = versionDate,
+                requestingUser = requestingUser
+            )
 
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
@@ -965,7 +988,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         resourceIri = resIri,
                         resourceRdfData = queryResultsSeparated(resIri),
                         mappings = mappingsAsMap,
+                        versionDate = versionDate,
                         responderManager = responderManager,
+                        knoraIdUtil = knoraIdUtil,
                         requestingUser = requestingUser
                     )
             }.toVector
@@ -983,13 +1008,19 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResourcePreview(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def getResourcePreviewV2(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = true, requestingUser = requestingUser)
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(
+                resourceIris = resourceIris,
+                preview = true,
+                propertyIri = None,
+                versionDate = None,
+                requestingUser = requestingUser
+            )
 
             resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
@@ -997,7 +1028,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         resourceIri = resIri,
                         resourceRdfData = queryResultsSeparated(resIri),
                         mappings = Map.empty[IRI, MappingAndXSLTransformation],
+                        versionDate = None,
                         responderManager = responderManager,
+                        knoraIdUtil = knoraIdUtil,
                         requestingUser = requestingUser
                     )
             }.toVector
@@ -1015,11 +1048,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param requestingUser        the user making the request.
       * @return the Gravsearch template.
       */
-    private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM) = {
+    private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM): Future[String] = {
 
         val gravsearchUrlFuture = for {
-            gravsearchResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
-            resource = gravsearchResponseV2.toResource(gravsearchTemplateIri)
+            resources: ReadResourcesSequenceV2 <- getResourcesV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)
+            resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
             _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
                 throw BadRequestException(s"Resource $gravsearchTemplateIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
@@ -1029,7 +1062,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
                     case value: ReadValueV2 => value.valueContent match {
                         case textRepr: TextFileValueContentV2 => textRepr
-                        case other => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
+                        case _ => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
                     }
                 }
 
@@ -1070,7 +1103,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param requestingUser        the user making the request.
       * @return a [[ResourceTEIGetResponseV2]].
       */
-    private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], headerXSLTIri: Option[String], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
+    private def getResourceAsTeiV2(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], headerXSLTIri: Option[String], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
 
         /**
           * Extract the text value to be converted to TEI/XML.
@@ -1176,7 +1209,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 for {
                     // get requested resource
-                    resource <- getResources(Vector(resourceIri), requestingUser).map(_.toResource(resourceIri))
+                    resource <- getResourcesV2(resourceIris = Vector(resourceIri), requestingUser = requestingUser).map(_.toResource(resourceIri))
 
                 } yield resource
             }
@@ -1272,7 +1305,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         if (targetResourceIris.isEmpty) {
             FastFuture.successful(())
         } else {
-            getResourcePreview(targetResourceIris.toSeq, requestingUser).map(_ => ())
+            getResourcePreviewV2(targetResourceIris.toSeq, requestingUser).map(_ => ())
         }
     }
 
@@ -1577,5 +1610,67 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         )
     }
 
-}
+    /**
+      * Returns the version history of a resource.
+      *
+      * @param resourceHistoryRequest the version history request.
+      * @return the resource's version history.
+      */
+    def getResourceHistoryV2(resourceHistoryRequest: ResourceVersionHistoryGetRequestV2): Future[ResourceVersionHistoryResponseV2] = {
+        for {
+            // Get the resource preview, to make sure the user has permission to see the resource, and to get
+            // its creation date.
 
+            resourcePreviewResponse: ReadResourcesSequenceV2 <- getResourcePreviewV2(
+                resourceIris = Seq(resourceHistoryRequest.resourceIri),
+                requestingUser = resourceHistoryRequest.requestingUser
+            )
+
+            resourcePreview: ReadResourceV2 = resourcePreviewResponse.toResource(resourceHistoryRequest.resourceIri)
+
+            // Get the version history of the resource's values.
+
+            historyRequestSparql = queries.sparql.v2.txt.getResourceValueVersionHistory(
+                triplestore = settings.triplestoreType,
+                resourceIri = resourceHistoryRequest.resourceIri,
+                maybeStartDate = resourceHistoryRequest.startDate,
+                maybeEndDate = resourceHistoryRequest.endDate
+            ).toString()
+
+            valueHistoryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(historyRequestSparql)).mapTo[SparqlSelectResponse]
+
+            valueHistoryEntries: Seq[ResourceHistoryEntry] = valueHistoryResponse.results.bindings.map {
+                row: VariableResultsRow =>
+                    val versionDateStr: String = row.rowMap("versionDate")
+                    val author: IRI = row.rowMap("author")
+
+                    ResourceHistoryEntry(
+                        versionDate = stringFormatter.xsdDateTimeStampToInstant(versionDateStr, throw InconsistentTriplestoreDataException(s"Could not parse version date: $versionDateStr")),
+                        author = author
+                    )
+            }
+
+            // Figure out whether to add the resource's creation to the history.
+
+            // Is there a requested start date that's after the resource's creation date?
+            historyEntriesWithResourceCreation: Seq[ResourceHistoryEntry] = if (resourceHistoryRequest.startDate.exists(_.isAfter(resourcePreview.creationDate))) {
+                // Yes. No need to add the resource's creation.
+                valueHistoryEntries
+            } else {
+                // No. Does the value history contain the resource creation date?
+                if (valueHistoryEntries.nonEmpty && valueHistoryEntries.last.versionDate == resourcePreview.creationDate) {
+                    // Yes. No need to add the resource's creation.
+                    valueHistoryEntries
+                } else {
+                    // No. Add a history entry for it.
+                    valueHistoryEntries :+ ResourceHistoryEntry(
+                        versionDate = resourcePreview.creationDate,
+                        author = resourcePreview.attachedToUser
+                    )
+                }
+            }
+        } yield ResourceVersionHistoryResponseV2(
+            historyEntriesWithResourceCreation
+        )
+    }
+}

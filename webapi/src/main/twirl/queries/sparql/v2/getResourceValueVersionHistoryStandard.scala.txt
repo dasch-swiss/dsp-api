@@ -17,31 +17,21 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
+@import java.time.Instant
 @import org.knora.webapi.IRI
 
 @**
- * Gets all information about a single project, given the the IRI of an ontology in the project.
+ * Gets the the version history of the values of a resource, using standard SPARQL.
  *
- * @param triplestore the name of the triplestore being used.
- * @param ontologyIri the ontology IRI.
+ * @param resourceIri    the IRI of the resource.
+ * @param maybeStartDate the start of the time period to return, inclusive.
+ * @param maybeEndDate   the end of the time period to return, exclusive.
  *@
-@(triplestore: String,
-  ontologyIri: String)
+@(resourceIri: IRI,
+  maybeStartDate: Option[Instant] = None,
+  maybeEndDate: Option[Instant] = None)
 
-prefix xsd: <http://www.w3.org/2001/XMLSchema#>
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-SELECT ?s ?p ?o
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
-WHERE {
-
-    ?s rdf:type knora-base:knoraProject .
-    ?s knora-base:projectOntology <@ontologyIri> .
-    ?s ?p ?o .
-
-}
+@* TODO *@

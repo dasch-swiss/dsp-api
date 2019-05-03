@@ -377,7 +377,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             linkTargetIri = realTargetIri,
                             currentReferenceCount = 0,
                             newReferenceCount = initialReferenceCount,
-                            newLinkValueCreator = OntologyConstants.KnoraBase.SystemUser,
+                            newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                             newLinkValuePermissions = standoffLinkValuePermissions
                         )
                 }
@@ -508,7 +508,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                             valueCreator = userIri,
                                             valuePermissions = defaultPropertyAccessPermissions,
                                             creationDate = createMultipleValuesRequest.creationDate,
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
+                                            knoraIdUtil = knoraIdUtil
                                         ).toString()
                                 }
 
@@ -675,53 +676,26 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 //
 
                 // create the apt case class depending on the file type returned by Sipi
-                changeValueResponses: Vector[ChangeValueResponseV1] <- sipiResponse.file_type match {
+                changedLocation: LocationV1 <- sipiResponse.file_type match {
                     case SipiConstants.FileType.IMAGE =>
-                        // we deal with hasStillImageFileValue, so there need to be two file values:
-                        // one for the full and one for the thumb
-                        if (fileValues.size != 2) {
-                            throw InconsistentTriplestoreDataException(s"Expected 2 file values for $resourceIri, but ${fileValues.size} given.")
+                        if (fileValues.size != 1) {
+                            throw InconsistentTriplestoreDataException(s"Expected 1 file value for $resourceIri, but ${fileValues.size} given.")
                         }
 
-                        // make sure that we have quality information for the existing file values
-                        fileValues.foreach {
-                            (fileValue) => fileValue.quality.getOrElse(throw InconsistentTriplestoreDataException(s"No quality level given for ${fileValue.valueObjectIri}"))
-                        }
+                        val oldFileValue: CurrentFileValue = fileValues.head
+                        val newFileValue: FileValueV1 = sipiResponse.fileValueV1
 
-                        // sort file values by quality: the thumbnail file value has to be updated with another thumbnail file value,
-                        // the applies for the full quality
-                        val oldFileValuesSorted: Seq[CurrentFileValue] = fileValues.sortBy(_.quality)
-                        val newFileValuesSorted: Vector[FileValueV1] = sipiResponse.fileValuesV1.sortBy {
-                            case imageFileValue: StillImageFileValueV1 => imageFileValue.qualityLevel
-                            case otherFileValue: FileValueV1 => throw SipiException(s"Sipi returned a wrong file value type: ${otherFileValue.valueTypeIri}")
-                        }
-
-                        val valuesToChange = oldFileValuesSorted.zip(newFileValuesSorted)
-                        val (firstOldValue, firstNewValue) = valuesToChange.head
-                        val (secondOldValue, secondNewValue) = valuesToChange(1)
-
-                        //
-                        // Change the file values sequentially (because concurrent SPARQL updates could interfere with each other).
-                        //
                         for {
-                            firstResult <- changeFileValue(firstOldValue, firstNewValue)
-                            secondResult <- changeFileValue(secondOldValue, secondNewValue)
-                        } yield Vector(firstResult, secondResult)
-
-
-                    case otherFileType => throw NotImplementedException(s"File type $otherFileType not yet supported")
-                }
-
-            } yield ChangeFileValueResponseV1(// return the response(s) of the call(s) of changeValueV1
-                locations = changeValueResponses.map {
-                    changeValueResponse =>
-                        val fileValue: FileValueV1 = changeValueResponse.value match {
-                            case fileValueV1: FileValueV1 => fileValueV1
+                            response: ChangeValueResponseV1 <- changeFileValue(oldFileValue, newFileValue)
+                        } yield response.value match {
+                            case fileValueV1: FileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1)
                             case other => throw AssertionException(s"Expected Sipi to change a file value, but it changed one of these: ${other.valueTypeIri}")
                         }
 
-                        valueUtilV1.fileValueV12LocationV1(fileValue)
+                    case otherFileType => throw NotImplementedException(s"File type $otherFileType not yet supported")
                 }
+            } yield ChangeFileValueResponseV1(
+                locations = Vector(changedLocation)
             )
 
             // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
@@ -732,8 +706,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                     case _ => ()
                 }
-
-
             }
         }
 
@@ -1135,7 +1107,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             linkSourceIri = findResourceWithValueResult.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
                             maybeComment = deleteValueRequest.deleteComment,
-                            currentTime = currentTime
+                            currentTime = currentTime,
+                            requestingUser = userIri
                         ).toString()
                     } yield (sparqlUpdate, sparqlTemplateLinkUpdate.newLinkValueIri)
 
@@ -1152,7 +1125,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                         sourceResourceIri = findResourceWithValueResult.resourceIri,
                                         linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                         targetResourceIri = targetResourceIri,
-                                        valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                        valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                         valuePermissions = standoffLinkValuePermissions,
                                         userProfile = deleteValueRequest.userProfile
                                     )
@@ -1187,7 +1160,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             valueIri = deleteValueRequest.valueIri,
                             maybeDeleteComment = deleteValueRequest.deleteComment,
                             linkUpdates = linkUpdates,
-                            currentTime = currentTime
+                            currentTime = currentTime,
+                            requestingUser = userIri
                         ).toString()
                     } yield (sparqlUpdate, deleteValueRequest.valueIri)
             }
@@ -2093,7 +2067,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                     sourceResourceIri = resourceIri,
                                     linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                     targetResourceIri = targetResourceIri,
-                                    valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                    valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                     valuePermissions = standoffLinkValuePermissions,
                                     userProfile = userProfile
                                 )
@@ -2117,7 +2091,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 maybeComment = comment,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
-                creationDate = creationDate
+                creationDate = creationDate,
+                knoraIdUtil = knoraIdUtil
             ).toString()
 
             /*
@@ -2204,7 +2179,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
                 linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                 maybeComment = comment,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = userProfile.id
             ).toString()
 
             /*
@@ -2301,7 +2277,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                 sourceResourceIri = resourceIri,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = targetResourceIri,
-                                valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                 valuePermissions = standoffLinkValuePermissions,
                                 userProfile = userProfile
                             )
@@ -2314,7 +2290,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                 sourceResourceIri = resourceIri,
                                 linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                                 targetResourceIri = removedTargetResource,
-                                valueCreator = OntologyConstants.KnoraBase.SystemUser,
+                                valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                 valuePermissions = standoffLinkValuePermissions,
                                 userProfile = userProfile
                             )
@@ -2355,7 +2331,9 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 valuePermissions = valuePermissions,
                 maybeComment = comment,
                 linkUpdates = standoffLinkUpdates,
-                currentTime = currentTime
+                currentTime = currentTime,
+                requestingUser = userProfile.id,
+                knoraIdUtil = knoraIdUtil
             ).toString()
 
             /*
@@ -2645,8 +2623,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       */
     lazy val standoffLinkValuePermissions: String = {
         val permissions: Set[PermissionADM] = Set(
-            PermissionADM.changeRightsPermission(OntologyConstants.KnoraBase.SystemUser),
-            PermissionADM.viewPermission(OntologyConstants.KnoraBase.UnknownUser)
+            PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.SystemUser),
+            PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
 
         PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)

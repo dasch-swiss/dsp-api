@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, Pre
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{DateUtilV1, SmartIri, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, KnoraIdUtil, SmartIri, StringFormatter}
 
 object StandoffTagUtilV2 {
 
@@ -44,7 +44,10 @@ object StandoffTagUtilV2 {
     private val classAttribute = "class"
 
     // an internal Link in an XML document begins with this character
-    val internalLinkMarker = '#'
+    private val internalLinkMarker = '#'
+
+    // A fixed UUID for comparing standoff tags when their UUIDs are not significant.
+    private val fixedUuid = UUID.fromString("00000000-0000-0000-0000-000000000000")
 
     /**
       * Tries to find a data type attribute in the XML attributes of a given standoff node. Throws an appropriate error if information is inconsistent or missing.
@@ -334,7 +337,7 @@ object StandoffTagUtilV2 {
                             standoffTagClassIri = standoffClassIri,
                             startPosition = hierarchicalStandoffTag.startPosition,
                             endPosition = hierarchicalStandoffTag.endPosition,
-                            uuid = hierarchicalStandoffTag.uuid.toString,
+                            uuid = hierarchicalStandoffTag.uuid,
                             originalXMLID = hierarchicalStandoffTag.originalID match {
                                 case Some(id: String) => Some(stringFormatter.toSparqlEncodedString(id, throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string")))
                                 case None => None
@@ -350,7 +353,7 @@ object StandoffTagUtilV2 {
                             standoffTagClassIri = standoffClassIri,
                             startPosition = freeStandoffTag.startPosition,
                             endPosition = freeStandoffTag.endPosition,
-                            uuid = freeStandoffTag.uuid.toString,
+                            uuid = freeStandoffTag.uuid,
                             originalXMLID = freeStandoffTag.originalID match {
                                 case Some(id: String) => Some(stringFormatter.toSparqlEncodedString(id, throw BadRequestException(s"XML id $id cannot be converted to a Sparql conform string")))
                                 case None => None
@@ -697,9 +700,10 @@ object StandoffTagUtilV2 {
       *
       * @param standoffEntities   information about the standoff entities (from the ontology).
       * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]]
+      * @param knoraIdUtil a [[KnoraIdUtil]].
       * @return a sequence of [[StandoffTagV2]].
       */
-    def createStandoffTagsV2FromSparqlResults(standoffEntities: StandoffEntityInfoGetResponseV2, standoffAssertions: Map[IRI, Map[IRI, String]]): Vector[StandoffTagV2] = {
+    def createStandoffTagsV2FromSparqlResults(standoffEntities: StandoffEntityInfoGetResponseV2, standoffAssertions: Map[IRI, Map[IRI, String]], knoraIdUtil: KnoraIdUtil): Vector[StandoffTagV2] = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -774,7 +778,7 @@ object StandoffTagUtilV2 {
                         case Some(endIndex: String) => Some(endIndex.toInt)
                         case None => None
                     },
-                    uuid = standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasUUID),
+                    uuid = knoraIdUtil.decodeUuid(standoffNodes(OntologyConstants.KnoraBase.StandoffTagHasUUID)),
                     originalXMLID = standoffNodes.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
                     startParentIndex = standoffNodes.get(OntologyConstants.KnoraBase.StandoffTagHasStartParent) match {
                         // translate standoff node IRI to index
@@ -958,7 +962,7 @@ object StandoffTagUtilV2 {
                             case `noNamespace` => None
                             case namespace => Some(namespace)
                         },
-                        uuid = UUID.fromString(standoffTagV2.uuid),
+                        uuid = standoffTagV2.uuid,
                         startPosition = standoffTagV2.startPosition,
                         endPosition = standoffTagV2.endPosition,
                         startIndex = standoffTagV2.startIndex,
@@ -976,7 +980,7 @@ object StandoffTagUtilV2 {
                             case `noNamespace` => None
                             case namespace => Some(namespace)
                         },
-                        uuid = UUID.fromString(standoffTagV2.uuid),
+                        uuid = standoffTagV2.uuid,
                         startPosition = standoffTagV2.startPosition,
                         endPosition = standoffTagV2.endPosition,
                         index = standoffTagV2.startIndex,
@@ -1006,7 +1010,18 @@ object StandoffTagUtilV2 {
         // then make a sequence of sets of tags sorted by index.
 
         standoff.groupBy(_.startIndex).map {
-            case (index: Int, standoffForIndex: Seq[StandoffTagV2]) => index -> standoffForIndex.map(_.copy(uuid = "")).toSet
+            case (index: Int, standoffForIndex: Seq[StandoffTagV2]) =>
+                // Set each tag's UUID to a fixed UUID (because these should not affect the comparison),
+                // and sort its attributes by standoff property IRI.
+                val comparableTags = standoffForIndex.map {
+                    tag =>
+                        tag.copy(
+                            uuid = fixedUuid,
+                            attributes = tag.attributes.sortBy(_.standoffPropertyIri)
+                        )
+                }
+
+                index -> comparableTags.toSet
         }.toVector.sortBy {
             case (index: Int, standoffForIndex: Set[StandoffTagV2]) => index
         }.map {

@@ -55,44 +55,44 @@ prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX knora-admin: <http://www.knora.org/ontology/knora-admin#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
 INSERT {
     GRAPH ?adminNamedGraphIri {
         ?projectIri rdf:type ?projectClassIri ;
 
-            knora-base:projectShortname "@shortname"^^xsd:string ;
+            knora-admin:projectShortname "@shortname"^^xsd:string ;
 
-            knora-base:projectShortcode "@shortcode"^^xsd:string ;
+            knora-admin:projectShortcode "@shortcode"^^xsd:string ;
 
             @if(maybeLongname.nonEmpty) {
-                knora-base:projectLongname """@maybeLongname.get"""^^xsd:string ;
+                knora-admin:projectLongname """@maybeLongname.get"""^^xsd:string ;
             }
 
             @if(maybeDescriptions.nonEmpty) {
                 @for(description <- maybeDescriptions.get) {
                     @if(description.language.nonEmpty) {
-                        knora-base:projectDescription """@description.value"""@@@{description.language.get} ;
+                        knora-admin:projectDescription """@description.value"""@@@{description.language.get} ;
                     } else {
-                        knora-base:projectDescription """@description.value"""^^xsd:string ;
+                        knora-admin:projectDescription """@description.value"""^^xsd:string ;
                     }
                 }
             }
 
             @if(maybeKeywords.nonEmpty) {
                 @for(keyword <- maybeKeywords.get) {
-                  knora-base:projectKeyword "@keyword"^^xsd:string ;
+                  knora-admin:projectKeyword "@keyword"^^xsd:string ;
                 }
             }
 
             @if(maybeLogo.nonEmpty) {
-                knora-base:projectLogo "@maybeLogo.get"^^xsd:string ;
+                knora-admin:projectLogo "@maybeLogo.get"^^xsd:string ;
             }
 
-            knora-base:status "@status"^^xsd:boolean ;
+            knora-admin:status "@status"^^xsd:boolean ;
 
-            knora-base:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean .
+            knora-admin:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean .
     }
 }
 @*
@@ -114,7 +114,7 @@ WHERE {
     BIND(IRI("@projectIri") AS ?projectIri)
     BIND(IRI("@projectClassIri") AS ?projectClassIri)
 
-    FILTER NOT EXISTS { ?s knora-base:projectShortname "@shortname"^^xsd:string . }
+    FILTER NOT EXISTS { ?s knora-admin:projectShortname "@shortname"^^xsd:string . }
 
-    FILTER NOT EXISTS { ?s knora-base:projectShortcode "@shortcode"^^xsd:string . }
+    FILTER NOT EXISTS { ?s knora-admin:projectShortcode "@shortcode"^^xsd:string . }
 }

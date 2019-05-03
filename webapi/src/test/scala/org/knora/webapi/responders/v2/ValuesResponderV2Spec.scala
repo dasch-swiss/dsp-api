@@ -96,7 +96,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
             startPosition = 0,
             endPosition = 7,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
         ),
@@ -104,7 +104,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
             startPosition = 0,
             endPosition = 10,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 1
         )
@@ -115,7 +115,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
             startPosition = 1,
             endPosition = 7,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
         ),
@@ -123,7 +123,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
             startPosition = 0,
             endPosition = 10,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 1
         )
@@ -135,7 +135,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
             startPosition = 0,
             endPosition = 7,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0,
             attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = aThingIri)),
@@ -144,7 +144,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
             startPosition = 0,
             endPosition = 10,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 1
         )
@@ -270,7 +270,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <${resourceInfo.resourceIri}>")
         }
 
-        resourceInfo.toOntologySchema(ApiV2WithValueObjects)
+        resourceInfo.toOntologySchema(ApiV2Complex)
     }
 
     private def getResourceLastModificationDate(resourceIri: IRI, requestingUser: UserADM): Option[Instant] = {
@@ -312,7 +312,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     )
                 ),
@@ -349,7 +349,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1
-            val permissions = "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+            val permissions = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             responderManager ! CreateValueRequestV2(
@@ -358,7 +358,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     ),
                     permissions = Some(permissions)
@@ -395,7 +395,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1024
-            val permissions = "M knora-base:Creator,V knora-base:KnownUser"
+            val permissions = "M knora-admin:Creator,V knora-admin:KnownUser"
 
             responderManager ! CreateValueRequestV2(
                 CreateValueV2(
@@ -403,7 +403,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     ),
                     permissions = Some(permissions)
@@ -422,7 +422,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1024
-            val permissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
+            val permissions = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
 
             responderManager ! CreateValueRequestV2(
                 CreateValueV2(
@@ -430,7 +430,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     ),
                     permissions = Some(permissions)
@@ -455,7 +455,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     )
                 ),
@@ -479,7 +479,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     )
                 ),
@@ -504,7 +504,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString
                     )
                 ),
@@ -543,7 +543,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString
                     )
                 ),
@@ -568,7 +568,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString,
                         comment = Some(valueHasComment)
                     )
@@ -619,7 +619,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString,
                         standoffAndMapping = standoffAndMapping
                     )
@@ -669,7 +669,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString,
                         standoffAndMapping = standoffAndMapping
                     )
@@ -697,7 +697,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = DecimalValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasDecimal = valueHasDecimal
                     )
                 ),
@@ -737,7 +737,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = DecimalValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasDecimal = valueHasDecimal
                     )
                 ),
@@ -758,7 +758,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             val submittedValueContent = DateValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
+                ontologySchema = ApiV2Complex,
                 valueHasCalendar = CalendarNameGregorian,
                 valueHasStartJDN = 2264907,
                 valueHasStartPrecision = DatePrecisionYear,
@@ -809,7 +809,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
 
             val submittedValueContent = DateValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
+                ontologySchema = ApiV2Complex,
                 valueHasCalendar = CalendarNameGregorian,
                 valueHasStartJDN = 2264907,
                 valueHasStartPrecision = DatePrecisionYear,
@@ -847,7 +847,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = BooleanValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasBoolean = valueHasBoolean
                     )
                 ),
@@ -890,7 +890,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = GeomValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasGeometry = valueHasGeometry
                     )
                 ),
@@ -930,7 +930,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = GeomValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasGeometry = valueHasGeometry
                     )
                 ),
@@ -958,7 +958,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntervalValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasIntervalStart = valueHasIntervalStart,
                         valueHasIntervalEnd = valueHasIntervalEnd
                     )
@@ -1003,7 +1003,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntervalValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasIntervalStart = valueHasIntervalStart,
                         valueHasIntervalEnd = valueHasIntervalEnd
                     )
@@ -1031,7 +1031,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = HierarchicalListValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasListNode = valueHasListNode
                     )
                 ),
@@ -1073,7 +1073,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = HierarchicalListValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasListNode = valueHasListNode
                     )
                 ),
@@ -1097,7 +1097,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = HierarchicalListValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasListNode = valueHasListNode
                     )
                 ),
@@ -1124,7 +1124,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = ColorValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasColor = valueHasColor
                     )
                 ),
@@ -1166,7 +1166,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = ColorValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasColor = valueHasColor
                     )
                 ),
@@ -1193,7 +1193,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = UriValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasUri = valueHasUri
                     )
                 ),
@@ -1235,7 +1235,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = UriValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasUri = valueHasUri
                     )
                 ),
@@ -1262,7 +1262,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = GeonameValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasGeonameCode = valueHasGeonameCode
                     )
                 ),
@@ -1304,7 +1304,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = GeonameValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasGeonameCode = valueHasGeonameCode
                     )
                 ),
@@ -1329,7 +1329,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = linkValuePropertyIri,
                     resourceClassIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj.toSmartIri,
                     valueContent = LinkValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         referredResourceIri = zeitglöckleinIri
                     )
                 ),
@@ -1371,7 +1371,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj.toSmartIri,
                     propertyIri = linkValuePropertyIri,
                     valueContent = LinkValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         referredResourceIri = zeitglöckleinIri
                     )
                 ),
@@ -1396,7 +1396,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj.toSmartIri,
                     propertyIri = linkPropertyIri,
                     valueContent = LinkValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         referredResourceIri = zeitglöckleinIri
                     )
                 ),
@@ -1418,7 +1418,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
                     valueContent = LinkValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         referredResourceIri = generationeIri
                     )
                 ),
@@ -1442,7 +1442,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     )
                 ),
@@ -1469,7 +1469,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString
                     )
                 ),
@@ -1495,7 +1495,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     )
                 ),
@@ -1520,7 +1520,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = "this is not a date"
                     )
                 ),
@@ -1544,7 +1544,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
                     propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue".toSmartIri,
                     valueContent = LinkValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         referredResourceIri = "http://rdfh.ch/0803/e41ab5695c"
                     )
                 ),
@@ -1564,7 +1564,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
                     propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = 1
                     )
                 ),
@@ -1591,7 +1591,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     startPosition = 31,
                     endPosition = 39,
                     attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                    uuid = UUID.randomUUID().toString,
+                    uuid = UUID.randomUUID(),
                     originalXMLID = None,
                     startIndex = 0
                 )),
@@ -1605,7 +1605,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString,
                         standoffAndMapping = standoffAndMapping
                     )
@@ -1680,7 +1680,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     startPosition = 30,
                     endPosition = 38,
                     attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                    uuid = UUID.randomUUID().toString,
+                    uuid = UUID.randomUUID(),
                     originalXMLID = None,
                     startIndex = 0
                 )),
@@ -1694,7 +1694,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString,
                         standoffAndMapping = standoffAndMapping
                     )
@@ -1757,158 +1757,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             standoffLinkValueIri.set(linkValueFromTriplestore.valueIri)
         }
 
-        "create a still image file value" in {
-            // Add the value.
-
-            val resourceIri: IRI = aThingPictureIri
-            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
-
-            val valueContent = StillImageFileValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
-                fileValue = FileValueV2(
-                    internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
-                    internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
-                ),
-                dimX = 512,
-                dimY = 256
-            )
-
-            responderManager ! CreateValueRequestV2(
-                CreateValueV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-                    propertyIri = propertyIri,
-                    valueContent = valueContent
-                ),
-                requestingUser = anythingUser1,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => stillImageFileValueIri.set(createValueResponse.valueIri)
-            }
-
-            // Read the value back to check that it was added correctly.
-
-            val valueFromTriplestore = getValue(
-                resourceIri = resourceIri,
-                maybePreviousLastModDate = maybeResourceLastModDate,
-                propertyIriForGravsearch = propertyIri,
-                propertyIriInResult = propertyIri,
-                expectedValueIri = stillImageFileValueIri.get,
-                requestingUser = anythingUser1
-            )
-
-            valueFromTriplestore.valueContent match {
-                case savedValue: StillImageFileValueContentV2 => savedValue should ===(valueContent)
-                case _ => throw AssertionException(s"Expected file value, got $valueFromTriplestore")
-            }
-        }
-
-        "not create a duplicate still image file value" in {
-            val resourceIri: IRI = aThingPictureIri
-            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
-
-            val valueContent = StillImageFileValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
-                fileValue = FileValueV2(
-                    internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
-                    internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
-                ),
-                dimX = 512,
-                dimY = 256
-            )
-
-            responderManager ! CreateValueRequestV2(
-                CreateValueV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-                    propertyIri = propertyIri,
-                    valueContent = valueContent
-                ),
-                requestingUser = anythingUser1,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
-            }
-        }
-
-        "return a Sipi error if Sipi fails to move a file to permanent storage" in {
-            val resourceIri: IRI = aThingPictureIri
-            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
-
-            val valueContent = StillImageFileValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
-                fileValue = FileValueV2(
-                    internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
-                    internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
-                ),
-                dimX = 512,
-                dimY = 256
-            )
-
-            // Knora will accept this request, but the mock Sipi responder will say it failed to move the file to permanent storage.
-            responderManager ! CreateValueRequestV2(
-                CreateValueV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-                    propertyIri = propertyIri,
-                    valueContent = valueContent
-                ),
-                requestingUser = anythingUser1,
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[SipiException] should ===(true)
-            }
-        }
-
-        "not return a Sipi error if Sipi fails to delete a temporary file when Knora rejects a request" in {
-            val resourceIri: IRI = aThingPictureIri
-            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
-
-            val valueContent = StillImageFileValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
-                fileValue = FileValueV2(
-                    internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
-                    internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
-                ),
-                dimX = 512,
-                dimY = 256
-            )
-
-            // Knora will reject this request.
-            responderManager ! CreateValueRequestV2(
-                CreateValueV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-                    propertyIri = propertyIri,
-                    valueContent = valueContent
-                ),
-                requestingUser = incunabulaUser, // this user doesn't have the necessary permission
-                apiRequestID = UUID.randomUUID
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-            }
-        }
-
         "update an integer value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
@@ -1936,7 +1784,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = intValueIri.get,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     )
                 ),
@@ -1980,7 +1828,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = firstIntValueVersionIri.get,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     )
                 ),
@@ -1996,7 +1844,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "update a value with custom permissions" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val permissions = "CR knora-base:Creator|V knora-base:ProjectMember"
+            val permissions = "CR knora-admin:Creator|V knora-admin:ProjectMember"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
             val intValue = 6
 
@@ -2007,7 +1855,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = intValueIri.get,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     ),
                     permissions = Some(permissions)
@@ -2043,7 +1891,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not update a value with custom permissions if the requesting user does not have ChangeRightsPermission on the value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val permissions = "CR knora-base:Creator"
+            val permissions = "CR knora-admin:Creator"
             val intValue = 10
 
             responderManager ! UpdateValueRequestV2(
@@ -2053,7 +1901,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = intValueIri.get,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     ),
                     permissions = Some(permissions)
@@ -2070,7 +1918,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not update a value with syntactically invalid custom permissions" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val permissions = "M knora-base:Creator,V knora-base:KnownUser"
+            val permissions = "M knora-admin:Creator,V knora-admin:KnownUser"
             val intValue = 7
 
             responderManager ! UpdateValueRequestV2(
@@ -2080,7 +1928,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = intValueIri.get,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     ),
                     permissions = Some(permissions)
@@ -2097,7 +1945,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not update a value with custom permissions referring to a nonexistent group" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val permissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
+            val permissions = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
             val intValue = 8
 
             responderManager ! UpdateValueRequestV2(
@@ -2107,7 +1955,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = intValueIri.get,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     ),
                     permissions = Some(permissions)
@@ -2133,7 +1981,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = intValueIri.get,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     )
                 ),
@@ -2158,7 +2006,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = intValueIri.get,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     )
                 ),
@@ -2183,7 +2031,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = intValueIri.get,
                     valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasInteger = intValue
                     )
                 ),
@@ -2208,7 +2056,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString
                     )
                 ),
@@ -2256,7 +2104,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = zeitglöckleinCommentWithStandoffIri.get,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString,
                         standoffAndMapping = standoffAndMapping
                     )
@@ -2325,7 +2173,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString
                     )
                 ),
@@ -2356,7 +2204,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString,
                         standoffAndMapping = standoffAndMapping
                     )
@@ -2407,7 +2255,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = zeitglöckleinCommentWithStandoffIri.get,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString,
                         standoffAndMapping = standoffAndMapping
                     )
@@ -2440,7 +2288,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString,
                         standoffAndMapping = standoffAndMapping
                     )
@@ -2492,7 +2340,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = zeitglöckleinCommentWithStandoffIri.get,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString,
                         standoffAndMapping = standoffAndMapping
                     )
@@ -2517,7 +2365,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
                     valueContent = TextValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasString = valueHasString
                     )
                 ),
@@ -2543,7 +2391,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = decimalValueIri.get,
                     valueContent = DecimalValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasDecimal = valueHasDecimal
                     )
                 ),
@@ -2584,7 +2432,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = decimalValueIri.get,
                     valueContent = DecimalValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasDecimal = valueHasDecimal
                     )
                 ),
@@ -2603,7 +2451,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             val submittedValueContent = DateValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
+                ontologySchema = ApiV2Complex,
                 valueHasCalendar = CalendarNameGregorian,
                 valueHasStartJDN = 2264908,
                 valueHasStartPrecision = DatePrecisionYear,
@@ -2655,7 +2503,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
 
             val submittedValueContent = DateValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
+                ontologySchema = ApiV2Complex,
                 valueHasCalendar = CalendarNameGregorian,
                 valueHasStartJDN = 2264908,
                 valueHasStartPrecision = DatePrecisionYear,
@@ -2693,7 +2541,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = booleanValueIri.get,
                     valueContent = BooleanValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasBoolean = valueHasBoolean
                     )
                 ),
@@ -2734,7 +2582,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = booleanValueIri.get,
                     valueContent = BooleanValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasBoolean = valueHasBoolean
                     )
                 ),
@@ -2760,7 +2608,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = geometryValueIri.get,
                     valueContent = GeomValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasGeometry = valueHasGeometry
                     )
                 ),
@@ -2801,7 +2649,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = geometryValueIri.get,
                     valueContent = GeomValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasGeometry = valueHasGeometry
                     )
                 ),
@@ -2828,7 +2676,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = intervalValueIri.get,
                     valueContent = IntervalValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasIntervalStart = valueHasIntervalStart,
                         valueHasIntervalEnd = valueHasIntervalEnd
                     )
@@ -2874,7 +2722,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = intervalValueIri.get,
                     valueContent = IntervalValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasIntervalStart = valueHasIntervalStart,
                         valueHasIntervalEnd = valueHasIntervalEnd
                     )
@@ -2901,7 +2749,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = listValueIri.get,
                     valueContent = HierarchicalListValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasListNode = valueHasListNode
                     )
                 ),
@@ -2944,7 +2792,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = listValueIri.get,
                     valueContent = HierarchicalListValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasListNode = valueHasListNode
                     )
                 ),
@@ -2969,7 +2817,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = listValueIri.get,
                     valueContent = HierarchicalListValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasListNode = valueHasListNode
                     )
                 ),
@@ -2995,7 +2843,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = colorValueIri.get,
                     valueContent = ColorValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasColor = valueHasColor
                     )
                 ),
@@ -3038,7 +2886,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = colorValueIri.get,
                     valueContent = ColorValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasColor = valueHasColor
                     )
                 ),
@@ -3064,7 +2912,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = uriValueIri.get,
                     valueContent = UriValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasUri = valueHasUri
                     )
                 ),
@@ -3107,7 +2955,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = uriValueIri.get,
                     valueContent = UriValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasUri = valueHasUri
                     )
                 ),
@@ -3133,7 +2981,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = geonameValueIri.get,
                     valueContent = GeonameValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasGeonameCode = valueHasGeonameCode
                     )
                 ),
@@ -3176,7 +3024,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueIri = geonameValueIri.get,
                     valueContent = GeonameValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         valueHasGeonameCode = valueHasGeonameCode
                     )
                 ),
@@ -3202,7 +3050,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = linkValuePropertyIri,
                     valueIri = linkValueIri.get,
                     valueContent = LinkValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         referredResourceIri = generationeIri
                     )
                 ),
@@ -3245,7 +3093,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = linkValuePropertyIri,
                     valueIri = linkValueIri.get,
                     valueContent = LinkValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         referredResourceIri = generationeIri
                     )
                 ),
@@ -3268,7 +3116,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
                     valueIri = zeitglöckleinCommentWithStandoffIri.get,
                     valueContent = LinkValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
+                        ontologySchema = ApiV2Complex,
                         referredResourceIri = generationeIri
                     )
                 ),
@@ -3283,11 +3131,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not update a still image file value without changing it" in {
             val resourceIri: IRI = aThingPictureIri
+            stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/file1")
 
             val valueContent = StillImageFileValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
+                ontologySchema = ApiV2Complex,
                 fileValue = FileValueV2(
-                    internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+                    internalFilename = "B1D0OkEgfFp-Cew2Seur7Wi.jp2",
                     internalMimeType = "image/jp2",
                     originalFilename = "test.tiff",
                     originalMimeType = "image/tiff"
@@ -3334,7 +3183,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             // Update the value.
 
             val valueContent = StillImageFileValueContentV2(
-                ontologySchema = ApiV2WithValueObjects,
+                ontologySchema = ApiV2Complex,
                 fileValue = FileValueV2(
                     internalFilename = "updated-filename.jp2",
                     internalMimeType = "image/jp2",
@@ -3380,6 +3229,76 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case _ => throw AssertionException(s"Expected still image file value, got $updatedValueFromTriplestore")
             }
 
+        }
+
+        "not return a Sipi error if Sipi fails to delete a temporary file when Knora rejects a request" in {
+            val resourceIri: IRI = aThingPictureIri
+            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
+
+            val valueContent = StillImageFileValueContentV2(
+                ontologySchema = ApiV2Complex,
+                fileValue = FileValueV2(
+                    internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
+                    internalMimeType = "image/jp2",
+                    originalFilename = "test.tiff",
+                    originalMimeType = "image/tiff"
+                ),
+                dimX = 512,
+                dimY = 256
+            )
+
+            // Knora will reject this request.
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = stillImageFileValueIri.get,
+                    valueContent = valueContent
+                ),
+                requestingUser = incunabulaUser, // this user doesn't have the necessary permission
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "return a Sipi error if Sipi fails to move a file to permanent storage" in {
+            val resourceIri: IRI = aThingPictureIri
+            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
+
+            val valueContent = StillImageFileValueContentV2(
+                ontologySchema = ApiV2Complex,
+                fileValue = FileValueV2(
+                    internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
+                    internalMimeType = "image/jp2",
+                    originalFilename = "test.tiff",
+                    originalMimeType = "image/tiff"
+                ),
+                dimX = 512,
+                dimY = 256
+            )
+
+            // Knora will accept this request, but the mock Sipi responder will say it failed to move the file to permanent storage.
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = stillImageFileValueIri.get,
+                    valueContent = valueContent
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[SipiException] should ===(true)
+            }
         }
 
         "not delete a value if the requesting user does not have DeletePermission on the value" in {

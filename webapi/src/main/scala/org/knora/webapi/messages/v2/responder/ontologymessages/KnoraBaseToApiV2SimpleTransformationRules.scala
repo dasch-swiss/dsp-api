@@ -26,15 +26,15 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
-  * Rules for converting `knora-base` into `knora-api` in the [[ApiV2Simple]] schema.
+  * Rules for converting `knora-base` (or an ontology based on it) into `knora-api` in the [[ApiV2Simple]] schema.
   */
-object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules {
+object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationRules {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
     override val ontologyMetadata = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
-        projectIri = Some(OntologyConstants.KnoraBase.SystemProject.toSmartIri),
+        projectIri = Some(OntologyConstants.KnoraAdmin.SystemProject.toSmartIri),
         label = Some("The knora-api ontology in the simple schema")
     )
 
@@ -98,6 +98,26 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Provides the ARK URL of a resource."
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Uri)
+    )
+
+    private val VersionArkUrl: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.VersionArkUrl,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "version ARK URL",
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides the ARK URL of a particular version of a resource."
                 )
             )
         ),
@@ -323,13 +343,16 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
 
     private val ResourceCardinalites = Map(
         OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Cardinality.MayHaveMany,
-        OntologyConstants.KnoraApiV2Simple.ArkUrl -> Cardinality.MustHaveOne
+        OntologyConstants.KnoraApiV2Simple.ArkUrl -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraApiV2Simple.VersionArkUrl -> Cardinality.MustHaveOne
     )
 
     /**
       * Properties to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema.
       */
-    override val knoraBasePropertiesToRemove: Set[SmartIri] = Set(
+    override val internalPropertiesToRemove: Set[SmartIri] = Set(
+        OntologyConstants.KnoraBase.CreationDate,
+        OntologyConstants.KnoraBase.LastModificationDate,
         OntologyConstants.KnoraBase.IsEditable,
         OntologyConstants.KnoraBase.CanBeInstantiated,
         OntologyConstants.KnoraBase.HasPermissions,
@@ -337,6 +360,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         OntologyConstants.KnoraBase.AttachedToProject,
         OntologyConstants.KnoraBase.IsDeleted,
         OntologyConstants.KnoraBase.DeleteDate,
+        OntologyConstants.KnoraBase.DeletedBy,
         OntologyConstants.KnoraBase.DeleteComment,
         OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted,
         OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
@@ -395,12 +419,10 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         OntologyConstants.KnoraBase.DimX,
         OntologyConstants.KnoraBase.DimY,
         OntologyConstants.KnoraBase.Fps,
-        OntologyConstants.KnoraBase.QualityLevel,
         OntologyConstants.KnoraBase.InternalFilename,
         OntologyConstants.KnoraBase.InternalMimeType,
         OntologyConstants.KnoraBase.OriginalFilename,
         OntologyConstants.KnoraBase.OriginalMimeType,
-        OntologyConstants.KnoraBase.IsPreview,
         OntologyConstants.KnoraBase.ValueHasOrder,
         OntologyConstants.KnoraBase.PreviousValue,
         OntologyConstants.KnoraBase.ValueHasRefCount,
@@ -412,46 +434,14 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         OntologyConstants.KnoraBase.ExtResProvider,
         OntologyConstants.KnoraBase.MapEntryKey,
         OntologyConstants.KnoraBase.MapEntryValue,
-        OntologyConstants.KnoraBase.IsInMap,
-        OntologyConstants.KnoraBase.ForProject, // TODO: remove admin stuff from here when it's moved to a separate ontology.
-        OntologyConstants.KnoraBase.ForGroup,
-        OntologyConstants.KnoraBase.ForResourceClass,
-        OntologyConstants.KnoraBase.ForProperty,
-        OntologyConstants.KnoraBase.Address,
-        OntologyConstants.KnoraBase.Email,
-        OntologyConstants.KnoraBase.GivenName,
-        OntologyConstants.KnoraBase.FamilyName,
-        OntologyConstants.KnoraBase.Password,
-        OntologyConstants.KnoraBase.UsersActiveProject,
-        OntologyConstants.KnoraBase.Status,
-        OntologyConstants.KnoraBase.PreferredLanguage,
-        OntologyConstants.KnoraBase.IsInProject,
-        OntologyConstants.KnoraBase.IsInProjectAdminGroup,
-        OntologyConstants.KnoraBase.IsInGroup,
-        OntologyConstants.KnoraBase.IsInSystemAdminGroup,
-        OntologyConstants.KnoraBase.InstitutionDescription,
-        OntologyConstants.KnoraBase.InstitutionName,
-        OntologyConstants.KnoraBase.InstitutionWebsite,
-        OntologyConstants.KnoraBase.Phone,
-        OntologyConstants.KnoraBase.KnoraProject,
-        OntologyConstants.KnoraBase.ProjectShortname,
-        OntologyConstants.KnoraBase.ProjectShortcode,
-        OntologyConstants.KnoraBase.ProjectLongname,
-        OntologyConstants.KnoraBase.ProjectDescription,
-        OntologyConstants.KnoraBase.ProjectKeyword,
-        OntologyConstants.KnoraBase.ProjectLogo,
-        OntologyConstants.KnoraBase.BelongsToInstitution,
-        OntologyConstants.KnoraBase.HasSelfJoinEnabled,
-        OntologyConstants.KnoraBase.GroupName,
-        OntologyConstants.KnoraBase.GroupDescription,
-        OntologyConstants.KnoraBase.BelongsToProject
+        OntologyConstants.KnoraBase.IsInMap
     ).map(_.toSmartIri)
 
     /**
       * Classes to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema. Standoff classes
       * are removed, too, but aren't included here, because this is taken care of in [[ReadOntologyV2]].
       */
-    override val knoraBaseClassesToRemove: Set[SmartIri] = Set(
+    override val internalClassesToRemove: Set[SmartIri] = Set(
         OntologyConstants.KnoraBase.ValueBase,
         OntologyConstants.KnoraBase.DateBase,
         OntologyConstants.KnoraBase.UriBase,
@@ -474,7 +464,6 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         OntologyConstants.KnoraBase.LinkValue,
         OntologyConstants.KnoraBase.GeonameValue,
         OntologyConstants.KnoraBase.FileValue,
-        OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
         OntologyConstants.KnoraBase.MappingElement,
         OntologyConstants.KnoraBase.MappingComponent,
         OntologyConstants.KnoraBase.MappingStandoffDataTypeClass,
@@ -484,20 +473,14 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         OntologyConstants.KnoraBase.ExternalResValue,
         OntologyConstants.KnoraBase.Map,
         OntologyConstants.KnoraBase.MapEntry,
-        OntologyConstants.KnoraBase.User, // TODO: remove admin stuff from here when it's moved to a separate ontology.
-        OntologyConstants.KnoraBase.KnoraProject,
-        OntologyConstants.KnoraBase.ListNode,
-        OntologyConstants.KnoraBase.Permission,
-        OntologyConstants.KnoraBase.UserGroup,
-        OntologyConstants.KnoraBase.Institution,
-        OntologyConstants.KnoraBase.AdministrativePermission
+        OntologyConstants.KnoraBase.ListNode
     ).map(_.toSmartIri)
 
     /**
       * After `knora-base` has been converted to the [[ApiV2Simple]] schema, these cardinalities must be
       * added to the specified classes to obtain `knora-api`.
       */
-    override val knoraApiCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
+    override val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
         OntologyConstants.KnoraBase.Resource -> ResourceCardinalites
     ).map {
         case (classIri, cardinalities) =>
@@ -510,7 +493,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
     /**
       * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2Simple]] schema, to obtain `knora-api`.
       */
-    override val knoraApiClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
+    override val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
         File,
         Date,
         Color,
@@ -524,10 +507,11 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
     /**
       * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2Simple]] schema, to obtain `knora-api`.
       */
-    override val knoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
+    override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Result,
         Error,
         ArkUrl,
+        VersionArkUrl,
         HasValue,
         ResourceProperty,
         SubjectType,
@@ -643,7 +627,8 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
                     iri: IRI => iri.toSmartIri
                 },
                 ontologySchema = ApiV2Simple
-            )
+            ),
+            allBaseClasses = subClassOf.map(_.toSmartIri).toSet + datatypeIri.toSmartIri
         )
     }
 }

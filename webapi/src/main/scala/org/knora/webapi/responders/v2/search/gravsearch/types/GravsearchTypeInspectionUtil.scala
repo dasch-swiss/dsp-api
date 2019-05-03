@@ -98,7 +98,8 @@ object GravsearchTypeInspectionUtil {
         OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue,
         OntologyConstants.KnoraApiV2WithValueObjects.ColorValue,
         OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.FileValue
+        OntologyConstants.KnoraApiV2WithValueObjects.FileValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.KnoraProject
     )
 
     /**

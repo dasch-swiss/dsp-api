@@ -185,8 +185,7 @@ to store files. The @ref:[Knora APIs](../03-apis/index.md) provide ways
 to create file values using Knora and Sipi.
 
 A resource that has a file value must belong to one of the subclasses of
-`kb:Representation`. Its subclasses, which are intended to be used directly in data,
-include:
+`kb:Representation`. Its subclasses include:
 
 `StillImageRepresentation`
 
@@ -213,12 +212,15 @@ include:
 :   A representation containing a document (such as a PDF file) that is
     not a text file.
 
+These classes can be used directly in data, but it is often better to make
+subclasses of them, to include metadata about the files being stored.
+
 The base class of all these classes is `Representation`, which is not intended to
 be used directly. It has this property, which its subclasses override:
 
-`hasFileValue` (1-n)
+`hasFileValue` (1)
 
-:   Points to one or more file values.
+:   Points to a file value.
 
 There are two ways for a project to design classes for representations.
 The simpler way is to create a resource class that represents a thing in
@@ -229,12 +231,11 @@ by still images, `ex:Painting` could be a subclass of
 `StillImageRepresentation`. This is the only approach supported in
 @ref:[Knora API v1](../03-apis/api-v1/index.md).
 
-The more flexible approach, which is supported by
-@ref:[Knora API v2](../03-apis/api-v2/index.md), is for each
-`ex:Painting` to use the `kb:hasRepresentation` property to point to
-other resources containing files that represent the painting. Each of
-these other resources can extend a different subclass of
-`Representation`. For example, a painting could have a
+The more flexible approach, which is supported by @ref:[Knora API
+v2](../03-apis/api-v2/index.md), is for each `ex:Painting` to link (using
+`kb:hasRepresentation` or a subproperty) to other resources containing files
+that represent the painting. Each of these other resources can extend a
+different subclass of `Representation`. For example, a painting could have a
 `StillImageRepresentation` as well as a `DDDrepresentation`.
 
 #### Standard Resource Classes
@@ -1199,34 +1200,44 @@ properties:
 
 Knora's concept of access control is that an object (a resource or
 value) can grant permissions to groups of users (but not to individual
-users). There are four built-in groups:
+users). There are several built-in groups:
 
-`UnknownUser`
+`knora-admin:UnknownUser`
 
 :   Any user who has not logged into Knora is
     automatically assigned to this group.
 
-`KnownUser`
+`knora-admin:KnownUser`
 
 :   Any user who has logged into Knora is automatically
     assigned to this group.
 
-`ProjectMember`
+`knora-admin:ProjectMember`
 
 :   When checking a user's permissions on an object, the user is
     automatically assigned to this group if she is a member of the
     project that the object belongs to.
 
-`Creator`
+`knora-admin:Creator`
 
 :   When checking a user's permissions on an object, the user is
     automatically assigned to this group if he is the creator of the
     object.
 
-A user-created ontology can define additional groups, which must
-belong to the OWL class `kb:UserGroup`.
+`knora-admin:ProjectAdmin`
 
-There is one built-in `SystemUser`, which is the creator of link values
+:   When checking a user's permissions on an object, the user is
+    automatically assigned to this group if she is an administrator of the
+    project that the object belongs to.
+
+`knora-admin:SystemAdmin`
+
+:   The group of Knora system administrators.
+
+A user-created ontology can define additional groups, which must
+belong to the OWL class `knora-admin:UserGroup`.
+
+There is one built-in `knora-admin:SystemUser`, which is the creator of link values
 created automatically for resource references in standoff markup (see
 @ref:[StandoffLinkTag](#standofflinktag)).
 
@@ -1281,7 +1292,7 @@ The format of the object of `kb:hasPermissions` is as follows:
     abbreviation given above.
 -   Each permission abbreviation is followed by a space, then a
     comma-separated list of groups that the permission is granted to.
--   The IRIs of built-in groups are shortened using the `knora-base`
+-   The IRIs of built-in groups are shortened using the `knora-admin`
     prefix.
 -   Multiple permissions are separated by a vertical bar (`|`).
 
@@ -1290,7 +1301,7 @@ users, and modify permission to project members, the resulting
 permission literal would be:
 
 ```
-V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember
+V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember
 ```
 
 ### Consistency Checking

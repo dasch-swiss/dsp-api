@@ -19,6 +19,7 @@
 
 @import java.time.Instant
 @import org.knora.webapi._
+@import org.knora.webapi.util.KnoraIdUtil
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 
@@ -37,6 +38,7 @@
  * @param valuePermissions the permissions that should be attached to the value.
  * @param creationDate an xsd:dateTimeStamp to be attached to the value.
  * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
+ * @param knoraIdUtil a [[KnoraIdUtil]].
  *@
 @(resourceIri: IRI,
   propertyIri: IRI,
@@ -47,7 +49,8 @@
   valueCreator: IRI,
   valuePermissions: String,
   creationDate: Instant,
-  maybeValueHasOrder: Option[Int])
+  maybeValueHasOrder: Option[Int],
+  knoraIdUtil: KnoraIdUtil)
 
         # Value: @newValueIri
         # Property: @propertyIri
@@ -115,7 +118,7 @@
                             }
 
                             knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
-                            knora-base:standoffTagHasUUID """@createStandoff.standoffNode.uuid""" ;
+                            knora-base:standoffTagHasUUID "@{knoraIdUtil.base64EncodeUuid(createStandoff.standoffNode.uuid)}" ;
                             knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
                             knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
                             rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .
@@ -175,14 +178,7 @@
                                      knora-base:internalFilename """@stillImageFileValue.internalFilename""" ;
                                      knora-base:internalMimeType """@stillImageFileValue.internalMimeType""" ;
                                      knora-base:dimX @stillImageFileValue.dimX ;
-                                     knora-base:dimY @stillImageFileValue.dimY ;
-                                     knora-base:qualityLevel @stillImageFileValue.qualityLevel ;
-                                     knora-base:valueHasQname """@stillImageFileValue.qualityName""" .
-
-                @if(stillImageFileValue.isPreview) {
-                    <@newValueIri> knora-base:isPreview true .
-                }
-
+                                     knora-base:dimY @stillImageFileValue.dimY .
             }
 
             case textFileValue: TextFileValueV1 => {

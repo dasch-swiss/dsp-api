@@ -19,12 +19,14 @@
 
 package org.knora.webapi.routing.v2
 
+import java.time.Instant
 import java.util.UUID
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
@@ -148,12 +150,12 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            ApiV2WithValueObjects
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }
@@ -176,14 +178,89 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            ApiV2WithValueObjects
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            responseSchema = ApiV2Complex
                         )
                     }
+                }
+            }
+        } ~ path("v2" / "resources") {
+            get {
+                requestContext => {
+                    val projectIri: SmartIri = RouteUtilV2.getProject(requestContext).getOrElse(throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+                    val resourceClassStr: String = params.getOrElse("resourceClass", throw BadRequestException(s"This route requires the parameter 'resourceClass'"))
+                    val resourceClass: SmartIri = resourceClassStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr"))
+
+                    if (!(resourceClass.isKnoraApiV2EntityIri && resourceClass.getOntologySchema.contains(ApiV2Complex))) {
+                        throw BadRequestException(s"Invalid resource class IRI: $resourceClassStr")
+                    }
+
+                    val maybeOrderByPropertyStr: Option[String] = params.get("orderByProperty")
+                    val maybeOrderByProperty: Option[SmartIri] = maybeOrderByPropertyStr.map {
+                        orderByPropertyStr =>
+                            val orderByProperty = orderByPropertyStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr"))
+
+                            if (!(orderByProperty.isKnoraApiV2EntityIri && orderByProperty.getOntologySchema.contains(ApiV2Complex))) {
+                                throw BadRequestException(s"Invalid property IRI: $orderByPropertyStr")
+                            }
+
+                            orderByProperty.toOntologySchema(ApiV2Complex)
+                    }
+
+                    val pageStr: String = params.getOrElse("page", throw BadRequestException(s"This route requires the parameter 'page'"))
+                    val page: Int = stringFormatter.validateInt(pageStr, throw BadRequestException(s"Invalid page number: $pageStr"))
+
+                    val requestMessageFuture: Future[SearchResourcesByProjectAndClassRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield SearchResourcesByProjectAndClassRequestV2(
+                        projectIri = projectIri,
+                        resourceClass = resourceClass.toOntologySchema(ApiV2Complex),
+                        orderByProperty = maybeOrderByProperty,
+                        page = page,
+                        requestingUser = requestingUser
+                    )
+
+                    RouteUtilV2.runRdfRouteWithFuture(
+                        requestMessageFuture,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        responseSchema = ApiV2Complex
+                    )
+                }
+            }
+        } ~ path("v2" / "resources" / "history" / Segment) { resourceIriStr: IRI =>
+            get {
+                requestContext => {
+                    val resourceIri = stringFormatter.validateAndEscapeIri(resourceIriStr, throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+                    val startDate: Option[Instant] = params.get("startDate").map(dateStr => stringFormatter.xsdDateTimeStampToInstant(dateStr, throw BadRequestException(s"Invalid start date: $dateStr")))
+                    val endDate = params.get("endDate").map(dateStr => stringFormatter.xsdDateTimeStampToInstant(dateStr, throw BadRequestException(s"Invalid end date: $dateStr")))
+
+                    val requestMessageFuture: Future[ResourceVersionHistoryGetRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ResourceVersionHistoryGetRequestV2(
+                        resourceIri = resourceIri,
+                        startDate = startDate,
+                        endDate = endDate,
+                        requestingUser = requestingUser
+                    )
+
+                    RouteUtilV2.runRdfRouteWithFuture(
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = ApiV2Complex
+                    )
                 }
             }
         } ~ path("v2" / "resources" / Segments) { resIris: Seq[String] =>
@@ -197,18 +274,38 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
                     }
 
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+                    // Was a version date provided?
+                    val versionDate: Option[Instant] = params.get("version").map {
+                        versionStr =>
+                            def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
+
+                            // Yes. Try to parse it as an xsd:dateTimeStamp.
+                            try {
+                                stringFormatter.xsdDateTimeStampToInstant(versionStr, errorFun)
+                            } catch {
+                                // If that doesn't work, try to parse it as a Knora ARK timestamp.
+                                case _: Exception => stringFormatter.arkTimestampToInstant(versionStr, errorFun)
+                            }
+                    }
+
                     val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield ResourcesGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
+                    } yield ResourcesGetRequestV2(
+                        resourceIris = resourceIris,
+                        versionDate = versionDate,
+                        requestingUser = requestingUser
+                    )
 
                     // #use-requested-schema
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        RouteUtilV2.getOntologySchema(requestContext)
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = RouteUtilV2.getOntologySchema(requestContext)
                     )
                     // #use-requested-schema
                 }
@@ -228,12 +325,12 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     } yield ResourcesPreviewGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        RouteUtilV2.getOntologySchema(requestContext)
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = RouteUtilV2.getOntologySchema(requestContext)
                     )
                 }
             }
@@ -266,12 +363,12 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     )
 
                     RouteUtilV2.runTEIXMLRoute(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        RouteUtilV2.getOntologySchema(requestContext)
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = RouteUtilV2.getOntologySchema(requestContext)
                     )
                 }
             }
@@ -312,12 +409,12 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        RouteUtilV2.getOntologySchema(requestContext)
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        responseSchema = RouteUtilV2.getOntologySchema(requestContext)
                     )
                 }
             }
@@ -341,12 +438,12 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            ApiV2WithValueObjects
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            responseSchema = ApiV2Complex
                         )
                     }
                 }

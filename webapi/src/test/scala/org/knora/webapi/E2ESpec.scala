@@ -87,7 +87,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
         // start the knora service without loading of the ontologies
-        startService(false)
+        startService(skipLoadingOfOntologies = true)
 
         // waits until knora is up and running
         applicationStateRunning()
@@ -131,6 +131,12 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
     protected def responseToString(httpResponse: HttpResponse): String = {
         val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
         Await.result(responseBodyFuture, 5.seconds)
+    }
+
+    protected def doGetRequest(urlPath: String): String = {
+        val request = Get(s"$baseApiUrl$urlPath")
+        val response: HttpResponse = singleAwaitingRequest(request)
+        responseToString(response)
     }
 
     protected def parseTurtle(turtleStr: String): Model = {

@@ -10,9 +10,46 @@
     <xsl:output method="xml" omit-xml-declaration="yes" encoding="utf-8" indent="yes"/>
 
     <!-- make IAF id a URL -->
-    <xsl:function name="knora-api:iaf" as="xs:anyURI">
+    <xsl:function name="knora-api:iaf" as="xs:string">
         <xsl:param name="input" as="xs:string"/>
-        <xsl:value-of select="replace($input, '\(DE-588\)', 'http://d-nb.info/gnd/')"/>
+        <xsl:sequence select="replace($input, '\(DE-588\)', 'http://d-nb.info/gnd/')"/>
+    </xsl:function>
+
+    <!-- Given a link value IRI and the document root node, returns the IRI of the target resource. -->
+    <xsl:function name="knora-api:getTargetResourceIri" as="xs:anyURI">
+        <xsl:param name="linkValueIri" as="xs:anyURI"/>
+        <xsl:param name="documentRoot" as="item()"/>
+
+        <xsl:choose>
+            <xsl:when test="boolean($documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//beol:person)">
+                <!-- The target resource is nested in the LinkValue. -->
+                <xsl:value-of
+                        select="$documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//beol:person/@rdf:about"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- The target resource is not nested in the LinkValue. -->
+                <xsl:value-of
+                        select="$documentRoot//knora-api:LinkValue[@rdf:about=$linkValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
+
+    <!-- https://www.safaribooksonline.com/library/view/xslt-cookbook/0596003722/ch03s03.html?orpq -->
+    <xsl:function name="knora-api:last-day-of-month" as="xs:string">
+        <xsl:param name="month"/>
+        <xsl:param name="year"/>
+        <xsl:choose>
+            <xsl:when test="$month = 2 and
+            not($year mod 4) and
+            ($year mod 100 or not($year mod 400))">
+                <xsl:value-of select="29"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of
+                        select="substring('312831303130313130313031',
+         2 * $month - 1,2)"/>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:function>
 
     <!-- make a standard date (Gregorian calendar assumed) -->
@@ -20,11 +57,15 @@
         <xsl:param name="input" as="element()*"/>
 
         <xsl:choose>
-            <xsl:when test="$input/knora-api:dateValueHasStartYear/text() = $input/knora-api:dateValueHasEndYear/text() and $input/knora-api:dateValueHasStartMonth/text() = $input/knora-api:dateValueHasEndMonth/text() and $input/knora-api:dateValueHasStartDay/text() = $input/knora-api:dateValueHasEndDay/text()">
+            <xsl:when
+                    test="$input/knora-api:dateValueHasStartYear/text() = $input/knora-api:dateValueHasEndYear/text() and $input/knora-api:dateValueHasStartMonth/text() = $input/knora-api:dateValueHasEndMonth/text() and $input/knora-api:dateValueHasStartDay/text() = $input/knora-api:dateValueHasEndDay/text()">
                 <!-- no period, day precision -->
                 <date>
                     <xsl:attribute name="when">
-                        <xsl:value-of select="format-number($input/knora-api:dateValueHasStartYear/text(), '0000')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>
+                        <xsl:value-of
+                                select="format-number($input/knora-api:dateValueHasStartYear/text(), '0000')"/>-<xsl:value-of
+                            select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>-<xsl:value-of
+                            select="format-number($input/knora-api:dateValueHasStartDay/text(), '00')"/>
                     </xsl:attribute>
                 </date>
 
@@ -32,12 +73,61 @@
             <xsl:otherwise>
                 <!-- period -->
                 <date>
+                    <!-- start date could be imprecise -->
+                    <xsl:variable name="startDay">
+                        <xsl:choose>
+                            <xsl:when test="$input/knora-api:dateValueHasStartDay">
+                                <xsl:value-of select="$input/knora-api:dateValueHasStartDay/text()"/>
+                            </xsl:when>
+                            <xsl:otherwise>01</xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
+
+                    <xsl:variable name="startMonth">
+                        <xsl:choose>
+                            <xsl:when test="$input/knora-api:dateValueHasStartMonth">
+                                <xsl:value-of select="$input/knora-api:dateValueHasStartMonth/text()"/>
+                            </xsl:when>
+                            <xsl:otherwise>01</xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
+
                     <xsl:attribute name="notBefore">
-                        <xsl:value-of select="format-number($input/knora-api:dateValueHasStartYear/text(), '0000')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartDay/text(), '00')"/>
+                        <xsl:value-of
+                                select="format-number($input/knora-api:dateValueHasStartYear/text(), '0000')"/>-<xsl:value-of
+                            select="format-number($startMonth, '00')"/>-<xsl:value-of
+                            select="format-number($startDay, '00')"/>
                     </xsl:attribute>
 
+                    <!-- end date could be imprecise -->
+
+                    <xsl:variable name="endMonth">
+                        <xsl:choose>
+                            <xsl:when test="$input/knora-api:dateValueHasEndMonth">
+                                <xsl:value-of select="$input/knora-api:dateValueHasEndMonth/text()"/>
+                            </xsl:when>
+                            <xsl:otherwise>12</xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
+
+                    <xsl:variable name="endDay">
+                        <xsl:choose>
+                            <xsl:when test="$input/knora-api:dateValueHasEndDay">
+                                <xsl:value-of select="$input/knora-api:dateValueHasEndDay/text()"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of
+                                        select="knora-api:last-day-of-month(number($endMonth), number($input/knora-api:dateValueHasEndYear/text()))"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
+
+
                     <xsl:attribute name="notAfter">
-                        <xsl:value-of select="format-number($input/knora-api:dateValueHasEndYear/text(), '0000')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasEndMonth/text(), '00')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasEndDay/text(), '00')"/>
+                        <xsl:value-of
+                                select="format-number($input/knora-api:dateValueHasEndYear/text(), '0000')"/>-<xsl:value-of
+                            select="format-number($endMonth, '00')"/>-<xsl:value-of
+                            select="format-number($endDay, '00')"/>
                     </xsl:attribute>
                 </date>
 
@@ -60,8 +150,9 @@
                     </title>
                 </titleStmt>
                 <publicationStmt>
-                    <p> This is the TEI/XML representation of the resource identified by the Iri
-                        <xsl:value-of select="$resourceIri"/>. </p>
+                    <p>This is the TEI/XML representation of the resource identified by the Iri
+                        <xsl:value-of select="$resourceIri"/>.
+                    </p>
                 </publicationStmt>
                 <sourceDesc>
                     <p>Representation of the resource's text as TEI/XML</p>
@@ -80,14 +171,15 @@
     </xsl:template>
 
     <xsl:template match="beol:letter/beol:hasAuthorValue">
-        <xsl:variable name="authorValue" select="@rdf:resource"/>
+        <xsl:variable name="authorValueIri" select="@rdf:resource"/>
+        <xsl:variable name="authorIri" select="knora-api:getTargetResourceIri($authorValueIri, /.)"/>
 
         <xsl:variable name="authorIAFValue"
-                      select="//knora-api:LinkValue[@rdf:about=$authorValue]//beol:hasIAFIdentifier/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$authorIri]//beol:hasIAFIdentifier/@rdf:resource"/>
         <xsl:variable name="authorFamilyNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$authorValue]//beol:hasFamilyName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$authorIri]//beol:hasFamilyName/@rdf:resource"/>
         <xsl:variable name="authorGivenNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$authorValue]//beol:hasGivenName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$authorIri]//beol:hasGivenName/@rdf:resource"/>
 
         <correspAction type="sent">
 
@@ -99,10 +191,13 @@
                           select="//knora-api:TextValue[@rdf:about=$authorGivenNameValue]/knora-api:valueAsString/text()"/>
 
             <persName>
-                <xsl:attribute name="ref"><xsl:value-of select="knora-api:iaf($authorIAFText)"
-                /></xsl:attribute>
-                <xsl:value-of select="$authorFamilyNameText"/>, <xsl:value-of
-                    select="$authorGivenNameText"/>
+                <xsl:attribute name="ref">
+                    <xsl:value-of select="knora-api:iaf($authorIAFText)"
+                    />
+                </xsl:attribute>
+                <xsl:value-of select="$authorFamilyNameText"/>,
+                <xsl:value-of
+                        select="$authorGivenNameText"/>
             </persName>
 
             <xsl:variable name="dateValue" select="//beol:creationDate/@rdf:resource"/>
@@ -116,14 +211,15 @@
     </xsl:template>
 
     <xsl:template match="beol:letter/beol:hasRecipientValue">
-        <xsl:variable name="recipientValue" select="@rdf:resource"/>
+        <xsl:variable name="recipientValueIri" select="@rdf:resource"/>
+        <xsl:variable name="recipientIri" select="knora-api:getTargetResourceIri($recipientValueIri, /.)"/>
 
         <xsl:variable name="recipientIAFValue"
-                      select="//knora-api:LinkValue[@rdf:about=$recipientValue]//beol:hasIAFIdentifier/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasIAFIdentifier/@rdf:resource"/>
         <xsl:variable name="recipientFamilyNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$recipientValue]//beol:hasFamilyName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasFamilyName/@rdf:resource"/>
         <xsl:variable name="recipientGivenNameValue"
-                      select="//knora-api:LinkValue[@rdf:about=$recipientValue]//beol:hasGivenName/@rdf:resource"/>
+                      select="//beol:person[@rdf:about=$recipientIri]//beol:hasGivenName/@rdf:resource"/>
 
         <correspAction type="received">
 
@@ -135,17 +231,20 @@
                           select="//knora-api:TextValue[@rdf:about=$recipientGivenNameValue]/knora-api:valueAsString/text()"/>
 
             <persName>
-                <xsl:attribute name="ref"><xsl:value-of select="knora-api:iaf($recipientIAFText)"
-                /></xsl:attribute>
-                <xsl:value-of select="$recipientFamilyNameText"/>, <xsl:value-of
-                    select="$recipientGivenNameText"/>
+                <xsl:attribute name="ref">
+                    <xsl:value-of select="knora-api:iaf($recipientIAFText)"
+                    />
+                </xsl:attribute>
+                <xsl:value-of select="$recipientFamilyNameText"/>,
+                <xsl:value-of
+                        select="$recipientGivenNameText"/>
             </persName>
 
         </correspAction>
     </xsl:template>
 
     <!-- ignore text if there is no template for the element containing it -->
-    <xsl:template match="text()"> </xsl:template>
+    <xsl:template match="text()"></xsl:template>
 
 
 </xsl:transform>

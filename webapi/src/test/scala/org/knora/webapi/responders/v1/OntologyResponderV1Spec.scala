@@ -57,7 +57,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                     gui_name = Some("fileupload"),
                     attributes = None,
                     valuetype_id = "http://www.knora.org/ontology/knora-base#StillImageFileValue",
-                    occurrence = "1-n",
+                    occurrence = "1",
                     vocabulary = "http://www.knora.org/ontology/knora-base",
                     description = Some("Connects a Representation to an image file"),
                     label = Some("hat Bilddatei"),

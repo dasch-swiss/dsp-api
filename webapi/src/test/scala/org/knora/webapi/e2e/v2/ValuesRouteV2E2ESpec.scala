@@ -24,8 +24,8 @@ import java.net.URLEncoder
 import java.time.Instant
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -118,7 +118,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         resource.maybeObject(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).map {
             jsonLDObject =>
                 jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.validateAndEscapeIri) should ===(OntologyConstants.Xsd.DateTimeStamp)
-                jsonLDObject.requireStringWithValidation(JsonLDConstants.VALUE, stringFormatter.toInstant)
+                jsonLDObject.requireStringWithValidation(JsonLDConstants.VALUE, stringFormatter.xsdDateTimeStampToInstant)
         }
     }
 
@@ -240,7 +240,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 1
-            val customPermissions: String = "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+            val customPermissions: String = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
             val jsonLDEntity =
@@ -456,6 +456,90 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                   | test</p>""".stripMargin
 
             assert(savedTextValueAsXml.contains(expectedText))
+        }
+
+        "create a TextValue from XML representing HTML with an attribute containing escaped quotes" in {
+            // Create the mapping.
+
+            val xmlFileToSend = new File("_test_data/test_route/texts/mappingForHTML.xml")
+
+            val mappingParams =
+                s"""{
+                   |    "knora-api:mappingHasName": "HTMLMapping",
+                   |    "knora-api:attachedToProject": {
+                   |      "@id": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}"
+                   |    },
+                   |    "rdfs:label": "HTML mapping",
+                   |    "@context": {
+                   |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+                   |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |    }
+                   |}""".stripMargin
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, mappingParams)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend.toPath),
+                    Map("filename" -> "HTMLMapping.xml")
+                )
+            )
+
+            // create standoff from XML
+            val mappingRequest = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val mappingResponse: HttpResponse = singleAwaitingRequest(mappingRequest)
+            assert(mappingResponse.status == StatusCodes.OK, mappingResponse.toString)
+
+            // Create the text value.
+
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
+
+            val textValueAsXml =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<text documentType="html">
+                  |    <p>This an <span data-description="an &quot;event&quot;" data-date="GREGORIAN:2017-01-27 CE" class="event">event</span>.</p>
+                  |</text>""".stripMargin
+
+            val jsonLDEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasText" : {
+                   |    "@type" : "knora-api:TextValue",
+                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
+                   |    "knora-api:textValueHasMapping" : {
+                   |      "@id": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}/mappings/HTMLMapping"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            thingTextValueIri.set(valueIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = aThingIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = valueIri,
+                userEmail = anythingUserEmail
+            )
+
+            val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml)
+            assert(savedTextValueAsXml.contains(textValueAsXml))
         }
 
         "create a text value with a comment" in {

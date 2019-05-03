@@ -66,7 +66,7 @@ object GravsearchQueryChecker {
 
                                     // If it's a variable that doesn't represent a property, and we're using the complex schema and the statement
                                     // is in the CONSTRUCT clause, check that it refers to a resource or value.
-                                    if (inConstructClause && querySchema == ApiV2WithValueObjects) {
+                                    if (inConstructClause && querySchema == ApiV2Complex) {
                                         val typeIriStr = nonPropertyTypeInfo.typeIri.toString
 
                                         if (!(typeIriStr == OntologyConstants.KnoraApiV2WithValueObjects.Resource || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(typeIriStr))) {
@@ -137,7 +137,6 @@ object GravsearchQueryChecker {
     val forbiddenPredicates: Set[IRI] = Set(
         OntologyConstants.Rdfs.Label,
         OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser,
-        OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject,
         OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions,
         OntologyConstants.KnoraApiV2WithValueObjects.CreationDate,
         OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,

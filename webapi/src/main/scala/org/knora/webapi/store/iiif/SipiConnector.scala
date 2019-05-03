@@ -117,7 +117,7 @@ class SipiConnector extends Actor with ActorLogging {
 
         val formParams = new util.ArrayList[NameValuePair]()
 
-        for ((key, value) <- conversionRequest.toFormData()) {
+        for ((key, value) <- conversionRequest.toFormData) {
             formParams.add(new BasicNameValuePair(key, value))
         }
 
@@ -186,7 +186,7 @@ class SipiConnector extends Actor with ActorLogging {
             fileTypeEnum: FileType.Value = SipiConstants.FileType.lookup(fileType)
 
             // create the apt case class depending on the file type returned by Sipi
-            fileValuesV1: Vector[FileValueV1] = fileTypeEnum match {
+            fileValueV1: FileValueV1 = fileTypeEnum match {
                 case SipiConstants.FileType.IMAGE =>
                     // parse response as a [[SipiImageConversionResponse]]
                     val imageConversionResult = try {
@@ -195,30 +195,15 @@ class SipiConnector extends Actor with ActorLogging {
                         case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiImageConversionResponse", e = e, log = log)
                     }
 
-                    // create two StillImageFileValueV1s
-                    Vector(StillImageFileValueV1(// full representation
+                    StillImageFileValueV1(
                         internalMimeType = stringFormatter.toSparqlEncodedString(imageConversionResult.mimetype_full, throw BadRequestException(s"The internal MIME type returned by Sipi is invalid: '${imageConversionResult.mimetype_full}")),
                         originalFilename = stringFormatter.toSparqlEncodedString(imageConversionResult.original_filename, throw BadRequestException(s"The original filename returned by Sipi is invalid: '${imageConversionResult.original_filename}")),
                         originalMimeType = Some(stringFormatter.toSparqlEncodedString(imageConversionResult.original_mimetype, throw BadRequestException(s"The original MIME type returned by Sipi is invalid: '${imageConversionResult.original_mimetype}"))),
                         projectShortcode = conversionRequest.projectShortcode,
                         dimX = imageConversionResult.nx_full,
                         dimY = imageConversionResult.ny_full,
-                        internalFilename = stringFormatter.toSparqlEncodedString(imageConversionResult.filename_full, throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${imageConversionResult.filename_full}")),
-                        qualityLevel = 100,
-                        qualityName = Some(SipiConstants.StillImage.fullQuality)
-                    ),
-                        StillImageFileValueV1(// thumbnail representation
-                            internalMimeType = stringFormatter.toSparqlEncodedString(imageConversionResult.mimetype_thumb, throw BadRequestException(s"The internal MIME type returned by Sipi is invalid: '${imageConversionResult.mimetype_full}")),
-                            originalFilename = stringFormatter.toSparqlEncodedString(imageConversionResult.original_filename, throw BadRequestException(s"The original filename returned by Sipi is invalid: '${imageConversionResult.original_filename}")),
-                            originalMimeType = Some(stringFormatter.toSparqlEncodedString(imageConversionResult.original_mimetype, throw BadRequestException(s"The original MIME type returned by Sipi is invalid: '${imageConversionResult.original_mimetype}"))),
-                            projectShortcode = conversionRequest.projectShortcode,
-                            dimX = imageConversionResult.nx_thumb,
-                            dimY = imageConversionResult.ny_thumb,
-                            internalFilename = stringFormatter.toSparqlEncodedString(imageConversionResult.filename_thumb, throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${imageConversionResult.filename_thumb}")),
-                            qualityLevel = 10,
-                            qualityName = Some(SipiConstants.StillImage.thumbnailQuality),
-                            isPreview = true
-                        ))
+                        internalFilename = stringFormatter.toSparqlEncodedString(imageConversionResult.filename_full, throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${imageConversionResult.filename_full}"))
+                    )
 
                 case SipiConstants.FileType.TEXT =>
 
@@ -229,20 +214,20 @@ class SipiConnector extends Actor with ActorLogging {
                         case e: DeserializationException => throw SipiException(message = "JSON response returned by Sipi is invalid, it cannot be turned into a SipiTextResponse", e = e, log = log)
                     }
 
-                    Vector(TextFileValueV1(
+                    TextFileValueV1(
                         internalMimeType = stringFormatter.toSparqlEncodedString(textStoreResult.mimetype, throw BadRequestException(s"The internal MIME type returned by Sipi is invalid: '${textStoreResult.mimetype}")),
                         internalFilename = stringFormatter.toSparqlEncodedString(textStoreResult.filename, throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${textStoreResult.filename}")),
                         originalFilename = stringFormatter.toSparqlEncodedString(textStoreResult.original_filename, throw BadRequestException(s"The internal filename returned by Sipi is invalid: '${textStoreResult.original_filename}")),
                         originalMimeType = Some(stringFormatter.toSparqlEncodedString(textStoreResult.mimetype, throw BadRequestException(s"The orignal MIME type returned by Sipi is invalid: '${textStoreResult.original_mimetype}"))),
                         projectShortcode = conversionRequest.projectShortcode
-                    ))
+                    )
 
                 case unknownType => throw NotImplementedException(s"Could not handle file type $unknownType")
 
                 // TODO: add missing file types
             }
 
-        } yield SipiConversionResponseV1(fileValuesV1, file_type = fileTypeEnum)
+        } yield SipiConversionResponseV1(fileValueV1, file_type = fileTypeEnum)
     }
 
     /**

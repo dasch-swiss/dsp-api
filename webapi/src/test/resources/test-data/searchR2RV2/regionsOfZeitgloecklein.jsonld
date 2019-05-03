@@ -16,14 +16,14 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:55Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "knora-api:isRegionOfValue" : {
       "@id" : "http://rdfh.ch/0803/2e0252679a35/values/498d07ec-dddb-4051-bfd1-62626f282fc5",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/0803/3f89a693a501",
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
@@ -33,7 +33,7 @@
           "knora-api:attachedToUser" : {
             "@id" : "http://rdfh.ch/users/91e19f1e01"
           },
-          "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+          "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
           "knora-api:linkValueHasTarget" : {
             "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
             "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -43,8 +43,13 @@
               "knora-api:attachedToUser" : {
                 "@id" : "http://rdfh.ch/users/91e19f1e01"
               },
-              "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
+              "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+              "knora-api:userHasPermission" : "M",
+              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi",
+              "knora-api:valueCreationDate" : {
+                "@type" : "xsd:dateTimeStamp",
+                "@value" : "2016-03-02T15:05:23Z"
+              }
             },
             "knora-api:arkUrl" : {
               "@type" : "xsd:anyURI",
@@ -60,8 +65,18 @@
               "@type" : "xsd:dateTimeStamp",
               "@value" : "2016-03-02T15:05:23Z"
             },
-            "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+            "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+            "knora-api:userHasPermission" : "M",
+            "knora-api:versionArkUrl" : {
+              "@type" : "xsd:anyURI",
+              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"
+            },
             "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+          },
+          "knora-api:userHasPermission" : "V",
+          "knora-api:valueCreationDate" : {
+            "@type" : "xsd:dateTimeStamp",
+            "@value" : "2016-03-02T15:05:24Z"
           }
         },
         "knora-api:arkUrl" : {
@@ -78,9 +93,24 @@
           "@type" : "xsd:dateTimeStamp",
           "@value" : "2016-03-02T15:05:24Z"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        "knora-api:userHasPermission" : "M",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/3f89a693a501w.20160302T150524Z"
+        },
         "rdfs:label" : "d8r"
+      },
+      "knora-api:userHasPermission" : "M",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:55Z"
       }
+    },
+    "knora-api:userHasPermission" : "M",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2e0252679a35p.20160302T150555Z"
     },
     "rdfs:label" : "DEMOX"
   }, {
@@ -100,14 +130,14 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:56Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
     "knora-api:isRegionOfValue" : {
       "@id" : "http://rdfh.ch/0803/4e2223eb204c01/values/97188bdc-292a-48f0-9373-29e67afbbd81",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/0803/6240ce899801",
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
@@ -117,7 +147,7 @@
           "knora-api:attachedToUser" : {
             "@id" : "http://rdfh.ch/users/91e19f1e01"
           },
-          "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+          "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
           "knora-api:linkValueHasTarget" : {
             "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
             "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -127,8 +157,13 @@
               "knora-api:attachedToUser" : {
                 "@id" : "http://rdfh.ch/users/91e19f1e01"
               },
-              "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
+              "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+              "knora-api:userHasPermission" : "M",
+              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi",
+              "knora-api:valueCreationDate" : {
+                "@type" : "xsd:dateTimeStamp",
+                "@value" : "2016-03-02T15:05:23Z"
+              }
             },
             "knora-api:arkUrl" : {
               "@type" : "xsd:anyURI",
@@ -144,8 +179,18 @@
               "@type" : "xsd:dateTimeStamp",
               "@value" : "2016-03-02T15:05:23Z"
             },
-            "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+            "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+            "knora-api:userHasPermission" : "M",
+            "knora-api:versionArkUrl" : {
+              "@type" : "xsd:anyURI",
+              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"
+            },
             "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+          },
+          "knora-api:userHasPermission" : "V",
+          "knora-api:valueCreationDate" : {
+            "@type" : "xsd:dateTimeStamp",
+            "@value" : "2016-03-02T15:05:23Z"
           }
         },
         "knora-api:arkUrl" : {
@@ -162,9 +207,24 @@
           "@type" : "xsd:dateTimeStamp",
           "@value" : "2016-03-02T15:05:23Z"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        "knora-api:userHasPermission" : "M",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/6240ce899801x.20160302T150523Z"
+        },
         "rdfs:label" : "a3v"
+      },
+      "knora-api:userHasPermission" : "M",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:56Z"
       }
+    },
+    "knora-api:userHasPermission" : "M",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/4e2223eb204c01w.20160302T150556Z"
     },
     "rdfs:label" : "This is a saint"
   }, {
@@ -184,14 +244,14 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:56Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
     "knora-api:isRegionOfValue" : {
       "@id" : "http://rdfh.ch/0803/c2807e831a4c01/values/39c732db-d191-44b9-b091-d764e6e0eff8",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/0803/c568b7239a01",
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
@@ -201,7 +261,7 @@
           "knora-api:attachedToUser" : {
             "@id" : "http://rdfh.ch/users/91e19f1e01"
           },
-          "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+          "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
           "knora-api:linkValueHasTarget" : {
             "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
             "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -211,8 +271,13 @@
               "knora-api:attachedToUser" : {
                 "@id" : "http://rdfh.ch/users/91e19f1e01"
               },
-              "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
+              "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+              "knora-api:userHasPermission" : "M",
+              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi",
+              "knora-api:valueCreationDate" : {
+                "@type" : "xsd:dateTimeStamp",
+                "@value" : "2016-03-02T15:05:23Z"
+              }
             },
             "knora-api:arkUrl" : {
               "@type" : "xsd:anyURI",
@@ -228,8 +293,18 @@
               "@type" : "xsd:dateTimeStamp",
               "@value" : "2016-03-02T15:05:23Z"
             },
-            "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+            "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+            "knora-api:userHasPermission" : "M",
+            "knora-api:versionArkUrl" : {
+              "@type" : "xsd:anyURI",
+              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"
+            },
             "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+          },
+          "knora-api:userHasPermission" : "V",
+          "knora-api:valueCreationDate" : {
+            "@type" : "xsd:dateTimeStamp",
+            "@value" : "2016-03-02T15:05:23Z"
           }
         },
         "knora-api:arkUrl" : {
@@ -246,9 +321,24 @@
           "@type" : "xsd:dateTimeStamp",
           "@value" : "2016-03-02T15:05:23Z"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        "knora-api:userHasPermission" : "M",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c568b7239a01k.20160302T150523Z"
+        },
         "rdfs:label" : "a7r"
+      },
+      "knora-api:userHasPermission" : "M",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:56Z"
       }
+    },
+    "knora-api:userHasPermission" : "M",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c2807e831a4c01G.20160302T150556Z"
     },
     "rdfs:label" : "TEST"
   }, {
@@ -268,14 +358,14 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:56Z"
     },
-    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "knora-api:isRegionOfValue" : {
       "@id" : "http://rdfh.ch/0803/c4160576204c01/values/8f499fc5-2884-4876-8887-4aa83504d937",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
-      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+      "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/0803/6240ce899801",
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
@@ -285,7 +375,7 @@
           "knora-api:attachedToUser" : {
             "@id" : "http://rdfh.ch/users/91e19f1e01"
           },
-          "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+          "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
           "knora-api:linkValueHasTarget" : {
             "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
             "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
@@ -295,8 +385,13 @@
               "knora-api:attachedToUser" : {
                 "@id" : "http://rdfh.ch/users/91e19f1e01"
               },
-              "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
-              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
+              "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+              "knora-api:userHasPermission" : "M",
+              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi",
+              "knora-api:valueCreationDate" : {
+                "@type" : "xsd:dateTimeStamp",
+                "@value" : "2016-03-02T15:05:23Z"
+              }
             },
             "knora-api:arkUrl" : {
               "@type" : "xsd:anyURI",
@@ -312,8 +407,18 @@
               "@type" : "xsd:dateTimeStamp",
               "@value" : "2016-03-02T15:05:23Z"
             },
-            "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+            "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+            "knora-api:userHasPermission" : "M",
+            "knora-api:versionArkUrl" : {
+              "@type" : "xsd:anyURI",
+              "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z"
+            },
             "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+          },
+          "knora-api:userHasPermission" : "V",
+          "knora-api:valueCreationDate" : {
+            "@type" : "xsd:dateTimeStamp",
+            "@value" : "2016-03-02T15:05:23Z"
           }
         },
         "knora-api:arkUrl" : {
@@ -330,9 +435,24 @@
           "@type" : "xsd:dateTimeStamp",
           "@value" : "2016-03-02T15:05:23Z"
         },
-        "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+        "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        "knora-api:userHasPermission" : "M",
+        "knora-api:versionArkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/6240ce899801x.20160302T150523Z"
+        },
         "rdfs:label" : "a3v"
+      },
+      "knora-api:userHasPermission" : "M",
+      "knora-api:valueCreationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:56Z"
       }
+    },
+    "knora-api:userHasPermission" : "M",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c4160576204c01K.20160302T150556Z"
     },
     "rdfs:label" : "Image with angel and saint"
   } ],

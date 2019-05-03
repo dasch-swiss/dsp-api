@@ -159,36 +159,10 @@ if not success then
     return
 end
 
-
-thumbImgName = baseName .. '.jpg'
-
---
--- create new thumnail image file path with sublevels:
---
-success, newThumbPath = helper.filename_hash(thumbImgName);
-if not success then
-    server.sendStatus(500)
-    server.log("Unable to generate filename hash for " .. thumbImgName, server.loglevel.LOG_ERR)
-    return false
-end
-
-fullThumbPath = projectDir .. newThumbPath
-success, errmsg = thumbImg:write(fullThumbPath)
-if not success then
-    server.log("Unable to write " .. fullThumbPath, server.loglevel.LOG_ERR)
-    return
-end
-
-
 --
 -- delete tmp and preview files
 --
 success, errmsg = server.fs.unlink(sourcePath)
-if not success then
-    server.log("server.fs.unlink failed: " .. errmsg, server.loglevel.LOG_ERR)
-    return
-end
-success, errmsg = server.fs.unlink(config.imgroot .. '/thumbs/' .. filename .. ".jpg")
 if not success then
     server.log("server.fs.unlink failed: " .. errmsg, server.loglevel.LOG_ERR)
     return
@@ -200,10 +174,6 @@ result = {
     filename_full = fullImgName,
     nx_full = fullDims.nx,
     ny_full = fullDims.ny,
-    mimetype_thumb = "image/jpeg",
-    filename_thumb = thumbImgName,
-    nx_thumb = thumbDims.nx,
-    ny_thumb = thumbDims.ny,
     original_mimetype = originalMimetype,
     original_filename = originalFilename,
     file_type = 'image'

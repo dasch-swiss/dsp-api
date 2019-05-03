@@ -28,8 +28,10 @@ from one Knora repository to another.
 
 ## Obtaining ARK URLs
 
-The ARK URL of each resource is provided as the object of its `knora-api:arkUrl`
-property (in both the simple schema and the complex schema). For example:
+A resource is always returned with two ARK URLs: one that will always refer
+to the latest version of the resource (`knora-api:arkUrl`), and one that refers
+specifically to the version being returned (`knora-api:versionArkUrl`).
+For example:
 
 ```jsonld
 {
@@ -38,6 +40,10 @@ property (in both the simple schema and the complex schema). For example:
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
     "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W"
+  },
+  "knora-api:versionArkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W.20180528T155203897Z"
   },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0803"
@@ -49,7 +55,7 @@ property (in both the simple schema and the complex schema). For example:
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2016-03-02T15:05:21Z"
   },
-  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser",
   "rdfs:label" : "Reise ins Heilige Land",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -60,6 +66,11 @@ property (in both the simple schema and the complex schema). For example:
   }
 }
 ```
+
+For more information on getting past versions of resources, see
+@ref:[Get a Full Representation of a Version of a Resource by IRI](reading-and-searching-resources.md#get-a-full-representation-of-a-version-of-a-resource-by-iri)
+and
+@ref:[Get the Version History of a Resource](reading-and-searching-resources.md#get-the-version-history-of-a-resource).
 
 ## Resolving Knora ARK URLs
 
@@ -86,11 +97,8 @@ http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY
 The same ARK URL with an optional timestamp is:
 
 ```
-http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20190118T102919000031660Z
+http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20180604T085622513Z
 ```
 
 Without a timestamp, a Knora ARK URL refers to the latest version of the
-resource at the time when the URL is resolved. Knora currently returns only ARK URLs
-without timestamps, because querying past versions of resources is not yet
-implemented (@github[#1115](#1115)). When it is implemented, Knora will also return
-ARK URLs with timestamps.
+resource at the time when the URL is resolved.

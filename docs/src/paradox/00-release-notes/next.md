@@ -4,14 +4,23 @@ Write any new release notes between releases into this file. They will be moved 
 at the time of the release, because only then we will know the next release number.
 
 Also, please change the **HINT** to the appropriate level:
- - MAJOR: the changes introduced warrant a major number increase
- - FEATURE: the changes introduced warrant a minor number increase
- - FIX: the changes introduced warrant a bugfix number increase
+
+- MAJOR: the changes introduced warrant a major number increase
+
+- FEATURE: the changes introduced warrant a minor number increase
+
+- FIX: the changes introduced warrant a bug fix number increase
 
 
 ## HINT => MAJOR CHANGE
 
-- MAJOR: Use HTTP POST to mark resources and values as deleted (@github[#1203](#1203))
-- MAJOR: Reorganize user and project routes (@github[#1209](#1209))
-- FEATURE: Secure routes returning user informations (@github[#961](#961))
-- MAJOR: Change all `xsd:dateTimeStamp` to `xsd:dateTime` in the triplestore (@github[#1211](#1211)). Existing data must be updated.
+- FIX: Unescape standoff string attributes when verifying text value update (@github[#1242](#1242))
+
+- FEATURE: Remove persistent map code (@github[#1254](#1254))
+
+- FEATURE: Return user's permission on resources and values (@github[#1257](#1257))
+
+- FEATURE: Get resources in a particular class from a project (@github[#1251](#1251))
+
+- MAJOR: Separate the `knora-admin` ontology from `knora-api` (@github[#1263](#1263)).
+  Existing repositories must be updated; see `upgrade/1263-knora-admin` for instructions.

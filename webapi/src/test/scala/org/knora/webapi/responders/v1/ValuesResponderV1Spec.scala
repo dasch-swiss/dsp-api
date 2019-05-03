@@ -114,7 +114,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
             startPosition = 0,
             endPosition = 7,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
         ),
@@ -122,7 +122,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
             startPosition = 0,
             endPosition = 10,
-            uuid = UUID.randomUUID().toString,
+            uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
         )
@@ -164,14 +164,14 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
                 startPosition = 0,
                 endPosition = 62,
-                uuid = "4800e53e-3835-498e-b658-6cc4f93ab894",
+                uuid = UUID.fromString("4800e53e-3835-498e-b658-6cc4f93ab894"),
                 originalXMLID = None,
                 startIndex = 0
             ), StandoffTagV2(
                 standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                 startPosition = 21,
                 endPosition = 25,
-                uuid = "4bc24696-5dde-4ced-9687-6f8e4519efe8",
+                uuid = UUID.fromString("4bc24696-5dde-4ced-9687-6f8e4519efe8"),
                 originalXMLID = None,
                 startIndex = 1,
                 startParentIndex = Some(0)
@@ -245,7 +245,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     }
 
     private def checkImageFileValueChange(received: ChangeFileValueResponseV1, request: ChangeFileValueRequestV1): Unit = {
-        assert(received.locations.size == 2, "Expected two file values to have been changed (thumb and full quality)")
+        assert(received.locations.size == 1, "Expected one file value to have been changed")
 
         received.locations.foreach {
             location: LocationV1 => assert(location.origname == request.file.originalFilename, "wrong original file name")
@@ -766,7 +766,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                         startPosition = 31,
                         endPosition = 39,
                         attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                        uuid = UUID.randomUUID().toString,
+                        uuid = UUID.randomUUID(),
                         originalXMLID = None,
                         startIndex = 0
                     )
@@ -844,7 +844,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                             startPosition = 39,
                             endPosition = 47,
                             attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                            uuid = UUID.randomUUID().toString,
+                            uuid = UUID.randomUUID(),
                             originalXMLID = None,
                             startIndex = 0
                         ),
@@ -854,7 +854,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                             startPosition = 0,
                             endPosition = 4,
                             attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                            uuid = UUID.randomUUID().toString,
+                            uuid = UUID.randomUUID(),
                             originalXMLID = None,
                             startIndex = 0
                         )
@@ -929,7 +929,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                         startPosition = 30,
                         endPosition = 38,
                         attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                        uuid = UUID.randomUUID().toString,
+                        uuid = UUID.randomUUID(),
                         originalXMLID = None,
                         startIndex = 0
                     )
@@ -1129,7 +1129,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                         startPosition = 45,
                         endPosition = 53,
                         attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
-                        uuid = UUID.randomUUID().toString,
+                        uuid = UUID.randomUUID(),
                         originalXMLID = None,
                         startIndex = 0
                     )
@@ -1460,7 +1460,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(true)
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
                     rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
-                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.ValueHasComment && row.rowMap("objObj") == comment) should ===(true)
+                    rows.exists(row => row.rowMap("objPred") == OntologyConstants.KnoraBase.DeleteComment && row.rowMap("objObj") == comment) should ===(true)
             }
 
             // Check that the link source's last modification date got updated.
@@ -1934,7 +1934,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                         endPosition = 39,
                         startIndex = 0,
                         attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = nonexistentIri)),
-                        uuid = UUID.randomUUID().toString,
+                        uuid = UUID.randomUUID(),
                         originalXMLID = None
                     )
                 ),

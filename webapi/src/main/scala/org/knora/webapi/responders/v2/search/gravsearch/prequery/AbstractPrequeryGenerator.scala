@@ -75,7 +75,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     val groupConcatVariableSuffix = "__Concat"
 
     // A set of types that can be treated as dates by the knora-api:toSimpleDate function.
-    val dateTypes: Set[IRI] = Set(OntologyConstants.KnoraApiV2WithValueObjects.DateValue, OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag)
+    private val dateTypes: Set[IRI] = Set(OntologyConstants.KnoraApiV2WithValueObjects.DateValue, OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag)
 
     /**
       * A container for a generated variable representing a value literal.
@@ -373,7 +373,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                         // it is not a sort criterion
                         None
                     }
-                    
+
                     Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted) ++ orderByStatement
                 } else {
                     // The variable doesn't refer to a value object. Just convert the statement pattern to the internal schema.
@@ -384,7 +384,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             }
         } else {
             // The subject isn't a resource, so it must be a value object or standoff node. Is the query in the complex schema?
-            if (querySchema == ApiV2WithValueObjects) {
+            if (querySchema == ApiV2Complex) {
                 // Yes. If the subject is a standoff tag and the object is a resource, that's an error, because the client
                 // has to use the knora-api:standoffLink function instead.
                 if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri) && objectIsResource) {
@@ -669,7 +669,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         val dateValStartStatementOption: Option[StatementPattern] = if (!dateValVarExists) {
             Some(StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar))
         } else {
-           None
+            None
         }
 
         // connects the value object with the periods end variable
@@ -903,7 +903,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       */
     private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspectionResult: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
-        if (querySchema == ApiV2WithValueObjects) {
+        if (querySchema == ApiV2Complex) {
             throw GravsearchException(s"The lang function is not allowed in a Gravsearch query that uses the API v2 complex schema")
         }
 
@@ -968,7 +968,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspectionResult: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
         // If the query uses the API v2 complex schema, leave the function call as it is.
-        if (querySchema == ApiV2WithValueObjects) {
+        if (querySchema == ApiV2Complex) {
             TransformedFilterPattern(Some(regexFunctionCall))
         } else {
             // If the query uses only the simple schema, transform the function call.
@@ -1029,7 +1029,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     private def handleMatchFunctionInSimpleSchema(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
         val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
-        if (querySchema == ApiV2WithValueObjects) {
+        if (querySchema == ApiV2Complex) {
             throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2WithValueObjects.MatchFunction.toSmartIri.toSparql} instead")
         }
 

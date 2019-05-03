@@ -24,13 +24,14 @@
 @prefix foaf:<http://xmlns.com/foaf/0.1/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 @base <http://www.knora.org/ontology/knora-base> .
 
 <http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology ;
 
     rdfs:label "The Knora base ontology"@en ;
 
-    :attachedToProject :SystemProject .
+    :attachedToProject knora-admin:SystemProject .
 
 
 
@@ -131,6 +132,33 @@
 
     rdfs:comment "Indicates whether a resource class can be instantiated via the Knora API."@en .
 
+
+
+###  http://www.knora.org/ontology/knora-base#attachedToProject
+
+:attachedToProject rdf:type owl:ObjectProperty ;
+
+                   rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                   rdfs:label "attached to project"@en ;
+
+                   rdfs:comment "Connects something to a project"@en ;
+
+                   :objectClassConstraint knora-admin:knoraProject .
+
+
+
+###  http://www.knora.org/ontology/knora-base#attachedToUser
+
+:attachedToUser rdf:type owl:ObjectProperty ;
+
+                rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                rdfs:label "attached to user"@en ;
+
+                rdfs:comment "Connects something to a user"@en ;
+
+                :objectClassConstraint knora-admin:User .
 
 
 ###  http://www.knora.org/ontology/knora-base#hasColor
@@ -962,6 +990,7 @@
 
                :objectDatatypeConstraint xsd:boolean .
 
+
 ### http://www.knora.org/ontology/knora-base#mappingHasDefaultXSLTransformation
 
 :mappingHasDefaultXSLTransformation rdf:type owl:ObjectProperty ;
@@ -976,23 +1005,25 @@
 
                :objectClassConstraint :XSLTransformation .
 
+
+###  http://www.knora.org/ontology/knora-base#deletedBy
+
+:deletedBy rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+           rdfs:comment "Indicates who deleted a resource or value"@en ;
+
+           # No :subjectClassConstraint, because this can be used with :Resource or :Value.
+
+           :objectClassConstraint knora-admin:User .
+           
+           
 #################################################################
 #
 #    Datatype properties
 #
 #################################################################
-
-
-###  http://www.knora.org/ontology/knora-base#address
-
-:address rdf:type owl:DatatypeProperty ;
-
-         rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
-
-         :objectDatatypeConstraint xsd:string ;
-
-         rdfs:comment "Address of a person or an institution"@en .
-
 
 
 ###  http://www.knora.org/ontology/knora-base#creationDate
@@ -1020,7 +1051,6 @@
             # No :subjectClassConstraint, because this can be used with :Resource or :Value.
 
             :objectDatatypeConstraint xsd:dateTime .
-
 
 
 ###  http://www.knora.org/ontology/knora-base#dimX
@@ -1154,18 +1184,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#isPreview
-
-:isPreview rdf:type owl:DatatypeProperty ;
-
-           rdfs:subPropertyOf :valueHas ;
-
-           :subjectClassConstraint :FileValue ;
-
-           :objectDatatypeConstraint xsd:boolean .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#isRootNode
 
 :isRootNode rdf:type owl:DatatypeProperty ;
@@ -1246,18 +1264,6 @@
                   :subjectClassConstraint :FileValue ;
 
                   :objectDatatypeConstraint xsd:string .
-
-
-
-###  http://www.knora.org/ontology/knora-base#qualityLevel
-
-:qualityLevel rdf:type owl:DatatypeProperty ;
-
-              rdfs:subPropertyOf :valueHas ;
-
-              :subjectClassConstraint :FileValue ;
-
-              :objectDatatypeConstraint xsd:integer .
 
 
 
@@ -1609,7 +1615,7 @@
                      rdfs:subClassOf :Representation  ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasAudioFileValue ;
-                                  owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                  owl:cardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
 
                      rdfs:label "Repräsentation (Audio)"@de ,
@@ -1658,7 +1664,7 @@
                    rdfs:subClassOf :Representation  ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasDDDFileValue ;
-                                  owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                  owl:cardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
 
                    rdfs:label "Repräsentation (3D)"@de ,
@@ -1726,7 +1732,7 @@
                         rdfs:subClassOf :Representation ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasDocumentFileValue ;
-                                  owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                  owl:cardinality "1"^^xsd:nonNegativeInteger
                                 ] .
 
 
@@ -1775,10 +1781,6 @@
 :FileValue rdf:type owl:Class ;
 
            rdfs:subClassOf :Value ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :isPreview ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :originalMimeType ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
@@ -2058,10 +2060,6 @@
                                         owl:cardinality "1"^^xsd:nonNegativeInteger
                                       ] ,
                                       [ rdf:type owl:Restriction ;
-                                        owl:onProperty :qualityLevel ;
-                                        owl:cardinality "1"^^xsd:nonNegativeInteger
-                                      ] ,
-                                      [ rdf:type owl:Restriction ;
                                         owl:onProperty :duration ;
                                         owl:cardinality "1"^^xsd:nonNegativeInteger
                                       ] ;
@@ -2077,7 +2075,7 @@
                            rdfs:subClassOf :Representation  ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasMovingImageFileValue ;
-                                  owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                  owl:cardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
 
                            rdfs:label "Repräsentation (Video)"@de ,
@@ -2135,7 +2133,7 @@
                 rdfs:subClassOf :Resource ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasFileValue ;
-                                  owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                  owl:cardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
 
                 rdfs:label "Repräsentation"@de ,
@@ -2143,7 +2141,7 @@
                            "Répresentation"@fr ,
                            "Rappresentazione"@it ;
 
-                rdfs:comment "A resource that can store one or more files"@en .
+                rdfs:comment "A resource that can store a file"@en .
 
 
 
@@ -2189,6 +2187,10 @@
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :deleteDate ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :deletedBy ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
@@ -2389,10 +2391,6 @@
                                        owl:cardinality "1"^^xsd:nonNegativeInteger
                                      ] ,
                                      [ rdf:type owl:Restriction ;
-                                       owl:onProperty :qualityLevel ;
-                                       owl:cardinality "1"^^xsd:nonNegativeInteger
-                                     ] ,
-                                     [ rdf:type owl:Restriction ;
                                        owl:onProperty :dimX ;
                                        owl:cardinality "1"^^xsd:nonNegativeInteger
                                      ] ;
@@ -2408,7 +2406,7 @@
                           rdfs:subClassOf :Representation ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :hasStillImageFileValue ;
-                                  owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                  owl:cardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
 
                           rdfs:label "Repräsentation (Bild)"@de ,
@@ -2416,7 +2414,7 @@
                                      "Répresentation (Image)"@fr ,
                                      "Rappresentazione (Imagine)"@it ;
 
-                          rdfs:comment "A resource that can contain two-dimensional still image files"@en .
+                          rdfs:comment "A resource that can contain a two-dimensional still image file"@en .
 
 
 
@@ -2437,7 +2435,7 @@
                     rdfs:subClassOf :Representation ,
                                     [ rdf:type owl:Restriction ;
                                       owl:onProperty :hasTextFileValue ;
-                                      owl:minCardinality "1"^^xsd:nonNegativeInteger
+                                      owl:cardinality "1"^^xsd:nonNegativeInteger
                                     ] ;
 
                     rdfs:label "Repräsentation (Text)"@de ,
@@ -2445,7 +2443,7 @@
                                                "Répresentation (Texte)"@fr ,
                                                "Rappresentazione (testo)"@it ;
 
-                    rdfs:comment "A resource containing text files"@en .
+                    rdfs:comment "A resource containing a text file"@en .
 
 
 ### http://www.knora.org/ontology/knora-base#ForbiddenResource
@@ -2640,6 +2638,10 @@
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :deleteDate ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :deletedBy ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;

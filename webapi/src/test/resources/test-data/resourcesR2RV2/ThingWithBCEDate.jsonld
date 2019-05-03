@@ -16,8 +16,13 @@
     "knora-api:dateValueHasStartEra" : "BCE",
     "knora-api:dateValueHasStartMonth" : 3,
     "knora-api:dateValueHasStartYear" : 44,
-    "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
-    "knora-api:valueAsString" : "JULIAN:0044-03-15 BCE"
+    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+    "knora-api:userHasPermission" : "V",
+    "knora-api:valueAsString" : "JULIAN:0044-03-15 BCE",
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2018-01-31T15:05:10Z"
+    }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
@@ -33,7 +38,12 @@
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2018-01-31T15:05:10Z"
   },
-  "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember",
+  "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+  "knora-api:userHasPermission" : "V",
+  "knora-api:versionArkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_dateb.20180131T150510Z"
+  },
   "rdfs:label" : "A thing that has a BCE date value",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

@@ -23,7 +23,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.{ActorRef}
+import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.apache.commons.lang3.builder.HashCodeBuilder
@@ -203,7 +203,7 @@ object OntologyUpdateHelper {
         val classIri = classInfoContent.classIri
 
         if (!(classIri.isKnoraApiV2EntityIri &&
-            classIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            classIri.getOntologySchema.contains(ApiV2Complex) &&
             classIri.getOntologyFromEntity == externalOntologyIri)) {
             throw BadRequestException(s"Invalid class IRI: $classIri")
         }
@@ -220,7 +220,7 @@ object OntologyUpdateHelper {
 
         classInfoContent.predicates.keySet.foreach {
             predIri =>
-                if (predIri.isKnoraIri && !predIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                if (predIri.isKnoraIri && !predIri.getOntologySchema.contains(ApiV2Complex)) {
                     throw BadRequestException(s"Invalid predicate for request: $predIri")
                 }
         }
@@ -263,7 +263,7 @@ object OntologyUpdateHelper {
         val propertyIri = propertyInfoContent.propertyIri
 
         if (!(propertyIri.isKnoraApiV2EntityIri &&
-            propertyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+            propertyIri.getOntologySchema.contains(ApiV2Complex) &&
             propertyIri.getOntologyFromEntity == externalOntologyIri)) {
             throw BadRequestException(s"Invalid property IRI: $propertyIri")
         }
@@ -280,7 +280,7 @@ object OntologyUpdateHelper {
 
         propertyInfoContent.predicates.keySet.foreach {
             predIri =>
-                if (predIri.isKnoraIri && !predIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                if (predIri.isKnoraIri && !predIri.getOntologySchema.contains(ApiV2Complex)) {
                     throw BadRequestException(s"Invalid predicate for request: $predIri")
                 }
         }
@@ -393,14 +393,14 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
             subjectTypePred =>
                 val subjectType = subjectTypePred.requireIriObject(throw BadRequestException(s"Missing or invalid object for predicate knora-api:subjectType"))
 
-                if (!(subjectType.isKnoraApiV2EntityIri && subjectType.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                if (!(subjectType.isKnoraApiV2EntityIri && subjectType.getOntologySchema.contains(ApiV2Complex))) {
                     throw BadRequestException(s"Invalid knora-api:subjectType: $subjectType")
                 }
         }
 
         val objectType = propertyInfoContent.requireIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw BadRequestException(s"Missing knora-api:objectType"))
 
-        if (!(objectType.isKnoraApiV2EntityIri && objectType.getOntologySchema.contains(ApiV2WithValueObjects))) {
+        if (!(objectType.isKnoraApiV2EntityIri && objectType.getOntologySchema.contains(ApiV2Complex))) {
             throw BadRequestException(s"Invalid knora-api:objectType: $objectType")
         }
 
@@ -1062,8 +1062,8 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
       * @return the converted [[ReadOntologyV2]].
       */
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyV2 = {
-        // Get rules for transforming knora-base entities to knora-api entities in the target schema.
-        val transformationRules = KnoraBaseTransformationRules.getTransformationRules(targetSchema)
+        // Get rules for transforming internal entities to external entities in the target schema.
+        val transformationRules = OntologyTransformationRules.getTransformationRules(ontologyMetadata.ontologyIri, targetSchema)
 
         // If we're converting to the API v2 simple schema, filter out link value properties.
         val propertiesConsideringLinkValueProps = targetSchema match {
@@ -1075,16 +1075,16 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
             case _ => properties
         }
 
-        // If we're converting knora-base to knora-api, filter classes and properties that don't exist in the target
-        // schema.
+        // If we're converting from the external schema to an internal one, filter classes and properties that don't
+        // exist in the target schema.
 
         val (classesFilteredForTargetSchema, propsFilteredForTargetSchema) = if (ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraBase.KnoraBaseOntologyIri) {
             val filteredClasses = classes.filterNot {
-                case (classIri, classDef) => transformationRules.knoraBaseClassesToRemove.contains(classIri) || (targetSchema == ApiV2Simple && classDef.isStandoffClass)
+                case (classIri, classDef) => transformationRules.internalClassesToRemove.contains(classIri) || (targetSchema == ApiV2Simple && classDef.isStandoffClass)
             }
 
             val filteredProps = propertiesConsideringLinkValueProps.filterNot {
-                case (propertyIri, _) => transformationRules.knoraBasePropertiesToRemove.contains(propertyIri)
+                case (propertyIri, _) => transformationRules.internalPropertiesToRemove.contains(propertyIri)
             }
 
             (filteredClasses, filteredProps)
@@ -1112,11 +1112,11 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
             case (individualIri, readIndividualInfo) => individualIri.toOntologySchema(targetSchema) -> readIndividualInfo.toOntologySchema(targetSchema)
         }
 
-        // If we're converting knora-base to knora-api, and this is the whole ontology, add classes and properties that exist in the target schema but
-        // not in the source schema.
+        // If we're converting from the internal schema to an external one, and this is the whole ontology,
+        // add classes and properties that exist in the target schema but not in the source schema.
 
         val (classesWithExtraOnesForSchema, propertiesWithExtraOnesForSchema) = if (isWholeOntology && ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraBase.KnoraBaseOntologyIri) {
-            (classesInTargetSchema ++ transformationRules.knoraApiClassesToAdd, propertiesInTargetSchema ++ transformationRules.knoraApiPropertiesToAdd)
+            (classesInTargetSchema ++ transformationRules.externalClassesToAdd, propertiesInTargetSchema ++ transformationRules.externalPropertiesToAdd)
         } else {
             (classesInTargetSchema, propertiesInTargetSchema)
         }
@@ -1174,12 +1174,12 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         // Determine which ontology to use as the knora-api prefix expansion.
         val knoraApiPrefixExpansion = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
+            case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
         }
 
         // Add a salsah-gui prefix only if we're using the complex schema.
         val salsahGuiPrefix: Option[(String, String)] = targetSchema match {
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 Some(OntologyConstants.SalsahGui.SalsahGuiOntologyLabel -> OntologyConstants.SalsahGuiApiV2WithValueObjects.SalsahGuiPrefixExpansion)
 
             case _ => None
@@ -1300,6 +1300,27 @@ case class InputOntologyV2(ontologyMetadata: OntologyMetadataV2,
     }
 }
 
+/**
+  * Represents a parsing mode used by [[InputOntologyV2]].
+  */
+sealed trait InputOntologyParsingModeV2
+
+/**
+  * A parsing mode that ignores predicates that are present in Knora responses and absent in client input.
+  * In tests, this allows a Knora response containing an entity to be parsed and compared with the client input
+  * that was used to create the entity.
+  */
+case object TestResponseParsingModeV2 extends InputOntologyParsingModeV2
+
+/**
+  * A parsing mode that rejects data not allowed in client input.
+  */
+case object ClientInputParsingModeV2 extends InputOntologyParsingModeV2
+
+/**
+  * A parsing mode for parsing everything returned in a Knora ontology response.
+  */
+case object KnoraOutputParsingModeV2 extends InputOntologyParsingModeV2
 
 /**
   * Processes JSON-LD received either from the client or from the API server. This is intended to support
@@ -1312,12 +1333,11 @@ object InputOntologyV2 {
     /**
       * Constructs an [[InputOntologyV2]] based on a JSON-LD document.
       *
-      * @param jsonLDDocument  a JSON-LD document representing information about the ontology.
-      * @param ignoreExtraData if `true`, extra data in the JSON-LD will be ignored. This is used only in testing.
-      *                        Otherwise, extra data will cause an exception to be thrown.
+      * @param jsonLDDocument a JSON-LD document representing information about the ontology.
+      * @param parsingMode    the parsing mode to be used.
       * @return an [[InputOntologyV2]] representing the same information.
       */
-    def fromJsonLD(jsonLDDocument: JsonLDDocument, ignoreExtraData: Boolean = false): InputOntologyV2 = {
+    def fromJsonLD(jsonLDDocument: JsonLDDocument, parsingMode: InputOntologyParsingModeV2 = ClientInputParsingModeV2): InputOntologyV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val ontologyObj = jsonLDDocument.body
@@ -1331,9 +1351,10 @@ object InputOntologyV2 {
 
         val ontologyLabel: Option[String] = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
-        val lastModificationDate: Option[Instant] =
-            ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2Simple.LastModificationDate, stringFormatter.toInstant).
-                orElse(ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant))
+        val lastModificationDate: Option[Instant] = ontologyObj.maybeStringWithValidation(
+            OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
+            stringFormatter.xsdDateTimeStampToInstant
+        )
 
         val ontologyMetadata = OntologyMetadataV2(
             ontologyIri = externalOntologyIri,
@@ -1357,13 +1378,13 @@ object InputOntologyV2 {
 
                 val classes: Map[SmartIri, ClassInfoContentV2] = entitiesWithTypes.collect {
                     case (jsonLDObj, entityType) if OntologyConstants.ClassTypes.contains(entityType.toString) =>
-                        val classInfoContent = ClassInfoContentV2.fromJsonLDObject(jsonLDObj, ignoreExtraData)
+                        val classInfoContent = ClassInfoContentV2.fromJsonLDObject(jsonLDObj, parsingMode)
                         classInfoContent.classIri -> classInfoContent
                 }.toMap
 
                 val properties: Map[SmartIri, PropertyInfoContentV2] = entitiesWithTypes.collect {
                     case (jsonLDObj, entityType) if OntologyConstants.PropertyTypes.contains(entityType.toString) =>
-                        val propertyInfoContent = PropertyInfoContentV2.fromJsonLDObject(jsonLDObj, ignoreExtraData)
+                        val propertyInfoContent = PropertyInfoContentV2.fromJsonLDObject(jsonLDObj, parsingMode)
                         propertyInfoContent.propertyIri -> propertyInfoContent
                 }.toMap
 
@@ -1422,7 +1443,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends K
     private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         val knoraApiOntologyPrefixExpansion = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
+            case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
         }
 
         val context = JsonLDObject(Map(
@@ -1812,7 +1833,30 @@ sealed trait EntityInfoContentV2 {
     }
 
     /**
-      * Returns the first object specified as a string without a language tag for the given predicate.
+      * Returns the first object specified as a boolean value for the given predicate, or `false` if the
+      * entity doesn't have that predicate.
+      *
+      * @param predicateIri the IRI of the predicate.
+      * @return the predicate's object, if given, otherwise `false`.
+      */
+    def getPredicateBooleanObject(predicateIri: SmartIri): Boolean = {
+        val values: Seq[Boolean] = predicates.get(predicateIri) match {
+            case Some(predicateInfo) => predicateInfo.objects.collect {
+                case BooleanLiteralV2(value) => value
+            }
+
+            case None => Seq.empty[Boolean]
+        }
+
+        if (values.nonEmpty) {
+            values.head
+        } else {
+            false
+        }
+    }
+
+    /**
+      * Returns the first object specified as an IRI for the given predicate.
       *
       * @param predicateIri the IRI of the predicate.
       * @return the predicate's object, if given.
@@ -1874,6 +1918,12 @@ object EntityInfoContentV2 {
                         PredicateInfoV2(
                             predicateIri = predicateIri,
                             objects = Seq(stringToLiteral(objStr))
+                        )
+
+                    case JsonLDBoolean(objBoolean) =>
+                        PredicateInfoV2(
+                            predicateIri = predicateIri,
+                            objects = Seq(BooleanLiteralV2(objBoolean))
                         )
 
                     case objObj: JsonLDObject =>
@@ -2027,7 +2077,7 @@ sealed trait ReadEntityInfoV2 {
   * @param fileValueProperties     a [[Set]] of IRIs of properties in `allCardinalities` that point to `FileValue` objects.
   */
 case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
-                           allBaseClasses: Set[SmartIri] = Set.empty[SmartIri],
+                           allBaseClasses: Set[SmartIri],
                            isResourceClass: Boolean = false,
                            isStandoffClass: Boolean = false,
                            isValueClass: Boolean = false,
@@ -2051,8 +2101,8 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
     }
 
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadClassInfoV2 = {
-        // Get rules for transforming knora-base entities to knora-api entities in the target schema.
-        val transformationRules = KnoraBaseTransformationRules.getTransformationRules(targetSchema)
+        // Get rules for transforming internal entities to external entities in the target schema.
+        val transformationRules = OntologyTransformationRules.getTransformationRules(entityInfoContent.classIri.getOntologyFromEntity, targetSchema)
 
         // If we're converting to the simplified API v2 schema, remove references to link value properties.
 
@@ -2084,15 +2134,15 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             knoraResourceProperties
         }
 
-        // Remove inherited cardinalities for knora-base properties that don't exist in the target schema.
+        // Remove inherited cardinalities for internal properties that don't exist in the target schema.
 
         val inheritedCardinalitiesFilteredForTargetSchema: Map[SmartIri, KnoraCardinalityInfo] = inheritedCardinalitiesConsideringLinkValueProps.filterNot {
-            case (propertyIri, _) => transformationRules.knoraBasePropertiesToRemove.contains(propertyIri)
+            case (propertyIri, _) => transformationRules.internalPropertiesToRemove.contains(propertyIri)
         }
 
         // Remove base classes that don't exist in the target schema.
 
-        val allBaseClassesFilteredForTargetSchema = allBaseClasses.diff(transformationRules.knoraBaseClassesToRemove)
+        val allBaseClassesFilteredForTargetSchema = allBaseClasses.diff(transformationRules.internalClassesToRemove)
 
         // Convert all IRIs to the target schema.
 
@@ -2116,7 +2166,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         val baseClassesInTargetSchema = allBaseClasses.map(_.toOntologySchema(targetSchema))
 
         val inheritedCardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = baseClassesInTargetSchema.flatMap {
-            baseClassIri => transformationRules.knoraApiCardinalitiesToAdd.getOrElse(baseClassIri, Map.empty[SmartIri, KnoraCardinalityInfo])
+            baseClassIri => transformationRules.externalCardinalitiesToAdd.getOrElse(baseClassIri, Map.empty[SmartIri, KnoraCardinalityInfo])
         }.toMap
 
         val inheritedCardinalitiesWithExtraOnesForSchema: Map[SmartIri, KnoraCardinalityInfo] = inheritedCardinalitiesInTargetSchema ++ inheritedCardinalitiesToAdd
@@ -2153,14 +2203,14 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                 }
 
                 // If we're using the complex schema and the cardinality is inherited, add an annotation to say so.
-                val isInheritedStatement = if (targetSchema == ApiV2WithValueObjects && !entityInfoContent.directCardinalities.contains(propertyIri)) {
+                val isInheritedStatement = if (targetSchema == ApiV2Complex && !entityInfoContent.directCardinalities.contains(propertyIri)) {
                     Some(OntologyConstants.KnoraApiV2WithValueObjects.IsInherited -> JsonLDBoolean(true))
                 } else {
                     None
                 }
 
                 val guiOrderStatement = targetSchema match {
-                    case ApiV2WithValueObjects =>
+                    case ApiV2Complex =>
                         cardinalityInfo.guiOrder.map {
                             guiOrder => OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiOrder -> JsonLDInt(guiOrder)
                         }
@@ -2177,7 +2227,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
 
         val resourceIconPred = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.ResourceIcon
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.ResourceIcon
+            case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.ResourceIcon
         }
 
         val resourceIconStatement: Option[(IRI, JsonLDString)] = entityInfoContent.getPredicateStringLiteralObjectsWithoutLang(resourceIconPred.toSmartIri).headOption.map {
@@ -2205,25 +2255,25 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             None
         }
 
-        val isKnoraResourceClassStatement: Option[(IRI, JsonLDBoolean)] = if (isResourceClass && targetSchema == ApiV2WithValueObjects) {
+        val isKnoraResourceClassStatement: Option[(IRI, JsonLDBoolean)] = if (isResourceClass && targetSchema == ApiV2Complex) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceClass -> JsonLDBoolean(true))
         } else {
             None
         }
 
-        val isStandoffClassStatement: Option[(IRI, JsonLDBoolean)] = if (isStandoffClass && targetSchema == ApiV2WithValueObjects) {
+        val isStandoffClassStatement: Option[(IRI, JsonLDBoolean)] = if (isStandoffClass && targetSchema == ApiV2Complex) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.IsStandoffClass -> JsonLDBoolean(true))
         } else {
             None
         }
 
-        val canBeInstantiatedStatement: Option[(IRI, JsonLDBoolean)] = if (canBeInstantiated && targetSchema == ApiV2WithValueObjects) {
+        val canBeInstantiatedStatement: Option[(IRI, JsonLDBoolean)] = if (canBeInstantiated && targetSchema == ApiV2Complex) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.CanBeInstantiated -> JsonLDBoolean(true))
         } else {
             None
         }
 
-        val isValueClassStatement: Option[(IRI, JsonLDBoolean)] = if (isValueClass && targetSchema == ApiV2WithValueObjects) {
+        val isValueClassStatement: Option[(IRI, JsonLDBoolean)] = if (isValueClass && targetSchema == ApiV2Complex) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.IsValueClass -> JsonLDBoolean(true))
         } else {
             None
@@ -2268,7 +2318,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         // Get the correct knora-api:subjectType and knora-api:objectType predicates for the target API schema.
         val (subjectTypePred: IRI, objectTypePred: IRI) = targetSchema match {
             case ApiV2Simple => (OntologyConstants.KnoraApiV2Simple.SubjectType, OntologyConstants.KnoraApiV2Simple.ObjectType)
-            case ApiV2WithValueObjects => (OntologyConstants.KnoraApiV2WithValueObjects.SubjectType, OntologyConstants.KnoraApiV2WithValueObjects.ObjectType)
+            case ApiV2Complex => (OntologyConstants.KnoraApiV2WithValueObjects.SubjectType, OntologyConstants.KnoraApiV2WithValueObjects.ObjectType)
         }
 
         // Get the property's knora-api:subjectType and knora-api:objectType, if provided.
@@ -2279,7 +2329,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
                 (entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri),
                     entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri))
 
-            case ApiV2WithValueObjects =>
+            case ApiV2Complex =>
                 (entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri),
                     entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri))
         }
@@ -2298,31 +2348,31 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
             None
         }
 
-        val isResourcePropStatement: Option[(IRI, JsonLDBoolean)] = if (isResourceProp && targetSchema == ApiV2WithValueObjects) {
+        val isResourcePropStatement: Option[(IRI, JsonLDBoolean)] = if (isResourceProp && targetSchema == ApiV2Complex) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceProperty -> JsonLDBoolean(true))
         } else {
             None
         }
 
-        val isEditableStatement: Option[(IRI, JsonLDBoolean)] = if (isEditable && targetSchema == ApiV2WithValueObjects) {
+        val isEditableStatement: Option[(IRI, JsonLDBoolean)] = if (isEditable && targetSchema == ApiV2Complex) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.IsEditable -> JsonLDBoolean(true))
         } else {
             None
         }
 
-        val isLinkValuePropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkValueProp && targetSchema == ApiV2WithValueObjects) {
+        val isLinkValuePropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkValueProp && targetSchema == ApiV2Complex) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty -> JsonLDBoolean(true))
         } else {
             None
         }
 
-        val isLinkPropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkProp && targetSchema == ApiV2WithValueObjects) {
+        val isLinkPropertyStatement: Option[(IRI, JsonLDBoolean)] = if (isLinkProp && targetSchema == ApiV2Complex) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty -> JsonLDBoolean(true))
         } else {
             None
         }
 
-        val guiElementStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2WithValueObjects) {
+        val guiElementStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {
             entityInfoContent.getPredicateIriObject(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri).map {
                 obj => OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp -> JsonLDUtil.iriToJsonLDObject(obj.toString)
             }
@@ -2330,7 +2380,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
             None
         }
 
-        val guiAttributeStatement = if (targetSchema == ApiV2WithValueObjects) {
+        val guiAttributeStatement = if (targetSchema == ApiV2Complex) {
             entityInfoContent.getPredicateStringLiteralObjectsWithoutLang(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri) match {
                 case objs if objs.nonEmpty =>
                     Some(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute -> JsonLDArray(objs.toArray.sorted.map(JsonLDString)))
@@ -2406,16 +2456,16 @@ case class ClassInfoContentV2(classIri: SmartIri,
     override def toOntologySchema(targetSchema: OntologySchema): ClassInfoContentV2 = {
         val classIriInTargetSchema = classIri.toOntologySchema(targetSchema)
 
-        // Get rules for transforming knora-base entities to knora-api entities in the target schema, if relevant.
-        val maybeTransformationRules: Option[KnoraBaseTransformationRules] = targetSchema match {
-            case apiV2Schema: ApiV2Schema => Some(KnoraBaseTransformationRules.getTransformationRules(apiV2Schema))
+        // Get rules for transforming internal entities to external entities in the target schema, if relevant.
+        val maybeTransformationRules: Option[OntologyTransformationRules] = targetSchema match {
+            case apiV2Schema: ApiV2Schema => Some(OntologyTransformationRules.getTransformationRules(classIri.getOntologyFromEntity, apiV2Schema))
             case InternalSchema => None
         }
 
-        // Remove cardinalities for knora-base properties that don't exist in the target schema.
+        // Remove cardinalities for internal properties that don't exist in the target schema.
 
         val knoraBasePropertiesToRemove: Set[SmartIri] = maybeTransformationRules match {
-            case Some(transformationRules) => transformationRules.knoraBasePropertiesToRemove
+            case Some(transformationRules) => transformationRules.internalPropertiesToRemove
             case _ => Set.empty[SmartIri]
         }
 
@@ -2426,7 +2476,7 @@ case class ClassInfoContentV2(classIri: SmartIri,
         val subClassOfFilteredForTargetSchema = subClassOf.filterNot {
             baseClass =>
                 maybeTransformationRules match {
-                    case Some(transformationRules) => transformationRules.knoraBaseClassesToRemove.contains(baseClass)
+                    case Some(transformationRules) => transformationRules.internalClassesToRemove.contains(baseClass)
                     case None => false
                 }
         }
@@ -2437,11 +2487,11 @@ case class ClassInfoContentV2(classIri: SmartIri,
             case (propertyIri, cardinality) => propertyIri.toOntologySchema(targetSchema) -> cardinality
         }
 
-        // Add any cardinalities that this class has in knora-api but not in knora-base.
+        // Add any cardinalities that this class has in the external schema but not in the internal schema.
 
         val cardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = maybeTransformationRules match {
             case Some(transformationRules) =>
-                transformationRules.knoraApiCardinalitiesToAdd.getOrElse(
+                transformationRules.externalCardinalitiesToAdd.getOrElse(
                     classIriInTargetSchema,
                     Map.empty[SmartIri, KnoraCardinalityInfo]
                 )
@@ -2497,8 +2547,8 @@ case class ClassInfoContentV2(classIri: SmartIri,
   */
 object ClassInfoContentV2 {
 
-    // The predicates that are allowed in a class definition that is read from JSON-LD.
-    private val AllowedJsonLDClassPredicates = Set(
+    // The predicates that are allowed in a class definition that is read from JSON-LD representing client input.
+    private val AllowedJsonLDClassPredicatesInClientInput = Set(
         JsonLDConstants.ID,
         JsonLDConstants.TYPE,
         OntologyConstants.Rdfs.SubClassOf,
@@ -2506,8 +2556,8 @@ object ClassInfoContentV2 {
         OntologyConstants.Rdfs.Comment
     )
 
-    // The predicates that are allowed in an owl:Restriction that is read from JSON-LD.
-    private val AllowedJsonLDRestrictionPredicates = Set(
+    // The predicates that are allowed in an owl:Restriction that is read from JSON-LD representing client input.
+    private val AllowedJsonLDRestrictionPredicatesInClientInput = Set(
         JsonLDConstants.TYPE,
         OntologyConstants.Owl.Cardinality,
         OntologyConstants.Owl.MinCardinality,
@@ -2519,28 +2569,36 @@ object ClassInfoContentV2 {
     /**
       * Converts a JSON-LD class definition into a [[ClassInfoContentV2]].
       *
-      * @param jsonLDClassDef  a JSON-LD object representing a class definition.
-      * @param ignoreExtraData if `true`, extra data in the class definition will be ignored. This is used only in testing.
-      *                        Otherwise, extra data will cause an exception to be thrown.
+      * @param jsonLDClassDef a JSON-LD object representing a class definition.
+      * @param parsingMode    the parsing mode to be used.
       * @return a [[ClassInfoContentV2]] representing the class definition.
       */
-    def fromJsonLDObject(jsonLDClassDef: JsonLDObject, ignoreExtraData: Boolean): ClassInfoContentV2 = {
+    def fromJsonLDObject(jsonLDClassDef: JsonLDObject, parsingMode: InputOntologyParsingModeV2): ClassInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val classIri: SmartIri = jsonLDClassDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = classIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid class IRI: $classIri"))
 
-        // TODO: handle custom datatypes.
+        // Parse differently depending on parsing mode.
+        val filteredClassDef: JsonLDObject = parsingMode match {
+            case ClientInputParsingModeV2 =>
+                // In client input mode, only certain predicates are allowed.
+                val extraClassPredicates = jsonLDClassDef.value.keySet -- AllowedJsonLDClassPredicatesInClientInput
 
-        if (!ignoreExtraData) {
-            val extraClassPredicates = jsonLDClassDef.value.keySet -- AllowedJsonLDClassPredicates
+                if (extraClassPredicates.nonEmpty) {
+                    throw BadRequestException(s"The definition of $classIri contains one or more invalid predicates: ${extraClassPredicates.mkString(", ")}")
+                } else {
+                    jsonLDClassDef
+                }
 
-            if (extraClassPredicates.nonEmpty) {
-                throw BadRequestException(s"The definition of $classIri contains one or more invalid predicates: ${extraClassPredicates.mkString(", ")}")
-            }
+            case TestResponseParsingModeV2 =>
+                // In test response mode, we ignore predicates that wouldn't be allowed as client input.
+                JsonLDObject(jsonLDClassDef.value.filterKeys(AllowedJsonLDClassPredicatesInClientInput))
+
+            case KnoraOutputParsingModeV2 =>
+                // In Knora output parsing mode, we accept all predicates.
+                jsonLDClassDef
         }
-
-        val filteredClassDef = JsonLDObject(jsonLDClassDef.value.filterKeys(AllowedJsonLDClassPredicates))
 
         val (subClassOf: Set[SmartIri], directCardinalities: Map[SmartIri, KnoraCardinalityInfo]) = filteredClassDef.maybeArray(OntologyConstants.Rdfs.SubClassOf) match {
             case Some(valueArray: JsonLDArray) =>
@@ -2556,31 +2614,35 @@ object ClassInfoContentV2 {
                     jsonLDObj => jsonLDObj.toIri(stringFormatter.toSmartIriWithErr)
                 }.toSet
 
-                // Any object of rdfs:subClassOf that isn't a base class should be an owl:Restriction.
+                // The restrictions are the object of rdfs:subClassOf that have type owl:Restriction.
                 val restrictions: Seq[JsonLDObject] = arrayElemsAsObjs.filter {
-                    jsonLDObj => !jsonLDObj.isIri
+                    jsonLDObj =>
+                        if (jsonLDObj.isIri) {
+                            false
+                        } else {
+                            jsonLDObj.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr).toString == OntologyConstants.Owl.Restriction
+                        }
                 }
 
-                val directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = restrictions.foldLeft(Map.empty[SmartIri, KnoraCardinalityInfo]) {
+                val cardinalities: Map[SmartIri, KnoraCardinalityInfo] = restrictions.foldLeft(Map.empty[SmartIri, KnoraCardinalityInfo]) {
                     case (acc, restriction) =>
-                        if (restriction.value.get(OntologyConstants.KnoraApiV2WithValueObjects.IsInherited).contains(JsonLDBoolean(true))) {
-                            // If ignoreExtraData is true and we encounter knora-api:isInherited in a cardinality, ignore the whole cardinality.
-                            if (ignoreExtraData) {
-                                acc
-                            } else {
-                                throw BadRequestException("Inherited cardinalities are not allowed in this request")
-                            }
+                        val isInherited = restriction.value.get(OntologyConstants.KnoraApiV2WithValueObjects.IsInherited).contains(JsonLDBoolean(true))
+
+                        // If we're in client input mode and the client tries to submit an inherited cardinality, return
+                        // a helpful error message.
+                        if (isInherited && parsingMode == ClientInputParsingModeV2) {
+                            throw BadRequestException("Inherited cardinalities are not allowed in this request")
+                        } else if (isInherited && parsingMode == TestResponseParsingModeV2) {
+                            // In test response parsing mode, ignore inherited cardinalities.
+                            acc
                         } else {
-                            val extraRestrictionPredicates = restriction.value.keySet -- AllowedJsonLDRestrictionPredicates
+                            // In client input mode, only certain predicates are allowed on owl:Restriction nodes.
+                            if (parsingMode == ClientInputParsingModeV2) {
+                                val extraRestrictionPredicates = restriction.value.keySet -- AllowedJsonLDRestrictionPredicatesInClientInput
 
-                            if (!ignoreExtraData && extraRestrictionPredicates.nonEmpty) {
-                                throw BadRequestException(s"A cardinality in the definition of $classIri contains one or more invalid predicates: ${extraRestrictionPredicates.mkString(", ")}")
-                            }
-
-                            val cardinalityType = restriction.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
-
-                            if (cardinalityType != OntologyConstants.Owl.Restriction.toSmartIri) {
-                                throw BadRequestException(s"A cardinality must be expressed as an owl:Restriction, but this type was found: $cardinalityType")
+                                if (extraRestrictionPredicates.nonEmpty) {
+                                    throw BadRequestException(s"A cardinality in the definition of $classIri contains one or more invalid predicates: ${extraRestrictionPredicates.mkString(", ")}")
+                                }
                             }
 
                             val (owlCardinalityIri: IRI, owlCardinalityValue: Int) = restriction.maybeInt(OntologyConstants.Owl.Cardinality) match {
@@ -2607,14 +2669,16 @@ object ClassInfoContentV2 {
                                 guiOrder = guiOrder
                             )
 
-                            acc + (onProperty -> Cardinality.owlCardinality2KnoraCardinality(
+                            val knoraCardinalityInfo = Cardinality.owlCardinality2KnoraCardinality(
                                 propertyIri = onProperty.toString,
                                 owlCardinality = owlCardinalityInfo
-                            ))
+                            )
+
+                            acc + (onProperty -> knoraCardinalityInfo)
                         }
                 }
 
-                (baseClasses, directCardinalities)
+                (baseClasses, cardinalities)
 
             case None => (Set.empty[SmartIri], Map.empty[SmartIri, KnoraCardinalityInfo])
         }
@@ -2681,15 +2745,15 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
 
         // Remove any references to base properties that don't exist in the target schema.
 
-        val maybeTransformationRules: Option[KnoraBaseTransformationRules] = targetSchema match {
-            case apiV2Schema: ApiV2Schema => Some(KnoraBaseTransformationRules.getTransformationRules(apiV2Schema))
+        val maybeTransformationRules: Option[OntologyTransformationRules] = targetSchema match {
+            case apiV2Schema: ApiV2Schema => Some(OntologyTransformationRules.getTransformationRules(propertyIri.getOntologyFromEntity, apiV2Schema))
             case InternalSchema => None
         }
 
         val subPropertyOfFilteredForTargetSchema = subPropertyOf.filterNot {
             baseProperty =>
                 maybeTransformationRules match {
-                    case Some(transformationRules) => transformationRules.knoraBasePropertiesToRemove.contains(baseProperty)
+                    case Some(transformationRules) => transformationRules.internalPropertiesToRemove.contains(baseProperty)
                     case None => false
                 }
         }
@@ -2740,8 +2804,8 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
   * Can read a [[PropertyInfoContentV2]] from JSON-LD, and provides constants used by that class.
   */
 object PropertyInfoContentV2 {
-    // The predicates allowed in a property definition that is read from JSON-LD.
-    private val AllowedJsonLDPropertyPredicates = Set(
+    // The predicates allowed in a property definition that is read from JSON-LD representing client input.
+    private val AllowedJsonLDPropertyPredicatesInClientInput = Set(
         JsonLDConstants.ID,
         JsonLDConstants.TYPE,
         OntologyConstants.KnoraApiV2Simple.SubjectType,
@@ -2759,25 +2823,35 @@ object PropertyInfoContentV2 {
       * Reads a [[PropertyInfoContentV2]] from a JSON-LD object.
       *
       * @param jsonLDPropertyDef the JSON-LD object representing a property definition.
-      * @param ignoreExtraData   if `true`, extra data in the property definition will be ignored. This is used only in testing.
-      *                          Otherwise, extra data will cause an exception to be thrown.
+      * @param parsingMode       the parsing mode to be used.
       * @return a [[PropertyInfoContentV2]] representing the property definition.
       */
-    def fromJsonLDObject(jsonLDPropertyDef: JsonLDObject, ignoreExtraData: Boolean): PropertyInfoContentV2 = {
+    def fromJsonLDObject(jsonLDPropertyDef: JsonLDObject, parsingMode: InputOntologyParsingModeV2): PropertyInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val propertyIri: SmartIri = jsonLDPropertyDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = propertyIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid property IRI: $propertyIri"))
 
-        if (!ignoreExtraData) {
-            val extraPropertyPredicates = jsonLDPropertyDef.value.keySet -- AllowedJsonLDPropertyPredicates
+        // Parse differently depending on the parsing mode.
+        val filteredPropertyDef: JsonLDObject = parsingMode match {
+            case ClientInputParsingModeV2 =>
+                // In client input mode, only certain predicates are allowed.
+                val extraPropertyPredicates = jsonLDPropertyDef.value.keySet -- AllowedJsonLDPropertyPredicatesInClientInput
 
-            if (extraPropertyPredicates.nonEmpty) {
-                throw BadRequestException(s"The definition of $propertyIri contains one or more invalid predicates: ${extraPropertyPredicates.mkString(", ")}")
-            }
+                if (extraPropertyPredicates.nonEmpty) {
+                    throw BadRequestException(s"The definition of $propertyIri contains one or more invalid predicates: ${extraPropertyPredicates.mkString(", ")}")
+                } else {
+                    jsonLDPropertyDef
+                }
+
+            case TestResponseParsingModeV2 =>
+                // In test response mode, we ignore predicates that wouldn't be allowed as client input.
+                JsonLDObject(jsonLDPropertyDef.value.filterKeys(AllowedJsonLDPropertyPredicatesInClientInput))
+
+            case KnoraOutputParsingModeV2 =>
+                // In Knora output parsing mode, we accept all predicates.
+                jsonLDPropertyDef
         }
-
-        val filteredPropertyDef = JsonLDObject(jsonLDPropertyDef.value.filterKeys(AllowedJsonLDPropertyPredicates))
 
         val subPropertyOf: Set[SmartIri] = filteredPropertyDef.maybeArray(OntologyConstants.Rdfs.SubPropertyOf) match {
             case Some(valueArray: JsonLDArray) =>
@@ -2898,7 +2972,7 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
         if (ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
             targetSchema match {
                 case InternalSchema => this
-                case apiV2Schema: ApiV2Schema => KnoraBaseTransformationRules.getTransformationRules(apiV2Schema).ontologyMetadata
+                case apiV2Schema: ApiV2Schema => OntologyTransformationRules.getTransformationRules(ontologyIri, apiV2Schema).ontologyMetadata
             }
         } else {
             copy(
@@ -2923,7 +2997,7 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
 
     def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {
 
-        val projectIriStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2WithValueObjects) {
+        val projectIriStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {
             projectIri.map {
                 definedProjectIri => OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(definedProjectIri.toString)
             }
@@ -2931,13 +3005,13 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
             None
         }
 
-        val isSharedStatement: Option[(IRI, JsonLDBoolean)] = if (ontologyIri.isKnoraSharedDefinitionIri && targetSchema == ApiV2WithValueObjects) {
+        val isSharedStatement: Option[(IRI, JsonLDBoolean)] = if (ontologyIri.isKnoraSharedDefinitionIri && targetSchema == ApiV2Complex) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.IsShared -> JsonLDBoolean(true))
         } else {
             None
         }
 
-        val isBuiltInStatement: Option[(IRI, JsonLDBoolean)] = if (ontologyIri.isKnoraBuiltInDefinitionIri && targetSchema == ApiV2WithValueObjects) {
+        val isBuiltInStatement: Option[(IRI, JsonLDBoolean)] = if (ontologyIri.isKnoraBuiltInDefinitionIri && targetSchema == ApiV2Complex) {
             Some(OntologyConstants.KnoraApiV2WithValueObjects.IsBuiltIn -> JsonLDBoolean(true))
         } else {
             None
@@ -2947,14 +3021,12 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
             labelStr => OntologyConstants.Rdfs.Label -> JsonLDString(labelStr)
         }
 
-        val lastModDateStatement: Option[(IRI, JsonLDString)] = lastModificationDate.map {
-            lastModDate =>
-                val lastModDateProp = targetSchema match {
-                    case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.LastModificationDate
-                    case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate
-                }
-
-                lastModDateProp -> JsonLDString(lastModDate.toString)
+        val lastModDateStatement: Option[(IRI, JsonLDString)] = if (targetSchema == ApiV2Complex) {
+            lastModificationDate.map {
+                lastModDate => OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> JsonLDString(lastModDate.toString)
+            }
+        } else {
+            None
         }
 
         Map(JsonLDConstants.ID -> JsonLDString(ontologyIri.toString),
