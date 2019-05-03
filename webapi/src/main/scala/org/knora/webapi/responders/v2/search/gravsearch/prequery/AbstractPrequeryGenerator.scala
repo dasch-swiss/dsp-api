@@ -285,6 +285,38 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             }
         }
 
+        /**
+          * Transforms a statement pointing to a list node so it matches also any of its subnodes.
+          *
+          * @return transformed statements.
+          */
+        def handleListNode(): Seq[StatementPattern] = {
+
+            if (querySchema == ApiV2Simple) {
+                throw GravsearchException("the method 'handleListNode' only works for the complex schema")
+            }
+
+            // the list node to match for provided in the input query
+            val listNode: Entity = statementPattern.obj
+
+            // variable representing the list node to match for
+            val listNodeVar: QueryVariable = createUniqueVariableFromStatement(
+                baseStatement = statementPattern,
+                suffix = "listNodeVar"
+            )
+
+            // transforms the statement given in the input query so the list node and any of its subnodes are matched
+            Seq(
+                statementPatternToInternalSchema(statementPattern, typeInspectionResult).copy(obj = listNodeVar),
+                StatementPattern(
+                    subj = listNode,
+                    pred = IriRef(iri = OntologyConstants.KnoraBase.HasSubListNode.toSmartIri, propertyPathOperator = Some('*')),
+                    obj = listNodeVar
+                )
+            )
+
+        }
+
         val maybeSubjectTypeIri: Option[SmartIri] = typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
             case Some(NonPropertyTypeInfo(subjectTypeIri)) => Some(subjectTypeIri)
             case _ => None
@@ -390,8 +422,16 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri) && objectIsResource) {
                     throw GravsearchException(s"Invalid statement pattern (use the knora-api:standoffLink function instead): ${statementPattern.toSparql.trim}")
                 } else {
-                    // Otherwise, just convert the statement pattern to the internal schema.
-                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                    // Is the object of the statement a list node?
+                    propertyTypeInfo.objectTypeIri match {
+                        case SmartIri(OntologyConstants.KnoraApiV2WithValueObjects.ListNode) =>
+                            // Yes, transform statement so it also matches any of the subnodes of the given node
+                            handleListNode
+                        case _ =>
+                            // No, just convert the statement pattern to the internal schema.
+                            Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                    }
+
                 }
             } else {
                 // The query is in the simple schema, so the statement is invalid.
