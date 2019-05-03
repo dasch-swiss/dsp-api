@@ -28,10 +28,13 @@ import spray.json._
 // API requests
 
 /**
-  * Represents an API request payload that asks the Knora API server to authenticate the user and create a JWT token
+  * Represents an API request payload that asks the Knora API server to authenticate the user and create a JWT token.
+  * Only one of IRI, username, or email as identifier is allowed.
   *
-  * @param identifier   the user's IRI, username, or email.
-  * @param password     the user's password.
+  * @param iri      the user's IRI.
+  * @param email    the user's email.
+  * @param username the user's username.
+  * @param password the user's password.
   */
 case class LoginApiRequestPayloadV2(iri: Option[IRI] = None,
                                     email: Option[String] = None,
@@ -39,16 +42,16 @@ case class LoginApiRequestPayloadV2(iri: Option[IRI] = None,
                                     password: String
                                    ) {
 
-    val parametersCount: Int = List(
+    val identifyingParameterCount: Int = List(
         iri,
         email,
         username
     ).flatten.size
 
     // something needs to be set
-    if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
+    if (identifyingParameterCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
 
-    if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
+    if (identifyingParameterCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
 
     // Password needs to be supplied
     if (password.isEmpty) throw BadRequestException("Password needs to be supplied.")
@@ -62,8 +65,8 @@ sealed abstract class KnoraCredentialsV2()
 /**
   * Represents id/password credentials that a user can supply within the authorization header or as URL parameters.
   *
-  * @param identifier   the supplied id.
-  * @param password     the supplied password.
+  * @param identifier the supplied id.
+  * @param password   the supplied password.
   */
 case class KnoraPasswordCredentialsV2(identifier: UserIdentifierADM, password: String) extends KnoraCredentialsV2
 
@@ -88,7 +91,6 @@ case class KnoraSessionCredentialsV2(token: String) extends KnoraCredentialsV2
   * @param token is the returned json web token.
   */
 case class LoginResponse(token: String)
-
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
