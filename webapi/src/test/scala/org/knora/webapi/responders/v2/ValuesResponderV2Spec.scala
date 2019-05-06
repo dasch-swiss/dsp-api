@@ -609,12 +609,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a text value with standoff" in {
             val valueHasString = "Comment 1aa"
 
-            val standoffAndMapping = Some(StandoffAndMapping(
-                standoff = sampleStandoff,
-                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                mapping = standardMapping.get
-            ))
-
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
@@ -626,7 +620,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
                         maybeValueHasString = Some(valueHasString),
-                        standoffAndMapping = standoffAndMapping
+                        standoff = sampleStandoff,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -651,7 +647,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueFromTriplestore.valueContent match {
                 case savedValue: TextValueContentV2 =>
                     assert(savedValue.valueHasString.contains(valueHasString))
-                    savedValue.standoffAndMapping should ===(standoffAndMapping)
+                    savedValue.standoff should ===(sampleStandoff)
+                    assert(savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
+                    assert(savedValue.mapping == standardMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
             }
@@ -659,12 +657,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not create a duplicate text value with standoff (even if the standoff is different)" in {
             val valueHasString = "Comment 1aa"
-
-            val standoffAndMapping = Some(StandoffAndMapping(
-                standoff = sampleStandoffModified,
-                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                mapping = standardMapping.get
-            ))
 
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
@@ -676,7 +668,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
                         maybeValueHasString = Some(valueHasString),
-                        standoffAndMapping = standoffAndMapping
+                        standoff = sampleStandoffModified,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -1589,19 +1583,15 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasString = "This comment refers to another resource"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
-            val standoffAndMapping = Some(StandoffAndMapping(
-                standoff = Seq(StandoffTagV2(
-                    dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                    standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
-                    startPosition = 31,
-                    endPosition = 39,
-                    attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
-                    uuid = UUID.randomUUID(),
-                    originalXMLID = None,
-                    startIndex = 0
-                )),
-                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                mapping = standardMapping.get
+            val standoff = Seq(StandoffTagV2(
+                dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
+                startPosition = 31,
+                endPosition = 39,
+                attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
+                uuid = UUID.randomUUID(),
+                originalXMLID = None,
+                startIndex = 0
             ))
 
             responderManager ! CreateValueRequestV2(
@@ -1612,7 +1602,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
                         maybeValueHasString = Some(valueHasString),
-                        standoffAndMapping = standoffAndMapping
+                        standoff = standoff,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -1646,7 +1638,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             textValueFromTriplestore.valueContent match {
                 case savedTextValue: TextValueContentV2 =>
                     assert(savedTextValue.valueHasString.contains(valueHasString))
-                    savedTextValue.standoffAndMapping should ===(standoffAndMapping)
+                    savedTextValue.standoff should ===(standoff)
+                    assert(savedTextValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
+                    savedTextValue.mapping should ===(standardMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $textValueFromTriplestore")
             }
@@ -1678,19 +1672,15 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasString = "This remark refers to another resource"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
-            val standoffAndMapping = Some(StandoffAndMapping(
-                standoff = Seq(StandoffTagV2(
-                    dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                    standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
-                    startPosition = 30,
-                    endPosition = 38,
-                    attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
-                    uuid = UUID.randomUUID(),
-                    originalXMLID = None,
-                    startIndex = 0
-                )),
-                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                mapping = standardMapping.get
+            val standoff = Seq(StandoffTagV2(
+                dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
+                startPosition = 30,
+                endPosition = 38,
+                attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
+                uuid = UUID.randomUUID(),
+                originalXMLID = None,
+                startIndex = 0
             ))
 
             responderManager ! CreateValueRequestV2(
@@ -1701,7 +1691,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
                         maybeValueHasString = Some(valueHasString),
-                        standoffAndMapping = standoffAndMapping
+                        standoff = standoff,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -1735,7 +1727,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             textValueFromTriplestore.valueContent match {
                 case savedTextValue: TextValueContentV2 =>
                     assert(savedTextValue.valueHasString.contains(valueHasString))
-                    savedTextValue.standoffAndMapping should ===(standoffAndMapping)
+                    savedTextValue.standoff should ===(standoff)
+                    assert(savedTextValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
+                    savedTextValue.mapping should ===(standardMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $textValueFromTriplestore")
             }
@@ -2093,12 +2087,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "update a text value (submitting standoff)" in {
             val valueHasString = "Comment 1ab"
 
-            val standoffAndMapping = Some(StandoffAndMapping(
-                standoff = sampleStandoffWithLink,
-                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                mapping = standardMapping.get
-            ))
-
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
@@ -2111,7 +2099,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
                         maybeValueHasString = Some(valueHasString),
-                        standoffAndMapping = standoffAndMapping
+                        standoff = sampleStandoffWithLink,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -2136,7 +2126,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueFromTriplestore.valueContent match {
                 case savedValue: TextValueContentV2 =>
                     assert(savedValue.valueHasString.contains(valueHasString))
-                    savedValue.standoffAndMapping should ===(standoffAndMapping)
+                    savedValue.standoff should ===(sampleStandoffWithLink)
+                    assert(savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
+                    savedValue.mapping should ===(standardMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
             }
@@ -2194,12 +2186,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a second text value with standoff" in {
             val valueHasString = "Comment 1ac"
 
-            val standoffAndMapping = Some(StandoffAndMapping(
-                standoff = sampleStandoff,
-                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                mapping = standardMapping.get
-            ))
-
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
@@ -2211,7 +2197,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
                         maybeValueHasString = Some(valueHasString),
-                        standoffAndMapping = standoffAndMapping
+                        standoff = sampleStandoff,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -2236,7 +2224,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueFromTriplestore.valueContent match {
                 case savedValue: TextValueContentV2 =>
                     assert(savedValue.valueHasString.contains(valueHasString))
-                    savedValue.standoffAndMapping should ===(standoffAndMapping)
+                    savedValue.standoff should ===(sampleStandoff)
+                    assert(savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
+                    savedValue.mapping should ===(standardMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
             }
@@ -2244,12 +2234,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not update a text value, duplicating an existing text value (submitting standoff)" in {
             val valueHasString = "Comment 1ac"
-
-            val standoffAndMapping = Some(StandoffAndMapping(
-                standoff = sampleStandoff,
-                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                mapping = standardMapping.get
-            ))
 
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
@@ -2262,7 +2246,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
                         maybeValueHasString = Some(valueHasString),
-                        standoffAndMapping = standoffAndMapping
+                        standoff = sampleStandoff,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -2277,12 +2263,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "update a text value, changing only the standoff" in {
             val valueHasString = "Comment 1ac"
 
-            val standoffAndMapping = Some(StandoffAndMapping(
-                standoff = sampleStandoffModified,
-                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                mapping = standardMapping.get
-            ))
-
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
@@ -2295,7 +2275,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
                         maybeValueHasString = Some(valueHasString),
-                        standoffAndMapping = standoffAndMapping
+                        standoff = sampleStandoffModified,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -2321,7 +2303,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueFromTriplestore.valueContent match {
                 case savedValue: TextValueContentV2 =>
                     assert(savedValue.valueHasString.contains(valueHasString))
-                    savedValue.standoffAndMapping should ===(standoffAndMapping)
+                    savedValue.standoff should ===(sampleStandoffModified)
+                    assert(savedValue.mappingIri.contains("http://rdfh.ch/standoff/mappings/StandardMapping"))
+                    savedValue.mapping should ===(standardMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
             }
@@ -2329,12 +2313,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not update a text value so it differs only from an existing value in that it has different standoff" in {
             val valueHasString = "Comment 1ac"
-
-            val standoffAndMapping = Some(StandoffAndMapping(
-                standoff = sampleStandoffModified,
-                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                mapping = standardMapping.get
-            ))
 
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
@@ -2347,7 +2325,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2Complex,
                         maybeValueHasString = Some(valueHasString),
-                        standoffAndMapping = standoffAndMapping
+                        standoff = sampleStandoffModified,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
                     )
                 ),
                 requestingUser = incunabulaUser,

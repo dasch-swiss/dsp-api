@@ -873,11 +873,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
                             maybeValueHasString = Some("this is text with standoff"),
-                            standoffAndMapping = Some(StandoffAndMapping(
-                                standoff = sampleStandoff,
-                                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                                mapping = standardMapping.get
-                            ))
+                            standoff = sampleStandoff,
+                            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                            mapping = standardMapping
                         )
                     )
                 ),
@@ -1310,11 +1308,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueContent = TextValueContentV2(
                             ontologySchema = ApiV2Complex,
                             maybeValueHasString = Some("this is text with standoff"),
-                            standoffAndMapping = Some(StandoffAndMapping(
-                                standoff = standoffWithInvalidLink,
-                                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-                                mapping = standardMapping.get
-                            ))
+                            standoff = standoffWithInvalidLink,
+                            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                            mapping = standardMapping
                         )
                     )
                 )

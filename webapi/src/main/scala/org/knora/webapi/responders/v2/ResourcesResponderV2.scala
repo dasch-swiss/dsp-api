@@ -883,6 +883,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                             if (!(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
                                 savedValue.permissions == expectedValue.permissions &&
                                 savedValue.attachedToUser == requestingUser.id)) {
+                                // println(s"========== Expected ==========\n${MessageUtil.toSource(expectedValue.valueContent)}\n========== Saved ==========\n${MessageUtil.toSource(savedValue.valueContent)}")
                                 throw AssertionException(s"Resource <$resourceIri> was saved, but one or more of its values are not correct")
                             }
                     }
@@ -1149,8 +1150,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 case Some(valObjs: Seq[ReadValueV2]) if valObjs.size == 1 =>
                     // make sure that the property has one instance and that it is of type TextValue and that is has standoff (markup)
                     valObjs.head.valueContent match {
-                        case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoffAndMapping.nonEmpty =>
-                            textValWithStandoff
+                        case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoff.nonEmpty => textValWithStandoff
 
                         case _ => throw BadRequestException(s"$textProperty to be of type ${OntologyConstants.KnoraBase.TextValue} with standoff (markup)")
                     }
@@ -1258,7 +1258,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             bodyTextValue: TextValueContentV2 = getTextValueFromReadResource(resource)
 
             // the ext value is expected to have standoff markup
-            _ = if (bodyTextValue.standoffAndMapping.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
+            _ = if (bodyTextValue.standoff.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
 
             // get all the metadata but the text property for the TEI header
             headerResource = resource.copy(

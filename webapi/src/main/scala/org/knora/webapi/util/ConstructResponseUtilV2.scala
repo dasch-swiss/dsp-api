@@ -31,7 +31,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetAllStandoffFromTextValueRequestV2, GetStandoffPageRequestV2, GetStandoffResponseV2, MappingXMLtoStandoff, StandoffTagV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetAllStandoffFromTextValueRequestV2, GetStandoffResponseV2, MappingXMLtoStandoff, StandoffTagV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
@@ -509,35 +509,31 @@ object ConstructResponseUtilV2 {
             // standoff nodes given
             // get the IRI of the mapping
             val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
+            val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] = mappings.get(mappingIri)
 
-            val mapping: MappingAndXSLTransformation = mappings(mappingIri)
-
-            val standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(
-                standoffEntities = mapping.standoffEntities,
-                standoffAssertions = valueObject.standoff,
-                knoraIdUtil = knoraIdUtil
-            )
-
-            FastFuture.successful(TextValueContentV2(
+            for {
+                standoff: Vector[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(
+                    standoffAssertions = valueObject.standoff,
+                    knoraIdUtil = knoraIdUtil,
+                    responderManager = responderManager,
+                    requestingUser = requestingUser
+                )
+            } yield TextValueContentV2(
                 ontologySchema = InternalSchema,
                 maybeValueHasString = valueObjectValueHasString,
                 valueHasLanguage = valueLanguageOption,
-                standoffAndMapping = Some(
-                    StandoffAndMapping(
-                        standoff = standoffTags,
-                        mappingIri = mappingIri,
-                        mapping = mapping.mapping,
-                        xslt = mapping.XSLTransformation
-                    )
-                ),
+                standoff = standoff,
+                mappingIri = Some(mappingIri),
+                mapping = mappingAndXsltTransformation.map(_.mapping),
+                xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
                 comment = valueCommentOption
-            ))
+            )
 
         } else if (queryStandoff && valueObject.assertions.contains(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex)) {
             // Standoff was not returned in this query result, but we're supposed to query it separately.
 
             val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
-            val mapping: MappingAndXSLTransformation = mappings(mappingIri)
+            val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] = mappings.get(mappingIri)
 
             for {
                 standoffResponse <- (responderManager ? GetAllStandoffFromTextValueRequestV2(resourceIri = resourceIri, valueIri = valueObject.valueObjectIri, requestingUser = requestingUser)).mapTo[GetStandoffResponseV2]
@@ -545,14 +541,10 @@ object ConstructResponseUtilV2 {
                 ontologySchema = InternalSchema,
                 maybeValueHasString = valueObjectValueHasString,
                 valueHasLanguage = valueLanguageOption,
-                standoffAndMapping = Some(
-                    StandoffAndMapping(
-                        standoff = standoffResponse.standoff,
-                        mappingIri = mappingIri,
-                        mapping = mapping.mapping,
-                        xslt = mapping.XSLTransformation
-                    )
-                ),
+                standoff = standoffResponse.standoff,
+                mappingIri = Some(mappingIri),
+                mapping = mappingAndXsltTransformation.map(_.mapping),
+                xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
                 comment = valueCommentOption
             )
         } else {
@@ -561,7 +553,6 @@ object ConstructResponseUtilV2 {
                 ontologySchema = InternalSchema,
                 maybeValueHasString = valueObjectValueHasString,
                 valueHasLanguage = valueLanguageOption,
-                standoffAndMapping = None,
                 comment = valueCommentOption
             ))
         }

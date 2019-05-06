@@ -33,7 +33,6 @@ import org.knora.webapi.messages.store.sipimessages.{GetImageMetadataRequestV2, 
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util._
@@ -1134,13 +1133,18 @@ case class CreateStandoffTagV2InTriplestore(standoffNode: StandoffTagV2, standof
   * Represents a Knora text value.
   *
   * @param maybeValueHasString the string representation of this text value, if available.
-  * @param standoffAndMapping a [[StandoffAndMapping]], if any.
-  * @param comment            a comment on this `TextValueContentV2`, if any.
+  * @param standoff            the standoff markup attached to the text value, if any.
+  * @param mappingIri          the IRI of the [[MappingXMLtoStandoff]] used by default with the text value, if any.
+  * @param mapping             the [[MappingXMLtoStandoff]] used by default with the text value, if any.
+  * @param comment             a comment on this `TextValueContentV2`, if any.
   */
 case class TextValueContentV2(ontologySchema: OntologySchema,
                               maybeValueHasString: Option[String],
                               valueHasLanguage: Option[String] = None,
-                              standoffAndMapping: Option[StandoffAndMapping] = None,
+                              standoff: Seq[StandoffTagV2] = Vector.empty,
+                              mappingIri: Option[IRI] = None,
+                              mapping: Option[MappingXMLtoStandoff] = None,
+                              xslt: Option[String] = None,
                               comment: Option[String] = None) extends ValueContentV2 {
     private val knoraIdUtil = new KnoraIdUtil
 
@@ -1160,23 +1164,19 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
       * Returns the IRI attributes representing the target IRIs of any standoff links in this text value.
       */
     lazy val standoffLinkTagIriAttributes: Set[StandoffTagIriAttributeV2] = {
-        standoffAndMapping match {
-            case Some(definedStandoffAndMapping) =>
-                definedStandoffAndMapping.standoff.foldLeft(Set.empty[StandoffTagIriAttributeV2]) {
-                    case (acc, standoffTag: StandoffTagV2) =>
-                        if (standoffTag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
-                            val iriAttributes: Set[StandoffTagIriAttributeV2] = standoffTag.attributes.collect {
-                                case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute
-                            }.toSet
+        standoff.foldLeft(Set.empty[StandoffTagIriAttributeV2]) {
+            case (acc, standoffTag: StandoffTagV2) =>
+                if (standoffTag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
+                    val iriAttributes: Set[StandoffTagIriAttributeV2] = standoffTag.attributes.collect {
+                        case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute
+                    }.toSet
 
-                            acc ++ iriAttributes
-                        } else {
-                            acc
-                        }
+                    acc ++ iriAttributes
+                } else {
+                    acc
                 }
-
-            case None => Set.empty[StandoffTagIriAttributeV2]
         }
+
     }
 
     override def valueHasString: String = maybeValueHasString.getOrElse(throw AssertionException("Text value has no valueHasString"))
@@ -1191,8 +1191,10 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
       * The maximum start index in the standoff attached to this [[TextValueContentV2]]. This is used
       * only when writing a text value to the triplestore.
       */
-    lazy val computedMaxStandoffStartIndex: Option[Int] = standoffAndMapping.map {
-        definedStandoffAndMapping => definedStandoffAndMapping.standoff.map(_.startIndex).max
+    lazy val computedMaxStandoffStartIndex: Option[Int] = if (standoff.nonEmpty) {
+        Some(standoff.map(_.startIndex).max)
+    } else {
+        None
     }
 
     override def toOntologySchema(targetSchema: OntologySchema): TextValueContentV2 = copy(ontologySchema = targetSchema)
@@ -1213,34 +1215,36 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                 }
 
             case ApiV2Complex =>
-                val renderStandoffAsXml: Boolean = standoffAndMapping.nonEmpty && SchemaOptions.renderMarkupAsXml(targetSchema = targetSchema, schemaOptions = schemaOptions)
+                val renderStandoffAsXml: Boolean = standoff.nonEmpty && SchemaOptions.renderMarkupAsXml(targetSchema = targetSchema, schemaOptions = schemaOptions)
 
                 // Should we render standoff as XML?
                 val objectMap: Map[IRI, JsonLDValue] = if (renderStandoffAsXml) {
+                    val definedMappingIri = mappingIri.getOrElse(throw BadRequestException(s"Cannot render standoff as XML without a mapping"))
+                    val definedMapping = mapping.getOrElse(throw BadRequestException(s"Cannot render standoff as XML without a mapping"))
+
                     val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(
                         utf8str = valueHasString,
-                        standoff = standoffAndMapping.get.standoff,
-                        mappingXMLtoStandoff = standoffAndMapping.get.mapping
+                        standoff = standoff,
+                        mappingXMLtoStandoff = definedMapping
                     )
 
                     // check if there is an XSL transformation
-                    if (standoffAndMapping.get.xslt.nonEmpty) {
+                    xslt match {
+                        case Some(definedXslt) =>
+                            val xmlTransformed: String = XMLUtil.applyXSLTransformation(
+                                xml = xmlFromStandoff,
+                                xslt = definedXslt
+                            )
 
-                        val xmlTransformed: String = XMLUtil.applyXSLTransformation(
-                            xml = xmlFromStandoff,
-                            xslt = standoffAndMapping.get.xslt.get
-                        )
+                            // the xml was converted to HTML
+                            Map(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml -> JsonLDString(xmlTransformed))
 
-                        // the xml was converted to HTML
-                        Map(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml -> JsonLDString(xmlTransformed))
-                    } else {
-                        // xml is returned
-                        Map(
-                            OntologyConstants.KnoraApiV2Complex.TextValueAsXml -> JsonLDString(xmlFromStandoff),
-                            OntologyConstants.KnoraApiV2Complex.TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(standoffAndMapping.get.mappingIri)
-                        )
+                        case None =>
+                            Map(
+                                OntologyConstants.KnoraApiV2Complex.TextValueAsXml -> JsonLDString(xmlFromStandoff),
+                                OntologyConstants.KnoraApiV2Complex.TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(definedMappingIri)
+                            )
                     }
-
                 } else {
                     // We're not rendering standoff as XML. Return the text without markup.
                     Map(OntologyConstants.KnoraApiV2Complex.ValueAsString -> JsonLDString(valueHasStringWithoutStandoff))
@@ -1268,93 +1272,86 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
       */
     def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV2InTriplestore] = {
 
-        standoffAndMapping match {
-            case Some(definedStandoffAndMapping) =>
-                // create an IRI for each standoff tag
-                // internal references to XML ids are not resolved yet
-                val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV2InTriplestore] = definedStandoffAndMapping.standoff.map {
-                    standoffNode: StandoffTagV2 =>
-                        CreateStandoffTagV2InTriplestore(
-                            standoffNode = standoffNode,
-                            standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
-                        )
-                }
+        if (standoff.nonEmpty) {
+            // create an IRI for each standoff tag
+            // internal references to XML ids are not resolved yet
+            val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV2InTriplestore] = standoff.map {
+                standoffNode: StandoffTagV2 =>
+                    CreateStandoffTagV2InTriplestore(
+                        standoffNode = standoffNode,
+                        standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
+                    )
+            }
 
-                // collect all the standoff tags that contain XML ids and
-                // map the XML ids to standoff node Iris
-                val iDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
-                    standoffTag: CreateStandoffTagV2InTriplestore =>
-                        // filter those tags out that have an XML id
-                        standoffTag.standoffNode.originalXMLID.isDefined
-                }.map {
-                    standoffTagWithID: CreateStandoffTagV2InTriplestore =>
-                        // return the XML id as a key and the standoff IRI as the value
-                        standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
-                }.toMap
+            // collect all the standoff tags that contain XML ids and
+            // map the XML ids to standoff node Iris
+            val iDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
+                standoffTag: CreateStandoffTagV2InTriplestore =>
+                    // filter those tags out that have an XML id
+                    standoffTag.standoffNode.originalXMLID.isDefined
+            }.map {
+                standoffTagWithID: CreateStandoffTagV2InTriplestore =>
+                    // return the XML id as a key and the standoff IRI as the value
+                    standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
+            }.toMap
 
-                // Map the start index of each tag to its IRI, so we can resolve references to parent tags as references to
-                // tag IRIs. We only care about start indexes here, because only hierarchical tags can be parents, and
-                // hierarchical tags don't have end indexes.
-                val startIndexesToStandoffNodeIris: Map[Int, IRI] = standoffTagsWithOriginalXMLIDs.map {
-                    tagWithIndex => tagWithIndex.standoffNode.startIndex -> tagWithIndex.standoffTagInstanceIri
-                }.toMap
+            // Map the start index of each tag to its IRI, so we can resolve references to parent tags as references to
+            // tag IRIs. We only care about start indexes here, because only hierarchical tags can be parents, and
+            // hierarchical tags don't have end indexes.
+            val startIndexesToStandoffNodeIris: Map[Int, IRI] = standoffTagsWithOriginalXMLIDs.map {
+                tagWithIndex => tagWithIndex.standoffNode.startIndex -> tagWithIndex.standoffTagInstanceIri
+            }.toMap
 
-                // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV2`
-                val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV2InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
-                    standoffTag: CreateStandoffTagV2InTriplestore =>
+            // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV2`
+            val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV2InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
+                standoffTag: CreateStandoffTagV2InTriplestore =>
 
-                        // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV2`
-                        val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] = standoffTag.standoffNode.attributes.map {
-                            attributeWithOriginalXMLID: StandoffTagAttributeV2 =>
-                                attributeWithOriginalXMLID match {
-                                    case refAttr: StandoffTagInternalReferenceAttributeV2 =>
-                                        // resolve the XML id to the corresponding standoff node IRI
-                                        refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
-                                    case attr => attr
-                                }
-                        }
+                    // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV2`
+                    val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] = standoffTag.standoffNode.attributes.map {
+                        attributeWithOriginalXMLID: StandoffTagAttributeV2 =>
+                            attributeWithOriginalXMLID match {
+                                case refAttr: StandoffTagInternalReferenceAttributeV2 =>
+                                    // resolve the XML id to the corresponding standoff node IRI
+                                    refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
+                                case attr => attr
+                            }
+                    }
 
-                        val startParentIndex: Option[Int] = standoffTag.standoffNode.startParentIndex
-                        val endParentIndex: Option[Int] = standoffTag.standoffNode.endParentIndex
+                    val startParentIndex: Option[Int] = standoffTag.standoffNode.startParentIndex
+                    val endParentIndex: Option[Int] = standoffTag.standoffNode.endParentIndex
 
-                        // return standoff tag with updated attributes
-                        standoffTag.copy(
-                            standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences),
-                            startParentIri = startParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)), // If there's a start parent index, get its IRI, otherwise None
-                            endParentIri = endParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)) // If there's an end parent index, get its IRI, otherwise None
-                        )
-                }
+                    // return standoff tag with updated attributes
+                    standoffTag.copy(
+                        standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences),
+                        startParentIri = startParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)), // If there's a start parent index, get its IRI, otherwise None
+                        endParentIri = endParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)) // If there's an end parent index, get its IRI, otherwise None
+                    )
+            }
 
-                standoffTagsWithNodeReferences
-
-            case None => Seq.empty[CreateStandoffTagV2InTriplestore]
-
+            standoffTagsWithNodeReferences
+        } else {
+            Seq.empty[CreateStandoffTagV2InTriplestore]
         }
 
     }
 
     override def unescape: ValueContentV2 = {
         // Unescape the text in standoff string attributes.
-        val unescapedStandoffAndMapping: Option[StandoffAndMapping] = standoffAndMapping.map {
-            definedStandoffAndMapping =>
-                definedStandoffAndMapping.copy(
-                    standoff = definedStandoffAndMapping.standoff.map {
-                        standoffTag =>
-                            standoffTag.copy(
-                                attributes = standoffTag.attributes.map {
-                                    case stringAttribute: StandoffTagStringAttributeV2 =>
-                                        stringAttribute.copy(value = stringFormatter.fromSparqlEncodedString(stringAttribute.value))
+        val unescapedStandoff = standoff.map {
+            standoffTag =>
+                standoffTag.copy(
+                    attributes = standoffTag.attributes.map {
+                        case stringAttribute: StandoffTagStringAttributeV2 =>
+                            stringAttribute.copy(value = stringFormatter.fromSparqlEncodedString(stringAttribute.value))
 
-                                    case other => other
-                                }
-                            )
+                        case other => other
                     }
                 )
         }
 
         copy(
             maybeValueHasString = maybeValueHasString.map(str => stringFormatter.fromSparqlEncodedString(str)),
-            standoffAndMapping = unescapedStandoffAndMapping,
+            standoff = unescapedStandoff,
             comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr))
         )
     }
@@ -1376,19 +1373,12 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
             case thatTextValue: TextValueContentV2 =>
                 val valueHasStringIdentical: Boolean = valueHasString == thatTextValue.valueHasString
 
+                val mappingIdentitcal = mappingIri == thatTextValue.mappingIri
+
                 // compare standoff nodes (sort them first by index) and the XML-to-standoff mapping IRI
-                val standoffIdentical: Boolean = (standoffAndMapping, thatTextValue.standoffAndMapping) match {
-                    case (Some(thisStandoffAndMapping), Some(thatStandoffAndMapping)) =>
-                        val thisComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(thisStandoffAndMapping.standoff)
-                        val thatComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(thatStandoffAndMapping.standoff)
-                        thisComparableStandoff == thatComparableStandoff && thisStandoffAndMapping.mappingIri == thatStandoffAndMapping.mappingIri
+                val standoffIdentical = StandoffTagUtilV2.makeComparableStandoffCollection(standoff) == StandoffTagUtilV2.makeComparableStandoffCollection(thatTextValue.standoff)
 
-                    case (None, None) => true
-
-                    case _ => false
-                }
-
-                valueHasStringIdentical && standoffIdentical && comment == thatTextValue.comment
+                valueHasStringIdentical && standoffIdentical && mappingIdentitcal && comment == thatTextValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1447,7 +1437,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                     )
 
                 case (None, Some(textValueAsXml), Some(mappingResponse)) =>
-                    // Text with standoff.
+                    // Text with standoff. TODO: support submitting text with standoff as JSON-LD rather than as XML.
 
                     val textWithStandoffTags: TextWithStandoffTagsV2 = StandoffTagUtilV2.convertXMLtoStandoffTagV2(
                         xml = textValueAsXml,
@@ -1456,18 +1446,13 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                         log = log
                     )
 
-                    val standoffAndMapping = StandoffAndMapping(
-                        standoff = textWithStandoffTags.standoffTagV2,
-                        mappingIri = mappingResponse.mappingIri,
-                        mapping = mappingResponse.mapping,
-                        xslt = None
-                    )
-
                     TextValueContentV2(
                         ontologySchema = ApiV2Complex,
                         maybeValueHasString = Some(stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw BadRequestException("Text value contains invalid characters"))),
                         valueHasLanguage = maybeValueHasLanguage,
-                        standoffAndMapping = Some(standoffAndMapping),
+                        standoff = textWithStandoffTags.standoffTagV2,
+                        mappingIri = Some(mappingResponse.mappingIri),
+                        mapping = Some(mappingResponse.mapping),
                         comment = getComment(jsonLDObject)
                     )
 
@@ -1477,17 +1462,6 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
         } yield textValue
     }
 }
-
-/**
-  * Represents standoff and the corresponding mapping.
-  * May include an XSL transformation.
-  *
-  * @param standoff   a sequence of [[StandoffTagV2]].
-  * @param mappingIri the IRI of the mapping
-  * @param mapping    a mapping between XML and standoff.
-  * @param xslt       an XSL transformation.
-  */
-case class StandoffAndMapping(standoff: Seq[StandoffTagV2], mappingIri: IRI, mapping: MappingXMLtoStandoff, xslt: Option[String] = None)
 
 /**
   * Represents a Knora integer value.

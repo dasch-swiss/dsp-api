@@ -65,7 +65,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
     private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker(log)
 
-    "The resources v2 endpoint" should {/*
+    "The resources v2 endpoint" should {
         "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
             val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}")
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -791,7 +791,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val previewResponseAsString = responseToString(previewResponse)
             assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
         }
-*/
+
         "create a resource with a lot of standoff" in {
             val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
 

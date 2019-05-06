@@ -118,8 +118,6 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 case _ => throw BadRequestException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> is not a text value")
             }
 
-            standoff: Seq[StandoffTagV2] = textValueObj.valueContent.standoffAndMapping.getOrElse(throw NotFoundException(s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> does not have the requested standoff")).standoff
-
             nextOffset: Option[Int] = textValueObj.valueHasMaxStandoffStartIndex match {
                 case Some(definedMaxIndex) =>
                     if (requestMaxStartIndex >= definedMaxIndex) {
@@ -132,7 +130,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             }
         } yield GetStandoffResponseV2(
             valueIri = textValueObj.valueIri,
-            standoff = standoff,
+            standoff = textValueObj.valueContent.standoff,
             nextOffset = nextOffset
         )
     }

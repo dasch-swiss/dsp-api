@@ -241,10 +241,10 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
 case class TEIBody(bodyInfo: TextValueContentV2, teiMapping: MappingXMLtoStandoff, bodyXSLT: String) {
 
     def toXML: String = {
-        if (bodyInfo.standoffAndMapping.isEmpty) throw BadRequestException(s"text is expected to have standoff markup")
+        if (bodyInfo.standoff.isEmpty) throw BadRequestException(s"text is expected to have standoff markup")
 
         // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
-        val tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(bodyInfo.valueHasString, bodyInfo.standoffAndMapping.get.standoff, teiMapping)
+        val tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(bodyInfo.valueHasString, bodyInfo.standoff, teiMapping)
 
         XMLUtil.applyXSLTransformation(tmpXml, bodyXSLT)
     }

@@ -25,7 +25,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         values = Map(
             "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -42,7 +41,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#citation".toSmartIri -> Vector(
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -58,7 +56,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -74,7 +71,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -91,7 +87,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             ),
             "http://www.knora.org/ontology/0803/incunabula#publisher".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -107,7 +102,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             )),
             "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -123,7 +117,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             )),
             "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -139,7 +132,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             )),
             "http://www.knora.org/ontology/0803/incunabula#location".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -155,7 +147,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             )),
             "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -188,7 +179,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             )),
             "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -235,7 +225,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         values = Map(
             "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -252,7 +241,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#citation".toSmartIri -> Vector(
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -268,7 +256,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -284,7 +271,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -300,7 +286,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -316,7 +301,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -332,7 +316,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -348,7 +331,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -364,7 +346,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -380,7 +361,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -397,7 +377,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             ),
             "http://www.knora.org/ontology/0803/incunabula#publisher".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -413,7 +392,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             )),
             "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -429,7 +407,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             )),
             "http://www.knora.org/ontology/0803/incunabula#book_comment".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -445,7 +422,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             )),
             "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -462,7 +438,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#note".toSmartIri -> Vector(
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -478,7 +453,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -494,7 +468,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -510,7 +483,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -526,7 +498,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -543,7 +514,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             ),
             "http://www.knora.org/ontology/0803/incunabula#location".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -559,7 +529,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             )),
             "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(ReadTextValueV2(
                 valueContent = TextValueContentV2(
-                    standoffAndMapping = None,
                     ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
@@ -593,7 +562,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -609,7 +577,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -625,7 +592,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ),
                 ReadTextValueV2(
                     valueContent = TextValueContentV2(
-                        standoffAndMapping = None,
                         ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
@@ -689,7 +655,6 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 values = Map(
                     "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri -> Vector(ReadTextValueV2(
                         valueContent = TextValueContentV2(
-                            standoffAndMapping = None,
                             valueHasLanguage = None,
                             ontologySchema = InternalSchema,
                             comment = None,
