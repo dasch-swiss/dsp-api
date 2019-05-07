@@ -43,8 +43,6 @@ import scala.concurrent.duration._
   * Static data for testing [[ResourcesResponderV1]].
   */
 object ResourcesResponderV1Spec {
-    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
     val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
@@ -619,6 +617,8 @@ object ResourcesResponderV1Spec {
 class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config) with ImplicitSender {
     import ResourcesResponderV1Spec._
 
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     private val valueUtilV1 = new ValueUtilV1(settings)
 
     override lazy val rdfDataObjects = List(
@@ -1125,7 +1125,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = "http://rdfh.ch/0803/c5058f3a")),
                         uuid = UUID.randomUUID(),
                         originalXMLID = None,
-                        startIndex = 0
+                        startIndex = 1
                     )
                 ),
                 mapping = ResourcesResponderV1SpecFullData.dummyMapping,

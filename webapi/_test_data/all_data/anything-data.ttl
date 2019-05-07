@@ -1236,49 +1236,49 @@
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
-  anything:hasRichtext <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1>;
+  anything:hasRichtext <http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1>;
   rdfs:label "test thing with markup";
   knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
   knora-base:creationDate "2018-01-31T15:05:10Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0001/thing_with_richtext_with_markup/text1> a knora-base:TextValue;
+<http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1> a knora-base:TextValue;
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF>;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2018-04-16T13:24:53.578Z"^^xsd:dateTime;
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
   knora-base:valueHasOrder 0;
-  knora-base:valueHasStandoff <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/0>,
-    <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/1>, <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/2>,
-    <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/3>;
+  knora-base:valueHasStandoff <http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1/standoff/0>,
+    <http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1/standoff/1>, <http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1/standoff/2>,
+    <http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1/standoff/3>;
   knora-base:valueHasMaxStandoffStartIndex "3"^^xsd:nonNegativeInteger;
   knora-base:valueHasString "This is a test that contains marked up elements. This is interesting text in italics. This is boring text in italics." .
 
-<http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/0> a standoff:StandoffRootTag;
+<http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1/standoff/0> a standoff:StandoffRootTag;
   knora-base:standoffTagHasEnd 118;
   knora-base:standoffTagHasStart 0;
   knora-base:standoffTagHasStartIndex 0;
   knora-base:standoffTagHasUUID "2cb01d47-bf01-4705-a5de-5e967e1c97fc" .
 
-<http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/1> a standoff:StandoffParagraphTag;
+<http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1/standoff/1> a standoff:StandoffParagraphTag;
   knora-base:standoffTagHasEnd 117;
   knora-base:standoffTagHasStart 0;
   knora-base:standoffTagHasStartIndex 1;
-  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/0>;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1/standoff/0>;
   knora-base:standoffTagHasUUID "0a3e72a7-ac7b-430b-81ed-1c4239598231" .
 
-<http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/2> a standoff:StandoffItalicTag;
+<http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1/standoff/2> a standoff:StandoffItalicTag;
   knora-base:standoffTagHasEnd 73;
   knora-base:standoffTagHasStart 57;
   knora-base:standoffTagHasStartIndex 2;
-  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/1>;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1/standoff/1>;
   knora-base:standoffTagHasUUID "265262c7-3919-4727-9178-60bb2ddec11c" .
 
-<http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/3> a standoff:StandoffItalicTag;
+<http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1/standoff/3> a standoff:StandoffItalicTag;
   knora-base:standoffTagHasEnd 105;
   knora-base:standoffTagHasStart 94;
   knora-base:standoffTagHasStartIndex 3;
-  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/1>;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1/standoff/1>;
   knora-base:standoffTagHasUUID "9c9fa856-6462-4337-94f7-9328668bb17d" .
 
 <http://rdfh.ch/0001/thing_with_two_list_values> a anything:Thing;
