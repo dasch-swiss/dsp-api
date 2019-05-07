@@ -785,6 +785,28 @@ object StandoffTagUtilV2 {
 
                     }.toVector
 
+                    // If we got these assertions from a v2 query result, and there's a start parent, the assertions will contain knora-base:standoffTagHasStartParentIndex.
+                    val startParentIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex).map(_.toInt).orElse {
+                        // Otherwise, look for knora-base:standoffTagHasStartParent, and see if we have the parent tag.
+                        standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasStartParent).map {
+                            // translate standoff node IRI to index
+                            startParentIri =>
+                                val startParentTagAssertions = standoffAssertions.getOrElse(startParentIri, throw InconsistentTriplestoreDataException(s"Parent standoff tag $startParentIri not found in SPARQL query results"))
+                                startParentTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt
+                        }
+                    }
+
+                    // If we got these assertions from a v2 query result, and there's an end parent, the assertions will contain knora-base:standoffTagHasEndParentIndex.
+                    val endParentIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex).map(_.toInt).orElse {
+                        // Otherwise, look for knora-base:standoffTagHasEndParent, and see if we have the parent tag.
+                        standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndParent).map {
+                            // translate standoff node IRI to index
+                            endParentIri =>
+                                val endParentTagAssertions = standoffAssertions.getOrElse(endParentIri, throw InconsistentTriplestoreDataException(s"Parent standoff tag $endParentIri not found in SPARQL query results"))
+                                endParentTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt
+                        }
+                    }
+
                     StandoffTagV2(
                         standoffTagClassIri = standoffTagAssertions(OntologyConstants.Rdf.Type).toSmartIri,
                         startPosition = standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
@@ -794,8 +816,8 @@ object StandoffTagUtilV2 {
                         endIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex).map(_.toInt),
                         uuid = knoraIdUtil.decodeUuid(standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasUUID)),
                         originalXMLID = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
-                        startParentIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex).map(_.toInt),
-                        endParentIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex).map(_.toInt),
+                        startParentIndex = startParentIndex,
+                        endParentIndex = endParentIndex,
                         attributes = attributes
                     )
             }.toVector.sortBy(_.startIndex)
