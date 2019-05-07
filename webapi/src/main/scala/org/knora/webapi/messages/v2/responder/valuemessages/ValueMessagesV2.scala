@@ -1219,6 +1219,9 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
 
                 // Should we render standoff as XML?
                 val objectMap: Map[IRI, JsonLDValue] = if (renderStandoffAsXml) {
+                    // println(s"Word count: ${maybeValueHasString.get.split("\\W+").length}")
+                    // println(s"Standoff tag count: ${standoff.size}")
+
                     val definedMappingIri = mappingIri.getOrElse(throw BadRequestException(s"Cannot render standoff as XML without a mapping"))
                     val definedMapping = mapping.getOrElse(throw BadRequestException(s"Cannot render standoff as XML without a mapping"))
 
@@ -1279,7 +1282,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                 standoffNode: StandoffTagV2 =>
                     CreateStandoffTagV2InTriplestore(
                         standoffNode = standoffNode,
-                        standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
+                        standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri = valueIri, startIndex = standoffNode.startIndex) // generate IRI for new standoff node
                     )
             }
 

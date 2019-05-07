@@ -21,16 +21,16 @@ package org.knora.webapi.util.standoff
 
 import java.util.UUID
 
-import akka.pattern._
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
+import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, PredicateInfoV2, ReadPropertyInfoV2, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{DateUtilV1, KnoraIdUtil, SmartIri, StringFormatter}
@@ -704,7 +704,7 @@ object StandoffTagUtilV2 {
       * Create a sequence of [[StandoffTagV2]] from the given standoff nodes (Sparql results).
       *
       * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]]
-      * @param knoraIdUtil a [[KnoraIdUtil]].
+      * @param knoraIdUtil        a [[KnoraIdUtil]].
       * @return a sequence of [[StandoffTagV2]].
       */
     def createStandoffTagsV2FromSparqlResults(standoffAssertions: Map[IRI, Map[IRI, String]],
@@ -719,17 +719,31 @@ object StandoffTagUtilV2 {
 
         val standoffPropertyIris: Set[SmartIri] = standoffAssertions.flatMap {
             case (standoffTagIri: IRI, standoffTagAssertions: Map[IRI, String]) =>
-                (standoffTagAssertions.keySet -- StandoffProperties.virtualProperties - OntologyConstants.Rdf.Type).map(_.toSmartIri)
+                (standoffTagAssertions.keySet - OntologyConstants.Rdf.Type).map(_.toSmartIri)
         }.toSet
 
         for {
             standoffEntities: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris = standoffClassIris, standoffPropertyIris = standoffPropertyIris, requestingUser = requestingUser)).mapTo[StandoffEntityInfoGetResponseV2]
 
             standoffTags = standoffAssertions.map {
-                case (standofTagIri: IRI, standoffTagAssertions: Map[IRI, String]) =>
+                case (standoffTagIri: IRI, standoffTagAssertions: Map[IRI, String]) =>
+                    val standoffTagSmartIri: SmartIri = standoffTagIri.toSmartIri
+
+                    if (!standoffTagSmartIri.isKnoraStandoffIri) {
+                        throw InconsistentTriplestoreDataException(s"Invalid standoff tag IRI: $standoffTagIri")
+                    }
+
+                    // The start index in the tag's IRI should match the one in its assertions.
+
+                    val startIndexFromIri: Int = standoffTagSmartIri.getStandoffStartIndex.get
+                    val startIndexFromAssertions: Int = standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt
+
+                    if (startIndexFromAssertions != startIndexFromIri) {
+                        throw InconsistentTriplestoreDataException(s"Standoff tag $standoffTagIri has start index $startIndexFromAssertions (expected $startIndexFromIri)")
+                    }
 
                     // create a sequence of `StandoffTagAttributeV2` from the given attributes
-                    val attributes: Seq[StandoffTagAttributeV2] = (standoffTagAssertions -- StandoffProperties.systemProperties  -- StandoffProperties.virtualProperties - OntologyConstants.Rdf.Type).map {
+                    val attributes: Seq[StandoffTagAttributeV2] = (standoffTagAssertions -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
                         case (propIri: IRI, value) =>
                             val propSmartIri = propIri.toSmartIri
                             val propPredicates: Map[SmartIri, PredicateInfoV2] = standoffEntities.standoffPropertyInfoMap(propIri.toSmartIri).entityInfoContent.predicates
@@ -785,39 +799,17 @@ object StandoffTagUtilV2 {
 
                     }.toVector
 
-                    // If we got these assertions from a v2 query result, and there's a start parent, the assertions will contain knora-base:standoffTagHasStartParentIndex.
-                    val startParentIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex).map(_.toInt).orElse {
-                        // Otherwise, look for knora-base:standoffTagHasStartParent, and see if we have the parent tag.
-                        standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasStartParent).map {
-                            // translate standoff node IRI to index
-                            startParentIri =>
-                                val startParentTagAssertions = standoffAssertions.getOrElse(startParentIri, throw InconsistentTriplestoreDataException(s"Parent standoff tag $startParentIri not found in SPARQL query results"))
-                                startParentTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt
-                        }
-                    }
-
-                    // If we got these assertions from a v2 query result, and there's an end parent, the assertions will contain knora-base:standoffTagHasEndParentIndex.
-                    val endParentIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex).map(_.toInt).orElse {
-                        // Otherwise, look for knora-base:standoffTagHasEndParent, and see if we have the parent tag.
-                        standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndParent).map {
-                            // translate standoff node IRI to index
-                            endParentIri =>
-                                val endParentTagAssertions = standoffAssertions.getOrElse(endParentIri, throw InconsistentTriplestoreDataException(s"Parent standoff tag $endParentIri not found in SPARQL query results"))
-                                endParentTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt
-                        }
-                    }
-
                     StandoffTagV2(
                         standoffTagClassIri = standoffTagAssertions(OntologyConstants.Rdf.Type).toSmartIri,
                         startPosition = standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
                         endPosition = standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
                         dataType = standoffEntities.standoffClassInfoMap(standoffTagAssertions(OntologyConstants.Rdf.Type).toSmartIri).standoffDataType,
-                        startIndex = standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt,
+                        startIndex = startIndexFromAssertions,
                         endIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex).map(_.toInt),
                         uuid = knoraIdUtil.decodeUuid(standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasUUID)),
                         originalXMLID = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
-                        startParentIndex = startParentIndex,
-                        endParentIndex = endParentIndex,
+                        startParentIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasStartParent).flatMap(_.toSmartIri.getStandoffStartIndex),
+                        endParentIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndParent).flatMap(_.toSmartIri.getStandoffStartIndex),
                         attributes = attributes
                     )
             }.toVector.sortBy(_.startIndex)

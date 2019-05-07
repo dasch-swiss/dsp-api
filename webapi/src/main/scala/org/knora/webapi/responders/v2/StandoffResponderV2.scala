@@ -91,7 +91,16 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 maybeStandoffMaxStartIndex = Some(requestMaxStartIndex)
             ).toString())
 
+            // _ = println("=================================")
+            // _ = println(resourceRequestSparql)
+
+            // standoffPageStartTime = System.currentTimeMillis()
+
             resourceRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourceRequestSparql)).mapTo[SparqlConstructResponse]
+
+            // standoffPageEndTime = System.currentTimeMillis()
+
+            // _ = println(s"Got a page of standoff in ${standoffPageEndTime - standoffPageStartTime} ms")
 
             // separate resources and values
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = getStandoffRequestV2.requestingUser)

@@ -35,7 +35,9 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.{FileUtil, PermissionUtilADM, StringFormatter}
+import org.knora.webapi.util.{FileUtil, MutableTestIri, PermissionUtilADM, StringFormatter}
+import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.diff.Diff
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -52,6 +54,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
     private val password = "test"
     private var aThingLastModificationDate = Instant.now
+    private val hamletResourceIri = new MutableTestIri
 
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
     private val writeTestDataFiles = false
@@ -792,7 +795,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
         }
 
-        "create a resource with a lot of standoff" in {
+        "create a resource with a lot of standoff (32849 words, 6738 standoff tags)" in {
+            // Create a resource containing the text of Hamlet.
+
             val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
 
             val jsonLDEntity =
@@ -818,13 +823,32 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                    |  }
                    |}""".stripMargin
 
-            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-            val response: HttpResponse = singleAwaitingRequest(request = request, duration = settings.triplestoreUpdateTimeout)
-            assert(response.status == StatusCodes.OK, response.toString)
-            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            val resourceCreateRequest = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceCreateResponse: HttpResponse = singleAwaitingRequest(request = resourceCreateRequest, duration = settings.triplestoreUpdateTimeout)
+            assert(resourceCreateResponse.status == StatusCodes.OK, resourceCreateResponse.toString)
+
+            val resourceCreateResponseAsJsonLD: JsonLDDocument = responseToJsonLDDocument(resourceCreateResponse)
+            val resourceIri: IRI = resourceCreateResponseAsJsonLD.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(resourceIri.toSmartIri.isKnoraDataIri)
-            println(s"Created Hamlet resource: <$resourceIri>")
+            hamletResourceIri.set(resourceIri)
+        }
+
+        "read a resource with a lot of standoff (32849 words, 6738 standoff tags)" in {
+            val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
+
+            // Request the newly created resource in the complex schema.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
+
+            val responseAsJsonLD = responseToJsonLDDocument(resourceGetResponse)
+
+            // Get the XML from the response.
+            val xmlFromResponse = responseAsJsonLD.body.value("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext").
+                asInstanceOf[JsonLDObject].value("http://api.knora.org/ontology/knora-api/v2#textValueAsXml").asInstanceOf[JsonLDString].value
+
+            // Compare it to the original XML.
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
+            xmlDiff.hasDifferences should be(false)
         }
     }
 }

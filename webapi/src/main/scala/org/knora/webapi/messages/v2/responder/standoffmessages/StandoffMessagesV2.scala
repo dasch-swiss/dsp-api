@@ -349,12 +349,6 @@ object StandoffProperties {
         OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID
     )
 
-    // Properties that are returned in CONSTRUCT query results but are not defined in knora-base.
-    val virtualProperties: Set[IRI] = Set(
-        OntologyConstants.KnoraBase.StandoffTagHasStartParentIndex,
-        OntologyConstants.KnoraBase.StandoffTagHasEndParentIndex
-    )
-
     // represents the standoff properties defined on the date standoff tag
     val dateProperties: Set[IRI] = Set(
         OntologyConstants.KnoraBase.ValueHasCalendar,

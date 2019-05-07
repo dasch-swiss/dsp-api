@@ -696,7 +696,7 @@ case class TextValueWithStandoffV1(utf8str: String,
             standoffNode: StandoffTagV2 =>
                 CreateStandoffTagV1InTriplestore(
                     standoffNode = standoffNode,
-                    standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
+                    standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri = valueIri, startIndex = standoffNode.startIndex) // generate IRI for new standoff node
                 )
         }
 

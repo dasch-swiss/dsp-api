@@ -79,8 +79,8 @@
 
 <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw> a knora-base:TextValue;
   knora-base:isDeleted false;
-  knora-base:valueHasStandoff <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/vLsZ6o56REqn3wpEPu1ppQ>,
-    <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/n8MWj2r3TRuzpKL5K9vPxw>;
+  knora-base:valueHasStandoff <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/0>,
+    <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/1>;
   knora-base:valueHasMaxStandoffStartIndex "1"^^xsd:nonNegativeInteger;
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
   knora-base:valueCreationDate "2018-06-04T08:56:33.879Z"^^xsd:dateTime;
@@ -89,15 +89,15 @@
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
-<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/n8MWj2r3TRuzpKL5K9vPxw>
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/1>
   a <http://www.knora.org/ontology/standoff#StandoffParagraphTag>;
   knora-base:standoffTagHasStart 0;
   knora-base:standoffTagHasEnd 9;
   knora-base:standoffTagHasStartIndex 1;
-  knora-base:standoffTagHasStartParent <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/vLsZ6o56REqn3wpEPu1ppQ>;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/0>;
   knora-base:standoffTagHasUUID "dafcc708-2755-4be4-9132-17dc6f3d73fd" .
 
-<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/vLsZ6o56REqn3wpEPu1ppQ>
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/0>
   a <http://www.knora.org/ontology/standoff#StandoffRootTag>;
   knora-base:standoffTagHasStart 0;
   knora-base:standoffTagHasEnd 10;
