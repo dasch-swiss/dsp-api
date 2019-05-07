@@ -481,7 +481,9 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      * Given a [[ValueRdfData]], constructs a [[TextValueContentV2]].
+      * Given a [[ValueRdfData]], constructs a [[TextValueContentV2]]. This method is used to process a text value
+      * as returned in an API response, as well as to process a page of standoff markup that is being queried
+      * separately from its text value.
       *
       * @param valueObject               the given [[ValueRdfData]].
       * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
@@ -506,10 +508,10 @@ object ConstructResponseUtilV2 {
         val valueLanguageOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasLanguage)
 
         if (valueObject.standoff.nonEmpty) {
-            // standoff nodes given
-            // get the IRI of the mapping
-            val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
-            val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] = mappings.get(mappingIri)
+            // The query returned a page of standoff markup.
+
+            val mappingIri: Option[IRI] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasMapping)
+            val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] = mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
 
             for {
                 standoff: Vector[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(
@@ -523,7 +525,7 @@ object ConstructResponseUtilV2 {
                 maybeValueHasString = valueObjectValueHasString,
                 valueHasLanguage = valueLanguageOption,
                 standoff = standoff,
-                mappingIri = Some(mappingIri),
+                mappingIri = mappingIri,
                 mapping = mappingAndXsltTransformation.map(_.mapping),
                 xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
                 comment = valueCommentOption
@@ -532,23 +534,27 @@ object ConstructResponseUtilV2 {
         } else if (queryStandoff && valueObject.assertions.contains(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex)) {
             // Standoff was not returned in this query result, but we're supposed to query it separately.
 
-            val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
-            val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] = mappings.get(mappingIri)
+            val mappingIri: Option[IRI] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasMapping)
+            val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] = mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
 
             for {
+                // Ask the standoff responder to get all the markup in the text value. Each page of markup will be
+                // processed by the first branch of this 'if' statement (see "The query returned a page of standoff markup" above).
+                // The resulting pages will be concatenated together and returned in a GetStandoffResponseV2.
                 standoffResponse <- (responderManager ? GetAllStandoffFromTextValueRequestV2(resourceIri = resourceIri, valueIri = valueObject.valueObjectIri, requestingUser = requestingUser)).mapTo[GetStandoffResponseV2]
             } yield TextValueContentV2(
                 ontologySchema = InternalSchema,
                 maybeValueHasString = valueObjectValueHasString,
                 valueHasLanguage = valueLanguageOption,
                 standoff = standoffResponse.standoff,
-                mappingIri = Some(mappingIri),
+                mappingIri = mappingIri,
                 mapping = mappingAndXsltTransformation.map(_.mapping),
                 xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
                 comment = valueCommentOption
             )
         } else {
-            // no standoff nodes given
+            // The query returned no standoff markup, and we're not supposed to query it separately.
+
             FastFuture.successful(TextValueContentV2(
                 ontologySchema = InternalSchema,
                 maybeValueHasString = valueObjectValueHasString,

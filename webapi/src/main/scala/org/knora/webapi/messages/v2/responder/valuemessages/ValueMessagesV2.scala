@@ -544,7 +544,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
 }
 
 /**
-  * A text value as read from the triplestore.
+  * A text value, or a page of standoff markup attached to a text value, as read from the triplestore.
   *
   * @param valueIri                      the IRI of the value.
   * @param attachedToUser                the user that created the value.
@@ -1130,7 +1130,7 @@ case class CreateStandoffTagV2InTriplestore(standoffNode: StandoffTagV2, standof
 
 
 /**
-  * Represents a Knora text value.
+  * Represents a Knora text value, or a page of standoff markup that will be included in a text value.
   *
   * @param maybeValueHasString the string representation of this text value, if available.
   * @param standoff            the standoff markup attached to the text value, if any.
