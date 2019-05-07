@@ -89,9 +89,7 @@ case class GetStandoffResponseV2(valueIri: IRI,
 
 
         val contentMap: Map[IRI, JsonLDValue] = Map(
-            JsonLDConstants.ID -> JsonLDString(valueIri),
-            JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.KnoraApiV2Complex.TextValue.toString),
-            OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff -> JsonLDArray(standoffAsJsonLD)
+            JsonLDConstants.GRAPH -> JsonLDArray(standoffAsJsonLD)
         )
 
         val nextOffsetStatement: Option[(IRI, JsonLDInt)] = nextOffset.map {
@@ -593,7 +591,10 @@ case class StandoffTagV2(standoffTagClassIri: SmartIri,
             throw AssertionException(s"Standoff is available only in the complex schema")
         }
 
-        copy(attributes = attributes.map(_.toOntologySchema(targetSchema)))
+        copy(
+            standoffTagClassIri = standoffTagClassIri.toOntologySchema(targetSchema),
+            attributes = attributes.map(_.toOntologySchema(targetSchema))
+        )
     }
 
     def toJsonLDValue(targetSchema: OntologySchema, knoraIdUtil: KnoraIdUtil): JsonLDValue = {
@@ -616,11 +617,11 @@ case class StandoffTagV2(standoffTagClassIri: SmartIri,
         }
 
         val startParentIndexStatement: Option[(IRI, JsonLDInt)] = startParentIndex.map {
-            definedStartParentIndex => OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartParent -> JsonLDInt(definedStartParentIndex)
+            definedStartParentIndex => OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartParentIndex -> JsonLDInt(definedStartParentIndex)
         }
 
         val endParentIndexStatement: Option[(IRI, JsonLDInt)] = endParentIndex.map {
-            definedEndParentIndex => OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndParent -> JsonLDInt(definedEndParentIndex)
+            definedEndParentIndex => OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndParentIndex -> JsonLDInt(definedEndParentIndex)
         }
 
         val originalXMLIDStatement: Option[(IRI, JsonLDString)] = originalXMLID.map {

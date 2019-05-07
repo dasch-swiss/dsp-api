@@ -573,8 +573,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     private val NextStandoffStartIndex: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Complex.NextStandoffStartIndex,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2Complex.TextValue),
         objectType = Some(OntologyConstants.Xsd.Integer),
         predicates = Seq(
             makePredicate(
@@ -586,7 +584,49 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "The next knora-api:standoffTagHasStartIndex in a text value."
+                    LanguageCodes.EN -> "The next available knora-api:standoffTagHasStartIndex in a sequence of pages of standoff."
+                )
+            )
+        )
+    )
+
+    private val StandoffTagHasStartParentIndex: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartParentIndex,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2Complex.StandoffTag),
+        objectType = Some(OntologyConstants.Xsd.Integer),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "standoff tag has start parent index"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The next knora-api:standoffTagHasStartIndex of the start parent tag of a standoff tag."
+                )
+            )
+        )
+    )
+
+    private val StandoffTagHasEndParentIndex: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndParentIndex,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2Complex.StandoffTag),
+        objectType = Some(OntologyConstants.Xsd.Integer),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "standoff tag has end parent index"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The next knora-api:standoffTagHasStartIndex of the end parent tag of a standoff tag."
                 )
             )
         )
@@ -1512,6 +1552,11 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         OntologyConstants.KnoraApiV2Complex.TextValueHasMaxStandoffStartIndex -> Cardinality.MayHaveOne
     )
 
+    private val StandoffTagCardinalities = Map(
+        OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartParentIndex -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndParentIndex -> Cardinality.MayHaveOne
+    )
+
     private val LinkValueCardinalities = Map(
         OntologyConstants.KnoraApiV2Complex.LinkValueHasSource -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget -> Cardinality.MayHaveOne,
@@ -1650,6 +1695,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         OntologyConstants.KnoraApiV2Complex.ColorBase -> ColorBaseCardinalities,
         OntologyConstants.KnoraApiV2Complex.Value -> ValueCardinalities,
         OntologyConstants.KnoraApiV2Complex.TextValue -> TextValueCardinalities,
+        OntologyConstants.KnoraApiV2Complex.StandoffTag -> StandoffTagCardinalities,
         OntologyConstants.KnoraApiV2Complex.LinkValue -> LinkValueCardinalities,
         OntologyConstants.KnoraApiV2Complex.GeomValue -> GeomValueCardinalities,
         OntologyConstants.KnoraApiV2Complex.ListValue -> ListValueCardinalities,
@@ -1702,6 +1748,8 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         TextValueHasStandoff,
         TextValueHasMaxStandoffStartIndex,
         NextStandoffStartIndex,
+        StandoffTagHasStartParentIndex,
+        StandoffTagHasEndParentIndex,
         TextValueHasLanguage,
         TextValueAsXml,
         TextValueAsHtml,

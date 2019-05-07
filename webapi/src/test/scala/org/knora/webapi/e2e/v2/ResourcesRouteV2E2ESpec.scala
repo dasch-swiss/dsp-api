@@ -35,10 +35,11 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.{FileUtil, MutableTestIri, PermissionUtilADM, StringFormatter}
+import org.knora.webapi.util._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContextExecutor
 
 /**
@@ -46,6 +47,8 @@ import scala.concurrent.ExecutionContextExecutor
   */
 class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    private val knoraIdUtil = new KnoraIdUtil
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.triplestoreUpdateTimeout)
 
@@ -795,7 +798,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
         }
 
-        "create a resource with a lot of standoff (32849 words, 6738 standoff tags)" in {
+        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" in {
             // Create a resource containing the text of Hamlet.
 
             val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
@@ -833,22 +836,95 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             hamletResourceIri.set(resourceIri)
         }
 
-        "read a resource with a lot of standoff (32849 words, 6738 standoff tags)" in {
+        "read the large text and its markup as XML" in {
             val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
 
-            // Request the newly created resource in the complex schema.
+            // Request the newly created resource.
             val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
 
-            val responseAsJsonLD = responseToJsonLDDocument(resourceGetResponse)
+            // Check that the response matches the ontology.
+            instanceChecker.check(
+                instanceResponse = resourceGetResponseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
 
             // Get the XML from the response.
-            val xmlFromResponse = responseAsJsonLD.body.value("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext").
-                asInstanceOf[JsonLDObject].value("http://api.knora.org/ontology/knora-api/v2#textValueAsXml").asInstanceOf[JsonLDString].value
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val xmlFromResponse: String = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext").
+                requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
 
             // Compare it to the original XML.
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
             xmlDiff.hasDifferences should be(false)
+        }
+
+        "read the large text without its markup, and get the markup separately as pages of standoff" in {
+            // Get the resource without markup.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}").addHeader(new MarkupHeader(RouteUtilV2.MARKUP_STANDOFF)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+
+            // Check that the response matches the ontology.
+            instanceChecker.check(
+                instanceResponse = resourceGetResponseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+
+            // Get the standoff markup separately.
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val textValue: JsonLDObject = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+            val maybeTextValueAsXml: Option[String] = textValue.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+            assert(maybeTextValueAsXml.isEmpty)
+            val textValueIri: IRI = textValue.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+
+            val resourceIriEncoded: IRI = URLEncoder.encode(hamletResourceIri.get, "UTF-8")
+            val textValueIriEncoded: IRI = URLEncoder.encode(textValueIri, "UTF-8")
+
+            val standoffBuffer: ArrayBuffer[JsonLDObject] = ArrayBuffer.empty
+            var offset: Int = 0
+            var hasMoreStandoff: Boolean = true
+
+            while (hasMoreStandoff) {
+                // Get a page of standoff.
+
+                val standoffGetRequest = Get(s"$baseApiUrl/v2/standoff/$resourceIriEncoded/$textValueIriEncoded/$offset").addHeader(new MarkupHeader(RouteUtilV2.MARKUP_STANDOFF)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+                val standoffGetResponse: HttpResponse = singleAwaitingRequest(standoffGetRequest)
+                val standoffGetResponseAsJsonLD: JsonLDObject = responseToJsonLDDocument(standoffGetResponse).body
+
+                val standoff: Seq[JsonLDValue] = standoffGetResponseAsJsonLD.maybeArray(JsonLDConstants.GRAPH).map(_.value).getOrElse(Seq.empty)
+
+                val standoffAsJsonLDObjects: Seq[JsonLDObject] = standoff.map {
+                    case jsonLDObject: JsonLDObject => jsonLDObject
+                    case other => throw AssertionException(s"Expected JsonLDObject, got $other")
+                }
+
+                standoffBuffer.appendAll(standoffAsJsonLDObjects)
+
+                standoffGetResponseAsJsonLD.maybeInt(OntologyConstants.KnoraApiV2Complex.NextStandoffStartIndex) match {
+                    case Some(nextOffset) => offset = nextOffset
+                    case None => hasMoreStandoff = false
+                }
+            }
+
+            assert(standoffBuffer.length == 6738)
+
+            // Check that each standoff tag matches the ontology. (Commented out because it takes about a minute.)
+
+            /*
+            for (jsonLDObject <- standoffBuffer) {
+                val docForValidation = JsonLDDocument(body = jsonLDObject).toCompactString
+
+                instanceChecker.check(
+                    instanceResponse = docForValidation,
+                    expectedClassIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr),
+                    knoraRouteGet = doGetRequest
+                )
+           }
+           */
         }
     }
 }

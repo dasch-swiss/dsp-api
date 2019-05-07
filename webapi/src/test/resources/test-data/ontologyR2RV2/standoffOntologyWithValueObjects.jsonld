@@ -32,6 +32,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -54,6 +61,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -96,6 +110,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -118,6 +139,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -160,6 +188,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -182,6 +217,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -224,6 +266,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -246,6 +295,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -288,6 +344,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -310,6 +373,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -352,6 +422,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -374,6 +451,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -416,6 +500,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -438,6 +529,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -480,6 +578,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -502,6 +607,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -544,6 +656,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -566,6 +685,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -608,6 +734,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -630,6 +763,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -672,6 +812,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -694,6 +841,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -736,6 +890,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -758,6 +919,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -813,6 +981,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -835,6 +1010,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -877,6 +1059,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -899,6 +1088,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -941,6 +1137,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -963,6 +1166,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1005,6 +1215,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1027,6 +1244,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1069,6 +1293,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1091,6 +1322,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1133,6 +1371,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1155,6 +1400,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1197,6 +1449,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1219,6 +1478,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1267,6 +1533,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1289,6 +1562,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1331,6 +1611,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1353,6 +1640,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1395,6 +1689,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1417,6 +1718,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1459,6 +1767,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1481,6 +1796,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1523,6 +1845,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1545,6 +1874,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1587,6 +1923,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1609,6 +1952,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1651,6 +2001,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1673,6 +2030,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1715,6 +2079,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1737,6 +2108,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1779,6 +2157,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1801,6 +2186,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1843,6 +2235,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1865,6 +2264,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1907,6 +2313,13 @@
       "knora-api:isInherited" : true,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasEndParentIndex"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasOriginalXMLID"
       }
     }, {
@@ -1929,6 +2342,13 @@
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:standoffTagHasStartParent"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:standoffTagHasStartParentIndex"
       }
     }, {
       "@type" : "owl:Restriction",

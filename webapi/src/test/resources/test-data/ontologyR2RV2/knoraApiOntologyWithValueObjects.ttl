@@ -2186,6 +2186,10 @@ knora-api:StandoffBooleanTag a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParentIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasOriginalXMLID
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2199,6 +2203,10 @@ knora-api:StandoffBooleanTag a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParentIndex
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2223,6 +2231,10 @@ knora-api:StandoffDataTypeTag a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParentIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasOriginalXMLID
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2236,6 +2248,10 @@ knora-api:StandoffDataTypeTag a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParentIndex
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2254,6 +2270,12 @@ knora-api:standoffTagHasEndParent a owl:ObjectProperty;
   knora-api:objectType knora-api:StandoffTag;
   knora-api:subjectType knora-api:StandoffTag .
 
+knora-api:standoffTagHasEndParentIndex a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:StandoffTag;
+  rdfs:comment "The next knora-api:standoffTagHasStartIndex of the end parent tag of a standoff tag.";
+  rdfs:label "standoff tag has end parent index" .
+
 knora-api:standoffTagHasOriginalXMLID a owl:DatatypeProperty;
   knora-api:objectType xsd:string;
   knora-api:subjectType knora-api:StandoffTag .
@@ -2270,6 +2292,12 @@ knora-api:standoffTagHasStartParent a owl:ObjectProperty;
   knora-api:objectType knora-api:StandoffTag;
   knora-api:subjectType knora-api:StandoffTag;
   rdfs:subPropertyOf knora-api:standoffTagHasStartAncestor .
+
+knora-api:standoffTagHasStartParentIndex a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:StandoffTag;
+  rdfs:comment "The next knora-api:standoffTagHasStartIndex of the start parent tag of a standoff tag.";
+  rdfs:label "standoff tag has start parent index" .
 
 knora-api:standoffTagHasUUID a owl:DatatypeProperty;
   knora-api:objectType xsd:string;
@@ -2297,6 +2325,10 @@ knora-api:StandoffColorTag a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParentIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasOriginalXMLID
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2310,6 +2342,10 @@ knora-api:StandoffColorTag a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParentIndex
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2330,6 +2366,9 @@ knora-api:StandoffTag a owl:Class;
       owl:onProperty knora-api:standoffTagHasEndParent
     ], [ a owl:Restriction;
       owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParentIndex
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasOriginalXMLID
     ], [ a owl:Restriction;
       owl:cardinality 1;
@@ -2340,6 +2379,9 @@ knora-api:StandoffTag a owl:Class;
     ], [ a owl:Restriction;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParentIndex
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:standoffTagHasUUID
@@ -2399,6 +2441,10 @@ knora-api:StandoffDateTag a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParentIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasOriginalXMLID
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2412,6 +2458,10 @@ knora-api:StandoffDateTag a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParentIndex
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2440,6 +2490,10 @@ knora-api:StandoffDecimalTag a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParentIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasOriginalXMLID
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2453,6 +2507,10 @@ knora-api:StandoffDecimalTag a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParentIndex
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2481,6 +2539,10 @@ knora-api:StandoffIntegerTag a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParentIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasOriginalXMLID
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2494,6 +2556,10 @@ knora-api:StandoffIntegerTag a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParentIndex
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2516,6 +2582,10 @@ knora-api:StandoffInternalReferenceTag a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasEndParent
     ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParentIndex
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:standoffTagHasInternalReference
     ], [ a owl:Restriction;
@@ -2534,6 +2604,10 @@ knora-api:StandoffInternalReferenceTag a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParentIndex
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2570,6 +2644,10 @@ knora-api:StandoffIntervalTag a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParentIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasOriginalXMLID
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2583,6 +2661,10 @@ knora-api:StandoffIntervalTag a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParentIndex
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2605,6 +2687,10 @@ knora-api:StandoffLinkTag a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasEndParent
     ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParentIndex
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:standoffTagHasLink
     ], [ a owl:Restriction;
@@ -2623,6 +2709,10 @@ knora-api:StandoffLinkTag a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParentIndex
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2651,6 +2741,10 @@ knora-api:StandoffUriTag a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParentIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasOriginalXMLID
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2664,6 +2758,10 @@ knora-api:StandoffUriTag a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParentIndex
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -3370,10 +3468,8 @@ knora-api:newModificationDate a owl:DatatypeProperty;
 
 knora-api:nextStandoffStartIndex a owl:DatatypeProperty;
   knora-api:objectType xsd:integer;
-  knora-api:subjectType knora-api:TextValue;
-  rdfs:comment "The next knora-api:standoffTagHasStartIndex in a text value.";
-  rdfs:label "next standoff start index";
-  rdfs:subPropertyOf knora-api:valueHas .
+  rdfs:comment "The next available knora-api:standoffTagHasStartIndex in a sequence of pages of standoff.";
+  rdfs:label "next standoff start index" .
 
 knora-api:objectType a rdf:Property;
   rdfs:comment "Specifies the required type of the objects of a property";
