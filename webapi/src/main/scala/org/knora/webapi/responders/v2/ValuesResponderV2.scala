@@ -1532,6 +1532,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceIris = Seq(resourceIri),
                     propertyIri = Some(propertyIri),
                     versionDate = Some(unverifiedValue.creationDate),
+                    targetSchema = ApiV2Complex,
+                    schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                     requestingUser = requestingUser
                 )
             }
