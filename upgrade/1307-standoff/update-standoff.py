@@ -19,7 +19,7 @@
 
 
 #######################################################################################
-# Adds knora-base:valueHasMaxStandoffStartIndex to the repository.
+# Updates standoff for PR 1307.
 #######################################################################################
 
 
@@ -54,13 +54,22 @@ def do_update(graphdb_url, username, password):
         sparql_file_path="sparql/update-knora-base.rq"
     )
 
-    print("Updating text values...")
+    print("Updating standoff IRIs...")
 
     do_sparql_update_request(
         graphdb_url=graphdb_url,
         username=username,
         password=password,
-        sparql_file_path="sparql/update-standoff.rq"
+        sparql_file_path="sparql/update-standoff-iris.rq"
+    )
+
+    print("Adding knora-base:valueHasMaxStandoffStartIndex...")
+
+    do_sparql_update_request(
+        graphdb_url=graphdb_url,
+        username=username,
+        password=password,
+        sparql_file_path="sparql/add-max-start-index.rq"
     )
 
     elapsed = time.time() - start

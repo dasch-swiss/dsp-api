@@ -285,7 +285,7 @@
   knora-base:standoffTagHasStart 10;
   knora-base:standoffTagHasEnd 16;
   knora-base:standoffTagHasStartIndex 2;
-  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg/standoff/0>;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg/standoff/1>;
   knora-base:standoffTagHasUUID "ea83cb41-1333-4b24-81de-8e00f8825251" .
 
 <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uBAmWuRhR-eo1u1eP7qqNg> a knora-base:UriValue;

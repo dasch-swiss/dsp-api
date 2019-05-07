@@ -43,8 +43,6 @@ import scala.concurrent.duration._
   * Static data for testing [[ValuesResponderV1]].
   */
 object ValuesResponderV1Spec {
-    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
     val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
@@ -84,6 +82,7 @@ object ValuesResponderV1Spec {
   * Tests [[ValuesResponderV1]].
   */
 class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with ImplicitSender {
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     import ValuesResponderV1Spec._
 
@@ -109,16 +108,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     private val currentColorValueIri = new MutableTestIri
     private val currentGeomValueIri = new MutableTestIri
     private val partOfLinkValueIri = new MutableTestIri
+
     // a sample set of standoff tags
     private val sampleStandoff: Vector[StandoffTagV2] = Vector(
-        StandoffTagV2(
-            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
-            startPosition = 0,
-            endPosition = 7,
-            uuid = UUID.randomUUID(),
-            originalXMLID = None,
-            startIndex = 0
-        ),
         StandoffTagV2(
             standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
             startPosition = 0,
@@ -126,10 +118,19 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
+        ),
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
+            startPosition = 0,
+            endPosition = 7,
+            uuid = UUID.randomUUID(),
+            originalXMLID = None,
+            startIndex = 1
         )
     )
+
     private val dummyMapping = MappingXMLtoStandoff(
-            namespace = Map.empty[String, Map[String, Map[String, XMLTag]]],
+        namespace = Map.empty[String, Map[String, Map[String, XMLTag]]],
         defaultXSLTransformation = None
     )
 
@@ -156,7 +157,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     private def checkValueGetResponseWithStandoff(response: ValueGetResponseV1): Unit = {
         assert(response.rights == 6, "rights was not 6")
         assert(response.value.asInstanceOf[TextValueWithStandoffV1].utf8str == "Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach", "comment utf8str value did not match")
-
 
 
         // expected Standoff information for <http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04> in incunabula-data.ttl
@@ -839,26 +839,26 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val textValueWithResourceRef = TextValueWithStandoffV1(
                 utf8str = "This updated comment refers to another resource",
                 standoff = Vector(
-                        StandoffTagV2(
-                            dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
-                            startPosition = 39,
-                            endPosition = 47,
-                            attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
-                            uuid = UUID.randomUUID(),
-                            originalXMLID = None,
-                            startIndex = 0
-                        ),
-                        StandoffTagV2(
-                            dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
-                            startPosition = 0,
-                            endPosition = 4,
-                            attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
-                            uuid = UUID.randomUUID(),
-                            originalXMLID = None,
-                            startIndex = 0
-                        )
+                    StandoffTagV2(
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
+                        startPosition = 0,
+                        endPosition = 4,
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
+                        uuid = UUID.randomUUID(),
+                        originalXMLID = None,
+                        startIndex = 0
+                    ),
+                    StandoffTagV2(
+                        dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
+                        startPosition = 39,
+                        endPosition = 47,
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = zeitglöckleinIri)),
+                        uuid = UUID.randomUUID(),
+                        originalXMLID = None,
+                        startIndex = 1
+                    )
                 ),
                 resource_reference = Set(zeitglöckleinIri),
                 mapping = dummyMapping,
@@ -1250,7 +1250,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             expectMsgPF(timeout) {
                 case msg: CreateValueResponseV1 =>
                     currentPubdateValueIri.set(msg.id)
-                    msg.value should ===(DateValueV1("2000", "2015-01-21", "CE","CE", KnoraCalendarV1.GREGORIAN))
+                    msg.value should ===(DateValueV1("2000", "2015-01-21", "CE", "CE", KnoraCalendarV1.GREGORIAN))
             }
         }
 
@@ -1728,7 +1728,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newBooleanValue: BooleanValueV1, _ , _, _) =>
+                case CreateValueResponseV1(newBooleanValue: BooleanValueV1, _, _, _) =>
                     newBooleanValue should ===(booleanValue)
             }
         }
@@ -1961,18 +1961,18 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         "add a new text value with language" in {
 
             responderManager ! CreateValueRequestV1(
-                value = TextValueSimpleV1(utf8str = "Hello World!", language= Some("en")),
+                value = TextValueSimpleV1(utf8str = "Hello World!", language = Some("en")),
                 userProfile = anythingUser,
                 propertyIri = "http://www.knora.org/ontology/0001/anything#hasText",
                 resourceIri = "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
                 apiRequestID = UUID.randomUUID
             )
 
-                expectMsgPF(timeout) {
-                    case msg: CreateValueResponseV1 =>
-                        msg.value should ===(TextValueSimpleV1(utf8str = "Hello World!", language = Some("en")))
+            expectMsgPF(timeout) {
+                case msg: CreateValueResponseV1 =>
+                    msg.value should ===(TextValueSimpleV1(utf8str = "Hello World!", language = Some("en")))
 
-                }
+            }
         }
 
     }
