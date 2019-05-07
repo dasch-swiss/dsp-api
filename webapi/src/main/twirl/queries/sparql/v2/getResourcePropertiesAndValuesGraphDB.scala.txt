@@ -221,18 +221,12 @@ CONSTRUCT {
                         ?valueObjectProperty ?valueObjectValue .
                 }
 
-                @* Exclude standoff if requested. *@
-
-                @if(maybeStandoffMinStartIndex.isEmpty) {
-                    FILTER NOT EXISTS {
-                        ?valueObjectValue a knora-base:StandoffTag .
-                    }
-                }
+                FILTER(?valueObjectProperty != knora-base:valueHasStandoff)
 
                 @* Exclude knora-base:valueHasString if requested. *@
 
                 @if(!queryValueHasString) {
-                    FILTER(?valueObjectProperty != knora-base:valueHasString && ?valueObjectProperty != knora-base:valueHasStandoff)
+                    FILTER(?valueObjectProperty != knora-base:valueHasString)
                 }
             }
             @* Query standoff if requested. *@
