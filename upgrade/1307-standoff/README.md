@@ -1,9 +1,8 @@
-# Add knora-base:valueHasMaxStandoffStartIndex
+# Update standoff markup
 
 With [PR #1307](https://github.com/dhlab-basel/Knora/pull/1307), standoff markup
 can be queried separately from text values. To support this, the `knora-base`
-ontology must be updated, and the property `knora-base:valueHasMaxStandoffStartIndex`
-must be added to all text values that have standoff markup. The program
+ontology and existing text values must be updated. The program
 `update-standoff.py` in this directory updates your repository accordingly.
 
 ## Instructions
