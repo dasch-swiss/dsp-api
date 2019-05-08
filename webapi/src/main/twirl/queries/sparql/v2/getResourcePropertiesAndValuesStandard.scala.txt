@@ -35,12 +35,12 @@
  * @param maybeVersionDate           if defined, requests the state of the resources at the specified
  *                                   time in the past. Cannot be used in conjunction with preview.
  * @param maybeValueIri              if defined, the specified value will be the only value returned.
- * @param queryValueHasString        if true, knora-base:valueHasString will be returned.
+ * @param queryAllNonStandoff        if true, knora-base:valueHasString and other non-standoff content will be returned.
  * @param maybeStandoffMinStartIndex if defined, the minimum knora-base:standoffTagHasStartIndex to be returned.
- *                                   Requires maybeValueIri and maybeStandoffMaxStartIndex. If undefined, standoff will
+ *                                   Requires maybeStandoffMaxStartIndex. If undefined, standoff will
  *                                   not be returned.
  * @param maybeStandoffMaxStartIndex if defined, the maximum knora-base:standoffTagHasStartIndex to be returned.
- *                                   Requires maybeValueIri and maybeStandoffMinStartIndex. If undefined, standoff will
+ *                                   Requires maybeStandoffMinStartIndex. If undefined, standoff will
  *                                   not be returned.
  *@
 @(triplestore: String,
@@ -49,7 +49,7 @@
   maybePropertyIri: Option[SmartIri],
   maybeVersionDate: Option[Instant],
   maybeValueIri: Option[IRI],
-  queryValueHasString: Boolean,
+  queryAllNonStandoff: Boolean,
   maybeStandoffMinStartIndex: Option[Int],
   maybeStandoffMaxStartIndex: Option[Int])
 

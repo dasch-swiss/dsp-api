@@ -66,7 +66,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       */
     def receive(msg: StandoffResponderRequestV2) = msg match {
         case getStandoffPageRequestV2: GetStandoffPageRequestV2 => getStandoffV2(getStandoffPageRequestV2)
-        case getAllStandoffFromTextValueRequestV2: GetAllStandoffFromTextValueRequestV2 => getAllStandoffFromTextValueV2(getAllStandoffFromTextValueRequestV2)
+        case getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2 => getRemainingStandoffFromTextValueV2(getRemainingStandoffFromTextValueRequestV2)
         case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) => createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, requestingUser, uuid)
         case GetMappingRequestV2(mappingIri, requestingUser) => getMappingV2(mappingIri, requestingUser)
         case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) => getXSLTransformation(xsltTextReprIri, requestingUser)
@@ -85,7 +85,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 preview = false,
                 maybePropertyIri = None,
                 maybeVersionDate = None,
-                queryValueHasString = false,
+                queryAllNonStandoff = false,
                 maybeValueIri = Some(getStandoffRequestV2.valueIri),
                 maybeStandoffMinStartIndex = Some(getStandoffRequestV2.offset),
                 maybeStandoffMaxStartIndex = Some(requestMaxStartIndex)
@@ -886,21 +886,21 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Returns all standoff markup for a text value, by querying it one page at a time.
+      * Returns all pages of standoff markup from a text value, except for the first page.
       *
-      * @param getAllStandoffFromTextValueRequestV2 the request message.
+      * @param getRemainingStandoffFromTextValueRequestV2 the request message.
       * @return the text value's standoff markup.
       */
-    private def getAllStandoffFromTextValueV2(getAllStandoffFromTextValueRequestV2: GetAllStandoffFromTextValueRequestV2): Future[GetStandoffResponseV2] = {
+    private def getRemainingStandoffFromTextValueV2(getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2): Future[GetStandoffResponseV2] = {
         val firstTask = GetStandoffTask(
-            resourceIri = getAllStandoffFromTextValueRequestV2.resourceIri,
-            valueIri = getAllStandoffFromTextValueRequestV2.valueIri,
-            offset = 0,
-            requestingUser = getAllStandoffFromTextValueRequestV2.requestingUser
+            resourceIri = getRemainingStandoffFromTextValueRequestV2.resourceIri,
+            valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
+            offset = settings.standoffPerPage, // the offset of the second page
+            requestingUser = getRemainingStandoffFromTextValueRequestV2.requestingUser
         )
 
         for {
             result: TaskResult[StandoffTaskUnderlyingResult] <- ActorUtil.runTasks(firstTask)
-        } yield GetStandoffResponseV2(valueIri = getAllStandoffFromTextValueRequestV2.valueIri, standoff = result.underlyingResult.standoff, nextOffset = None)
+        } yield GetStandoffResponseV2(valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri, standoff = result.underlyingResult.standoff, nextOffset = None)
     }
 }

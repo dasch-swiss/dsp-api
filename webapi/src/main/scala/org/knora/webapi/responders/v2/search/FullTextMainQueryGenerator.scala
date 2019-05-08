@@ -21,7 +21,8 @@ package org.knora.webapi.responders.v2.search
 
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{ApiV2Schema, IRI, MarkupAsStandoff, OntologyConstants, SchemaOption, SchemaOptions}
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.{ApiV2Schema, IRI, MarkupAsStandoff, OntologyConstants, SchemaOption, SchemaOptions, SettingsImpl}
 
 object FullTextMainQueryGenerator {
 
@@ -64,6 +65,9 @@ object FullTextMainQueryGenerator {
 
         // SPARQL variable representing the objects of a standoff node of a (text) value object
         val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
+
+        // SPARQL variable representing the start index of a standoff node.
+        val standoffStartIndexVar: QueryVariable = QueryVariable("startIndex")
     }
 
     /**
@@ -75,7 +79,7 @@ object FullTextMainQueryGenerator {
       * @param schemaOptions   the schema options submitted with the request.
       * @return a [[ConstructQuery]].
       */
-    def createMainQuery(resourceIris: Set[IRI], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): ConstructQuery = {
+    def createMainQuery(resourceIris: Set[IRI], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption], settings: SettingsImpl): ConstructQuery = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         import FullTextSearchConstants._
@@ -114,15 +118,30 @@ object FullTextMainQueryGenerator {
                 StatementPattern(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj)
             )
 
-            // Check whether the response should include standoff.
+            // Check whether the response should include a page of standoff.
             val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
 
-            // WHERE patterns for standoff belonging to value objects (if any)
+            // WHERE patterns for querying the first page of standoff in each text value
             val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {
                 Seq(
                     ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
                     StatementPattern.makeExplicit(subj = resourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
-                    StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+                    StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
+                    StatementPattern.makeExplicit(subj = standoffNodeVar, pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartIndex.toSmartIri), obj = standoffStartIndexVar),
+                    FilterPattern(
+                        AndExpression(
+                            leftArg = CompareExpression(
+                                leftArg = standoffStartIndexVar,
+                                operator = CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO,
+                                rightArg = XsdLiteral(value = "0", datatype = OntologyConstants.Xsd.Integer.toSmartIri)
+                            ),
+                            rightArg = CompareExpression(
+                                leftArg = standoffStartIndexVar,
+                                operator = CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO,
+                                rightArg = XsdLiteral(value = (settings.standoffPerPage - 1).toString, datatype = OntologyConstants.Xsd.Integer.toSmartIri)
+                            )
+                        )
+                    )
                 )
             } else {
                 Seq.empty[QueryPattern]

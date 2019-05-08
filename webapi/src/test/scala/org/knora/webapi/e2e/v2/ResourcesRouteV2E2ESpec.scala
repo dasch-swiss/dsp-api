@@ -48,8 +48,6 @@ import scala.concurrent.ExecutionContextExecutor
 class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val knoraIdUtil = new KnoraIdUtil
-
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.triplestoreUpdateTimeout)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
@@ -836,7 +834,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             hamletResourceIri.set(resourceIri)
         }
 
-        "read the large text and its markup as XML" in {
+        "read the large text and its markup as XML, and check that it matches the original XML" in {
             val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
 
             // Request the newly created resource.

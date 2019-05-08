@@ -45,6 +45,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{DeletePermission, ModifyPermission}
 import org.knora.webapi.util._
 import org.knora.webapi.util.date.CalendarNameGregorian
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -948,6 +949,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
+        // If we're supposed to query standoff, get the indexes delimiting the first page of standoff. (Subsequent
+        // pages, if any, will be queried separately.)
+        val (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) = StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
+            settings = settings,
+            targetSchema = targetSchema,
+            schemaOptions = schemaOptions
+        )
+
         for {
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
@@ -955,7 +964,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 preview = preview,
                 maybePropertyIri = propertyIri,
                 maybeVersionDate = versionDate,
-                queryValueHasString = true
+                queryAllNonStandoff = true,
+                maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
+                maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex
             ).toString())
 
             // _ = println(resourceRequestSparql)

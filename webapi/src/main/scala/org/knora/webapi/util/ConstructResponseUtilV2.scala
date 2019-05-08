@@ -31,7 +31,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetAllStandoffFromTextValueRequestV2, GetStandoffResponseV2, MappingXMLtoStandoff, StandoffTagV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetRemainingStandoffFromTextValueRequestV2, GetStandoffResponseV2, MappingXMLtoStandoff, StandoffTagV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
@@ -508,7 +508,9 @@ object ConstructResponseUtilV2 {
         val valueLanguageOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasLanguage)
 
         if (valueObject.standoff.nonEmpty) {
-            // The query returned a page of standoff markup.
+            // The query included a page of standoff markup. This is either because we've queried the text value
+            // and got the first page of its standoff along with it, or because we're querying a subsequent page
+            // of standoff for a text value.
 
             val mappingIri: Option[IRI] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasMapping)
             val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] = mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
@@ -520,40 +522,43 @@ object ConstructResponseUtilV2 {
                     responderManager = responderManager,
                     requestingUser = requestingUser
                 )
+
+                valueHasMaxStandoffStartIndex = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex).toInt
+                lastStartIndexQueried = standoff.last.startIndex
+
+                // Should we get more the rest of the standoff for the same text value?
+                standoffToReturn <- if (queryStandoff && lastStartIndexQueried < valueHasMaxStandoffStartIndex) {
+                    // We're supposed to get all the standoff for the text value. Ask the standoff responder for the rest of it.
+                    // Each page of markup will be also be processed by this method. The resulting pages will be
+                    // concatenated together and returned in a GetStandoffResponseV2.
+
+                    // println(s"***** makeTextValueContentV2: Got <${valueObject.valueObjectIri}> with ${valueObject.standoff.size} standoff tags. Querying the rest.")
+
+                    for {
+                        standoffResponse <- (responderManager ? GetRemainingStandoffFromTextValueRequestV2(resourceIri = resourceIri, valueIri = valueObject.valueObjectIri, requestingUser = requestingUser)).mapTo[GetStandoffResponseV2]
+                    } yield standoff ++ standoffResponse.standoff
+                } else {
+                    // We're not supposed to get any more standoff here, either because we have all of it already,
+                    // or because we're just supposed to return one page.
+
+                    // println(s"***** makeTextValueContentV2: Got <${valueObject.valueObjectIri}> with ${valueObject.standoff.size} standoff tags. Not querying more here.")
+
+                    FastFuture.successful(standoff)
+                }
             } yield TextValueContentV2(
                 ontologySchema = InternalSchema,
                 maybeValueHasString = valueObjectValueHasString,
                 valueHasLanguage = valueLanguageOption,
-                standoff = standoff,
-                mappingIri = mappingIri,
-                mapping = mappingAndXsltTransformation.map(_.mapping),
-                xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
-                comment = valueCommentOption
-            )
-
-        } else if (queryStandoff && valueObject.assertions.contains(OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex)) {
-            // Standoff was not returned in this query result, but we're supposed to query it separately.
-
-            val mappingIri: Option[IRI] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasMapping)
-            val mappingAndXsltTransformation: Option[MappingAndXSLTransformation] = mappingIri.flatMap(definedMappingIri => mappings.get(definedMappingIri))
-
-            for {
-                // Ask the standoff responder to get all the markup in the text value. Each page of markup will be
-                // processed by the first branch of this 'if' statement (see "The query returned a page of standoff markup" above).
-                // The resulting pages will be concatenated together and returned in a GetStandoffResponseV2.
-                standoffResponse <- (responderManager ? GetAllStandoffFromTextValueRequestV2(resourceIri = resourceIri, valueIri = valueObject.valueObjectIri, requestingUser = requestingUser)).mapTo[GetStandoffResponseV2]
-            } yield TextValueContentV2(
-                ontologySchema = InternalSchema,
-                maybeValueHasString = valueObjectValueHasString,
-                valueHasLanguage = valueLanguageOption,
-                standoff = standoffResponse.standoff,
+                standoff = standoffToReturn,
                 mappingIri = mappingIri,
                 mapping = mappingAndXsltTransformation.map(_.mapping),
                 xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
                 comment = valueCommentOption
             )
         } else {
-            // The query returned no standoff markup, and we're not supposed to query it separately.
+            // The query returned no standoff markup.
+
+            // println(s"***** makeTextValueContentV2: Got <${valueObject.valueObjectIri}> with no standoff. Not querying more here.")
 
             FastFuture.successful(TextValueContentV2(
                 ontologySchema = InternalSchema,

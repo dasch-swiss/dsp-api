@@ -37,6 +37,7 @@ import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.ConstructResponseUtilV2.ResourceWithValueRdfData
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
 import scala.concurrent.Future
 
@@ -210,7 +211,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     resourceIris = resourceIris.toSet,
                     valueObjectIris = allValueObjectIris,
                     targetSchema = targetSchema,
-                    schemaOptions = schemaOptions
+                    schemaOptions = schemaOptions,
+                    settings = settings
                 )
 
                 val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
@@ -499,7 +501,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
                     valueObjectIris = allValueObjectIris,
                     targetSchema = targetSchema,
-                    schemaOptions = schemaOptions
+                    schemaOptions = schemaOptions,
+                    settings = settings
                 )
 
                 val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
@@ -658,20 +661,28 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResponse]
             mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
 
-            // Check whether the response should include standoff.
-            queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(ApiV2Complex, resourcesInProjectGetRequestV2.schemaOptions)
+            // If we're supposed to query standoff, get the indexes delimiting the first page of standoff. (Subsequent
+            // pages, if any, will be queried separately.)
+            (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) = StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
+                settings = settings,
+                targetSchema = ApiV2Complex,
+                schemaOptions = resourcesInProjectGetRequestV2.schemaOptions
+            )
 
             // Are there any matching resources?
             resources: Vector[ReadResourceV2] <- if (mainResourceIris.nonEmpty) {
                 for {
-                    // Yes. Do a CONSTRUCT query to get the complete contents of those resources.
+                    // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
+                    // at most one page of standoff per text value.
                     resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                         triplestore = settings.triplestoreType,
                         resourceIris = mainResourceIris,
                         preview = false,
-                        queryValueHasString = true,
+                        queryAllNonStandoff = true,
                         maybePropertyIri = None,
-                        maybeVersionDate = None
+                        maybeVersionDate = None,
+                        maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
+                        maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex
                     ).toString())
 
                     // _ = println(resourceRequestSparql)
@@ -698,7 +709,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         searchResults = queryResultsSeparated,
                         orderByResourceIri = mainResourceIris,
                         mappings = mappings,
-                        queryStandoff = queryStandoff,
+                        queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
                         forbiddenResource = forbiddenResourceOption,
                         responderManager = responderManager,
                         knoraIdUtil = knoraIdUtil,

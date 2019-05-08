@@ -67,6 +67,9 @@ object GravsearchMainQueryGenerator {
         // SPARQL variable representing the objects of a standoff node of a (text) value object
         val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
 
+        // SPARQL variable representing the start index of a standoff node.
+        val standoffStartIndexVar: QueryVariable = QueryVariable("startIndex")
+
         // SPARQL variable representing a list node pointed to by a (list) value object
         val listNode: QueryVariable = QueryVariable("listNode")
 
@@ -158,11 +161,11 @@ object GravsearchMainQueryGenerator {
       * @param mainResourceIris      IRIs of main resources to be queried.
       * @param dependentResourceIris IRIs of dependent resources to be queried.
       * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
-      * @param targetSchema the target API schema.
+      * @param targetSchema          the target API schema.
       * @param schemaOptions         the schema options submitted with the request.
       * @return the main [[ConstructQuery]] query to be executed.
       */
-    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): ConstructQuery = {
+    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption], settings: SettingsImpl): ConstructQuery = {
         import GravsearchConstants._
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -219,12 +222,27 @@ object GravsearchMainQueryGenerator {
             // Check whether the response should include standoff.
             val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
 
-            // WHERE patterns for standoff belonging to value objects (if any)
+            // WHERE patterns for querying the first page of standoff in each text value
             val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {
                 Seq(
                     mainAndDependentResourcesValueObjectsValuePattern,
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
-                    StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+                    StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
+                    StatementPattern.makeExplicit(subj = standoffNodeVar, pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartIndex.toSmartIri), obj = standoffStartIndexVar),
+                    FilterPattern(
+                        AndExpression(
+                            leftArg = CompareExpression(
+                                leftArg = standoffStartIndexVar,
+                                operator = CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO,
+                                rightArg = XsdLiteral(value = "0", datatype = OntologyConstants.Xsd.Integer.toSmartIri)
+                            ),
+                            rightArg = CompareExpression(
+                                leftArg = standoffStartIndexVar,
+                                operator = CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO,
+                                rightArg = XsdLiteral(value = (settings.standoffPerPage - 1).toString, datatype = OntologyConstants.Xsd.Integer.toSmartIri)
+                            )
+                        )
+                    )
                 )
             } else {
                 Seq.empty[QueryPattern]

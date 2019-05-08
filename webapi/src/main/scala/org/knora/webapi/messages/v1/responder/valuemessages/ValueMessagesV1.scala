@@ -657,6 +657,12 @@ case class TextValueWithStandoffV1(utf8str: String,
     private val knoraIdUtil = new KnoraIdUtil
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+    lazy val computedMaxStandoffStartIndex: Option[Int] = if (standoff.nonEmpty) {
+        Some(standoff.map(_.startIndex).max)
+    } else {
+        None
+    }
+
     def valueTypeIri: IRI = OntologyConstants.KnoraBase.TextValue
 
     def toJsValue: JsValue = {
