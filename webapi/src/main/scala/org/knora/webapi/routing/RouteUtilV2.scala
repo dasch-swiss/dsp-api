@@ -79,7 +79,7 @@ object RouteUtilV2 {
       * The name of the HTTP header that can be used to specify how markup should be returned with
       * text values.
       */
-    val MARKUP_HEADER: String = "x-knora-markup"
+    val MARKUP_HEADER: String = "x-knora-accept-markup"
 
     /**
       * Indicates that standoff markup should be returned as XML with text values.
