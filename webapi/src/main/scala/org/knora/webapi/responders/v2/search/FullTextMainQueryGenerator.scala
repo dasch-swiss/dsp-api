@@ -21,8 +21,7 @@ package org.knora.webapi.responders.v2.search
 
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.{ApiV2Schema, IRI, MarkupAsStandoff, OntologyConstants, SchemaOption, SchemaOptions, SettingsImpl}
+import org.knora.webapi._
 
 object FullTextMainQueryGenerator {
 

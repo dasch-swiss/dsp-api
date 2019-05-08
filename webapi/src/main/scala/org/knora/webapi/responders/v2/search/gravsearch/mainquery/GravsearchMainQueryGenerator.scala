@@ -19,11 +19,11 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.mainquery
 
+import org.knora.webapi._
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi._
 
 object GravsearchMainQueryGenerator {
 
