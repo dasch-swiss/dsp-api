@@ -32,6 +32,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Ontology Management](ontology-management.md)
 - [Knora and Sipi](sipi.md)
 - [Gravsearch Design](gravsearch.md)
+- [Standoff Markup](standoff.md)
 - [Archival Resource Key (ARK) Identifiers](ark.md)
 
 @@@

@@ -38,7 +38,7 @@ jsonformat:
 
 jsonformattest:
 	$(TYPEDOC) --out $(FORMATDOCDIRV1) --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIRV1)
-	$(TYPEDOC) --out $(FORMATDOCDIRV2) --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
+	# $(TYPEDOC) --out $(FORMATDOCDIRV2) --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
 	@echo "Sample requests test finished."
 
 graphvizfigures: $(PNG_FIGURES)
