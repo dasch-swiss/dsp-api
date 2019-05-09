@@ -916,6 +916,10 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                                     handleDateQueryVar(queryVar = queryVar, comparisonOperator = compareExpression.operator, dateValueExpression = compareExpression.rightArg)
 
+                                case OntologyConstants.KnoraApiV2Simple.ListNode =>
+
+                                    throw NotImplementedException(s"Value type ${OntologyConstants.KnoraApiV2Simple.ListNode} will be implemented in this PR :-)")
+
                                 case other => throw NotImplementedException(s"Value type $other not supported in FilterExpression")
 
                             }

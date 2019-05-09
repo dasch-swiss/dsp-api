@@ -5223,6 +5223,43 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "do a Gravsearch query that searches for a list node (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |?mainRes knora-api:isMainResource true .
+                  |
+                  |?mainRes beol:hasSubject ?propVal0 .
+                  |
+                  |} WHERE {
+                  |
+                  |?mainRes a beol:letter .
+                  |
+                  |?mainRes beol:hasSubject ?propVal0 .
+                  |
+                  |FILTER(?propval = "Algebraic equations"^^knora-api:ListNode)
+                  |
+                  |}
+                  |
+                  |OFFSET 0
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                println(responseAs[String])
+
+                // val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"), writeTestDataFiles)
+                // compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Queries that submit the complex schema
 
