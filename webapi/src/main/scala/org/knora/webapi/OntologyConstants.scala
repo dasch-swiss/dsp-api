@@ -985,8 +985,11 @@ object OntologyConstants {
 
         val File: IRI = KnoraApiV2PrefixExpansion + "File"
 
+        // The set of custom datatypes defined in knora-api in the simple schema. InstanceChecker relies on
+        // this.
         val KnoraDatatypes: Set[IRI] = Set(
             Date,
+            ListNode,
             Geom,
             Color,
             Interval,
