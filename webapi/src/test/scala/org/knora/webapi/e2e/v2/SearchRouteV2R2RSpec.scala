@@ -5227,21 +5227,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             val gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |
                   |CONSTRUCT {
                   |
                   |?mainRes knora-api:isMainResource true .
                   |
-                  |?mainRes beol:hasSubject ?propVal0 .
+                  |?mainRes anything:hasListItem ?propVal0 .
                   |
                   |} WHERE {
                   |
-                  |?mainRes a beol:letter .
+                  |?mainRes anything:hasListItem ?propVal0 .
                   |
-                  |?mainRes beol:hasSubject ?propVal0 .
-                  |
-                  |FILTER(?propval = "Algebraic equations"^^knora-api:ListNode)
+                  |FILTER(?propVal0 = "Tree list node 02"^^knora-api:ListNode)
                   |
                   |}
                   |
@@ -5252,10 +5250,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                println(responseAs[String])
-
-                // val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"), writeTestDataFiles)
-                // compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingWithListNodeLabel.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
         }

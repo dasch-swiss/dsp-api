@@ -622,6 +622,46 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     }
 
     /**
+      * Handles query variables that represent a list node label in a [[FilterPattern]].
+      *
+      * @param queryVar           the query variable to be handled.
+      * @param comparisonOperator the comparison operator used in the filter pattern.
+      * @param listNodeLabel      the label to match against.
+      */
+    private def handleListQueryVar(queryVar: QueryVariable, comparisonOperator: CompareExpressionOperator.Value, literalValueExpression: Expression): TransformedFilterPattern = {
+
+        // make sure that the expression is a literal of the expected type
+        val nodeLabel: String = literalValueExpression match {
+            case xsdLiteral: XsdLiteral if xsdLiteral.datatype.toString == OntologyConstants.KnoraApiV2Simple.ListNode => xsdLiteral.value
+
+            case other => throw GravsearchException(s"Invalid type for literal ${OntologyConstants.KnoraApiV2Simple.ListNode}")
+        }
+
+        // Generate a variable name representing the list node pointed to by the list value object
+        val listNodeVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
+            base = queryVar,
+            propertyIri = OntologyConstants.KnoraBase.ValueHasListNode
+        )
+
+        // Generate variable name representing the label of the list node pointed to
+        val listNodeLabel: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
+            base = queryVar,
+            propertyIri = OntologyConstants.Rdfs.Label
+        )
+
+        TransformedFilterPattern(
+            // use the SPARQL-STR function because the list node label has a language tag
+            Some(CompareExpression(StrFunction(listNodeLabel), comparisonOperator, XsdLiteral(nodeLabel, OntologyConstants.Xsd.String.toSmartIri))), // compares the provided literal to the value object's literal value
+            Seq(
+                // connects the query variable with the list node label
+                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), listNodeVar),
+                StatementPattern.makeExplicit(subj = listNodeVar, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
+                
+            )
+        )
+    }
+
+    /**
       * Handles query variables that represent literals in a [[FilterPattern]].
       *
       * @param queryVar                 the query variable to be handled.
@@ -918,7 +958,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                                 case OntologyConstants.KnoraApiV2Simple.ListNode =>
 
-                                    throw NotImplementedException(s"Value type ${OntologyConstants.KnoraApiV2Simple.ListNode} will be implemented in this PR :-)")
+                                    handleListQueryVar(queryVar = queryVar, comparisonOperator = compareExpression.operator, literalValueExpression = compareExpression.rightArg)
 
                                 case other => throw NotImplementedException(s"Value type $other not supported in FilterExpression")
 
