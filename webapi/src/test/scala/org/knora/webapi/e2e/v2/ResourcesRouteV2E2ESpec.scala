@@ -910,9 +910,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
             assert(standoffBuffer.length == 6738)
 
-            // Check that each standoff tag matches the ontology. (Commented out because it takes about a minute.)
+            // Check the standoff tags to make sure they match the ontology.
 
-            /*
             for (jsonLDObject <- standoffBuffer) {
                 val docForValidation = JsonLDDocument(body = jsonLDObject).toCompactString
 
@@ -922,7 +921,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                     knoraRouteGet = doGetRequest
                 )
            }
-           */
         }
     }
 }
