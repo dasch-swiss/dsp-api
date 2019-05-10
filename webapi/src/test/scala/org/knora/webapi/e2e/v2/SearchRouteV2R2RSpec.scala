@@ -1983,7 +1983,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for an anything:Thing with a list value" ignore { // ignored because the list node label returned is not deterministic
+        "search for an anything:Thing with a list value" in {
 
             val gravsearchQuery =
                 """
@@ -2000,9 +2000,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?thing anything:hasListItem ?listItem .
                   |
-                  |        anything:hasListItem knora-api:objectType xsd:string .
+                  |        anything:hasListItem knora-api:objectType knora-api:ListNode .
                   |
-                  |        ?listItem a xsd:string .
+                  |        ?listItem a knora-api:ListNode .
                   |
                   |    } OFFSET 0
                 """.stripMargin
@@ -4636,7 +4636,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for an anything:Thing with a list value (with type inference)" ignore { // ignored because the list node label returned is not deterministic
+        "search for an anything:Thing with a list value (with type inference)" in {
 
             val gravsearchQuery =
                 """
@@ -6665,7 +6665,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for an anything:Thing with a list value (submitting the complex schema)" ignore { // ignored because the list node label returned is not deterministic
+        "search for an anything:Thing with a list value (submitting the complex schema)" in {
 
             val gravsearchQuery =
                 """

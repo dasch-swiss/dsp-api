@@ -626,7 +626,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       *
       * @param queryVar           the query variable to be handled.
       * @param comparisonOperator the comparison operator used in the filter pattern.
-      * @param listNodeLabel      the label to match against.
+      * @param literalValueExpression      the label to match against.
       */
     private def handleListQueryVar(queryVar: QueryVariable, comparisonOperator: CompareExpressionOperator.Value, literalValueExpression: Expression): TransformedFilterPattern = {
 
@@ -636,6 +636,12 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
             case other => throw GravsearchException(s"Invalid type for literal ${OntologyConstants.KnoraApiV2Simple.ListNode}")
         }
+
+        val validComparisonOperators = Set(CompareExpressionOperator.EQUALS)
+
+        // check if comparison operator is supported
+        if (!validComparisonOperators.contains(comparisonOperator))
+            throw GravsearchException(s"Invalid operator '$comparisonOperator' in expression (allowed operators in this context are ${validComparisonOperators.map(op => "'" + op + "'").mkString(", ")})")
 
         // Generate a variable name representing the list node pointed to by the list value object
         val listNodeVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
