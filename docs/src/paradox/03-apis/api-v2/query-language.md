@@ -90,8 +90,8 @@ The response to a count query request is an object with one predicate,
 A Gravsearch query can be written in either of the two
 @ref:[Knora API v2 schemas](introduction.md#api-schema). The simple schema
 is easier to work with, and is sufficient if you don't need to query
-anything below the level of a Knora value. If your query needs to refer to
-list nodes or standoff markup, you must use the complex schema. Each query must use a single
+anything below the level of a Knora value. If your query needs to refer to 
+standoff markup, you must use the complex schema. Each query must use a single
 schema, with one exception (see @ref:[Date Comparisons](#date-comparisons)).
 
 Gravsearch query results can be requested in the simple or complex schema;
@@ -277,6 +277,12 @@ expressions in the simple schema:
 - Decimal values (`xsd:decimal`)
 - Boolean values (`xsd:boolean`)
 - Date values (`knora-api:Date`)
+- List values (`knora-api:ListNode`)
+
+List values can only be searched for using the equal operator (`=`), 
+performing an exact match on a list node's label. Labels can be given in different languages for a specific list node.
+If one of the given list node labels matches, it is considered a match.
+Note that in the simple schema, uniqueness is not guaranteed (as opposed to the complex schema). 
 
 A Knora value may not be represented as the literal object of a predicate;
 for example, this is not allowed:
@@ -785,7 +791,9 @@ PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 
 ### Searching for a List Value Referring to a Particular List Node
 
-This is possible only in the complex schema:
+Since list nodes are represented by their Iri in the complex schema, 
+uniqueness is guranteed (as opposed to the simple schema).
+Also all the subnodes of the given list node are considered a match.
 
 ```
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
