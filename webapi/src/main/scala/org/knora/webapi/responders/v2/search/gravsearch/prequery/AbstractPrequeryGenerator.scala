@@ -424,7 +424,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 } else {
                     // Is the object of the statement a list node?
                     propertyTypeInfo.objectTypeIri match {
-                        case SmartIri(OntologyConstants.KnoraApiV2WithValueObjects.ListNode) =>
+                        case SmartIri(OntologyConstants.KnoraApiV2Complex.ListNode) =>
                             // Yes, transform statement so it also matches any of the subnodes of the given node
                             handleListNode
                         case _ =>
