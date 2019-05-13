@@ -5256,6 +5256,38 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "do a Gravsearch count query that searches for a list node (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |?mainRes knora-api:isMainResource true .
+                  |
+                  |?mainRes anything:hasListItem ?propVal0 .
+                  |
+                  |} WHERE {
+                  |
+                  |?mainRes anything:hasListItem ?propVal0 .
+                  |
+                  |FILTER(?propVal0 = "Tree list node 02"^^knora-api:ListNode)
+                  |
+                  |}
+                  |
+                  |OFFSET 0
+                """.stripMargin
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountResponse(responseAs[String], 1)
+
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Queries that submit the complex schema
 
@@ -7385,6 +7417,37 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingNotReferringToSpecificListNode.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+            }
+        }
+
+        "search for a list value that does not refer to a particular list node, performing a count query (submitting the complex schema)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?thing knora-api:isMainResource true .
+                  |
+                  |        ?thing anything:hasListItem ?listItem .
+                  |
+                  |    } WHERE {
+                  |        ?thing anything:hasListItem ?listItem .
+                  |
+                  |        FILTER NOT EXISTS {
+                  |
+                  |         ?listItem knora-api:listValueAsListNode <http://rdfh.ch/lists/0001/treeList02> .
+                  |
+                  |        }
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+                
+                checkCountResponse(responseAs[String], 2)
             }
         }
 
