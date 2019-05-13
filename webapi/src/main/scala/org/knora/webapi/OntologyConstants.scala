@@ -964,6 +964,7 @@ object OntologyConstants {
         val Color: IRI = KnoraApiV2PrefixExpansion + "Color"
         val Interval: IRI = KnoraApiV2PrefixExpansion + "Interval"
         val Geoname: IRI = KnoraApiV2PrefixExpansion + "Geoname"
+        val ListNode: IRI = KnoraApiV2PrefixExpansion + "ListNode"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
         val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"
@@ -996,8 +997,11 @@ object OntologyConstants {
 
         val File: IRI = KnoraApiV2PrefixExpansion + "File"
 
+        // The set of custom datatypes defined in knora-api in the simple schema. InstanceChecker relies on
+        // this.
         val KnoraDatatypes: Set[IRI] = Set(
             Date,
+            ListNode,
             Geom,
             Color,
             Interval,
@@ -1028,7 +1032,7 @@ object OntologyConstants {
             KnoraBase.DateValue -> KnoraApiV2Simple.Date,
             KnoraBase.ColorValue -> KnoraApiV2Simple.Color,
             KnoraBase.GeomValue -> KnoraApiV2Simple.Geom,
-            KnoraBase.ListValue -> Xsd.String,
+            KnoraBase.ListValue -> KnoraApiV2Simple.ListNode,
             KnoraBase.IntervalValue -> KnoraApiV2Simple.Interval,
             KnoraBase.GeonameValue -> KnoraApiV2Simple.Geoname,
             KnoraBase.FileValue -> KnoraApiV2Simple.File,
@@ -1081,7 +1085,8 @@ object OntologyConstants {
             KnoraApiV2Simple.HasAudioFile -> KnoraBase.HasAudioFileValue,
             KnoraApiV2Simple.HasDDDFile -> KnoraBase.HasDDDFileValue,
             KnoraApiV2Simple.HasTextFile -> KnoraBase.HasTextFileValue,
-            KnoraApiV2Simple.HasDocumentFile -> KnoraBase.HasDocumentFileValue
+            KnoraApiV2Simple.HasDocumentFile -> KnoraBase.HasDocumentFileValue,
+            KnoraApiV2Simple.ListNode -> KnoraBase.ListValue
 
         ),
         (ApiV2Complex, InternalSchema) -> Map(

@@ -435,7 +435,8 @@ object JsonInstanceInspector {
                 OntologyConstants.KnoraApiV2Simple.Geom,
                 OntologyConstants.KnoraApiV2Simple.Color,
                 OntologyConstants.KnoraApiV2Simple.Interval,
-                OntologyConstants.KnoraApiV2Simple.Geoname),
+                OntologyConstants.KnoraApiV2Simple.Geoname,
+                OntologyConstants.KnoraApiV2Simple.ListNode),
 
         IRI -> Set(OntologyConstants.Xsd.Uri, OntologyConstants.KnoraApiV2Simple.File),
         INTEGER -> Set(OntologyConstants.Xsd.Integer, OntologyConstants.Xsd.NonNegativeInteger),

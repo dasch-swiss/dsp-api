@@ -1973,7 +1973,10 @@ case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
         targetSchema match {
             case ApiV2Simple =>
                 listNodeLabel match {
-                    case Some(labelStr) => JsonLDString(labelStr)
+                    case Some(labelStr) => JsonLDUtil.datatypeValueToJsonLDObject(
+                        value = labelStr,
+                        datatype = OntologyConstants.KnoraApiV2Simple.ListNode.toSmartIri
+                    )
                     case None => throw AssertionException("Can't convert list value to simple schema because it has no list node label")
 
                 }
