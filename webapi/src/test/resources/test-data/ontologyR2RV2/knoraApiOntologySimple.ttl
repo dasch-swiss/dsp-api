@@ -309,6 +309,16 @@ knora-api:hasLinkTo a owl:ObjectProperty;
   rdfs:label "has Link to";
   rdfs:subPropertyOf knora-api:resourceProperty .
 
+knora-api:ListNode a rdfs:Datatype;
+  rdfs:comment "Represents a list node.";
+  rdfs:label "List Node";
+  rdfs:subClassOf [ a rdfs:Datatype;
+      owl:onDatatype xsd:string;
+      owl:withRestrictions [
+          xsd:pattern ".+"
+        ]
+    ] .
+
 knora-api:MovingImageRepresentation a owl:Class;
   rdfs:comment "A resource containing moving image data";
   rdfs:label "Representation (Movie)";

@@ -285,6 +285,38 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             }
         }
 
+        /**
+          * Transforms a statement pointing to a list node so it matches also any of its subnodes.
+          *
+          * @return transformed statements.
+          */
+        def handleListNode(): Seq[StatementPattern] = {
+
+            if (querySchema == ApiV2Simple) {
+                throw GravsearchException("the method 'handleListNode' only works for the complex schema")
+            }
+
+            // the list node to match for provided in the input query
+            val listNode: Entity = statementPattern.obj
+
+            // variable representing the list node to match for
+            val listNodeVar: QueryVariable = createUniqueVariableFromStatement(
+                baseStatement = statementPattern,
+                suffix = "listNodeVar"
+            )
+
+            // transforms the statement given in the input query so the list node and any of its subnodes are matched
+            Seq(
+                statementPatternToInternalSchema(statementPattern, typeInspectionResult).copy(obj = listNodeVar),
+                StatementPattern(
+                    subj = listNode,
+                    pred = IriRef(iri = OntologyConstants.KnoraBase.HasSubListNode.toSmartIri, propertyPathOperator = Some('*')),
+                    obj = listNodeVar
+                )
+            )
+
+        }
+
         val maybeSubjectTypeIri: Option[SmartIri] = typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
             case Some(NonPropertyTypeInfo(subjectTypeIri)) => Some(subjectTypeIri)
             case _ => None
@@ -390,8 +422,16 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri) && objectIsResource) {
                     throw GravsearchException(s"Invalid statement pattern (use the knora-api:standoffLink function instead): ${statementPattern.toSparql.trim}")
                 } else {
-                    // Otherwise, just convert the statement pattern to the internal schema.
-                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                    // Is the object of the statement a list node?
+                    propertyTypeInfo.objectTypeIri match {
+                        case SmartIri(OntologyConstants.KnoraApiV2WithValueObjects.ListNode) =>
+                            // Yes, transform statement so it also matches any of the subnodes of the given node
+                            handleListNode
+                        case _ =>
+                            // No, just convert the statement pattern to the internal schema.
+                            Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                    }
+
                 }
             } else {
                 // The query is in the simple schema, so the statement is invalid.
@@ -579,6 +619,52 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             // not a linking property, just return the provided restriction
             TransformedFilterPattern(Some(userProvidedRestriction))
         }
+    }
+
+    /**
+      * Handles query variables that represent a list node label in a [[FilterPattern]].
+      *
+      * @param queryVar           the query variable to be handled.
+      * @param comparisonOperator the comparison operator used in the filter pattern.
+      * @param literalValueExpression      the label to match against.
+      */
+    private def handleListQueryVar(queryVar: QueryVariable, comparisonOperator: CompareExpressionOperator.Value, literalValueExpression: Expression): TransformedFilterPattern = {
+
+        // make sure that the expression is a literal of the expected type
+        val nodeLabel: String = literalValueExpression match {
+            case xsdLiteral: XsdLiteral if xsdLiteral.datatype.toString == OntologyConstants.KnoraApiV2Simple.ListNode => xsdLiteral.value
+
+            case other => throw GravsearchException(s"Invalid type for literal ${OntologyConstants.KnoraApiV2Simple.ListNode}")
+        }
+
+        val validComparisonOperators = Set(CompareExpressionOperator.EQUALS)
+
+        // check if comparison operator is supported
+        if (!validComparisonOperators.contains(comparisonOperator))
+            throw GravsearchException(s"Invalid operator '$comparisonOperator' in expression (allowed operators in this context are ${validComparisonOperators.map(op => "'" + op + "'").mkString(", ")})")
+
+        // Generate a variable name representing the list node pointed to by the list value object
+        val listNodeVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
+            base = queryVar,
+            propertyIri = OntologyConstants.KnoraBase.ValueHasListNode
+        )
+
+        // Generate variable name representing the label of the list node pointed to
+        val listNodeLabel: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
+            base = queryVar,
+            propertyIri = OntologyConstants.Rdfs.Label
+        )
+
+        TransformedFilterPattern(
+            // use the SPARQL-STR function because the list node label has a language tag
+            Some(CompareExpression(StrFunction(listNodeLabel), comparisonOperator, XsdLiteral(nodeLabel, OntologyConstants.Xsd.String.toSmartIri))), // compares the provided literal to the value object's literal value
+            Seq(
+                // connects the query variable with the list node label
+                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), listNodeVar),
+                StatementPattern.makeExplicit(subj = listNodeVar, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
+                
+            )
+        )
     }
 
     /**
@@ -875,6 +961,10 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                                 case OntologyConstants.KnoraApiV2Simple.Date =>
 
                                     handleDateQueryVar(queryVar = queryVar, comparisonOperator = compareExpression.operator, dateValueExpression = compareExpression.rightArg)
+
+                                case OntologyConstants.KnoraApiV2Simple.ListNode =>
+
+                                    handleListQueryVar(queryVar = queryVar, comparisonOperator = compareExpression.operator, literalValueExpression = compareExpression.rightArg)
 
                                 case other => throw NotImplementedException(s"Value type $other not supported in FilterExpression")
 
