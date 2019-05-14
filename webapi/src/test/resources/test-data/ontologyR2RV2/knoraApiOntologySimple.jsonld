@@ -348,6 +348,20 @@
       }
     } ]
   }, {
+    "@id" : "knora-api:ListNode",
+    "@type" : "rdfs:Datatype",
+    "rdfs:comment" : "Represents a list node.",
+    "rdfs:label" : "List Node",
+    "rdfs:subClassOf" : {
+      "@type" : "rdfs:Datatype",
+      "owl:onDatatype" : {
+        "@id" : "xsd:string"
+      },
+      "owl:withRestrictions" : {
+        "xsd:pattern" : ".+"
+      }
+    }
+  }, {
     "@id" : "knora-api:MovingImageRepresentation",
     "@type" : "owl:Class",
     "rdfs:comment" : "A resource containing moving image data",
