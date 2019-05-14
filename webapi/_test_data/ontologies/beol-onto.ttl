@@ -1463,7 +1463,7 @@
                 rdfs:comment "Kommentar zu"@de ,
                              "Comment of"@en ;
 
-                rdfs:label  "Kommentar von"@de ,
+                rdfs:label  "Kommentar zu"@de ,
                             "Comment of"@en ;
 
                 knora-base:subjectClassConstraint :entryComment ;
