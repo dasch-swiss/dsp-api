@@ -591,6 +591,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 val statusCategory: Int = statusCode / 100
 
                 if (statusCategory != 2) {
+                    log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr,SPARQL query was:\n$sparql")
                     throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
                 }
 
@@ -605,7 +606,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
         triplestoreResponseTry.recover {
             case tre: TriplestoreResponseException => throw tre
-            case e: Exception => throw TriplestoreConnectionException("Failed to connect to triplestore", e, log)
+
+            case e: Exception =>
+                log.error(e, s"Failed to connect to triplestore, SPARQL query was:\n$sparql")
+                throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
         }
     }
 }
