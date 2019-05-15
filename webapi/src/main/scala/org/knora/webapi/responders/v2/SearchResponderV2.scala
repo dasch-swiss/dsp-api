@@ -661,12 +661,15 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResponse]
             mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
 
+            // Find out whether to query standoff along with text values. This boolean value will be passed to
+            // ConstructResponseUtilV2.makeTextValueContentV2.
+            queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema = ApiV2Complex, schemaOptions = resourcesInProjectGetRequestV2.schemaOptions)
+
             // If we're supposed to query standoff, get the indexes delimiting the first page of standoff. (Subsequent
             // pages, if any, will be queried separately.)
             (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) = StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
-                settings = settings,
-                targetSchema = ApiV2Complex,
-                schemaOptions = resourcesInProjectGetRequestV2.schemaOptions
+                queryStandoff = queryStandoff,
+                settings = settings
             )
 
             // Are there any matching resources?

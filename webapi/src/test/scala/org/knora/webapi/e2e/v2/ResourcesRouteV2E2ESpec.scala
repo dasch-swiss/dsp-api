@@ -889,7 +889,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             while (hasMoreStandoff) {
                 // Get a page of standoff.
 
-                val standoffGetRequest = Get(s"$baseApiUrl/v2/standoff/$resourceIriEncoded/$textValueIriEncoded/$offset").addHeader(new MarkupHeader(RouteUtilV2.MARKUP_STANDOFF)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+                val standoffGetRequest = Get(s"$baseApiUrl/v2/standoff/$resourceIriEncoded/$textValueIriEncoded/$offset") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
                 val standoffGetResponse: HttpResponse = singleAwaitingRequest(standoffGetRequest)
                 val standoffGetResponseAsJsonLD: JsonLDObject = responseToJsonLDDocument(standoffGetResponse).body
 

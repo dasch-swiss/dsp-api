@@ -61,11 +61,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                     }
 
                     val offset: Int = stringFormatter.validateInt(offsetStr, throw BadRequestException(s"Invalid offset: $offsetStr"))
-                    val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
-
-                    if (!SchemaOptions.renderMarkupAsStandoff(ApiV2Complex, schemaOptions)) {
-                        throw BadRequestException(s"Standoff markup cannot be returned with the specified schema options")
-                    }
+                    val schemaOptions: Set[SchemaOption] = SchemaOptions.ForStandoffSeparateFromTextValues
 
                     val requestMessageFuture: Future[GetStandoffPageRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)

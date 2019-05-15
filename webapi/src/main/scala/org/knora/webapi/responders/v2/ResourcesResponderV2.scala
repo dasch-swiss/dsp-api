@@ -930,20 +930,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     /**
       * Gets the requested resources from the triplestore.
       *
-      * @param resourceIris the Iris of the requested resources.
-      * @param preview      `true` if a preview of the resource is requested.
-      * @param versionDate  if defined, requests the state of the resources at the specified time in the past.
-      *                     Cannot be used in conjunction with `preview`.
-      * @param targetSchema the target API schema.
-      * @param schemaOptions the schema options submitted with the request.
+      * @param resourceIris  the Iris of the requested resources.
+      * @param preview       `true` if a preview of the resource is requested.
+      * @param versionDate   if defined, requests the state of the resources at the specified time in the past.
+      *                      Cannot be used in conjunction with `preview`.
+      * @param queryStandoff `true` if standoff should be queried.
       * @return a map of resource IRIs to RDF data.
       */
     private def getResourcesFromTriplestore(resourceIris: Seq[IRI],
                                             preview: Boolean,
                                             propertyIri: Option[SmartIri],
                                             versionDate: Option[Instant],
-                                            targetSchema: ApiV2Schema,
-                                            schemaOptions: Set[SchemaOption],
+                                            queryStandoff: Boolean,
                                             requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
 
         // eliminate duplicate Iris
@@ -952,9 +950,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // If we're supposed to query standoff, get the indexes delimiting the first page of standoff. (Subsequent
         // pages, if any, will be queried separately.)
         val (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) = StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
-            settings = settings,
-            targetSchema = targetSchema,
-            schemaOptions = schemaOptions
+            queryStandoff = queryStandoff,
+            settings = settings
         )
 
         for {
@@ -1005,7 +1002,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
-        val queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+        // Find out whether to query standoff along with text values. This boolean value will be passed to
+        // ConstructResponseUtilV2.makeTextValueContentV2.
+        val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
 
         for {
 
@@ -1014,8 +1013,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 preview = false,
                 propertyIri = propertyIri,
                 versionDate = versionDate,
-                targetSchema = targetSchema,
-                schemaOptions = schemaOptions,
+                queryStandoff = queryStandoff,
                 requestingUser = requestingUser
             )
 
@@ -1060,8 +1058,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 preview = true,
                 propertyIri = None,
                 versionDate = None,
-                targetSchema = ApiV2Complex, // This has no effect, because we are not querying values.
-                schemaOptions = Set(NoMarkup), // This has no effect, because we are not querying values.
+                queryStandoff = false, // This has no effect, because we are not querying values.
                 requestingUser = requestingUser
             )
 

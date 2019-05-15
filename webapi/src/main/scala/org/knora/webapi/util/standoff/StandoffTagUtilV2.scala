@@ -1053,16 +1053,12 @@ object StandoffTagUtilV2 {
       * If standoff is supposed to be queried with text values, returns the minimum and maximum start indexes
       * for the first page of standoff in a text value. Otherwise, returns `(None, None)`.
       *
-      * @param settings the application settings.
-      * @param targetSchema the target ontology schema.
-      * @param schemaOptions the schema options submitted with the request.
+      * @param queryStandoff `true` if standoff should be queried.
+      * @param settings      the application settings.
       * @return a tuple containing the minimum start index and maximum start index, or `(None, None)` if standoff
       *         is not being queried with text values.
       */
-    def getStandoffMinAndMaxStartIndexesForTextValueQuery(settings: SettingsImpl, targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): (Option[Int], Option[Int]) = {
-        // Are we supposed to query standoff?
-        val queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
-
+    def getStandoffMinAndMaxStartIndexesForTextValueQuery(queryStandoff: Boolean, settings: SettingsImpl): (Option[Int], Option[Int]) = {
         if (queryStandoff) {
             // Yes. Get the first page of standoff with each text value.
             (Some(0), Some(settings.standoffPerPage - 1))

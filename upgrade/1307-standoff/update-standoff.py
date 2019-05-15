@@ -115,7 +115,7 @@ class TextValue:
             self.subj: transformed_value_pred_objs
         }
 
-        for old_tag_subj, tag in self.standoff_tags:
+        for _, tag in self.standoff_tags:
             transformed_statements[tag.new_subj] = tag.transform_pred_objs(self.standoff_tags)
 
         return transformed_statements

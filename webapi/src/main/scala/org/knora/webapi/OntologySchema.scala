@@ -83,6 +83,11 @@ object SchemaOptions {
     val ForStandoffWithTextValues: Set[SchemaOption] = Set(MarkupAsXml)
 
     /**
+      * A set of schema options for querying standoff markup separately from text values.
+      */
+    val ForStandoffSeparateFromTextValues: Set[SchemaOption] = Set(MarkupAsStandoff)
+
+    /**
       * Determines whether standoff should be queried when a text value is queried.
       *
       * @param targetSchema the target API schema.
