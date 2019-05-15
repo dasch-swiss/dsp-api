@@ -43,34 +43,50 @@ class UpdateException(Exception):
 # The directory in the Knora source tree where built-in Knora ontologies are stored.
 knora_ontologies_dir = "../../knora-ontologies"
 
+# The filename of the knora-admin ontology.
+knora_admin_filename = "knora-admin.ttl"
+
+# The context of the named graph containing the knora-admin ontology.
+knora_admin_context = "http://www.knora.org/ontology/knora-admin"
+
 # The filename of the knora-base ontology.
 knora_base_filename = "knora-base.ttl"
 
 # The context of the named graph containing the knora-base ontology.
 knora_base_context = "http://www.knora.org/ontology/knora-base"
 
-# The namespace of the knora-base ontology.
-knora_base_namespace = knora_base_context + "#"
-
+# The IRI of knora-base:TextValue.
 text_value_type = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#TextValue")
+
+# The IRI of knora-base:standoffTagHasStartParent.
 standoff_tag_has_start_parent = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#standoffTagHasStartParent")
+
+# The IRI of knora-base:standoffTagHasEndParent.
 standoff_tag_has_end_parent = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#standoffTagHasEndParent")
+
+# The IRI of knora-base:standoffTagHasStartIndex.
 standoff_tag_has_start_index = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex")
+
+# The IRI of knora-base:valueHasStandoff.
 value_has_standoff = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#valueHasStandoff")
+
+# The IRI of knora-base:valueHasMaxStandoffStartIndex.
 value_has_max_standoff_start_index = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#valueHasMaxStandoffStartIndex")
 
 
+# Represents a standoff tag to be be transformed.
 class StandoffTag:
     def __init__(self, old_subj, pred_objs):
         self.old_subj = old_subj
         self.pred_objs = pred_objs
-        start_index = int(pred_objs[standoff_tag_has_start_index][0])
-        self.new_subj = make_new_standoff_tag_iri(old_subj, start_index)
+        self.start_index = int(pred_objs[standoff_tag_has_start_index][0])
+        self.new_subj = make_new_standoff_tag_iri(old_subj, self.start_index)
 
+    # Transforms the statements whose subject is this text value.
     def transform_pred_objs(self, standoff_tags):
         transformed_pred_objs = {}
 
-        for pred, objs in self.pred_objs:
+        for pred, objs in self.pred_objs.items():
             if pred == standoff_tag_has_start_parent or pred == standoff_tag_has_end_parent:
                 old_obj = objs[0]
                 new_obj = standoff_tags[old_obj].new_subj
@@ -81,18 +97,21 @@ class StandoffTag:
         return transformed_pred_objs
 
 
+# Converts an old standoff tag IRI to a new one.
 def make_new_standoff_tag_iri(old_subj, start_index):
     old_subj_str = str(old_subj)
-    hash_pos = old_subj_str.rfind("/")
-    return rdflib.term.URIRef(old_subj_str[0:hash_pos] + str(start_index))
+    slash_pos = old_subj_str.rfind("/") + 1
+    return rdflib.term.URIRef(old_subj_str[0:slash_pos] + str(start_index))
 
 
+# Represents a text value to be transformed.
 class TextValue:
     def __init__(self, subj, pred_objs, standoff_tags):
         self.subj = subj
         self.pred_objs = pred_objs
         self.standoff_tags = standoff_tags
 
+    # Transforms the statements whose subject is this text value or any of its standoff tags.
     def transform_statements(self):
         transformed_value_pred_objs = {}
 
@@ -107,15 +126,16 @@ class TextValue:
             else:
                 transformed_value_pred_objs[pred] = objs
 
-        max_start_index = max([tag.start_index for tag in self.standoff_tags])
-        max_start_index_literal = rdflib.Literal(str(max_start_index), datatype=XSD.integer)
-        transformed_value_pred_objs[value_has_max_standoff_start_index] = max_start_index_literal
+        if self.standoff_tags:
+            max_start_index = max([tag.start_index for tag in self.standoff_tags.values()])
+            max_start_index_literal = rdflib.Literal(str(max_start_index), datatype=XSD.integer)
+            transformed_value_pred_objs[value_has_max_standoff_start_index] = [max_start_index_literal]
 
         transformed_statements = {
             self.subj: transformed_value_pred_objs
         }
 
-        for _, tag in self.standoff_tags:
+        for tag in self.standoff_tags.values():
             transformed_statements[tag.new_subj] = tag.transform_pred_objs(self.standoff_tags)
 
         return transformed_statements
@@ -165,19 +185,30 @@ class NamedGraph:
         graph_size = len(input_graph)
 
         print("Transforming {} statements...".format(graph_size))
+
+        # Group the statements in the named graph by subject and by predicate.
         grouped_statements = group_statements(input_graph)
+
+        # Collect all text values included in the grouped statements.
         text_values = collect_text_values(grouped_statements)
+
+        # A set of subjects that will be transformed and should therefore not be copied
+        # from the input graph.
         old_subjs = set()
+
+        # A set of transformed statements to be included in the output graph.
         transformed_statements = {}
 
+        # Transform text values.
         for text_value in text_values:
             old_subjs.add(text_value.subj)
 
-            for standoff_tag in text_value.standoff_tags:
-                old_subjs.add(standoff_tag.old_subj)
+            for standoff_tag_old_subj in text_value.standoff_tags.keys():
+                old_subjs.add(standoff_tag_old_subj)
 
             transformed_statements.update(text_value.transform_statements())
 
+        # Copy all non-transformed statements into the output graph.
         for subj, pred_objs in grouped_statements.items():
             if subj not in old_subjs:
                 transformed_statements[subj] = pred_objs
@@ -205,8 +236,9 @@ class NamedGraph:
         upload_response.raise_for_status()
 
 
+# Groups statements by subject and by predicate.
 def group_statements(input_graph):
-    grouped_statements = defaultdict(list)
+    grouped_statements = {}
 
     for subj in input_graph.subjects():
         grouped_pred_objs = defaultdict(list)
@@ -214,26 +246,29 @@ def group_statements(input_graph):
         for pred, obj in input_graph.predicate_objects(subj):
             grouped_pred_objs[pred].append(obj)
 
-        grouped_statements[subj].append(grouped_pred_objs)
+        grouped_statements[subj] = grouped_pred_objs
 
     return grouped_statements
 
 
+# Ungroups statements.
 def ungroup_statements(grouped_statements):
     output_graph = rdflib.Graph()
 
     for subj, pred_objs in grouped_statements.items():
-        for pred, obj in pred_objs.items():
-            output_graph.add((subj, pred, obj))
+        for pred, objs in pred_objs.items():
+            for obj in objs:
+                output_graph.add((subj, pred, obj))
 
     return output_graph
 
 
+# Collects all text values found in grouped statements.
 def collect_text_values(grouped_statements):
     text_values = []
 
     for subj, pred_objs in grouped_statements.items():
-        if pred_objs(RDF.type) == text_value_type:
+        if pred_objs[RDF.type][0] == text_value_type:
             standoff_tags = {}
 
             if value_has_standoff in pred_objs:
@@ -270,7 +305,7 @@ class Repository:
         contexts.pop(0)
 
         for context in contexts:
-            if not (context == knora_base_context):
+            if not (context == knora_base_context or context == knora_admin_context):
                 named_graph = NamedGraph(context=context, graphdb_info=self.graphdb_info)
                 named_graph.download(download_dir)
                 self.named_graphs.append(named_graph)
@@ -303,7 +338,13 @@ class Repository:
     def upload(self, upload_dir):
         print("Uploading named graphs...")
 
-        # Upload the new knora-base ontology.
+        # Upload the knora-admin and knora-base ontologies first.
+
+        knora_admin_named_graph = NamedGraph(
+            context=knora_admin_context,
+            graphdb_info=self.graphdb_info,
+            filename=knora_admin_filename
+        )
 
         knora_base_named_graph = NamedGraph(
             context=knora_base_context,
@@ -311,6 +352,7 @@ class Repository:
             filename=knora_base_filename
         )
 
+        knora_admin_named_graph.upload(knora_ontologies_dir)
         knora_base_named_graph.upload(knora_ontologies_dir)
 
         # Upload the transformed named graphs.

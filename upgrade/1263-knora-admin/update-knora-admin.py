@@ -212,7 +212,7 @@ class Repository:
         contexts.pop(0)
 
         for context in contexts:
-            if not (context == knora_base_context):
+            if not (context == knora_base_context or context == knora_admin_context):
                 named_graph = NamedGraph(context=context, graphdb_info=self.graphdb_info)
                 named_graph.download(download_dir)
                 self.named_graphs.append(named_graph)
