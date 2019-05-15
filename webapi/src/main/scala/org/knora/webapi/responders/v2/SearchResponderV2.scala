@@ -34,7 +34,7 @@ import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch._
 import org.knora.webapi.responders.v2.search.gravsearch.prequery._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
-import org.knora.webapi.util.ConstructResponseUtilV2.ResourceWithValueRdfData
+import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
@@ -290,12 +290,18 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 Future(None)
             }
 
-            // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
+            // Find out whether to query standoff along with text values. This boolean value will be passed to
+            // ConstructResponseUtilV2.makeTextValueContentV2.
+            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+
+            // If we're querying standoff, get XML-to standoff mappings.
+            mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
+                getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
+            } else {
+                FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
+            }
 
             // _ = println(mappingsAsMap)
-
-            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
 
             resources: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
@@ -565,10 +571,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 Future(None)
             }
 
-            // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
-
+            // Find out whether to query standoff along with text values. This boolean value will be passed to
+            // ConstructResponseUtilV2.makeTextValueContentV2.
             queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+
+            // If we're querying standoff, get XML-to standoff mappings.
+            mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
+                getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
+            } else {
+                FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
+            }
 
             resources <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
@@ -704,8 +716,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         Future(None)
                     }
 
-                    // get the standoff mappings used in the resources
-                    mappings: Map[IRI, ConstructResponseUtilV2.MappingAndXSLTransformation] <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, resourcesInProjectGetRequestV2.requestingUser)
+                    // If we're querying standoff, get XML-to standoff mappings.
+                    mappings: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
+                        getMappingsFromQueryResultsSeparated(queryResultsSeparated, resourcesInProjectGetRequestV2.requestingUser)
+                    } else {
+                        FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
+                    }
 
                     // Construct a ReadResourceV2 for each resource that the user has permission to see.
                     searchResponse <- ConstructResponseUtilV2.createSearchResponse(

@@ -1017,7 +1017,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 requestingUser = requestingUser
             )
 
-            // get the mappings
+            // If we're querying standoff, get XML-to standoff mappings.
             mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
                 getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
             } else {
