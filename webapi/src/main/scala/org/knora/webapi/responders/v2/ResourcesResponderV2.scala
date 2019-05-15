@@ -1018,7 +1018,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             )
 
             // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
+            mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
+                getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
+            } else {
+                FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
+            }
 
             resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
