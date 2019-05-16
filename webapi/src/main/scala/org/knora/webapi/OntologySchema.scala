@@ -46,4 +46,78 @@ case object ApiV2Simple extends ApiV2Schema
   * schema always represents values as objects.
   */
 case object ApiV2Complex extends ApiV2Schema
+
+/**
+  * A trait representing options that can be submitted to configure an ontology schema.
+  */
+sealed trait SchemaOption
+
+/**
+  * A trait representing options that affect the rendering of markup when text values are returned.
+  */
+sealed trait MarkupRendering extends SchemaOption
+
+/**
+  * Indicates that markup should be rendered as XML when text values are returned.
+  */
+case object MarkupAsXml extends MarkupRendering
+
+/**
+  * Indicates that markup should not be returned with text values, because it will be requested
+  * separately as standoff.
+  */
+case object MarkupAsStandoff extends MarkupRendering
+
+/**
+  * Indicates that no markup should be returned with text values. Used only internally.
+  */
+case object NoMarkup extends MarkupRendering
+
+/**
+  * Utility functions for working with schema options.
+  */
+object SchemaOptions {
+    /**
+      * A set of schema options for querying all standoff markup along with text values.
+      */
+    val ForStandoffWithTextValues: Set[SchemaOption] = Set(MarkupAsXml)
+
+    /**
+      * A set of schema options for querying standoff markup separately from text values.
+      */
+    val ForStandoffSeparateFromTextValues: Set[SchemaOption] = Set(MarkupAsStandoff)
+
+    /**
+      * Determines whether standoff should be queried when a text value is queried.
+      *
+      * @param targetSchema the target API schema.
+      * @param schemaOptions the schema options submitted with the request.
+      * @return `true` if standoff should be queried.
+      */
+    def queryStandoffWithTextValues(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): Boolean = {
+        targetSchema == ApiV2Complex && !schemaOptions.contains(MarkupAsStandoff)
+    }
+
+    /**
+      * Determines whether markup should be rendered as XML.
+      *
+      * @param targetSchema the target API schema.
+      * @param schemaOptions the schema options submitted with the request.
+      * @return `true` if markup should be rendered as XML.
+      */
+    def renderMarkupAsXml(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): Boolean = {
+        targetSchema == ApiV2Complex && !schemaOptions.contains(MarkupAsStandoff)
+    }
+
+    /**
+      * Determines whether markup should be rendered as standoff, separately from text values.
+      *
+      * @param targetSchema the target API schema.
+      * @param schemaOptions the schema options submitted with the request.
+      * @return `true` if markup should be rendered as standoff.
+      */
+    def renderMarkupAsStandoff(targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption]): Boolean = {
+        targetSchema == ApiV2Complex && schemaOptions.contains(MarkupAsStandoff)
+    }
+}
 // #OntologySchema

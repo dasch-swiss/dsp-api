@@ -455,13 +455,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -478,7 +478,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri, OntologyConstants.SchemaOrg.Name.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri, OntologyConstants.SchemaOrg.Name.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -516,13 +516,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -539,7 +539,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri, OntologyConstants.SchemaOrg.Name.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri, OntologyConstants.SchemaOrg.Name.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -601,12 +601,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
@@ -622,7 +622,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -712,13 +712,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
                 predicates = Map(
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -733,7 +733,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -762,13 +762,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -783,7 +783,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -812,13 +812,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.IntValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -833,7 +833,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -862,13 +862,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.IntValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -912,13 +912,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -962,13 +962,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1015,13 +1015,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("NonexistentClass")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1036,7 +1036,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -1065,13 +1065,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2((OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion + "NonexistentClass").toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2((OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion + "NonexistentClass").toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1086,7 +1086,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -1115,13 +1115,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.Representation.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.Representation.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1165,13 +1165,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.FileValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.FileValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1186,7 +1186,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasFileValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasFileValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -1215,13 +1215,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1236,7 +1236,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -1265,13 +1265,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1286,7 +1286,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -1315,12 +1315,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Xsd.String.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
@@ -1336,7 +1336,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -1365,13 +1365,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.StillImageFileValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1386,7 +1386,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -1415,12 +1415,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
@@ -1436,7 +1436,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -1465,13 +1465,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1486,7 +1486,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -1515,13 +1515,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.IntValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1566,12 +1566,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
@@ -1617,13 +1617,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1646,7 +1646,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         objects = Seq(StringLiteralV2("rows=10"), StringLiteralV2("cols=80.5"))
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -1675,13 +1675,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -1704,7 +1704,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         objects = Seq(StringLiteralV2("rows=10"), StringLiteralV2("cols=80"), StringLiteralV2("wrap=wrong"))
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -2143,7 +2143,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -2312,7 +2312,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -2353,7 +2353,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -2477,7 +2477,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 directCardinalities = Map(AnythingOntologyIri.makeEntityIri("nonexistentProperty") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
-                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -2519,7 +2519,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     )
                 ),
                 directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
-                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -2733,13 +2733,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Nothing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -2760,7 +2760,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Checkbox".toSmartIri))
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -2795,13 +2795,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Nothing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -2816,7 +2816,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -2857,7 +2857,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -3028,12 +3028,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(classIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(classIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
@@ -3049,7 +3049,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -3096,8 +3096,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val expectedProperties = Set(
-                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri,
-                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
+                OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
+                OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
                 propertyIri,
                 propertyIri.fromLinkPropToLinkValueProp
             )
@@ -3154,8 +3154,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val expectedProperties = Set(
-                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri,
-                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
+                OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
+                OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
                 AnythingOntologyIri.makeEntityIri("hasOtherNothing"),
                 AnythingOntologyIri.makeEntityIri("hasOtherNothingValue"),
                 AnythingOntologyIri.makeEntityIri("hasNothingness")
@@ -3217,13 +3217,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Nothing")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -3240,7 +3240,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -3297,8 +3297,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val expectedProperties = Set(
-                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri,
-                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
+                OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
+                OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
                 AnythingOntologyIri.makeEntityIri("hasOtherNothing"),
                 AnythingOntologyIri.makeEntityIri("hasOtherNothingValue"),
                 AnythingOntologyIri.makeEntityIri("hasNothingness"),
@@ -3376,8 +3376,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val expectedProperties = Set(
-                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri,
-                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
+                OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
+                OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
                 AnythingOntologyIri.makeEntityIri("hasEmptiness")
             )
 
@@ -3507,8 +3507,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val expectedProperties = Set(
-                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri,
-                OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri
+                OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
+                OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
             )
 
             expectMsgPF(timeout) {
@@ -3674,7 +3674,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         objects = Seq(StringLiteralV2("Represents an invalid class", Some("en")))
                     )
                 ),
-                subClassOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri),
+                subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
                 directCardinalities = Map(IncunabulaOntologyIri.makeEntityIri("description") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
                 ontologySchema = ApiV2Complex
             )
@@ -3704,9 +3704,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -3750,13 +3750,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(IncunabulaOntologyIri.makeEntityIri("book")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -3771,7 +3771,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -3800,8 +3800,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(IncunabulaOntologyIri.makeEntityIri("book")))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
@@ -3817,7 +3817,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         )
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -3974,9 +3974,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -4042,13 +4042,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(ExampleSharedOntologyIri.makeEntityIri("Box")))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue.toSmartIri))
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.BooleanValue.toSmartIri))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
@@ -4059,7 +4059,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         objects = Seq(StringLiteralV2("Represents a boolean", Some("en")))
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasValue.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 
@@ -4114,8 +4114,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
                     ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
+                    OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
                         objects = Seq(SmartIriLiteralV2(ExampleSharedOntologyIri.makeEntityIri("Box")))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
@@ -4127,7 +4127,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         objects = Seq(StringLiteralV2("Has a box", Some("en")))
                     )
                 ),
-                subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
+                subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri),
                 ontologySchema = ApiV2Complex
             )
 

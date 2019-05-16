@@ -155,19 +155,19 @@ class ValuesV2R2RSpec extends R2RSpec {
                 val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
                 stillImageFileValueIri.set(valueIri)
                 val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
-                valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue.toSmartIri)
+                valueType should ===(OntologyConstants.KnoraApiV2Complex.StillImageFileValue.toSmartIri)
 
                 val savedValue: JsonLDObject = getValue(
                     resourceIri = resourceIri,
-                    propertyIriForGravsearch = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri,
-                    propertyIriInResult = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri,
+                    propertyIriForGravsearch = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
+                    propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
                     expectedValueIri = stillImageFileValueIri.get,
                     userEmail = anythingUserEmail
                 )
 
-                savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename) should ===(internalFilename)
-                savedValue.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX) should ===(512)
-                savedValue.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY) should ===(256)
+                savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename) should ===(internalFilename)
+                savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX) should ===(512)
+                savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY) should ===(256)
             }
         }
     }

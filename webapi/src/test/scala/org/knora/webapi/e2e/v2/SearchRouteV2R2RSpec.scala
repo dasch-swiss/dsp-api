@@ -33,8 +33,12 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v1.ValuesRouteV1
-import org.knora.webapi.routing.v2.{SearchRouteV2, StandoffRouteV2}
-import org.knora.webapi.util.FileUtil
+import org.knora.webapi.routing.v2.{ResourcesRouteV2, SearchRouteV2, StandoffRouteV2}
+import org.knora.webapi.util.{FileUtil, MutableTestIri, StringFormatter}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument, JsonLDUtil}
+import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.diff.Diff
 import spray.json.JsString
 
 import scala.concurrent.ExecutionContextExecutor
@@ -45,6 +49,7 @@ import scala.concurrent.ExecutionContextExecutor
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
 class SearchRouteV2R2RSpec extends R2RSpec {
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     override def testConfigSource: String =
         """
@@ -53,6 +58,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         """.stripMargin
 
     private val searchPath = new SearchRouteV2(routeData).knoraApiPath
+    private val resourcePath = new ResourcesRouteV2(routeData).knoraApiPath
     private val standoffPath = new StandoffRouteV2(routeData).knoraApiPath
     private val valuesPath = new ValuesRouteV1(routeData).knoraApiPath
 
@@ -68,6 +74,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val incunabulaUserEmail = incunabulaUser.email
 
     private val password = "test"
+
+    private val hamletResourceIri = new MutableTestIri
 
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
     private val writeTestDataFiles = false
@@ -7673,7 +7681,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                    |    "rdfs:label": "mapping for HTML",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
                    |    }
                    |}
                 """.stripMargin
@@ -7698,7 +7706,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
 
-            // Next, create a resource with a text value containing a standoff date tag. Use API v1, because v2 doesn't yet have update routes.
+            // Next, create a resource with a text value containing a standoff date tag. TODO: Use API v2.
 
             val xmlFileToSend = new File("_test_data/test_route/texts/HTML.xml")
 
@@ -7811,5 +7819,75 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" in {
+            // Create a resource containing the text of Hamlet.
+
+            val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
+
+            val jsonLDEntity =
+                s"""{
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasRichtext" : {
+                   |    "@type" : "knora-api:TextValue",
+                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(hamletXml)},
+                   |    "knora-api:textValueHasMapping" : {
+                   |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+                   |    }
+                   |  },
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "rdfs:label" : "test thing",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            Post("/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcePath ~> check {
+                val resourceCreateResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, resourceCreateResponseStr)
+                val resourceCreateResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceCreateResponseStr)
+                val resourceIri: IRI = resourceCreateResponseAsJsonLD.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+                assert(resourceIri.toSmartIri.isKnoraDataIri)
+                hamletResourceIri.set(resourceIri)
+            }
+        }
+
+        "search for the large text and its markup and receive it as XML, and check that it matches the original XML" in {
+            val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
+
+            val gravsearchQuery =
+                s"""
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasRichtext ?text .
+                  |} WHERE {
+                  |    BIND(<${hamletResourceIri.get}> AS ?thing)
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasRichtext ?text .
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val searchResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(searchResponseStr)
+                val xmlFromResponse: String = searchResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext").
+                    requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+
+                // Compare it to the original XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
+                xmlDiff.hasDifferences should be(false)
+            }
+        }
     }
 }

@@ -389,6 +389,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
         OntologyConstants.KnoraBase.ValueHasLanguage,
         OntologyConstants.KnoraBase.ValueHasStandoff,
         OntologyConstants.KnoraBase.ValueHasMapping,
+        OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex,
         OntologyConstants.KnoraBase.HasMappingElement,
         OntologyConstants.KnoraBase.MappingHasStandoffClass,
         OntologyConstants.KnoraBase.MappingHasStandoffProperty,

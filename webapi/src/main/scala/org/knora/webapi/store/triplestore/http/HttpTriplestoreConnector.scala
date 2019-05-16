@@ -46,7 +46,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.SparqlResultProtocol._
-import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
+import org.knora.webapi.util.{FakeTriplestore, FileUtil, StringFormatter}
 import spray.json._
 
 import scala.collection.JavaConverters._

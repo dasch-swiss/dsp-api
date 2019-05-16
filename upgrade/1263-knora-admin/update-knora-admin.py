@@ -51,7 +51,7 @@ knora_base_context = "http://www.knora.org/ontology/knora-base"
 # The namespace of the knora-base ontology.
 knora_base_namespace = knora_base_context + "#"
 
-# T/he filename of the knora-admin ontology.
+# The filename of the knora-admin ontology.
 knora_admin_filename = "knora-admin.ttl"
 
 # The context of the named graph containing the knora-admin ontology.
@@ -212,7 +212,7 @@ class Repository:
         contexts.pop(0)
 
         for context in contexts:
-            if not (context == knora_base_context):
+            if not (context == knora_base_context or context == knora_admin_context):
                 named_graph = NamedGraph(context=context, graphdb_info=self.graphdb_info)
                 named_graph.download(download_dir)
                 self.named_graphs.append(named_graph)
@@ -331,11 +331,11 @@ def update_repository(graphdb_info, download_dir, upload_dir):
 # Command-line invocation.
 def main():
     default_graphdb_host = "localhost"
-    defaut_repository = "knora-test"
+    default_repository = "knora-test"
 
     parser = argparse.ArgumentParser(description="Separates knora-admin from knora-base.")
     parser.add_argument("-g", "--graphdb", help="GraphDB host (default '{}')".format(default_graphdb_host), type=str)
-    parser.add_argument("-r", "--repository", help="GraphDB repository (default '{}')".format(defaut_repository),
+    parser.add_argument("-r", "--repository", help="GraphDB repository (default '{}')".format(default_repository),
                         type=str)
     parser.add_argument("-u", "--username", help="GraphDB username", type=str, required=True)
     parser.add_argument("-p", "--password", help="GraphDB password (if not provided, will prompt for password)",
@@ -350,7 +350,7 @@ def main():
     repository = args.repository
 
     if not repository:
-        repository = defaut_repository
+        repository = default_repository
 
     password = args.password
 

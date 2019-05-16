@@ -77,7 +77,7 @@ trait ListResponderResponseV2 {
   */
 case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
 
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -145,7 +145,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
         ) ++ project ++ children ++ label ++ comment)
 
         val context = JsonLDObject(Map(
-            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion),
+            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion),
             "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
             "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
             "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#"),
@@ -173,7 +173,7 @@ case class NodeGetRequestV2(nodeIri: IRI,
   */
 case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
 
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -218,7 +218,7 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
 
 
         val context = JsonLDObject(Map(
-            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion),
+            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion),
             "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
             "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
             "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#"),
