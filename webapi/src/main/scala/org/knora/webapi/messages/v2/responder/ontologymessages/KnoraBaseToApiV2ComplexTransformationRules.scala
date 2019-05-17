@@ -1160,28 +1160,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         )
     )
 
-    private val ListValueAsListNodeLabel: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Complex.ListValueAsListNodeLabel,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2Complex.ListValue),
-        objectType = Some(OntologyConstants.Xsd.String),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Hierarchical list value as list node name"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Represents the name of the list node pointed to."
-                )
-            )
-        )
-    )
-
     private val ColorValueAsColor: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Complex.ColorValueAsColor,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1569,8 +1547,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     )
 
     private val ListValueCardinalities = Map(
-        OntologyConstants.KnoraApiV2Complex.ListValueAsListNode -> Cardinality.MustHaveOne,
-        OntologyConstants.KnoraApiV2Complex.ListValueAsListNodeLabel -> Cardinality.MustHaveOne
+        OntologyConstants.KnoraApiV2Complex.ListValueAsListNode -> Cardinality.MustHaveOne
     )
 
     private val GeonameValueCardinalities = Map(
@@ -1774,7 +1751,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         BooleanValueAsBoolean,
         GeometryValueAsGeometry,
         ListValueAsListNode,
-        ListValueAsListNodeLabel,
         ColorValueAsColor,
         UriValueAsUri,
         GeonameValueAsGeonameCode,
