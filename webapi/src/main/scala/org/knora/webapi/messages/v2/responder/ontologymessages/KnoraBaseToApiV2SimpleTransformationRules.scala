@@ -418,6 +418,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
         OntologyConstants.KnoraBase.ListNodeName,
         OntologyConstants.KnoraBase.ListNodePosition,
         OntologyConstants.KnoraBase.ValueCreationDate,
+        OntologyConstants.KnoraBase.ValueHasUUID,
         OntologyConstants.KnoraBase.ValueHas,
         OntologyConstants.KnoraBase.ValueHasComment,
         OntologyConstants.KnoraBase.ValueHasCalendar,

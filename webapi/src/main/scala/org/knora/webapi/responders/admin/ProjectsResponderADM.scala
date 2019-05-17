@@ -33,7 +33,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadata
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.StringFormatter
 
 import scala.concurrent.Future
 
@@ -42,9 +42,6 @@ import scala.concurrent.Future
   */
 class ProjectsResponderADM(responderData: ResponderData) extends Responder(responderData) {
 
-
-    // Creates IRIs for new Knora user objects.
-    val knoraIdUtil = new KnoraIdUtil
 
     // Global lock IRI used for project creation and update
     val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
@@ -489,7 +486,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                 throw DuplicateValueException(s"Project with the shortcode: '${createRequest.shortcode}' already exists")
             }
 
-            newProjectIRI = knoraIdUtil.makeRandomProjectIri(validatedShortcode)
+            newProjectIRI = stringFormatter.makeRandomProjectIri(validatedShortcode)
 
             // Create the new project.
             createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(

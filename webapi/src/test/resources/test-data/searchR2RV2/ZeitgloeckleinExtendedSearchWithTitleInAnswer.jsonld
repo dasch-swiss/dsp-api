@@ -14,7 +14,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:10Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "00000000000000c329533w"
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -52,7 +53,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:23Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "0000000000d9a52284500w"
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",

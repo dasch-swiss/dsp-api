@@ -36,119 +36,136 @@
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Katalogaufnahme anhand ISTC und v.d.Haegen";
-  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "000000000056c287fc950w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/7b4a9bf89305> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Van der Haegen I: 9,14";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "00000000007b4a9bf8930w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/3e74ee319405> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Goff M165";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "00000000003e74ee31940w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/019e416b9405> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "C 3833";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000019e416b940w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/c4c794a49405> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Klebs 651.2";
-  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000c4c794a4940w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/87f1e7dd9405> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Schr 4799";
-  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "000000000087f1e7dd940w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/4a1b3b179505> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Schramm XXI p. 9 & 26";
-  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "00000000004a1b3b17950w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/0d458e509505> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "FairMur(G) 283";
-  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "00000000000d458e50950w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/d06ee1899505> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "IBP 3556";
-  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000d06ee189950w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/939834c39505> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Borm 1751";
-  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000939834c3950w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/262655679205> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Basel UB, Sign: Aleph D III 13:1";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "000000000026265567920w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/ac79fbd99205> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "deutsch von Otto von Diemeringen";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000ac79fbd9920w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/6fa34e139305> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Rubr. mit Init. J zu Beginn";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "00000000006fa34e13930w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/32cda14c9305> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Holzschnitte nicht koloriert";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "000000000032cda14c930w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/f5f6f4859305> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Besitzervermerke: Kartause, H. Zscheckenbürlin";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000f5f6f485930w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/b82048bf9305> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000b82048bf930w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/e94fa8a09205> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Extent: 1 Bd.; Dimensions: f°";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000e94fa8a0920w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/63fc012e9205> a knora-api:DateValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
@@ -160,46 +177,53 @@
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "JULIAN:1481 CE";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "000000000063fc012e920w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/dda85bbb9105> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Bernhard Richel";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000dda85bbb910w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/a0d2aef49105> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|V knora-admin:ProjectMember,knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Basel";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000a0d2aef4910w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/d1010fd69005> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Reise ins Heilige Land";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000d1010fd6900w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/942b620f9105> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Reysen und wanderschafften durch das Gelobte Land";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "0000000000942b620f910w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/5755b5489105> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "Itinerarius";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "00000000005755b548910w" .
 
 <http://rdfh.ch/0803/2a6221216701/values/f89173afca2704> a knora-api:TextValue;
   knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-api:userHasPermission "V";
   knora-api:valueAsString "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320";
-  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp .
+  knora-api:valueCreationDate "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp;
+  knora-api:valueHasUUID "00000000f89173afca270w" .

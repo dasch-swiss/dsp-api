@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInf
 import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.{KnoraIdUtil, SmartIri, StringFormatter}
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.{ExecutionContext, Future}
@@ -70,7 +70,7 @@ case class GetRemainingStandoffFromTextValueRequestV2(resourceIri: IRI, valueIri
 case class GetStandoffResponseV2(valueIri: IRI,
                                  standoff: Seq[StandoffTagV2],
                                  nextOffset: Option[Int]) extends KnoraResponseV2 {
-    private val knoraIdUtil = new KnoraIdUtil
+    private val stringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * Converts the response to a data structure that can be used to generate JSON-LD.
@@ -85,7 +85,7 @@ case class GetStandoffResponseV2(valueIri: IRI,
 
         val standoffInTargetSchema: Seq[StandoffTagV2] = standoff.map(_.toOntologySchema(targetSchema))
         val projectSpecificOntologiesUsed: Set[SmartIri] = standoffInTargetSchema.flatMap(_.getOntologyIrisUsed).toSet.filter(!_.isKnoraBuiltInDefinitionIri)
-        val standoffAsJsonLD: Seq[JsonLDValue] = standoffInTargetSchema.map(_.toJsonLDValue(targetSchema = targetSchema, knoraIdUtil = knoraIdUtil))
+        val standoffAsJsonLD: Seq[JsonLDValue] = standoffInTargetSchema.map(_.toJsonLDValue(targetSchema = targetSchema))
 
 
         val contentMap: Map[IRI, JsonLDValue] = Map(
@@ -586,6 +586,8 @@ case class StandoffTagV2(standoffTagClassIri: SmartIri,
                          startParentIndex: Option[Int] = None,
                          endParentIndex: Option[Int] = None,
                          attributes: Seq[StandoffTagAttributeV2] = Seq.empty[StandoffTagAttributeV2]) extends KnoraContentV2[StandoffTagV2] {
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     override def toOntologySchema(targetSchema: OntologySchema): StandoffTagV2 = {
         if (targetSchema != ApiV2Complex) {
             throw AssertionException(s"Standoff is available only in the complex schema")
@@ -597,7 +599,7 @@ case class StandoffTagV2(standoffTagClassIri: SmartIri,
         )
     }
 
-    def toJsonLDValue(targetSchema: OntologySchema, knoraIdUtil: KnoraIdUtil): JsonLDValue = {
+    def toJsonLDValue(targetSchema: OntologySchema): JsonLDValue = {
         if (targetSchema != ApiV2Complex) {
             throw AssertionException(s"Standoff is available only in the complex schema")
         }
@@ -606,7 +608,7 @@ case class StandoffTagV2(standoffTagClassIri: SmartIri,
 
         val contentMap: Map[IRI, JsonLDValue] = Map(
             JsonLDConstants.TYPE -> JsonLDString(standoffTagClassIri.toString),
-            OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID -> JsonLDString(knoraIdUtil.base64EncodeUuid(uuid)),
+            OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(uuid)),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasStart -> JsonLDInt(startPosition),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasEnd -> JsonLDInt(endPosition),
             OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartIndex -> JsonLDInt(startIndex)

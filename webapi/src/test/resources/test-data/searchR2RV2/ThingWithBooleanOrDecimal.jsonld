@@ -14,7 +14,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2018-05-28T15:52:03.897Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ"
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -52,7 +53,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2017-07-25T08:45:16.322Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "azE8tXC6RFKv296GXYEg5Q"
     },
     "anything:hasDecimal" : {
       "@id" : "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ",
@@ -69,7 +71,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2017-07-25T07:13:16.732Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "85et-o-STOmn2JcVqrGTCQ"
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",

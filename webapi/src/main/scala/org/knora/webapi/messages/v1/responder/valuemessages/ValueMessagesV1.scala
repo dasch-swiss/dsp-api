@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util.{DateUtilV1, KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, StringFormatter}
 import spray.json._
 
 
@@ -654,7 +654,6 @@ case class TextValueWithStandoffV1(utf8str: String,
                                    mappingIri: IRI,
                                    mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
-    private val knoraIdUtil = new KnoraIdUtil
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     lazy val computedMaxStandoffStartIndex: Option[Int] = if (standoff.nonEmpty) {
@@ -702,7 +701,7 @@ case class TextValueWithStandoffV1(utf8str: String,
             standoffNode: StandoffTagV2 =>
                 CreateStandoffTagV1InTriplestore(
                     standoffNode = standoffNode,
-                    standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri = valueIri, startIndex = standoffNode.startIndex) // generate IRI for new standoff node
+                    standoffTagInstanceIri = stringFormatter.makeRandomStandoffTagIri(valueIri = valueIri, startIndex = standoffNode.startIndex) // generate IRI for new standoff node
                 )
         }
 

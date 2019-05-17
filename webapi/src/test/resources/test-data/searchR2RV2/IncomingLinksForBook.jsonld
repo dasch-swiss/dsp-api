@@ -51,7 +51,8 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:54Z"
-    }
+    },
+    "knora-api:valueHasUUID" : "mhJuyZOHTMW1ZQAppzRL8A"
   },
   "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
   "knora-api:userHasPermission" : "V",

@@ -13,7 +13,8 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2019-02-13T09:05:10Z"
-    }
+    },
+    "knora-api:valueHasUUID" : "00000000000000000uuidw"
   },
   "anything:hasText" : {
     "@id" : "http://rdfh.ch/0001/thing-with-history/values/2c",
@@ -27,7 +28,8 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2019-02-12T10:05:10Z"
-    }
+    },
+    "knora-api:valueHasUUID" : "00000000000000000uuidw"
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

@@ -64,7 +64,8 @@
           "knora-api:valueCreationDate" : {
             "@type" : "xsd:dateTimeStamp",
             "@value" : "2018-06-06T12:08:57.382Z"
-          }
+          },
+          "knora-api:valueHasUUID" : "XktHkAazSZWzBA3x0sYFuQ"
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
@@ -92,7 +93,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2018-06-06T12:08:57.382Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "XktHkAazSZWzBA3x0sYFuQ"
     },
     "knora-api:hasPermissions" : "CR knora-admin:ProjectAdmin|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "V",
@@ -142,7 +144,8 @@
           "knora-api:valueCreationDate" : {
             "@type" : "xsd:dateTimeStamp",
             "@value" : "2018-06-06T12:08:57.175Z"
-          }
+          },
+          "knora-api:valueHasUUID" : "UKYA3eNMQK6OWmPjxVAbsA"
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
@@ -170,7 +173,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2018-06-06T12:08:57.175Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "UKYA3eNMQK6OWmPjxVAbsA"
     }, {
       "@id" : "http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw",
       "@type" : "knora-api:LinkValue",
@@ -195,7 +199,8 @@
           "knora-api:valueCreationDate" : {
             "@type" : "xsd:dateTimeStamp",
             "@value" : "2018-06-06T12:08:57.561Z"
-          }
+          },
+          "knora-api:valueHasUUID" : "m1bols-_R3OZQTe20pqBGw"
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
@@ -223,7 +228,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2018-06-06T12:08:57.561Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "m1bols-_R3OZQTe20pqBGw"
     } ],
     "knora-api:hasPermissions" : "CR knora-admin:ProjectAdmin|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "V",

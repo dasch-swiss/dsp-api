@@ -52,7 +52,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:54Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "mhJuyZOHTMW1ZQAppzRL8A"
     }, {
       "@id" : "http://rdfh.ch/0803/881405205304/values/daadc2ff-863e-49a1-a03c-51888e444bb3",
       "@type" : "knora-api:LinkValue",
@@ -89,7 +90,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:54Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "2q3C_4Y-SaGgPFGIjkRLsw"
     } ],
     "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
     "knora-api:userHasPermission" : "V",
@@ -151,7 +153,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:55Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "RszUN1ZdS_qtij4TcUp6Ng"
     },
     "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "V",
@@ -213,7 +216,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:56Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "BebUQwHrTmq6lTKetg4H1Q"
     }, {
       "@id" : "http://rdfh.ch/0803/cb1a74e3e2f6/values/87fbf1ca-05b7-4cf0-aa2f-4964ee1a7a8d",
       "@type" : "knora-api:LinkValue",
@@ -250,7 +254,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:56Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "h_vxygW3TPCqL0lk7hp6jQ"
     }, {
       "@id" : "http://rdfh.ch/0803/cb1a74e3e2f6/values/add0efdb-7af4-4a73-9bf4-3965d50dac28",
       "@type" : "knora-api:LinkValue",
@@ -287,7 +292,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:56Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "rdDv23r0SnOb9Dll1Q2sKA"
     } ],
     "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
     "knora-api:userHasPermission" : "V",

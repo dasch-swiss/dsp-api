@@ -13,7 +13,8 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-05-28T15:52:03.897Z"
-    }
+    },
+    "knora-api:valueHasUUID" : "dJ1ES8QTQNepFKF5-EAqdg"
   },
   "anything:hasText" : {
     "@id" : "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/SZyeLLmOTcCCuS3B0VksHQ",
@@ -27,7 +28,8 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-05-28T15:52:03.897Z"
-    }
+    },
+    "knora-api:valueHasUUID" : "SZyeLLmOTcCCuS3B0VksHQ"
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

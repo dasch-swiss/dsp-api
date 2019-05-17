@@ -518,7 +518,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
         // #getGeneralInstance
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         // #getGeneralInstance
-        val knoraIdUtil = new KnoraIdUtil
 
         for {
             // Get the resource class.
@@ -616,7 +615,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             )).mapTo[ProjectGetResponseADM]
 
             // Generate a random IRI for the resource.
-            resourceIri <- knoraIdUtil.makeUnusedIri(knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project.shortcode), storeManager, log)
+            resourceIri <- stringFormatter.makeUnusedIri(stringFormatter.makeRandomResourceIri(projectInfoResponse.project.shortcode), storeManager, log)
         } yield CreateResourceRequestV2(
             createResource = CreateResourceV2(
                 resourceIri = resourceIri,
@@ -880,7 +879,6 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
             schemaOptions = schemaOptions
         )
     }
-
     // #toJsonLDDocument
 
     /**

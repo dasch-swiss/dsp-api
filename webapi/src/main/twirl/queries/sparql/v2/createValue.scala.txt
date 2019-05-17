@@ -18,8 +18,9 @@
  *@
 
 @import java.time.Instant
+@import java.util.UUID
 @import org.knora.webapi._
-@import org.knora.webapi.util.{SmartIri, KnoraIdUtil}
+@import org.knora.webapi.util.{SmartIri, StringFormatter}
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v2.responder.valuemessages._
 
@@ -32,14 +33,13 @@
  * @param resourceIri the resource to update.
  * @param propertyIri the resource property to update.
  * @param newValueIri the new value IRI.
- * @param valueTypeIri the type of the new value.
  * @param value the value to insert.
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
  * @param valueCreator the IRI of the user who created the value.
  * @param valuePermissions the permissions that should be attached to the value.
  * @param creationDate an xsd:dateTimeStamp that should be attached to the value.
- * @param knoraIdUtil a [[KnoraIdUtil]].
+ * @param stringFormatter a [[StringFormatter]].
  *
  * The generated WHERE clause does some consistency checks. If these fail, the operation will do nothing.
  * To find out whether the update succeeded, the application must query the property's version history.
@@ -49,13 +49,12 @@
   resourceIri: IRI,
   propertyIri: SmartIri,
   newValueIri: IRI,
-  valueTypeIri: SmartIri,
   value: ValueContentV2,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   valueCreator: IRI,
   valuePermissions: String,
   creationDate: Instant,
-  knoraIdUtil: KnoraIdUtil)
+  stringFormatter: StringFormatter)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -99,7 +98,7 @@ DELETE {
                                                                          valuePermissions = valuePermissions,
                                                                          creationDate = creationDate,
                                                                          maybeValueHasOrder = None,
-                                                                         knoraIdUtil = knoraIdUtil)
+                                                                         stringFormatter = stringFormatter)
         }
     }
 }

@@ -19,6 +19,8 @@
 
 package org.knora.webapi.twirl
 
+import java.util.UUID
+
 import org.knora.webapi.IRI
 import org.knora.webapi.util.SmartIri
 

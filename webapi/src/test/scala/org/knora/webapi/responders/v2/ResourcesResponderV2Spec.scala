@@ -387,7 +387,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     private val resourcesResponderV2SpecFullData = new ResourcesResponderV2SpecFullData
-    private val knoraIdUtil = new KnoraIdUtil
 
     private var standardMapping: Option[MappingXMLtoStandoff] = None
 
@@ -755,7 +754,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a resource with no values" in {
             // Create the resource.
 
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputResource = CreateResourceV2(
                 resourceIri = resourceIri,
@@ -806,7 +805,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a resource with no values and custom permissions" in {
             // Create the resource.
 
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputResource = CreateResourceV2(
                 resourceIri = resourceIri,
@@ -841,7 +840,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a resource with values" in {
             // Create the resource.
 
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
@@ -998,7 +997,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a resource with a still image file value" in {
             // Create the resource.
 
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri -> Seq(
@@ -1048,7 +1047,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with missing required values" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputResource = CreateResourceV2(
                 resourceIri = resourceIri,
@@ -1070,7 +1069,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with too many values for the cardinality of a property" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1117,7 +1116,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a property for which there is no cardinality in the resource class" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1158,7 +1157,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with duplicate values" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1203,7 +1202,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource if the user doesn't have permission to create resources in the project" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1236,7 +1235,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a link to a nonexistent other resource" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
@@ -1269,7 +1268,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a standoff link to a nonexistent other resource" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val standoffWithInvalidLink: Vector[StandoffTagV2] = Vector(
                 StandoffTagV2(
@@ -1336,7 +1335,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a list value referring to a nonexistent list node" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
@@ -1369,7 +1368,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a value that's the wrong type for the property" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
@@ -1402,7 +1401,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a link to a resource of the wrong class for the link property" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
@@ -1435,7 +1434,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with invalid custom permissions" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputResource = CreateResourceV2(
                 resourceIri = resourceIri,
@@ -1458,7 +1457,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a value that has invalid custom permissions" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
@@ -1493,7 +1492,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource that uses a class from another non-shared project" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputResource = CreateResourceV2(
                 resourceIri = resourceIri,

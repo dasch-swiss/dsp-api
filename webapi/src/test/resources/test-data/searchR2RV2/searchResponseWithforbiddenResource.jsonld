@@ -62,7 +62,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:21Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "00000000002d55be9d3d2w"
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -100,7 +101,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:11Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "000000000016bfda32332w"
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -138,7 +140,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:39Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "00000000009becc538942w"
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -176,7 +179,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:21Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "000000000056665e77ef2w"
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",

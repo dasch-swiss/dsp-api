@@ -23,7 +23,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2018-05-28T15:52:03.897Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "-rG4F5FTTu2iB5mTBPVn5Q"
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -70,7 +71,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2018-01-31T15:05:10Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "000000000000date_valuQ"
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -117,7 +119,8 @@
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2018-01-31T15:05:10Z"
-      }
+      },
+      "knora-api:valueHasUUID" : "000000000000date_valuQ"
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",

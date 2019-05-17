@@ -18,7 +18,8 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:14Z"
-    }
+    },
+    "knora-api:valueHasUUID" : "0000000000f2877cc8990w"
   },
   "incunabula:title" : {
     "@id" : "http://rdfh.ch/0803/9935159f67/values/e6e02fe39801",
@@ -32,7 +33,8 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:14Z"
-    }
+    },
+    "knora-api:valueHasUUID" : "0000000000e6e02fe3980w"
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

@@ -16,7 +16,8 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:54Z"
-    }
+    },
+    "knora-api:valueHasUUID" : "000000000000000000000w"
   }, {
     "@id" : "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
     "@type" : "knora-api:TextValue",
@@ -32,7 +33,8 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:54Z"
-    }
+    },
+    "knora-api:valueHasUUID" : "000000000000000000000w"
   } ],
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

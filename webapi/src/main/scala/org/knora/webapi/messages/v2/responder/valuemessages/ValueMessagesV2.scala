@@ -470,6 +470,11 @@ sealed trait ReadValueV2 extends IOValueV2 {
     def valueCreationDate: Instant
 
     /**
+      * The UUID shared by all the versions of this value.
+      */
+    def valueHasUUID: UUID
+
+    /**
       * The content of the value.
       */
     def valueContent: ValueContentV2
@@ -520,7 +525,8 @@ sealed trait ReadValueV2 extends IOValueV2 {
                             OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
                                 value = valueCreationDate.toString,
                                 datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
-                            )
+                            ),
+                            OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID))
                         )
 
                         val valueHasCommentAsJsonLD: Option[(IRI, JsonLDValue)] = valueContent.comment.map {
@@ -550,6 +556,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
   * @param attachedToUser                the user that created the value.
   * @param permissions                   the permissions that the value grants to user groups.
   * @param userPermission                the permission that the requesting user has on the value.
+  * @param valueHasUUID                  the UUID shared by all the versions of this value.
   * @param valueContent                  the content of the value.
   * @param valueHasMaxStandoffStartIndex if this text value has standoff markup, the highest
   *                                      `knora-base:standoffTagHasEndIndex`
@@ -562,6 +569,7 @@ case class ReadTextValueV2(valueIri: IRI,
                            permissions: String,
                            userPermission: EntityPermission,
                            valueCreationDate: Instant,
+                           valueHasUUID: UUID,
                            valueContent: TextValueContentV2,
                            valueHasMaxStandoffStartIndex: Option[Int],
                            deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadTextValueV2] {
@@ -621,6 +629,7 @@ case class ReadTextValueV2(valueIri: IRI,
   * @param attachedToUser   the user that created the value.
   * @param permissions      the permissions that the value grants to user groups.
   * @param userPermission   the permission that the requesting user has on the value.
+  * @param valueHasUUID     the UUID shared by all the versions of this value.
   * @param valueContent     the content of the value.
   * @param valueHasRefCount if this is a link value, its reference count. Not returned in API responses, but needed
   *                         here for testing.
@@ -634,6 +643,7 @@ case class ReadLinkValueV2(valueIri: IRI,
                            permissions: String,
                            userPermission: EntityPermission,
                            valueCreationDate: Instant,
+                           valueHasUUID: UUID,
                            valueContent: LinkValueContentV2,
                            valueHasRefCount: Int,
                            previousValueIri: Option[IRI] = None,
@@ -655,6 +665,7 @@ case class ReadLinkValueV2(valueIri: IRI,
   * @param attachedToUser the user that created the value.
   * @param permissions    the permissions that the value grants to user groups.
   * @param userPermission the permission that the requesting user has on the value.
+  * @param valueHasUUID   the UUID shared by all the versions of this value.
   * @param valueContent   the content of the value.
   * @param deletionInfo   if this value has been marked as deleted, provides the date when it was
   *                       deleted and the reason why it was deleted.
@@ -664,6 +675,7 @@ case class ReadOtherValueV2(valueIri: IRI,
                             permissions: String,
                             userPermission: EntityPermission,
                             valueCreationDate: Instant,
+                            valueHasUUID: UUID,
                             valueContent: ValueContentV2,
                             deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadOtherValueV2] {
     /**
@@ -764,7 +776,7 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
 
     /**
       * Returns `true` if creating this [[ValueContentV2]] as a new value would duplicate the specified other value.
-      * This means that if resource `R` has property `P` with value `V1`, and `V1` would dupliate `V2`, the API server
+      * This means that if resource `R` has property `P` with value `V1`, and `V1` would duplicate `V2`, the API server
       * should not add another instance of property `P` with value `V2`. It does not necessarily mean that `V1 == V2`.
       *
       * @param that a [[ValueContentV2]] in the same resource, as read from the triplestore.
@@ -1146,8 +1158,6 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                               mapping: Option[MappingXMLtoStandoff] = None,
                               xslt: Option[String] = None,
                               comment: Option[String] = None) extends ValueContentV2 {
-    private val knoraIdUtil = new KnoraIdUtil
-
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.TextValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1282,7 +1292,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                 standoffNode: StandoffTagV2 =>
                     CreateStandoffTagV2InTriplestore(
                         standoffNode = standoffNode,
-                        standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri = valueIri, startIndex = standoffNode.startIndex) // generate IRI for new standoff node
+                        standoffTagInstanceIri = stringFormatter.makeRandomStandoffTagIri(valueIri = valueIri, startIndex = standoffNode.startIndex) // generate IRI for new standoff node
                     )
             }
 
