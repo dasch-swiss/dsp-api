@@ -510,7 +510,6 @@ case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
     override def toSparql: String = s"MINUS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
 }
 
-
 /**
   * Represents a CONSTRUCT clause in a query.
   *

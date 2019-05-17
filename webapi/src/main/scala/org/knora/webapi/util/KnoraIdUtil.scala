@@ -276,12 +276,12 @@ class KnoraIdUtil {
     /**
       * Creates a new standoff tag IRI based on a UUID.
       *
-      * @param valueIri the IRI of the text value containing the standoff tag.
+      * @param valueIri   the IRI of the text value containing the standoff tag.
+      * @param startIndex the standoff tag's start index.
       * @return a standoff tag IRI.
       */
-    def makeRandomStandoffTagIri(valueIri: IRI): IRI = {
-        val standoffTagUuid = makeRandomBase64EncodedUuid
-        s"$valueIri/standoff/$standoffTagUuid"
+    def makeRandomStandoffTagIri(valueIri: IRI, startIndex: Int): IRI = {
+        s"$valueIri/standoff/$startIndex"
     }
 
     /**

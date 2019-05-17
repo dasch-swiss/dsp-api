@@ -124,7 +124,8 @@ WHERE {
     }
 
     @{
-        queries.sparql.v2.txt.generateWhereStatementsForCreateValue(propertyIri = propertyIri,
+        queries.sparql.v2.txt.generateWhereStatementsForCreateValue(resourceIri = resourceIri,
+                                                                    propertyIri = propertyIri,
                                                                     newValueIri = newValueIri,
                                                                     value = value,
                                                                     linkUpdates = linkUpdates)

@@ -102,7 +102,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     // URL-encoded IRIs for use as URL segments in HTTP GET tests.
     private val imagesProjectSegment = URLEncoder.encode(imagesProjectIri, "UTF-8")
     private val knoraApiSimpleOntologySegment = URLEncoder.encode(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri, "UTF-8")
-    private val knoraApiWithValueObjectsOntologySegment = URLEncoder.encode(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri, "UTF-8")
+    private val knoraApiWithValueObjectsOntologySegment = URLEncoder.encode(OntologyConstants.KnoraApiV2Complex.KnoraApiOntologyIri, "UTF-8")
     private val incunabulaOntologySimpleSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2", "UTF-8")
     private val incunabulaOntologyWithValueObjectsSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2", "UTF-8")
     private val knoraApiDateSegment = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#Date", "UTF-8")
@@ -209,7 +209,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |    "rdfs:label": "$label",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
                    |    }
                    |}
                 """.stripMargin
@@ -222,7 +222,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(ontologyIri == "http://0.0.0.0:3333/ontology/00FF/foo/v2")
                 fooIri.set(ontologyIri)
                 assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
-                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
+                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2Complex.LastModificationDate).asInstanceOf[JsonLDString].value)
                 fooLastModDate = lastModDate
             }
         }
@@ -238,7 +238,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |  "knora-api:lastModificationDate": "$fooLastModDate",
                    |  "@context": {
                    |    "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |    "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |    "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
                    |  }
                    |}
                 """.stripMargin
@@ -250,7 +250,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
                 assert(ontologyIri == fooIri.get)
                 assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(newLabel))
-                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
+                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2Complex.LastModificationDate).asInstanceOf[JsonLDString].value)
                 assert(lastModDate.isAfter(fooLastModDate))
                 fooLastModDate = lastModDate
             }
@@ -918,7 +918,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1188,7 +1188,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1262,7 +1262,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1276,7 +1276,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1296,7 +1296,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |    "rdfs:label": "$label",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
                    |    }
                    |}
                 """.stripMargin
@@ -1309,7 +1309,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(ontologyIri == "http://api.knora.org/ontology/shared/useless/v2")
                 uselessIri.set(ontologyIri)
                 assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
-                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
+                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2Complex.LastModificationDate).asInstanceOf[JsonLDString].value)
                 uselessLastModDate = lastModDate
             }
 

@@ -51,7 +51,7 @@ object GravsearchTypeInspectionUtil {
         private val valueMap = Map(
             OntologyConstants.Rdf.Type -> RdfType,
             OntologyConstants.KnoraApiV2Simple.ObjectType -> ObjectType,
-            OntologyConstants.KnoraApiV2WithValueObjects.ObjectType -> ObjectType
+            OntologyConstants.KnoraApiV2Complex.ObjectType -> ObjectType
         )
 
         /**
@@ -85,22 +85,22 @@ object GravsearchTypeInspectionUtil {
         OntologyConstants.KnoraApiV2Simple.Color,
         OntologyConstants.KnoraApiV2Simple.File,
         OntologyConstants.KnoraApiV2Simple.ListNode,
-        OntologyConstants.KnoraApiV2WithValueObjects.Resource,
-        OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag,
-        OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.TextValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.IntValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.UriValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.DateValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.ListValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.ListNode,
-        OntologyConstants.KnoraApiV2WithValueObjects.GeomValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.ColorValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.FileValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.KnoraProject
+        OntologyConstants.KnoraApiV2Complex.Resource,
+        OntologyConstants.KnoraApiV2Complex.StandoffTag,
+        OntologyConstants.KnoraApiV2Complex.BooleanValue,
+        OntologyConstants.KnoraApiV2Complex.TextValue,
+        OntologyConstants.KnoraApiV2Complex.IntValue,
+        OntologyConstants.KnoraApiV2Complex.DecimalValue,
+        OntologyConstants.KnoraApiV2Complex.UriValue,
+        OntologyConstants.KnoraApiV2Complex.DateValue,
+        OntologyConstants.KnoraApiV2Complex.ListValue,
+        OntologyConstants.KnoraApiV2Complex.ListNode,
+        OntologyConstants.KnoraApiV2Complex.GeomValue,
+        OntologyConstants.KnoraApiV2Complex.GeonameValue,
+        OntologyConstants.KnoraApiV2Complex.ColorValue,
+        OntologyConstants.KnoraApiV2Complex.IntervalValue,
+        OntologyConstants.KnoraApiV2Complex.FileValue,
+        OntologyConstants.KnoraApiV2Complex.KnoraProject
     )
 
     /**

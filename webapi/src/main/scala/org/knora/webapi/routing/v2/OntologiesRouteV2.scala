@@ -62,7 +62,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
                     val requestedOntology = requestedOntologyStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr"))
 
-                    val responseSchema = requestedOntology.getOntologySchema match {
+                    val targetSchema = requestedOntology.getOntologySchema match {
                         case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
                         case _ => throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr")
                     }
@@ -80,12 +80,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        responseSchema = responseSchema
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        targetSchema = targetSchema,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }
@@ -99,12 +100,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     } yield OntologyMetadataGetByProjectRequestV2(projectIris = maybeProjectIri.toSet, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        responseSchema = ApiV2Complex
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             } ~ put {
@@ -127,12 +129,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            responseSchema = ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -147,12 +150,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     } yield OntologyMetadataGetByProjectRequestV2(projectIris = validatedProjectIris, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        responseSchema = ApiV2Complex
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }
@@ -161,7 +165,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 requestContext => {
                     val requestedOntologyIri = externalOntologyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIriStr"))
 
-                    val responseSchema = requestedOntologyIri.getOntologySchema match {
+                    val targetSchema = requestedOntologyIri.getOntologySchema match {
                         case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
                         case _ => throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIriStr")
                     }
@@ -179,12 +183,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        responseSchema = responseSchema
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        targetSchema = targetSchema,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }
@@ -209,12 +214,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            responseSchema = ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -238,12 +244,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            responseSchema = ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -269,12 +276,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            responseSchema = ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -298,12 +306,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            responseSchema = ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -335,7 +344,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     }
 
                     // Decide which API schema to use for the response.
-                    val responseSchema = if (schemas.size == 1) {
+                    val targetSchema = if (schemas.size == 1) {
                         schemas.head
                     } else {
                         // The client requested different schemas.
@@ -355,12 +364,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        responseSchema
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        targetSchema = targetSchema,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             } ~ delete {
@@ -390,12 +400,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        responseSchema = ApiV2Complex
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }
@@ -420,12 +431,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            responseSchema = ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -449,12 +461,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            responseSchema = ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -486,7 +499,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     }
 
                     // Decide which API schema to use for the response.
-                    val responseSchema = if (schemas.size == 1) {
+                    val targetSchema = if (schemas.size == 1) {
                         schemas.head
                     } else {
                         // The client requested different schemas.
@@ -506,12 +519,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        responseSchema = responseSchema
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        targetSchema = targetSchema,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             } ~ delete {
@@ -541,12 +555,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        responseSchema = ApiV2Complex
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }
@@ -571,12 +586,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log,
-                            responseSchema = ApiV2Complex
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -604,12 +620,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        responseSchema = ApiV2Complex
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }

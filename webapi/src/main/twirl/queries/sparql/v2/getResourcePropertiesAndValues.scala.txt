@@ -28,19 +28,31 @@
  * If the triplestore type is GraphDB, this template delegates to getResourcePropertiesAndValuesGraphDB.sparql.txt,
  * which is optimised for GraphDB. Otherwise, it delegates to getResourcePropertiesAndValuesStandard.sparql.txt.
  *
- * @param triplestore      the name of the triplestore being used.
- * @param resourceIris     the IRIs of the requested resources.
- * @param preview          indicates if the request should only return preview information.
- * @param maybePropertyIri if defined, only returns values of the specified explicit property.
- *                         Cannot be used in conjunction with preview.
- * @param maybeVersionDate if defined, requests the state of the resources at the specified
- *                         time in the past. Cannot be used in conjunction with preview.
+ * @param triplestore                the name of the triplestore being used.
+ * @param resourceIris               the IRIs of the requested resources.
+ * @param preview                    indicates if the request should only return preview information.
+ * @param maybePropertyIri           if defined, only returns values of the specified explicit property.
+ *                                   Cannot be used in conjunction with preview.
+ * @param maybeVersionDate           if defined, requests the state of the resources at the specified
+ *                                   time in the past. Cannot be used in conjunction with preview.
+ * @param maybeValueIri              if defined, the specified value will be the only value returned.
+ * @param queryAllNonStandoff        if true, knora-base:valueHasString and other non-standoff content will be returned.
+ * @param maybeStandoffMinStartIndex if defined, the minimum knora-base:standoffTagHasStartIndex to be returned.
+ *                                   Requires maybeStandoffMaxStartIndex. If undefined, standoff will
+ *                                   not be returned.
+ * @param maybeStandoffMaxStartIndex if defined, the maximum knora-base:standoffTagHasStartIndex to be returned.
+ *                                   Requires maybeStandoffMinStartIndex. If undefined, standoff will
+ *                                   not be returned.
  *@
 @(triplestore: String,
   resourceIris: Seq[IRI],
   preview: Boolean,
+  queryAllNonStandoff: Boolean,
   maybePropertyIri: Option[SmartIri] = None,
-  maybeVersionDate: Option[Instant] = None)
+  maybeVersionDate: Option[Instant] = None,
+  maybeValueIri: Option[IRI] = None,
+  maybeStandoffMinStartIndex: Option[Int] = None,
+  maybeStandoffMaxStartIndex: Option[Int] = None)
 
 @if(preview && (maybeVersionDate.isDefined || maybePropertyIri.isDefined)) {
     @{throw SparqlGenerationException(s"A preview cannot be requested with a property or a version date"); ()}
@@ -51,7 +63,11 @@
         queries.sparql.v2.txt.getResourcePropertiesAndValuesGraphDB(resourceIris = resourceIris,
                                                                     preview = preview,
                                                                     maybePropertyIri = maybePropertyIri,
-                                                                    maybeVersionDate = maybeVersionDate)
+                                                                    maybeVersionDate = maybeVersionDate,
+                                                                    maybeValueIri = maybeValueIri,
+                                                                    queryAllNonStandoff = queryAllNonStandoff,
+                                                                    maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
+                                                                    maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex)
     }
 } else {
     @{
@@ -59,6 +75,10 @@
                                                                     resourceIris = resourceIris,
                                                                     preview = preview,
                                                                     maybePropertyIri = maybePropertyIri,
-                                                                    maybeVersionDate = maybeVersionDate)
+                                                                    maybeVersionDate = maybeVersionDate,
+                                                                    maybeValueIri = maybeValueIri,
+                                                                    queryAllNonStandoff = queryAllNonStandoff,
+                                                                    maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
+                                                                    maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex)
     }
 }
