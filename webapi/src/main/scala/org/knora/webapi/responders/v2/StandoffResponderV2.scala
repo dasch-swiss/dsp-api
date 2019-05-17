@@ -117,6 +117,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 versionDate = None,
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,
+                targetSchema = getStandoffRequestV2.targetSchema,
                 settings = settings,
                 requestingUser = getStandoffRequestV2.requestingUser
             )

@@ -44,11 +44,13 @@ sealed trait StandoffResponderRequestV2 extends KnoraRequestV2
 /**
   * Requests a page of standoff markup from a text value. A successful response will be a [[GetStandoffResponseV2]].
   *
-  * @param resourceIri the IRI of the resource containing the value.
-  * @param valueIri    the IRI of the value.
-  * @param offset      the start index of the first standoff tag to be returned.
+  * @param resourceIri    the IRI of the resource containing the value.
+  * @param valueIri       the IRI of the value.
+  * @param offset         the start index of the first standoff tag to be returned.
+  * @param targetSchema   the schema of the response.
+  * @param requestingUser the user making the request.
   */
-case class GetStandoffPageRequestV2(resourceIri: IRI, valueIri: IRI, offset: Int, requestingUser: UserADM) extends StandoffResponderRequestV2
+case class GetStandoffPageRequestV2(resourceIri: IRI, valueIri: IRI, offset: Int, targetSchema: ApiV2Schema = ApiV2Complex, requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
   * Requests all the standoff markup from a text value, except for the first page. A successful response will be a [[GetStandoffResponseV2]].

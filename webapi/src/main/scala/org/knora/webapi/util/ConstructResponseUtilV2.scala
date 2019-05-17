@@ -621,6 +621,7 @@ object ConstructResponseUtilV2 {
       * @param versionDate               if defined, represents the requested time in the the resources' version history.
       * @param responderManager          the Knora responder manager.
       * @param knoraIdUtil               a [[KnoraIdUtil]].
+      * @param targetSchema              the schema of the response.
       * @param settings                  the application's settings.
       * @param requestingUser            the user making the request.
       * @return a [[LinkValueContentV2]].
@@ -633,6 +634,7 @@ object ConstructResponseUtilV2 {
                                        versionDate: Option[Instant],
                                        responderManager: ActorRef,
                                        knoraIdUtil: KnoraIdUtil,
+                                       targetSchema: ApiV2Schema,
                                        settings: SettingsImpl,
                                        requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
@@ -664,6 +666,7 @@ object ConstructResponseUtilV2 {
                         versionDate = versionDate,
                         responderManager = responderManager,
                         requestingUser = requestingUser,
+                        targetSchema = targetSchema,
                         settings = settings,
                         knoraIdUtil = knoraIdUtil
                     )
@@ -685,6 +688,7 @@ object ConstructResponseUtilV2 {
       * @param versionDate      if defined, represents the requested time in the the resources' version history.
       * @param responderManager the Knora responder manager.
       * @param knoraIdUtil      a [[KnoraIdUtil]].
+      * @param targetSchema     the schema of the response.
       * @param settings         the application's settings.
       * @param requestingUser   the user making the request.
       * @return a [[ValueContentV2]] representing a value.
@@ -696,6 +700,7 @@ object ConstructResponseUtilV2 {
                                                      versionDate: Option[Instant] = None,
                                                      responderManager: ActorRef,
                                                      knoraIdUtil: KnoraIdUtil,
+                                                     targetSchema: ApiV2Schema,
                                                      settings: SettingsImpl,
                                                      requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -790,15 +795,27 @@ object ConstructResponseUtilV2 {
 
                 val listNodeIri: String = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode)
 
-                // TODO: only query the list node if the response is requested in the simple schema (label is required in the simple schema, but not in the complex schema)
-                for {
-                    nodeResponse <- (responderManager ? NodeGetRequestV2(listNodeIri, requestingUser)).mapTo[NodeGetResponseV2]
-                } yield HierarchicalListValueContentV2(
+                val listNode = HierarchicalListValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasListNode = listNodeIri,
-                    listNodeLabel = nodeResponse.node.getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = settings.fallbackLanguage),
+                    listNodeLabel = None,
                     comment = valueCommentOption
                 )
+
+                // only query the list node if the response is requested in the simple schema
+                // (label is required in the simple schema, but not in the complex schema)
+
+                targetSchema match {
+                    case ApiV2Simple => for {
+                        nodeResponse <- (responderManager ? NodeGetRequestV2(listNodeIri, requestingUser)).mapTo[NodeGetResponseV2]
+                    } yield listNode.copy(
+                        listNodeLabel = nodeResponse.node.getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = settings.fallbackLanguage)
+                    )
+
+                    case ApiV2Complex => FastFuture.successful(listNode)
+                }
+
+
 
             case OntologyConstants.KnoraBase.IntervalValue =>
                 FastFuture.successful(IntervalValueContentV2(
@@ -818,6 +835,7 @@ object ConstructResponseUtilV2 {
                     versionDate = versionDate,
                     responderManager = responderManager,
                     requestingUser = requestingUser,
+                    targetSchema = targetSchema,
                     settings = settings,
                     knoraIdUtil = knoraIdUtil
                 )
@@ -848,6 +866,7 @@ object ConstructResponseUtilV2 {
       * @param versionDate              if defined, represents the requested time in the the resources' version history.
       * @param responderManager         the Knora responder manager.
       * @param knoraIdUtil              a [[KnoraIdUtil]].
+      * @param targetSchema             the schema of the response.
       * @param settings                 the application's settings.
       * @param requestingUser           the user making the request.
       * @return a [[ReadResourceV2]].
@@ -859,6 +878,7 @@ object ConstructResponseUtilV2 {
                                         versionDate: Option[Instant],
                                         responderManager: ActorRef,
                                         knoraIdUtil: KnoraIdUtil,
+                                        targetSchema: ApiV2Schema,
                                         settings: SettingsImpl,
                                         requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -917,6 +937,7 @@ object ConstructResponseUtilV2 {
                                 queryStandoff = queryStandoff,
                                 responderManager = responderManager,
                                 requestingUser = requestingUser,
+                                targetSchema = targetSchema,
                                 settings = settings,
                                 knoraIdUtil = knoraIdUtil
                             )
@@ -1008,6 +1029,7 @@ object ConstructResponseUtilV2 {
       * @param versionDate      if defined, represents the requested time in the the resources' version history.
       * @param responderManager the Knora responder manager.
       * @param knoraIdUtil      a [[KnoraIdUtil]].
+      * @param targetSchema     the schema of response.
       * @param settings         the application's settings.
       * @param requestingUser   the user making the request.
       * @return a [[ReadResourceV2]].
@@ -1019,6 +1041,7 @@ object ConstructResponseUtilV2 {
                                    versionDate: Option[Instant],
                                    responderManager: ActorRef,
                                    knoraIdUtil: KnoraIdUtil,
+                                   targetSchema: ApiV2Schema,
                                    settings: SettingsImpl,
                                    requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
 
@@ -1030,6 +1053,7 @@ object ConstructResponseUtilV2 {
             versionDate = versionDate,
             responderManager = responderManager,
             requestingUser = requestingUser,
+            targetSchema = targetSchema,
             settings = settings,
             knoraIdUtil = knoraIdUtil
         )
@@ -1045,6 +1069,7 @@ object ConstructResponseUtilV2 {
       * @param forbiddenResource  the ForbiddenResource, if any.
       * @param responderManager   the Knora responder manager.
       * @param knoraIdUtil        a [[KnoraIdUtil]].
+      * @param targetSchema       the schema of response.
       * @param settings           the application's settings.
       * @param requestingUser     the user making the request.
       * @return a collection of [[ReadResourceV2]] representing the search results.
@@ -1056,6 +1081,7 @@ object ConstructResponseUtilV2 {
                              forbiddenResource: Option[ReadResourceV2],
                              responderManager: ActorRef,
                              knoraIdUtil: KnoraIdUtil,
+                             targetSchema: ApiV2Schema,
                              settings: SettingsImpl,
                              requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[ReadResourceV2]] = {
 
@@ -1079,6 +1105,7 @@ object ConstructResponseUtilV2 {
                             versionDate = None,
                             responderManager = responderManager,
                             knoraIdUtil = knoraIdUtil,
+                            targetSchema = targetSchema,
                             settings = settings,
                             requestingUser = requestingUser
                         )

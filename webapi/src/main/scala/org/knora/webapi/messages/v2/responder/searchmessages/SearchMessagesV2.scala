@@ -116,12 +116,14 @@ case class SearchResourceByLabelCountRequestV2(searchValue: String,
   * @param offset               the offset to be used for paging.
   * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
+  * @param targetSchema         the schema of the response.
   * @param requestingUser       the user making the request.
   */
 case class SearchResourceByLabelRequestV2(searchValue: String,
                                           offset: Int,
                                           limitToProject: Option[IRI],
                                           limitToResourceClass: Option[SmartIri],
+                                          targetSchema: ApiV2Schema = ApiV2Complex,
                                           requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
@@ -147,6 +149,7 @@ case class ResourceCountV2(numberOfResources: Int) extends KnoraResponseV2 {
   * @param resourceClass   the IRI of the resource class, in the complex schema.
   * @param orderByProperty the IRI of the property that the resources are to be ordered by, in the complex schema.
   * @param page            the page number of the results page to be returned.
+  * @param targetSchema    the schema of the response.
   * @param schemaOptions   the schema options submitted with the request.
   * @param requestingUser  the user making the request.
   */
@@ -154,5 +157,6 @@ case class SearchResourcesByProjectAndClassRequestV2(projectIri: SmartIri,
                                                      resourceClass: SmartIri,
                                                      orderByProperty: Option[SmartIri],
                                                      page: Int,
+                                                     targetSchema: ApiV2Schema = ApiV2Complex,
                                                      schemaOptions: Set[SchemaOption],
                                                      requestingUser: UserADM) extends SearchResponderRequestV2

@@ -65,7 +65,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         case GravsearchCountRequestV2(query, requestingUser) => gravsearchCountV2(inputQuery = query, requestingUser = requestingUser)
         case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser) => gravsearchV2(inputQuery = query, targetSchema = targetSchema, schemaOptions = schemaOptions, requestingUser = requestingUser)
         case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser)
-        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser)
+        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser) => searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser)
         case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 => searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
@@ -312,6 +312,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,
                 settings = settings,
+                targetSchema = targetSchema,
                 requestingUser = requestingUser
             )
 
@@ -592,6 +593,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,
                 settings = settings,
+                targetSchema = targetSchema,
                 requestingUser = requestingUser
             )
 
@@ -734,6 +736,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         forbiddenResource = forbiddenResourceOption,
                         responderManager = responderManager,
                         knoraIdUtil = knoraIdUtil,
+                        targetSchema = resourcesInProjectGetRequestV2.targetSchema,
                         settings = settings,
                         requestingUser = resourcesInProjectGetRequestV2.requestingUser
                     )
@@ -799,6 +802,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
+      * @param targetSchema         the schema of the response.
       * @param requestingUser       the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
@@ -806,6 +810,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                          offset: Int,
                                          limitToProject: Option[IRI],
                                          limitToResourceClass: Option[SmartIri],
+                                         targetSchema: ApiV2Schema,
                                          requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
@@ -866,6 +871,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,
+                targetSchema = targetSchema,
                 settings = settings,
                 requestingUser = requestingUser
             )
