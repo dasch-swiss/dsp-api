@@ -311,6 +311,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,
+                settings = settings,
                 requestingUser = requestingUser
             )
 
@@ -590,6 +591,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,
+                settings = settings,
                 requestingUser = requestingUser
             )
 
@@ -732,6 +734,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         forbiddenResource = forbiddenResourceOption,
                         responderManager = responderManager,
                         knoraIdUtil = knoraIdUtil,
+                        settings = settings,
                         requestingUser = resourcesInProjectGetRequestV2.requestingUser
                     )
                 } yield searchResponse
@@ -863,6 +866,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,
+                settings = settings,
                 requestingUser = requestingUser
             )
 

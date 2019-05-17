@@ -1034,6 +1034,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         versionDate = versionDate,
                         responderManager = responderManager,
                         knoraIdUtil = knoraIdUtil,
+                        settings = settings,
                         requestingUser = requestingUser
                     )
             }.toVector
@@ -1076,6 +1077,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         versionDate = None,
                         responderManager = responderManager,
                         knoraIdUtil = knoraIdUtil,
+                        settings = settings,
                         requestingUser = requestingUser
                     )
             }.toVector
