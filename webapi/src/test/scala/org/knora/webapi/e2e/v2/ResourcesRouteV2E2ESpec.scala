@@ -208,7 +208,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             )
         }
 
-        "perform a full resource request for a resource with a list value" ignore { // disabled because the language in which the label is returned is not deterministic
+        "perform a full resource request for a resource with a list value" in {
             val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing_with_list_value", "UTF-8")}")
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
@@ -220,6 +220,22 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             instanceChecker.check(
                 instanceResponse = responseAsString,
                 expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+        }
+
+        "perform a full resource request for a resource with a list value (in the simple schema)" in {
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing_with_list_value", "UTF-8")}").addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingWithListValueSimple.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+
+            // Check that the resource corresponds to the ontology.
+            instanceChecker.check(
+                instanceResponse = responseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
                 knoraRouteGet = doGetRequest
             )
         }
