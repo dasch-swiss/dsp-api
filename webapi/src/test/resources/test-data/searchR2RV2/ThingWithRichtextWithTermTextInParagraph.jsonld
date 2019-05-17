@@ -2,7 +2,7 @@
   "@id" : "http://rdfh.ch/0001/thing_with_richtext_with_markup",
   "@type" : "anything:Thing",
   "anything:hasRichtext" : {
-    "@id" : "http://rdfh.ch/0001/thing_with_richtext_with_markup/text1",
+    "@id" : "http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1",
     "@type" : "knora-api:TextValue",
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"

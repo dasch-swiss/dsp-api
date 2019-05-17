@@ -155,7 +155,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             settings = settings,
                             responderManager = responderManager,
                             log = log,
-                            responseSchema = ApiV2Complex
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -183,7 +184,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             settings = settings,
                             responderManager = responderManager,
                             log = log,
-                            responseSchema = ApiV2Complex
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }
@@ -216,6 +218,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     val pageStr: String = params.getOrElse("page", throw BadRequestException(s"This route requires the parameter 'page'"))
                     val page: Int = stringFormatter.validateInt(pageStr, throw BadRequestException(s"Invalid page number: $pageStr"))
 
+                    val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
                     val requestMessageFuture: Future[SearchResourcesByProjectAndClassRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield SearchResourcesByProjectAndClassRequestV2(
@@ -223,6 +227,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         resourceClass = resourceClass.toOntologySchema(ApiV2Complex),
                         orderByProperty = maybeOrderByProperty,
                         page = page,
+                        schemaOptions = schemaOptions,
                         requestingUser = requestingUser
                     )
 
@@ -232,7 +237,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         settings,
                         responderManager,
                         log,
-                        responseSchema = ApiV2Complex
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = schemaOptions
                     )
                 }
             }
@@ -259,7 +265,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
-                        responseSchema = ApiV2Complex
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }
@@ -290,11 +297,16 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             }
                     }
 
+                    val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+                    val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
                     val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ResourcesGetRequestV2(
                         resourceIris = resourceIris,
                         versionDate = versionDate,
+                        targetSchema = targetSchema,
+                        schemaOptions = schemaOptions,
                         requestingUser = requestingUser
                     )
 
@@ -305,7 +317,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
-                        responseSchema = RouteUtilV2.getOntologySchema(requestContext)
+                        targetSchema = targetSchema,
+                        schemaOptions = schemaOptions
                     )
                     // #use-requested-schema
                 }
@@ -330,7 +343,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
-                        responseSchema = RouteUtilV2.getOntologySchema(requestContext)
+                        targetSchema = RouteUtilV2.getOntologySchema(requestContext),
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }
@@ -368,7 +382,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
-                        responseSchema = RouteUtilV2.getOntologySchema(requestContext)
+                        targetSchema = RouteUtilV2.getOntologySchema(requestContext)
                     )
                 }
             }
@@ -414,7 +428,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
-                        responseSchema = RouteUtilV2.getOntologySchema(requestContext)
+                        targetSchema = RouteUtilV2.getOntologySchema(requestContext),
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                     )
                 }
             }
@@ -443,7 +458,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             settings = settings,
                             responderManager = responderManager,
                             log = log,
-                            responseSchema = ApiV2Complex
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                         )
                     }
                 }

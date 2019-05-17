@@ -31,20 +31,18 @@ import org.knora.webapi.messages.store.sipimessages.SipiConversionFileRequestV1
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.store.SipiConnectorActorName
 import org.knora.webapi.store.iiif.MockSipiConnector
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util._
 import spray.json.JsValue
-
+import org.knora.webapi.util.IriConversions._
 import scala.concurrent.duration._
 
 /**
   * Static data for testing [[ResourcesResponderV1]].
   */
 object ResourcesResponderV1Spec {
-
     val config: Config = ConfigFactory.parseString(
         """
          akka.loglevel = "DEBUG"
@@ -619,6 +617,8 @@ object ResourcesResponderV1Spec {
 class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config) with ImplicitSender {
     import ResourcesResponderV1Spec._
 
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     private val valueUtilV1 = new ValueUtilV1(settings)
 
     override lazy val rdfDataObjects = List(
@@ -699,7 +699,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             // turn the expected ApiValueV1s in ResourceCreateValueResponseV1 (these are returned by the actor).
             case (propIri: IRI, propValues: Seq[ApiValueV1]) =>
                 (propIri, propValues.map {
-                    case (propValue: ApiValueV1) =>
+                    propValue: ApiValueV1 =>
                         val valueResponse = CreateValueResponseV1(
                             value = propValue,
                             rights = 6,
@@ -839,11 +839,10 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         responderManager ! ObjectAccessPermissionsForResourceGetADM(resourceIri = newBookResourceIri.get, requestingUser = KnoraSystemInstances.Users.SystemUser)
         expectMsgPF(timeout) {
-            case Some(permission) => {
+            case Some(permission) =>
                 val perms = permission.asInstanceOf[ObjectAccessPermissionADM].hasPermissions
                 perms should contain allElementsOf expected
                 perms.size should equal(expected.size)
-            }
             case _ => fail("No ObjectAccessPermission returned!")
         }
     }
@@ -1060,12 +1059,12 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 utf8str = "This comment refers to another resource",
                 standoff = Vector(
                     StandoffTagV2(
-                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         startPosition = 31,
                         endPosition = 39,
                         startIndex = 0,
-                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = nonexistentIri)),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = nonexistentIri)),
                         uuid = UUID.randomUUID(),
                         originalXMLID = None
                     )
@@ -1111,7 +1110,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 utf8str = "This citation refers to another resource",
                 standoff = Vector(
                     StandoffTagV2(
-                        standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+                        standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
                         startPosition = 5,
                         endPosition = 13,
                         uuid = UUID.randomUUID(),
@@ -1119,14 +1118,14 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         startIndex = 0
                     ),
                     StandoffTagV2(
-                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                        standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         startPosition = 32,
                         endPosition = 40,
-                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/0803/c5058f3a")),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri, value = "http://rdfh.ch/0803/c5058f3a")),
                         uuid = UUID.randomUUID(),
                         originalXMLID = None,
-                        startIndex = 0
+                        startIndex = 1
                     )
                 ),
                 mapping = ResourcesResponderV1SpecFullData.dummyMapping,

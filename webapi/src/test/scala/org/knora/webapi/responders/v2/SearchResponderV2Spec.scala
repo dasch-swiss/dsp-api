@@ -19,14 +19,14 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.testkit.{ImplicitSender, TestActorRef}
+import akka.testkit.ImplicitSender
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{CoreSpec, SharedTestDataADM}
+import org.knora.webapi.{ApiV2Complex, CoreSpec, MarkupAsXml, SchemaOptions, SharedTestDataADM}
 
 import scala.concurrent.duration._
 
@@ -51,7 +51,16 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a fulltext search for 'Narr'" in {
 
-            responderManager ! FulltextSearchRequestV2(searchValue = "Narr", offset = 0, limitToProject = None, limitToResourceClass = None, limitToStandoffClass = None, SharedTestDataADM.anonymousUser)
+            responderManager ! FulltextSearchRequestV2(
+                searchValue = "Narr",
+                offset = 0,
+                limitToProject = None,
+                limitToResourceClass = None,
+                limitToStandoffClass = None,
+                targetSchema = ApiV2Complex,
+                schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                requestingUser = SharedTestDataADM.anonymousUser
+            )
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -65,7 +74,16 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a fulltext search for 'Dinge'" in {
 
-            responderManager ! FulltextSearchRequestV2(searchValue = "Dinge", offset = 0, limitToProject = None, limitToResourceClass = None, limitToStandoffClass = None, SharedTestDataADM.anythingUser1)
+            responderManager ! FulltextSearchRequestV2(
+                searchValue = "Dinge",
+                offset = 0,
+                limitToProject = None,
+                limitToResourceClass = None,
+                limitToStandoffClass = None,
+                targetSchema = ApiV2Complex,
+                schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                requestingUser = SharedTestDataADM.anythingUser1
+            )
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -77,7 +95,12 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens'" in {
 
 
-            responderManager ! GravsearchRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
+            responderManager ! GravsearchRequestV2(
+                constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein,
+                targetSchema = ApiV2Complex,
+                schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                requestingUser = SharedTestDataADM.anonymousUser
+            )
 
             // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
@@ -89,7 +112,12 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
 
-            responderManager ! GravsearchRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
+            responderManager ! GravsearchRequestV2(
+                constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein,
+                targetSchema = ApiV2Complex,
+                schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                requestingUser = SharedTestDataADM.anonymousUser
+            )
 
             // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
@@ -122,6 +150,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
                 resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                 orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
+                schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                 page = 0,
                 requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
             )

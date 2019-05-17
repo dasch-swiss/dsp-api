@@ -200,6 +200,7 @@ object OntologyConstants {
         val ObjectCannotBeMarkedAsDeleted: IRI = KnoraBasePrefixExpansion + "objectCannotBeMarkedAsDeleted"
 
         val ValueHasString: IRI = KnoraBasePrefixExpansion + "valueHasString"
+        val ValueHasMaxStandoffStartIndex: IRI = KnoraBasePrefixExpansion + "valueHasMaxStandoffStartIndex"
         val ValueHasLanguage: IRI = KnoraBasePrefixExpansion + "valueHasLanguage"
         val ValueHasMapping: IRI = KnoraBasePrefixExpansion + "valueHasMapping"
         val ValueHasInteger: IRI = KnoraBasePrefixExpansion + "valueHasInteger"
@@ -654,7 +655,7 @@ object OntologyConstants {
           */
         def isKnoraApiV2Resource(iri: SmartIri): Boolean = {
             val iriStr = iri.toString
-            iriStr == OntologyConstants.KnoraApiV2Simple.Resource || iriStr == OntologyConstants.KnoraApiV2WithValueObjects.Resource
+            iriStr == OntologyConstants.KnoraApiV2Simple.Resource || iriStr == OntologyConstants.KnoraApiV2Complex.Resource
         }
 
         /**
@@ -663,7 +664,7 @@ object OntologyConstants {
         def getSubjectTypePredicate(apiV2Schema: ApiV2Schema): IRI = {
             apiV2Schema match {
                 case ApiV2Simple => KnoraApiV2Simple.SubjectType
-                case ApiV2Complex => KnoraApiV2WithValueObjects.SubjectType
+                case ApiV2Complex => KnoraApiV2Complex.SubjectType
             }
         }
 
@@ -673,12 +674,12 @@ object OntologyConstants {
         def getObjectTypePredicate(apiV2Schema: ApiV2Schema): IRI = {
             apiV2Schema match {
                 case ApiV2Simple => KnoraApiV2Simple.ObjectType
-                case ApiV2Complex => KnoraApiV2WithValueObjects.ObjectType
+                case ApiV2Complex => KnoraApiV2Complex.ObjectType
             }
         }
     }
 
-    object KnoraApiV2WithValueObjects {
+    object KnoraApiV2Complex {
 
         val VersionSegment = "/v2"
 
@@ -841,6 +842,8 @@ object OntologyConstants {
         val DateValueHasCalendar: IRI = KnoraApiV2PrefixExpansion + "dateValueHasCalendar"
 
         val TextValueHasStandoff: IRI = KnoraApiV2PrefixExpansion + "textValueHasStandoff"
+        val TextValueHasMarkup: IRI = KnoraApiV2PrefixExpansion + "textValueHasMarkup"
+        val TextValueHasMaxStandoffStartIndex: IRI = KnoraApiV2PrefixExpansion + "textValueHasMaxStandoffStartIndex"
         val TextValueAsHtml: IRI = KnoraApiV2PrefixExpansion + "textValueAsHtml"
         val TextValueAsXml: IRI = KnoraApiV2PrefixExpansion + "textValueAsXml"
         val TextValueHasMapping: IRI = KnoraApiV2PrefixExpansion + "textValueHasMapping"
@@ -848,6 +851,15 @@ object OntologyConstants {
         val StandoffTag: IRI = KnoraApiV2PrefixExpansion + "StandoffTag"
         val StandoffTagHasStartParent: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasStartParent"
         val StandoffTagHasEndParent: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasEndParent"
+        val StandoffTagHasStartParentIndex: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasStartParentIndex"
+        val StandoffTagHasEndParentIndex: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasEndParentIndex"
+        val StandoffTagHasStart: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasStart"
+        val StandoffTagHasEnd: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasEnd"
+        val StandoffTagHasStartIndex: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasStartIndex"
+        val StandoffTagHasEndIndex: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasEndIndex"
+        val StandoffTagHasUUID: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasUUID"
+        val StandoffTagHasOriginalXMLID: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasOriginalXMLID"
+        val NextStandoffStartIndex: IRI = KnoraApiV2PrefixExpansion + "nextStandoffStartIndex"
 
         val IntValueAsInt: IRI = KnoraApiV2PrefixExpansion + "intValueAsInt"
 
@@ -901,7 +913,7 @@ object OntologyConstants {
     }
 
     object SalsahGuiApiV2WithValueObjects {
-        val SalsahGuiOntologyIri: IRI = KnoraApi.ApiOntologyStart + SalsahGui.SalsahGuiOntologyLabel + KnoraApiV2WithValueObjects.VersionSegment
+        val SalsahGuiOntologyIri: IRI = KnoraApi.ApiOntologyStart + SalsahGui.SalsahGuiOntologyLabel + KnoraApiV2Complex.VersionSegment
         val SalsahGuiPrefixExpansion: IRI = SalsahGuiOntologyIri + "#"
 
         val GuiAttribute: IRI = SalsahGuiPrefixExpansion + "guiAttribute"
@@ -1039,21 +1051,21 @@ object OntologyConstants {
             KnoraBase.HasDocumentFileValue -> KnoraApiV2Simple.HasDocumentFile
         ),
         (InternalSchema, ApiV2Complex) -> Map(
-            KnoraBase.SubjectClassConstraint -> KnoraApiV2WithValueObjects.SubjectType,
-            KnoraBase.ObjectClassConstraint -> KnoraApiV2WithValueObjects.ObjectType,
-            KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2WithValueObjects.ObjectType,
-            KnoraBase.ValueHasString -> KnoraApiV2WithValueObjects.ValueAsString,
-            KnoraBase.ValueHasUri -> KnoraApiV2WithValueObjects.UriValueAsUri,
-            KnoraBase.ValueHasInteger -> KnoraApiV2WithValueObjects.IntValueAsInt,
-            KnoraBase.ValueHasDecimal -> KnoraApiV2WithValueObjects.DecimalValueAsDecimal,
-            KnoraBase.ValueHasBoolean -> KnoraApiV2WithValueObjects.BooleanValueAsBoolean,
-            KnoraBase.ValueHasIntervalStart -> KnoraApiV2WithValueObjects.IntervalValueHasStart,
-            KnoraBase.ValueHasIntervalEnd -> KnoraApiV2WithValueObjects.IntervalValueHasEnd,
-            KnoraBase.ValueHasLanguage -> KnoraApiV2WithValueObjects.TextValueHasLanguage,
-            KnoraBase.ValueHasListNode -> KnoraApiV2WithValueObjects.ListValueAsListNode,
-            KnoraBase.ValueHasGeonameCode -> KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode,
-            KnoraBase.ValueHasColor -> KnoraApiV2WithValueObjects.ColorValueAsColor,
-            KnoraBase.ValueHasStandoff -> KnoraApiV2WithValueObjects.TextValueHasStandoff
+            KnoraBase.SubjectClassConstraint -> KnoraApiV2Complex.SubjectType,
+            KnoraBase.ObjectClassConstraint -> KnoraApiV2Complex.ObjectType,
+            KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2Complex.ObjectType,
+            KnoraBase.ValueHasString -> KnoraApiV2Complex.ValueAsString,
+            KnoraBase.ValueHasUri -> KnoraApiV2Complex.UriValueAsUri,
+            KnoraBase.ValueHasInteger -> KnoraApiV2Complex.IntValueAsInt,
+            KnoraBase.ValueHasDecimal -> KnoraApiV2Complex.DecimalValueAsDecimal,
+            KnoraBase.ValueHasBoolean -> KnoraApiV2Complex.BooleanValueAsBoolean,
+            KnoraBase.ValueHasIntervalStart -> KnoraApiV2Complex.IntervalValueHasStart,
+            KnoraBase.ValueHasIntervalEnd -> KnoraApiV2Complex.IntervalValueHasEnd,
+            KnoraBase.ValueHasLanguage -> KnoraApiV2Complex.TextValueHasLanguage,
+            KnoraBase.ValueHasListNode -> KnoraApiV2Complex.ListValueAsListNode,
+            KnoraBase.ValueHasGeonameCode -> KnoraApiV2Complex.GeonameValueAsGeonameCode,
+            KnoraBase.ValueHasColor -> KnoraApiV2Complex.ColorValueAsColor,
+            KnoraBase.ValueHasStandoff -> KnoraApiV2Complex.TextValueHasStandoff
         ),
         (ApiV2Simple, InternalSchema) -> Map(
             // Not all types in ApiV2Simple can be converted here to types in KnoraBase. For example,
@@ -1078,20 +1090,20 @@ object OntologyConstants {
 
         ),
         (ApiV2Complex, InternalSchema) -> Map(
-            KnoraApiV2WithValueObjects.SubjectType -> KnoraBase.SubjectClassConstraint,
-            KnoraApiV2WithValueObjects.ObjectType -> KnoraBase.ObjectClassConstraint,
-            KnoraApiV2WithValueObjects.UriValueAsUri -> KnoraBase.ValueHasUri,
-            KnoraApiV2WithValueObjects.IntValueAsInt -> KnoraBase.ValueHasInteger,
-            KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> KnoraBase.ValueHasDecimal,
-            KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> KnoraBase.ValueHasBoolean,
-            KnoraApiV2WithValueObjects.IntervalValueHasStart -> KnoraBase.ValueHasIntervalStart,
-            KnoraApiV2WithValueObjects.IntervalValueHasEnd -> KnoraBase.ValueHasIntervalEnd,
-            KnoraApiV2WithValueObjects.ValueAsString -> KnoraBase.ValueHasString,
-            KnoraApiV2WithValueObjects.TextValueHasLanguage -> KnoraBase.ValueHasLanguage,
-            KnoraApiV2WithValueObjects.ListValueAsListNode -> KnoraBase.ValueHasListNode,
-            KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
-            KnoraApiV2WithValueObjects.ColorValueAsColor -> KnoraBase.ValueHasColor,
-            KnoraApiV2WithValueObjects.TextValueHasStandoff -> KnoraBase.ValueHasStandoff
+            KnoraApiV2Complex.SubjectType -> KnoraBase.SubjectClassConstraint,
+            KnoraApiV2Complex.ObjectType -> KnoraBase.ObjectClassConstraint,
+            KnoraApiV2Complex.UriValueAsUri -> KnoraBase.ValueHasUri,
+            KnoraApiV2Complex.IntValueAsInt -> KnoraBase.ValueHasInteger,
+            KnoraApiV2Complex.DecimalValueAsDecimal -> KnoraBase.ValueHasDecimal,
+            KnoraApiV2Complex.BooleanValueAsBoolean -> KnoraBase.ValueHasBoolean,
+            KnoraApiV2Complex.IntervalValueHasStart -> KnoraBase.ValueHasIntervalStart,
+            KnoraApiV2Complex.IntervalValueHasEnd -> KnoraBase.ValueHasIntervalEnd,
+            KnoraApiV2Complex.ValueAsString -> KnoraBase.ValueHasString,
+            KnoraApiV2Complex.TextValueHasLanguage -> KnoraBase.ValueHasLanguage,
+            KnoraApiV2Complex.ListValueAsListNode -> KnoraBase.ValueHasListNode,
+            KnoraApiV2Complex.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
+            KnoraApiV2Complex.ColorValueAsColor -> KnoraBase.ValueHasColor,
+            KnoraApiV2Complex.TextValueHasStandoff -> KnoraBase.ValueHasStandoff
         )
     )
 

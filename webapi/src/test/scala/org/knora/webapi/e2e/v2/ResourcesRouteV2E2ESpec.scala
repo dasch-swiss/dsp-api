@@ -35,8 +35,11 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.{FileUtil, PermissionUtilADM, StringFormatter}
+import org.knora.webapi.util._
+import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.diff.Diff
 
+import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.ExecutionContextExecutor
 
 /**
@@ -45,13 +48,14 @@ import scala.concurrent.ExecutionContextExecutor
 class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.triplestoreUpdateTimeout)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
     private val password = "test"
     private var aThingLastModificationDate = Instant.now
+    private val hamletResourceIri = new MutableTestIri
 
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
     private val writeTestDataFiles = false
@@ -314,7 +318,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         "return the version history of a resource within a date range" in {
             val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
             val startDate = URLEncoder.encode(Instant.parse("2019-02-08T15:05:11Z").toString, "UTF-8")
-            val endDate =  URLEncoder.encode(Instant.parse("2019-02-13T09:05:10Z").toString, "UTF-8")
+            val endDate = URLEncoder.encode(Instant.parse("2019-02-13T09:05:10Z").toString, "UTF-8")
             val request = Get(s"$baseApiUrl/v2/resources/history/$resourceIri?startDate=$startDate&endDate=$endDate")
             val response: HttpResponse = singleAwaitingRequest(request)
             val responseAsString = responseToString(response)
@@ -336,7 +340,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                 entry match {
                     case jsonLDObject: JsonLDObject =>
                         val versionDate: Instant = jsonLDObject.requireDatatypeValueInObject(
-                            key = OntologyConstants.KnoraApiV2WithValueObjects.VersionDate,
+                            key = OntologyConstants.KnoraApiV2Complex.VersionDate,
                             expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                             validationFun = stringFormatter.xsdDateTimeStampToInstant
                         )
@@ -596,27 +600,27 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
             val jsonLDEntity =
                 s"""{
-                  |  "@type" : "anything:Thing",
-                  |  "knora-api:attachedToProject" : {
-                  |    "@id" : "http://rdfh.ch/projects/0001"
-                  |  },
-                  |  "anything:hasBoolean" : {
-                  |    "@type" : "knora-api:BooleanValue",
-                  |    "knora-api:booleanValueAsBoolean" : true
-                  |  },
-                  |  "rdfs:label" : "test thing",
-                  |  "knora-api:creationDate" : {
-                  |    "@type" : "xsd:dateTimeStamp",
-                  |    "@value" : "$creationDate"
-                  |  },
-                  |  "@context" : {
-                  |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                  |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                  |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                  |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                  |  }
-                  |}""".stripMargin
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "anything:hasBoolean" : {
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : true
+                   |  },
+                   |  "rdfs:label" : "test thing",
+                   |  "knora-api:creationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$creationDate"
+                   |  },
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
 
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -626,7 +630,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(resourceIri.toSmartIri.isKnoraDataIri)
 
             val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
-                key = OntologyConstants.KnoraApiV2WithValueObjects.CreationDate,
+                key = OntologyConstants.KnoraApiV2Complex.CreationDate,
                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                 validationFun = stringFormatter.xsdDateTimeStampToInstant
             )
@@ -665,7 +669,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
             assert(resourceIri.toSmartIri.isKnoraDataIri)
 
-            val savedAttachedToUser: IRI = responseJsonDoc.body.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser, stringFormatter.validateAndEscapeIri)
+            val savedAttachedToUser: IRI = responseJsonDoc.body.requireIriInObject(OntologyConstants.KnoraApiV2Complex.AttachedToUser, stringFormatter.validateAndEscapeIri)
             assert(savedAttachedToUser == SharedTestDataADM.anythingUser1.id)
         }
 
@@ -717,22 +721,22 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
             val jsonLDEntity =
                 s"""|{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "rdfs:label" : "$newLabel",
-                   |  "knora-api:hasPermissions" : "$newPermissions",
-                   |  "knora-api:newModificationDate" : {
-                   |    "@type" : "xsd:dateTimeStamp",
-                   |    "@value" : "$newModificationDate"
-                   |  },
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "rdfs:label" : "$newLabel",
+                    |  "knora-api:hasPermissions" : "$newPermissions",
+                    |  "knora-api:newModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$newModificationDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
 
             val updateRequest = Put(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
@@ -747,11 +751,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
             val updatedLabel: String = previewJsonLD.requireString(OntologyConstants.Rdfs.Label)
             assert(updatedLabel == newLabel)
-            val updatedPermissions: String = previewJsonLD.requireString(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions)
+            val updatedPermissions: String = previewJsonLD.requireString(OntologyConstants.KnoraApiV2Complex.HasPermissions)
             assert(PermissionUtilADM.parsePermissions(updatedPermissions) == PermissionUtilADM.parsePermissions(newPermissions))
 
             val lastModificationDate: Instant = previewJsonLD.requireDatatypeValueInObject(
-                key = OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
+                key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
                 validationFun = stringFormatter.xsdDateTimeStampToInstant
             )
@@ -790,6 +794,133 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
             val previewResponseAsString = responseToString(previewResponse)
             assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
+        }
+
+        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" in {
+            // Create a resource containing the text of Hamlet.
+
+            val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
+
+            val jsonLDEntity =
+                s"""{
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasRichtext" : {
+                   |    "@type" : "knora-api:TextValue",
+                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(hamletXml)},
+                   |    "knora-api:textValueHasMapping" : {
+                   |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+                   |    }
+                   |  },
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "rdfs:label" : "test thing",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val resourceCreateRequest = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceCreateResponse: HttpResponse = singleAwaitingRequest(request = resourceCreateRequest, duration = settings.triplestoreUpdateTimeout)
+            assert(resourceCreateResponse.status == StatusCodes.OK, resourceCreateResponse.toString)
+
+            val resourceCreateResponseAsJsonLD: JsonLDDocument = responseToJsonLDDocument(resourceCreateResponse)
+            val resourceIri: IRI = resourceCreateResponseAsJsonLD.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri.toSmartIri.isKnoraDataIri)
+            hamletResourceIri.set(resourceIri)
+        }
+
+        "read the large text and its markup as XML, and check that it matches the original XML" in {
+            val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
+
+            // Request the newly created resource.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest, duration = settings.triplestoreUpdateTimeout)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+
+            // Check that the response matches the ontology.
+            instanceChecker.check(
+                instanceResponse = resourceGetResponseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+
+            // Get the XML from the response.
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val xmlFromResponse: String = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext").
+                requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+
+            // Compare it to the original XML.
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
+            xmlDiff.hasDifferences should be(false)
+        }
+
+        "read the large text without its markup, and get the markup separately as pages of standoff" in {
+            // Get the resource without markup.
+            val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}").addHeader(new MarkupHeader(RouteUtilV2.MARKUP_STANDOFF)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)
+            val resourceGetResponseAsString = responseToString(resourceGetResponse)
+
+            // Check that the response matches the ontology.
+            instanceChecker.check(
+                instanceResponse = resourceGetResponseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+
+            // Get the standoff markup separately.
+            val resourceGetResponseAsJsonLD = JsonLDUtil.parseJsonLD(resourceGetResponseAsString)
+            val textValue: JsonLDObject = resourceGetResponseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext")
+            val maybeTextValueAsXml: Option[String] = textValue.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+            assert(maybeTextValueAsXml.isEmpty)
+            val textValueIri: IRI = textValue.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+
+            val resourceIriEncoded: IRI = URLEncoder.encode(hamletResourceIri.get, "UTF-8")
+            val textValueIriEncoded: IRI = URLEncoder.encode(textValueIri, "UTF-8")
+
+            val standoffBuffer: ArrayBuffer[JsonLDObject] = ArrayBuffer.empty
+            var offset: Int = 0
+            var hasMoreStandoff: Boolean = true
+
+            while (hasMoreStandoff) {
+                // Get a page of standoff.
+
+                val standoffGetRequest = Get(s"$baseApiUrl/v2/standoff/$resourceIriEncoded/$textValueIriEncoded/$offset") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+                val standoffGetResponse: HttpResponse = singleAwaitingRequest(standoffGetRequest)
+                val standoffGetResponseAsJsonLD: JsonLDObject = responseToJsonLDDocument(standoffGetResponse).body
+
+                val standoff: Seq[JsonLDValue] = standoffGetResponseAsJsonLD.maybeArray(JsonLDConstants.GRAPH).map(_.value).getOrElse(Seq.empty)
+
+                val standoffAsJsonLDObjects: Seq[JsonLDObject] = standoff.map {
+                    case jsonLDObject: JsonLDObject => jsonLDObject
+                    case other => throw AssertionException(s"Expected JsonLDObject, got $other")
+                }
+
+                standoffBuffer.appendAll(standoffAsJsonLDObjects)
+
+                standoffGetResponseAsJsonLD.maybeInt(OntologyConstants.KnoraApiV2Complex.NextStandoffStartIndex) match {
+                    case Some(nextOffset) => offset = nextOffset
+                    case None => hasMoreStandoff = false
+                }
+            }
+
+            assert(standoffBuffer.length == 6738)
+
+            // Check the standoff tags to make sure they match the ontology.
+
+            for (jsonLDObject <- standoffBuffer) {
+                val docForValidation = JsonLDDocument(body = jsonLDObject).toCompactString
+
+                instanceChecker.check(
+                    instanceResponse = docForValidation,
+                    expectedClassIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr),
+                    knoraRouteGet = doGetRequest
+                )
+           }
         }
     }
 }

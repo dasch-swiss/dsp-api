@@ -1485,6 +1485,43 @@
                    rdfs:comment """Dieser Brief ist auch vorhanden in"""@de ,
                               """Letter is also available at"""@en .
 
+### ###########################################
+### beol:entryCommentOf
+
+:entryCommentOf rdf:type owl:ObjectProperty ;
+
+                rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                rdfs:comment "Kommentar zu"@de ,
+                             "Comment of"@en ;
+
+                rdfs:label  "Kommentar zu"@de ,
+                            "Comment of"@en ;
+
+                knora-base:subjectClassConstraint :entryComment ;
+
+                knora-base:objectClassConstraint :manuscriptEntry ;
+
+                salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:entryCommentOfValue
+
+:entryCommentOfValue rdf:type owl:ObjectProperty ;
+
+                knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                knora-base:subjectClassConstraint :entryComment ;
+
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                rdfs:comment "Kommentar zu"@de ,
+                             "Comment of"@en ;
+
+                rdfs:label  "Kommentar von"@de ,
+                            "Comment of"@en .
+
 ##########################################################
 #
 # RESOURCES
@@ -2118,6 +2155,44 @@
 
          rdfs:label "Transkription"@de ,
                     "Transcription"@en .
+
+### ###########################################
+### beol:comment
+
+:entryComment rdf:type owl:Class ;
+
+         rdfs:subClassOf knora-base:Resource ,
+
+         [
+           rdf:type owl:Restriction ;
+           owl:onProperty :hasText ;
+           owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+           salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+         ] ,
+         [
+           rdf:type owl:Restriction ;
+           owl:onProperty :seqnum ;
+           owl:cardinality "1"^^xsd:nonNegativeInteger ;
+           salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+         ] ,
+         [
+           rdf:type owl:Restriction ;
+           owl:onProperty :entryCommentOf ;
+           owl:cardinality "1"^^xsd:nonNegativeInteger ;
+           salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+         ] ,
+         [
+           rdf:type owl:Restriction ;
+           owl:onProperty :entryCommentOfValue ;
+           owl:cardinality "1"^^xsd:nonNegativeInteger ;
+           salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+         ] ;
+
+         rdfs:label "Kommentar zu Manuskripteintrag"@de ,
+                    "Comment of an entry in a manuscript"@en ;
+
+         rdfs:comment "Kommentar zu Manuskripteintrag"@de ,
+                      "Comment of an entry in a manuscript"@en .
 
 ### ###########################################
 ### beol:manuscriptEntry

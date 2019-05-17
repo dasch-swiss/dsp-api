@@ -18,7 +18,7 @@
  *@
 
 @import java.time.Instant
-@import org.knora.webapi.IRI
+@import org.knora.webapi._
 @import org.knora.webapi.util.SmartIri
 
 @*
@@ -26,17 +26,29 @@
  *
  * This template is used only by getResourcePropertiesAndValues.scala.txt.
  *
- * @param resourceIris     the IRIs of the requested resources.
- * @param preview          indicates if the request should only return preview information.
- * @param maybePropertyIri if defined, only returns values of the specified explicit property.
- *                         Cannot be used in conjunction with preview.
- * @param maybeVersionDate if defined, requests the state of the resources at the specified
- *                         time in the past. Cannot be used in conjunction with preview.
+ * @param resourceIris               the IRIs of the requested resources.
+ * @param preview                    indicates if the request should only return preview information.
+ * @param maybePropertyIri           if defined, only returns values of the specified explicit property.
+ *                                   Cannot be used in conjunction with preview.
+ * @param maybeVersionDate           if defined, requests the state of the resources at the specified
+ *                                   time in the past. Cannot be used in conjunction with preview.
+ * @param maybeValueIri              if defined, the specified value will be the only value returned.
+ * @param queryAllNonStandoff        if true, knora-base:valueHasString and other non-standoff content will be returned.
+ * @param maybeStandoffMinStartIndex if defined, the minimum knora-base:standoffTagHasStartIndex to be returned.
+ *                                   Requires maybeStandoffMaxStartIndex. If undefined, standoff will
+ *                                   not be returned.
+ * @param maybeStandoffMaxStartIndex if defined, the maximum knora-base:standoffTagHasStartIndex to be returned.
+ *                                   Requires maybeStandoffMinStartIndex. If undefined, standoff will
+ *                                   not be returned.
  *@
 @(resourceIris: Seq[IRI],
   preview: Boolean,
   maybePropertyIri: Option[SmartIri],
-  maybeVersionDate: Option[Instant])
+  maybeVersionDate: Option[Instant],
+  maybeValueIri: Option[IRI],
+  queryAllNonStandoff: Boolean,
+  maybeStandoffMinStartIndex: Option[Int],
+  maybeStandoffMaxStartIndex: Option[Int])
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -58,26 +70,32 @@ CONSTRUCT {
     @* include this inferred information in the results, needed to identify value properties *@
     ?resource knora-base:hasValue ?valueObject ;
         ?resourceValueProperty ?valueObject .
+
     ?valueObject ?valueObjectProperty ?valueObjectValue .
 
-    ?standoffNode ?standoffProperty ?standoffValue .
+    @if(maybeStandoffMinStartIndex.nonEmpty) {
+        ?valueObject knora-base:valueHasStandoff ?standoffNode .
+        ?standoffNode ?standoffProperty ?standoffValue .
+    }
 
-    @* include this inferred information in the results, needed to identify linking properties *@
-    ?resource knora-base:hasLinkTo ?referredResource ;
-        ?resourceLinkProperty ?referredResource .
+    @if(queryAllNonStandoff) {
+        @* include this inferred information in the results, needed to identify linking properties *@
+        ?resource knora-base:hasLinkTo ?referredResource ;
+            ?resourceLinkProperty ?referredResource .
 
-    ?referredResource a knora-base:Resource ;
-        knora-base:isDeleted false ;
-        rdfs:label ?referredResourceLabel ;
-        a ?referredResourceType ;
-        knora-base:attachedToUser ?referredResourceCreator ;
-        knora-base:hasPermissions ?referredResourcePermissions ;
-        knora-base:attachedToProject ?referredResourceProject  ;
-        knora-base:creationDate ?referredResourceCreationDate ;
-        knora-base:lastModificationDate ?referredResourceLastModificationDate .
+        ?referredResource a knora-base:Resource ;
+            knora-base:isDeleted false ;
+            rdfs:label ?referredResourceLabel ;
+            a ?referredResourceType ;
+            knora-base:attachedToUser ?referredResourceCreator ;
+            knora-base:hasPermissions ?referredResourcePermissions ;
+            knora-base:attachedToProject ?referredResourceProject  ;
+            knora-base:creationDate ?referredResourceCreationDate ;
+            knora-base:lastModificationDate ?referredResourceLastModificationDate .
 
-    ?valueObject knora-base:valueHasListNode ?listNode .
-    ?listNode rdfs:label ?listNodeLabel .
+        ?valueObject knora-base:valueHasListNode ?listNode .
+        ?listNode rdfs:label ?listNodeLabel .
+    }
 
 } WHERE {
     VALUES ?resource { @for(resIri <- resourceIris) { <@resIri> } }
@@ -189,46 +207,81 @@ CONSTRUCT {
                 }
             }
 
+            @* Filter by value IRI if requested. *@
+            @maybeValueIri match {
+                case Some(valueIri) => {
+                    FILTER(?valueObject = <@valueIri>)
+                }
+
+                case None => {}
+            }
+
             {
                 GRAPH <http://www.ontotext.com/explicit> {
                     ?valueObject a ?valueObjectType ;
                         ?valueObjectProperty ?valueObjectValue .
                 }
-            } UNION {
-                GRAPH <http://www.ontotext.com/explicit> {
-                    ?valueObject knora-base:valueHasStandoff ?standoffNode .
-                    ?standoffNode ?standoffProperty ?standoffValue .
+
+                FILTER(?valueObjectProperty != knora-base:valueHasStandoff)
+
+                @* Exclude knora-base:valueHasString if requested. *@
+
+                @if(!queryAllNonStandoff) {
+                    FILTER(?valueObjectProperty != knora-base:valueHasString)
                 }
-            } UNION {
-                 GRAPH <http://www.ontotext.com/explicit> {
-                    ?valueObject a knora-base:ListValue .
-                    ?valueObject knora-base:valueHasListNode  ?listNode .
-                    ?listNode rdfs:label ?listNodeLabel .
-                 }
-            } UNION {
-                @*
+            }
+            @* Query standoff if requested. *@
+            @maybeStandoffMinStartIndex match {
+                case Some(standoffMinStartIndex) => {
+                    @if(maybeStandoffMaxStartIndex.isEmpty) {
+                        @{throw SparqlGenerationException("maybeStandoffMaxStartIndex must be defined if maybeStandoffMinStartIndex is defined"); ()}
+                    }
 
-                If the value is a link value, get the referred resource, as long as it hasn't been
-                marked as deleted.
+                    UNION {
+                        GRAPH <http://www.ontotext.com/explicit> {
+                            ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                            ?standoffNode ?standoffProperty ?standoffValue ;
+                                knora-base:standoffTagHasStartIndex ?startIndex .
+                        }
 
-                *@
-                GRAPH <http://www.ontotext.com/explicit> {
-                    ?valueObject a knora-base:LinkValue ;
-                      rdf:predicate ?resourceLinkProperty ;
-                      rdf:object ?referredResource .
-                    ?referredResource a ?referredResourceType .
+                        FILTER(?startIndex >= @standoffMinStartIndex && ?startIndex <= @{maybeStandoffMaxStartIndex.get})
+                    }
                 }
 
-                ?referredResource a knora-base:Resource ;
-                  knora-base:isDeleted false ;
-                  rdfs:label ?referredResourceLabel ;
-                  knora-base:attachedToUser ?referredResourceCreator ;
-                  knora-base:hasPermissions ?referredResourcePermissions ;
-                  knora-base:attachedToProject ?referredResourceProject ;
-                  knora-base:creationDate ?referredResourceCreationDate .
+                case None => {}
+            }
+            @if(queryAllNonStandoff) {
+                UNION {
+                     GRAPH <http://www.ontotext.com/explicit> {
+                        ?valueObject a knora-base:ListValue .
+                        ?valueObject knora-base:valueHasListNode  ?listNode .
+                        ?listNode rdfs:label ?listNodeLabel .
+                     }
+                } UNION {
+                    @*
 
-                OPTIONAL {
-                    ?referredResource knora-base:lastModificationDate ?lastModificationDate .
+                    If the value is a link value, get the referred resource, as long as it hasn't been
+                    marked as deleted.
+
+                    *@
+                    GRAPH <http://www.ontotext.com/explicit> {
+                        ?valueObject a knora-base:LinkValue ;
+                          rdf:predicate ?resourceLinkProperty ;
+                          rdf:object ?referredResource .
+                        ?referredResource a ?referredResourceType .
+                    }
+
+                    ?referredResource a knora-base:Resource ;
+                      knora-base:isDeleted false ;
+                      rdfs:label ?referredResourceLabel ;
+                      knora-base:attachedToUser ?referredResourceCreator ;
+                      knora-base:hasPermissions ?referredResourcePermissions ;
+                      knora-base:attachedToProject ?referredResourceProject ;
+                      knora-base:creationDate ?referredResourceCreationDate .
+
+                    OPTIONAL {
+                        ?referredResource knora-base:lastModificationDate ?lastModificationDate .
+                    }
                 }
             }
         }

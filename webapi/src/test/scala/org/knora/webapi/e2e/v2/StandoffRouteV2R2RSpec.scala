@@ -102,7 +102,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
                    |    "rdfs:label": "letter mapping",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
                    |    }
                    |}
                 """.stripMargin
