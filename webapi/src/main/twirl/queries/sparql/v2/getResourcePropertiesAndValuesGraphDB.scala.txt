@@ -18,8 +18,9 @@
  *@
 
 @import java.time.Instant
+@import java.util.UUID
 @import org.knora.webapi._
-@import org.knora.webapi.util.SmartIri
+@import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 @*
  * Gets the values of all the Knora properties of one or more resources, using GraphDB.
@@ -30,6 +31,7 @@
  * @param preview                    indicates if the request should only return preview information.
  * @param maybePropertyIri           if defined, only returns values of the specified explicit property.
  *                                   Cannot be used in conjunction with preview.
+ * @param maybeValueUuid             if defined, requests only the value with the specified UUID.
  * @param maybeVersionDate           if defined, requests the state of the resources at the specified
  *                                   time in the past. Cannot be used in conjunction with preview.
  * @param maybeValueIri              if defined, the specified value will be the only value returned.
@@ -40,15 +42,18 @@
  * @param maybeStandoffMaxStartIndex if defined, the maximum knora-base:standoffTagHasStartIndex to be returned.
  *                                   Requires maybeStandoffMinStartIndex. If undefined, standoff will
  *                                   not be returned.
+ * @param stringFormatter            a StringFormatter.
  *@
 @(resourceIris: Seq[IRI],
   preview: Boolean,
   maybePropertyIri: Option[SmartIri],
+  maybeValueUuid: Option[UUID],
   maybeVersionDate: Option[Instant],
   maybeValueIri: Option[IRI],
   queryAllNonStandoff: Boolean,
   maybeStandoffMinStartIndex: Option[Int],
-  maybeStandoffMaxStartIndex: Option[Int])
+  maybeStandoffMaxStartIndex: Option[Int],
+  stringFormatter: StringFormatter)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -211,6 +216,15 @@ CONSTRUCT {
             @maybeValueIri match {
                 case Some(valueIri) => {
                     FILTER(?valueObject = <@valueIri>)
+                }
+
+                case None => {}
+            }
+
+            @* Filter by value UUID if requested. *@
+            @maybeValueUuid match {
+                case Some(valueUuid) => {
+                    ?valueObject knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(valueUuid)}" .
                 }
 
                 case None => {}

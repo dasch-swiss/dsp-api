@@ -2735,6 +2735,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
+      * Calls `decodeUuidWithErr`, throwing [[InconsistentTriplestoreDataException]] if the string cannot be parsed.
+      */
+    def decodeUuid(uuidStr: String): UUID = {
+        decodeUuidWithErr(uuidStr, throw InconsistentTriplestoreDataException(s"Invalid UUID: $uuidStr"))
+    }
+
+    /**
       * Decodes a string representing a UUID in one of two formats:
       *
       * - The canonical 36-character format.
@@ -2744,17 +2751,18 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * (this is non-reversible, and is needed only for working with test data).
       *
       * @param uuidStr the string to be decoded.
-      * @return the equivalent [[UUID]].
+      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
+      * @return the decoded [[UUID]].
       */
-    def decodeUuid(uuidStr: String): UUID = {
-        if (uuidStr.length == 36) {
+    def decodeUuidWithErr(uuidStr: String, errorFun: => Nothing): UUID = {
+        if (uuidStr.length == CanonicalUuidLength) {
             UUID.fromString(uuidStr)
-        } else if (uuidStr.length == 22) {
+        } else if (uuidStr.length == Base64UuidLength) {
             base64DecodeUuid(uuidStr)
-        } else if (uuidStr.length < 22) {
-            base64DecodeUuid(uuidStr.reverse.padTo(22, '0').reverse)
+        } else if (uuidStr.length < Base64UuidLength) {
+            base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse)
         } else {
-            throw InconsistentTriplestoreDataException(s"Invalid UUID: $uuidStr")
+            errorFun
         }
     }
 

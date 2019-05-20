@@ -693,7 +693,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         maybePropertyIri = None,
                         maybeVersionDate = None,
                         maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
-                        maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex
+                        maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
+                        stringFormatter = stringFormatter
                     ).toString())
 
                     // _ = println(resourceRequestSparql)

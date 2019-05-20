@@ -59,6 +59,7 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   *
   * @param resourceIris   the IRIs of the resources to be queried.
   * @param propertyIri    if defined, requests only the values of the specified explicit property.
+  * @param valueUuid      if defined, requests only the value with the specified UUID.
   * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
   * @param targetSchema   the target API schema.
   * @param schemaOptions  the schema options submitted with the request.
@@ -66,6 +67,7 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   */
 case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  propertyIri: Option[SmartIri] = None,
+                                 valueUuid: Option[UUID] = None,
                                  versionDate: Option[Instant] = None,
                                  targetSchema: ApiV2Schema = ApiV2Complex,
                                  schemaOptions: Set[SchemaOption] = Set.empty,

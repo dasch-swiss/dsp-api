@@ -86,7 +86,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 queryAllNonStandoff = false,
                 maybeValueIri = Some(getStandoffRequestV2.valueIri),
                 maybeStandoffMinStartIndex = Some(getStandoffRequestV2.offset),
-                maybeStandoffMaxStartIndex = Some(requestMaxStartIndex)
+                maybeStandoffMaxStartIndex = Some(requestMaxStartIndex),
+                stringFormatter = stringFormatter
             ).toString())
 
             // _ = println("=================================")
