@@ -91,7 +91,7 @@ case class GravsearchCountRequestV2(constructQuery: ConstructQuery,
   * @param requestingUser the user making the request.
   */
 case class GravsearchRequestV2(constructQuery: ConstructQuery,
-                               targetSchema: ApiV2Schema = ApiV2Complex,
+                               targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption] = Set.empty[SchemaOption],
                                requestingUser: UserADM) extends SearchResponderRequestV2
 
@@ -123,7 +123,7 @@ case class SearchResourceByLabelRequestV2(searchValue: String,
                                           offset: Int,
                                           limitToProject: Option[IRI],
                                           limitToResourceClass: Option[SmartIri],
-                                          targetSchema: ApiV2Schema = ApiV2Complex,
+                                          targetSchema: ApiV2Schema,
                                           requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
@@ -157,6 +157,6 @@ case class SearchResourcesByProjectAndClassRequestV2(projectIri: SmartIri,
                                                      resourceClass: SmartIri,
                                                      orderByProperty: Option[SmartIri],
                                                      page: Int,
-                                                     targetSchema: ApiV2Schema = ApiV2Complex,
+                                                     targetSchema: ApiV2Schema,
                                                      schemaOptions: Set[SchemaOption],
                                                      requestingUser: UserADM) extends SearchResponderRequestV2

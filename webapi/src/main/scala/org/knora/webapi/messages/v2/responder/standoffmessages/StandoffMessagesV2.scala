@@ -50,7 +50,7 @@ sealed trait StandoffResponderRequestV2 extends KnoraRequestV2
   * @param targetSchema   the schema of the response.
   * @param requestingUser the user making the request.
   */
-case class GetStandoffPageRequestV2(resourceIri: IRI, valueIri: IRI, offset: Int, targetSchema: ApiV2Schema = ApiV2Complex, requestingUser: UserADM) extends StandoffResponderRequestV2
+case class GetStandoffPageRequestV2(resourceIri: IRI, valueIri: IRI, offset: Int, targetSchema: ApiV2Schema, requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
   * Requests all the standoff markup from a text value, except for the first page. A successful response will be a [[GetStandoffResponseV2]].

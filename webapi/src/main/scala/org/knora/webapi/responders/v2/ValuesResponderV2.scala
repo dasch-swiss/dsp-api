@@ -1447,17 +1447,18 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       * Given a set of resource IRIs, checks that they point to Knora resources.
       * If not, throws an exception.
       *
-      * @param targeResourceIris the IRIs to be checked.
+      * @param targetResourceIris the IRIs to be checked.
       * @param requestingUser    the user making the request.
       */
-    private def checkResourceIris(targeResourceIris: Set[IRI], requestingUser: UserADM): Future[Unit] = {
-        if (targeResourceIris.isEmpty) {
+    private def checkResourceIris(targetResourceIris: Set[IRI], requestingUser: UserADM): Future[Unit] = {
+        if (targetResourceIris.isEmpty) {
             FastFuture.successful(())
         } else {
             for {
                 resourcePreviewRequest <- FastFuture.successful(
                     ResourcesPreviewGetRequestV2(
-                        resourceIris = targeResourceIris.toSeq,
+                        resourceIris = targetResourceIris.toSeq,
+                        targetSchema = ApiV2Complex,
                         requestingUser = requestingUser
                     )
                 )
@@ -1586,6 +1587,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             resourcePreviewRequest <- FastFuture.successful(
                 ResourcesPreviewGetRequestV2(
                     resourceIris = Seq(linkValueContent.referredResourceIri),
+                    targetSchema = ApiV2Complex,
                     requestingUser = requestingUser
                 )
             )
