@@ -267,7 +267,7 @@ knora-api:Geoname a rdfs:Datatype;
 
 knora-api:Interval a rdfs:Datatype;
   rdfs:comment "Represents an interval.";
-  rdfs:label "Interprivate val literal";
+  rdfs:label "Interval literal";
   rdfs:subClassOf [ a rdfs:Datatype;
       owl:onDatatype xsd:string;
       owl:withRestrictions [
