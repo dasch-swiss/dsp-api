@@ -24,11 +24,21 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.{ClientApiGenerationException, InconsistentTriplestoreDataException, OntologyConstants}
 
+/**
+  * The front-end of the client code generator.
+  */
 class GeneratorFrontEnd {
+    /**
+      * Converts RDF class definitions into [[ClientClassDefinition]] instances.
+      *
+      * @param rdfClassDef     the class definition to be converted.
+      * @param rdfPropertyDefs the definitions of the properties used in the class.
+      * @return a [[ClientClassDefinition]] describing the class.
+      */
     def rdfClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val isResourceClass = rdfClassDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceClass.toSmartIri)
+        val isResourceClass = rdfClassDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2Complex.IsResourceClass.toSmartIri)
 
         if (isResourceClass) {
             rdfResourceClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
@@ -43,7 +53,7 @@ class GeneratorFrontEnd {
         val cardinalitiesWithoutLinkProps = rdfClassDef.directCardinalities.filter {
             case (propertyIri, _) =>
                 rdfPropertyDefs.get(propertyIri) match {
-                    case Some(rdfPropertyDef) => !rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty.toSmartIri)
+                    case Some(rdfPropertyDef) => !rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2Complex.IsLinkProperty.toSmartIri)
                     case None => true
                 }
         }
@@ -54,12 +64,12 @@ class GeneratorFrontEnd {
 
                 if (propertyIri.isKnoraEntityIri) {
                     val rdfPropertyDef = rdfPropertyDefs(propertyIri)
-                    val ontologyObjectType: SmartIri = rdfPropertyDef.requireIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-api:objectType"))
-                    val isResourceProp = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsResourceProperty.toSmartIri)
-                    val isEditable = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsEditable.toSmartIri)
+                    val ontologyObjectType: SmartIri = rdfPropertyDef.requireIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-api:objectType"))
+                    val isResourceProp = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2Complex.IsResourceProperty.toSmartIri)
+                    val isEditable = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2Complex.IsEditable.toSmartIri)
 
                     if (isResourceProp) {
-                        val isLinkValueProp = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty.toSmartIri)
+                        val isLinkValueProp = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2Complex.IsLinkValueProperty.toSmartIri)
 
                         val clientObjectType: ClientObjectType = if (isLinkValueProp) {
                             ClientLinkValue(ontologyObjectType)
@@ -110,7 +120,7 @@ class GeneratorFrontEnd {
 
                 if (propertyIri.isKnoraEntityIri) {
                     val rdfPropertyDef = rdfPropertyDefs(propertyIri)
-                    val ontologyObjectType: SmartIri = rdfPropertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri).getOrElse(OntologyConstants.Xsd.String.toSmartIri)
+                    val ontologyObjectType: SmartIri = rdfPropertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri).getOrElse(OntologyConstants.Xsd.String.toSmartIri)
 
                     ClientPropertyDefinition(
                         propertyName = propertyName,
@@ -143,23 +153,23 @@ class GeneratorFrontEnd {
 
     private def resourcePropObjectTypeToClientObjectType(ontologyObjectType: SmartIri): ClientObjectType = {
         ontologyObjectType.toString match {
-            case OntologyConstants.KnoraApiV2WithValueObjects.TextValue => ClientTextValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.IntValue => ClientIntValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue => ClientDecimalValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue => ClientBooleanValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.DateValue => ClientDateValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.GeomValue => ClientGeomValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue => ClientIntervalValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.ListValue => ClientListValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.UriValue => ClientUriValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue => ClientGeonameValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.ColorValue => ClientColorValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue => ClientStillImageFileValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.MovingImageFileValue => ClientMovingImageFileValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.AudioFileValue => ClientAudioFileValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.DDDFileValue => ClientDDDFileValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.TextFileValue => ClientTextFileValue
-            case OntologyConstants.KnoraApiV2WithValueObjects.DocumentFileValue => ClientDocumentFileValue
+            case OntologyConstants.KnoraApiV2Complex.TextValue => ClientTextValue
+            case OntologyConstants.KnoraApiV2Complex.IntValue => ClientIntValue
+            case OntologyConstants.KnoraApiV2Complex.DecimalValue => ClientDecimalValue
+            case OntologyConstants.KnoraApiV2Complex.BooleanValue => ClientBooleanValue
+            case OntologyConstants.KnoraApiV2Complex.DateValue => ClientDateValue
+            case OntologyConstants.KnoraApiV2Complex.GeomValue => ClientGeomValue
+            case OntologyConstants.KnoraApiV2Complex.IntervalValue => ClientIntervalValue
+            case OntologyConstants.KnoraApiV2Complex.ListValue => ClientListValue
+            case OntologyConstants.KnoraApiV2Complex.UriValue => ClientUriValue
+            case OntologyConstants.KnoraApiV2Complex.GeonameValue => ClientGeonameValue
+            case OntologyConstants.KnoraApiV2Complex.ColorValue => ClientColorValue
+            case OntologyConstants.KnoraApiV2Complex.StillImageFileValue => ClientStillImageFileValue
+            case OntologyConstants.KnoraApiV2Complex.MovingImageFileValue => ClientMovingImageFileValue
+            case OntologyConstants.KnoraApiV2Complex.AudioFileValue => ClientAudioFileValue
+            case OntologyConstants.KnoraApiV2Complex.DDDFileValue => ClientDDDFileValue
+            case OntologyConstants.KnoraApiV2Complex.TextFileValue => ClientTextFileValue
+            case OntologyConstants.KnoraApiV2Complex.DocumentFileValue => ClientDocumentFileValue
             case _ => throw ClientApiGenerationException(s"Unexpected value type: $ontologyObjectType")
         }
     }

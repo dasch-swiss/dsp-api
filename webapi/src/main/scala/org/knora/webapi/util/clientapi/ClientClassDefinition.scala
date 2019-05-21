@@ -22,60 +22,163 @@ package org.knora.webapi.util.clientapi
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Cardinality
 import org.knora.webapi.util.SmartIri
 
-sealed trait ClientObjectType
 
-sealed trait ClientLiteral extends ClientObjectType
+/**
+  * A definition of a Knora API class, which can be used by a [[GeneratorBackEnd]] to generate client code.
+  *
+  * @param className  the name of the class.
+  * @param classIri   the IRI of the class in the Knora API.
+  * @param properties definitions of the properties used in the class.
+  */
+case class ClientClassDefinition(className: String, classIri: SmartIri, properties: Vector[ClientPropertyDefinition])
 
-case object ClientStringLiteral extends ClientLiteral
-
-case object ClientBooleanLiteral extends ClientLiteral
-
-case object ClientIntegerLiteral extends ClientLiteral
-
-case object ClientDecimalLiteral extends ClientLiteral
-
-case object ClientDateTimeStampLiteral extends ClientLiteral
-
-case class ClientClassReference(className: String, classIri: SmartIri) extends ClientObjectType
-
-sealed trait ClientKnoraValue extends ClientObjectType
-
-case object ClientTextValue extends ClientKnoraValue
-
-case object ClientIntValue extends ClientKnoraValue
-
-case object ClientBooleanValue extends ClientKnoraValue
-
-case object ClientUriValue extends ClientKnoraValue
-
-case object ClientDecimalValue extends ClientKnoraValue
-
-case object ClientDateValue extends ClientKnoraValue
-
-case object ClientColorValue extends ClientKnoraValue
-
-case object ClientGeomValue extends ClientKnoraValue
-
-case object ClientListValue extends ClientKnoraValue
-
-case object ClientIntervalValue extends ClientKnoraValue
-
-case object ClientGeonameValue extends ClientKnoraValue
-
-case object ClientAudioFileValue extends ClientKnoraValue
-
-case object ClientDDDFileValue extends ClientKnoraValue
-
-case object ClientDocumentFileValue extends ClientKnoraValue
-
-case object ClientStillImageFileValue extends ClientKnoraValue
-
-case object ClientMovingImageFileValue extends ClientKnoraValue
-
-case object ClientTextFileValue extends ClientKnoraValue
-
-case class ClientLinkValue(classIri: SmartIri) extends ClientKnoraValue
-
+/**
+  * A definition of a Knora property as used in a particular class.
+  *
+  * @param propertyName the name of the property.
+  * @param propertyIri the IRI of the property in the Knora API.
+  * @param objectType the type of object that the property points to.
+  * @param cardinality the cardinality of the property in the class.
+  * @param isEditable `true` if the property's value is editable via the API.
+  */
 case class ClientPropertyDefinition(propertyName: String, propertyIri: SmartIri, objectType: ClientObjectType, cardinality: Cardinality, isEditable: Boolean)
 
-case class ClientClassDefinition(className: String, classIri: SmartIri, properties: Vector[ClientPropertyDefinition])
+/**
+  * A trait for types of objects of properties.
+  */
+sealed trait ClientObjectType
+
+/**
+  * A trait for literal types used as objects of properties.
+  */
+sealed trait ClientLiteral extends ClientObjectType
+
+/**
+  * The type of string literal property objects.
+  */
+case object ClientStringLiteral extends ClientLiteral
+
+/**
+  * The type of boolean literal property objects.
+  */
+case object ClientBooleanLiteral extends ClientLiteral
+
+/**
+  * The type of integer literal property objects.
+  */
+case object ClientIntegerLiteral extends ClientLiteral
+
+/**
+  * The type of decimal literal property objects.
+  */
+case object ClientDecimalLiteral extends ClientLiteral
+
+/**
+  * The type of timestamp literal property objects.
+  */
+case object ClientDateTimeStampLiteral extends ClientLiteral
+
+/**
+  * The type of property objects that are instances of classes.
+  *
+  * @param className the name of the class.
+  * @param classIri the IRI of the class.
+  */
+case class ClientClassReference(className: String, classIri: SmartIri) extends ClientObjectType
+
+/**
+  * A trait for Knora value types used as objects of properties.
+  */
+sealed trait ClientKnoraValue extends ClientObjectType
+
+/**
+  * The type of text value property objects.
+  */
+case object ClientTextValue extends ClientKnoraValue
+
+/**
+  * The type of integer value property objects.
+  */
+case object ClientIntValue extends ClientKnoraValue
+
+/**
+  * The type of boolean value property objects.
+  */
+case object ClientBooleanValue extends ClientKnoraValue
+
+/**
+  * The type of URI value property objects.
+  */
+case object ClientUriValue extends ClientKnoraValue
+
+/**
+  * The type of decimal value property objects.
+  */
+case object ClientDecimalValue extends ClientKnoraValue
+
+/**
+  * The type of date value property objects.
+  */
+case object ClientDateValue extends ClientKnoraValue
+
+/**
+  * The type of color value property objects.
+  */
+case object ClientColorValue extends ClientKnoraValue
+
+/**
+  * The type of geometry value property objects.
+  */
+case object ClientGeomValue extends ClientKnoraValue
+
+/**
+  * The type of list value property objects.
+  */
+case object ClientListValue extends ClientKnoraValue
+
+/**
+  * The type of interval value property objects.
+  */
+case object ClientIntervalValue extends ClientKnoraValue
+
+/**
+  * The type of Geoname value property objects.
+  */
+case object ClientGeonameValue extends ClientKnoraValue
+
+/**
+  * The type of audio file value property objects.
+  */
+case object ClientAudioFileValue extends ClientKnoraValue
+
+/**
+  * The type of 3D file value property objects.
+  */
+case object ClientDDDFileValue extends ClientKnoraValue
+
+/**
+  * The type of document file value property objects.
+  */
+case object ClientDocumentFileValue extends ClientKnoraValue
+
+/**
+  * The type of still image file value property objects.
+  */
+case object ClientStillImageFileValue extends ClientKnoraValue
+
+/**
+  * The type of moving image value property objects.
+  */
+case object ClientMovingImageFileValue extends ClientKnoraValue
+
+/**
+  * The type of text file value property objects.
+  */
+case object ClientTextFileValue extends ClientKnoraValue
+
+/**
+  * The type of link value property objects.
+  *
+  * @param classIri the IRI of the class that is the target of the link.
+  */
+case class ClientLinkValue(classIri: SmartIri) extends ClientKnoraValue
