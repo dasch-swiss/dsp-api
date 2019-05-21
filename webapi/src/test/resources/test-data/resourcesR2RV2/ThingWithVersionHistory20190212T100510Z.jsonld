@@ -14,7 +14,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2019-02-12T09:05:10Z"
     },
-    "knora-api:valueHasUUID" : "00000000000000000uuidw"
+    "knora-api:valueHasUUID" : "pLlW4ODASumZfZFbJdpw1g"
   },
   "anything:hasOtherThingValue" : {
     "@id" : "http://rdfh.ch/0001/thing-with-history/values/3a",
@@ -31,7 +31,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2019-02-10T10:30:10Z"
     },
-    "knora-api:valueHasUUID" : "00000000000000000uuidw"
+    "knora-api:valueHasUUID" : "IZGOjVqxTfSNO4ieKyp0SA"
   },
   "anything:hasText" : {
     "@id" : "http://rdfh.ch/0001/thing-with-history/values/2c",
@@ -46,7 +46,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2019-02-12T10:05:10Z"
     },
-    "knora-api:valueHasUUID" : "00000000000000000uuidw"
+    "knora-api:valueHasUUID" : "W5fm67e0QDWxRZumcXcs6g"
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

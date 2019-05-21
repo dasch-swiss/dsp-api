@@ -16,7 +16,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2019-02-10T10:30:10Z"
     },
-    "knora-api:valueHasUUID" : "00000000000000000uuidw"
+    "knora-api:valueHasUUID" : "IZGOjVqxTfSNO4ieKyp0SA"
   },
   "anything:hasText" : {
     "@id" : "http://rdfh.ch/0001/thing-with-history/values/2a",
@@ -31,7 +31,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2019-02-10T10:05:10Z"
     },
-    "knora-api:valueHasUUID" : "00000000000000000uuidw"
+    "knora-api:valueHasUUID" : "W5fm67e0QDWxRZumcXcs6g"
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

@@ -962,6 +962,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 resourceIris = resourceIrisDistinct,
                 preview = preview,
                 maybePropertyIri = propertyIri,
+                maybeValueUuid = valueUuid,
                 maybeVersionDate = versionDate,
                 queryAllNonStandoff = true,
                 maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,

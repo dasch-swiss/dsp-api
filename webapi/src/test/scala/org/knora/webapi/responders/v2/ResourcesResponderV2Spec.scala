@@ -545,7 +545,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
+        "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
             responderManager ! ResourcesGetRequestV2(resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), versionDate = None, requestingUser = incunabulaUserProfile)
 
@@ -567,7 +567,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "return two full description of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
+        "return two full descriptions of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
 
             responderManager ! ResourcesGetRequestV2(
                 resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
@@ -582,7 +582,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
+        "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
 
             responderManager ! ResourcesGetRequestV2(
                 resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
@@ -682,6 +682,33 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case response: ResourceVersionHistoryResponseV2 =>
                     assert(response == resourcesResponderV2SpecFullData.expectedPartialVersionHistoryResponse)
+            }
+        }
+
+        "get the latest version of a value, given its UUID" in {
+            responderManager ! ResourcesGetRequestV2(
+                resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+                valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
+                requestingUser = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuid, received = response)
+            }
+        }
+
+        "get a past version of a value, given its UUID and a timestamp" in {
+            responderManager ! ResourcesGetRequestV2(
+                resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+                valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
+                versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
+                requestingUser = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuidAndVersionDate, received = response)
             }
         }
 

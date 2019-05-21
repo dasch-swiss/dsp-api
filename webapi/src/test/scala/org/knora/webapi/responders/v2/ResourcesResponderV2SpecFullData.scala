@@ -698,7 +698,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ),
                         valueHasMaxStandoffStartIndex = None,
                         valueIri = "http://rdfh.ch/0001/thing-with-history/values/2b",
-                        valueHasUUID = stringFormatter.decodeUuid("uuid2"),
+                        valueHasUUID = stringFormatter.decodeUuid("W5fm67e0QDWxRZumcXcs6g"),
                         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
                         userPermission = ChangeRightsPermission,
                         valueCreationDate = Instant.parse("2019-02-11T10:05:10Z"),
@@ -714,7 +714,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         ),
                         valueHasRefCount = 1,
                         valueIri = "http://rdfh.ch/0001/thing-with-history/values/3a",
-                        valueHasUUID = stringFormatter.decodeUuid("uuid3"),
+                        valueHasUUID = stringFormatter.decodeUuid("IZGOjVqxTfSNO4ieKyp0SA"),
                         permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
                         userPermission = ModifyPermission,
                         valueCreationDate = Instant.parse("2019-02-10T10:30:10Z"),
@@ -729,7 +729,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                             comment = None
                         ),
                         valueIri = "http://rdfh.ch/0001/thing-with-history/values/1a",
-                        valueHasUUID = stringFormatter.decodeUuid("uuid1"),
+                        valueHasUUID = stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g"),
                         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
                         userPermission = ChangeRightsPermission,
                         valueCreationDate = Instant.parse("2019-02-11T09:05:10Z"),
@@ -830,4 +830,69 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         numberOfResources = 2
     )
 
+    val expectedFullResponseResponseForThingWithValueByUuid = ReadResourcesSequenceV2(
+        numberOfResources = 1,
+        resources = Vector(ReadResourceV2(
+            versionDate = None,
+            label = "A thing with version history",
+            resourceIri = "http://rdfh.ch/0001/thing-with-history",
+            permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
+            attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+            resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+            creationDate = Instant.parse("2019-02-08T15:05:10Z"),
+            userPermission = ModifyPermission,
+            values = Map(
+                "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(ReadOtherValueV2(
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = InternalSchema,
+                        valueHasInteger = 3,
+                        comment = None
+                    ),
+                    valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
+                    valueCreationDate = Instant.parse("2019-02-13T09:05:10Z"),
+                    attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+                    valueHasUUID = stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g"),
+                    userPermission = ChangeRightsPermission,
+                    deletionInfo = None
+                ))
+            ),
+            projectADM = SharedTestDataADM.anythingProject,
+            lastModificationDate = Some(Instant.parse("2019-02-13T09:05:10Z")),
+            deletionInfo = None
+        ))
+    )
+
+    val expectedFullResponseResponseForThingWithValueByUuidAndVersionDate = ReadResourcesSequenceV2(
+        numberOfResources = 1,
+        resources = Vector(ReadResourceV2(
+            versionDate = None,
+            label = "A thing with version history",
+            resourceIri = "http://rdfh.ch/0001/thing-with-history",
+            permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
+            attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+            resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+            creationDate = Instant.parse("2019-02-08T15:05:10Z"),
+            userPermission = ModifyPermission,
+            values = Map(
+                "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(ReadOtherValueV2(
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = InternalSchema,
+                        valueHasInteger = 2,
+                        comment = None
+                    ),
+                    valueIri = "http://rdfh.ch/0001/thing-with-history/values/1b",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
+                    valueCreationDate = Instant.parse("2019-02-12T09:05:10Z"),
+                    attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+                    valueHasUUID = stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g"),
+                    userPermission = ChangeRightsPermission,
+                    deletionInfo = None
+                ))
+            ),
+            projectADM = SharedTestDataADM.anythingProject,
+            lastModificationDate = Some(Instant.parse("2019-02-13T09:05:10Z")),
+            deletionInfo = None
+        ))
+    )
 }
