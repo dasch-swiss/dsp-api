@@ -286,7 +286,7 @@
     "@id" : "knora-api:Interval",
     "@type" : "rdfs:Datatype",
     "rdfs:comment" : "Represents an interval.",
-    "rdfs:label" : "Interprivate val literal",
+    "rdfs:label" : "Interval literal",
     "rdfs:subClassOf" : {
       "@type" : "rdfs:Datatype",
       "owl:onDatatype" : {

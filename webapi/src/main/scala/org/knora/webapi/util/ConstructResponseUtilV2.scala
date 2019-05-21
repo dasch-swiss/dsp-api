@@ -29,6 +29,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
+import org.knora.webapi.messages.v2.responder.listsmessages.{NodeGetRequestV2, NodeGetResponseV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetRemainingStandoffFromTextValueRequestV2, GetStandoffResponseV2, MappingXMLtoStandoff, StandoffTagV2}
@@ -58,7 +59,6 @@ object ConstructResponseUtilV2 {
       * @param userPermission   the permission that the requesting user has on the value.
       * @param assertions       the value objects assertions.
       * @param standoff         standoff assertions, if any.
-      * @param listNode         assertions about the referred list node, if the value points to a list node.
       */
     case class ValueRdfData(valueObjectIri: IRI,
                             valueObjectClass: IRI,
@@ -66,8 +66,7 @@ object ConstructResponseUtilV2 {
                             isIncomingLink: Boolean = false,
                             userPermission: EntityPermission,
                             assertions: Map[IRI, String],
-                            standoff: Map[IRI, Map[IRI, String]],
-                            listNode: Map[IRI, String])
+                            standoff: Map[IRI, Map[IRI, String]])
 
     /**
       * Represents a resource and its values.
@@ -247,8 +246,7 @@ object ConstructResponseUtilV2 {
                                         valueObjectClass = valueObjectClass,
                                         userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
                                         assertions = predicateMapForValueAssertions,
-                                        standoff = Map.empty[IRI, Map[IRI, String]], // link value does not contain standoff
-                                        listNode = Map.empty[IRI, String] // link value cannot point to a list node
+                                        standoff = Map.empty[IRI, Map[IRI, String]] // link value does not contain standoff
                                     ))
 
                                 } else {
@@ -262,10 +260,6 @@ object ConstructResponseUtilV2 {
                                         standoff = standoffAssertions.map {
                                             case (standoffNodeIri: IRI, standoffAssertions: Seq[(IRI, String)]) =>
                                                 (standoffNodeIri, standoffAssertions.toMap)
-                                        },
-                                        listNode = listNodeAssertions.flatMap {
-                                            case (listNodeIri: IRI, assertions: Seq[(IRI, String)]) =>
-                                                assertions.toMap
                                         }))
                                 }
                         }
@@ -627,6 +621,8 @@ object ConstructResponseUtilV2 {
       * @param versionDate               if defined, represents the requested time in the the resources' version history.
       * @param responderManager          the Knora responder manager.
       * @param knoraIdUtil               a [[KnoraIdUtil]].
+      * @param targetSchema              the schema of the response.
+      * @param settings                  the application's settings.
       * @param requestingUser            the user making the request.
       * @return a [[LinkValueContentV2]].
       */
@@ -638,6 +634,8 @@ object ConstructResponseUtilV2 {
                                        versionDate: Option[Instant],
                                        responderManager: ActorRef,
                                        knoraIdUtil: KnoraIdUtil,
+                                       targetSchema: ApiV2Schema,
+                                       settings: SettingsImpl,
                                        requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
             valueObject.assertions(OntologyConstants.Rdf.Subject)
@@ -668,6 +666,8 @@ object ConstructResponseUtilV2 {
                         versionDate = versionDate,
                         responderManager = responderManager,
                         requestingUser = requestingUser,
+                        targetSchema = targetSchema,
+                        settings = settings,
                         knoraIdUtil = knoraIdUtil
                     )
                 } yield linkValue.copy(
@@ -682,10 +682,15 @@ object ConstructResponseUtilV2 {
     /**
       * Given a [[ValueRdfData]], constructs a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
       *
-      * @param valueObject   the given [[ValueRdfData]].
-      * @param mappings      the mappings needed for standoff conversions and XSL transformations.
-      * @param queryStandoff if `true`, make separate queries to get the standoff for text values.
-      * @param versionDate   if defined, represents the requested time in the the resources' version history.
+      * @param valueObject      the given [[ValueRdfData]].
+      * @param mappings         the mappings needed for standoff conversions and XSL transformations.
+      * @param queryStandoff    if `true`, make separate queries to get the standoff for text values.
+      * @param versionDate      if defined, represents the requested time in the the resources' version history.
+      * @param responderManager the Knora responder manager.
+      * @param knoraIdUtil      a [[KnoraIdUtil]].
+      * @param targetSchema     the schema of the response.
+      * @param settings         the application's settings.
+      * @param requestingUser   the user making the request.
       * @return a [[ValueContentV2]] representing a value.
       */
     private def createValueContentV2FromValueRdfData(resourceIri: IRI,
@@ -695,6 +700,8 @@ object ConstructResponseUtilV2 {
                                                      versionDate: Option[Instant] = None,
                                                      responderManager: ActorRef,
                                                      knoraIdUtil: KnoraIdUtil,
+                                                     targetSchema: ApiV2Schema,
+                                                     settings: SettingsImpl,
                                                      requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -786,17 +793,29 @@ object ConstructResponseUtilV2 {
 
             case OntologyConstants.KnoraBase.ListValue =>
 
-                val listNodeLabel: String = valueObject.listNode.get(OntologyConstants.Rdfs.Label) match {
-                    case Some(nodeLabel: String) => nodeLabel
-                    case None => throw InconsistentTriplestoreDataException(s"Expected ${OntologyConstants.Rdfs.Label} in assertions for a value object of type list value.")
+                val listNodeIri: String = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode)
+
+                val listNode = HierarchicalListValueContentV2(
+                    ontologySchema = InternalSchema,
+                    valueHasListNode = listNodeIri,
+                    listNodeLabel = None,
+                    comment = valueCommentOption
+                )
+
+                // only query the list node if the response is requested in the simple schema
+                // (label is required in the simple schema, but not in the complex schema)
+
+                targetSchema match {
+                    case ApiV2Simple => for {
+                        nodeResponse <- (responderManager ? NodeGetRequestV2(listNodeIri, requestingUser)).mapTo[NodeGetResponseV2]
+                    } yield listNode.copy(
+                        listNodeLabel = nodeResponse.node.getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = settings.fallbackLanguage)
+                    )
+
+                    case ApiV2Complex => FastFuture.successful(listNode)
                 }
 
-                FastFuture.successful(HierarchicalListValueContentV2(
-                    ontologySchema = InternalSchema,
-                    valueHasListNode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode),
-                    listNodeLabel = Some(listNodeLabel),
-                    comment = valueCommentOption
-                ))
+
 
             case OntologyConstants.KnoraBase.IntervalValue =>
                 FastFuture.successful(IntervalValueContentV2(
@@ -816,6 +835,8 @@ object ConstructResponseUtilV2 {
                     versionDate = versionDate,
                     responderManager = responderManager,
                     requestingUser = requestingUser,
+                    targetSchema = targetSchema,
+                    settings = settings,
                     knoraIdUtil = knoraIdUtil
                 )
 
@@ -843,6 +864,11 @@ object ConstructResponseUtilV2 {
       * @param mappings                 the mappings needed for standoff conversions and XSL transformations.
       * @param queryStandoff            if `true`, make separate queries to get the standoff for text values.
       * @param versionDate              if defined, represents the requested time in the the resources' version history.
+      * @param responderManager         the Knora responder manager.
+      * @param knoraIdUtil              a [[KnoraIdUtil]].
+      * @param targetSchema             the schema of the response.
+      * @param settings                 the application's settings.
+      * @param requestingUser           the user making the request.
       * @return a [[ReadResourceV2]].
       */
     private def constructReadResourceV2(resourceIri: IRI,
@@ -852,6 +878,8 @@ object ConstructResponseUtilV2 {
                                         versionDate: Option[Instant],
                                         responderManager: ActorRef,
                                         knoraIdUtil: KnoraIdUtil,
+                                        targetSchema: ApiV2Schema,
+                                        settings: SettingsImpl,
                                         requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -909,6 +937,8 @@ object ConstructResponseUtilV2 {
                                 queryStandoff = queryStandoff,
                                 responderManager = responderManager,
                                 requestingUser = requestingUser,
+                                targetSchema = targetSchema,
+                                settings = settings,
                                 knoraIdUtil = knoraIdUtil
                             )
 
@@ -992,11 +1022,16 @@ object ConstructResponseUtilV2 {
     /**
       * Creates a response to a full resource request.
       *
-      * @param resourceIri     the IRI of the requested resource.
-      * @param resourceRdfData the results returned by the triplestore.
-      * @param mappings        the mappings needed for standoff conversions and XSL transformations.
-      * @param queryStandoff   if `true`, make separate queries to get the standoff for text values.
-      * @param versionDate     if defined, represents the requested time in the the resources' version history.
+      * @param resourceIri      the IRI of the requested resource.
+      * @param resourceRdfData  the results returned by the triplestore.
+      * @param mappings         the mappings needed for standoff conversions and XSL transformations.
+      * @param queryStandoff    if `true`, make separate queries to get the standoff for text values.
+      * @param versionDate      if defined, represents the requested time in the the resources' version history.
+      * @param responderManager the Knora responder manager.
+      * @param knoraIdUtil      a [[KnoraIdUtil]].
+      * @param targetSchema     the schema of response.
+      * @param settings         the application's settings.
+      * @param requestingUser   the user making the request.
       * @return a [[ReadResourceV2]].
       */
     def createFullResourceResponse(resourceIri: IRI,
@@ -1006,6 +1041,8 @@ object ConstructResponseUtilV2 {
                                    versionDate: Option[Instant],
                                    responderManager: ActorRef,
                                    knoraIdUtil: KnoraIdUtil,
+                                   targetSchema: ApiV2Schema,
+                                   settings: SettingsImpl,
                                    requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
 
         constructReadResourceV2(
@@ -1016,6 +1053,8 @@ object ConstructResponseUtilV2 {
             versionDate = versionDate,
             responderManager = responderManager,
             requestingUser = requestingUser,
+            targetSchema = targetSchema,
+            settings = settings,
             knoraIdUtil = knoraIdUtil
         )
     }
@@ -1025,7 +1064,14 @@ object ConstructResponseUtilV2 {
       *
       * @param searchResults      the resources that matched the query and the client has permissions to see.
       * @param orderByResourceIri the order in which the resources should be returned.
+      * @param mappings           the mappings to convert standoff to XML, if any.
       * @param queryStandoff      if `true`, make separate queries to get the standoff for text values.
+      * @param forbiddenResource  the ForbiddenResource, if any.
+      * @param responderManager   the Knora responder manager.
+      * @param knoraIdUtil        a [[KnoraIdUtil]].
+      * @param targetSchema       the schema of response.
+      * @param settings           the application's settings.
+      * @param requestingUser     the user making the request.
       * @return a collection of [[ReadResourceV2]] representing the search results.
       */
     def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData],
@@ -1035,6 +1081,8 @@ object ConstructResponseUtilV2 {
                              forbiddenResource: Option[ReadResourceV2],
                              responderManager: ActorRef,
                              knoraIdUtil: KnoraIdUtil,
+                             targetSchema: ApiV2Schema,
+                             settings: SettingsImpl,
                              requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[ReadResourceV2]] = {
 
         if (orderByResourceIri.toSet != searchResults.keySet && forbiddenResource.isEmpty) throw AssertionException(s"Not all resources are visible, but forbiddenResource is None")
@@ -1057,6 +1105,8 @@ object ConstructResponseUtilV2 {
                             versionDate = None,
                             responderManager = responderManager,
                             knoraIdUtil = knoraIdUtil,
+                            targetSchema = targetSchema,
+                            settings = settings,
                             requestingUser = requestingUser
                         )
 

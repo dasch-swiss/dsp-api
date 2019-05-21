@@ -379,6 +379,8 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
                     val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
+                    val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+
                     val requestMessage: Future[SearchResourceByLabelRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield SearchResourceByLabelRequestV2(
@@ -386,6 +388,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         offset = offset,
                         limitToProject = limitToProject,
                         limitToResourceClass = limitToResourceClass,
+                        targetSchema = targetSchema,
                         requestingUser = requestingUser
                     )
 
