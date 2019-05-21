@@ -25,7 +25,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString}
-import org.knora.webapi.{ApiV2Schema, IRI, OntologyConstants, SettingsImpl}
+import org.knora.webapi.{ApiV2Complex, ApiV2Schema, IRI, OntologyConstants, SchemaOption, SettingsImpl}
 
 /**
   * An abstract trait for messages that can be sent to `SearchResponderV2`.
@@ -56,6 +56,8 @@ case class FullTextSearchCountRequestV2(searchValue: String,
   * @param offset               the offset to be used for paging.
   * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
+  * @param targetSchema         the target API schema.
+  * @param schemaOptions        the schema options submitted with the request.
   * @param requestingUser       the user making the request.
   */
 case class FulltextSearchRequestV2(searchValue: String,
@@ -63,6 +65,8 @@ case class FulltextSearchRequestV2(searchValue: String,
                                    limitToProject: Option[IRI],
                                    limitToResourceClass: Option[SmartIri],
                                    limitToStandoffClass: Option[SmartIri],
+                                   targetSchema: ApiV2Schema,
+                                   schemaOptions: Set[SchemaOption],
                                    requestingUser: UserADM) extends SearchResponderRequestV2
 
 
@@ -82,14 +86,18 @@ case class GravsearchCountRequestV2(constructQuery: ConstructQuery,
   * Performs a Gravsearch query. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param constructQuery a Sparql construct query provided by the client.
+  * @param targetSchema         the target API schema.
+  * @param schemaOptions  the schema options submitted with the request.
   * @param requestingUser the user making the request.
   */
 case class GravsearchRequestV2(constructQuery: ConstructQuery,
+                               targetSchema: ApiV2Schema,
+                               schemaOptions: Set[SchemaOption] = Set.empty[SchemaOption],
                                requestingUser: UserADM) extends SearchResponderRequestV2
 
 
 /**
-  * Requests a search of resources by their label. A successful response will be a [[ReadResourcesSequenceV2]].
+  * Requests a search of resources by their label. A successful response will be a [[ResourceCountV2]].
   *
   * @param searchValue          the values to search for.
   * @param limitToProject       limit search to given project.
@@ -108,19 +116,21 @@ case class SearchResourceByLabelCountRequestV2(searchValue: String,
   * @param offset               the offset to be used for paging.
   * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
+  * @param targetSchema         the schema of the response.
   * @param requestingUser       the user making the request.
   */
 case class SearchResourceByLabelRequestV2(searchValue: String,
                                           offset: Int,
                                           limitToProject: Option[IRI],
                                           limitToResourceClass: Option[SmartIri],
+                                          targetSchema: ApiV2Schema,
                                           requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
   * Represents the number of resources found by a search query.
   */
 case class ResourceCountV2(numberOfResources: Int) extends KnoraResponseV2 {
-    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         JsonLDDocument(
             body = JsonLDObject(Map(
                 OntologyConstants.SchemaOrg.NumberOfItems -> JsonLDInt(numberOfResources)
@@ -139,9 +149,14 @@ case class ResourceCountV2(numberOfResources: Int) extends KnoraResponseV2 {
   * @param resourceClass   the IRI of the resource class, in the complex schema.
   * @param orderByProperty the IRI of the property that the resources are to be ordered by, in the complex schema.
   * @param page            the page number of the results page to be returned.
+  * @param targetSchema    the schema of the response.
+  * @param schemaOptions   the schema options submitted with the request.
+  * @param requestingUser  the user making the request.
   */
 case class SearchResourcesByProjectAndClassRequestV2(projectIri: SmartIri,
                                                      resourceClass: SmartIri,
                                                      orderByProperty: Option[SmartIri],
                                                      page: Int,
+                                                     targetSchema: ApiV2Schema,
+                                                     schemaOptions: Set[SchemaOption],
                                                      requestingUser: UserADM) extends SearchResponderRequestV2

@@ -249,7 +249,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "Interprivate val literal"
+                    LanguageCodes.EN -> "Interval literal"
                 )
             ),
             makePredicate(
@@ -318,6 +318,25 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
         )
     )
 
+    private val ListNode: ReadClassInfoV2 = makeDatatype(
+        datatypeIri = OntologyConstants.KnoraApiV2Simple.ListNode,
+        xsdStringRestrictionPattern = Some(".+"),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "List Node"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents a list node."
+                )
+            )
+        )
+    )
+
     private val HasIncomingLink: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Simple.HasIncomingLink,
         propertyType = OntologyConstants.Owl.ObjectProperty,
@@ -370,6 +389,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
         OntologyConstants.KnoraBase.ValueHasLanguage,
         OntologyConstants.KnoraBase.ValueHasStandoff,
         OntologyConstants.KnoraBase.ValueHasMapping,
+        OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex,
         OntologyConstants.KnoraBase.HasMappingElement,
         OntologyConstants.KnoraBase.MappingHasStandoffClass,
         OntologyConstants.KnoraBase.MappingHasStandoffProperty,
@@ -499,7 +519,8 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
         Color,
         Interval,
         Geoname,
-        Geom
+        Geom,
+        ListNode
     ).map {
         classInfo => classInfo.entityInfoContent.classIri -> classInfo
     }.toMap
@@ -627,7 +648,8 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
                     iri: IRI => iri.toSmartIri
                 },
                 ontologySchema = ApiV2Simple
-            )
+            ),
+            allBaseClasses = subClassOf.map(_.toSmartIri).toSet + datatypeIri.toSmartIri
         )
     }
 }

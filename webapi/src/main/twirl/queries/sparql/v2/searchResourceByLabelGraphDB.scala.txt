@@ -101,6 +101,10 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
             }
 
             FILTER(?valueObjectType != knora-base:LinkValue)
+
+            FILTER NOT EXISTS {
+                ?valueObjectValue a knora-base:StandoffTag .
+            }
         }
     }
 } else {

@@ -97,6 +97,7 @@ sealed trait IndexedStandoffTag extends StandoffTag {
   * Represents a standoff tag that requires a hierarchical document structure. When serialised to XML, it is represented
   * as a single element.
   *
+  * @param originalID    a client-specific ID for the tag.
   * @param uuid          a [[UUID]] representing this tag and any other tags that
   *                      point to semantically equivalent content in other versions of the same text.
   * @param tagName       the name of this tag.
@@ -124,6 +125,7 @@ case class HierarchicalStandoffTag(originalID: Option[String],
   * such a structure. Its XML representation is a pair of empty elements in
   * [[http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html#t6 CLIX]] format.
   *
+  * @param originalID       a client-specific ID for the tag.
   * @param uuid             a [[UUID]] representing this tag and any other tags that
   *                         point to semantically equivalent content in other versions of the same text.
   * @param tagName          the name of the tag.

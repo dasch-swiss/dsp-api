@@ -963,23 +963,23 @@ Beschriftung oben Mitte (Graphitstift) \"B 1\".""" .
   knora-base:valueCreationDate "2016-01-22T11:31:24Z"^^xsd:dateTime;
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
   knora-base:valueHasOrder 0;
-  knora-base:valueHasStandoff <http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04/standoff/mX6z2vBPQ3OuUjQkfYEZRg>,
-    <http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04/standoff/cfPKbQw3QPqs9tIDnVrKsg>;
+  knora-base:valueHasStandoff <http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04/standoff/0>,
+    <http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04/standoff/1>;
   knora-base:valueHasString "Zusammengebunden mit zwei weiteren Drucken von Johann Amerbach" .
 
-<http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04/standoff/cfPKbQw3QPqs9tIDnVrKsg>
+<http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04/standoff/0>
   a standoff:StandoffRootTag;
   knora-base:standoffTagHasEnd "62"^^xsd:int;
   knora-base:standoffTagHasStart "0"^^xsd:int;
   knora-base:standoffTagHasStartIndex 0;
   knora-base:standoffTagHasUUID "4800e53e-3835-498e-b658-6cc4f93ab894" .
 
-<http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04/standoff/mX6z2vBPQ3OuUjQkfYEZRg>
+<http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04/standoff/1>
   a standoff:StandoffBoldTag;
   knora-base:standoffTagHasEnd "25"^^xsd:int;
   knora-base:standoffTagHasStart "21"^^xsd:int;
   knora-base:standoffTagHasStartIndex "1"^^xsd:int;
-  knora-base:standoffTagHasStartParent <http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04/standoff/cfPKbQw3QPqs9tIDnVrKsg>;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04/standoff/0>;
   knora-base:standoffTagHasUUID "4bc24696-5dde-4ced-9687-6f8e4519efe8" .
 
 <http://rdfh.ch/0803/e41ab5695c/values/fc4544c26a01> a knora-base:TextValue;

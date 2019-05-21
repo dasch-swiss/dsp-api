@@ -19,11 +19,11 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.mainquery
 
+import org.knora.webapi._
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{GravsearchException, IRI, OntologyConstants}
 
 object GravsearchMainQueryGenerator {
 
@@ -66,6 +66,9 @@ object GravsearchMainQueryGenerator {
 
         // SPARQL variable representing the objects of a standoff node of a (text) value object
         val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
+
+        // SPARQL variable representing the start index of a standoff node.
+        val standoffStartIndexVar: QueryVariable = QueryVariable("startIndex")
 
         // SPARQL variable representing a list node pointed to by a (list) value object
         val listNode: QueryVariable = QueryVariable("listNode")
@@ -158,9 +161,11 @@ object GravsearchMainQueryGenerator {
       * @param mainResourceIris      IRIs of main resources to be queried.
       * @param dependentResourceIris IRIs of dependent resources to be queried.
       * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
+      * @param targetSchema          the target API schema.
+      * @param schemaOptions         the schema options submitted with the request.
       * @return the main [[ConstructQuery]] query to be executed.
       */
-    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI]): ConstructQuery = {
+    def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI], targetSchema: ApiV2Schema, schemaOptions: Set[SchemaOption], settings: SettingsImpl): ConstructQuery = {
         import GravsearchConstants._
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -214,41 +219,53 @@ object GravsearchMainQueryGenerator {
                 StatementPattern(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
             )
 
-            // WHERE patterns for standoff belonging to value objects (if any)
-            val wherePatternsForStandoff = Seq(
-                mainAndDependentResourcesValueObjectsValuePattern,
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
-                StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
-            )
+            // Check whether the response should include standoff.
+            val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
+
+            // WHERE patterns for querying the first page of standoff in each text value
+            val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {
+                Seq(
+                    mainAndDependentResourcesValueObjectsValuePattern,
+                    StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
+                    StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
+                    StatementPattern.makeExplicit(subj = standoffNodeVar, pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartIndex.toSmartIri), obj = standoffStartIndexVar),
+                    FilterPattern(
+                        AndExpression(
+                            leftArg = CompareExpression(
+                                leftArg = standoffStartIndexVar,
+                                operator = CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO,
+                                rightArg = XsdLiteral(value = "0", datatype = OntologyConstants.Xsd.Integer.toSmartIri)
+                            ),
+                            rightArg = CompareExpression(
+                                leftArg = standoffStartIndexVar,
+                                operator = CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO,
+                                rightArg = XsdLiteral(value = (settings.standoffPerPage - 1).toString, datatype = OntologyConstants.Xsd.Integer.toSmartIri)
+                            )
+                        )
+                    )
+                )
+            } else {
+                Seq.empty[QueryPattern]
+            }
 
             // return standoff assertions
-            val constructPatternsForStandoff = Seq(
-                StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
-                StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
-            )
-
-            // WHERE patterns for list node pointed to by value objects (if any)
-            val wherePatternsForListNode = Seq(
-                mainAndDependentResourcesValueObjectsValuePattern,
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.ListValue.toSmartIri)),
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
-                StatementPattern.makeExplicit(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
-            )
-
-            // return list node assertions
-            val constructPatternsForListNode = Seq(
-                StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
-                StatementPattern(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
-            )
+            val constructPatternsForStandoff: Seq[StatementPattern] = if (queryStandoff) {
+                Seq(
+                    StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
+                    StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+                )
+            } else {
+                Seq.empty[StatementPattern]
+            }
 
             ConstructQuery(
                 constructClause = ConstructClause(
-                    statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff ++ constructPatternsForListNode
+                    statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff
                 ),
                 whereClause = WhereClause(
                     Seq(
                         UnionPattern(
-                            Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff, wherePatternsForListNode)
+                            Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff).filter(_.nonEmpty)
                         )
                     )
                 )
