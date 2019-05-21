@@ -1860,9 +1860,6 @@ knora-api:ListValue a owl:Class;
       owl:cardinality 1;
       owl:onProperty knora-api:listValueAsListNode
     ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:listValueAsListNodeLabel
-    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:userHasPermission
@@ -1889,13 +1886,6 @@ knora-api:listValueAsListNode a owl:ObjectProperty;
   knora-api:subjectType knora-api:ListValue;
   rdfs:comment "Represents a reference to a hierarchical list node.";
   rdfs:label "Hierarchical list value as list node";
-  rdfs:subPropertyOf knora-api:valueHas .
-
-knora-api:listValueAsListNodeLabel a owl:ObjectProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType knora-api:ListValue;
-  rdfs:comment "Represents the name of the list node pointed to.";
-  rdfs:label "Hierarchical list value as list node name";
   rdfs:subPropertyOf knora-api:valueHas .
 
 knora-api:MovingImageFileValue a owl:Class;

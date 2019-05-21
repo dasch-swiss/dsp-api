@@ -258,28 +258,14 @@ object GravsearchMainQueryGenerator {
                 Seq.empty[StatementPattern]
             }
 
-            // WHERE patterns for list node pointed to by value objects (if any)
-            val wherePatternsForListNode = Seq(
-                mainAndDependentResourcesValueObjectsValuePattern,
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.ListValue.toSmartIri)),
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
-                StatementPattern.makeExplicit(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
-            )
-
-            // return list node assertions
-            val constructPatternsForListNode = Seq(
-                StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), obj = listNode),
-                StatementPattern(subj = listNode, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
-            )
-
             ConstructQuery(
                 constructClause = ConstructClause(
-                    statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff ++ constructPatternsForListNode
+                    statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff
                 ),
                 whereClause = WhereClause(
                     Seq(
                         UnionPattern(
-                            Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff, wherePatternsForListNode).filter(_.nonEmpty)
+                            Seq(wherePatternsForMainResource, wherePatternsForMainAndDependentResources, wherePatternsForMainAndDependentResourcesValues, wherePatternsForStandoff).filter(_.nonEmpty)
                         )
                     )
                 )

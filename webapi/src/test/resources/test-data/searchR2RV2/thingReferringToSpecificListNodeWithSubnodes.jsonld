@@ -12,7 +12,6 @@
       "knora-api:listValueAsListNode" : {
         "@id" : "http://rdfh.ch/lists/0001/treeList01"
       },
-      "knora-api:listValueAsListNodeLabel" : "Tree list node 01",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -54,7 +53,6 @@
       "knora-api:listValueAsListNode" : {
         "@id" : "http://rdfh.ch/lists/0001/treeList02"
       },
-      "knora-api:listValueAsListNodeLabel" : "Baumlistenknoten 02",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",
@@ -96,7 +94,6 @@
       "knora-api:listValueAsListNode" : {
         "@id" : "http://rdfh.ch/lists/0001/treeList01"
       },
-      "knora-api:listValueAsListNodeLabel" : "Tree list node 01",
       "knora-api:userHasPermission" : "V",
       "knora-api:valueCreationDate" : {
         "@type" : "xsd:dateTimeStamp",

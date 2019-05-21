@@ -249,7 +249,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "Interprivate val literal"
+                    LanguageCodes.EN -> "Interval literal"
                 )
             ),
             makePredicate(

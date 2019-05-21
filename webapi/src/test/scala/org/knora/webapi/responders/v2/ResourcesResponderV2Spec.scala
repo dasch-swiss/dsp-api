@@ -430,7 +430,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     )
 
     private def getResource(resourceIri: IRI, requestingUser: UserADM): ReadResourceV2 = {
-        responderManager ! ResourcesGetRequestV2(resourceIris = Seq(resourceIri), requestingUser = anythingUserProfile)
+        responderManager ! ResourcesGetRequestV2(resourceIris = Seq(resourceIri), targetSchema = ApiV2Complex, requestingUser = anythingUserProfile)
 
         expectMsgPF(timeout) {
             case response: ReadResourcesSequenceV2 =>
@@ -509,6 +509,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! ResourcesGetRequestV2(
                 resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
                 versionDate = None,
+                targetSchema = ApiV2Complex,
                 requestingUser = incunabulaUserProfile
             )
 
@@ -521,7 +522,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-            responderManager ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a"), incunabulaUserProfile)
+            responderManager ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a"), ApiV2Complex, incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -535,6 +536,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! ResourcesGetRequestV2(
                 resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
                 versionDate = None,
+                targetSchema = ApiV2Complex,
                 requestingUser = incunabulaUserProfile
             )
 
@@ -547,7 +549,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            responderManager ! ResourcesGetRequestV2(resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), versionDate = None, requestingUser = incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), versionDate = None, targetSchema = ApiV2Complex, requestingUser = incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -558,7 +560,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            responderManager ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), ApiV2Complex, incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -572,6 +574,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! ResourcesGetRequestV2(
                 resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
                 versionDate = None,
+                targetSchema = ApiV2Complex,
                 requestingUser = incunabulaUserProfile
             )
 
@@ -587,6 +590,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! ResourcesGetRequestV2(
                 resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
                 versionDate = None,
+                targetSchema = ApiV2Complex,
                 requestingUser = incunabulaUserProfile
             )
 
@@ -641,6 +645,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! ResourcesGetRequestV2(
                 resourceIris = Seq(resourceIri),
                 versionDate = Some(versionDate),
+                targetSchema = ApiV2Complex,
                 requestingUser = anythingUserProfile
             )
 
@@ -689,6 +694,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! ResourcesGetRequestV2(
                 resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
                 valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
+                targetSchema = ApiV2Complex,
                 requestingUser = anythingUserProfile
             )
 
@@ -703,6 +709,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
                 valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
                 versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
+                targetSchema = ApiV2Complex,
                 requestingUser = anythingUserProfile
             )
 
@@ -1714,7 +1721,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             // We should now be unable to request the resource.
 
-            responderManager ! ResourcesGetRequestV2(resourceIris = Seq(aThingIri), requestingUser = SharedTestDataADM.anythingUser1)
+            responderManager ! ResourcesGetRequestV2(resourceIris = Seq(aThingIri), targetSchema = ApiV2Complex, requestingUser = SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)

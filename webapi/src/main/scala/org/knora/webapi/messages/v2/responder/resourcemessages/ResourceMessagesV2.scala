@@ -69,7 +69,7 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  propertyIri: Option[SmartIri] = None,
                                  valueUuid: Option[UUID] = None,
                                  versionDate: Option[Instant] = None,
-                                 targetSchema: ApiV2Schema = ApiV2Complex,
+                                 targetSchema: ApiV2Schema,
                                  schemaOptions: Set[SchemaOption] = Set.empty,
                                  requestingUser: UserADM) extends ResourcesResponderRequestV2
 
@@ -77,9 +77,10 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
   * Requests a preview of one or more resources. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param resourceIris   the IRIs of the resources to obtain a preview for.
+  * @param targetSchema   the schema of the response.
   * @param requestingUser the user making the request.
   */
-case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI], requestingUser: UserADM) extends ResourcesResponderRequestV2
+case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI], targetSchema: ApiV2Schema, requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
   * Requests the version history of the values of a resource.

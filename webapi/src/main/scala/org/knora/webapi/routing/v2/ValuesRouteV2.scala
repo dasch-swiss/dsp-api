@@ -68,12 +68,16 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             }
                     }
 
+                    val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+                    val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
                     val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ResourcesGetRequestV2(
                         resourceIris = Seq(resourceIri.toString),
                         valueUuid = Some(valueUuid),
                         versionDate = versionDate,
+                        targetSchema = targetSchema,
                         requestingUser = requestingUser
                     )
 
@@ -83,8 +87,8 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         settings = settings,
                         responderManager = responderManager,
                         log = log,
-                        targetSchema = ApiV2Complex,
-                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                        targetSchema = targetSchema,
+                        schemaOptions = schemaOptions
                     )
                 }
             }

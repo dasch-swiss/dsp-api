@@ -2345,12 +2345,6 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:listValueAsListNodeLabel"
-      }
-    }, {
-      "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
@@ -5927,20 +5921,6 @@
     },
     "rdfs:comment" : "Represents a reference to a hierarchical list node.",
     "rdfs:label" : "Hierarchical list value as list node",
-    "rdfs:subPropertyOf" : {
-      "@id" : "knora-api:valueHas"
-    }
-  }, {
-    "@id" : "knora-api:listValueAsListNodeLabel",
-    "@type" : "owl:ObjectProperty",
-    "knora-api:objectType" : {
-      "@id" : "xsd:string"
-    },
-    "knora-api:subjectType" : {
-      "@id" : "knora-api:ListValue"
-    },
-    "rdfs:comment" : "Represents the name of the list node pointed to.",
-    "rdfs:label" : "Hierarchical list value as list node name",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:valueHas"
     }

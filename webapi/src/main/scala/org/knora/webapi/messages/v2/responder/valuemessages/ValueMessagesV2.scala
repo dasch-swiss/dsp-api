@@ -1995,7 +1995,7 @@ case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
                 JsonLDObject(
                     Map(
                         OntologyConstants.KnoraApiV2Complex.ListValueAsListNode -> JsonLDUtil.iriToJsonLDObject(valueHasListNode)
-                    ) ++ listNodeLabel.map(labelStr => OntologyConstants.KnoraApiV2Complex.ListValueAsListNodeLabel -> JsonLDString(labelStr))
+                    )
                 )
         }
     }
