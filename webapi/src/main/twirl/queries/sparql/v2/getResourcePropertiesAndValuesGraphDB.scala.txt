@@ -92,9 +92,6 @@ CONSTRUCT {
             knora-base:attachedToProject ?referredResourceProject  ;
             knora-base:creationDate ?referredResourceCreationDate ;
             knora-base:lastModificationDate ?referredResourceLastModificationDate .
-
-        ?valueObject knora-base:valueHasListNode ?listNode .
-        ?listNode rdfs:label ?listNodeLabel .
     }
 
 } WHERE {
@@ -252,12 +249,6 @@ CONSTRUCT {
             }
             @if(queryAllNonStandoff) {
                 UNION {
-                     GRAPH <http://www.ontotext.com/explicit> {
-                        ?valueObject a knora-base:ListValue .
-                        ?valueObject knora-base:valueHasListNode  ?listNode .
-                        ?listNode rdfs:label ?listNodeLabel .
-                     }
-                } UNION {
                     @*
 
                     If the value is a link value, get the referred resource, as long as it hasn't been

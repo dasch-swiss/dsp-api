@@ -162,7 +162,6 @@ object GravsearchQueryChecker {
         OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry,
         OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget,
         OntologyConstants.KnoraApiV2Complex.LinkValueHasTargetIri,
-        OntologyConstants.KnoraApiV2Complex.ListValueAsListNodeLabel,
         OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
         OntologyConstants.KnoraApiV2Complex.FileValueHasFilename,
         OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl

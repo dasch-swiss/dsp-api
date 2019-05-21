@@ -135,6 +135,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 offset = 0,
                 limitToProject = None,
                 limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
+                targetSchema = ApiV2Complex,
                 requestingUser = SharedTestDataADM.anonymousUser
             )
 
@@ -152,6 +153,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
                 orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
                 schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                 page = 0,
+                targetSchema = ApiV2Complex,
                 requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
             )
 
