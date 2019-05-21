@@ -220,6 +220,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
                     val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
+                    val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+
                     val requestMessageFuture: Future[SearchResourcesByProjectAndClassRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield SearchResourcesByProjectAndClassRequestV2(
@@ -227,6 +229,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         resourceClass = resourceClass.toOntologySchema(ApiV2Complex),
                         orderByProperty = maybeOrderByProperty,
                         page = page,
+                        targetSchema = targetSchema,
                         schemaOptions = schemaOptions,
                         requestingUser = requestingUser
                     )
@@ -333,9 +336,11 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
                     }
 
+                    val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+
                     val requestMessageFuture: Future[ResourcesPreviewGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield ResourcesPreviewGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
+                    } yield ResourcesPreviewGetRequestV2(resourceIris = resourceIris, targetSchema = targetSchema, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageF = requestMessageFuture,

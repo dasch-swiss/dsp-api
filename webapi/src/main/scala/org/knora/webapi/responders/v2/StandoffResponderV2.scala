@@ -117,6 +117,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 versionDate = None,
                 responderManager = responderManager,
                 knoraIdUtil = knoraIdUtil,
+                targetSchema = getStandoffRequestV2.targetSchema,
+                settings = settings,
                 requestingUser = getStandoffRequestV2.requestingUser
             )
 
@@ -157,6 +159,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
             textRepresentationResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
                 resourceIris = Vector(xslTransformationIri),
+                targetSchema = ApiV2Complex,
                 requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
             resource = textRepresentationResponseV2.toResource(xslTransformationIri)
 
@@ -859,6 +862,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                         resourceIri = resourceIri,
                         valueIri = valueIri,
                         offset = offset,
+                        targetSchema = ApiV2Complex,
                         requestingUser = requestingUser)
                 )
 

@@ -279,7 +279,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     private def getResourceLastModificationDate(resourceIri: IRI, requestingUser: UserADM): Option[Instant] = {
-        responderManager ! ResourcesPreviewGetRequestV2(resourceIris = Seq(resourceIri), requestingUser = requestingUser)
+        responderManager ! ResourcesPreviewGetRequestV2(resourceIris = Seq(resourceIri), targetSchema = ApiV2Complex, requestingUser = requestingUser)
 
         expectMsgPF(timeout) {
             case previewResponse: ReadResourcesSequenceV2 =>

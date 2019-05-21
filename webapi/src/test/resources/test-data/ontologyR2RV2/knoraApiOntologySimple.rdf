@@ -328,7 +328,7 @@
 </rdfs:Datatype>
 <rdfs:Datatype rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#Interval">
 	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Represents an interval.</rdfs:comment>
-	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Interprivate val literal</rdfs:label>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Interval literal</rdfs:label>
 	<rdfs:subClassOf>
 		<rdfs:Datatype rdf:nodeID="genid-09ee7caf866849afa4cf01675b009dd2-b37">
 			<owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>

@@ -72,7 +72,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       */
     def receive(msg: ResourcesResponderRequestV2) = msg match {
         case ResourcesGetRequestV2(resIris, propertyIri, versionDate, targetSchema, schemaOptions, requestingUser) => getResourcesV2(resIris, propertyIri, versionDate, targetSchema, schemaOptions, requestingUser)
-        case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreviewV2(resIris, requestingUser)
+        case ResourcesPreviewGetRequestV2(resIris, targetSchema, requestingUser) => getResourcePreviewV2(resIris, targetSchema, requestingUser)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
         case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
@@ -254,6 +254,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 // Get the metadata of the resource to be updated.
                 resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                     resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
+                    targetSchema = ApiV2Complex,
                     requestingUser = updateResourceMetadataRequestV2.requestingUser
                 )
 
@@ -309,6 +310,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                     resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
+                    targetSchema = ApiV2Complex,
                     requestingUser = updateResourceMetadataRequestV2.requestingUser
                 )
 
@@ -358,6 +360,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 // Get the metadata of the resource to be updated.
                 resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                     resourceIris = Seq(deleteResourceV2.resourceIri),
+                    targetSchema = ApiV2Complex,
                     requestingUser = deleteResourceV2.requestingUser
                 )
 
@@ -567,6 +570,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             // Get information about the existing resources that are targets of links.
             existingTargets: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                 resourceIris = existingTargets.toSeq,
+                targetSchema = ApiV2Complex,
                 requestingUser = requestingUser
             )
 
@@ -1034,6 +1038,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         versionDate = versionDate,
                         responderManager = responderManager,
                         knoraIdUtil = knoraIdUtil,
+                        targetSchema = targetSchema,
+                        settings = settings,
                         requestingUser = requestingUser
                     )
             }.toVector
@@ -1051,7 +1057,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
-    private def getResourcePreviewV2(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def getResourcePreviewV2(resourceIris: Seq[IRI], targetSchema: ApiV2Schema, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -1076,6 +1082,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         versionDate = None,
                         responderManager = responderManager,
                         knoraIdUtil = knoraIdUtil,
+                        targetSchema = targetSchema,
+                        settings = settings,
                         requestingUser = requestingUser
                     )
             }.toVector
@@ -1357,7 +1365,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         if (targetResourceIris.isEmpty) {
             FastFuture.successful(())
         } else {
-            getResourcePreviewV2(targetResourceIris.toSeq, requestingUser).map(_ => ())
+            getResourcePreviewV2(targetResourceIris.toSeq, targetSchema = ApiV2Complex, requestingUser).map(_ => ())
         }
     }
 
@@ -1675,6 +1683,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             resourcePreviewResponse: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                 resourceIris = Seq(resourceHistoryRequest.resourceIri),
+                targetSchema = ApiV2Complex,
                 requestingUser = resourceHistoryRequest.requestingUser
             )
 
