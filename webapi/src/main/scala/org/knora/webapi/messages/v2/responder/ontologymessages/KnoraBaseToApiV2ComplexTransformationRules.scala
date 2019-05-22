@@ -113,7 +113,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "Provides the ARK URL of a resource."
+                    LanguageCodes.EN -> "Provides the ARK URL of a resource or value."
                 )
             )
         ),
@@ -133,7 +133,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "Provides the ARK URL of a particular version of a resource."
+                    LanguageCodes.EN -> "Provides the ARK URL of a particular version of a resource or value."
                 )
             )
         ),

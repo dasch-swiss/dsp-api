@@ -422,7 +422,7 @@ case class ReadResourceV2(resourceIri: IRI,
 
         val versionArkUrlAsJsonLD: (IRI, JsonLDObject) =
             versionArkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-                value = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(arkTimestamp)),
+                value = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(arkTimestamp)),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
             )
 

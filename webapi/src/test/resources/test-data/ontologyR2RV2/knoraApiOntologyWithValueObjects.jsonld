@@ -4964,7 +4964,7 @@
     "knora-api:objectType" : {
       "@id" : "xsd:anyURI"
     },
-    "rdfs:comment" : "Provides the ARK URL of a resource.",
+    "rdfs:comment" : "Provides the ARK URL of a resource or value.",
     "rdfs:label" : "ARK URL"
   }, {
     "@id" : "knora-api:attachedToProject",
@@ -6419,7 +6419,7 @@
     "knora-api:objectType" : {
       "@id" : "xsd:anyURI"
     },
-    "rdfs:comment" : "Provides the ARK URL of a particular version of a resource.",
+    "rdfs:comment" : "Provides the ARK URL of a particular version of a resource or value.",
     "rdfs:label" : "version ARK URL"
   }, {
     "@id" : "knora-api:versionDate",

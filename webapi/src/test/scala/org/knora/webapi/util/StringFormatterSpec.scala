@@ -1044,21 +1044,21 @@ class StringFormatterSpec extends CoreSpec() {
         "generate an ARK URL for a resource IRI with a timestamp with a fractional part" in {
             val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
             val timestamp = Instant.parse("2018-06-04T08:56:22.9876543Z")
-            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(timestamp))
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(timestamp))
             assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T0856229876543Z")
         }
 
         "generate an ARK URL for a resource IRI with a timestamp with a leading zero" in {
             val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
             val timestamp = Instant.parse("2018-06-04T08:56:22.098Z")
-            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(timestamp))
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(timestamp))
             assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T085622098Z")
         }
 
         "generate an ARK URL for a resource IRI with a timestamp without a fractional part" in {
             val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
             val timestamp = Instant.parse("2018-06-04T08:56:22Z")
-            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(timestamp))
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(timestamp))
             assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T085622Z")
         }
 

@@ -575,13 +575,14 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     def fromLinkPropToLinkValueProp: SmartIri
 
     /**
-      * If this is a Knora data IRI representing a resource, returns the corresponding ARK URL. Throws
+      * If this is a Knora data IRI representing a resource, returns an ARK URL for the resource or for one of its values. Throws
       * [[DataConversionException]] if this IRI is not a Knora resource IRI.
       *
+      * @param maybeValueUUID if defined, the UUID of the value that the ARK URL should refer to.
       * @param maybeTimestamp an optional timestamp indicating the point in the resource's version history that the ARK URL should
       *                       cite.
       */
-    def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String
+    def fromResourceIriToArkUrl(maybeValueUUID: Option[UUID] = None, maybeTimestamp: Option[Instant] = None): String
 
     override def equals(obj: scala.Any): Boolean = {
         // See the comment at the top of the SmartIri trait.
@@ -1479,7 +1480,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             }
         }
 
-        override def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String = {
+        override def fromResourceIriToArkUrl(maybeValueUUID: Option[UUID] = None, maybeTimestamp: Option[Instant] = None): String = {
             if (!isKnoraResourceIri) {
                 throw DataConversionException(s"IRI $iri is not a Knora resource IRI")
             }
@@ -1488,6 +1489,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
                 makeArkUrl(
                     projectID = iriInfo.projectCode.get,
                     resourceID = iriInfo.resourceID.get,
+                    maybeValueUUID = maybeValueUUID,
                     maybeTimestamp = maybeTimestamp
                 )
 
@@ -2604,37 +2606,52 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
-      * Generates an ARK URL for a resource as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
+      * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
       *
       * @param projectID      the shortcode of the project that the resource belongs to.
       * @param resourceID     the resource's ID (the last component of its IRI).
+      * @param maybeValueUUID if this is an ARK URL for a value, the value's UUID.
       * @param maybeTimestamp a timestamp indicating the point in the resource's version history that the ARK URL should
       *                       cite.
-      * @return an ARK URL that can be resolved to obtain the resource.
+      * @return an ARK URL that can be resolved to obtain the resource or value.
       */
-    private def makeArkUrl(projectID: String, resourceID: String, maybeTimestamp: Option[Instant] = None): String = {
+    private def makeArkUrl(projectID: String, resourceID: String, maybeValueUUID: Option[UUID] = None, maybeTimestamp: Option[Instant] = None): String = {
+        /**
+          * Adds a check digit to a Base64-encoded ID, and escapes '-' as '=', because '-' can be ignored in ARK URLs.
+          *
+          * @param id a Base64-encoded ID.
+          * @return the ID with a check digit added.
+          */
+        def addCheckDigitAndEscape(id: String): String = {
+            val checkDigitTry: Try[String] = Try {
+                base64UrlCheckDigit.calculate(id)
+            }
+
+            val checkDigit: String = checkDigitTry match {
+                case Success(digit) => digit
+                case Failure(ex) => throw DataConversionException(ex.getMessage)
+            }
+
+            val idWithCheckDigit = id + checkDigit
+            idWithCheckDigit.replace('-', '=')
+        }
+
         val (resolver: String, assignedNumber: Int) = (arkResolver, arkAssignedNumber) match {
             case (Some(definedHost: String), Some(definedAssignedNumber: Int)) => (definedHost, definedAssignedNumber)
             case _ => throw AssertionException(s"StringFormatter has not been initialised with system settings")
         }
 
         // Calculate a check digit for the resource ID.
+        val resourceIDWithCheckDigit: String = addCheckDigitAndEscape(resourceID)
 
-        val checkDigitTry: Try[String] = Try {
-            base64UrlCheckDigit.calculate(resourceID)
+        // Construct an ARK URL for the resource, without a value UUID and without a timestamp.
+        val resourceArkUrl = s"$resolver/ark:/$assignedNumber/$ArkVersion/$projectID/$resourceIDWithCheckDigit"
+
+        // If a value UUID was provided, Base64-encode it, add a check digit, and append the result to the URL.
+        val arkUrlWithoutTimestamp = maybeValueUUID match {
+            case Some(valueUUID: UUID) => s"$resourceArkUrl/${addCheckDigitAndEscape(base64EncodeUuid(valueUUID))}"
+            case None => resourceArkUrl
         }
-
-        val checkDigit: String = checkDigitTry match {
-            case Success(digit) => digit
-            case Failure(ex) => throw DataConversionException(ex.getMessage)
-        }
-
-        val resourceIDWithCheckDigit = resourceID + checkDigit
-
-        // Escape '-' as '=' in the resource ID and check digit, because '-' can be ignored in ARK URLs.
-        val escapedResourceIDWithCheckDigit = resourceIDWithCheckDigit.replace('-', '=')
-
-        val arkUrlWithoutTimestamp = s"$resolver/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit"
 
         maybeTimestamp match {
             case Some(timestamp) =>

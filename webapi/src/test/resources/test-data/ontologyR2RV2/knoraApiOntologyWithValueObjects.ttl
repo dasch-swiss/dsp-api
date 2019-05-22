@@ -154,7 +154,7 @@ knora-api:Resource a owl:Class;
 
 knora-api:arkUrl a owl:DatatypeProperty;
   knora-api:objectType xsd:anyURI;
-  rdfs:comment "Provides the ARK URL of a resource.";
+  rdfs:comment "Provides the ARK URL of a resource or value.";
   rdfs:label "ARK URL" .
 
 knora-api:attachedToProject a owl:ObjectProperty;
@@ -255,7 +255,7 @@ knora-api:userHasPermission a owl:DatatypeProperty;
 
 knora-api:versionArkUrl a owl:DatatypeProperty;
   knora-api:objectType xsd:anyURI;
-  rdfs:comment "Provides the ARK URL of a particular version of a resource.";
+  rdfs:comment "Provides the ARK URL of a particular version of a resource or value.";
   rdfs:label "version ARK URL" .
 
 knora-api:versionDate a owl:DatatypeProperty;
