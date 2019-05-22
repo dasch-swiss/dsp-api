@@ -13,6 +13,13 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:attachedToUser"
       }
     }, {
@@ -147,6 +154,13 @@
       "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:valueHasUUID"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
       }
     } ]
   } ],

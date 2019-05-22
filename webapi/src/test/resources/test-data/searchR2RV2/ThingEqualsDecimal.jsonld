@@ -4,6 +4,10 @@
   "anything:hasDecimal" : {
     "@id" : "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ",
     "@type" : "knora-api:DecimalValue",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/uqmMo72OQ2K2xe7mkIytlgf/85et=o=STOmn2JcVqrGTCQp"
+    },
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
     },
@@ -17,7 +21,11 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2017-07-25T07:13:16.732Z"
     },
-    "knora-api:valueHasUUID" : "85et-o-STOmn2JcVqrGTCQ"
+    "knora-api:valueHasUUID" : "85et-o-STOmn2JcVqrGTCQ",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/uqmMo72OQ2K2xe7mkIytlgf/85et=o=STOmn2JcVqrGTCQp.20170725T071316732Z"
+    }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

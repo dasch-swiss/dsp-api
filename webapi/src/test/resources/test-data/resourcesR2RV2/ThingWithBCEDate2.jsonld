@@ -2,8 +2,12 @@
   "@id" : "http://rdfh.ch/0001/thing_with_BCE_date2",
   "@type" : "anything:Thing",
   "anything:hasDate" : {
-    "@id" : "http://rdfh.ch/0001/thing_with_BCE_date2/date_value",
+    "@id" : "http://rdfh.ch/0001/thing_with_BCE_date2/values/date_value",
     "@type" : "knora-api:DateValue",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S/000000000000date_valuQ9"
+    },
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
     },
@@ -23,7 +27,11 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-01-31T15:05:10Z"
     },
-    "knora-api:valueHasUUID" : "000000000000date_valuQ"
+    "knora-api:valueHasUUID" : "000000000000date_valuQ",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S/000000000000date_valuQ9.20180131T150510Z"
+    }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

@@ -4,6 +4,10 @@
   "anything:hasText" : {
     "@id" : "http://rdfh.ch/0001/a-thing-with-text-valueslanguage/values/1",
     "@type" : "knora-api:TextValue",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valueslanguageX/000000000000000000000ws"
+    },
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
     },
@@ -15,7 +19,11 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:54Z"
     },
-    "knora-api:valueHasUUID" : "000000000000000000000w"
+    "knora-api:valueHasUUID" : "000000000000000000000w",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valueslanguageX/000000000000000000000ws.20160302T150554Z"
+    }
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

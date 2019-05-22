@@ -575,14 +575,22 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     def fromLinkPropToLinkValueProp: SmartIri
 
     /**
-      * If this is a Knora data IRI representing a resource, returns an ARK URL for the resource or for one of its values. Throws
+      * If this is a Knora data IRI representing a resource, returns an ARK URL for the resource. Throws
       * [[DataConversionException]] if this IRI is not a Knora resource IRI.
       *
-      * @param maybeValueUUID if defined, the UUID of the value that the ARK URL should refer to.
       * @param maybeTimestamp an optional timestamp indicating the point in the resource's version history that the ARK URL should
       *                       cite.
       */
-    def fromResourceIriToArkUrl(maybeValueUUID: Option[UUID] = None, maybeTimestamp: Option[Instant] = None): String
+    def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String
+
+    /**
+      * If this is a Knora data IRI representing a value, returns an ARK URL for the value. Throws
+      * [[DataConversionException]] if this IRI is not a Knora value IRI.
+      *
+      * @param maybeTimestamp an optional timestamp indicating the point in the value's version history that the ARK URL should
+      *                       cite.
+      */
+    def fromValueIriToArkUrl(valueUUID: UUID, maybeTimestamp: Option[Instant] = None): String
 
     override def equals(obj: scala.Any): Boolean = {
         // See the comment at the top of the SmartIri trait.
@@ -1480,7 +1488,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             }
         }
 
-        override def fromResourceIriToArkUrl(maybeValueUUID: Option[UUID] = None, maybeTimestamp: Option[Instant] = None): String = {
+        override def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String = {
             if (!isKnoraResourceIri) {
                 throw DataConversionException(s"IRI $iri is not a Knora resource IRI")
             }
@@ -1489,7 +1497,28 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
                 makeArkUrl(
                     projectID = iriInfo.projectCode.get,
                     resourceID = iriInfo.resourceID.get,
-                    maybeValueUUID = maybeValueUUID,
+                    maybeValueUUID = None,
+                    maybeTimestamp = maybeTimestamp
+                )
+
+            }
+
+            arkUrlTry match {
+                case Success(arkUrl) => arkUrl
+                case Failure(ex) => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
+            }
+        }
+
+        override def fromValueIriToArkUrl(valueUUID: UUID, maybeTimestamp: Option[Instant] = None): String = {
+            if (!isKnoraValueIri) {
+                throw DataConversionException(s"IRI $iri is not a Knora value IRI")
+            }
+
+            val arkUrlTry = Try {
+                makeArkUrl(
+                    projectID = iriInfo.projectCode.get,
+                    resourceID = iriInfo.resourceID.get,
+                    maybeValueUUID = Some(valueUUID),
                     maybeTimestamp = maybeTimestamp
                 )
 

@@ -400,6 +400,8 @@ case class ReadResourceV2(resourceIri: IRI,
 
         // Make an ARK URL without a version timestamp.
 
+        val resourceSmartIri: SmartIri = resourceIri.toSmartIri
+
         val arkUrlProp: IRI = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.ArkUrl
             case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.ArkUrl
@@ -407,7 +409,7 @@ case class ReadResourceV2(resourceIri: IRI,
 
         val arkUrlAsJsonLD: (IRI, JsonLDObject) =
             arkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-                value = resourceIri.toSmartIri.fromResourceIriToArkUrl(),
+                value = resourceSmartIri.fromResourceIriToArkUrl(),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
             )
 
@@ -422,7 +424,7 @@ case class ReadResourceV2(resourceIri: IRI,
 
         val versionArkUrlAsJsonLD: (IRI, JsonLDObject) =
             versionArkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-                value = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(arkTimestamp)),
+                value = resourceSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(arkTimestamp)),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
             )
 

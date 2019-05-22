@@ -1229,12 +1229,12 @@
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
-  anything:hasDate <http://rdfh.ch/0001/thing_with_BCE_date/date_value>;
+  anything:hasDate <http://rdfh.ch/0001/thing_with_BCE_date/values/date_value>;
   rdfs:label "A thing that has a BCE date value";
   knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
   knora-base:creationDate "2018-01-31T15:05:10Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0001/thing_with_BCE_date/date_value> a knora-base:DateValue;
+<http://rdfh.ch/0001/thing_with_BCE_date/values/date_value> a knora-base:DateValue;
   knora-base:valueHasUUID "date_value"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -1253,12 +1253,12 @@
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
-  anything:hasDate <http://rdfh.ch/0001/thing_with_BCE_date2/date_value>;
+  anything:hasDate <http://rdfh.ch/0001/thing_with_BCE_date2/values/date_value>;
   rdfs:label "A thing that has a BCE date value";
   knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
   knora-base:creationDate "2018-01-31T15:05:10Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0001/thing_with_BCE_date2/date_value> a knora-base:DateValue;
+<http://rdfh.ch/0001/thing_with_BCE_date2/values/date_value> a knora-base:DateValue;
   knora-base:valueHasUUID "date_value"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -1277,12 +1277,12 @@
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
-  anything:hasListItem <http://rdfh.ch/0001/thing_with_list_value/list_value>;
+  anything:hasListItem <http://rdfh.ch/0001/thing_with_list_value/values/list_value>;
   rdfs:label "A thing that has a list value";
   knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
   knora-base:creationDate "2018-01-31T15:05:10Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0001/thing_with_list_value/list_value> a knora-base:ListValue;
+<http://rdfh.ch/0001/thing_with_list_value/values/list_value> a knora-base:ListValue;
   knora-base:valueHasUUID "list_value"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -1347,13 +1347,13 @@
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
-  anything:hasListItem <http://rdfh.ch/0001/thing_with_two_list_values/first_list_value>;
-  anything:hasOtherListItem <http://rdfh.ch/0001/thing_with_two_list_values/second_list_value>;
+  anything:hasListItem <http://rdfh.ch/0001/thing_with_two_list_values/values/first_list_value>;
+  anything:hasOtherListItem <http://rdfh.ch/0001/thing_with_two_list_values/values/second_list_value>;
   rdfs:label "A thing that has two list values";
   knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
   knora-base:creationDate "2018-01-31T15:05:10Z"^^xsd:dateTime .
 
-<http://rdfh.ch/0001/thing_with_two_list_values/first_list_value> a knora-base:ListValue;
+<http://rdfh.ch/0001/thing_with_two_list_values/values/first_list_value> a knora-base:ListValue;
   knora-base:valueHasUUID "first_list_value"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
@@ -1363,7 +1363,7 @@
   knora-base:valueCreationDate "2018-01-31T15:05:10Z"^^xsd:dateTime;
   knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
 
-<http://rdfh.ch/0001/thing_with_two_list_values/second_list_value> a knora-base:ListValue;
+<http://rdfh.ch/0001/thing_with_two_list_values/values/second_list_value> a knora-base:ListValue;
   knora-base:valueHasUUID "second_list_value"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;

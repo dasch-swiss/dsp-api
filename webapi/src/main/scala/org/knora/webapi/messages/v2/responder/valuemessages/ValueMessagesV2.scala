@@ -516,6 +516,8 @@ sealed trait ReadValueV2 extends IOValueV2 {
                     case jsonLDObject: JsonLDObject =>
                         // Add the value's metadata.
 
+                        val valueSmartIri = valueIri.toSmartIri
+
                         val requiredMetadata = Map(
                             JsonLDConstants.ID -> JsonLDString(valueIri),
                             JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString),
@@ -526,7 +528,15 @@ sealed trait ReadValueV2 extends IOValueV2 {
                                 value = valueCreationDate.toString,
                                 datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
                             ),
-                            OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID))
+                            OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID)),
+                            OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+                                value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID),
+                                datatype = OntologyConstants.Xsd.Uri.toSmartIri
+                            ),
+                            OntologyConstants.KnoraApiV2Complex.VersionArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+                                value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID, maybeTimestamp = Some(valueCreationDate)),
+                                datatype = OntologyConstants.Xsd.Uri.toSmartIri
+                            )
                         )
 
                         val valueHasCommentAsJsonLD: Option[(IRI, JsonLDValue)] = valueContent.comment.map {

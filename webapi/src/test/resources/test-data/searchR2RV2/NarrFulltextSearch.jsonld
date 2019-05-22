@@ -5,6 +5,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/00505cf0a803/values/549527258a26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/00505cf0a803D/0000000000549527258a2wq"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -15,7 +19,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:46Z"
       },
-      "knora-api:valueHasUUID" : "0000000000549527258a2w"
+      "knora-api:valueHasUUID" : "0000000000549527258a2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/00505cf0a803D/0000000000549527258a2wq.20160302T150546Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -44,6 +52,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/00c650d23303/values/af68552c3626",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/00c650d23303L/0000000000af68552c362wo"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -54,7 +66,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:40Z"
       },
-      "knora-api:valueHasUUID" : "0000000000af68552c362w"
+      "knora-api:valueHasUUID" : "0000000000af68552c362w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/00c650d23303L/0000000000af68552c362wo.20160302T150540Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -83,6 +99,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/02abe871e903/values/1852a8aa8526",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/02abe871e903L/00000000001852a8aa852wu"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -93,7 +113,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:49Z"
       },
-      "knora-api:valueHasUUID" : "00000000001852a8aa852w"
+      "knora-api:valueHasUUID" : "00000000001852a8aa852w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/02abe871e903L/00000000001852a8aa852wu.20160302T150549Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -122,6 +146,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/04416f64ef03/values/6ce3c0ef8b26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/04416f64ef03=/00000000006ce3c0ef8b2w4"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -132,7 +160,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:50Z"
       },
-      "knora-api:valueHasUUID" : "00000000006ce3c0ef8b2w"
+      "knora-api:valueHasUUID" : "00000000006ce3c0ef8b2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/04416f64ef03=/00000000006ce3c0ef8b2w4.20160302T150550Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -161,6 +193,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/04f25db73f03/values/aa8971af4d26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/04f25db73f03q/0000000000aa8971af4d2wz"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -171,7 +207,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:40Z"
       },
-      "knora-api:valueHasUUID" : "0000000000aa8971af4d2w"
+      "knora-api:valueHasUUID" : "0000000000aa8971af4d2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/04f25db73f03q/0000000000aa8971af4d2wz.20160302T150540Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -200,6 +240,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/05c7acceb703/values/5f23f3171d26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/05c7acceb703v/00000000005f23f3171d2w4"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -210,7 +254,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:valueHasUUID" : "00000000005f23f3171d2w"
+      "knora-api:valueHasUUID" : "00000000005f23f3171d2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/05c7acceb703v/00000000005f23f3171d2w4.20160302T150547Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -239,6 +287,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/075d33c1bd03/values/77718ce21e26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/075d33c1bd03V/000000000077718ce21e2w5"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -249,7 +301,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:valueHasUUID" : "000000000077718ce21e2w"
+      "knora-api:valueHasUUID" : "000000000077718ce21e2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/075d33c1bd03V/000000000077718ce21e2w5.20160302T150547Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -278,6 +334,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/0b8940a6c903/values/f752218c3b26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0b8940a6c903u/0000000000f752218c3b2wr"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -288,7 +348,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:48Z"
       },
-      "knora-api:valueHasUUID" : "0000000000f752218c3b2w"
+      "knora-api:valueHasUUID" : "0000000000f752218c3b2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0b8940a6c903u/0000000000f752218c3b2wr.20160302T150548Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -317,6 +381,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/0d1fc798cf03/values/e75f1e764d26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0d1fc798cf03K/0000000000e75f1e764d2wl"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -327,7 +395,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:48Z"
       },
-      "knora-api:valueHasUUID" : "0000000000e75f1e764d2w"
+      "knora-api:valueHasUUID" : "0000000000e75f1e764d2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0d1fc798cf03K/0000000000e75f1e764d2wl.20160302T150548Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -356,6 +428,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/0d5ac1099503/values/4dcdbebc7126",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0d5ac1099503s/00000000004dcdbebc712wd"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -366,7 +442,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:45Z"
       },
-      "knora-api:valueHasUUID" : "00000000004dcdbebc712w"
+      "knora-api:valueHasUUID" : "00000000004dcdbebc712w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0d5ac1099503s/00000000004dcdbebc712wd.20160302T150545Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -395,6 +475,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/0fb54d8bd503/values/9a966e995f26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0fb54d8bd503g/00000000009a966e995f2wK"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -405,7 +489,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:48Z"
       },
-      "knora-api:valueHasUUID" : "00000000009a966e995f2w"
+      "knora-api:valueHasUUID" : "00000000009a966e995f2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0fb54d8bd503g/00000000009a966e995f2wK.20160302T150548Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -434,6 +522,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/0ff047fc9a03/values/b9ac70cc7926",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0ff047fc9a03X/0000000000b9ac70cc792w_"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -444,7 +536,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:45Z"
       },
-      "knora-api:valueHasUUID" : "0000000000b9ac70cc792w"
+      "knora-api:valueHasUUID" : "0000000000b9ac70cc792w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0ff047fc9a03X/0000000000b9ac70cc792w_.20160302T150545Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -473,6 +569,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/114bd47ddb03/values/c99f73e26726",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/114bd47ddb03G/0000000000c99f73e2672we"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -483,7 +583,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:49Z"
       },
-      "knora-api:valueHasUUID" : "0000000000c99f73e2672w"
+      "knora-api:valueHasUUID" : "0000000000c99f73e2672w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/114bd47ddb03G/0000000000c99f73e2672we.20160302T150549Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -512,6 +616,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/14dd8cbc3403/values/7e39f54a3726",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/14dd8cbc3403w/00000000007e39f54a372wC"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -522,7 +630,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:40Z"
       },
-      "knora-api:valueHasUUID" : "00000000007e39f54a372w"
+      "knora-api:valueHasUUID" : "00000000007e39f54a372w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/14dd8cbc3403w/00000000007e39f54a372wC.20160302T150540Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -551,6 +663,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/167313af3a03/values/1ab5d9ef4226",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/167313af3a03e/00000000001ab5d9ef422w1"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -561,7 +677,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:40Z"
       },
-      "knora-api:valueHasUUID" : "00000000001ab5d9ef422w"
+      "knora-api:valueHasUUID" : "00000000001ab5d9ef422w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/167313af3a03e/00000000001ab5d9ef422w1.20160302T150540Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -590,6 +710,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/1b746fabbe03/values/8318d9c71f26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1b746fabbe03v/00000000008318d9c71f2wT"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -600,7 +724,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:valueHasUUID" : "00000000008318d9c71f2w"
+      "knora-api:valueHasUUID" : "00000000008318d9c71f2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1b746fabbe03v/00000000008318d9c71f2wT.20160302T150547Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -629,6 +757,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/1baf691c8403/values/2882816d3a26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1baf691c8403U/00000000002882816d3a2wp"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -639,7 +771,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:44Z"
       },
-      "knora-api:valueHasUUID" : "00000000002882816d3a2w"
+      "knora-api:valueHasUUID" : "00000000002882816d3a2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1baf691c8403U/00000000002882816d3a2wp.20160302T150544Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -668,6 +804,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/1d0af69dc403/values/4e9dc2b53326",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1d0af69dc4039/00000000004e9dc2b5332w7"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -678,7 +818,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:47Z"
       },
-      "knora-api:valueHasUUID" : "00000000004e9dc2b5332w"
+      "knora-api:valueHasUUID" : "00000000004e9dc2b5332w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1d0af69dc4039/00000000004e9dc2b5332w7.20160302T150547Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -707,6 +851,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/1fa07c90ca03/values/c623c1aa3c26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1fa07c90ca03h/0000000000c623c1aa3c2wV"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -717,7 +865,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:48Z"
       },
-      "knora-api:valueHasUUID" : "0000000000c623c1aa3c2w"
+      "knora-api:valueHasUUID" : "0000000000c623c1aa3c2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1fa07c90ca03h/0000000000c623c1aa3c2wV.20160302T150548Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -746,6 +898,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/1fdb76019003/values/118a3f426d26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1fdb760190032/0000000000118a3f426d2wc"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -756,7 +912,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:45Z"
       },
-      "knora-api:valueHasUUID" : "0000000000118a3f426d2w"
+      "knora-api:valueHasUUID" : "0000000000118a3f426d2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1fdb760190032/0000000000118a3f426d2wc.20160302T150545Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -785,6 +945,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/21360383d003/values/b630be944e26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/21360383d003A/0000000000b630be944e2wA"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -795,7 +959,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:48Z"
       },
-      "knora-api:valueHasUUID" : "0000000000b630be944e2w"
+      "knora-api:valueHasUUID" : "0000000000b630be944e2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/21360383d003A/0000000000b630be944e2wA.20160302T150548Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -824,6 +992,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/2171fdf39503/values/59740ba27226",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2171fdf39503q/000000000059740ba2722wL"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -834,7 +1006,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:45Z"
       },
-      "knora-api:valueHasUUID" : "000000000059740ba2722w"
+      "knora-api:valueHasUUID" : "000000000059740ba2722w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2171fdf39503q/000000000059740ba2722wL.20160302T150545Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -863,6 +1039,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/230784e69b03/values/4ba763247b26",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/230784e69b03z/00000000004ba763247b2wD"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -873,7 +1053,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:45Z"
       },
-      "knora-api:valueHasUUID" : "00000000004ba763247b2w"
+      "knora-api:valueHasUUID" : "00000000004ba763247b2w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/230784e69b03z/00000000004ba763247b2wD.20160302T150545Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -902,6 +1086,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/23427e576103/values/c32d62198426",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/23427e5761032/0000000000c32d6219842wP"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -912,7 +1100,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:42Z"
       },
-      "knora-api:valueHasUUID" : "0000000000c32d6219842w"
+      "knora-api:valueHasUUID" : "0000000000c32d6219842w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/23427e5761032/0000000000c32d6219842wP.20160302T150542Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -941,6 +1133,10 @@
     "incunabula:description" : {
       "@id" : "http://rdfh.ch/0803/23cc8975d603/values/a63dbb7e6026",
       "@type" : "knora-api:TextValue",
+      "knora-api:arkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/23cc8975d603o/0000000000a63dbb7e602wT"
+      },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/b83acc5f05"
       },
@@ -951,7 +1147,11 @@
         "@type" : "xsd:dateTimeStamp",
         "@value" : "2016-03-02T15:05:48Z"
       },
-      "knora-api:valueHasUUID" : "0000000000a63dbb7e602w"
+      "knora-api:valueHasUUID" : "0000000000a63dbb7e602w",
+      "knora-api:versionArkUrl" : {
+        "@type" : "xsd:anyURI",
+        "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/23cc8975d603o/0000000000a63dbb7e602wT.20160302T150548Z"
+      }
     },
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
