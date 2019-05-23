@@ -33,12 +33,12 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV2, StandoffTagV2}
+import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 
@@ -2514,13 +2514,14 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // because we want a double check (the function has already been called in the route or in standoff responder)
         val resourceRefsInStandoff: Set[IRI] = textValue.standoff.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
+                if (standoffNode.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
+                    val maybeTargetIri: Option[IRI] = standoffNode.attributes.collectFirst {
+                        case iriTagAttr: StandoffTagIriAttributeV2 if iriTagAttr.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasLink => iriTagAttr.value
+                    }
 
-                standoffNode match {
-
-                    case node: StandoffTagV2 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
-                        acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
-
-                    case _ => acc
+                    acc + maybeTargetIri.getOrElse(throw NotFoundException(s"No link found in $standoffNode"))
+                } else {
+                    acc
                 }
         }
 

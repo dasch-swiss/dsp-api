@@ -286,7 +286,7 @@
     "@id" : "knora-api:Interval",
     "@type" : "rdfs:Datatype",
     "rdfs:comment" : "Represents an interval.",
-    "rdfs:label" : "Interprivate val literal",
+    "rdfs:label" : "Interval literal",
     "rdfs:subClassOf" : {
       "@type" : "rdfs:Datatype",
       "owl:onDatatype" : {
@@ -347,6 +347,20 @@
         "@id" : "rdfs:label"
       }
     } ]
+  }, {
+    "@id" : "knora-api:ListNode",
+    "@type" : "rdfs:Datatype",
+    "rdfs:comment" : "Represents a list node.",
+    "rdfs:label" : "List Node",
+    "rdfs:subClassOf" : {
+      "@type" : "rdfs:Datatype",
+      "owl:onDatatype" : {
+        "@id" : "xsd:string"
+      },
+      "owl:withRestrictions" : {
+        "xsd:pattern" : ".+"
+      }
+    }
   }, {
     "@id" : "knora-api:MovingImageRepresentation",
     "@type" : "owl:Class",

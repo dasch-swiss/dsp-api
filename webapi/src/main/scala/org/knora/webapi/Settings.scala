@@ -136,6 +136,7 @@ class SettingsImpl(config: Config) extends Extension {
     val dumpMessages: Boolean = config.getBoolean("app.dump-messages")
     val showInternalErrors: Boolean = config.getBoolean("app.show-internal-errors")
     val maxResultsPerSearchResultPage: Int = config.getInt("app.max-results-per-search-result-page")
+    val standoffPerPage: Int = config.getInt("app.standoff-per-page")
     val defaultIconSizeDimX: Int = config.getInt("app.gui.default-icon-size.dimX")
     val defaultIconSizeDimY: Int = config.getInt("app.gui.default-icon-size.dimY")
 

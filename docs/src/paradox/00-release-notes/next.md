@@ -25,6 +25,10 @@ Also, please change the **HINT** to the appropriate level:
 - MAJOR: Separate the `knora-admin` ontology from `knora-api` (@github[#1263](#1263)).
   Existing repositories must be updated; see `upgrade/1263-knora-admin` for instructions.
 
+- FEATURE: Add support for searching for specific list values in Gravsearch for both the simple and complex schema (@github[#1314](#1314)).  
+
+- REFACTOR: List value responses contain the list node's label in the simple schema only (@github[#1321](#1321))
+
 - MAJOR: Change API v1 file uploads to work like API v2 (@github[#1233](#1233)). To enable
   Knora and Sipi to work without sharing a filesystem, the procedure
   for uploading files in API v1 has changed; see
@@ -33,3 +37,4 @@ Also, please change the **HINT** to the appropriate level:
   Also, for consistency with API v2 responses, the `temporaryBaseIIIFUrl` returned by the Sipi 
   `/upload` route no longer includes the image filename; see
   @ref:[Upload Files to Sipi](../03-apis/api-v2/editing-values.md#upload-files-to-sipi).
+ 

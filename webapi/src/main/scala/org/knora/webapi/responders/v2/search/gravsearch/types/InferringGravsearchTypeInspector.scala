@@ -134,7 +134,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                             Some(inferredType)
                                         } else if (classDef.isStandoffClass) {
                                             // It's not a resource class, it's a standoff class. Infer rdf:type knora-api:StandoffTag.
-                                            val inferredType = NonPropertyTypeInfo(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri)
+                                            val inferredType = NonPropertyTypeInfo(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri)
                                             log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
                                             Some(inferredType)
                                         } else {
@@ -505,7 +505,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         def getResourceTypeIriForSchema(querySchema: ApiV2Schema): SmartIri = {
             querySchema match {
                 case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri
-                case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri
+                case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri
             }
         }
 
@@ -517,7 +517,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         def getFileTypeForSchema(querySchema: ApiV2Schema): SmartIri = {
             querySchema match {
                 case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.File.toSmartIri
-                case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.FileValue.toSmartIri
+                case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.FileValue.toSmartIri
             }
         }
 
@@ -536,15 +536,15 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             } else {
                 // It's not a resource property. Get the knora-api:subjectType that the ontology responder provided.
                 readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri).
-                    orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri)) match {
+                    orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri)) match {
                     case Some(subjectType: SmartIri) =>
                         val subjectTypeStr = subjectType.toString
 
                         // Is it knora-api:Value or one of the knora-api:ValueBase classes?
-                        if (subjectTypeStr == OntologyConstants.KnoraApiV2WithValueObjects.Value || OntologyConstants.KnoraApiV2WithValueObjects.ValueBaseClasses.contains(subjectTypeStr)) {
+                        if (subjectTypeStr == OntologyConstants.KnoraApiV2Complex.Value || OntologyConstants.KnoraApiV2Complex.ValueBaseClasses.contains(subjectTypeStr)) {
                             // Yes. Don't use it.
                             None
-                        } else if (OntologyConstants.KnoraApiV2WithValueObjects.FileValueClasses.contains(subjectTypeStr)) {
+                        } else if (OntologyConstants.KnoraApiV2Complex.FileValueClasses.contains(subjectTypeStr)) {
                             // No. If it's a file value class, return the representation of file values in the specified schema.
                             Some(getFileTypeForSchema(querySchema))
                         } else {
@@ -556,7 +556,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
                             if (isStandoffClass) {
                                 // Yes. Infer knora-api:subjectType knora-api:StandoffTag.
-                                Some(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri)
+                                Some(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri)
                             } else if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(subjectTypeStr)) {
                                 // It's not any of those. If it's valid in a type inspection result, return it.
                                 Some(subjectType)
@@ -589,12 +589,12 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             } else {
                 // It's not a link property. Get the knora-api:objectType that the ontology responder provided.
                 readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri).
-                    orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri)) match {
+                    orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri)) match {
                     case Some(objectType: SmartIri) =>
                         val objectTypeStr = objectType.toString
 
                         // Is it knora-api:Value?
-                        if (objectTypeStr == OntologyConstants.KnoraApiV2WithValueObjects.Value) {
+                        if (objectTypeStr == OntologyConstants.KnoraApiV2Complex.Value) {
                             // Yes. Don't use it.
                             None
                         } else {
@@ -606,7 +606,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
                             if (isStandoffClass) {
                                 // Yes. Infer knora-api:subjectType knora-api:StandoffTag.
-                                Some(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri)
+                                Some(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri)
                             } else if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(objectTypeStr)) {
                                 // It's not any of those. If it's valid in a type inspection result, return it.
                                 Some(objectType)
@@ -982,7 +982,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                     // the function.
 
                     functionCallExpression.functionIri.iri.toString match {
-                        case OntologyConstants.KnoraApiV2Simple.MatchFunction | OntologyConstants.KnoraApiV2WithValueObjects.MatchFunction =>
+                        case OntologyConstants.KnoraApiV2Simple.MatchFunction | OntologyConstants.KnoraApiV2Complex.MatchFunction =>
                             // The first argument is a variable representing a string.
                             val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
                             val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(textVar, Set.empty[SmartIri])
@@ -992,7 +992,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                     (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri))
                             )
 
-                        case OntologyConstants.KnoraApiV2WithValueObjects.MatchInStandoffFunction =>
+                        case OntologyConstants.KnoraApiV2Complex.MatchInStandoffFunction =>
                             // The first argument is a variable representing a string.
                             val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
                             val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(textVar, Set.empty[SmartIri])
@@ -1004,10 +1004,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             acc.copy(
                                 typedEntitiesInFilters = acc.typedEntitiesInFilters +
                                     (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri)) +
-                                    (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri))
+                                    (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri))
                             )
 
-                        case OntologyConstants.KnoraApiV2WithValueObjects.StandoffLinkFunction =>
+                        case OntologyConstants.KnoraApiV2Complex.StandoffLinkFunction =>
                             if (functionCallExpression.args.size != 3) throw GravsearchException(s"Three arguments are expected for ${functionCallExpression.functionIri.toSparql}")
 
                             // The first and third arguments are variables or IRIs representing resources.
@@ -1016,7 +1016,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             }.map {
                                 typeableEntity =>
                                     val currentVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(typeableEntity, Set.empty[SmartIri])
-                                    typeableEntity -> (currentVarTypesFromFilters + OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri)
+                                    typeableEntity -> (currentVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri)
                             }
 
                             // The second argument is a variable representing a standoff tag.
@@ -1025,10 +1025,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
                             acc.copy(
                                 typedEntitiesInFilters = acc.typedEntitiesInFilters ++ resourceEntitiesAndTypes +
-                                    (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri))
+                                    (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri))
                             )
 
-                        case OntologyConstants.KnoraApiV2WithValueObjects.ToSimpleDateFunction =>
+                        case OntologyConstants.KnoraApiV2Complex.ToSimpleDateFunction =>
                             // The function knora-api:toSimpleDate can take either a knora-api:DateValue or a knora-api:StandoffTag,
                             // so we don't infer the type of its argument.
                             acc

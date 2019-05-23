@@ -75,7 +75,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     val groupConcatVariableSuffix = "__Concat"
 
     // A set of types that can be treated as dates by the knora-api:toSimpleDate function.
-    private val dateTypes: Set[IRI] = Set(OntologyConstants.KnoraApiV2WithValueObjects.DateValue, OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag)
+    private val dateTypes: Set[IRI] = Set(OntologyConstants.KnoraApiV2Complex.DateValue, OntologyConstants.KnoraApiV2Complex.StandoffTag)
 
     /**
       * A container for a generated variable representing a value literal.
@@ -158,7 +158,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                 val iriStr = iri.toString
 
-                if (iriStr == OntologyConstants.KnoraApiV2Simple.IsMainResource || iriStr == OntologyConstants.KnoraApiV2WithValueObjects.IsMainResource) {
+                if (iriStr == OntologyConstants.KnoraApiV2Simple.IsMainResource || iriStr == OntologyConstants.KnoraApiV2Complex.IsMainResource) {
                     statementPattern.obj match {
                         case XsdLiteral(value, SmartIri(OntologyConstants.Xsd.Boolean)) if value.toBoolean =>
                             statementPattern.subj match {
@@ -285,6 +285,38 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             }
         }
 
+        /**
+          * Transforms a statement pointing to a list node so it matches also any of its subnodes.
+          *
+          * @return transformed statements.
+          */
+        def handleListNode(): Seq[StatementPattern] = {
+
+            if (querySchema == ApiV2Simple) {
+                throw GravsearchException("the method 'handleListNode' only works for the complex schema")
+            }
+
+            // the list node to match for provided in the input query
+            val listNode: Entity = statementPattern.obj
+
+            // variable representing the list node to match for
+            val listNodeVar: QueryVariable = createUniqueVariableFromStatement(
+                baseStatement = statementPattern,
+                suffix = "listNodeVar"
+            )
+
+            // transforms the statement given in the input query so the list node and any of its subnodes are matched
+            Seq(
+                statementPatternToInternalSchema(statementPattern, typeInspectionResult).copy(obj = listNodeVar),
+                StatementPattern(
+                    subj = listNode,
+                    pred = IriRef(iri = OntologyConstants.KnoraBase.HasSubListNode.toSmartIri, propertyPathOperator = Some('*')),
+                    obj = listNodeVar
+                )
+            )
+
+        }
+
         val maybeSubjectTypeIri: Option[SmartIri] = typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
             case Some(NonPropertyTypeInfo(subjectTypeIri)) => Some(subjectTypeIri)
             case _ => None
@@ -328,7 +360,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                 // simple schema. If the query uses the complex schema, check whether the property's object type is
                 // a Knora API v2 value class.
 
-                val objectVarIsValueObject = querySchema == ApiV2Simple || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
+                val objectVarIsValueObject = querySchema == ApiV2Simple || OntologyConstants.KnoraApiV2Complex.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
 
                 if (objectVarIsValueObject) {
                     // The variable refers to a value object. Add it to the collection representing value objects.
@@ -387,11 +419,19 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             if (querySchema == ApiV2Complex) {
                 // Yes. If the subject is a standoff tag and the object is a resource, that's an error, because the client
                 // has to use the knora-api:standoffLink function instead.
-                if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri) && objectIsResource) {
+                if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri) && objectIsResource) {
                     throw GravsearchException(s"Invalid statement pattern (use the knora-api:standoffLink function instead): ${statementPattern.toSparql.trim}")
                 } else {
-                    // Otherwise, just convert the statement pattern to the internal schema.
-                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                    // Is the object of the statement a list node?
+                    propertyTypeInfo.objectTypeIri match {
+                        case SmartIri(OntologyConstants.KnoraApiV2Complex.ListNode) =>
+                            // Yes, transform statement so it also matches any of the subnodes of the given node
+                            handleListNode
+                        case _ =>
+                            // No, just convert the statement pattern to the internal schema.
+                            Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                    }
+
                 }
             } else {
                 // The query is in the simple schema, so the statement is invalid.
@@ -490,13 +530,13 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         OntologyConstants.KnoraApiV2Simple.Date -> OntologyConstants.KnoraBase.ValueHasStartJDN,
         OntologyConstants.KnoraApiV2Simple.Color -> OntologyConstants.KnoraBase.ValueHasColor,
         OntologyConstants.KnoraApiV2Simple.Geoname -> OntologyConstants.KnoraBase.ValueHasGeonameCode,
-        OntologyConstants.KnoraApiV2WithValueObjects.TextValue -> OntologyConstants.KnoraBase.ValueHasString,
-        OntologyConstants.KnoraApiV2WithValueObjects.IntValue -> OntologyConstants.KnoraBase.ValueHasInteger,
-        OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue -> OntologyConstants.KnoraBase.ValueHasDecimal,
-        OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue -> OntologyConstants.KnoraBase.ValueHasBoolean,
-        OntologyConstants.KnoraApiV2WithValueObjects.DateValue -> OntologyConstants.KnoraBase.ValueHasStartJDN,
-        OntologyConstants.KnoraApiV2WithValueObjects.ColorValue -> OntologyConstants.KnoraBase.ValueHasColor,
-        OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue -> OntologyConstants.KnoraBase.ValueHasGeonameCode
+        OntologyConstants.KnoraApiV2Complex.TextValue -> OntologyConstants.KnoraBase.ValueHasString,
+        OntologyConstants.KnoraApiV2Complex.IntValue -> OntologyConstants.KnoraBase.ValueHasInteger,
+        OntologyConstants.KnoraApiV2Complex.DecimalValue -> OntologyConstants.KnoraBase.ValueHasDecimal,
+        OntologyConstants.KnoraApiV2Complex.BooleanValue -> OntologyConstants.KnoraBase.ValueHasBoolean,
+        OntologyConstants.KnoraApiV2Complex.DateValue -> OntologyConstants.KnoraBase.ValueHasStartJDN,
+        OntologyConstants.KnoraApiV2Complex.ColorValue -> OntologyConstants.KnoraBase.ValueHasColor,
+        OntologyConstants.KnoraApiV2Complex.GeonameValue -> OntologyConstants.KnoraBase.ValueHasGeonameCode
     )
 
     /**
@@ -579,6 +619,52 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             // not a linking property, just return the provided restriction
             TransformedFilterPattern(Some(userProvidedRestriction))
         }
+    }
+
+    /**
+      * Handles query variables that represent a list node label in a [[FilterPattern]].
+      *
+      * @param queryVar           the query variable to be handled.
+      * @param comparisonOperator the comparison operator used in the filter pattern.
+      * @param literalValueExpression      the label to match against.
+      */
+    private def handleListQueryVar(queryVar: QueryVariable, comparisonOperator: CompareExpressionOperator.Value, literalValueExpression: Expression): TransformedFilterPattern = {
+
+        // make sure that the expression is a literal of the expected type
+        val nodeLabel: String = literalValueExpression match {
+            case xsdLiteral: XsdLiteral if xsdLiteral.datatype.toString == OntologyConstants.KnoraApiV2Simple.ListNode => xsdLiteral.value
+
+            case other => throw GravsearchException(s"Invalid type for literal ${OntologyConstants.KnoraApiV2Simple.ListNode}")
+        }
+
+        val validComparisonOperators = Set(CompareExpressionOperator.EQUALS)
+
+        // check if comparison operator is supported
+        if (!validComparisonOperators.contains(comparisonOperator))
+            throw GravsearchException(s"Invalid operator '$comparisonOperator' in expression (allowed operators in this context are ${validComparisonOperators.map(op => "'" + op + "'").mkString(", ")})")
+
+        // Generate a variable name representing the list node pointed to by the list value object
+        val listNodeVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
+            base = queryVar,
+            propertyIri = OntologyConstants.KnoraBase.ValueHasListNode
+        )
+
+        // Generate variable name representing the label of the list node pointed to
+        val listNodeLabel: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
+            base = queryVar,
+            propertyIri = OntologyConstants.Rdfs.Label
+        )
+
+        TransformedFilterPattern(
+            // use the SPARQL-STR function because the list node label has a language tag
+            Some(CompareExpression(StrFunction(listNodeLabel), comparisonOperator, XsdLiteral(nodeLabel, OntologyConstants.Xsd.String.toSmartIri))), // compares the provided literal to the value object's literal value
+            Seq(
+                // connects the query variable with the list node label
+                StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasListNode.toSmartIri), listNodeVar),
+                StatementPattern.makeExplicit(subj = listNodeVar, pred = IriRef(OntologyConstants.Rdfs.Label.toSmartIri), obj = listNodeLabel)
+                
+            )
+        )
     }
 
     /**
@@ -876,6 +962,10 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                                     handleDateQueryVar(queryVar = queryVar, comparisonOperator = compareExpression.operator, dateValueExpression = compareExpression.rightArg)
 
+                                case OntologyConstants.KnoraApiV2Simple.ListNode =>
+
+                                    handleListQueryVar(queryVar = queryVar, comparisonOperator = compareExpression.operator, literalValueExpression = compareExpression.rightArg)
+
                                 case other => throw NotImplementedException(s"Value type $other not supported in FilterExpression")
 
                             }
@@ -1030,7 +1120,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
         if (querySchema == ApiV2Complex) {
-            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2WithValueObjects.MatchFunction.toSmartIri.toSparql} instead")
+            throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2Complex.MatchFunction.toSmartIri.toSparql} instead")
         }
 
         // The match function must be the top-level expression, otherwise boolean logic won't work properly.
@@ -1266,7 +1356,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         val standoffTagVar = functionCallExpression.getArgAsQueryVar(pos = 1)
 
         typeInspectionResult.getTypeOfEntity(standoffTagVar) match {
-            case Some(NonPropertyTypeInfo(typeIri)) if typeIri.toString == OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag => ()
+            case Some(NonPropertyTypeInfo(typeIri)) if typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag => ()
             case _ => throw GravsearchException(s"The second argument of ${functionIri.toSparql} must represent a knora-api:StandoffTag")
         }
 
@@ -1327,28 +1417,28 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                     isTopLevel = isTopLevel
                 )
 
-            case OntologyConstants.KnoraApiV2WithValueObjects.MatchFunction =>
+            case OntologyConstants.KnoraApiV2Complex.MatchFunction =>
                 handleMatchFunctionInComplexSchema(
                     functionCallExpression = functionCallExpression,
                     typeInspectionResult = typeInspectionResult,
                     isTopLevel = isTopLevel
                 )
 
-            case OntologyConstants.KnoraApiV2WithValueObjects.MatchInStandoffFunction =>
+            case OntologyConstants.KnoraApiV2Complex.MatchInStandoffFunction =>
                 handleMatchInStandoffFunction(
                     functionCallExpression = functionCallExpression,
                     typeInspectionResult = typeInspectionResult,
                     isTopLevel = isTopLevel
                 )
 
-            case OntologyConstants.KnoraApiV2WithValueObjects.StandoffLinkFunction =>
+            case OntologyConstants.KnoraApiV2Complex.StandoffLinkFunction =>
                 handleStandoffLinkFunction(
                     functionCallExpression = functionCallExpression,
                     typeInspectionResult = typeInspectionResult,
                     isTopLevel = isTopLevel
                 )
 
-            case OntologyConstants.KnoraApiV2WithValueObjects.ToSimpleDateFunction =>
+            case OntologyConstants.KnoraApiV2Complex.ToSimpleDateFunction =>
                 throw GravsearchException(s"Function ${functionIri.toSparql} must be used in a comparison expression")
 
             case _ => throw NotImplementedException(s"Function ${functionCallExpression.functionIri} not found")
@@ -1405,7 +1495,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                     case queryVar: QueryVariable =>
                         handleQueryVar(queryVar = queryVar, compareExpression = filterCompare, typeInspectionResult = typeInspectionResult)
 
-                    case functionCallExpr: FunctionCallExpression if functionCallExpr.functionIri.iri.toString == OntologyConstants.KnoraApiV2WithValueObjects.ToSimpleDateFunction =>
+                    case functionCallExpr: FunctionCallExpression if functionCallExpr.functionIri.iri.toString == OntologyConstants.KnoraApiV2Complex.ToSimpleDateFunction =>
                         handleToSimpleDateFunction(
                             filterCompare = filterCompare,
                             functionCallExpr = functionCallExpr,

@@ -28,9 +28,8 @@ import org.knora.webapi.messages.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LiteralValueType, LocationV1, ResourceCreateValueObjectResponseV1, ResourceCreateValueResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.v1.GroupedProps._
-import org.knora.webapi.twirl._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, KnoraIdUtil, StringFormatter}
 
@@ -553,10 +552,11 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             // v2 responder is used here directly, v1 responder would inernally use v2 responder anyway and do unnecessary back and forth conversions
             mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, requestingUser = userProfile)).mapTo[GetMappingResponseV2]
 
-            standoffTags: Seq[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(
-                standoffEntities = mappingResponse.standoffEntities,
+            standoffTags: Seq[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(
                 standoffAssertions = valueProps.standoff,
-                knoraIdUtil = knoraIdUtil
+                knoraIdUtil = knoraIdUtil,
+                responderManager = responderManager,
+                requestingUser = userProfile
             )
 
         } yield TextValueWithStandoffV1(

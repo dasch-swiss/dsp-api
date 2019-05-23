@@ -118,16 +118,16 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
       * @return a [[SavedImage]] containing the same information.
       */
     private def savedValueToSavedImage(savedValue: JsonLDObject): SavedImage = {
-        val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename)
+        val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
         val iiifUrl = savedValue.requireDatatypeValueInObject(
-            key = OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl,
+            key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
             expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
             validationFun = stringFormatter.toSparqlEncodedString
         )
 
-        val width = savedValue.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX)
-        val height = savedValue.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY)
+        val width = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX)
+        val height = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY)
 
         SavedImage(
             internalFilename = internalFilename,
@@ -225,7 +225,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // Get the new file value from the resource.
             val savedValue: JsonLDObject = getValueFromResource(
                 resource = resource,
-                propertyIriInResult = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri,
+                propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
                 expectedValueIri = stillImageFileValueIri.get
             )
 

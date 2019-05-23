@@ -34,8 +34,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.twirl.StandoffTagV2
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.JavaUtil.Optional
 import spray.json._
 
@@ -308,14 +307,15 @@ object StringFormatter {
     /**
       * Holds information extracted from the IRI.
       *
-      * @param iriType        the type of the IRI.
-      * @param projectCode    the IRI's project code, if any.
-      * @param ontologyName   the IRI's ontology name, if any.
-      * @param entityName     the IRI's entity name, if any.
-      * @param resourceID     if this is a resource IRI or value IRI, its resource ID.
-      * @param valueID        if this is a value IRI, its value ID.
-      * @param ontologySchema the IRI's ontology schema, or `None` if it is not a Knora definition IRI.
-      * @param isBuiltInDef   `true` if the IRI refers to a built-in Knora ontology or ontology entity.
+      * @param iriType            the type of the IRI.
+      * @param projectCode        the IRI's project code, if any.
+      * @param ontologyName       the IRI's ontology name, if any.
+      * @param entityName         the IRI's entity name, if any.
+      * @param resourceID         if this is a resource IRI or value IRI, its resource ID.
+      * @param valueID            if this is a value IRI, its value ID.
+      * @param standoffStartIndex if this is a standoff IRI, its start index.
+      * @param ontologySchema     the IRI's ontology schema, or `None` if it is not a Knora definition IRI.
+      * @param isBuiltInDef       `true` if the IRI refers to a built-in Knora ontology or ontology entity.
       */
     private case class SmartIriInfo(iriType: IriType,
                                     projectCode: Option[String] = None,
@@ -323,6 +323,7 @@ object StringFormatter {
                                     entityName: Option[String] = None,
                                     resourceID: Option[String] = None,
                                     valueID: Option[String] = None,
+                                    standoffStartIndex: Option[Int] = None,
                                     ontologySchema: Option[OntologySchema],
                                     isBuiltInDef: Boolean = false,
                                     sharedOntology: Boolean = false)
@@ -401,6 +402,11 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     def isKnoraValueIri: Boolean
 
     /**
+      * Returns `true` if this is a Knora standoff IRI.
+      */
+    def isKnoraStandoffIri: Boolean
+
+    /**
       * Returns `true` if this is a Knora ontology or entity IRI.
       */
     def isKnoraDefinitionIri: Boolean
@@ -463,6 +469,11 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
       * Returns the IRI's value ID, if any.
       */
     def getValueID: Option[String]
+
+    /**
+      * Returns the IRI's standoff start index, if any.
+      */
+    def getStandoffStartIndex: Option[Int]
 
     /**
       * If this is an ontology entity IRI, returns its ontology IRI.
@@ -662,18 +673,18 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
     // EE being the era: one of BC or AD
     private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN)""" +
-            CalendarSeparator + // calendar name
-            """(?:[1-9][0-9]{0,3})(""" + // year
-            PrecisionSeparator +
-            """(?!00)[0-9]{1,2}(""" + // month
-            PrecisionSeparator +
-            """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
-            CalendarSeparator + // separator if a period is given
-            """(?:[1-9][0-9]{0,3})(""" + // year 2
-            PrecisionSeparator +
-            """(?!00)[0-9]{1,2}(""" + // month 2
-            PrecisionSeparator +
-            """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
+        CalendarSeparator + // calendar name
+        """(?:[1-9][0-9]{0,3})(""" + // year
+        PrecisionSeparator +
+        """(?!00)[0-9]{1,2}(""" + // month
+        PrecisionSeparator +
+        """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
+        CalendarSeparator + // separator if a period is given
+        """(?:[1-9][0-9]{0,3})(""" + // year 2
+        PrecisionSeparator +
+        """(?!00)[0-9]{1,2}(""" + // month 2
+        PrecisionSeparator +
+        """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
 
     // The expected format of a datetime.
     private val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
@@ -719,10 +730,10 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
     // A regex for the URL path of an API v2 ontology (built-in or project-specific).
     private val ApiV2OntologyUrlPathRegex: Regex = (
-            "^" + "/ontology/((" +
-                    ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
-                    OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
-            ).r
+        "^" + "/ontology/((" +
+            ProjectIDPattern + ")/)?(" + NCNamePattern + ")(" +
+            OntologyConstants.KnoraApiV2Complex.VersionSegment + "|" + OntologyConstants.KnoraApiV2Simple.VersionSegment + ")$"
+        ).r
 
     // The start of the IRI of a project-specific API v2 ontology that is served by this API server.
     private val MaybeProjectSpecificApiV2OntologyStart: Option[String] = knoraApiHostAndPort match {
@@ -732,22 +743,22 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
-            "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
-                    "(shared/)?((" + ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
-                    OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
-            ).r
+        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
+            "(shared/)?((" + ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
+            OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
+        ).r
 
     // In XML import data, a property from another ontology is referred to as prefixLabel__localName. The prefix label
     // may start with a project ID (prefixed with 'p') and a hyphen. This regex parses that pattern.
     private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
-            "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
-            ).r
+        "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
+        ).r
 
     // In XML import data, a standoff link tag that refers to a resource described in the import must have the
     // form defined by this regex.
     private val StandoffLinkReferenceToClientIDForResourceRegex: Regex = (
-            "^ref:(" + NCNamePattern + ")$"
-            ).r
+        "^ref:(" + NCNamePattern + ")$"
+        ).r
 
     private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
 
@@ -774,14 +785,19 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     // A regex that matches a Knora resource IRI.
     private val ResourceIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")$").r
 
-    // A regex that matches a Knora values IRI.
+    // A regex that matches a Knora value IRI.
     private val ValueIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + ")$").r
 
+    // A regex that matches a Knora standoff IRI.
+    private val StandoffIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + """)/standoff/(\d+)$""").r
+
     // A regex that parses a Knora ARK timestamp.
-    private val ArkTimestampRegex: Regex = """^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(\d{1,9})?Z$""".r
+    private val ArkTimestampRegex: Regex =
+        """^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(\d{1,9})?Z$""".r
 
     // A regex that finds trailing zeroes.
-    private val TrailingZerosRegex: Regex = """0+$""".r
+    private val TrailingZerosRegex: Regex =
+        """0+$""".r
 
     /**
       * A regex that matches a valid username
@@ -882,6 +898,17 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
                                 valueID = Some(valueID)
                             )
 
+                        case StandoffIriRegex(projectCode: String, resourceID: String, valueID: String, standoffStartIndex: String) =>
+                            // It's a standoff IRI.
+                            SmartIriInfo(
+                                iriType = KnoraDataIri,
+                                ontologySchema = None,
+                                projectCode = Some(projectCode),
+                                resourceID = Some(resourceID),
+                                valueID = Some(valueID),
+                                standoffStartIndex = Some(standoffStartIndex.toInt)
+                            )
+
                         case _ =>
                             // It's some other kind of data IRI; nothing else to do.
                             SmartIriInfo(
@@ -890,7 +917,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
                             )
                     }
                 } else if (iri.startsWith(OntologyConstants.NamedGraphs.DataNamedGraphStart) ||
-                        iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph) {
+                    iri == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph) {
                     // Nothing else to do.
                     SmartIriInfo(
                         iriType = KnoraDataIri,
@@ -1058,6 +1085,8 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
         override def getValueID: Option[String] = iriInfo.valueID
 
+        override def getStandoffStartIndex: Option[Int] = iriInfo.standoffStartIndex
+
         lazy val ontologyFromEntity: SmartIri = if (isKnoraOntologyIri) {
             throw DataConversionException(s"$iri is not a Knora entity IRI")
         } else {
@@ -1188,7 +1217,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         private def getVersionSegment(targetSchema: ApiV2Schema): String = {
             targetSchema match {
                 case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.VersionSegment
-                case ApiV2Complex => OntologyConstants.KnoraApiV2WithValueObjects.VersionSegment
+                case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.VersionSegment
             }
         }
 
@@ -1401,6 +1430,17 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             } else {
                 (iriInfo.projectCode, iriInfo.resourceID, iriInfo.valueID) match {
                     case (Some(_), Some(_), Some(_)) => true
+                    case _ => false
+                }
+            }
+        }
+
+        override def isKnoraStandoffIri: Boolean = {
+            if (!isKnoraDataIri) {
+                false
+            } else {
+                (iriInfo.projectCode, iriInfo.resourceID, iriInfo.valueID, iriInfo.standoffStartIndex) match {
+                    case (Some(_), Some(_), Some(_), Some(_)) => true
                     case _ => false
                 }
             }
@@ -1943,13 +1983,14 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     def getResourceIrisFromStandoffTags(standoffTags: Seq[StandoffTagV2]): Set[IRI] = {
         standoffTags.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
+                if (standoffNode.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
+                    val maybeTargetIri: Option[IRI] = standoffNode.attributes.collectFirst {
+                        case iriTagAttr: StandoffTagIriAttributeV2 if iriTagAttr.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasLink => iriTagAttr.value
+                    }
 
-                standoffNode match {
-
-                    case node: StandoffTagV2 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
-                        acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
-
-                    case _ => acc
+                    acc + maybeTargetIri.getOrElse(throw NotFoundException(s"No link found in $standoffNode"))
+                } else {
+                    acc
                 }
         }
     }
