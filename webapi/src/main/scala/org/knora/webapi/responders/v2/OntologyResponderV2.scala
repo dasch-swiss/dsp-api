@@ -1906,6 +1906,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = unescapedClassDefWithLinkValueProps,
+                    allBaseClasses = allBaseClassIris,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -2269,6 +2270,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = newInternalClassDefWithLinkValueProps,
+                    allBaseClasses = allBaseClassIris,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -2433,6 +2435,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 readClassInfo = ReadClassInfoV2(
                     entityInfoContent = newInternalClassDefWithLinkValueProps,
+                    allBaseClasses = allBaseClassIris,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,

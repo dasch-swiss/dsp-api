@@ -30,10 +30,18 @@ import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{OntologyUtil, SmartIri, StringFormatter}
 import spray.json._
 
+import scala.collection.mutable
+
 /**
   * A factory that constructs [[InstanceChecker]] instances for different Knora response formats.
   */
 object InstanceChecker {
+    // A cache of class definitions.
+    private val classDefCache: mutable.Map[SmartIri, ClassInfoContentV2] = mutable.Map.empty
+
+    // A cache of property definitions.
+    private val propertyDefCache: mutable.Map[SmartIri, PropertyInfoContentV2] = mutable.Map.empty
+
     /**
       * Returns an [[InstanceChecker]] for Knora responses in JSON format.
       */
@@ -311,17 +319,24 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
       * @return the class definition.
       */
     private def getClassDef(classIri: SmartIri, knoraRouteGet: String => String): ClassInfoContentV2 = {
-        val urlPath = s"/v2/ontologies/classes/${URLEncoder.encode(classIri.toString, "UTF-8")}"
-        val classDefStr: String = knoraRouteGet(urlPath)
-        val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(classDefStr)
+        InstanceChecker.classDefCache.get(classIri) match {
+            case Some(classDef) => classDef
 
-        // If Knora returned an error, get the error message and throw an exception.
-        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.Error) match {
-            case Some(error) => throwAndLogAssertionException(error)
-            case None => ()
+            case None =>
+                val urlPath = s"/v2/ontologies/classes/${URLEncoder.encode(classIri.toString, "UTF-8")}"
+                val classDefStr: String = knoraRouteGet(urlPath)
+                val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(classDefStr)
+
+                // If Knora returned an error, get the error message and throw an exception.
+                jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2Complex.Error) match {
+                    case Some(error) => throwAndLogAssertionException(error)
+                    case None => ()
+                }
+
+                val classDef = InputOntologyV2.fromJsonLD(jsonLDDocument, parsingMode = KnoraOutputParsingModeV2).classes(classIri)
+                InstanceChecker.classDefCache.put(classIri, classDef)
+                classDef
         }
-
-        InputOntologyV2.fromJsonLD(jsonLDDocument, parsingMode = KnoraOutputParsingModeV2).classes(classIri)
     }
 
     /**
@@ -332,17 +347,24 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
       * @return the property definition.
       */
     private def getPropertyDef(propertyIri: SmartIri, knoraRouteGet: String => String): PropertyInfoContentV2 = {
-        val urlPath = s"/v2/ontologies/properties/${URLEncoder.encode(propertyIri.toString, "UTF-8")}"
-        val propertyDefStr: String = knoraRouteGet(urlPath)
-        val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(propertyDefStr)
+        InstanceChecker.propertyDefCache.get(propertyIri) match {
+            case Some(propertyDef) => propertyDef
 
-        // If Knora returned an error, get the error message and throw an exception.
-        jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.Error) match {
-            case Some(error) => throwAndLogAssertionException(error)
-            case None => ()
+            case None =>
+                val urlPath = s"/v2/ontologies/properties/${URLEncoder.encode(propertyIri.toString, "UTF-8")}"
+                val propertyDefStr: String = knoraRouteGet(urlPath)
+                val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(propertyDefStr)
+
+                // If Knora returned an error, get the error message and throw an exception.
+                jsonLDDocument.body.maybeString(OntologyConstants.KnoraApiV2Complex.Error) match {
+                    case Some(error) => throwAndLogAssertionException(error)
+                    case None => ()
+                }
+
+                val propertyDef = InputOntologyV2.fromJsonLD(jsonLDDocument, parsingMode = KnoraOutputParsingModeV2).properties(propertyIri)
+                InstanceChecker.propertyDefCache.put(propertyIri, propertyDef)
+                propertyDef
         }
-
-        InputOntologyV2.fromJsonLD(jsonLDDocument, parsingMode = KnoraOutputParsingModeV2).properties(propertyIri)
     }
 
     /**
@@ -352,7 +374,7 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
       * @return the property's `knora-api:objectType`, if it has one.
       */
     private def getObjectType(propertyDef: PropertyInfoContentV2): Option[SmartIri] = {
-        propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri).
+        propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri).
             orElse(propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri))
     }
 }
@@ -413,7 +435,8 @@ object JsonInstanceInspector {
                 OntologyConstants.KnoraApiV2Simple.Geom,
                 OntologyConstants.KnoraApiV2Simple.Color,
                 OntologyConstants.KnoraApiV2Simple.Interval,
-                OntologyConstants.KnoraApiV2Simple.Geoname),
+                OntologyConstants.KnoraApiV2Simple.Geoname,
+                OntologyConstants.KnoraApiV2Simple.ListNode),
 
         IRI -> Set(OntologyConstants.Xsd.Uri, OntologyConstants.KnoraApiV2Simple.File),
         INTEGER -> Set(OntologyConstants.Xsd.Integer, OntologyConstants.Xsd.NonNegativeInteger),

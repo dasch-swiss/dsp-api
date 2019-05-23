@@ -60,7 +60,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
             // Compare the original XML with the regenerated XML.
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTag)).withTest(Input.fromString(backToXml)).build()
-            println(xmlDiff.getDifferences)
+            // println(xmlDiff.getDifferences)
             xmlDiff.hasDifferences should be(false)
         }
 
@@ -75,7 +75,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
             // Compare the original XML with the regenerated XML.
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTags)).withTest(Input.fromString(backToXml)).build()
-            println(xmlDiff.getDifferences)
+            // println(xmlDiff.getDifferences)
             xmlDiff.hasDifferences should be(false)
         }
 

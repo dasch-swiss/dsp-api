@@ -69,7 +69,7 @@ object GravsearchQueryChecker {
                                     if (inConstructClause && querySchema == ApiV2Complex) {
                                         val typeIriStr = nonPropertyTypeInfo.typeIri.toString
 
-                                        if (!(typeIriStr == OntologyConstants.KnoraApiV2WithValueObjects.Resource || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(typeIriStr))) {
+                                        if (!(typeIriStr == OntologyConstants.KnoraApiV2Complex.Resource || OntologyConstants.KnoraApiV2Complex.ValueClasses.contains(typeIriStr))) {
                                             throw GravsearchException(s"${queryVar.toSparql} is not allowed in a CONSTRUCT clause")
                                         }
                                     }
@@ -85,7 +85,7 @@ object GravsearchQueryChecker {
                             statementPattern.pred match {
                                 case iriRef: IriRef =>
                                     val iriStr = iriRef.iri.toString
-                                    iriStr == OntologyConstants.KnoraApiV2Simple.IsMainResource || iriStr == OntologyConstants.KnoraApiV2WithValueObjects.IsMainResource
+                                    iriStr == OntologyConstants.KnoraApiV2Simple.IsMainResource || iriStr == OntologyConstants.KnoraApiV2Complex.IsMainResource
 
                                 case _ => false
                             }
@@ -136,35 +136,34 @@ object GravsearchQueryChecker {
     // A set of predicates that aren't allowed in Gravsearch.
     val forbiddenPredicates: Set[IRI] = Set(
         OntologyConstants.Rdfs.Label,
-        OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser,
-        OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions,
-        OntologyConstants.KnoraApiV2WithValueObjects.CreationDate,
-        OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
-        OntologyConstants.KnoraApiV2WithValueObjects.Result,
-        OntologyConstants.KnoraApiV2WithValueObjects.IsEditable,
-        OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty,
-        OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty,
-        OntologyConstants.KnoraApiV2WithValueObjects.IsInherited,
-        OntologyConstants.KnoraApiV2WithValueObjects.OntologyName,
-        OntologyConstants.KnoraApiV2WithValueObjects.MappingHasName,
-        OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLinkValue,
-        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear,
-        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear,
-        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth,
-        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth,
-        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay,
-        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay,
-        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra,
-        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra,
-        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar,
-        OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml,
-        OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml,
-        OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry,
-        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget,
-        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri,
-        OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNodeLabel,
-        OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl,
-        OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename,
-        OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl
+        OntologyConstants.KnoraApiV2Complex.AttachedToUser,
+        OntologyConstants.KnoraApiV2Complex.HasPermissions,
+        OntologyConstants.KnoraApiV2Complex.CreationDate,
+        OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+        OntologyConstants.KnoraApiV2Complex.Result,
+        OntologyConstants.KnoraApiV2Complex.IsEditable,
+        OntologyConstants.KnoraApiV2Complex.IsLinkProperty,
+        OntologyConstants.KnoraApiV2Complex.IsLinkValueProperty,
+        OntologyConstants.KnoraApiV2Complex.IsInherited,
+        OntologyConstants.KnoraApiV2Complex.OntologyName,
+        OntologyConstants.KnoraApiV2Complex.MappingHasName,
+        OntologyConstants.KnoraApiV2Complex.HasIncomingLinkValue,
+        OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear,
+        OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear,
+        OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth,
+        OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth,
+        OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay,
+        OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay,
+        OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra,
+        OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra,
+        OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar,
+        OntologyConstants.KnoraApiV2Complex.TextValueAsHtml,
+        OntologyConstants.KnoraApiV2Complex.TextValueAsXml,
+        OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry,
+        OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget,
+        OntologyConstants.KnoraApiV2Complex.LinkValueHasTargetIri,
+        OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
+        OntologyConstants.KnoraApiV2Complex.FileValueHasFilename,
+        OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl
     )
 }

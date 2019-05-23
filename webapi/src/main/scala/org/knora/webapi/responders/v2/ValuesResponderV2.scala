@@ -98,7 +98,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 }
 
                 // Don't accept knora-api:hasStandoffLinkToValue.
-                _ = if (createValueRequest.createValue.propertyIri.toString == OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue) {
+                _ = if (createValueRequest.createValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
                     throw BadRequestException(s"Values of <${createValueRequest.createValue.propertyIri}> cannot be created directly")
                 }
 
@@ -678,7 +678,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 }
 
                 // Don't accept knora-api:hasStandoffLinkToValue.
-                _ = if (updateValueRequest.updateValue.propertyIri.toString == OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue) {
+                _ = if (updateValueRequest.updateValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
                     throw BadRequestException(s"Values of <${updateValueRequest.updateValue.propertyIri}> cannot be updated directly")
                 }
 
@@ -1120,7 +1120,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 }
 
                 // Don't accept knora-api:hasStandoffLinkToValue.
-                _ = if (deleteValueRequest.propertyIri.toString == OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue) {
+                _ = if (deleteValueRequest.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
                     throw BadRequestException(s"Values of <${deleteValueRequest.propertyIri}> cannot be deleted directly")
                 }
 
@@ -1418,7 +1418,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         if (propertyInfoForSubmittedProperty.isLinkValueProp) {
             maybeSubmittedValueType match {
                 case Some(submittedValueType) =>
-                    if (submittedValueType.toString != OntologyConstants.KnoraApiV2WithValueObjects.LinkValue) {
+                    if (submittedValueType.toString != OntologyConstants.KnoraApiV2Complex.LinkValue) {
                         FastFuture.failed(BadRequestException(s"A value of type <$submittedValueType> cannot be an object of property <$submittedPropertyIri>"))
                     }
 
@@ -1447,17 +1447,18 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       * Given a set of resource IRIs, checks that they point to Knora resources.
       * If not, throws an exception.
       *
-      * @param targeResourceIris the IRIs to be checked.
+      * @param targetResourceIris the IRIs to be checked.
       * @param requestingUser    the user making the request.
       */
-    private def checkResourceIris(targeResourceIris: Set[IRI], requestingUser: UserADM): Future[Unit] = {
-        if (targeResourceIris.isEmpty) {
+    private def checkResourceIris(targetResourceIris: Set[IRI], requestingUser: UserADM): Future[Unit] = {
+        if (targetResourceIris.isEmpty) {
             FastFuture.successful(())
         } else {
             for {
                 resourcePreviewRequest <- FastFuture.successful(
                     ResourcesPreviewGetRequestV2(
-                        resourceIris = targeResourceIris.toSeq,
+                        resourceIris = targetResourceIris.toSeq,
+                        targetSchema = ApiV2Complex,
                         requestingUser = requestingUser
                     )
                 )
@@ -1482,8 +1483,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       * @return a [[ReadResourceV2]] containing only the resource's metadata and its values for the specified property.
       */
     private def getResourceWithPropertyValues(resourceIri: IRI, propertyInfo: ReadPropertyInfoV2, requestingUser: UserADM): Future[ReadResourceV2] = {
-        // TODO: when text values in Gravsearch query results are shortened, make a way for this query to get the complete value.
-
         for {
             // Get the property's object class constraint.
             objectClassConstraint: SmartIri <- Future(propertyInfo.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint")))
@@ -1507,7 +1506,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             // Run the query.
 
             parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
-            searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, requestingUser)).mapTo[ReadResourcesSequenceV2]
+            searchResponse <- (responderManager ? GravsearchRequestV2(
+                constructQuery = parsedGravsearchQuery,
+                targetSchema = ApiV2Complex,
+                schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
         } yield searchResponse.toResource(resourceIri)
     }
 
@@ -1530,6 +1533,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     resourceIris = Seq(resourceIri),
                     propertyIri = Some(propertyIri),
                     versionDate = Some(unverifiedValue.creationDate),
+                    targetSchema = ApiV2Complex,
+                    schemaOptions = SchemaOptions.ForStandoffWithTextValues,
                     requestingUser = requestingUser
                 )
             }
@@ -1582,6 +1587,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             resourcePreviewRequest <- FastFuture.successful(
                 ResourcesPreviewGetRequestV2(
                     resourceIris = Seq(linkValueContent.referredResourceIri),
+                    targetSchema = ApiV2Complex,
                     requestingUser = requestingUser
                 )
             )
