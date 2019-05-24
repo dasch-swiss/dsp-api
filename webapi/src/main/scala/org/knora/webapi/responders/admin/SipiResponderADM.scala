@@ -69,6 +69,8 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
                 filename = request.filename
             ).toString())
 
+            // _ = println(sparqlQuery)
+
             queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
 
             rows: Seq[VariableResultsRow] = queryResponse.results.bindings
@@ -101,13 +103,12 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
 
             response <- permissionCode match {
 
-                case 1 => {
+                case 1 =>
                     for {
                         maybeRVSettings <- (responderManager ? ProjectRestrictedViewSettingsGetADM(ProjectIdentifierADM(shortcode = Some(request.projectID)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectRestrictedViewSettingsADM]]
 
                     } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)
-                }
-                case other => FastFuture.successful(SipiFileInfoGetResponseADM(permissionCode = permissionCode, restrictedViewSettings = None))
+                case _ => FastFuture.successful(SipiFileInfoGetResponseADM(permissionCode = permissionCode, restrictedViewSettings = None))
             }
 
         } yield response

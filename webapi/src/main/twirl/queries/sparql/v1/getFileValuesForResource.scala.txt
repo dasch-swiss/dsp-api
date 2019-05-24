@@ -49,8 +49,4 @@ WHERE {
 
     ?resIri ?p ?fileValueIri .
     ?p rdfs:subPropertyOf* knora-base:hasFileValue .
-
-    OPTIONAL {
-        ?fileValueIri knora-base:qualityLevel ?quality .
-    }
 }
