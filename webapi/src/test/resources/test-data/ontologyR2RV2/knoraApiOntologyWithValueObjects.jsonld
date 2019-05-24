@@ -2370,12 +2370,6 @@
       }
     }, {
       "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:movingImageFileValueHasQualityLevel"
-      }
-    }, {
-      "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
@@ -5846,20 +5840,6 @@
     },
     "rdfs:comment" : "The number of frames per second in a moving image file value.",
     "rdfs:label" : "Moving image file value has frames per second",
-    "rdfs:subPropertyOf" : {
-      "@id" : "knora-api:valueHas"
-    }
-  }, {
-    "@id" : "knora-api:movingImageFileValueHasQualityLevel",
-    "@type" : "owl:DatatypeProperty",
-    "knora-api:objectType" : {
-      "@id" : "xsd:integer"
-    },
-    "knora-api:subjectType" : {
-      "@id" : "knora-api:MovingImageFileValue"
-    },
-    "rdfs:comment" : "The quality level of a moving image file value.",
-    "rdfs:label" : "Moving image file value has quality level",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:valueHas"
     }

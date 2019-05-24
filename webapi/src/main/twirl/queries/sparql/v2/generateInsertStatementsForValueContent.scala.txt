@@ -158,10 +158,7 @@
                                      knora-base:internalFilename """@stillImageFileValue.fileValue.internalFilename""" ;
                                      knora-base:internalMimeType """@stillImageFileValue.fileValue.internalMimeType""" ;
                                      knora-base:dimX @stillImageFileValue.dimX ;
-                                     knora-base:dimY @stillImageFileValue.dimY ;
-                                     knora-base:isPreview false ; @* Remove for issue #1068 *@
-                                     knora-base:qualityLevel 100 ; @* Remove for issue #1068 *@
-                                     knora-base:valueHasQname "full" . @* Remove for issue #1068 *@
+                                     knora-base:dimY @stillImageFileValue.dimY .
             }
 
             case textFileValue: TextFileValueContentV2 => {
