@@ -1871,9 +1871,6 @@ knora-api:MovingImageFileValue a owl:Class;
       owl:cardinality 1;
       owl:onProperty knora-api:movingImageFileValueHasFps
     ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:movingImageFileValueHasQualityLevel
-    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:userHasPermission
@@ -1917,13 +1914,6 @@ knora-api:movingImageFileValueHasFps a owl:DatatypeProperty;
   knora-api:subjectType knora-api:MovingImageFileValue;
   rdfs:comment "The number of frames per second in a moving image file value.";
   rdfs:label "Moving image file value has frames per second";
-  rdfs:subPropertyOf knora-api:valueHas .
-
-knora-api:movingImageFileValueHasQualityLevel a owl:DatatypeProperty;
-  knora-api:objectType xsd:integer;
-  knora-api:subjectType knora-api:MovingImageFileValue;
-  rdfs:comment "The quality level of a moving image file value.";
-  rdfs:label "Moving image file value has quality level";
   rdfs:subPropertyOf knora-api:valueHas .
 
 knora-api:MovingImageRepresentation a owl:Class;

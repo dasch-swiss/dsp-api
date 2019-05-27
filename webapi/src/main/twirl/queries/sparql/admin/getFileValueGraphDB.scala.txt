@@ -43,6 +43,9 @@ WHERE {
     ?fileValue knora-base:internalFilename "@filename" ;
         knora-base:isDeleted false .
 
+    ?resource knora-base:hasFileValue ?fileValue ;
+        knora-base:isDeleted false .
+
     {
         GRAPH <http://www.ontotext.com/explicit> {
             ?fileValue ?objPred ?objObj .
@@ -54,9 +57,7 @@ WHERE {
     {
         @* Return the project of the resource that contains the value. *@
 
-        ?resource knora-base:hasFileValue ?fileValue ;
-            knora-base:isDeleted false ;
-            knora-base:attachedToProject ?resourceProject .
+        ?resource knora-base:attachedToProject ?resourceProject .
 
         BIND(knora-base:attachedToProject AS ?objPred)
         BIND(?resourceProject AS ?objObj)
