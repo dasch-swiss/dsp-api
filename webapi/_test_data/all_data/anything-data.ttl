@@ -1415,6 +1415,7 @@
   knora-base:originalFilename "A_100-1-A4_1_406.JPG" ;
   knora-base:originalMimeType "image/jpeg" ;
   knora-base:valueCreationDate "2019-04-26T16:44:17.485Z"^^xsd:dateTime ;
+  knora-base:valueHasUUID "pWIujTIqdqKqrswwqfA" ;
   knora-base:valueHasOrder "0"^^xsd:integer ;
   knora-base:valueHasString "A_100-1-A4_1_406.JPG" ;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
