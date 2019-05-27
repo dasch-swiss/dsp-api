@@ -203,9 +203,7 @@ object GraphDBConsistencyCheckingSpec {
           |                                     knora-base:internalFilename "full.jp2" ;
           |                                     knora-base:internalMimeType "image/jp2" ;
           |                                     knora-base:dimX 800 ;
-          |                                     knora-base:dimY 800 ;
-          |                                     knora-base:qualityLevel 100 ;
-          |                                     knora-base:valueHasQname "full" .
+          |                                     knora-base:dimY 800 .
           |
           |
           |
@@ -240,9 +238,7 @@ object GraphDBConsistencyCheckingSpec {
           |                                     knora-base:internalFilename "thumb.jpg" ;
           |                                     knora-base:internalMimeType "image/jpeg" ;
           |                                     knora-base:dimX 80 ;
-          |                                     knora-base:dimY 80 ;
-          |                                     knora-base:qualityLevel 10 ;
-          |                                     knora-base:valueHasQname "thumbnail" .
+          |                                     knora-base:dimY 80 .
           |
           |
           |                    ?newValue0_3 knora-base:isPreview true .

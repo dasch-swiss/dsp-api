@@ -1402,28 +1402,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         )
     )
 
-    private val MovingImageFileValueHasQualityLevel: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasQualityLevel,
-        propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2Complex.MovingImageFileValue),
-        objectType = Some(OntologyConstants.Xsd.Integer),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Moving image file value has quality level"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "The quality level of a moving image file value."
-                )
-            )
-        )
-    )
-
     private val MovingImageFileValueHasDuration: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDuration,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1569,7 +1547,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimX -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimY -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasFps -> Cardinality.MustHaveOne,
-        OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasQualityLevel -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDuration -> Cardinality.MustHaveOne
     )
 
@@ -1762,7 +1739,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         MovingImageFileValueHasDimX,
         MovingImageFileValueHasDimY,
         MovingImageFileValueHasFps,
-        MovingImageFileValueHasQualityLevel,
         MovingImageFileValueHasDuration,
         AudioFileValueHasDuration
     ).map {
