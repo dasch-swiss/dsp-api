@@ -147,22 +147,6 @@ case class CreateFileV1(originalFilename: String,
 case class ReadFileV1(file: File, mimeType: String)
 
 /**
-  * Represents a quality level of a file value to added to a Knora resource.
-  *
-  * @param path     the path to the file.
-  * @param mimeType the mime type of the file.
-  * @param dimX     the x dimension of the file, if given (e.g. an image).
-  * @param dimY     the y dimension of the file, if given (e.g. an image).
-  */
-case class CreateFileQualityLevelV1(path: String,
-                                    mimeType: String,
-                                    dimX: Option[Int] = None,
-                                    dimY: Option[Int] = None) {
-
-    def toJsValue: JsValue = ApiValueV1JsonProtocol.createFileQualityLevelFormat.write(this)
-}
-
-/**
   * Represents an API request payload that asks the Knora API server to change a value of a resource property (i.e. to
   * update its version history).
   *
@@ -1615,7 +1599,6 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         def write(valueV1: ApiValueV1): JsValue = valueV1.toJsValue
     }
 
-    implicit val createFileQualityLevelFormat: RootJsonFormat[CreateFileQualityLevelV1] = jsonFormat4(CreateFileQualityLevelV1)
     implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat7(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat5(DateValueV1)
