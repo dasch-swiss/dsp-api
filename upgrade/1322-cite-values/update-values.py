@@ -25,13 +25,15 @@
 
 import os
 import time
+import uuid
+import base64
 from datetime import timedelta
 import tempfile
 import argparse
 import getpass
 import requests
 import rdflib
-from rdflib.namespace import RDF, XSD
+from rdflib.namespace import XSD
 from collections import defaultdict
 
 
@@ -117,8 +119,8 @@ class NamedGraph:
         value_iris = collect_value_iris(grouped_statements)
 
         for value_iri in value_iris:
-            uuid = "" # TODO: make Base64-encoded UUID
-            graph.add((value_iri, value_has_uuid, rdflib.Literal(str(uuid), datatype=XSD.string)))
+            random_uuid_str = make_random_uuid_str()
+            graph.add((value_iri, value_has_uuid, rdflib.Literal(str(random_uuid_str), datatype=XSD.string)))
 
         output_file_path = upload_dir + "/" + self.filename
 
@@ -166,6 +168,12 @@ def collect_value_iris(grouped_statements):
             value_iris.add(subj)
 
     return value_iris
+
+
+# Returns a random, Base64-encoded, URL-safe UUID.
+def make_random_uuid_str():
+    random_uuid = uuid.uuid4()
+    return base64.urlsafe_b64encode(random_uuid.bytes).decode("ascii").strip("=")
 
 
 # Represents a repository.
