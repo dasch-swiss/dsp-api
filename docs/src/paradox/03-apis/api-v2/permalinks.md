@@ -28,7 +28,8 @@ from one Knora repository to another.
 
 ## Obtaining ARK URLs
 
-A resource or value is always returned with two ARK URLs: one that will always refer
+In the @ref:[complex schema](introduction.md#api-schema), a resource or value
+is always returned with two ARK URLs: one that will always refer
 to the latest version of the resource or value (`knora-api:arkUrl`), and one that refers
 specifically to the version being returned (`knora-api:versionArkUrl`).
 For example:
@@ -90,6 +91,10 @@ For example:
   }
 }
 ```
+
+In the @ref:[simple schema](introduction.md#api-schema), resources are returned
+with ARK URLs, but values are returned as literals, so ARK URLs are not provided
+for values.
 
 For more information on getting past versions of resources and values, see:
 
