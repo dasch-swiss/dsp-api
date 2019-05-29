@@ -216,7 +216,7 @@ and add the URL parameter `?version=TIMESTAMP`, where `TIMESTAMP` is an
 [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp) in the
 UTC timezone. The timestamp can either be URL-encoded, or submitted with all
 punctuation (`-`, `:`, and `.`) removed (this is to accept timestamps
-from Knora's @ref:[ARK URLs](resource-permalinks.md)).
+from Knora's @ref:[ARK URLs](permalinks.md)).
 
 The resource will be returned with the values that it had at the specified
 time. Since Knora only versions values, not resource metadata (e.g.
@@ -224,8 +224,40 @@ time. Since Knora only versions values, not resource metadata (e.g.
 
 The returned resource will include the predicate `knora-api:versionDate`,
 containing the timestamp that was submitted, and its `knora-api:versionArkUrl`
-(see @ref:[Resource Permalinks](resource-permalinks.md)) will contain the
+(see @ref:[Resource Permalinks](permalinks.md)) will contain the
 same timestamp.
+
+### Get a Value in a Resource
+
+To get a specific value of a resource, use this route:
+
+```
+HTTP GET to http://host//v2/values/resourceIRI/valueUUID
+```
+
+The resource IRI must be URL-encoded. The path element `valueUUID` is the
+string object of the value's `knora-api:valueHasUUID`.
+
+The value will be returned within its containing resource, in the same format
+as for @ref:[Responses Describing Resources](#responses-describing-resources),
+but without any of the resource's other values.
+
+### Get a Version of a Value in a Resource
+
+To get a particular version of a specific value of a resource, use the route
+described in @ref:[Get a Value in a Resource](#get-a-value-in-a-resource),
+and add the URL parameter `?version=TIMESTAMP`, where `TIMESTAMP` is an
+[xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp) in the
+UTC timezone. The timestamp can either be URL-encoded, or submitted with all
+punctuation (`-`, `:`, and `.`) removed (this is to accept timestamps
+from Knora's @ref:[ARK URLs](permalinks.md)).
+
+The value will be returned within its containing resource, in the same format
+as for @ref:[Responses Describing Resources](#responses-describing-resources),
+but without any of the resource's other values.
+
+Since Knora only versions values, not resource metadata (e.g.
+`rdfs:label`), the current resource metadata will be returned.
 
 ### Get the Version History of a Resource
 

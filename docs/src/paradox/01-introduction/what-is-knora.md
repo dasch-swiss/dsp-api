@@ -114,7 +114,7 @@ versions of each item of data. Ordinary searches return only the latest version,
 but you can
 @ref:[obtain](../03-apis/api-v2/reading-and-searching-resources.md#get-a-full-representation-of-a-version-of-a-resource-by-iri)
 and
-@ref:[cite](../03-apis/api-v2/resource-permalinks.md)
+@ref:[cite](../03-apis/api-v2/permalinks.md)
 an item as it was at any point in the past.
 
 ## Data Consistency
