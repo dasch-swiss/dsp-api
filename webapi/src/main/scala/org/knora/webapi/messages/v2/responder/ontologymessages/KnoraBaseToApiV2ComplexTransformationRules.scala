@@ -1497,7 +1497,8 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         OntologyConstants.KnoraApiV2Complex.UserHasPermission -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.ArkUrl -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.VersionArkUrl -> Cardinality.MustHaveOne,
-        OntologyConstants.KnoraApiV2Complex.IsDeleted -> Cardinality.MayHaveOne
+        OntologyConstants.KnoraApiV2Complex.IsDeleted -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> Cardinality.MustHaveOne
     )
 
     private val TextValueCardinalities = Map(
