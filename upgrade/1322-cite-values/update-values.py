@@ -66,6 +66,9 @@ value_has_uuid = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#va
 # The IRI of knora-base:valueCreationDate.
 value_creation_date = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#valueCreationDate")
 
+# The IRI of knora-base:previousValue.
+previous_value = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#previousValue")
+
 
 # Represents information about a GraphDB repository.
 class GraphDBInfo:
@@ -115,8 +118,8 @@ class NamedGraph:
         # Group the statements in the named graph by subject and by predicate.
         grouped_statements = group_statements(graph)
 
-        # Collect all text values included in the grouped statements.
-        value_iris = collect_value_iris(grouped_statements)
+        # Collect the IRIs of values to be transformed.
+        value_iris = collect_value_iris(graph, grouped_statements)
 
         for value_iri in value_iris:
             random_uuid_str = make_random_uuid_str()
@@ -159,13 +162,26 @@ def group_statements(input_graph):
     return grouped_statements
 
 
-# Collects all value IRIs found in grouped statements.
-def collect_value_iris(grouped_statements):
+# Returns true if the specified generator is empty.
+def generator_is_empty(gen):
+    try:
+        next(gen)
+    except StopIteration:
+        return True
+
+    return False
+
+
+# Given a graph, collects the IRIs of all values that are current value versions.
+def collect_value_iris(graph, grouped_statements):
     value_iris = set()
 
     for subj, pred_objs in grouped_statements.items():
         if value_creation_date in pred_objs:
-            value_iris.add(subj)
+            # This is a value. Is it a current value version?
+            if generator_is_empty(graph.subjects(previous_value, subj)):
+                # Yes. Include its IRI.
+                value_iris.add(subj)
 
     return value_iris
 

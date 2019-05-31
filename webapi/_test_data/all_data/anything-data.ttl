@@ -1138,7 +1138,6 @@
   anything:hasOtherThingValue <http://rdfh.ch/0001/thing-with-history/values/3b> .
 
 <http://rdfh.ch/0001/thing-with-history/values/1a> a knora-base:IntValue;
-  knora-base:valueHasUUID "pLlW4ODASumZfZFbJdpw1g"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2019-02-11T09:05:10Z"^^xsd:dateTime;
   knora-base:valueHasInteger 1;
@@ -1148,7 +1147,6 @@
   knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/thing-with-history/values/1b> a knora-base:IntValue;
-  knora-base:valueHasUUID "pLlW4ODASumZfZFbJdpw1g"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2019-02-12T09:05:10Z"^^xsd:dateTime;
   knora-base:valueHasInteger 2;
@@ -1170,7 +1168,6 @@
   knora-base:previousValue <http://rdfh.ch/0001/thing-with-history/values/1b> .
 
 <http://rdfh.ch/0001/thing-with-history/values/2a> a knora-base:TextValue;
-  knora-base:valueHasUUID "W5fm67e0QDWxRZumcXcs6g"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2019-02-10T10:05:10Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
@@ -1179,7 +1176,6 @@
   knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/thing-with-history/values/2b> a knora-base:TextValue;
-  knora-base:valueHasUUID "W5fm67e0QDWxRZumcXcs6g"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2019-02-11T10:05:10Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
@@ -1199,7 +1195,6 @@
   knora-base:previousValue <http://rdfh.ch/0001/thing-with-history/values/2b> .
 
 <http://rdfh.ch/0001/thing-with-history/values/3a> a knora-base:LinkValue;
-  knora-base:valueHasUUID "IZGOjVqxTfSNO4ieKyp0SA"^^xsd:string;
   rdf:subject <http://rdfh.ch/0001/thing-with-history>;
   rdf:predicate anything:hasOtherThing;
   rdf:object <http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ>;

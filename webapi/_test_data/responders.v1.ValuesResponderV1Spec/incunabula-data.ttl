@@ -37,7 +37,6 @@
   knora-base:valueHasString "ISTC im00266000" .
 
 <http://rdfh.ch/0803/21abac2162/values/11111111> a knora-base:TextValue;
-  knora-base:valueHasUUID "f76660458201"^^xsd:string;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-base:isDeleted false;

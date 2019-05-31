@@ -2684,7 +2684,7 @@
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :valueHasUUID ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ;
 
 

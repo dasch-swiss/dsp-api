@@ -77,6 +77,9 @@ DELETE {
         @* Delete the resource's last modification date so we can update it. *@
         ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 
+        @* Delete the UUID from the current version of the value, because the new version will store it. *@
+        ?currentValue knora-base:valueHasUUID ?currentValueUUID .
+
         @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
             @* Delete direct links for resource references that no longer exist. *@
             @if(linkUpdate.deleteDirectLink) {
@@ -86,6 +89,9 @@ DELETE {
             @* If any LinkValues need to be updated, detach them from the resource. *@
             @if(linkUpdate.linkValueExists) {
                 ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+
+                @* Delete the UUID from the current version of the link value, because the new version will store it. *@
+                ?linkValue@linkValueIndex knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
             }
         }
     }

@@ -76,7 +76,8 @@ CONSTRUCT {
     ?resource knora-base:hasValue ?valueObject ;
         ?resourceValueProperty ?valueObject .
 
-    ?valueObject ?valueObjectProperty ?valueObjectValue .
+    ?valueObject ?valueObjectProperty ?valueObjectValue ;
+        knora-base:valueHasUUID ?currentValueUUID .
 
     @if(maybeStandoffMinStartIndex.nonEmpty) {
         ?valueObject knora-base:valueHasStandoff ?standoffNode .
@@ -158,6 +159,18 @@ CONSTRUCT {
                         FILTER(?currentValueDeleteDate <= "@versionDate"^^xsd:dateTime)
                     }
 
+                    @* Get the current version's UUID, because we're going to return it with the requested version. *@
+                    ?currentValue knora-base:valueHasUUID ?currentValueUUID .
+
+                    @* Filter by value UUID if requested. *@
+                    @maybeValueUuid match {
+                        case Some(valueUuid) => {
+                            FILTER(?currentValueUUID = "@{stringFormatter.base64EncodeUuid(valueUuid)}")
+                        }
+
+                        case None => {}
+                    }
+
                     @* In each value's history, find a version that was created on or before the target date. *@
                     ?currentValue knora-base:previousValue* ?valueObject .
                     ?valueObject knora-base:valueCreationDate ?valueObjectCreationDate .
@@ -206,6 +219,15 @@ CONSTRUCT {
                     GRAPH <http://www.ontotext.com/explicit> {
                         ?resource ?resourceValueProperty ?valueObject .
                     }
+
+                    @* Filter by value UUID if requested. *@
+                    @maybeValueUuid match {
+                        case Some(valueUuid) => {
+                            ?valueObject knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(valueUuid)}" .
+                        }
+
+                        case None => {}
+                    }
                 }
             }
 
@@ -213,15 +235,6 @@ CONSTRUCT {
             @maybeValueIri match {
                 case Some(valueIri) => {
                     FILTER(?valueObject = <@valueIri>)
-                }
-
-                case None => {}
-            }
-
-            @* Filter by value UUID if requested. *@
-            @maybeValueUuid match {
-                case Some(valueUuid) => {
-                    ?valueObject knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(valueUuid)}" .
                 }
 
                 case None => {}
