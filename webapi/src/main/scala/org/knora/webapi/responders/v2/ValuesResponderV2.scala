@@ -37,7 +37,7 @@ import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.PermissionUtilADM.{ChangeRightsPermission, DeletePermission, EntityPermission, ModifyPermission}
+import org.knora.webapi.util.PermissionUtilADM._
 import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM, SmartIri}
 
 import scala.concurrent.Future
@@ -198,21 +198,38 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     case _ => FastFuture.successful(())
                 }
 
+                // Get the default permissions for the new value.
+                defaultValuePermissions: String <- ResourceUtilV2.getDefaultValuePermissions(
+                    projectIri = resourceInfo.projectADM.id,
+                    resourceClassIri = resourceInfo.resourceClassIri,
+                    propertyIri = submittedInternalPropertyIri,
+                    requestingUser = createValueRequest.requestingUser,
+                    responderManager = responderManager
+                )
+
                 // Did the user submit permissions for the new value?
                 newValuePermissionLiteral <- createValueRequest.createValue.permissions match {
-                    case Some(permissions) =>
+                    case Some(permissions: String) =>
                         // Yes. Validate them.
-                        PermissionUtilADM.validatePermissions(permissionLiteral = permissions, responderManager = responderManager)
+                        for {
+                            validatedCustomPermissions <- PermissionUtilADM.validatePermissions(permissionLiteral = permissions, responderManager = responderManager)
+
+                            permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
+                                entityCreator = createValueRequest.requestingUser.id,
+                                entityProject = resourceInfo.projectADM.id,
+                                permissionLiteralA = validatedCustomPermissions,
+                                permissionLiteralB = defaultValuePermissions,
+                                requestingUser = createValueRequest.requestingUser
+                            )
+
+                            _ = if (permissionComparisonResult == AGreaterThanB) {
+                                throw ForbiddenException(s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions")
+                            }
+                        } yield validatedCustomPermissions
 
                     case None =>
-                        // No. Get default permissions for the new value.
-                        ResourceUtilV2.getDefaultValuePermissions(
-                            projectIri = resourceInfo.projectADM.id,
-                            resourceClassIri = resourceInfo.resourceClassIri,
-                            propertyIri = submittedInternalPropertyIri,
-                            requestingUser = createValueRequest.requestingUser,
-                            responderManager = responderManager
-                        )
+                        // No. Use the default permissions.
+                        FastFuture.successful(defaultValuePermissions)
                 }
 
                 dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
@@ -734,7 +751,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // on the value, they need ChangeRightsPermission, otherwise they need ModifyPermission.
 
                 currentPermissionsParsed: Map[EntityPermission, Set[IRI]] = PermissionUtilADM.parsePermissions(currentValue.permissions)
-                newPermissionsParsed: Map[EntityPermission, Set[IRI]] = PermissionUtilADM.parsePermissions(newValueVersionPermissionLiteral, { permissionLiteral: String => throw BadRequestException(s"Invalid permission literal: $permissionLiteral") })
+                newPermissionsParsed: Map[EntityPermission, Set[IRI]] = PermissionUtilADM.parsePermissions(newValueVersionPermissionLiteral, { permissionLiteral: String => throw AssertionException(s"Invalid permission literal: $permissionLiteral") })
 
                 permissionNeeded = if (newPermissionsParsed != currentPermissionsParsed) {
                     ChangeRightsPermission

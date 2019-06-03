@@ -234,7 +234,6 @@ object PermissionUtilADM {
     /**
       * Determines the permissions that a user has on a entity, and returns an [[EntityPermission]].
       *
-      * @param entityIri               the IRI of the entity.
       * @param entityCreator           the IRI of the user that created the entity.
       * @param entityProject           the IRI of the entity's project.
       * @param entityPermissionLiteral the literal that is the object of the entity's `knora-base:hasPermissions` predicate.
@@ -242,8 +241,7 @@ object PermissionUtilADM {
       * @return an [[EntityPermission]] representing the user's permission level for the entity, or `None` if the user
       *         has no permissions on the entity.
       */
-    def getUserPermissionADM(entityIri: IRI,
-                             entityCreator: IRI,
+    def getUserPermissionADM(entityCreator: IRI,
                              entityProject: IRI,
                              entityPermissionLiteral: String,
                              requestingUser: UserADM): Option[EntityPermission] = {
@@ -279,7 +277,7 @@ object PermissionUtilADM {
 
             // Find the highest permission that can be granted to the user.
             calculateHighestGrantedPermissionLevel(entityPermissions, userGroups) match {
-                case Some(highestPermissionlevel) => Some(highestPermissionlevel)
+                case Some(highestPermissionLevel) => Some(highestPermissionLevel)
 
                 case None =>
                     // If the result is that they would get no permissions, give them user whatever permission an
@@ -289,6 +287,76 @@ object PermissionUtilADM {
         }
 
         maybePermissionLevel
+    }
+
+    /**
+      * A trait representing a result returned by [[comparePermissionsADM]].
+      */
+    sealed trait PermissionComparisonResult
+
+    /**
+      * Indicates that the user would have a lower permission with permission string A.
+      */
+    case object ALessThanB extends PermissionComparisonResult
+
+    /**
+      * Indicates that permission strings A and B would give the user the same permission.
+      */
+    case object AEqualToB extends PermissionComparisonResult
+
+    /**
+      * Indicates that the user would have a higher permission with permission string A.
+      */
+    case object AGreaterThanB extends PermissionComparisonResult
+
+    /**
+      * Calculates the permissions that the specified user would have on an entity with two permission strings,
+      * and returns:
+      *
+      * - [[ALessThanB]] if the user would have a lower permission with `permissionLiteralA`.
+      * - [[AEqualToB]] if `permissionLiteralA` `permissionLiteralB` would give the user the same permission.
+      * - [[AGreaterThanB]] if the user would have a higher permission with `permissionLiteralA`.
+      *
+      * @param entityCreator      the IRI of the user that created the entity.
+      * @param entityProject      the IRI of the entity's project.
+      * @param permissionLiteralA the first permission string.
+      * @param permissionLiteralB the second permission string.
+      * @param requestingUser     the user making the request.
+      * @return a [[PermissionComparisonResult]].
+      */
+    def comparePermissionsADM(entityCreator: IRI,
+                              entityProject: IRI,
+                              permissionLiteralA: String,
+                              permissionLiteralB: String,
+                              requestingUser: UserADM): PermissionComparisonResult = {
+        val maybePermissionA: Option[EntityPermission] = getUserPermissionADM(
+            entityCreator = requestingUser.id,
+            entityProject = entityProject,
+            entityPermissionLiteral = permissionLiteralA,
+            requestingUser = requestingUser
+        )
+
+        val maybePermissionB: Option[EntityPermission] = getUserPermissionADM(
+            entityCreator = requestingUser.id,
+            entityProject = entityProject,
+            entityPermissionLiteral = permissionLiteralB,
+            requestingUser = requestingUser
+        )
+
+        (maybePermissionA, maybePermissionB) match {
+            case (None, None) => AEqualToB
+            case (None, Some(_)) => ALessThanB
+            case (Some(_), None) => AGreaterThanB
+
+            case (Some(permissionA: EntityPermission), Some(permissionB: EntityPermission)) =>
+                if (permissionA == permissionB) {
+                    AEqualToB
+                } else if (permissionA < permissionB) {
+                    ALessThanB
+                } else {
+                    AGreaterThanB
+                }
+        }
     }
 
     /**
@@ -312,12 +380,11 @@ object PermissionUtilADM {
         val assertionMap: Map[IRI, String] = assertions.toMap
 
         // Anything with permissions must have an creator and a project.
-        val entityCreator: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToUser, throw InconsistentTriplestoreDataException(s"entity $entityIri has no creator"))
-        val entityProject: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"entity $entityIri has no project"))
-        val entityPermissionLiteral: String = assertionMap.getOrElse(OntologyConstants.KnoraBase.HasPermissions, throw InconsistentTriplestoreDataException(s"entity $entityIri has no knora-base:hasPermissions predicate"))
+        val entityCreator: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToUser, throw InconsistentTriplestoreDataException(s"Entity $entityIri has no creator"))
+        val entityProject: IRI = assertionMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Entity $entityIri has no project"))
+        val entityPermissionLiteral: String = assertionMap.getOrElse(OntologyConstants.KnoraBase.HasPermissions, throw InconsistentTriplestoreDataException(s"Entity $entityIri has no knora-base:hasPermissions predicate"))
 
         getUserPermissionADM(
-            entityIri = entityIri,
             entityCreator = entityCreator,
             entityProject = entityProject,
             entityPermissionLiteral = entityPermissionLiteral,

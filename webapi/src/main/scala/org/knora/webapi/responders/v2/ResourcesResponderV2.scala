@@ -26,6 +26,7 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -42,7 +43,7 @@ import org.knora.webapi.responders.{IriLocker, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.PermissionUtilADM.{DeletePermission, ModifyPermission}
+import org.knora.webapi.util.PermissionUtilADM.{AGreaterThanB, DeletePermission, ModifyPermission, PermissionComparisonResult}
 import org.knora.webapi.util._
 import org.knora.webapi.util.date.CalendarNameGregorian
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
@@ -509,11 +510,34 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             // permissions are not provided.
 
             resourcePermissions: String <- internalCreateResource.permissions match {
-                case Some(permissionStr) => PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
+                case Some(permissionStr) =>
+                    for {
+                        validatedCustomPermissions: String <- PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
+
+                        permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
+                            entityCreator = requestingUser.id,
+                            entityProject = internalCreateResource.projectADM.id,
+                            permissionLiteralA = validatedCustomPermissions,
+                            permissionLiteralB = defaultResourcePermissions,
+                            requestingUser = requestingUser
+                        )
+
+                        _ = if (permissionComparisonResult == AGreaterThanB) {
+                            throw ForbiddenException(s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions")
+                        }
+                    } yield validatedCustomPermissions
+
+
                 case None => FastFuture.successful(defaultResourcePermissions)
             }
 
-            valuesWithValidatedPermissions: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]] <- validateAndFormatValuePermissions(internalCreateResource.values, defaultPropertyPermissions)
+            valuesWithValidatedPermissions: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]] <- validateAndFormatValuePermissions(
+                project = internalCreateResource.projectADM,
+                values = internalCreateResource.values,
+                defaultPropertyPermissions = defaultPropertyPermissions,
+                resourceIDForErrorMsg = resourceIDForErrorMsg,
+                requestingUser = requestingUser
+            )
 
             // Ask the values responder for SPARQL for generating the values.
             sparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV2 <- (responderManager ?
@@ -729,13 +753,20 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Given a map of property IRIs to values to be created in a new resource, validates and reformats any custom
       * permissions in the values, and sets all value permissions to defaults if custom permissions are not provided.
       *
+      * @param project                    the project in which the resource is to be created.
       * @param values                     the values whose permissions are to be validated.
       * @param defaultPropertyPermissions a map of property IRIs to default permissions.
+      * @param resourceIDForErrorMsg      a string that can be prepended to an error message to specify the client's
+      *                                   ID for the containing resource, if provided.
+      * @param requestingUser             the user making the request.
       * @return a map of property IRIs to sequences of [[GenerateSparqlForValueInNewResourceV2]], in which
       *         all permissions have been validated and defined.
       */
-    private def validateAndFormatValuePermissions(values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-                                                  defaultPropertyPermissions: Map[SmartIri, String]): Future[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
+    private def validateAndFormatValuePermissions(project: ProjectADM,
+                                                  values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
+                                                  defaultPropertyPermissions: Map[SmartIri, String],
+                                                  resourceIDForErrorMsg: String,
+                                                  requestingUser: UserADM): Future[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
         val propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Future[GenerateSparqlForValueInNewResourceV2]]] = values.map {
             case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
                 val validatedPermissionFutures: Seq[Future[GenerateSparqlForValueInNewResourceV2]] = valuesToCreate.map {
@@ -744,16 +775,25 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         valueToCreate.permissions match {
                             case Some(permissionStr: String) =>
                                 // Yes. Validate and reformat them.
-                                val validatedPermissionFuture: Future[String] = PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
+                                for {
+                                    validatedCustomPermissions <- PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
 
-                                // Make a future in which the value has the reformatted permissions.
-                                validatedPermissionFuture.map {
-                                    validatedPermissions: String =>
-                                        GenerateSparqlForValueInNewResourceV2(
-                                            valueContent = valueToCreate.valueContent,
-                                            permissions = validatedPermissions
-                                        )
-                                }
+                                    permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
+                                        entityCreator = requestingUser.id,
+                                        entityProject = project.id,
+                                        permissionLiteralA = validatedCustomPermissions,
+                                        permissionLiteralB = defaultPropertyPermissions(propertyIri),
+                                        requestingUser = requestingUser
+                                    )
+
+                                    _ = if (permissionComparisonResult == AGreaterThanB) {
+                                        throw ForbiddenException(s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions")
+                                    }
+
+                                } yield GenerateSparqlForValueInNewResourceV2(
+                                    valueContent = valueToCreate.valueContent,
+                                    permissions = validatedCustomPermissions
+                                )
 
                             case None =>
                                 // No. Use the default permissions.
@@ -1473,7 +1513,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         node: QueryResultNode =>
                             // Filter out the nodes that the user doesn't have permission to see.
                             PermissionUtilADM.getUserPermissionADM(
-                                entityIri = node.nodeIri,
                                 entityCreator = node.nodeCreator,
                                 entityProject = node.nodeProject,
                                 entityPermissionLiteral = node.nodePermissions,
@@ -1514,7 +1553,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                             // nodes.
                             val hasPermission: Boolean = visibleNodeIris.contains(edge.sourceNodeIri) && visibleNodeIris.contains(edge.targetNodeIri) &&
                                 PermissionUtilADM.getUserPermissionADM(
-                                    entityIri = edge.linkValueIri,
                                     entityCreator = edge.linkValueCreator,
                                     entityProject = edge.sourceNodeProject,
                                     entityPermissionLiteral = edge.linkValuePermissions,
@@ -1608,7 +1646,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             // Make sure the user has permission to see the start node.
             _ = if (PermissionUtilADM.getUserPermissionADM(
-                entityIri = startNode.nodeIri,
                 entityCreator = startNode.nodeCreator,
                 entityProject = startNode.nodeProject,
                 entityPermissionLiteral = startNode.nodePermissions,
