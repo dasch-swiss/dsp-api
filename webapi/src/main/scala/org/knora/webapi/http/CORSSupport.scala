@@ -41,7 +41,7 @@ object CORSSupport extends Directives {
             withAllowedOrigins(HttpOriginRange.*).
             withAllowedHeaders(HttpHeaderRange.*).
             withAllowedMethods(Seq(GET, PUT, POST, DELETE, HEAD, OPTIONS)).
-            withExposedHeaders(Seq.empty).
+            withExposedHeaders(Seq("Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization", "Server")).
             withMaxAge(Some(age))
 
     /**
