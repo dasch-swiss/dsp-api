@@ -33,10 +33,9 @@ import scala.collection.immutable.Seq
 
 object CORSSupport extends Directives {
 
-    val age: Long = 30 * 60
-
     val allowedMethods = Seq(GET, PUT, POST, DELETE, HEAD, OPTIONS)
-    val exposedHeaders = Seq("Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization", "Server")
+    val exposedHeaders = Seq("Server")
+    val age: Long = 30 * 60
 
     val corsSettings = CorsSettings.defaultSettings.
             withAllowGenericHttpRequests(true).
