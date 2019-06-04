@@ -214,16 +214,22 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                         for {
                             validatedCustomPermissions <- PermissionUtilADM.validatePermissions(permissionLiteral = permissions, responderManager = responderManager)
 
-                            permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
-                                entityCreator = createValueRequest.requestingUser.id,
-                                entityProject = resourceInfo.projectADM.id,
-                                permissionLiteralA = validatedCustomPermissions,
-                                permissionLiteralB = defaultValuePermissions,
-                                requestingUser = createValueRequest.requestingUser
-                            )
+                            // Is the requesting user a system admin, or an admin of this project?
+                            _ = if (!(createValueRequest.requestingUser.permissions.isProjectAdmin(createValueRequest.requestingUser.id) || createValueRequest.requestingUser.permissions.isSystemAdmin)) {
 
-                            _ = if (permissionComparisonResult == AGreaterThanB) {
-                                throw ForbiddenException(s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions")
+                                // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+
+                                val permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
+                                    entityCreator = createValueRequest.requestingUser.id,
+                                    entityProject = resourceInfo.projectADM.id,
+                                    permissionLiteralA = validatedCustomPermissions,
+                                    permissionLiteralB = defaultValuePermissions,
+                                    requestingUser = createValueRequest.requestingUser
+                                )
+
+                                if (permissionComparisonResult == AGreaterThanB) {
+                                    throw ForbiddenException(s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions")
+                                }
                             }
                         } yield validatedCustomPermissions
 

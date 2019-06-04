@@ -514,16 +514,22 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     for {
                         validatedCustomPermissions: String <- PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
 
-                        permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
-                            entityCreator = requestingUser.id,
-                            entityProject = internalCreateResource.projectADM.id,
-                            permissionLiteralA = validatedCustomPermissions,
-                            permissionLiteralB = defaultResourcePermissions,
-                            requestingUser = requestingUser
-                        )
+                        // Is the requesting user a system admin, or an admin of this project?
+                        _ = if (!(requestingUser.permissions.isProjectAdmin(internalCreateResource.projectADM.id) || requestingUser.permissions.isSystemAdmin)) {
 
-                        _ = if (permissionComparisonResult == AGreaterThanB) {
-                            throw ForbiddenException(s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions")
+                            // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+
+                            val permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
+                                entityCreator = requestingUser.id,
+                                entityProject = internalCreateResource.projectADM.id,
+                                permissionLiteralA = validatedCustomPermissions,
+                                permissionLiteralB = defaultResourcePermissions,
+                                requestingUser = requestingUser
+                            )
+
+                            if (permissionComparisonResult == AGreaterThanB) {
+                                throw ForbiddenException(s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions")
+                            }
                         }
                     } yield validatedCustomPermissions
 
@@ -778,18 +784,23 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                 for {
                                     validatedCustomPermissions <- PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
 
-                                    permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
-                                        entityCreator = requestingUser.id,
-                                        entityProject = project.id,
-                                        permissionLiteralA = validatedCustomPermissions,
-                                        permissionLiteralB = defaultPropertyPermissions(propertyIri),
-                                        requestingUser = requestingUser
-                                    )
+                                    // Is the requesting user a system admin, or an admin of this project?
+                                    _ = if (!(requestingUser.permissions.isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin)) {
 
-                                    _ = if (permissionComparisonResult == AGreaterThanB) {
-                                        throw ForbiddenException(s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions")
+                                        // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+
+                                        val permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
+                                            entityCreator = requestingUser.id,
+                                            entityProject = project.id,
+                                            permissionLiteralA = validatedCustomPermissions,
+                                            permissionLiteralB = defaultPropertyPermissions(propertyIri),
+                                            requestingUser = requestingUser
+                                        )
+
+                                        if (permissionComparisonResult == AGreaterThanB) {
+                                            throw ForbiddenException(s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions")
+                                        }
                                     }
-
                                 } yield GenerateSparqlForValueInNewResourceV2(
                                     valueContent = valueToCreate.valueContent,
                                     permissions = validatedCustomPermissions
