@@ -53,8 +53,8 @@ class CORSSupportV1R2RSpec extends R2RSpec {
                 status shouldBe StatusCodes.OK
                 response.headers should contain theSameElementsAs Seq(
                     `Access-Control-Allow-Origin`(exampleOrigin),
-                    `Access-Control-Allow-Methods`(corsSettings.allowedMethods),
-                    `Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Authorization, Server"),
+                    `Access-Control-Allow-Methods`(CORSSupport.allowedMethods),
+                    `Access-Control-Allow-Headers`(CORSSupport.exposedHeaders),
                     `Access-Control-Max-Age`(1800),
                     `Access-Control-Allow-Credentials`(true)
                 )
