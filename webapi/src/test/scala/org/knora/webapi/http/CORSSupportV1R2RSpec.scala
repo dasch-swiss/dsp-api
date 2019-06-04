@@ -42,7 +42,7 @@ class CORSSupportV1R2RSpec extends R2RSpec {
     val exampleOrigin = HttpOrigin("http://example.com")
     val corsSettings = CORSSupport.corsSettings
 
-    "A Route with enabled CORS support " should {
+    "A Route with enabled CORS support" should {
 
         "accept valid pre-flight requests" in {
 
