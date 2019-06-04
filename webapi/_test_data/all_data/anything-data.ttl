@@ -542,7 +542,21 @@
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:dimX 512;
   knora-base:dimY 256;
-  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser" .
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser" ;
+  knora-base:previousValue <http://rdfh.ch/0001/a-thing-picture/values/file1a> .
+
+<http://rdfh.ch/0001/a-thing-picture/values/file1a> a knora-base:StillImageFileValue;
+  knora-base:valueHasString "test.tiff";
+  knora-base:originalFilename "test.tiff";
+  knora-base:originalMimeType "image/tiff";
+  knora-base:internalFilename "QxFMm5wlRlatStw9ft3iZA.jp2";
+  knora-base:internalMimeType "image/jp2";
+  knora-base:valueCreationDate "2012-10-21T16:50:38Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:dimX 512;
+  knora-base:dimY 256;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser" .
 
 <http://rdfh.ch/0001/a-thing-with-picture> a anything:Thing;
   knora-base:isDeleted false;
