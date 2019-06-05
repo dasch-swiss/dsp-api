@@ -6,8 +6,8 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM._
-import org.knora.webapi.util.date.{CalendarNameJulian, DatePrecisionYear}
 import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.date.{CalendarNameJulian, DatePrecisionYear}
 import org.knora.webapi.{InternalSchema, SharedTestDataADM}
 
 class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
@@ -37,6 +37,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#citation".toSmartIri -> Vector(
@@ -54,6 +55,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -70,6 +72,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -86,6 +89,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 )
             ),
@@ -103,6 +107,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(ReadTextValueV2(
@@ -119,6 +124,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(ReadTextValueV2(
@@ -135,6 +141,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#location".toSmartIri -> Vector(ReadTextValueV2(
@@ -151,6 +158,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(ReadTextValueV2(
@@ -167,6 +175,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#pubdate".toSmartIri -> Vector(ReadOtherValueV2(
@@ -185,6 +194,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadTextValueV2(
@@ -201,6 +211,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             ))
         ),
@@ -248,6 +259,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#citation".toSmartIri -> Vector(
@@ -265,6 +277,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -281,6 +294,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -297,6 +311,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -313,6 +328,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -329,6 +345,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -345,6 +362,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -361,6 +379,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -377,6 +396,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -393,6 +413,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 )
             ),
@@ -410,6 +431,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(ReadTextValueV2(
@@ -426,6 +448,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#book_comment".toSmartIri -> Vector(ReadTextValueV2(
@@ -442,6 +465,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(ReadTextValueV2(
@@ -458,6 +482,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#note".toSmartIri -> Vector(
@@ -475,6 +500,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -491,6 +517,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -507,6 +534,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -523,6 +551,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -539,6 +568,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 )
             ),
@@ -556,6 +586,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(ReadTextValueV2(
@@ -572,6 +603,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#pubdate".toSmartIri -> Vector(ReadOtherValueV2(
@@ -590,6 +622,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 userPermission = ChangeRightsPermission,
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                previousValueIri = None,
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
@@ -607,6 +640,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -623,6 +657,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 ),
                 ReadTextValueV2(
@@ -639,6 +674,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     userPermission = ChangeRightsPermission,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    previousValueIri = None,
                     deletionInfo = None
                 )
             )
@@ -703,6 +739,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         userPermission = ChangeRightsPermission,
                         valueCreationDate = Instant.parse("2019-02-11T10:05:10Z"),
                         attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+                        previousValueIri = None,
                         deletionInfo = None
                     )),
                     "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri -> Vector(ReadLinkValueV2(
@@ -734,6 +771,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         userPermission = ChangeRightsPermission,
                         valueCreationDate = Instant.parse("2019-02-11T09:05:10Z"),
                         attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+                        previousValueIri = None,
                         deletionInfo = None
                     ))
                 ),
@@ -854,6 +892,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
                     valueHasUUID = stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g"),
                     userPermission = ChangeRightsPermission,
+                    previousValueIri = None,
                     deletionInfo = None
                 ))
             ),
@@ -887,6 +926,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
                     valueHasUUID = stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g"),
                     userPermission = ChangeRightsPermission,
+                    previousValueIri = None,
                     deletionInfo = None
                 ))
             ),

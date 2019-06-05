@@ -530,7 +530,7 @@ HTTP GET to http://host/v2/resources?resourceClass=RESOURCE_CLASS_IRI&page=PAGE[
 ```
 
 This is useful only if the project does not contain a large amount of data;
-otherwise, you should use @ref:[Gravsearch](query-language.md)) to search
+otherwise, you should use @ref:[Gravsearch](query-language.md) to search
 using more specific criteria.
 
 The HTTP header `X-Knora-Accept-Project` must be submitted; its value is

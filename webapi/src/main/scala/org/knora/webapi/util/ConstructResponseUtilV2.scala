@@ -930,11 +930,12 @@ object ConstructResponseUtilV2 {
                             valueCreationDate: Instant = stringFormatter.xsdDateTimeStampToInstant(valueCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueCreationDate in value <${valObj.valueObjectIri}>: $valueCreationDateStr"))
                             valueDeletionInfo = getDeletionInfo(entityIri = valObj.valueObjectIri, assertions = valObj.assertions)
                             valueHasUUID: UUID = stringFormatter.decodeUuid(valObj.assertions(OntologyConstants.KnoraBase.ValueHasUUID))
+                            previousValueIri: Option[IRI] = valObj.assertions.get(OntologyConstants.KnoraBase.PreviousValue)
+
                         } yield valueContent match {
                             case linkValueContentV2: LinkValueContentV2 =>
                                 val valueHasRefCountStr: String = valObj.assertions(OntologyConstants.KnoraBase.ValueHasRefCount)
                                 val valueHasRefCount: Int = stringFormatter.validateInt(valueHasRefCountStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueHasRefCount in value <${valObj.valueObjectIri}>: $valueHasRefCountStr"))
-                                val previousValueIri: Option[IRI] = valObj.assertions.get(OntologyConstants.KnoraBase.PreviousValue)
 
                                 ReadLinkValueV2(
                                     valueIri = valObj.valueObjectIri,
@@ -968,6 +969,7 @@ object ConstructResponseUtilV2 {
                                     valueHasUUID = valueHasUUID,
                                     valueContent = textValueContentV2,
                                     valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
+                                    previousValueIri = previousValueIri,
                                     deletionInfo = valueDeletionInfo
                                 )
 
@@ -980,6 +982,7 @@ object ConstructResponseUtilV2 {
                                     valueCreationDate = valueCreationDate,
                                     valueHasUUID = valueHasUUID,
                                     valueContent = otherValueContentV2,
+                                    previousValueIri = previousValueIri,
                                     deletionInfo = valueDeletionInfo
                                 )
                         }

@@ -480,6 +480,12 @@ sealed trait ReadValueV2 extends IOValueV2 {
     def valueContent: ValueContentV2
 
     /**
+      * The IRI of the previous version of this value. Not returned in API responses, but needed
+      * here for testing.
+      */
+    def previousValueIri: Option[IRI]
+
+    /**
       * If the value has been marked as deleted, information about its deletion.
       */
     def deletionInfo: Option[DeletionInfo]
@@ -571,6 +577,8 @@ sealed trait ReadValueV2 extends IOValueV2 {
   * @param valueHasMaxStandoffStartIndex if this text value has standoff markup, the highest
   *                                      `knora-base:standoffTagHasEndIndex`
   *                                      used in its standoff tags.
+  * @param previousValueIri              the IRI of the previous version of this value. Not returned in API responses, but needed
+  *                                      here for testing.
   * @param deletionInfo                  if this value has been marked as deleted, provides the date when it was
   *                                      deleted and the reason why it was deleted.
   */
@@ -582,6 +590,7 @@ case class ReadTextValueV2(valueIri: IRI,
                            valueHasUUID: UUID,
                            valueContent: TextValueContentV2,
                            valueHasMaxStandoffStartIndex: Option[Int],
+                           previousValueIri: Option[IRI],
                            deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadTextValueV2] {
     /**
       * Converts this value to the specified ontology schema.
@@ -671,14 +680,16 @@ case class ReadLinkValueV2(valueIri: IRI,
 /**
   * A non-text, non-link value as read from the triplestore.
   *
-  * @param valueIri       the IRI of the value.
-  * @param attachedToUser the user that created the value.
-  * @param permissions    the permissions that the value grants to user groups.
-  * @param userPermission the permission that the requesting user has on the value.
-  * @param valueHasUUID   the UUID shared by all the versions of this value.
-  * @param valueContent   the content of the value.
-  * @param deletionInfo   if this value has been marked as deleted, provides the date when it was
-  *                       deleted and the reason why it was deleted.
+  * @param valueIri         the IRI of the value.
+  * @param attachedToUser   the user that created the value.
+  * @param permissions      the permissions that the value grants to user groups.
+  * @param userPermission   the permission that the requesting user has on the value.
+  * @param valueHasUUID     the UUID shared by all the versions of this value.
+  * @param valueContent     the content of the value.
+  * @param previousValueIri the IRI of the previous version of this value. Not returned in API responses, but needed
+  *                         here for testing.
+  * @param deletionInfo     if this value has been marked as deleted, provides the date when it was
+  *                         deleted and the reason why it was deleted.
   */
 case class ReadOtherValueV2(valueIri: IRI,
                             attachedToUser: IRI,
@@ -687,6 +698,7 @@ case class ReadOtherValueV2(valueIri: IRI,
                             valueCreationDate: Instant,
                             valueHasUUID: UUID,
                             valueContent: ValueContentV2,
+                            previousValueIri: Option[IRI],
                             deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadOtherValueV2] {
     /**
       * Converts this value to the specified ontology schema.
