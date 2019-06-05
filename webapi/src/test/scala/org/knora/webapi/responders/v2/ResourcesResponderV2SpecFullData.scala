@@ -739,7 +739,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                         userPermission = ChangeRightsPermission,
                         valueCreationDate = Instant.parse("2019-02-11T10:05:10Z"),
                         attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
-                        previousValueIri = None,
+                        previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/2a"),
                         deletionInfo = None
                     )),
                     "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri -> Vector(ReadLinkValueV2(
@@ -892,7 +892,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
                     valueHasUUID = stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g"),
                     userPermission = ChangeRightsPermission,
-                    previousValueIri = None,
+                    previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/1b"),
                     deletionInfo = None
                 ))
             ),
@@ -926,7 +926,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
                     valueHasUUID = stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g"),
                     userPermission = ChangeRightsPermission,
-                    previousValueIri = None,
+                    previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/1a"),
                     deletionInfo = None
                 ))
             ),
