@@ -38,9 +38,15 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 SELECT ?fileValue ?objPred ?objObj
 WHERE {
 
-    ?fileValue knora-base:internalFilename "@filename" ;
+    ?fileValue knora-base:internalFilename "@filename" .
+
+    ?currentFileValue knora-base:previousValue* ?fileValue ;
         knora-base:isDeleted false .
 
+    ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
+
+    ?resource ?prop ?currentFileValue ;
+        knora-base:isDeleted false .
 
     {
         ?fileValue ?objPred ?objObj .
@@ -50,10 +56,7 @@ WHERE {
     {
         @* Return the project of the resource that contains the value. *@
 
-        ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
-        ?resource ?prop ?fileValue ;
-            knora-base:isDeleted false ;
-            knora-base:attachedToProject ?resourceProject .
+        ?resource knora-base:attachedToProject ?resourceProject .
 
         BIND(knora-base:attachedToProject AS ?objPred)
         BIND(?resourceProject AS ?objObj)

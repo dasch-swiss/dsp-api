@@ -514,7 +514,21 @@
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:dimX 512;
   knora-base:dimY 256;
-  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser" .
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser" ;
+  knora-base:previousValue <http://rdfh.ch/0001/a-thing-picture/values/file1a> .
+
+<http://rdfh.ch/0001/a-thing-picture/values/file1a> a knora-base:StillImageFileValue;
+  knora-base:valueHasString "test.tiff";
+  knora-base:originalFilename "test.tiff";
+  knora-base:originalMimeType "image/tiff";
+  knora-base:internalFilename "QxFMm5wlRlatStw9ft3iZA.jp2";
+  knora-base:internalMimeType "image/jp2";
+  knora-base:valueCreationDate "2012-10-21T16:50:38Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-base:dimX 512;
+  knora-base:dimY 256;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser" .
 
 <http://rdfh.ch/0001/a-thing-with-picture> a anything:Thing;
   knora-base:isDeleted false;
@@ -1326,6 +1340,33 @@
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "2.1";
   knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
+
+<http://rdfh.ch/0001/gjs0RTRkTZeYDT_37nbcCg/values/85et-o-STOmn2JcVqrGTCQ> a anything:ThingPicture ;
+  rdfs:label "A_100-1-A4_1_406 p. 405" ;
+  knora-base:isDeleted "true"^^xsd:boolean ;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  knora-base:hasStillImageFileValue <http://rdfh.ch/0001/gjs0RTRkTZeYDT_37nbcCg/values/Dy-pWIujTIqdqKqrswwqfA> ;
+  knora-base:creationDate "2019-04-26T16:44:17.485Z"^^xsd:dateTime ;
+  knora-base:deleteDate "2019-05-22T21:21:00.507685Z"^^xsd:dateTime ;
+  knora-base:lastModificationDate "2019-05-22T21:21:00.507685Z"^^xsd:dateTime ;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+  knora-base:hasStillImageFileValue <http://rdfh.ch/0001/gjs0RTRkTZeYDT_37nbcCg/values/Dy-pWIujTIqdqKqrswwqfA>;
+  knora-base:deletedBy <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
+
+<http://rdfh.ch/0001/gjs0RTRkTZeYDT_37nbcCg/values/Dy-pWIujTIqdqKqrswwqfA> a knora-base:StillImageFileValue ;
+  knora-base:isDeleted "false"^^xsd:boolean ;
+  knora-base:dimX "3526"^^xsd:integer ;
+  knora-base:dimY "4219"^^xsd:integer ;
+  knora-base:internalFilename "9hxmmrWh0a7-CnRCq0650ro.jpx" ;
+  knora-base:internalMimeType "image/jp2" ;
+  knora-base:originalFilename "A_100-1-A4_1_406.JPG" ;
+  knora-base:originalMimeType "image/jpeg" ;
+  knora-base:valueCreationDate "2019-04-26T16:44:17.485Z"^^xsd:dateTime ;
+  knora-base:valueHasOrder "0"^^xsd:integer ;
+  knora-base:valueHasString "A_100-1-A4_1_406.JPG" ;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
 
 <http://rdfh.ch/lists/0001/otherTreeList> a knora-base:ListNode;

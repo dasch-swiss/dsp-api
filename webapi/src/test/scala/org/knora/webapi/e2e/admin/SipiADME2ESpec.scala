@@ -107,6 +107,29 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
 
             (fr.permissionCode === 1) should be (true)
         }
+
+        "return 404 Not Found if a file value is in a deleted resource" in {
+            val request = Get(baseApiUrl + s"/admin/files/0001/9hxmmrWh0a7-CnRCq0650ro.jpx?email=$normalUserEmailEnc&password=$testPass")
+            val response: HttpResponse = singleAwaitingRequest(request)
+
+            // println(response.toString)
+
+            assert(response.status == StatusCodes.NotFound)
+        }
+
+        "return permissions for a previous version of a file value" in {
+            val request = Get(baseApiUrl + s"/admin/files/0001/QxFMm5wlRlatStw9ft3iZA.jp2?email=$normalUserEmailEnc&password=$testPass")
+            val response: HttpResponse = singleAwaitingRequest(request)
+
+            // println(response.toString)
+
+            assert(response.status == StatusCodes.OK)
+
+            val fr: SipiFileInfoGetResponseADM = Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
+
+            (fr.permissionCode === 2) should be (true)
+
+        }
     }
 
     "The Files Route ('admin/files') using session credentials" should {

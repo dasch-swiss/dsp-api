@@ -41,7 +41,8 @@ SELECT ?objPred ?objObj ?predStandoff ?objStandoff
 WHERE {
     BIND(IRI("@valueIri") AS ?obj)
 
-    ?resource knora-base:hasValue ?obj .
+    ?resource knora-base:hasValue ?obj ;
+        knora-base:isDeleted false .
 
     {
         ?obj knora-base:isDeleted false .
