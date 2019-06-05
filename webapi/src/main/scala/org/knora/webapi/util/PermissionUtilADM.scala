@@ -314,7 +314,7 @@ object PermissionUtilADM {
       * and returns:
       *
       * - [[ALessThanB]] if the user would have a lower permission with `permissionLiteralA`.
-      * - [[AEqualToB]] if `permissionLiteralA` `permissionLiteralB` would give the user the same permission.
+      * - [[AEqualToB]] if `permissionLiteralA` and `permissionLiteralB` would give the user the same permission.
       * - [[AGreaterThanB]] if the user would have a higher permission with `permissionLiteralA`.
       *
       * @param entityCreator      the IRI of the user that created the entity.
