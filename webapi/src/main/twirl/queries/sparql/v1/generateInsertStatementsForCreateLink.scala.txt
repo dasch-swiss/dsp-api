@@ -18,7 +18,9 @@
  *@
 
 @import java.time.Instant
+@import java.util.UUID
 @import org.knora.webapi._
+@import org.knora.webapi.util.StringFormatter
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 
@@ -32,12 +34,14 @@
  * @param creationDate an xsd:dateTimeStamp to be attached to the link value.
  * @param maybeComment an optional comment on the link.
  * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
+ * @param stringFormatter a [[StringFormatter]].
  *@
 @(resourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
   creationDate: Instant,
   maybeComment: Option[String],
-  maybeValueHasOrder: Option[Int])
+  maybeValueHasOrder: Option[Int],
+  stringFormatter: StringFormatter)
 
         # Value: @linkUpdate.newLinkValueIri
         # Property: @linkUpdate.linkPropertyIri
@@ -73,6 +77,7 @@
                 }
             }
             knora-base:isDeleted false ;
+            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" ;
             knora-base:valueCreationDate "@creationDate"^^xsd:dateTime ;
             knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
             knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions"^^xsd:string .

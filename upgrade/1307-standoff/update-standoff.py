@@ -353,7 +353,7 @@ class Repository:
         )
 
         knora_admin_named_graph.upload(knora_ontologies_dir)
-        knora_base_named_graph.upload(knora_ontologies_dir)
+        knora_base_named_graph.upload(".")
 
         # Upload the transformed named graphs.
 
@@ -396,7 +396,7 @@ def main():
     default_graphdb_host = "localhost"
     default_repository = "knora-test"
 
-    parser = argparse.ArgumentParser(description="Separates knora-admin from knora-base.")
+    parser = argparse.ArgumentParser(description="Updates standoff markup.")
     parser.add_argument("-g", "--graphdb", help="GraphDB host (default '{}')".format(default_graphdb_host), type=str)
     parser.add_argument("-r", "--repository", help="GraphDB repository (default '{}')".format(default_repository),
                         type=str)
