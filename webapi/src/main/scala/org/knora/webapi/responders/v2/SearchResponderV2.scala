@@ -46,15 +46,13 @@ import scala.concurrent.Future
   */
 object SearchResponderV2Constants {
 
-    val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/0000/forbiddenResource"
+    val forbiddenResourceIri: IRI = s"http://${StringFormatter.IriDomain}/0000/forbiddenResource"
 }
 
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
     // A Gravsearch type inspection runner.
     private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(responderData)
-
-    private val knoraIdUtil = new KnoraIdUtil
 
     /**
       * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
@@ -310,7 +308,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 queryStandoff = queryStandoff,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
-                knoraIdUtil = knoraIdUtil,
                 settings = settings,
                 targetSchema = targetSchema,
                 requestingUser = requestingUser
@@ -591,7 +588,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 queryStandoff = queryStandoff,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
-                knoraIdUtil = knoraIdUtil,
                 settings = settings,
                 targetSchema = targetSchema,
                 requestingUser = requestingUser
@@ -701,7 +697,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         maybePropertyIri = None,
                         maybeVersionDate = None,
                         maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
-                        maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex
+                        maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
+                        stringFormatter = stringFormatter
                     ).toString())
 
                     // _ = println(resourceRequestSparql)
@@ -735,7 +732,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
                         forbiddenResource = forbiddenResourceOption,
                         responderManager = responderManager,
-                        knoraIdUtil = knoraIdUtil,
                         targetSchema = resourcesInProjectGetRequestV2.targetSchema,
                         settings = settings,
                         requestingUser = resourcesInProjectGetRequestV2.requestingUser
@@ -870,7 +866,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 queryStandoff = false,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
-                knoraIdUtil = knoraIdUtil,
                 targetSchema = targetSchema,
                 settings = settings,
                 requestingUser = requestingUser

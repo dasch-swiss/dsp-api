@@ -4,6 +4,10 @@
   "anything:hasRichtext" : {
     "@id" : "http://rdfh.ch/0001/thing_with_richtext_with_markup/values/text1",
     "@type" : "knora-api:TextValue",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_richtext_with_markupO/00000000000000000textwl"
+    },
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
     },
@@ -16,6 +20,11 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-04-16T13:24:53.578Z"
+    },
+    "knora-api:valueHasUUID" : "00000000000000000textw",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_richtext_with_markupO/00000000000000000textwl.20180416T132453578Z"
     }
   },
   "knora-api:arkUrl" : {

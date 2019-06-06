@@ -4,6 +4,10 @@
   "beol:hasSubject" : {
     "@id" : "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/LFXE4suQQdqsPkP3eq1IbA",
     "@type" : "knora-api:ListValue",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/_B3lQa6tSymIq7_7SowBsAD/LFXE4suQQdqsPkP3eq1IbAI"
+    },
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
     },
@@ -15,6 +19,11 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-06-25T09:23:12.035Z"
+    },
+    "knora-api:valueHasUUID" : "LFXE4suQQdqsPkP3eq1IbA",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/_B3lQa6tSymIq7_7SowBsAD/LFXE4suQQdqsPkP3eq1IbAI.20180625T092312035Z"
     }
   },
   "knora-api:arkUrl" : {

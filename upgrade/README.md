@@ -27,7 +27,9 @@ scripts:
 ### Updating Repositories
 
 The Knora release notes specify the directories containing the updates you need
-to apply. Follow the instructions in those directories.
+to apply. Each directory's name begins with the number of the GitHub pull request
+that introduced the change. The updates must be applied in numerical order.
+Follow the instructions in each directory to apply the update.
 
 ### After Updating Repositories
 

@@ -20,6 +20,7 @@
 package org.knora.webapi.util
 
 import java.time.Instant
+import java.util.UUID
 
 import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
@@ -485,7 +486,6 @@ object ConstructResponseUtilV2 {
       * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
       * @param queryStandoff             if `true`, make separate queries to get the standoff for the text value.
       * @param responderManager          the Knora responder manager.
-      * @param knoraIdUtil               a [[KnoraIdUtil]].
       * @param requestingUser            the user making the request.
       * @return a [[TextValueContentV2]].
       */
@@ -496,8 +496,7 @@ object ConstructResponseUtilV2 {
                                        mappings: Map[IRI, MappingAndXSLTransformation],
                                        queryStandoff: Boolean,
                                        responderManager: ActorRef,
-                                       knoraIdUtil: KnoraIdUtil,
-                                       requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
+                                       requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
         // Any knora-base:TextValue may have a language
         val valueLanguageOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasLanguage)
 
@@ -512,7 +511,6 @@ object ConstructResponseUtilV2 {
             for {
                 standoff: Vector[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(
                     standoffAssertions = valueObject.standoff,
-                    knoraIdUtil = knoraIdUtil,
                     responderManager = responderManager,
                     requestingUser = requestingUser
                 )
@@ -581,7 +579,7 @@ object ConstructResponseUtilV2 {
                                        valueCommentOption: Option[String],
                                        mappings: Map[IRI, MappingAndXSLTransformation],
                                        responderManager: ActorRef,
-                                       requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[FileValueContentV2] = {
+                                       requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[FileValueContentV2] = {
         val fileValue = FileValueV2(
             internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
             internalFilename = valueObject.assertions(OntologyConstants.KnoraBase.InternalFilename),
@@ -620,7 +618,6 @@ object ConstructResponseUtilV2 {
       * @param queryStandoff             if `true`, make separate queries to get the standoff for text values.
       * @param versionDate               if defined, represents the requested time in the the resources' version history.
       * @param responderManager          the Knora responder manager.
-      * @param knoraIdUtil               a [[KnoraIdUtil]].
       * @param targetSchema              the schema of the response.
       * @param settings                  the application's settings.
       * @param requestingUser            the user making the request.
@@ -633,10 +630,9 @@ object ConstructResponseUtilV2 {
                                        queryStandoff: Boolean,
                                        versionDate: Option[Instant],
                                        responderManager: ActorRef,
-                                       knoraIdUtil: KnoraIdUtil,
                                        targetSchema: ApiV2Schema,
                                        settings: SettingsImpl,
-                                       requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
+                                       requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
             valueObject.assertions(OntologyConstants.Rdf.Subject)
         } else {
@@ -667,8 +663,7 @@ object ConstructResponseUtilV2 {
                         responderManager = responderManager,
                         requestingUser = requestingUser,
                         targetSchema = targetSchema,
-                        settings = settings,
-                        knoraIdUtil = knoraIdUtil
+                        settings = settings
                     )
                 } yield linkValue.copy(
                     nestedResource = Some(nestedResource) // construct a `ReadResourceV2`
@@ -687,7 +682,6 @@ object ConstructResponseUtilV2 {
       * @param queryStandoff    if `true`, make separate queries to get the standoff for text values.
       * @param versionDate      if defined, represents the requested time in the the resources' version history.
       * @param responderManager the Knora responder manager.
-      * @param knoraIdUtil      a [[KnoraIdUtil]].
       * @param targetSchema     the schema of the response.
       * @param settings         the application's settings.
       * @param requestingUser   the user making the request.
@@ -699,12 +693,9 @@ object ConstructResponseUtilV2 {
                                                      queryStandoff: Boolean,
                                                      versionDate: Option[Instant] = None,
                                                      responderManager: ActorRef,
-                                                     knoraIdUtil: KnoraIdUtil,
                                                      targetSchema: ApiV2Schema,
                                                      settings: SettingsImpl,
-                                                     requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
+                                                     requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         // every knora-base:Value (any of its subclasses) has a string representation, but it is not necessarily returned with text values.
         val valueObjectValueHasString: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasString)
 
@@ -723,8 +714,7 @@ object ConstructResponseUtilV2 {
                     mappings = mappings,
                     queryStandoff = queryStandoff,
                     responderManager = responderManager,
-                    requestingUser = requestingUser,
-                    knoraIdUtil = knoraIdUtil
+                    requestingUser = requestingUser
                 )
 
             case OntologyConstants.KnoraBase.DateValue =>
@@ -836,8 +826,7 @@ object ConstructResponseUtilV2 {
                     responderManager = responderManager,
                     requestingUser = requestingUser,
                     targetSchema = targetSchema,
-                    settings = settings,
-                    knoraIdUtil = knoraIdUtil
+                    settings = settings
                 )
 
             case fileValueClass: IRI if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
@@ -865,7 +854,6 @@ object ConstructResponseUtilV2 {
       * @param queryStandoff            if `true`, make separate queries to get the standoff for text values.
       * @param versionDate              if defined, represents the requested time in the the resources' version history.
       * @param responderManager         the Knora responder manager.
-      * @param knoraIdUtil              a [[KnoraIdUtil]].
       * @param targetSchema             the schema of the response.
       * @param settings                 the application's settings.
       * @param requestingUser           the user making the request.
@@ -877,12 +865,9 @@ object ConstructResponseUtilV2 {
                                         queryStandoff: Boolean,
                                         versionDate: Option[Instant],
                                         responderManager: ActorRef,
-                                        knoraIdUtil: KnoraIdUtil,
                                         targetSchema: ApiV2Schema,
                                         settings: SettingsImpl,
-                                        requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
+                                        requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
         def getDeletionInfo(entityIri: IRI, assertions: Map[IRI, String]): Option[DeletionInfo] = {
             val isDeletedStr: String = assertions(OntologyConstants.KnoraBase.IsDeleted)
             val resourceIsDeleted: Boolean = stringFormatter.toBoolean(isDeletedStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:isDeleted in entity <$entityIri>: $isDeletedStr"))
@@ -938,18 +923,19 @@ object ConstructResponseUtilV2 {
                                 responderManager = responderManager,
                                 requestingUser = requestingUser,
                                 targetSchema = targetSchema,
-                                settings = settings,
-                                knoraIdUtil = knoraIdUtil
+                                settings = settings
                             )
 
                             valueCreationDateStr: String = valObj.assertions(OntologyConstants.KnoraBase.ValueCreationDate)
                             valueCreationDate: Instant = stringFormatter.xsdDateTimeStampToInstant(valueCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueCreationDate in value <${valObj.valueObjectIri}>: $valueCreationDateStr"))
                             valueDeletionInfo = getDeletionInfo(entityIri = valObj.valueObjectIri, assertions = valObj.assertions)
+                            valueHasUUID: UUID = stringFormatter.decodeUuid(valObj.assertions(OntologyConstants.KnoraBase.ValueHasUUID))
+                            previousValueIri: Option[IRI] = valObj.assertions.get(OntologyConstants.KnoraBase.PreviousValue)
+
                         } yield valueContent match {
                             case linkValueContentV2: LinkValueContentV2 =>
                                 val valueHasRefCountStr: String = valObj.assertions(OntologyConstants.KnoraBase.ValueHasRefCount)
                                 val valueHasRefCount: Int = stringFormatter.validateInt(valueHasRefCountStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueHasRefCount in value <${valObj.valueObjectIri}>: $valueHasRefCountStr"))
-                                val previousValueIri: Option[IRI] = valObj.assertions.get(OntologyConstants.KnoraBase.PreviousValue)
 
                                 ReadLinkValueV2(
                                     valueIri = valObj.valueObjectIri,
@@ -957,6 +943,7 @@ object ConstructResponseUtilV2 {
                                     permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
                                     userPermission = valObj.userPermission,
                                     valueCreationDate = valueCreationDate,
+                                    valueHasUUID = valueHasUUID,
                                     valueContent = linkValueContentV2,
                                     valueHasRefCount = valueHasRefCount,
                                     previousValueIri = previousValueIri,
@@ -979,8 +966,10 @@ object ConstructResponseUtilV2 {
                                     permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
                                     userPermission = valObj.userPermission,
                                     valueCreationDate = valueCreationDate,
+                                    valueHasUUID = valueHasUUID,
                                     valueContent = textValueContentV2,
                                     valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
+                                    previousValueIri = previousValueIri,
                                     deletionInfo = valueDeletionInfo
                                 )
 
@@ -991,7 +980,9 @@ object ConstructResponseUtilV2 {
                                     permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
                                     userPermission = valObj.userPermission,
                                     valueCreationDate = valueCreationDate,
+                                    valueHasUUID = valueHasUUID,
                                     valueContent = otherValueContentV2,
+                                    previousValueIri = previousValueIri,
                                     deletionInfo = valueDeletionInfo
                                 )
                         }
@@ -1028,7 +1019,6 @@ object ConstructResponseUtilV2 {
       * @param queryStandoff    if `true`, make separate queries to get the standoff for text values.
       * @param versionDate      if defined, represents the requested time in the the resources' version history.
       * @param responderManager the Knora responder manager.
-      * @param knoraIdUtil      a [[KnoraIdUtil]].
       * @param targetSchema     the schema of response.
       * @param settings         the application's settings.
       * @param requestingUser   the user making the request.
@@ -1040,10 +1030,9 @@ object ConstructResponseUtilV2 {
                                    queryStandoff: Boolean,
                                    versionDate: Option[Instant],
                                    responderManager: ActorRef,
-                                   knoraIdUtil: KnoraIdUtil,
                                    targetSchema: ApiV2Schema,
                                    settings: SettingsImpl,
-                                   requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
+                                   requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
 
         constructReadResourceV2(
             resourceIri = resourceIri,
@@ -1054,8 +1043,7 @@ object ConstructResponseUtilV2 {
             responderManager = responderManager,
             requestingUser = requestingUser,
             targetSchema = targetSchema,
-            settings = settings,
-            knoraIdUtil = knoraIdUtil
+            settings = settings
         )
     }
 
@@ -1068,7 +1056,6 @@ object ConstructResponseUtilV2 {
       * @param queryStandoff      if `true`, make separate queries to get the standoff for text values.
       * @param forbiddenResource  the ForbiddenResource, if any.
       * @param responderManager   the Knora responder manager.
-      * @param knoraIdUtil        a [[KnoraIdUtil]].
       * @param targetSchema       the schema of response.
       * @param settings           the application's settings.
       * @param requestingUser     the user making the request.
@@ -1080,10 +1067,9 @@ object ConstructResponseUtilV2 {
                              queryStandoff: Boolean,
                              forbiddenResource: Option[ReadResourceV2],
                              responderManager: ActorRef,
-                             knoraIdUtil: KnoraIdUtil,
                              targetSchema: ApiV2Schema,
                              settings: SettingsImpl,
-                             requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[ReadResourceV2]] = {
+                             requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[Vector[ReadResourceV2]] = {
 
         if (orderByResourceIri.toSet != searchResults.keySet && forbiddenResource.isEmpty) throw AssertionException(s"Not all resources are visible, but forbiddenResource is None")
 
@@ -1104,7 +1090,6 @@ object ConstructResponseUtilV2 {
                             queryStandoff = queryStandoff,
                             versionDate = None,
                             responderManager = responderManager,
-                            knoraIdUtil = knoraIdUtil,
                             targetSchema = targetSchema,
                             settings = settings,
                             requestingUser = requestingUser

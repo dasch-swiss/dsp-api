@@ -64,6 +64,9 @@ DELETE {
         @* Detach the LinkValue from the link source. *@
         @if(linkUpdate.linkValueExists) {
             ?linkSource ?linkValueProperty ?currentLinkValue .
+
+            @* Delete the UUID from the current version of the link value, because the new version will store it. *@
+            ?currentLinkValue knora-base:valueHasUUID ?currentLinkUUID .
         } else {
             @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be true in this SPARQL template"); ()}
         }
@@ -82,6 +85,7 @@ INSERT {
             knora-base:deleteDate "@currentTime"^^xsd:dateTime ;
             knora-base:deletedBy <@requestingUser> ;
             knora-base:previousValue ?currentLinkValue ;
+            knora-base:valueHasUUID ?currentLinkUUID ;
             @maybeComment match {
                 case Some(comment) => {
                     knora-base:deleteComment """@comment""" ;
@@ -144,7 +148,8 @@ WHERE {
             rdf:predicate ?linkProperty ;
             rdf:object ?linkTarget ;
             knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
-            knora-base:isDeleted false .
+            knora-base:isDeleted false ;
+            knora-base:valueHasUUID ?currentLinkUUID .
     } else {
         @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be true in this SPARQL template"); ()}
     }
