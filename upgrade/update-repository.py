@@ -297,7 +297,7 @@ def run_updates(graphdb_info, transformers):
 def load_transformers(graphdb_info):
     plugins_subdirs = os.listdir("plugins")
     pr_dirs = filter(lambda dirname: dirname.isdigit(), plugins_subdirs)
-    pr_nums = map(lambda dirname: int(dirname), pr_dirs)
+    pr_nums = map(int, pr_dirs)
 
     knora_base_pr_num_sparql = """
         PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
@@ -326,7 +326,7 @@ def load_transformers(graphdb_info):
         print("No updates needed.")
         return []
 
-    needed_pr_nums_str = ', '.join(map(lambda needed_pr_num: str(needed_pr_num), needed_pr_nums))
+    needed_pr_nums_str = ', '.join(map(str, needed_pr_nums))
     print("Required updates: " + needed_pr_nums_str)
     transformers = []
 
