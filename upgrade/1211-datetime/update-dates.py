@@ -44,11 +44,11 @@ def do_request(graphdb_url, username, password):
 # Command-line invocation.
 def main():
     default_graphdb_host = "localhost"
-    defaut_repository = "knora-test"
+    default_repository = "knora-test"
 
     parser = argparse.ArgumentParser(description="Changes all xsd:dateTimeStamp to xsd:dateTime.")
     parser.add_argument("-g", "--graphdb", help="GraphDB host (default '{}')".format(default_graphdb_host), type=str)
-    parser.add_argument("-r", "--repository", help="GraphDB repository (default '{}')".format(defaut_repository), type=str)
+    parser.add_argument("-r", "--repository", help="GraphDB repository (default '{}')".format(default_repository), type=str)
     parser.add_argument("-u", "--username", help="GraphDB username", type=str, required=True)
     parser.add_argument("-p", "--password", help="GraphDB password (if not provided, will prompt for password)", type=str)
 
@@ -61,7 +61,7 @@ def main():
     repository = args.repository
 
     if not repository:
-        repository = defaut_repository
+        repository = default_repository
 
     graphdb_url = "http://{}:7200/repositories/{}/statements".format(graphdb_host, repository)
     password = args.password

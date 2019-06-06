@@ -18,11 +18,6 @@
 # License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 
-#######################################################################################
-# Updates knora-base and existing values for PR 1322.
-#######################################################################################
-
-
 import os
 import time
 from datetime import timedelta
@@ -32,7 +27,7 @@ import getpass
 import requests
 import rdflib
 from collections import defaultdict
-from abc import ABC, abstractmethod
+import importlib
 
 
 # The directory in the Knora source tree where built-in Knora ontologies are stored.
@@ -58,12 +53,6 @@ knora_ontologies = [
 ]
 
 knora_ontology_contexts = set([onto["context"] for onto in knora_ontologies])
-
-
-class GraphTransformer(ABC):
-    @abstractmethod
-    def transform(self, input_graph):
-        return input_graph
 
 
 class UpdateException(Exception):
@@ -174,7 +163,7 @@ class Repository:
     def download(self, download_dir):
         print("Downloading named graphs...")
 
-        contexts_response = requests.get(self.graphdb_info.contexts_url,
+        contexts_response = requests.get(url=self.graphdb_info.contexts_url,
                                          auth=(self.graphdb_info.username, self.graphdb_info.password))
         contexts_response.raise_for_status()
         contexts = contexts_response.text.splitlines()
@@ -206,7 +195,7 @@ class Repository:
     # Deletes the contents of the repository.
     def empty(self):
         print("Emptying repository...")
-        drop_all_response = requests.post(self.graphdb_info.statements_url,
+        drop_all_response = requests.post(url=self.graphdb_info.statements_url,
                                           headers={"Content-Type": "application/sparql-update"},
                                           auth=(self.graphdb_info.username, self.graphdb_info.password),
                                           data="DROP ALL")
@@ -243,7 +232,7 @@ class Repository:
             INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
         """
 
-        update_lucene_index_response = requests.post(self.graphdb_info.statements_url,
+        update_lucene_index_response = requests.post(url=self.graphdb_info.statements_url,
                                                      headers={"Content-Type": "application/sparql-update"},
                                                      auth=(self.graphdb_info.username, self.graphdb_info.password),
                                                      data=sparql)
@@ -251,25 +240,69 @@ class Repository:
         print("Updated Lucene index.")
 
 
-# Updates a repository.
-def update_repository(graphdb_info, graph_transformer, download_dir, upload_dir):
+def load_transformer(pr_num):
+    transformer_plugin_module = importlib.import_module(pr_num + ".update")
+    transformer_plugin_class = getattr(transformer_plugin_module, "GraphTransformer")
+    return transformer_plugin_class()
+
+
+def do_select_request(graphdb_info, sparql):
+    headers = {
+        "Accept": "application/sparql-results+json"
+    }
+
+    data = {
+        "query": sparql
+    }
+
+    r = requests.post(
+        url=graphdb_info.graphdb_url,
+        data=data,
+        headers=headers,
+        auth=(graphdb_info.username, graphdb_info.password)
+    )
+
+    r.raise_for_status()
+    json_response = r.json()
+    return json_response["results"]["bindings"]
+
+
+def run_updates(graphdb_info, transformers):
     start = time.time()
     repository = Repository(graphdb_info)
-    repository.download(download_dir)
-    repository.transform(graph_transformer=graph_transformer, download_dir=download_dir, upload_dir=upload_dir)
-    repository.empty()
-    repository.upload(upload_dir)
+    last_upload_dir = None
+
+    for transformer in transformers:
+        temp_dir = tempfile.mkdtemp()
+        print("Running transformation for PR {} using temporary directory {}".format(transformer.pr_num, temp_dir))
+
+        upload_dir = temp_dir + "/upload"
+        os.mkdir(upload_dir)
+
+        if last_upload_dir is not None:
+            repository.transform(graph_transformer=transformer, download_dir=last_upload_dir, upload_dir=upload_dir)
+        else:
+            download_dir = temp_dir + "/download"
+            os.mkdir(download_dir)
+            repository.download(download_dir)
+            repository.transform(graph_transformer=transformer, download_dir=download_dir, upload_dir=upload_dir)
+            last_upload_dir = upload_dir
+
+        repository.empty()
+        repository.upload(upload_dir)
+        print("Update for PR {} complete.".format(transformer.pr_num))
+
     repository.update_lucene_index()
     elapsed = time.time() - start
     print("Update complete. Elapsed time: {}.".format(str(timedelta(seconds=elapsed))))
 
 
 # Command-line invocation.
-def main(description, graph_transformer):
+def main():
     default_graphdb_host = "localhost"
     default_repository = "knora-test"
 
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(description="Updates a Knora repository.")
     parser.add_argument("-g", "--graphdb", help="GraphDB host (default '{}')".format(default_graphdb_host), type=str)
     parser.add_argument("-r", "--repository", help="GraphDB repository (default '{}')".format(default_repository),
                         type=str)
@@ -300,17 +333,6 @@ def main(description, graph_transformer):
         password=password
     )
 
-    temp_dir = tempfile.mkdtemp()
-    print("Using temporary directory", temp_dir)
 
-    download_dir = temp_dir + "/download"
-    upload_dir = temp_dir + "/upload"
-    os.mkdir(download_dir)
-    os.mkdir(upload_dir)
-
-    update_repository(
-        graphdb_info=graphdb_info,
-        graph_transformer=graph_transformer,
-        download_dir=download_dir,
-        upload_dir=upload_dir
-    )
+if __name__ == "__main__":
+    main()
