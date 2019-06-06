@@ -26,9 +26,9 @@ env:
   - SIPI_REPO=dhlabbasel/sipi
   - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
   - CHROME_BIN=google-chrome-stable
-  - GDB_HEAP_SIZE="2G"
+  - GDB_HEAP_SIZE="3G"
   - TAG=${TRAVIS_BRANCH//\//-}
-  - GRAPHDB_VERSION="8.10.0-se"
+  - GRAPHDB_VERSION="8.9.0-se"
 
 before_cache:
   - sudo chown -R travis:travis $HOME/.ivy2
