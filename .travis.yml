@@ -63,12 +63,14 @@ jobs:
     # unit and e2e tests
     - stage: test
       script:
-        # prepare needed graphdb-se files
+        # download and start graphdb locally
         - mkdir -p $TRAVIS_BUILD_DIR/graphdb
         - cd $TRAVIS_BUILD_DIR/graphdb
         - curl -O http://maven.ontotext.com/repository/owlim-releases/com/ontotext/graphdb/graphdb-se/8.10.0/graphdb-se-8.10.0-dist.zip
         - unzip graphdb-se-8.10.0-dist.zip
-        - $TRAVIS_BUILD_DIR/graphdb/graphdb-se-8.10.0/bin/graphdb 
+        - $TRAVIS_BUILD_DIR/graphdb/graphdb-se-8.10.0/bin/graphdb -Dgraphdb.license.file=$TRAVIS_BUILD_DIR/travis/graphdb.license &
+        # prepare needed graphdb-se files
+        # - mkdir -p $TRAVIS_BUILD_DIR/graphdb
         # - cp $TRAVIS_BUILD_DIR/travis/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
         # - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
         # start and initialize graphdb-se
