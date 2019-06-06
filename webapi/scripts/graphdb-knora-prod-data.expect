@@ -42,6 +42,8 @@ send "load ../_test_data/ontologies/biblio-onto.ttl into http://www.knora.org/on
 expect $prompt
 send "load ../_test_data/ontologies/newton-onto.ttl into http://www.knora.org/ontology/0801/newton .\r"
 expect $prompt
+send "load ../_test_data/ontologies/leibniz-onto.ttl into http://www.knora.org/ontology/0801/leibniz .\r"
+expect $prompt
 send "load ../_test_data/all_data/biblio-data.ttl into http://www.knora.org/data/0801/biblio .\r"
 expect $prompt
 send "load ../_test_data/all_data/beol-data.ttl into http://www.knora.org/data/0801/beol .\r"

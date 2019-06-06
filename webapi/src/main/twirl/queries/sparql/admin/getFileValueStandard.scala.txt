@@ -38,12 +38,14 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 SELECT ?fileValue ?objPred ?objObj
 WHERE {
 
-    ?fileValue knora-base:internalFilename "@filename" ;
+    ?fileValue knora-base:internalFilename "@filename" .
+
+    ?currentFileValue knora-base:previousValue* ?fileValue ;
         knora-base:isDeleted false .
 
     ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
 
-    ?resource ?prop ?fileValue ;
+    ?resource ?prop ?currentFileValue ;
         knora-base:isDeleted false .
 
     {
