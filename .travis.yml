@@ -65,12 +65,16 @@ jobs:
       script:
         # prepare needed graphdb-se files
         - mkdir -p $TRAVIS_BUILD_DIR/graphdb
-        - cp $TRAVIS_BUILD_DIR/travis/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
-        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
+        - cd $TRAVIS_BUILD_DIR/graphdb
+        - curl -O http://maven.ontotext.com/repository/owlim-releases/com/ontotext/graphdb/graphdb-se/8.10.0/graphdb-se-8.10.0-dist.zip
+        - unzip graphdb-se-8.10.0-dist.zip
+        - $TRAVIS_BUILD_DIR/graphdb/graphdb-se-8.10.0/bin/graphdb 
+        # - cp $TRAVIS_BUILD_DIR/travis/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
+        # - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
         # start and initialize graphdb-se
-        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.license.file=/graphdb/graphdb.license
+        # - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.license.file=/graphdb/graphdb.license
         - sleep 15
-        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
+        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-local-init-knora-test-unit.sh
         # hit graphdb with a request "waking-it-up"
         - curl http://localhost:7200/rest/repositories
         # start the built-in webapi server tests
