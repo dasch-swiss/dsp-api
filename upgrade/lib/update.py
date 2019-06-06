@@ -25,49 +25,50 @@
 
 import os
 import time
-import uuid
-import base64
 from datetime import timedelta
 import tempfile
 import argparse
 import getpass
 import requests
 import rdflib
-from rdflib.namespace import XSD
 from collections import defaultdict
+from abc import ABC, abstractmethod
+
+
+# The directory in the Knora source tree where built-in Knora ontologies are stored.
+knora_ontologies_dir = "knora-ontologies"
+
+knora_ontologies = [
+    {
+        "filename": "knora-admin.ttl",
+        "context": "http://www.knora.org/ontology/knora-admin"
+    },
+    {
+        "filename": "knora-base.ttl",
+        "context": "http://www.knora.org/ontology/knora-base"
+    },
+    {
+        "filename": "salsah-gui.ttl",
+        "context": "http://www.knora.org/ontology/salsah-gui"
+    },
+    {
+        "filename": "standoff-onto.ttl",
+        "context": "http://www.knora.org/ontology/standoff"
+    }
+]
+
+knora_ontology_contexts = set([onto["context"] for onto in knora_ontologies])
+
+
+class GraphTransformer(ABC):
+    @abstractmethod
+    def transform(self, input_graph):
+        return input_graph
 
 
 class UpdateException(Exception):
     def __init__(self, message):
         self.message = message
-
-
-# The directory in the Knora source tree where built-in Knora ontologies are stored.
-knora_ontologies_dir = "../../knora-ontologies"
-
-# The filename of the knora-admin ontology.
-knora_admin_filename = "knora-admin.ttl"
-
-# The context of the named graph containing the knora-admin ontology.
-knora_admin_context = "http://www.knora.org/ontology/knora-admin"
-
-# The filename of the knora-base ontology.
-knora_base_filename = "knora-base.ttl"
-
-# The context of the named graph containing the knora-base ontology.
-knora_base_context = "http://www.knora.org/ontology/knora-base"
-
-# The IRI of knora-base:TextValue.
-text_value_type = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#TextValue")
-
-# The IRI of knora-base:valueHasUUID.
-value_has_uuid = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#valueHasUUID")
-
-# The IRI of knora-base:valueCreationDate.
-value_creation_date = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#valueCreationDate")
-
-# The IRI of knora-base:previousValue.
-previous_value = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#previousValue")
 
 
 # Represents information about a GraphDB repository.
@@ -121,10 +122,6 @@ class NamedGraph:
         print("Writing transformed file...")
         graph.serialize(destination=output_file_path, format="turtle")
 
-    # Transforms the named graph, writing the output to a file in upload_dir.
-    def transform(self, graph):
-        return graph
-
     # Uploads the transformed file from upload_dir to the repository.
     def upload(self, upload_dir):
         print("Uploading named graph {}...".format(self.context))
@@ -167,26 +164,6 @@ def generator_is_empty(gen):
     return False
 
 
-# Given a graph, collects the IRIs of all values that are current value versions.
-def collect_value_iris(graph, grouped_statements):
-    value_iris = set()
-
-    for subj, pred_objs in grouped_statements.items():
-        if value_creation_date in pred_objs:
-            # This is a value. Is it a current value version?
-            if generator_is_empty(graph.subjects(previous_value, subj)):
-                # Yes. Include its IRI.
-                value_iris.add(subj)
-
-    return value_iris
-
-
-# Returns a random, Base64-encoded, URL-safe UUID.
-def make_random_uuid_str():
-    random_uuid = uuid.uuid4()
-    return base64.urlsafe_b64encode(random_uuid.bytes).decode("ascii").strip("=")
-
-
 # Represents a repository.
 class Repository:
     def __init__(self, graphdb_info):
@@ -208,21 +185,21 @@ class Repository:
         contexts.pop(0)
 
         for context in contexts:
-            if not (context == knora_base_context or context == knora_admin_context):
-                named_graph = NamedGraph(context=context, graphdb_info=self.graphdb_info) # TODO: construct PR-specific subclass.
+            if not (context in knora_ontology_contexts):
+                named_graph = NamedGraph(context=context, graphdb_info=self.graphdb_info)
                 named_graph.download(download_dir)
                 self.named_graphs.append(named_graph)
 
         print("Downloaded named graphs to", download_dir)
 
     # Transforms the named graphs, saving the output in files in upload_dir.
-    def transform(self, download_dir, upload_dir):
+    def transform(self, graph_transformer, download_dir, upload_dir):
         print("Transforming downloaded data...")
 
         for named_graph in self.named_graphs:
             input_graph = named_graph.parse(download_dir)
-            named_graph.transform(input_graph)
-            named_graph.format(upload_dir)
+            output_graph = graph_transformer.transform(input_graph)
+            named_graph.format(output_graph, upload_dir)
 
         print("Wrote transformed data to " + upload_dir)
 
@@ -240,22 +217,16 @@ class Repository:
     def upload(self, upload_dir):
         print("Uploading named graphs...")
 
-        # Upload the knora-admin and knora-base ontologies first.
+        # Upload built-in Knora ontologies.
 
-        knora_admin_named_graph = NamedGraph(
-            context=knora_admin_context,
-            graphdb_info=self.graphdb_info,
-            filename=knora_admin_filename
-        )
+        for ontology in knora_ontologies:
+            ontology_named_graph = NamedGraph(
+                context=ontology["context"],
+                graphdb_info=self.graphdb_info,
+                filename=ontology["filename"]
+            )
 
-        knora_base_named_graph = NamedGraph(
-            context=knora_base_context,
-            graphdb_info=self.graphdb_info,
-            filename=knora_base_filename
-        )
-
-        knora_admin_named_graph.upload(knora_ontologies_dir)
-        knora_base_named_graph.upload(".")
+            ontology_named_graph.upload(knora_ontologies_dir)
 
         # Upload the transformed named graphs.
 
@@ -281,11 +252,11 @@ class Repository:
 
 
 # Updates a repository.
-def update_repository(graphdb_info, download_dir, upload_dir):
+def update_repository(graphdb_info, graph_transformer, download_dir, upload_dir):
     start = time.time()
     repository = Repository(graphdb_info)
     repository.download(download_dir)
-    repository.transform(download_dir=download_dir, upload_dir=upload_dir)
+    repository.transform(graph_transformer=graph_transformer, download_dir=download_dir, upload_dir=upload_dir)
     repository.empty()
     repository.upload(upload_dir)
     repository.update_lucene_index()
@@ -294,7 +265,7 @@ def update_repository(graphdb_info, download_dir, upload_dir):
 
 
 # Command-line invocation.
-def main(description):
+def main(description, graph_transformer):
     default_graphdb_host = "localhost"
     default_repository = "knora-test"
 
@@ -339,6 +310,7 @@ def main(description):
 
     update_repository(
         graphdb_info=graphdb_info,
+        graph_transformer=graph_transformer,
         download_dir=download_dir,
         upload_dir=upload_dir
     )
