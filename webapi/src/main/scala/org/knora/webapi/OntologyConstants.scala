@@ -200,6 +200,7 @@ object OntologyConstants {
         val ObjectCannotBeMarkedAsDeleted: IRI = KnoraBasePrefixExpansion + "objectCannotBeMarkedAsDeleted"
 
         val ValueHasString: IRI = KnoraBasePrefixExpansion + "valueHasString"
+        val ValueHasUUID: IRI = KnoraBasePrefixExpansion + "valueHasUUID"
         val ValueHasMaxStandoffStartIndex: IRI = KnoraBasePrefixExpansion + "valueHasMaxStandoffStartIndex"
         val ValueHasLanguage: IRI = KnoraBasePrefixExpansion + "valueHasLanguage"
         val ValueHasMapping: IRI = KnoraBasePrefixExpansion + "valueHasMapping"
@@ -710,6 +711,7 @@ object OntologyConstants {
 
         val ValueAsString: IRI = KnoraApiV2PrefixExpansion + "valueAsString"
         val ValueCreationDate: IRI = KnoraApiV2PrefixExpansion + "valueCreationDate"
+        val ValueHasUUID: IRI = KnoraApiV2PrefixExpansion + "valueHasUUID"
         val ValueHasComment: IRI = KnoraApiV2PrefixExpansion + "valueHasComment"
 
         val User: IRI = KnoraApiV2PrefixExpansion + "User"

@@ -1325,6 +1325,20 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#valueHasUUID
+
+:valueHasUUID  rdf:type owl:DatatypeProperty ;
+
+               rdfs:subPropertyOf :valueHas ;
+
+               rdfs:comment "The UUID of a value"@en ;
+
+               :subjectClassConstraint :Value ;
+
+               :objectDatatypeConstraint xsd:string .
+
+
+
 ###  http://www.knora.org/ontology/knora-base#valueHasCalendar
 
 :valueHasCalendar rdf:type owl:DatatypeProperty ;
@@ -2667,6 +2681,11 @@
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :valueHasString ;
                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :valueHasUUID ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ;
+
 
        rdfs:comment "The base class of classes representing Knora values"@en .

@@ -69,7 +69,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     // needs to be initialized early on
     StringFormatter.initForTest()
 
-    val settings = Settings(system)
+    val settings: SettingsImpl = Settings(system)
     val log = akka.event.Logging(system, this.getClass)
 
     lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]

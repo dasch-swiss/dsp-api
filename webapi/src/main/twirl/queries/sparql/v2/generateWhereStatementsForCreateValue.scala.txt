@@ -125,8 +125,8 @@
                     rdf:predicate <@linkUpdate.linkPropertyIri> ;
                     rdf:object <@linkUpdate.linkTargetIri> ;
                     knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
-                    knora-base:isDeleted false .
-
+                    knora-base:isDeleted false ;
+                    knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
             } else {
                 @* Make sure there is no such knora-base:LinkValue. *@
                 MINUS {

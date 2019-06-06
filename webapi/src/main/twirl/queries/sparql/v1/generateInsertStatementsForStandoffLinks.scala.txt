@@ -18,7 +18,9 @@
  *@
 
 @import java.time.Instant
+@import java.util.UUID
 @import org.knora.webapi._
+@import org.knora.webapi.util.StringFormatter
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 
@@ -32,10 +34,12 @@
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
  * @param creationDate an xsd:dateTimeStamp to be attached to the link values.
+ * @param stringFormatter a [[StringFormatter]].
  *@
 @(resourceIri: IRI,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
-  creationDate: Instant)
+  creationDate: Instant,
+  stringFormatter: StringFormatter)
 
         @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
             @* Insert a direct link for the resource reference if necessary. *@
@@ -61,15 +65,19 @@
             If this template is being used to create a single text value containing standoff links, the new LinkValue
             we are creating may be a new version of an existing LinkValue (linkUpdate.linkValueExists will be true).
             In that case, the WHERE clause will have already bound a SPARQL variable ?linkValue@linkValueIndex,
-            containing the IRI of the existing LinkValue. In that case, add a triple indicating that the new LinkValue
-            is a new version of the existing one.
+            containing the IRI of the existing LinkValue. Therefore, add a triple indicating that the new LinkValue
+            is a new version of the existing one, and copy the UUID from the existing one.
 
             If this template is being used to create a new resource with its initial values, there won't be any existing
-            LinkValues for standoff links, so linkUpdate.linkValueExists will be false.
+            LinkValues for standoff links, so linkUpdate.linkValueExists will be false. Generate a random UUID for the
+            LinkValue.
 
             *@
             @if(linkUpdate.linkValueExists) {
-                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex .
+                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
+                    knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
+            } else {
+                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" .
             }
 
             @* Attach the new LinkValue to its containing resource. *@

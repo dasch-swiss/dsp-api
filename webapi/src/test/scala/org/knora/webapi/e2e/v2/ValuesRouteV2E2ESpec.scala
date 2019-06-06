@@ -170,6 +170,45 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     }
 
     "The values v2 endpoint" should {
+        "get the latest version of a value, given its UUID" in {
+            val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
+            val valueUuid = "pLlW4ODASumZfZFbJdpw1g"
+
+            val request = Get(baseApiUrl + s"/v2/values/$resourceIri/$valueUuid") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+
+            val value: JsonLDObject = getValueFromResource(
+                resource = responseJsonDoc,
+                propertyIriInResult = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
+                expectedValueIri = "http://rdfh.ch/0001/thing-with-history/values/1c"
+            )
+
+            val intValueAsInt: Int = value.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
+            intValueAsInt should ===(3)
+        }
+
+        "get a past version of a value, given its UUID and a timestamp" in {
+            val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
+            val valueUuid = "pLlW4ODASumZfZFbJdpw1g"
+            val timestamp = "20190212T090510Z"
+
+            val request = Get(baseApiUrl + s"/v2/values/$resourceIri/$valueUuid?version=$timestamp") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+
+            val value: JsonLDObject = getValueFromResource(
+                resource = responseJsonDoc,
+                propertyIriInResult = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
+                expectedValueIri = "http://rdfh.ch/0001/thing-with-history/values/1b"
+            )
+
+            val intValueAsInt: Int = value.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
+            intValueAsInt should ===(2)
+        }
+
         "create an integer value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
