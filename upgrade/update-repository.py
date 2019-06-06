@@ -28,6 +28,7 @@ import requests
 import rdflib
 from collections import defaultdict
 import importlib
+import re
 
 
 # The directory in the Knora source tree where built-in Knora ontologies are stored.
@@ -53,6 +54,8 @@ knora_ontologies = [
 ]
 
 knora_ontology_contexts = set([onto["context"] for onto in knora_ontologies])
+
+knora_base_version_string_regex = re.compile(r"^PR ([0-9]+)$")
 
 
 class UpdateException(Exception):
@@ -240,12 +243,6 @@ class Repository:
         print("Updated Lucene index.")
 
 
-def load_transformer(pr_num):
-    transformer_plugin_module = importlib.import_module(pr_num + ".update")
-    transformer_plugin_class = getattr(transformer_plugin_module, "GraphTransformer")
-    return transformer_plugin_class()
-
-
 def do_select_request(graphdb_info, sparql):
     headers = {
         "Accept": "application/sparql-results+json"
@@ -297,6 +294,51 @@ def run_updates(graphdb_info, transformers):
     print("Update complete. Elapsed time: {}.".format(str(timedelta(seconds=elapsed))))
 
 
+def load_transformers(graphdb_info):
+    plugins_subdirs = os.listdir("plugins")
+    pr_dirs = filter(lambda dirname: dirname.isdigit(), plugins_subdirs)
+    pr_nums = map(lambda dirname: int(dirname), pr_dirs)
+
+    knora_base_pr_num_sparql = """
+        PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+        SELECT ?version
+        WHERE {
+            <http://www.knora.org/ontology/knora-base> knora-base:version ?version .
+        }
+    """
+
+    query_result_rows = do_select_request(graphdb_info=graphdb_info, sparql=knora_base_pr_num_sparql)
+    repository_pr_num = 0
+
+    if len(query_result_rows) > 0:
+        version_string = query_result_rows[0]["version"]
+        match = knora_base_version_string_regex.match(version_string)
+
+        if match is None:
+            raise UpdateException("Could not parse knora-base:version: {}".format(version_string))
+
+        repository_pr_num = match.group(1)
+
+    needed_pr_nums = sorted(list(filter(lambda pr_num: pr_num > repository_pr_num, pr_nums)))
+
+    if len(needed_pr_nums) == 0:
+        print("No updates needed.")
+        return []
+
+    needed_pr_nums_str = ', '.join(map(lambda needed_pr_num: str(needed_pr_num), needed_pr_nums))
+    print("Required updates: " + needed_pr_nums_str)
+    transformers = []
+
+    for transformer_pr_num in needed_pr_nums:
+        transformer_module = importlib.import_module(str(transformer_pr_num) + ".update")
+        transformer_class = getattr(transformer_module, "GraphTransformer")
+        transformer = transformer_class()
+        transformers.append(transformer)
+
+    return transformers
+
+
 # Command-line invocation.
 def main():
     default_graphdb_host = "localhost"
@@ -332,6 +374,11 @@ def main():
         username=args.username,
         password=password
     )
+
+    transformers = load_transformers(graphdb_info)
+
+    if len(transformers) > 0:
+        run_updates(graphdb_info=graphdb_info, transformers=transformers)
 
 
 if __name__ == "__main__":
