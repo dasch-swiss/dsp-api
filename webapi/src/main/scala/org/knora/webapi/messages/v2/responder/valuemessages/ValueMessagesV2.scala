@@ -32,8 +32,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{GetImageMetadataRequestV2, GetImageMetadataResponseV2}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
-import org.knora.webapi.twirl._
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util._
@@ -108,16 +107,16 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
                     for {
                         valueContent: ValueContentV2 <-
-                            ValueContentV2.fromJsonLDObject(
-                                jsonLDObject = jsonLDObject,
-                                requestingUser = requestingUser,
-                                responderManager = responderManager,
-                                storeManager = storeManager,
-                                settings = settings,
-                                log = log
-                            )
+                        ValueContentV2.fromJsonLDObject(
+                            jsonLDObject = jsonLDObject,
+                            requestingUser = requestingUser,
+                            responderManager = responderManager,
+                            storeManager = storeManager,
+                            settings = settings,
+                            log = log
+                        )
 
-                        maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+                        maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
                         resourceIri = resourceIri.toString,
                         resourceClassIri = resourceClassIri,
@@ -144,7 +143,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 case class CreateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
-    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         if (targetSchema != ApiV2Complex) {
             throw AssertionException(s"CreateValueResponseV2 can only be returned in the complex schema")
         }
@@ -214,17 +213,17 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
                     for {
                         valueContent: ValueContentV2 <-
-                            ValueContentV2.fromJsonLDObject(
-                                jsonLDObject = jsonLDObject,
-                                requestingUser = requestingUser,
-                                responderManager = responderManager,
-                                storeManager = storeManager,
-                                settings = settings,
-                                log = log
-                            )
+                        ValueContentV2.fromJsonLDObject(
+                            jsonLDObject = jsonLDObject,
+                            requestingUser = requestingUser,
+                            responderManager = responderManager,
+                            storeManager = storeManager,
+                            settings = settings,
+                            log = log
+                        )
 
                         valueIri = jsonLDObject.getIDAsKnoraDataIri
-                        maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+                        maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield UpdateValueV2(
                         resourceIri = resourceIri.toString,
                         resourceClassIri = resourceClassIri,
@@ -252,7 +251,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
 case class UpdateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  projectADM: ProjectADM) extends KnoraResponseV2 with UpdateResultInProject {
-    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         if (targetSchema != ApiV2Complex) {
             throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex schema")
         }
@@ -271,14 +270,14 @@ case class UpdateValueResponseV2(valueIri: IRI,
 /**
   * Requests that a value is marked as deleted. A successful response will be a [[SuccessResponseV2]].
   *
-  * @param resourceIri    the IRI of the containing resource.
+  * @param resourceIri      the IRI of the containing resource.
   * @param resourceClassIri the IRI of the resource class.
-  * @param propertyIri    the IRI of the property pointing to the value to be marked as deleted.
-  * @param valueIri       the IRI of the value to be marked as deleted.
-  * @param valueTypeIri  the IRI of the value class.
-  * @param deleteComment  an optional comment explaining why the value is being marked as deleted.
-  * @param requestingUser the user making the request.
-  * @param apiRequestID   the API request ID.
+  * @param propertyIri      the IRI of the property pointing to the value to be marked as deleted.
+  * @param valueIri         the IRI of the value to be marked as deleted.
+  * @param valueTypeIri     the IRI of the value class.
+  * @param deleteComment    an optional comment explaining why the value is being marked as deleted.
+  * @param requestingUser   the user making the request.
+  * @param apiRequestID     the API request ID.
   */
 case class DeleteValueRequestV2(resourceIri: IRI,
                                 resourceClassIri: SmartIri,
@@ -346,7 +345,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
 
                 val valueTypeIri: SmartIri = jsonLDObject.getTypeAsKnoraTypeIri
 
-                val deleteComment: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DeleteComment, stringFormatter.toSparqlEncodedString)
+                val deleteComment: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DeleteComment, stringFormatter.toSparqlEncodedString)
 
                 DeleteValueRequestV2(
                     resourceIri = resourceIri.toString,
@@ -429,14 +428,14 @@ case class DeletionInfo(deleteDate: Instant,
         }
 
         Map(
-            OntologyConstants.KnoraApiV2WithValueObjects.IsDeleted -> JsonLDBoolean(true),
-            OntologyConstants.KnoraApiV2WithValueObjects.DeleteDate -> JsonLDObject(
+            OntologyConstants.KnoraApiV2Complex.IsDeleted -> JsonLDBoolean(true),
+            OntologyConstants.KnoraApiV2Complex.DeleteDate -> JsonLDObject(
                 Map(
                     JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
                     JsonLDConstants.VALUE -> JsonLDString(deleteDate.toString)
                 )
             ),
-            OntologyConstants.KnoraApiV2WithValueObjects.DeleteComment -> JsonLDString(deleteComment)
+            OntologyConstants.KnoraApiV2Complex.DeleteComment -> JsonLDString(deleteComment)
         )
     }
 }
@@ -471,9 +470,20 @@ sealed trait ReadValueV2 extends IOValueV2 {
     def valueCreationDate: Instant
 
     /**
+      * The UUID shared by all the versions of this value.
+      */
+    def valueHasUUID: UUID
+
+    /**
       * The content of the value.
       */
     def valueContent: ValueContentV2
+
+    /**
+      * The IRI of the previous version of this value. Not returned in API responses, but needed
+      * here for testing.
+      */
+    def previousValueIri: Option[IRI]
 
     /**
       * If the value has been marked as deleted, information about its deletion.
@@ -494,10 +504,15 @@ sealed trait ReadValueV2 extends IOValueV2 {
       * @param settings     the application settings.
       * @return a JSON-LD representation of this value.
       */
-    def toJsonLD(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    def toJsonLD(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val valueContentAsJsonLD = valueContent.toJsonLDValue(targetSchema, projectADM, settings)
+        val valueContentAsJsonLD = valueContent.toJsonLDValue(
+            targetSchema = targetSchema,
+            projectADM = projectADM,
+            settings = settings,
+            schemaOptions = schemaOptions
+        )
 
         // In the complex schema, add the value's IRI and type to the JSON-LD object that represents it.
         targetSchema match {
@@ -507,20 +522,31 @@ sealed trait ReadValueV2 extends IOValueV2 {
                     case jsonLDObject: JsonLDObject =>
                         // Add the value's metadata.
 
+                        val valueSmartIri = valueIri.toSmartIri
+
                         val requiredMetadata = Map(
                             JsonLDConstants.ID -> JsonLDString(valueIri),
                             JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString),
-                            OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
-                            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions),
-                            OntologyConstants.KnoraApiV2WithValueObjects.UserHasPermission -> JsonLDString(userPermission.toString),
-                            OntologyConstants.KnoraApiV2WithValueObjects.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                            OntologyConstants.KnoraApiV2Complex.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
+                            OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(permissions),
+                            OntologyConstants.KnoraApiV2Complex.UserHasPermission -> JsonLDString(userPermission.toString),
+                            OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
                                 value = valueCreationDate.toString,
                                 datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                            ),
+                            OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID)),
+                            OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+                                value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID),
+                                datatype = OntologyConstants.Xsd.Uri.toSmartIri
+                            ),
+                            OntologyConstants.KnoraApiV2Complex.VersionArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+                                value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID, maybeTimestamp = Some(valueCreationDate)),
+                                datatype = OntologyConstants.Xsd.Uri.toSmartIri
                             )
                         )
 
                         val valueHasCommentAsJsonLD: Option[(IRI, JsonLDValue)] = valueContent.comment.map {
-                            definedComment => OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment -> JsonLDString(definedComment)
+                            definedComment => OntologyConstants.KnoraApiV2Complex.ValueHasComment -> JsonLDString(definedComment)
                         }
 
                         val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
@@ -540,43 +566,91 @@ sealed trait ReadValueV2 extends IOValueV2 {
 }
 
 /**
-  * A link value as read from the triplestore.
+  * A text value, or a page of standoff markup attached to a text value, as read from the triplestore.
   *
-  * @param valueIri       the IRI of the value.
-  * @param attachedToUser the user that created the value.
-  * @param permissions    the permissions that the value grants to user groups.
-  * @param userPermission the permission that the requesting user has on the value.
-  * @param valueContent   the content of the value.
-  * @param deletionInfo   if this value has been marked as deleted, provides the date when it was
-  *                       deleted and the reason why it was deleted.
+  * @param valueIri                      the IRI of the value.
+  * @param attachedToUser                the user that created the value.
+  * @param permissions                   the permissions that the value grants to user groups.
+  * @param userPermission                the permission that the requesting user has on the value.
+  * @param valueHasUUID                  the UUID shared by all the versions of this value.
+  * @param valueContent                  the content of the value.
+  * @param valueHasMaxStandoffStartIndex if this text value has standoff markup, the highest
+  *                                      `knora-base:standoffTagHasEndIndex`
+  *                                      used in its standoff tags.
+  * @param previousValueIri              the IRI of the previous version of this value. Not returned in API responses, but needed
+  *                                      here for testing.
+  * @param deletionInfo                  if this value has been marked as deleted, provides the date when it was
+  *                                      deleted and the reason why it was deleted.
   */
-case class ReadNonLinkValueV2(valueIri: IRI,
-                              attachedToUser: IRI,
-                              permissions: String,
-                              userPermission: EntityPermission,
-                              valueCreationDate: Instant,
-                              valueContent: NonLinkValueContentV2,
-                              deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadNonLinkValueV2] {
+case class ReadTextValueV2(valueIri: IRI,
+                           attachedToUser: IRI,
+                           permissions: String,
+                           userPermission: EntityPermission,
+                           valueCreationDate: Instant,
+                           valueHasUUID: UUID,
+                           valueContent: TextValueContentV2,
+                           valueHasMaxStandoffStartIndex: Option[Int],
+                           previousValueIri: Option[IRI],
+                           deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadTextValueV2] {
     /**
       * Converts this value to the specified ontology schema.
       *
       * @param targetSchema the target schema.
       */
-    override def toOntologySchema(targetSchema: ApiV2Schema): ReadNonLinkValueV2 = {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadTextValueV2 = {
         copy(valueContent = valueContent.toOntologySchema(targetSchema))
     }
 
+    override def toJsonLD(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val valueAsJsonLDValue: JsonLDValue = super.toJsonLD(
+            targetSchema = targetSchema,
+            projectADM = projectADM,
+            settings = settings,
+            schemaOptions = schemaOptions
+        )
+
+        // If this is the complex schema and separate standoff has been requested, and the text value has
+        // valueHasMaxStandoffStartIndex, add it along with textValueHasMarkup to the metadata returned with the value.
+        targetSchema match {
+            case ApiV2Complex =>
+                if (SchemaOptions.renderMarkupAsStandoff(targetSchema = ApiV2Complex, schemaOptions = schemaOptions)) {
+                    valueHasMaxStandoffStartIndex match {
+                        case Some(maxStartIndex) =>
+                            val valueAsJsonLDObject: JsonLDObject = valueAsJsonLDValue match {
+                                case jsonLDObject: JsonLDObject => jsonLDObject
+                                case other => throw AssertionException(s"Expected value $valueIri to be a represented as a JSON-LD object in the complex schema, but found $other")
+                            }
+
+                            JsonLDObject(
+                                valueAsJsonLDObject.value ++ Map(
+                                    OntologyConstants.KnoraApiV2Complex.TextValueHasMarkup -> JsonLDBoolean(true),
+                                    OntologyConstants.KnoraApiV2Complex.TextValueHasMaxStandoffStartIndex -> JsonLDInt(maxStartIndex)
+                                )
+                            )
+
+                        case None => valueAsJsonLDValue
+                    }
+                } else {
+                    valueAsJsonLDValue
+                }
+
+            case ApiV2Simple => valueAsJsonLDValue
+        }
+    }
 }
 
 /**
-  * A non-link value as read from the triplestore.
+  * A link value as read from the triplestore.
   *
   * @param valueIri         the IRI of the value.
   * @param attachedToUser   the user that created the value.
   * @param permissions      the permissions that the value grants to user groups.
   * @param userPermission   the permission that the requesting user has on the value.
+  * @param valueHasUUID     the UUID shared by all the versions of this value.
   * @param valueContent     the content of the value.
-  * @param valueHasRefCount if this is a link value, its reference count.  Not returned in API responses, but needed
+  * @param valueHasRefCount if this is a link value, its reference count. Not returned in API responses, but needed
   *                         here for testing.
   * @param previousValueIri the IRI of the previous version of this value. Not returned in API responses, but needed
   *                         here for testing.
@@ -588,6 +662,7 @@ case class ReadLinkValueV2(valueIri: IRI,
                            permissions: String,
                            userPermission: EntityPermission,
                            valueCreationDate: Instant,
+                           valueHasUUID: UUID,
                            valueContent: LinkValueContentV2,
                            valueHasRefCount: Int,
                            previousValueIri: Option[IRI] = None,
@@ -598,6 +673,39 @@ case class ReadLinkValueV2(valueIri: IRI,
       * @param targetSchema the target schema.
       */
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadLinkValueV2 = {
+        copy(valueContent = valueContent.toOntologySchema(targetSchema))
+    }
+}
+
+/**
+  * A non-text, non-link value as read from the triplestore.
+  *
+  * @param valueIri         the IRI of the value.
+  * @param attachedToUser   the user that created the value.
+  * @param permissions      the permissions that the value grants to user groups.
+  * @param userPermission   the permission that the requesting user has on the value.
+  * @param valueHasUUID     the UUID shared by all the versions of this value.
+  * @param valueContent     the content of the value.
+  * @param previousValueIri the IRI of the previous version of this value. Not returned in API responses, but needed
+  *                         here for testing.
+  * @param deletionInfo     if this value has been marked as deleted, provides the date when it was
+  *                         deleted and the reason why it was deleted.
+  */
+case class ReadOtherValueV2(valueIri: IRI,
+                            attachedToUser: IRI,
+                            permissions: String,
+                            userPermission: EntityPermission,
+                            valueCreationDate: Instant,
+                            valueHasUUID: UUID,
+                            valueContent: ValueContentV2,
+                            previousValueIri: Option[IRI],
+                            deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadOtherValueV2] {
+    /**
+      * Converts this value to the specified ontology schema.
+      *
+      * @param targetSchema the target schema.
+      */
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadOtherValueV2 = {
         copy(valueContent = valueContent.toOntologySchema(targetSchema))
     }
 }
@@ -679,7 +787,7 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
       * @param settings     the configuration options.
       * @return a [[JsonLDValue]] that can be used to generate JSON-LD representing this value.
       */
-    def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue
+    def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue
 
     /**
       * Undoes the SPARQL-escaping of strings in this [[ValueContentV2]].
@@ -690,7 +798,7 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
 
     /**
       * Returns `true` if creating this [[ValueContentV2]] as a new value would duplicate the specified other value.
-      * This means that if resource `R` has property `P` with value `V1`, and `V1` would dupliate `V2`, the API server
+      * This means that if resource `R` has property `P` with value `V1`, and `V1` would duplicate `V2`, the API server
       * should not add another instance of property `P` with value `V2`. It does not necessarily mean that `V1 == V2`.
       *
       * @param that a [[ValueContentV2]] in the same resource, as read from the triplestore.
@@ -707,10 +815,6 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
       * @return `true` if this [[ValueContentV2]] would duplicate `currentVersion`.
       */
     def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean
-}
-
-sealed trait NonLinkValueContentV2 extends ValueContentV2 {
-    override def toOntologySchema(targetSchema: OntologySchema): NonLinkValueContentV2
 }
 
 /**
@@ -738,7 +842,7 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
                          log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 
     protected def getComment(jsonLDObject: JsonLDObject)(implicit stringFormatter: StringFormatter): Option[String] = {
-        jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment, stringFormatter.toSparqlEncodedString)
+        jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.ValueHasComment, stringFormatter.toSparqlEncodedString)
     }
 }
 
@@ -771,43 +875,43 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
             // #validate-json-ld-iri
 
             valueContent: ValueContentV2 <- valueType.toString match {
-                case OntologyConstants.KnoraApiV2WithValueObjects.TextValue =>
+                case OntologyConstants.KnoraApiV2Complex.TextValue =>
                     TextValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.IntValue =>
+                case OntologyConstants.KnoraApiV2Complex.IntValue =>
                     IntegerValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue =>
+                case OntologyConstants.KnoraApiV2Complex.DecimalValue =>
                     DecimalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue =>
+                case OntologyConstants.KnoraApiV2Complex.BooleanValue =>
                     BooleanValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.DateValue =>
+                case OntologyConstants.KnoraApiV2Complex.DateValue =>
                     DateValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.GeomValue =>
+                case OntologyConstants.KnoraApiV2Complex.GeomValue =>
                     GeomValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue =>
+                case OntologyConstants.KnoraApiV2Complex.IntervalValue =>
                     IntervalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.LinkValue =>
+                case OntologyConstants.KnoraApiV2Complex.LinkValue =>
                     LinkValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.ListValue =>
+                case OntologyConstants.KnoraApiV2Complex.ListValue =>
                     HierarchicalListValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.UriValue =>
+                case OntologyConstants.KnoraApiV2Complex.UriValue =>
                     UriValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue =>
+                case OntologyConstants.KnoraApiV2Complex.GeonameValue =>
                     GeonameValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.ColorValue =>
+                case OntologyConstants.KnoraApiV2Complex.ColorValue =>
                     ColorValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
-                case OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue =>
+                case OntologyConstants.KnoraApiV2Complex.StillImageFileValue =>
                     StillImageFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
@@ -833,7 +937,7 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
                               valueHasStartPrecision: DatePrecisionV2,
                               valueHasEndPrecision: DatePrecisionV2,
                               valueHasCalendar: CalendarNameV2,
-                              comment: Option[String] = None) extends NonLinkValueContentV2 {
+                              comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.DateValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -864,7 +968,7 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): DateValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -876,19 +980,19 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
                 val startCalendarDate: CalendarDateV2 = asCalendarDateRange.startCalendarDate
                 val endCalendarDate: CalendarDateV2 = asCalendarDateRange.endCalendarDate
 
-                val startDateAssertions = Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> JsonLDInt(startCalendarDate.year)) ++
-                    startCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> JsonLDInt(month)) ++
-                    startCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> JsonLDInt(day)) ++
-                    startCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra -> JsonLDString(era.toString))
+                val startDateAssertions = Map(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear -> JsonLDInt(startCalendarDate.year)) ++
+                    startCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth -> JsonLDInt(month)) ++
+                    startCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay -> JsonLDInt(day)) ++
+                    startCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra -> JsonLDString(era.toString))
 
-                val endDateAssertions = Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> JsonLDInt(endCalendarDate.year)) ++
-                    endCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> JsonLDInt(month)) ++
-                    endCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> JsonLDInt(day)) ++
-                    endCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra -> JsonLDString(era.toString))
+                val endDateAssertions = Map(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear -> JsonLDInt(endCalendarDate.year)) ++
+                    endCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth -> JsonLDInt(month)) ++
+                    endCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay -> JsonLDInt(day)) ++
+                    endCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra -> JsonLDString(era.toString))
 
                 JsonLDObject(Map(
-                    OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString),
-                    OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar -> JsonLDString(valueHasCalendar.toString)
+                    OntologyConstants.KnoraApiV2Complex.ValueAsString -> JsonLDString(valueHasString),
+                    OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar -> JsonLDString(valueHasCalendar.toString)
                 ) ++ startDateAssertions ++ endDateAssertions)
         }
     }
@@ -974,19 +1078,19 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
 
         // Get the values given in the the JSON-LD object.
 
-        val calendarName: CalendarNameV2 = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar, CalendarNameV2.parse)
+        val calendarName: CalendarNameV2 = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar, CalendarNameV2.parse)
 
-        val dateValueHasStartYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear)
-        val maybeDateValueHasStartMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth)
-        val maybeDateValueHasStartDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay)
+        val dateValueHasStartYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear)
+        val maybeDateValueHasStartMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth)
+        val maybeDateValueHasStartDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay)
         // #validate-optional-json-ld-string
-        val maybeDateValueHasStartEra: Option[DateEraV2] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra, DateEraV2.parse)
+        val maybeDateValueHasStartEra: Option[DateEraV2] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra, DateEraV2.parse)
         // #validate-optional-json-ld-string
 
-        val dateValueHasEndYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear)
-        val maybeDateValueHasEndMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth)
-        val maybeDateValueHasEndDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay)
-        val maybeDateValueHasEndEra: Option[DateEraV2] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra, DateEraV2.parse)
+        val dateValueHasEndYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear)
+        val maybeDateValueHasEndMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth)
+        val maybeDateValueHasEndDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay)
+        val maybeDateValueHasEndEra: Option[DateEraV2] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra, DateEraV2.parse)
 
         // Check that the date precisions are valid.
 
@@ -1060,19 +1164,22 @@ case class CreateStandoffTagV2InTriplestore(standoffNode: StandoffTagV2, standof
 
 
 /**
-  * Represents a Knora text value.
+  * Represents a Knora text value, or a page of standoff markup that will be included in a text value.
   *
-  * @param valueHasString     the string representation of the text (without markup).
-  * @param standoffAndMapping a [[StandoffAndMapping]], if any.
-  * @param comment            a comment on this `TextValueContentV2`, if any.
+  * @param maybeValueHasString the string representation of this text value, if available.
+  * @param standoff            the standoff markup attached to the text value, if any.
+  * @param mappingIri          the IRI of the [[MappingXMLtoStandoff]] used by default with the text value, if any.
+  * @param mapping             the [[MappingXMLtoStandoff]] used by default with the text value, if any.
+  * @param comment             a comment on this `TextValueContentV2`, if any.
   */
 case class TextValueContentV2(ontologySchema: OntologySchema,
-                              valueHasString: String,
+                              maybeValueHasString: Option[String],
                               valueHasLanguage: Option[String] = None,
-                              standoffAndMapping: Option[StandoffAndMapping] = None,
-                              comment: Option[String] = None) extends NonLinkValueContentV2 {
-    private val knoraIdUtil = new KnoraIdUtil
-
+                              standoff: Seq[StandoffTagV2] = Vector.empty,
+                              mappingIri: Option[IRI] = None,
+                              mapping: Option[MappingXMLtoStandoff] = None,
+                              xslt: Option[String] = None,
+                              comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.TextValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1089,75 +1196,100 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
       * Returns the IRI attributes representing the target IRIs of any standoff links in this text value.
       */
     lazy val standoffLinkTagIriAttributes: Set[StandoffTagIriAttributeV2] = {
-        standoffAndMapping match {
-            case Some(definedStandoffAndMapping) =>
-                definedStandoffAndMapping.standoff.foldLeft(Set.empty[StandoffTagIriAttributeV2]) {
-                    case (acc, standoffTag: StandoffTagV2) =>
-                        if (standoffTag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
-                            val iriAttributes: Set[StandoffTagIriAttributeV2] = standoffTag.attributes.collect {
-                                case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute
-                            }.toSet
+        standoff.foldLeft(Set.empty[StandoffTagIriAttributeV2]) {
+            case (acc, standoffTag: StandoffTagV2) =>
+                if (standoffTag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
+                    val iriAttributes: Set[StandoffTagIriAttributeV2] = standoffTag.attributes.collect {
+                        case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute
+                    }.toSet
 
-                            acc ++ iriAttributes
-                        } else {
-                            acc
-                        }
+                    acc ++ iriAttributes
+                } else {
+                    acc
                 }
-
-            case None => Set.empty[StandoffTagIriAttributeV2]
         }
+
+    }
+
+    override def valueHasString: String = maybeValueHasString.getOrElse(throw AssertionException("Text value has no valueHasString"))
+
+    /**
+      * The content of the text value without standoff, suitable for returning in API responses. This removes
+      * INFORMATION SEPARATOR TWO, which is used only internally.
+      */
+    lazy val valueHasStringWithoutStandoff: String = valueHasString.replace(StringFormatter.INFORMATION_SEPARATOR_TWO.toString, "")
+
+    /**
+      * The maximum start index in the standoff attached to this [[TextValueContentV2]]. This is used
+      * only when writing a text value to the triplestore.
+      */
+    lazy val computedMaxStandoffStartIndex: Option[Int] = if (standoff.nonEmpty) {
+        Some(standoff.map(_.startIndex).max)
+    } else {
+        None
     }
 
     override def toOntologySchema(targetSchema: OntologySchema): TextValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
-                // Remove INFORMATION SEPARATOR TWO, which is used only internally.
-                val textForSimpleSchema = valueHasString.replace(StringFormatter.INFORMATION_SEPARATOR_TWO.toString, "")
-
                 valueHasLanguage match {
                     case Some(lang) =>
                         // In the simple schema, if this text value specifies a language, return it using a JSON-LD
                         // @language key as per <https://json-ld.org/spec/latest/json-ld/#string-internationalization>.
                         JsonLDUtil.objectWithLangToJsonLDObject(
-                            obj = textForSimpleSchema,
+                            obj = valueHasStringWithoutStandoff,
                             lang = lang
                         )
 
-                    case None => JsonLDString(textForSimpleSchema)
+                    case None => JsonLDString(valueHasStringWithoutStandoff)
                 }
 
             case ApiV2Complex =>
-                val objectMap: Map[IRI, JsonLDValue] = if (standoffAndMapping.nonEmpty) {
+                val renderStandoffAsXml: Boolean = standoff.nonEmpty && SchemaOptions.renderMarkupAsXml(targetSchema = targetSchema, schemaOptions = schemaOptions)
 
-                    val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueHasString, standoffAndMapping.get.standoff, standoffAndMapping.get.mapping)
+                // Should we render standoff as XML?
+                val objectMap: Map[IRI, JsonLDValue] = if (renderStandoffAsXml) {
+                    // println(s"Word count: ${maybeValueHasString.get.split("\\W+").length}")
+                    // println(s"Standoff tag count: ${standoff.size}")
+
+                    val definedMappingIri = mappingIri.getOrElse(throw BadRequestException(s"Cannot render standoff as XML without a mapping"))
+                    val definedMapping = mapping.getOrElse(throw BadRequestException(s"Cannot render standoff as XML without a mapping"))
+
+                    val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(
+                        utf8str = valueHasString,
+                        standoff = standoff,
+                        mappingXMLtoStandoff = definedMapping
+                    )
 
                     // check if there is an XSL transformation
-                    if (standoffAndMapping.get.xslt.nonEmpty) {
+                    xslt match {
+                        case Some(definedXslt) =>
+                            val xmlTransformed: String = XMLUtil.applyXSLTransformation(
+                                xml = xmlFromStandoff,
+                                xslt = definedXslt
+                            )
 
-                        val xmlTransformed: String = XMLUtil.applyXSLTransformation(xmlFromStandoff, standoffAndMapping.get.xslt.get)
+                            // the xml was converted to HTML
+                            Map(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml -> JsonLDString(xmlTransformed))
 
-                        // the xml was converted to HTML
-                        Map(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> JsonLDString(xmlTransformed))
-                    } else {
-                        // xml is returned
-                        Map(
-                            OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> JsonLDString(xmlFromStandoff),
-                            OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(standoffAndMapping.get.mappingIri)
-                        )
+                        case None =>
+                            Map(
+                                OntologyConstants.KnoraApiV2Complex.TextValueAsXml -> JsonLDString(xmlFromStandoff),
+                                OntologyConstants.KnoraApiV2Complex.TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(definedMappingIri)
+                            )
                     }
-
                 } else {
-                    // no markup given
-                    Map(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString))
+                    // We're not rendering standoff as XML. Return the text without markup.
+                    Map(OntologyConstants.KnoraApiV2Complex.ValueAsString -> JsonLDString(valueHasStringWithoutStandoff))
                 }
 
                 // In the complex schema, if this text value specifies a language, return it using the predicate
                 // knora-api:textValueHasLanguage.
                 val objectMapWithLanguage: Map[IRI, JsonLDValue] = valueHasLanguage match {
                     case Some(lang) =>
-                        objectMap + (OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> JsonLDString(lang))
+                        objectMap + (OntologyConstants.KnoraApiV2Complex.TextValueHasLanguage -> JsonLDString(lang))
                     case None =>
                         objectMap
                 }
@@ -1175,93 +1307,86 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
       */
     def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV2InTriplestore] = {
 
-        standoffAndMapping match {
-            case Some(definedStandoffAndMapping) =>
-                // create an IRI for each standoff tag
-                // internal references to XML ids are not resolved yet
-                val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV2InTriplestore] = definedStandoffAndMapping.standoff.map {
-                    standoffNode: StandoffTagV2 =>
-                        CreateStandoffTagV2InTriplestore(
-                            standoffNode = standoffNode,
-                            standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
-                        )
-                }
+        if (standoff.nonEmpty) {
+            // create an IRI for each standoff tag
+            // internal references to XML ids are not resolved yet
+            val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV2InTriplestore] = standoff.map {
+                standoffNode: StandoffTagV2 =>
+                    CreateStandoffTagV2InTriplestore(
+                        standoffNode = standoffNode,
+                        standoffTagInstanceIri = stringFormatter.makeRandomStandoffTagIri(valueIri = valueIri, startIndex = standoffNode.startIndex) // generate IRI for new standoff node
+                    )
+            }
 
-                // collect all the standoff tags that contain XML ids and
-                // map the XML ids to standoff node Iris
-                val iDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
-                    standoffTag: CreateStandoffTagV2InTriplestore =>
-                        // filter those tags out that have an XML id
-                        standoffTag.standoffNode.originalXMLID.isDefined
-                }.map {
-                    standoffTagWithID: CreateStandoffTagV2InTriplestore =>
-                        // return the XML id as a key and the standoff IRI as the value
-                        standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
-                }.toMap
+            // collect all the standoff tags that contain XML ids and
+            // map the XML ids to standoff node Iris
+            val iDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
+                standoffTag: CreateStandoffTagV2InTriplestore =>
+                    // filter those tags out that have an XML id
+                    standoffTag.standoffNode.originalXMLID.isDefined
+            }.map {
+                standoffTagWithID: CreateStandoffTagV2InTriplestore =>
+                    // return the XML id as a key and the standoff IRI as the value
+                    standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
+            }.toMap
 
-                // Map the start index of each tag to its IRI, so we can resolve references to parent tags as references to
-                // tag IRIs. We only care about start indexes here, because only hierarchical tags can be parents, and
-                // hierarchical tags don't have end indexes.
-                val startIndexesToStandoffNodeIris: Map[Int, IRI] = standoffTagsWithOriginalXMLIDs.map {
-                    tagWithIndex => tagWithIndex.standoffNode.startIndex -> tagWithIndex.standoffTagInstanceIri
-                }.toMap
+            // Map the start index of each tag to its IRI, so we can resolve references to parent tags as references to
+            // tag IRIs. We only care about start indexes here, because only hierarchical tags can be parents, and
+            // hierarchical tags don't have end indexes.
+            val startIndexesToStandoffNodeIris: Map[Int, IRI] = standoffTagsWithOriginalXMLIDs.map {
+                tagWithIndex => tagWithIndex.standoffNode.startIndex -> tagWithIndex.standoffTagInstanceIri
+            }.toMap
 
-                // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV2`
-                val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV2InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
-                    standoffTag: CreateStandoffTagV2InTriplestore =>
+            // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV2`
+            val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV2InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
+                standoffTag: CreateStandoffTagV2InTriplestore =>
 
-                        // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV2`
-                        val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] = standoffTag.standoffNode.attributes.map {
-                            attributeWithOriginalXMLID: StandoffTagAttributeV2 =>
-                                attributeWithOriginalXMLID match {
-                                    case refAttr: StandoffTagInternalReferenceAttributeV2 =>
-                                        // resolve the XML id to the corresponding standoff node IRI
-                                        refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
-                                    case attr => attr
-                                }
-                        }
+                    // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV2`
+                    val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] = standoffTag.standoffNode.attributes.map {
+                        attributeWithOriginalXMLID: StandoffTagAttributeV2 =>
+                            attributeWithOriginalXMLID match {
+                                case refAttr: StandoffTagInternalReferenceAttributeV2 =>
+                                    // resolve the XML id to the corresponding standoff node IRI
+                                    refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
+                                case attr => attr
+                            }
+                    }
 
-                        val startParentIndex: Option[Int] = standoffTag.standoffNode.startParentIndex
-                        val endParentIndex: Option[Int] = standoffTag.standoffNode.endParentIndex
+                    val startParentIndex: Option[Int] = standoffTag.standoffNode.startParentIndex
+                    val endParentIndex: Option[Int] = standoffTag.standoffNode.endParentIndex
 
-                        // return standoff tag with updated attributes
-                        standoffTag.copy(
-                            standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences),
-                            startParentIri = startParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)), // If there's a start parent index, get its IRI, otherwise None
-                            endParentIri = endParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)) // If there's an end parent index, get its IRI, otherwise None
-                        )
-                }
+                    // return standoff tag with updated attributes
+                    standoffTag.copy(
+                        standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences),
+                        startParentIri = startParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)), // If there's a start parent index, get its IRI, otherwise None
+                        endParentIri = endParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)) // If there's an end parent index, get its IRI, otherwise None
+                    )
+            }
 
-                standoffTagsWithNodeReferences
-
-            case None => Seq.empty[CreateStandoffTagV2InTriplestore]
-
+            standoffTagsWithNodeReferences
+        } else {
+            Seq.empty[CreateStandoffTagV2InTriplestore]
         }
 
     }
 
     override def unescape: ValueContentV2 = {
         // Unescape the text in standoff string attributes.
-        val unescapedStandoffAndMapping: Option[StandoffAndMapping] = standoffAndMapping.map {
-            definedStandoffAndMapping =>
-                definedStandoffAndMapping.copy(
-                    standoff = definedStandoffAndMapping.standoff.map {
-                        standoffTag =>
-                            standoffTag.copy(
-                                attributes = standoffTag.attributes.map {
-                                    case stringAttribute: StandoffTagStringAttributeV2 =>
-                                        stringAttribute.copy(value = stringFormatter.fromSparqlEncodedString(stringAttribute.value))
+        val unescapedStandoff = standoff.map {
+            standoffTag =>
+                standoffTag.copy(
+                    attributes = standoffTag.attributes.map {
+                        case stringAttribute: StandoffTagStringAttributeV2 =>
+                            stringAttribute.copy(value = stringFormatter.fromSparqlEncodedString(stringAttribute.value))
 
-                                    case other => other
-                                }
-                            )
+                        case other => other
                     }
                 )
         }
 
         copy(
-            valueHasString = stringFormatter.fromSparqlEncodedString(valueHasString),
-            standoffAndMapping = unescapedStandoffAndMapping,
+            maybeValueHasString = maybeValueHasString.map(str => stringFormatter.fromSparqlEncodedString(str)),
+            standoff = unescapedStandoff,
             comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr))
         )
     }
@@ -1283,19 +1408,12 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
             case thatTextValue: TextValueContentV2 =>
                 val valueHasStringIdentical: Boolean = valueHasString == thatTextValue.valueHasString
 
+                val mappingIdentitcal = mappingIri == thatTextValue.mappingIri
+
                 // compare standoff nodes (sort them first by index) and the XML-to-standoff mapping IRI
-                val standoffIdentical: Boolean = (standoffAndMapping, thatTextValue.standoffAndMapping) match {
-                    case (Some(thisStandoffAndMapping), Some(thatStandoffAndMapping)) =>
-                        val thisComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(thisStandoffAndMapping.standoff)
-                        val thatComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(thatStandoffAndMapping.standoff)
-                        thisComparableStandoff == thatComparableStandoff && thisStandoffAndMapping.mappingIri == thatStandoffAndMapping.mappingIri
+                val standoffIdentical = StandoffTagUtilV2.makeComparableStandoffCollection(standoff) == StandoffTagUtilV2.makeComparableStandoffCollection(thatTextValue.standoff)
 
-                    case (None, None) => true
-
-                    case _ => false
-                }
-
-                valueHasStringIdentical && standoffIdentical && comment == thatTextValue.comment
+                valueHasStringIdentical && standoffIdentical && mappingIdentitcal && comment == thatTextValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1327,10 +1445,10 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
-            maybeValueAsString: Option[String] <- Future(jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString, stringFormatter.toSparqlEncodedString))
-            maybeValueHasLanguage: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage, stringFormatter.toSparqlEncodedString)
-            maybeTextValueAsXml: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml)
-            maybeMappingIri: Option[IRI] = jsonLDObject.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping, stringFormatter.validateAndEscapeIri)
+            maybeValueAsString: Option[String] <- Future(jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.ValueAsString, stringFormatter.toSparqlEncodedString))
+            maybeValueHasLanguage: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.TextValueHasLanguage, stringFormatter.toSparqlEncodedString)
+            maybeTextValueAsXml: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+            maybeMappingIri: Option[IRI] = jsonLDObject.maybeIriInObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping, stringFormatter.validateAndEscapeIri)
 
             // If the client supplied the IRI of a standoff-to-XML mapping, get the mapping.
 
@@ -1349,12 +1467,12 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                     // Text without standoff.
                     TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = valueAsString,
+                        maybeValueHasString = Some(valueAsString),
                         comment = getComment(jsonLDObject)
                     )
 
                 case (None, Some(textValueAsXml), Some(mappingResponse)) =>
-                    // Text with standoff.
+                    // Text with standoff. TODO: support submitting text with standoff as JSON-LD rather than as XML.
 
                     val textWithStandoffTags: TextWithStandoffTagsV2 = StandoffTagUtilV2.convertXMLtoStandoffTagV2(
                         xml = textValueAsXml,
@@ -1363,18 +1481,13 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                         log = log
                     )
 
-                    val standoffAndMapping = StandoffAndMapping(
-                        standoff = textWithStandoffTags.standoffTagV2,
-                        mappingIri = mappingResponse.mappingIri,
-                        mapping = mappingResponse.mapping,
-                        xslt = None
-                    )
-
                     TextValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        valueHasString = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw BadRequestException("Text value contains invalid characters")),
+                        maybeValueHasString = Some(stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw BadRequestException("Text value contains invalid characters"))),
                         valueHasLanguage = maybeValueHasLanguage,
-                        standoffAndMapping = Some(standoffAndMapping),
+                        standoff = textWithStandoffTags.standoffTagV2,
+                        mappingIri = Some(mappingResponse.mappingIri),
+                        mapping = Some(mappingResponse.mapping),
                         comment = getComment(jsonLDObject)
                     )
 
@@ -1386,17 +1499,6 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
 }
 
 /**
-  * Represents standoff and the corresponding mapping.
-  * May include an XSL transformation.
-  *
-  * @param standoff   a sequence of [[StandoffTagV2]].
-  * @param mappingIri the IRI of the mapping
-  * @param mapping    a mapping between XML and standoff.
-  * @param xslt       an XSL transformation.
-  */
-case class StandoffAndMapping(standoff: Seq[StandoffTagV2], mappingIri: IRI, mapping: MappingXMLtoStandoff, xslt: Option[String] = None)
-
-/**
   * Represents a Knora integer value.
   *
   * @param valueHasInteger the integer value.
@@ -1404,7 +1506,7 @@ case class StandoffAndMapping(standoff: Seq[StandoffTagV2], mappingIri: IRI, map
   */
 case class IntegerValueContentV2(ontologySchema: OntologySchema,
                                  valueHasInteger: Int,
-                                 comment: Option[String] = None) extends NonLinkValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.IntValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1414,12 +1516,12 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): IntegerValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple => JsonLDInt(valueHasInteger)
 
             case ApiV2Complex =>
-                JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt -> JsonLDInt(valueHasInteger)))
+                JsonLDObject(Map(OntologyConstants.KnoraApiV2Complex.IntValueAsInt -> JsonLDInt(valueHasInteger)))
 
         }
     }
@@ -1474,7 +1576,7 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): IntegerValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val intValueAsInt: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt)
+        val intValueAsInt: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
 
         IntegerValueContentV2(
             ontologySchema = ApiV2Complex,
@@ -1492,7 +1594,7 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
   */
 case class DecimalValueContentV2(ontologySchema: OntologySchema,
                                  valueHasDecimal: BigDecimal,
-                                 comment: Option[String] = None) extends NonLinkValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.DecimalValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1502,7 +1604,7 @@ case class DecimalValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): DecimalValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val decimalValueAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueHasDecimal.toString,
             datatype = OntologyConstants.Xsd.Decimal.toSmartIri
@@ -1512,7 +1614,7 @@ case class DecimalValueContentV2(ontologySchema: OntologySchema,
             case ApiV2Simple => decimalValueAsJsonLDObject
 
             case ApiV2Complex =>
-                JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> decimalValueAsJsonLDObject))
+                JsonLDObject(Map(OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal -> decimalValueAsJsonLDObject))
         }
     }
 
@@ -1567,7 +1669,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val decimalValueAsDecimal: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
-            key = OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal,
+            key = OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal,
             expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
             validationFun = stringFormatter.validateBigDecimal
         )
@@ -1588,7 +1690,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
   */
 case class BooleanValueContentV2(ontologySchema: OntologySchema,
                                  valueHasBoolean: Boolean,
-                                 comment: Option[String] = None) extends NonLinkValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.BooleanValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1598,12 +1700,12 @@ case class BooleanValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): BooleanValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple => JsonLDBoolean(valueHasBoolean)
 
             case ApiV2Complex =>
-                JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> JsonLDBoolean(valueHasBoolean)))
+                JsonLDObject(Map(OntologyConstants.KnoraApiV2Complex.BooleanValueAsBoolean -> JsonLDBoolean(valueHasBoolean)))
         }
     }
 
@@ -1655,7 +1757,7 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): BooleanValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val booleanValueAsBoolean: Boolean = jsonLDObject.requireBoolean(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean)
+        val booleanValueAsBoolean: Boolean = jsonLDObject.requireBoolean(OntologyConstants.KnoraApiV2Complex.BooleanValueAsBoolean)
 
         BooleanValueContentV2(
             ontologySchema = ApiV2Complex,
@@ -1673,7 +1775,7 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
   */
 case class GeomValueContentV2(ontologySchema: OntologySchema,
                               valueHasGeometry: String,
-                              comment: Option[String] = None) extends NonLinkValueContentV2 {
+                              comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.GeomValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1683,7 +1785,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): GeomValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -1692,7 +1794,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema,
                 )
 
             case ApiV2Complex =>
-                JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry -> JsonLDString(valueHasGeometry)))
+                JsonLDObject(Map(OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry -> JsonLDString(valueHasGeometry)))
         }
     }
 
@@ -1749,7 +1851,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): GeomValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val geometryValueAsGeometry: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry, stringFormatter.validateGeometryString)
+        val geometryValueAsGeometry: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry, stringFormatter.validateGeometryString)
 
         GeomValueContentV2(
             ontologySchema = ApiV2Complex,
@@ -1770,7 +1872,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
 case class IntervalValueContentV2(ontologySchema: OntologySchema,
                                   valueHasIntervalStart: BigDecimal,
                                   valueHasIntervalEnd: BigDecimal,
-                                  comment: Option[String] = None) extends NonLinkValueContentV2 {
+                                  comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.IntervalValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1780,7 +1882,7 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): IntervalValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -1790,12 +1892,12 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
 
             case ApiV2Complex =>
                 JsonLDObject(Map(
-                    OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart ->
+                    OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart ->
                         JsonLDUtil.datatypeValueToJsonLDObject(
                             value = valueHasIntervalStart.toString,
                             datatype = OntologyConstants.Xsd.Decimal.toSmartIri
                         ),
-                    OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd ->
+                    OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd ->
                         JsonLDUtil.datatypeValueToJsonLDObject(
                             value = valueHasIntervalEnd.toString,
                             datatype = OntologyConstants.Xsd.Decimal.toSmartIri
@@ -1859,13 +1961,13 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val intervalValueHasStart: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
-            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart,
+            OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
             OntologyConstants.Xsd.Decimal.toSmartIri,
             stringFormatter.validateBigDecimal
         )
 
         val intervalValueHasEnd: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
-            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd,
+            OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
             OntologyConstants.Xsd.Decimal.toSmartIri,
             stringFormatter.validateBigDecimal
         )
@@ -1889,7 +1991,7 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
 case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
                                           valueHasListNode: IRI,
                                           listNodeLabel: Option[String] = None,
-                                          comment: Option[String] = None) extends NonLinkValueContentV2 {
+                                          comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.ListValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1899,11 +2001,14 @@ case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): HierarchicalListValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 listNodeLabel match {
-                    case Some(labelStr) => JsonLDString(labelStr)
+                    case Some(labelStr) => JsonLDUtil.datatypeValueToJsonLDObject(
+                        value = labelStr,
+                        datatype = OntologyConstants.KnoraApiV2Simple.ListNode.toSmartIri
+                    )
                     case None => throw AssertionException("Can't convert list value to simple schema because it has no list node label")
 
                 }
@@ -1911,8 +2016,8 @@ case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
             case ApiV2Complex =>
                 JsonLDObject(
                     Map(
-                        OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode -> JsonLDUtil.iriToJsonLDObject(valueHasListNode)
-                    ) ++ listNodeLabel.map(labelStr => OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNodeLabel -> JsonLDString(labelStr))
+                        OntologyConstants.KnoraApiV2Complex.ListValueAsListNode -> JsonLDUtil.iriToJsonLDObject(valueHasListNode)
+                    )
                 )
         }
     }
@@ -1970,7 +2075,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): HierarchicalListValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val listValueAsListNode: SmartIri = jsonLDObject.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode, stringFormatter.toSmartIriWithErr)
+        val listValueAsListNode: SmartIri = jsonLDObject.requireIriInObject(OntologyConstants.KnoraApiV2Complex.ListValueAsListNode, stringFormatter.toSmartIriWithErr)
 
         if (!listValueAsListNode.isKnoraDataIri) {
             throw BadRequestException(s"List node IRI <$listValueAsListNode> is not a Knora data IRI")
@@ -1993,7 +2098,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
   */
 case class ColorValueContentV2(ontologySchema: OntologySchema,
                                valueHasColor: String,
-                               comment: Option[String] = None) extends NonLinkValueContentV2 {
+                               comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.ColorValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -2003,7 +2108,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): ColorValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -2012,7 +2117,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema,
                 )
 
             case ApiV2Complex =>
-                JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor -> JsonLDString(valueHasColor)))
+                JsonLDObject(Map(OntologyConstants.KnoraApiV2Complex.ColorValueAsColor -> JsonLDString(valueHasColor)))
         }
     }
 
@@ -2069,7 +2174,7 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): ColorValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val colorValueAsColor: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor, stringFormatter.toSparqlEncodedString)
+        val colorValueAsColor: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.ColorValueAsColor, stringFormatter.toSparqlEncodedString)
 
         ColorValueContentV2(
             ontologySchema = ApiV2Complex,
@@ -2087,7 +2192,7 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
   */
 case class UriValueContentV2(ontologySchema: OntologySchema,
                              valueHasUri: String,
-                             comment: Option[String] = None) extends NonLinkValueContentV2 {
+                             comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.UriValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -2097,7 +2202,7 @@ case class UriValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): UriValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val uriAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueHasUri,
             datatype = OntologyConstants.Xsd.Uri.toSmartIri
@@ -2107,7 +2212,7 @@ case class UriValueContentV2(ontologySchema: OntologySchema,
             case ApiV2Simple => uriAsJsonLDObject
 
             case ApiV2Complex =>
-                JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri -> uriAsJsonLDObject))
+                JsonLDObject(Map(OntologyConstants.KnoraApiV2Complex.UriValueAsUri -> uriAsJsonLDObject))
         }
     }
 
@@ -2165,7 +2270,7 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val uriValueAsUri: String = jsonLDObject.requireDatatypeValueInObject(
-            key = OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri,
+            key = OntologyConstants.KnoraApiV2Complex.UriValueAsUri,
             expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
             validationFun = stringFormatter.toSparqlEncodedString
         )
@@ -2187,7 +2292,7 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
   */
 case class GeonameValueContentV2(ontologySchema: OntologySchema,
                                  valueHasGeonameCode: String,
-                                 comment: Option[String] = None) extends NonLinkValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.GeonameValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -2197,7 +2302,7 @@ case class GeonameValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): GeonameValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
@@ -2206,7 +2311,7 @@ case class GeonameValueContentV2(ontologySchema: OntologySchema,
                 )
 
             case ApiV2Complex =>
-                JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode -> JsonLDString(valueHasGeonameCode)))
+                JsonLDObject(Map(OntologyConstants.KnoraApiV2Complex.GeonameValueAsGeonameCode -> JsonLDString(valueHasGeonameCode)))
         }
     }
 
@@ -2263,7 +2368,7 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): GeonameValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val geonameValueAsGeonameCode: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode, stringFormatter.toSparqlEncodedString)
+        val geonameValueAsGeonameCode: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.GeonameValueAsGeonameCode, stringFormatter.toSparqlEncodedString)
 
         GeonameValueContentV2(
             ontologySchema = ApiV2Complex,
@@ -2284,7 +2389,7 @@ case class FileValueV2(internalFilename: String,
 /**
   * A trait for case classes representing different types of file values.
   */
-sealed trait FileValueContentV2 extends NonLinkValueContentV2 {
+sealed trait FileValueContentV2 extends ValueContentV2 {
     /**
       * The basic metadata about the file value.
       */
@@ -2300,9 +2405,9 @@ sealed trait FileValueContentV2 extends NonLinkValueContentV2 {
     }
 
     def toJsonLDObjectMapInComplexSchema(fileUrl: String): Map[IRI, JsonLDValue] = Map(
-        OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> JsonLDString(fileValue.internalFilename),
+        OntologyConstants.KnoraApiV2Complex.FileValueHasFilename -> JsonLDString(fileValue.internalFilename),
 
-        OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+        OntologyConstants.KnoraApiV2Complex.FileValueAsUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = fileUrl,
             datatype = OntologyConstants.Xsd.Uri.toSmartIri
         )
@@ -2331,7 +2436,7 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): StillImageFileValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val fileUrl: String = s"${settings.externalSipiIIIFGetUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
 
         targetSchema match {
@@ -2339,9 +2444,9 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
 
             case ApiV2Complex =>
                 JsonLDObject(toJsonLDObjectMapInComplexSchema(fileUrl) ++ Map(
-                    OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX -> JsonLDInt(dimX),
-                    OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY -> JsonLDInt(dimY),
-                    OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+                    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX -> JsonLDInt(dimX),
+                    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY -> JsonLDInt(dimY),
+                    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
                         value = s"${settings.externalSipiIIIFGetUrl}/${projectADM.shortcode}",
                         datatype = OntologyConstants.Xsd.Uri.toSmartIri
                     )
@@ -2388,7 +2493,7 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
 
         for {
             // The submitted value provides only Sipi's internal filename for the image.
-            internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename, stringFormatter.toSparqlEncodedString))
+            internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename, stringFormatter.toSparqlEncodedString))
 
             // Ask Sipi about the rest of the file's metadata.
             tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$internalFilename"
@@ -2428,7 +2533,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
 
     override def toOntologySchema(targetSchema: OntologySchema): TextFileValueContentV2 = copy(ontologySchema = targetSchema)
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         val fileUrl: String = s"${settings.externalSipiFileServerGetUrl}/${fileValue.internalFilename}"
 
         targetSchema match {
@@ -2520,7 +2625,7 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
         )
     }
 
-    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
         targetSchema match {
             case ApiV2Simple => JsonLDUtil.iriToJsonLDObject(referredResourceIri)
 
@@ -2531,21 +2636,22 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
                         // include the nested resource in the response
                         val referredResourceAsJsonLDValue: JsonLDObject = targetResource.toJsonLD(
                             targetSchema = targetSchema,
-                            settings = settings
+                            settings = settings,
+                            schemaOptions = schemaOptions
                         )
 
                         // check whether the nested resource is the target or the source of the link
                         if (!isIncomingLink) {
-                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget -> referredResourceAsJsonLDValue)
+                            Map(OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget -> referredResourceAsJsonLDValue)
                         } else {
-                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSource -> referredResourceAsJsonLDValue)
+                            Map(OntologyConstants.KnoraApiV2Complex.LinkValueHasSource -> referredResourceAsJsonLDValue)
                         }
                     case None =>
                         // check whether it is an outgoing or incoming link
                         if (!isIncomingLink) {
-                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> JsonLDUtil.iriToJsonLDObject(referredResourceIri))
+                            Map(OntologyConstants.KnoraApiV2Complex.LinkValueHasTargetIri -> JsonLDUtil.iriToJsonLDObject(referredResourceIri))
                         } else {
-                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSourceIri -> JsonLDUtil.iriToJsonLDObject(referredResourceIri))
+                            Map(OntologyConstants.KnoraApiV2Complex.LinkValueHasSourceIri -> JsonLDUtil.iriToJsonLDObject(referredResourceIri))
                         }
                 }
 
@@ -2595,7 +2701,7 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): LinkValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val targetIri: SmartIri = jsonLDObject.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri, stringFormatter.toSmartIriWithErr)
+        val targetIri: SmartIri = jsonLDObject.requireIriInObject(OntologyConstants.KnoraApiV2Complex.LinkValueHasTargetIri, stringFormatter.toSmartIriWithErr)
 
         if (!targetIri.isKnoraDataIri) {
             throw BadRequestException(s"Link target IRI <$targetIri> is not a Knora data IRI")

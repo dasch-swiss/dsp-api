@@ -41,7 +41,9 @@ WHERE {
     ?resourceProp rdfs:subPropertyOf* knora-base:hasValue .
 
     {
-        ?resource ?resourceProp ?obj .
+        ?resource ?resourceProp ?obj ;
+            knora-base:isDeleted false .
+
         ?obj knora-base:isDeleted false .
         ?obj ?objPred ?objObj .
 
@@ -56,7 +58,9 @@ WHERE {
     {
         @* Return the project of the resource that contains the value. *@
 
-        ?resource ?resourceProp ?obj .
+        ?resource ?resourceProp ?obj ;
+            knora-base:isDeleted false .
+
         ?obj knora-base:isDeleted false .
         ?resource knora-base:attachedToProject ?resourceProject .
 

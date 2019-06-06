@@ -380,6 +380,15 @@ case class SubStrFunction(textLiteralVar: QueryVariable, startExpression: Expres
 }
 
 /**
+  * Represents the SPARQL `str` function.
+  *
+  * @param textLiteralVar the variable containing the string literal possibly with a language tag from which the string is to be taken.
+  */
+case class StrFunction(textLiteralVar: QueryVariable) extends Expression {
+    override def toSparql: String = s"""str(${textLiteralVar.toSparql})"""
+}
+
+/**
   * Represents a function call in a filter.
   *
   * @param functionIri the IRI of the function.
@@ -500,7 +509,6 @@ case class FilterNotExistsPattern(patterns: Seq[QueryPattern]) extends QueryPatt
 case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
     override def toSparql: String = s"MINUS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
 }
-
 
 /**
   * Represents a CONSTRUCT clause in a query.

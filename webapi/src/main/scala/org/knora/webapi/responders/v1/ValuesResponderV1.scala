@@ -33,10 +33,10 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV2, StandoffTagV2}
+import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 
@@ -48,9 +48,6 @@ import scala.concurrent.Future
   * Updates Knora values.
   */
 class ValuesResponderV1(responderData: ResponderData) extends Responder(responderData) {
-    // Creates IRIs for new Knora value objects.
-    val knoraIdUtil = new KnoraIdUtil
-
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
 
@@ -373,7 +370,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             deleteDirectLink = false,
                             linkValueExists = false,
                             linkTargetExists = true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
-                            newLinkValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
+                            newLinkValueIri = stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
                             linkTargetIri = realTargetIri,
                             currentReferenceCount = 0,
                             newReferenceCount = initialReferenceCount,
@@ -386,7 +383,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(
                     resourceIri = createMultipleValuesRequest.resourceIri,
                     linkUpdates = standoffLinkUpdates,
-                    creationDate = createMultipleValuesRequest.creationDate
+                    creationDate = createMultipleValuesRequest.creationDate,
+                    stringFormatter = stringFormatter
                 ).toString()
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -431,7 +429,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         val sparqlGenerationResultForProperty: SparqlGenerationResultForProperty = valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
                             case (propertyAcc: SparqlGenerationResultForProperty, valueToCreate: NumberedValueToCreate) =>
                                 val updateValueV1 = valueToCreate.createValueV1WithComment.updateValueV1
-                                val newValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
+                                val newValueIri = stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
 
                                 // How we generate the SPARQL depends on whether we're creating a link or an ordinary value.
                                 val insertSparql: String = valueToCreate.createValueV1WithComment.updateValueV1 match {
@@ -461,7 +459,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                             linkUpdate = sparqlTemplateLinkUpdate,
                                             creationDate = createMultipleValuesRequest.creationDate,
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
-                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
+                                            maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
+                                            stringFormatter = stringFormatter
                                         ).toString()
 
                                     case _ =>
@@ -509,7 +508,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                             valuePermissions = defaultPropertyAccessPermissions,
                                             creationDate = createMultipleValuesRequest.creationDate,
                                             maybeValueHasOrder = Some(valueToCreate.valueHasOrder),
-                                            knoraIdUtil = knoraIdUtil
+                                            stringFormatter = stringFormatter
                                         ).toString()
                                 }
 
@@ -745,7 +744,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             // If we're updating a link, findResourceWithValueResult will contain the IRI of the property that points to the
             // knora-base:LinkValue, but we'll need the IRI of the corresponding link property.
             val propertyIri = changeValueRequest.value match {
-                case linkUpdateV1: LinkUpdateV1 => knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
+                case linkUpdateV1: LinkUpdateV1 => stringFormatter.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
                 case _ => findResourceWithValueResult.propertyIri
             }
 
@@ -820,7 +819,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 )).mapTo[ResourceFullResponseV1]
 
                 _ = changeValueRequest.value match {
-                    case fileValue: FileValueV1 => () // It is a file value, do not check for duplicates.
+                    case _: FileValueV1 => () // It is a file value, do not check for duplicates.
                     case _ => // It is not a file value.
                         // Ensure that adding the new value version would not create a duplicate value. This works in API v1 because a
                         // ResourceFullResponseV1 contains only the values that the user is allowed to see, otherwise checking for
@@ -828,7 +827,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         resourceFullResponse.props.flatMap(_.properties.find(_.pid == propertyIri)) match {
                             case Some(prop: PropertyV1) =>
                                 // Don't consider the current value version when looking for duplicates.
-                                val filteredValues = prop.value_ids.zip(prop.values).filter(_._1 != changeValueRequest.valueIri).unzip._2
+                                val filteredValues = prop.value_ids.zip(prop.values).filter(_._1 != changeValueRequest.valueIri).map(_._2)
 
                                 if (filteredValues.exists(apiValueV1 => changeValueRequest.value.isDuplicateOfOtherValue(apiValueV1))) {
                                     throw DuplicateValueException()
@@ -893,7 +892,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                     case _ =>
                         // We're updating an ordinary value. Generate an IRI for the new version of the value.
-                        val newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
+                        val newValueIri = stringFormatter.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
                         // Give the new version the same permissions as the previous version.
 
@@ -964,7 +963,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 // Everything looks OK, so update the comment.
 
                 // Generate an IRI for the new value.
-                newValueIri = knoraIdUtil.makeRandomValueIri(findResourceWithValueResult.resourceIri)
+                newValueIri = stringFormatter.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
                 // Get project info
                 maybeProjectInfo <- {
@@ -1076,7 +1075,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         case (p, o) => p == OntologyConstants.KnoraBase.HasPermissions
                     }.map(_._2).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${deleteValueRequest.valueIri} has no permissions"))
 
-                    val linkPropertyIri = knoraIdUtil.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
+                    val linkPropertyIri = stringFormatter.linkValuePropertyIri2LinkPropertyIri(findResourceWithValueResult.propertyIri)
 
                     for {
                         // Get project info
@@ -1161,7 +1160,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             maybeDeleteComment = deleteValueRequest.deleteComment,
                             linkUpdates = linkUpdates,
                             currentTime = currentTime,
-                            requestingUser = userIri
+                            requestingUser = userIri,
+                            stringFormatter = stringFormatter
                         ).toString()
                     } yield (sparqlUpdate, deleteValueRequest.valueIri)
             }
@@ -2012,7 +2012,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
                 creationDate = currentTime,
-                maybeComment = comment
+                maybeComment = comment,
+                stringFormatter = stringFormatter
             ).toString()
 
             /*
@@ -2049,7 +2050,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                  valuePermissions: String,
                                                  userProfile: UserADM): Future[UnverifiedValueV1] = {
         // Generate an IRI for the new value.
-        val newValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
+        val newValueIri = stringFormatter.makeRandomValueIri(resourceIri)
         val creationDate: Instant = Instant.now
 
         for {
@@ -2092,7 +2093,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 creationDate = creationDate,
-                knoraIdUtil = knoraIdUtil
+                stringFormatter = stringFormatter
             ).toString()
 
             /*
@@ -2180,7 +2181,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                 maybeComment = comment,
                 currentTime = currentTime,
-                requestingUser = userProfile.id
+                requestingUser = userProfile.id,
+                stringFormatter = stringFormatter
             ).toString()
 
             /*
@@ -2333,7 +2335,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 linkUpdates = standoffLinkUpdates,
                 currentTime = currentTime,
                 requestingUser = userProfile.id,
-                knoraIdUtil = knoraIdUtil
+                stringFormatter = stringFormatter
             ).toString()
 
             /*
@@ -2401,7 +2403,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             targetIriCheckResult <- checkStandoffResourceReferenceTargets(targetIris = Set(targetResourceIri), userProfile = userProfile)
 
             // Generate an IRI for the new LinkValue.
-            newLinkValueIri = knoraIdUtil.makeRandomValueIri(sourceResourceIri)
+            newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
 
             linkUpdate = maybeLinkValueQueryResult match {
                 case Some(linkValueQueryResult) =>
@@ -2496,7 +2498,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                     val deleteDirectLink = linkValueQueryResult.directLinkExists && newReferenceCount == 0
 
                     // Generate an IRI for the new LinkValue.
-                    val newLinkValueIri = knoraIdUtil.makeRandomValueIri(sourceResourceIri)
+                    val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
 
                     SparqlTemplateLinkUpdate(
                         linkPropertyIri = linkPropertyIri.toSmartIri,
@@ -2533,13 +2535,14 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // because we want a double check (the function has already been called in the route or in standoff responder)
         val resourceRefsInStandoff: Set[IRI] = textValue.standoff.foldLeft(Set.empty[IRI]) {
             case (acc: Set[IRI], standoffNode: StandoffTagV2) =>
+                if (standoffNode.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
+                    val maybeTargetIri: Option[IRI] = standoffNode.attributes.collectFirst {
+                        case iriTagAttr: StandoffTagIriAttributeV2 if iriTagAttr.standoffPropertyIri.toString == OntologyConstants.KnoraBase.StandoffTagHasLink => iriTagAttr.value
+                    }
 
-                standoffNode match {
-
-                    case node: StandoffTagV2 if node.dataType.isDefined && node.dataType.get == StandoffDataTypeClasses.StandoffLinkTag =>
-                        acc + node.attributes.find(_.standoffPropertyIri == OntologyConstants.KnoraBase.StandoffTagHasLink).getOrElse(throw NotFoundException(s"${OntologyConstants.KnoraBase.StandoffTagHasLink} was not found in $node")).stringValue
-
-                    case _ => acc
+                    acc + maybeTargetIri.getOrElse(throw NotFoundException(s"No link found in $standoffNode"))
+                } else {
+                    acc
                 }
         }
 

@@ -34,9 +34,10 @@ import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch._
 import org.knora.webapi.responders.v2.search.gravsearch.prequery._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
-import org.knora.webapi.util.ConstructResponseUtilV2.ResourceWithValueRdfData
+import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
 import scala.concurrent.Future
 
@@ -45,7 +46,7 @@ import scala.concurrent.Future
   */
 object SearchResponderV2Constants {
 
-    val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/0000/forbiddenResource"
+    val forbiddenResourceIri: IRI = s"http://${StringFormatter.IriDomain}/0000/forbiddenResource"
 }
 
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
@@ -53,18 +54,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     // A Gravsearch type inspection runner.
     private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(responderData)
 
-    private val knoraIdUtil = new KnoraIdUtil
-
     /**
       * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
       */
     def receive(msg: SearchResponderRequestV2) = msg match {
         case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser)
-        case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser)
+        case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, requestingUser) => fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, targetSchema, schemaOptions, requestingUser)
         case GravsearchCountRequestV2(query, requestingUser) => gravsearchCountV2(inputQuery = query, requestingUser = requestingUser)
-        case GravsearchRequestV2(query, requestingUser) => gravsearchV2(inputQuery = query, requestingUser = requestingUser)
+        case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser) => gravsearchV2(inputQuery = query, targetSchema = targetSchema, schemaOptions = schemaOptions, requestingUser = requestingUser)
         case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser)
-        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser)
+        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser) => searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser)
         case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 => searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
@@ -79,7 +78,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         import SearchResponderV2Constants.forbiddenResourceIri
 
         for {
-            forbiddenResSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Seq(forbiddenResourceIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+            forbiddenResSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
+                resourceIris = Seq(forbiddenResourceIri),
+                targetSchema = ApiV2Complex, // This has no effect, because ForbiddenResource has no values.
+                requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
             forbiddenRes = forbiddenResSeq.resources.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"$forbiddenResourceIri was not returned"))
         } yield Some(forbiddenRes)
     }
@@ -134,10 +136,19 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
+      * @param targetSchema         the target API schema.
+      * @param schemaOptions        the schema options submitted with the request.
       * @param requestingUser       the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchV2(searchValue: String,
+                                 offset: Int,
+                                 limitToProject: Option[IRI],
+                                 limitToResourceClass: Option[SmartIri],
+                                 limitToStandoffClass: Option[SmartIri],
+                                 targetSchema: ApiV2Schema,
+                                 schemaOptions: Set[SchemaOption],
+                                 requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
         import FullTextMainQueryGenerator.FullTextSearchConstants
 
         val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
@@ -194,7 +205,13 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 val allValueObjectIris = valueObjectIrisPerResource.values.flatten.toSet
 
                 // create CONSTRUCT queries to query resources and their values
-                val mainQuery = FullTextMainQueryGenerator.createMainQuery(resourceIris.toSet, allValueObjectIris)
+                val mainQuery = FullTextMainQueryGenerator.createMainQuery(
+                    resourceIris = resourceIris.toSet,
+                    valueObjectIris = allValueObjectIris,
+                    targetSchema = targetSchema,
+                    schemaOptions = schemaOptions,
+                    settings = settings
+                )
 
                 val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
                     if (settings.triplestoreType.startsWith("graphdb")) {
@@ -271,8 +288,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 Future(None)
             }
 
-            // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
+            // Find out whether to query standoff along with text values. This boolean value will be passed to
+            // ConstructResponseUtilV2.makeTextValueContentV2.
+            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+
+            // If we're querying standoff, get XML-to standoff mappings.
+            mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
+                getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
+            } else {
+                FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
+            }
 
             // _ = println(mappingsAsMap)
 
@@ -280,9 +305,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = resourceIris,
                 mappings = mappingsAsMap,
+                queryStandoff = queryStandoff,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
-                knoraIdUtil = knoraIdUtil,
+                settings = settings,
+                targetSchema = targetSchema,
                 requestingUser = requestingUser
             )
 
@@ -370,10 +397,15 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       * Performs a search using a Gravsearch query provided by the client.
       *
       * @param inputQuery     a Gravsearch query provided by the client.
+      * @param targetSchema   the target API schema.
+      * @param schemaOptions  the schema options submitted with the request.
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def gravsearchV2(inputQuery: ConstructQuery, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def gravsearchV2(inputQuery: ConstructQuery,
+                             targetSchema: ApiV2Schema,
+                             schemaOptions: Set[SchemaOption],
+                             requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
         import org.knora.webapi.responders.v2.search.MainQueryResultProcessor
         import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 
@@ -472,7 +504,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 val mainQuery: ConstructQuery = GravsearchMainQueryGenerator.createMainQuery(
                     mainResourceIris = mainResourceIris.map(iri => IriRef(iri.toSmartIri)).toSet,
                     dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
-                    valueObjectIris = allValueObjectIris
+                    valueObjectIris = allValueObjectIris,
+                    targetSchema = targetSchema,
+                    schemaOptions = schemaOptions,
+                    settings = settings
                 )
 
                 val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
@@ -535,16 +570,26 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 Future(None)
             }
 
-            // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
+            // Find out whether to query standoff along with text values. This boolean value will be passed to
+            // ConstructResponseUtilV2.makeTextValueContentV2.
+            queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
+
+            // If we're querying standoff, get XML-to standoff mappings.
+            mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
+                getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
+            } else {
+                FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
+            }
 
             resources <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = mainResourceIris,
                 mappings = mappingsAsMap,
+                queryStandoff = queryStandoff,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
-                knoraIdUtil = knoraIdUtil,
+                settings = settings,
+                targetSchema = targetSchema,
                 requestingUser = requestingUser
             )
 
@@ -628,16 +673,32 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResponse]
             mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
 
+            // Find out whether to query standoff along with text values. This boolean value will be passed to
+            // ConstructResponseUtilV2.makeTextValueContentV2.
+            queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema = ApiV2Complex, schemaOptions = resourcesInProjectGetRequestV2.schemaOptions)
+
+            // If we're supposed to query standoff, get the indexes delimiting the first page of standoff. (Subsequent
+            // pages, if any, will be queried separately.)
+            (maybeStandoffMinStartIndex: Option[Int], maybeStandoffMaxStartIndex: Option[Int]) = StandoffTagUtilV2.getStandoffMinAndMaxStartIndexesForTextValueQuery(
+                queryStandoff = queryStandoff,
+                settings = settings
+            )
+
             // Are there any matching resources?
             resources: Vector[ReadResourceV2] <- if (mainResourceIris.nonEmpty) {
                 for {
-                    // Yes. Do a CONSTRUCT query to get the complete contents of those resources.
+                    // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
+                    // at most one page of standoff per text value.
                     resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                         triplestore = settings.triplestoreType,
                         resourceIris = mainResourceIris,
                         preview = false,
+                        queryAllNonStandoff = true,
                         maybePropertyIri = None,
-                        maybeVersionDate = None
+                        maybeVersionDate = None,
+                        maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
+                        maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
+                        stringFormatter = stringFormatter
                     ).toString())
 
                     // _ = println(resourceRequestSparql)
@@ -656,17 +717,23 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         Future(None)
                     }
 
-                    // get the standoff mappings used in the resources
-                    mappings: Map[IRI, ConstructResponseUtilV2.MappingAndXSLTransformation] <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, resourcesInProjectGetRequestV2.requestingUser)
+                    // If we're querying standoff, get XML-to standoff mappings.
+                    mappings: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
+                        getMappingsFromQueryResultsSeparated(queryResultsSeparated, resourcesInProjectGetRequestV2.requestingUser)
+                    } else {
+                        FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
+                    }
 
                     // Construct a ReadResourceV2 for each resource that the user has permission to see.
                     searchResponse <- ConstructResponseUtilV2.createSearchResponse(
                         searchResults = queryResultsSeparated,
                         orderByResourceIri = mainResourceIris,
                         mappings = mappings,
+                        queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
                         forbiddenResource = forbiddenResourceOption,
                         responderManager = responderManager,
-                        knoraIdUtil = knoraIdUtil,
+                        targetSchema = resourcesInProjectGetRequestV2.targetSchema,
+                        settings = settings,
                         requestingUser = resourcesInProjectGetRequestV2.requestingUser
                     )
                 } yield searchResponse
@@ -731,10 +798,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
+      * @param targetSchema         the schema of the response.
       * @param requestingUser       the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def searchResourcesByLabelV2(searchValue: String,
+                                         offset: Int,
+                                         limitToProject: Option[IRI],
+                                         limitToResourceClass: Option[SmartIri],
+                                         targetSchema: ApiV2Schema,
+                                         requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
@@ -790,9 +863,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             resources <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparated,
                 orderByResourceIri = mainResourceIris.toSeq.sorted,
+                queryStandoff = false,
                 forbiddenResource = forbiddenResourceOption,
                 responderManager = responderManager,
-                knoraIdUtil = knoraIdUtil,
+                targetSchema = targetSchema,
+                settings = settings,
                 requestingUser = requestingUser
             )
 

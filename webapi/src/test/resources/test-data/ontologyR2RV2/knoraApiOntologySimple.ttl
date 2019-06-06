@@ -267,7 +267,7 @@ knora-api:Geoname a rdfs:Datatype;
 
 knora-api:Interval a rdfs:Datatype;
   rdfs:comment "Represents an interval.";
-  rdfs:label "Interprivate val literal";
+  rdfs:label "Interval literal";
   rdfs:subClassOf [ a rdfs:Datatype;
       owl:onDatatype xsd:string;
       owl:withRestrictions [
@@ -308,6 +308,16 @@ knora-api:hasLinkTo a owl:ObjectProperty;
   rdfs:comment "Represents a direct connection between two resources";
   rdfs:label "has Link to";
   rdfs:subPropertyOf knora-api:resourceProperty .
+
+knora-api:ListNode a rdfs:Datatype;
+  rdfs:comment "Represents a list node.";
+  rdfs:label "List Node";
+  rdfs:subClassOf [ a rdfs:Datatype;
+      owl:onDatatype xsd:string;
+      owl:withRestrictions [
+          xsd:pattern ".+"
+        ]
+    ] .
 
 knora-api:MovingImageRepresentation a owl:Class;
   rdfs:comment "A resource containing moving image data";

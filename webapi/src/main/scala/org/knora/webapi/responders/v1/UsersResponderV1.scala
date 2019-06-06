@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.Use
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
+import org.knora.webapi.util.CacheUtil
 
 import scala.concurrent.Future
 
@@ -39,9 +39,6 @@ import scala.concurrent.Future
   * Provides information about Knora users to other responders.
   */
 class UsersResponderV1(responderData: ResponderData) extends Responder(responderData) {
-
-    // Creates IRIs for new Knora user objects.
-    val knoraIdUtil = new KnoraIdUtil
 
     // The IRI used to lock user creation and update
     val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
@@ -172,7 +169,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                 // found a user profile in the cache
                 log.debug(s"userProfileByIRIGetV1 - cache hit: $userProfile")
                 FastFuture.successful(Some(userProfile.ofType(profileType)))
-            case None => {
+
+            case None =>
                 for {
                     sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByIri(
                         triplestore = settings.triplestoreType,
@@ -193,7 +191,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
                     // _ = log.debug("userProfileByIRIGetV1 - maybeUserProfileV1: {}", MessageUtil.toSource(maybeUserProfileV1))
                 } yield result // UserProfileV1(userData, groups, projects_info, sessionId, isSystemUser, permissionData)
-            }
         }
     }
 
@@ -236,7 +233,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                 // found a user profile in the cache
                 log.debug(s"userProfileByIRIGetV1 - cache hit: $userProfile")
                 FastFuture.successful(Some(userProfile.ofType(profileType)))
-            case None => {
+
+            case None =>
                 for {
                     sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
                         triplestore = settings.triplestoreType,
@@ -258,7 +256,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                     // _ = log.debug("userProfileByEmailGetV1 - maybeUserProfileV1: {}", MessageUtil.toSource(maybeUserProfileV1))
 
                 } yield result // UserProfileV1(userDataV1, groupIris, projectIris)
-            }
         }
 
 

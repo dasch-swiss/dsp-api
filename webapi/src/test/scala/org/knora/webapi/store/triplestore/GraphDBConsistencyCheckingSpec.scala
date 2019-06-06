@@ -168,7 +168,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue0_1 rdf:type ?valueType0_1 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid1" .
           |
           |
           |
@@ -195,7 +196,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue0_2 rdf:type ?valueType0_2 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid2" .
           |
           |
           |                ?newValue0_2 knora-base:originalFilename "test.jpg" ;
@@ -203,9 +205,7 @@ object GraphDBConsistencyCheckingSpec {
           |                                     knora-base:internalFilename "full.jp2" ;
           |                                     knora-base:internalMimeType "image/jp2" ;
           |                                     knora-base:dimX 800 ;
-          |                                     knora-base:dimY 800 ;
-          |                                     knora-base:qualityLevel 100 ;
-          |                                     knora-base:valueHasQname "full" .
+          |                                     knora-base:dimY 800 .
           |
           |
           |
@@ -232,7 +232,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue0_3 rdf:type ?valueType0_3 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid3" .
           |
           |
           |                ?newValue0_3 knora-base:originalFilename "test.jpg" ;
@@ -240,9 +241,7 @@ object GraphDBConsistencyCheckingSpec {
           |                                     knora-base:internalFilename "thumb.jpg" ;
           |                                     knora-base:internalMimeType "image/jpeg" ;
           |                                     knora-base:dimX 80 ;
-          |                                     knora-base:dimY 80 ;
-          |                                     knora-base:qualityLevel 10 ;
-          |                                     knora-base:valueHasQname "thumbnail" .
+          |                                     knora-base:dimY 80 .
           |
           |
           |                    ?newValue0_3 knora-base:isPreview true .
@@ -277,6 +276,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |        ?newLinkValue0_4 rdf:type knora-base:LinkValue ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid4" ;
           |            rdf:subject ?resource0 ;
           |            rdf:predicate ?linkProperty0_4 ;
           |            rdf:object ?linkTarget0_4 ;
@@ -300,7 +300,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue0_5 rdf:type ?valueType0_5 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid5" .
           |
           |
           |
@@ -328,7 +329,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue0_6 rdf:type ?valueType0_6 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid6" .
           |
           |
           |
@@ -539,28 +541,6 @@ object GraphDBConsistencyCheckingSpec {
           |
           |            BIND(0 AS ?nextOrder0_6)
           |
-          |
-          |
-          |
-          |    # Value 7
-          |    # Property: http://www.knora.org/ontology/0803/incunabula#pagenum
-          |
-          |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#pagenum") AS ?property0_7)
-          |    BIND(IRI("http://rdfh.ch/0803/missingPartOf/values/nQ3tRObaQWe74WQv2_OdCg") AS ?newValue0_7)
-          |    BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType0_7)
-          |
-          |
-          |
-          |    ?property0_7 knora-base:objectClassConstraint ?propertyRange0_7 .
-          |    ?valueType0_7 rdfs:subClassOf* ?propertyRange0_7 .
-          |
-          |
-          |
-          |
-          |
-          |
-          |            BIND(0 AS ?nextOrder0_1)
-          |
           |}
         """.stripMargin
 
@@ -595,6 +575,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |        ?newLinkValue0 rdf:type knora-base:LinkValue ;
           |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid0" ;
           |            rdf:subject ?resource ;
           |            rdf:predicate ?linkProperty0 ;
           |            rdf:object ?linkTarget0 ;
@@ -687,7 +668,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue0 rdf:type ?valueType0 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid0" .
           |
           |
           |
@@ -715,7 +697,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue1 rdf:type ?valueType1 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid1" .
           |
           |
           |
@@ -747,7 +730,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue2 rdf:type ?valueType2 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid2" .
           |
           |
           |
@@ -775,8 +759,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue3 rdf:type ?valueType3 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
-          |
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid3" .
           |
           |
           |                ?newValue3 knora-base:valueHasString "ein Zitat" .
@@ -801,7 +785,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue4 rdf:type ?valueType4 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid4" .
           |
           |
           |
@@ -828,7 +813,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue5 rdf:type ?valueType5 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid5" .
           |
           |
           |
@@ -883,7 +869,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue6 rdf:type ?valueType6 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid6" .
           |
           |
           |
@@ -912,7 +899,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue7 rdf:type ?valueType7 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid7" .
           |
           |
           |
@@ -1185,7 +1173,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue0 rdf:type ?valueType0 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid0" .
           |
           |
           |
@@ -1212,7 +1201,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue1 rdf:type ?valueType1 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid1" .
           |
           |
           |
@@ -1246,7 +1236,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue6 rdf:type ?valueType6 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid6" .
           |
           |
           |
@@ -1391,7 +1382,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue0 rdf:type ?valueType0 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid0" .
           |
           |
           |
@@ -1419,7 +1411,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue1 rdf:type ?valueType1 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid1" .
           |
           |
           |
@@ -1452,7 +1445,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue6 rdf:type ?valueType6 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid6" .
           |
           |
           |
@@ -1595,7 +1589,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue0 rdf:type ?valueType0 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid0" .
           |
           |
           |
@@ -1623,7 +1618,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue1 rdf:type ?valueType1 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid1" .
           |
           |
           |
@@ -1654,7 +1650,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue6 rdf:type ?valueType6 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid6" .
           |
           |
           |
@@ -1811,7 +1808,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue0 rdf:type ?valueType0 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid0" .
           |
           |
           |
@@ -1837,7 +1835,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue1 rdf:type ?valueType1 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid1" .
           |
           |
           |
@@ -1870,7 +1869,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue6 rdf:type ?valueType6 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid6" .
           |
           |
           |
@@ -1898,7 +1898,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue7 rdf:type ?valueType7 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid7" .
           |
           |
           |
@@ -2059,7 +2060,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue0 rdf:type ?valueType0 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid0" .
           |
           |
           |
@@ -2085,7 +2087,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue1 rdf:type ?valueType1 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid1" .
           |
           |
           |
@@ -2125,7 +2128,8 @@ object GraphDBConsistencyCheckingSpec {
           |
           |
           |        ?newValue6 rdf:type ?valueType6 ;
-          |            knora-base:isDeleted "false"^^xsd:boolean .
+          |            knora-base:isDeleted "false"^^xsd:boolean ;
+          |            knora-base:valueHasUUID "uuid6" .
           |
           |
           |
@@ -2281,6 +2285,7 @@ object GraphDBConsistencyCheckingSpec {
           |
           |            knora-base:valueHasOrder ?nextOrder0_0 ;
           |            knora-base:isDeleted false ;
+          |            knora-base:valueHasUUID "uuid0" ;
           |            knora-base:valueCreationDate ?currentTime .
           |
           |        ?newLinkValue0_0 knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
@@ -2379,16 +2384,6 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(IRI("http://rdfh.ch/projects/0001") AS ?projectIri)
           |    BIND(str("Test Thing") AS ?label)
           |    BIND(NOW() AS ?currentTime)
-          |
-          |
-          |
-          |    # Value 0
-          |    # Property: http://www.knora.org/ontology/0001/anything#hasBlueThing
-          |
-          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#hasBlueThing") AS ?linkProperty0)
-          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#hasBlueThingValue") AS ?linkValueProperty0)
-          |    BIND(IRI("http://rdfh.ch/0001/twoLabels/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
-          |    BIND(IRI("http://rdfh.ch/0001/a-thing") AS ?linkTarget0)
           |}
         """.stripMargin
 
@@ -2426,6 +2421,7 @@ object GraphDBConsistencyCheckingSpec {
           |            knora-base:valueHasRefCount 1 ;
           |            knora-base:valueHasOrder ?nextOrder0 ;
           |            knora-base:isDeleted false ;
+          |            knora-base:valueHasUUID "uuid0" ;
           |            knora-base:valueCreationDate ?currentTime .
           |
           |        ?newLinkValue0 knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .

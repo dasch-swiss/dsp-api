@@ -18,7 +18,7 @@
  *@
 
 @import org.knora.webapi._
-@import org.knora.webapi.util.{KnoraIdUtil, SmartIri}
+@import org.knora.webapi.util.{StringFormatter, SmartIri}
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v2.responder.valuemessages._
 
@@ -27,11 +27,11 @@
  *
  * @param value the value to insert.
  * @param newValueIri the IRI of the new value.
- * @param knoraIdUtil a [[KnoraIdUtil]].
+ * @param stringFormatter a [[StringFormatter]].
  *@
 @(value: ValueContentV2,
   newValueIri: IRI,
-  knoraIdUtil: KnoraIdUtil)
+  stringFormatter: StringFormatter)
 
         @value match {
 
@@ -41,67 +41,70 @@
                     <@newValueIri> knora-base:valueHasLanguage """@textValue.valueHasLanguage.get""" .
                 }
 
-                @textValue.standoffAndMapping match {
+                @if(textValue.standoff.nonEmpty) {
 
-                    case Some(standoffAndMapping) => {
+                    @* Create a Standoff node for each standoff tag. *@
 
-                        @* Create a Standoff node for each standoff tag. *@
-
-                        <@newValueIri> knora-base:valueHasMapping <@standoffAndMapping.mappingIri> .
-
-                        @for((createStandoff: CreateStandoffTagV2InTriplestore, standoffNodeIndex) <- textValue.prepareForSparqlInsert(newValueIri).zipWithIndex) {
-
-                            <@newValueIri> knora-base:valueHasStandoff <@createStandoff.standoffTagInstanceIri> .
-
-                            <@createStandoff.standoffTagInstanceIri>
-
-                                    @*
-
-                                    Check for optional standoff properties
-
-                                    *@
-
-                                    @if(createStandoff.standoffNode.endIndex.isDefined) {
-                                        knora-base:standoffTagHasEndIndex @createStandoff.standoffNode.endIndex.get ;
-                                    }
-
-                                    @if(createStandoff.startParentIri.isDefined) {
-                                        knora-base:standoffTagHasStartParent <@createStandoff.startParentIri.get> ;
-                                    }
-
-                                    @if(createStandoff.endParentIri.isDefined) {
-                                        knora-base:standoffTagHasEndParent <@createStandoff.endParentIri.get> ;
-                                    }
-
-                                    @if(createStandoff.standoffNode.originalXMLID.isDefined) {
-                                        knora-base:standoffTagHasOriginalXMLID """@createStandoff.standoffNode.originalXMLID.get""" ;
-                                    }
-
-                                    @*
-
-                                    Handle standoff class specific standoff properties
-
-                                    *@
-                                    @for(createProperty <- createStandoff.standoffNode.attributes) {
-
-                                        <@createProperty.standoffPropertyIri> @createProperty.rdfValue ;
-
-                                    }
-
-                                    knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
-                                    knora-base:standoffTagHasUUID "@{knoraIdUtil.base64EncodeUuid(createStandoff.standoffNode.uuid)}" ;
-                                    knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
-                                    knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
-                                    rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .
-
+                    @textValue.mappingIri match {
+                        case Some(definedMappingIri) => {
+                            <@newValueIri> knora-base:valueHasMapping <@definedMappingIri> .
                         }
+
+                        case None => {}
+                    }
+
+                    <@newValueIri> knora-base:valueHasMaxStandoffStartIndex @textValue.computedMaxStandoffStartIndex.get .
+
+                    @for((createStandoff: CreateStandoffTagV2InTriplestore, standoffNodeIndex) <- textValue.prepareForSparqlInsert(newValueIri).zipWithIndex) {
+
+                        <@newValueIri> knora-base:valueHasStandoff <@createStandoff.standoffTagInstanceIri> .
+
+                        <@createStandoff.standoffTagInstanceIri>
+
+                                @*
+
+                                Check for optional standoff properties
+
+                                *@
+
+                                @if(createStandoff.standoffNode.endIndex.isDefined) {
+                                    knora-base:standoffTagHasEndIndex @createStandoff.standoffNode.endIndex.get ;
+                                }
+
+                                @if(createStandoff.startParentIri.isDefined) {
+                                    knora-base:standoffTagHasStartParent <@createStandoff.startParentIri.get> ;
+                                }
+
+                                @if(createStandoff.endParentIri.isDefined) {
+                                    knora-base:standoffTagHasEndParent <@createStandoff.endParentIri.get> ;
+                                }
+
+                                @if(createStandoff.standoffNode.originalXMLID.isDefined) {
+                                    knora-base:standoffTagHasOriginalXMLID """@createStandoff.standoffNode.originalXMLID.get""" ;
+                                }
+
+                                @*
+
+                                Handle standoff class specific standoff properties
+
+                                *@
+                                @for(createProperty <- createStandoff.standoffNode.attributes) {
+
+                                    <@createProperty.standoffPropertyIri> @createProperty.rdfValue ;
+
+                                }
+
+                                knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
+                                knora-base:standoffTagHasUUID "@{stringFormatter.base64EncodeUuid(createStandoff.standoffNode.uuid)}" ;
+                                knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
+                                knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
+                                rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .
 
                     }
 
-                    case None => {}
                 }
-
             }
+
 
             case intValue: IntegerValueContentV2 => {
 
@@ -155,10 +158,7 @@
                                      knora-base:internalFilename """@stillImageFileValue.fileValue.internalFilename""" ;
                                      knora-base:internalMimeType """@stillImageFileValue.fileValue.internalMimeType""" ;
                                      knora-base:dimX @stillImageFileValue.dimX ;
-                                     knora-base:dimY @stillImageFileValue.dimY ;
-                                     knora-base:isPreview false ; @* Remove for issue #1068 *@
-                                     knora-base:qualityLevel 100 ; @* Remove for issue #1068 *@
-                                     knora-base:valueHasQname "full" . @* Remove for issue #1068 *@
+                                     knora-base:dimY @stillImageFileValue.dimY .
             }
 
             case textFileValue: TextFileValueContentV2 => {

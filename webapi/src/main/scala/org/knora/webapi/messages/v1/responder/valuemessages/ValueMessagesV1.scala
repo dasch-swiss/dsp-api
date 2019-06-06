@@ -29,10 +29,9 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.SipiConversionRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util.{DateUtilV1, KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, StringFormatter}
 import spray.json._
 
 
@@ -146,22 +145,6 @@ case class CreateFileV1(originalFilename: String,
   * @param mimeType the file's MIME type.
   */
 case class ReadFileV1(file: File, mimeType: String)
-
-/**
-  * Represents a quality level of a file value to added to a Knora resource.
-  *
-  * @param path     the path to the file.
-  * @param mimeType the mime type of the file.
-  * @param dimX     the x dimension of the file, if given (e.g. an image).
-  * @param dimY     the y dimension of the file, if given (e.g. an image).
-  */
-case class CreateFileQualityLevelV1(path: String,
-                                    mimeType: String,
-                                    dimX: Option[Int] = None,
-                                    dimY: Option[Int] = None) {
-
-    def toJsValue: JsValue = ApiValueV1JsonProtocol.createFileQualityLevelFormat.write(this)
-}
 
 /**
   * Represents an API request payload that asks the Knora API server to change a value of a resource property (i.e. to
@@ -655,8 +638,13 @@ case class TextValueWithStandoffV1(utf8str: String,
                                    mappingIri: IRI,
                                    mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
-    private val knoraIdUtil = new KnoraIdUtil
-    private val stringFormatter = StringFormatter.getGeneralInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    lazy val computedMaxStandoffStartIndex: Option[Int] = if (standoff.nonEmpty) {
+        Some(standoff.map(_.startIndex).max)
+    } else {
+        None
+    }
 
     def valueTypeIri: IRI = OntologyConstants.KnoraBase.TextValue
 
@@ -697,7 +685,7 @@ case class TextValueWithStandoffV1(utf8str: String,
             standoffNode: StandoffTagV2 =>
                 CreateStandoffTagV1InTriplestore(
                     standoffNode = standoffNode,
-                    standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
+                    standoffTagInstanceIri = stringFormatter.makeRandomStandoffTagIri(valueIri = valueIri, startIndex = standoffNode.startIndex) // generate IRI for new standoff node
                 )
         }
 
@@ -1611,7 +1599,6 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         def write(valueV1: ApiValueV1): JsValue = valueV1.toJsValue
     }
 
-    implicit val createFileQualityLevelFormat: RootJsonFormat[CreateFileQualityLevelV1] = jsonFormat4(CreateFileQualityLevelV1)
     implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
     implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat7(ValueGetResponseV1)
     implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat5(DateValueV1)

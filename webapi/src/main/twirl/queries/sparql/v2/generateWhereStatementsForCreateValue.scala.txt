@@ -27,6 +27,7 @@
  * property (as opposed to a new version of an existing value). This template is used only when creating a
  * single value in an existing resource.
  *
+ * @param resourceIri the IRI of the resource being updated.
  * @param propertyIri the resource property to update.
  * @param newValueIri the new value IRI.
  * @param valueTypeIri the type of the new value.
@@ -36,7 +37,8 @@
  *
  * The SPARQL variables ?resource and ?resourceClass must already be bound.
  *@
-@(propertyIri: SmartIri,
+@(resourceIri: IRI,
+  propertyIri: SmartIri,
   newValueIri: IRI,
   value: ValueContentV2,
   linkUpdates: Seq[SparqlTemplateLinkUpdate])
@@ -123,8 +125,8 @@
                     rdf:predicate <@linkUpdate.linkPropertyIri> ;
                     rdf:object <@linkUpdate.linkTargetIri> ;
                     knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
-                    knora-base:isDeleted false .
-
+                    knora-base:isDeleted false ;
+                    knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
             } else {
                 @* Make sure there is no such knora-base:LinkValue. *@
                 MINUS {
@@ -157,7 +159,7 @@
     {
         SELECT ((MAX(?order)) AS ?maxOrder) (IF(BOUND(?maxOrder), ?maxOrder + 1, 0) AS ?nextOrder)
         WHERE {
-            ?resource <@propertyIri> ?otherValue .
+            <@resourceIri> <@propertyIri> ?otherValue .
             ?otherValue knora-base:valueHasOrder ?order ;
                 knora-base:isDeleted false .
         }

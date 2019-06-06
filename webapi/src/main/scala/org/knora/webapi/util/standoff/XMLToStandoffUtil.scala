@@ -29,7 +29,7 @@ import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
 import org.apache.commons.text.StringEscapeUtils
 import org.knora.webapi._
-import org.knora.webapi.util.{ErrorHandlingMap, KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.{ErrorHandlingMap, StringFormatter}
 
 import scala.xml._
 
@@ -97,6 +97,7 @@ sealed trait IndexedStandoffTag extends StandoffTag {
   * Represents a standoff tag that requires a hierarchical document structure. When serialised to XML, it is represented
   * as a single element.
   *
+  * @param originalID    a client-specific ID for the tag.
   * @param uuid          a [[UUID]] representing this tag and any other tags that
   *                      point to semantically equivalent content in other versions of the same text.
   * @param tagName       the name of this tag.
@@ -124,6 +125,7 @@ case class HierarchicalStandoffTag(originalID: Option[String],
   * such a structure. Its XML representation is a pair of empty elements in
   * [[http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html#t6 CLIX]] format.
   *
+  * @param originalID       a client-specific ID for the tag.
   * @param uuid             a [[UUID]] representing this tag and any other tags that
   *                         point to semantically equivalent content in other versions of the same text.
   * @param tagName          the name of the tag.
@@ -307,6 +309,8 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
 
     import XMLToStandoffUtil._
 
+    private val stringFormatter = StringFormatter.getGeneralInstance
+
     // Parse XML with an XML parser configured to prevent certain security risks.
     // See <https://github.com/scala/scala-xml/issues/17>.
     private val saxParserFactory = SAXParserFactory.newInstance()
@@ -315,9 +319,6 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
 
     // Computes diffs between texts.
     private val diffMatchPatch = new DiffMatchPatch
-
-    // Encodes and decodes UUIDs in Base 64.
-    private val knoraIdUtil = new KnoraIdUtil
 
     // A Map of UUIDs to document-specific IDs.
     private val uuidsToDocumentSpecificIds: Map[UUID, String] = documentSpecificIDs.map(_.swap)
@@ -704,8 +705,8 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
                 case Some(existingUuid) => existingUuid
                 case None =>
                     // Otherwise, try to parse the ID as a UUID.
-                    if (knoraIdUtil.couldBeUuid(id)) {
-                        knoraIdUtil.decodeUuid(id)
+                    if (stringFormatter.couldBeUuid(id)) {
+                        stringFormatter.decodeUuid(id)
                     } else {
                         // If the ID doesn't seem to be a UUID, replace it with a random UUID. TODO: this should throw an exception instead.
                         UUID.randomUUID
@@ -829,9 +830,11 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
                 }
 
             case (acc, text: Text) =>
+                val textData: String = text.data
+
                 // We got an XML text node. Just skip it.
                 acc.copy(
-                    currentPos = acc.currentPos + text.data.length
+                    currentPos = acc.currentPos + textData.length
                 )
 
             case (acc, other) =>
@@ -908,7 +911,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
 
             val id = uuidsToDocumentSpecificIds.get(tag.uuid) match {
                 case Some(documentSpecificId) => documentSpecificId
-                case None => knoraIdUtil.encodeUuid(tag.uuid, writeBase64IDs)
+                case None => stringFormatter.encodeUuid(tag.uuid, writeBase64IDs)
             }
 
             val maybeIdAttr: Option[(String, String)] = if (writeUuidsToXml) {

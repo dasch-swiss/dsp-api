@@ -24,3 +24,7 @@ Also, please change the **HINT** to the appropriate level:
 
 - MAJOR: Separate the `knora-admin` ontology from `knora-api` (@github[#1263](#1263)).
   Existing repositories must be updated; see `upgrade/1263-knora-admin` for instructions.
+  
+- FEATURE: Add support for searching for specific list values in Gravsearch for both the simple and complex schema (@github[#1314](#1314)).  
+
+- REFACTOR: List value responses contain the list node's label in the simple schema only (@github[#1321](#1321))
