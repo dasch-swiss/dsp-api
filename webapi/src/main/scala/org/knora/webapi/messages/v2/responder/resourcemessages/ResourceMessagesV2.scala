@@ -59,6 +59,7 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   *
   * @param resourceIris   the IRIs of the resources to be queried.
   * @param propertyIri    if defined, requests only the values of the specified explicit property.
+  * @param valueUuid      if defined, requests only the value with the specified UUID.
   * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
   * @param targetSchema   the target API schema.
   * @param schemaOptions  the schema options submitted with the request.
@@ -66,6 +67,7 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   */
 case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  propertyIri: Option[SmartIri] = None,
+                                 valueUuid: Option[UUID] = None,
                                  versionDate: Option[Instant] = None,
                                  targetSchema: ApiV2Schema,
                                  schemaOptions: Set[SchemaOption] = Set.empty,
@@ -398,6 +400,8 @@ case class ReadResourceV2(resourceIri: IRI,
 
         // Make an ARK URL without a version timestamp.
 
+        val resourceSmartIri: SmartIri = resourceIri.toSmartIri
+
         val arkUrlProp: IRI = targetSchema match {
             case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.ArkUrl
             case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.ArkUrl
@@ -405,7 +409,7 @@ case class ReadResourceV2(resourceIri: IRI,
 
         val arkUrlAsJsonLD: (IRI, JsonLDObject) =
             arkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-                value = resourceIri.toSmartIri.fromResourceIriToArkUrl(),
+                value = resourceSmartIri.fromResourceIriToArkUrl(),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
             )
 
@@ -420,7 +424,7 @@ case class ReadResourceV2(resourceIri: IRI,
 
         val versionArkUrlAsJsonLD: (IRI, JsonLDObject) =
             versionArkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-                value = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(arkTimestamp)),
+                value = resourceSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(arkTimestamp)),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
             )
 
@@ -519,7 +523,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
         // #getGeneralInstance
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         // #getGeneralInstance
-        val knoraIdUtil = new KnoraIdUtil
 
         for {
             // Get the resource class.
@@ -617,7 +620,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             )).mapTo[ProjectGetResponseADM]
 
             // Generate a random IRI for the resource.
-            resourceIri <- knoraIdUtil.makeUnusedIri(knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project.shortcode), storeManager, log)
+            resourceIri <- stringFormatter.makeUnusedIri(stringFormatter.makeRandomResourceIri(projectInfoResponse.project.shortcode), storeManager, log)
         } yield CreateResourceRequestV2(
             createResource = CreateResourceV2(
                 resourceIri = resourceIri,
@@ -881,7 +884,6 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
             schemaOptions = schemaOptions
         )
     }
-
     // #toJsonLDDocument
 
     /**

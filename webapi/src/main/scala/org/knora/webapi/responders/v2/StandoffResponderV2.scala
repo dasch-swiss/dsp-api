@@ -59,8 +59,6 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     /* actor materializer needed for http requests */
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-    private val knoraIdUtil = new KnoraIdUtil
-
     /**
       * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
       */
@@ -88,7 +86,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 queryAllNonStandoff = false,
                 maybeValueIri = Some(getStandoffRequestV2.valueIri),
                 maybeStandoffMinStartIndex = Some(getStandoffRequestV2.offset),
-                maybeStandoffMaxStartIndex = Some(requestMaxStartIndex)
+                maybeStandoffMaxStartIndex = Some(requestMaxStartIndex),
+                stringFormatter = stringFormatter
             ).toString())
 
             // _ = println("=================================")
@@ -116,7 +115,6 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 queryStandoff = false,
                 versionDate = None,
                 responderManager = responderManager,
-                knoraIdUtil = knoraIdUtil,
                 targetSchema = getStandoffRequestV2.targetSchema,
                 settings = settings,
                 requestingUser = getStandoffRequestV2.requestingUser
@@ -224,8 +222,6 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
         def createMappingAndCheck(xml: String, label: String, mappingIri: IRI, namedGraph: String, requestingUser: UserADM): Future[CreateMappingResponseV2] = {
 
-            val knoraIdUtil = new KnoraIdUtil
-
             val createMappingFuture = for {
 
                 factory <- Future(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
@@ -302,7 +298,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                                     attributeName = stringFormatter.toSparqlEncodedString(attrName, throw BadRequestException(s"tagname $attrName contains invalid characters")),
                                     namespace = stringFormatter.toSparqlEncodedString(attributeNamespace, throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")),
                                     standoffProperty = stringFormatter.validateAndEscapeIri(propIri, throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
-                                    mappingXMLAttributeElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri)
+                                    mappingXMLAttributeElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri)
                                 )
 
                         }
@@ -320,7 +316,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                             Some(MappingStandoffDatatypeClass(
                                 datatype = dataType.toString, // safe because it is an enumeration
                                 attributeName = stringFormatter.toSparqlEncodedString(dataTypeAttribute, throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters")),
-                                mappingStandoffDataTypeClassElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri)
+                                mappingStandoffDataTypeClassElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri)
                             ))
                         } else {
                             None
@@ -333,7 +329,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                             standoffClass = stringFormatter.validateAndEscapeIri(standoffClassIri, throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
                             attributes = attributes,
                             standoffDataTypeClass = standoffDataTypeOption,
-                            mappingElementIri = knoraIdUtil.makeRandomMappingElementIri(mappingIri),
+                            mappingElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri),
                             separatorRequired = separatorRequired
                         )
 
@@ -424,12 +420,10 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 requestingUser = requestingUser
             )).mapTo[Option[ProjectADM]]
 
-            knoraIdUtil = new KnoraIdUtil
-
             // TODO: make sure that has sufficient permissions to create a mapping in the given project
 
             // create the mapping IRI from the project IRI and the name provided by the user
-            mappingIri = knoraIdUtil.makeProjectMappingIri(projectIri.toString, mappingName)
+            mappingIri = stringFormatter.makeProjectMappingIri(projectIri.toString, mappingName)
 
             _ = if (projectInfoMaybe.isEmpty) throw BadRequestException(s"Project with Iri ${projectIri.toString} does not exist")
 
@@ -438,7 +432,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
             result: CreateMappingResponseV2 <- IriLocker.runWithIriLock(
                 apiRequestID,
-                knoraIdUtil.createMappingLockIriForProject(projectIri.toString), // use a special project specific IRI to lock the creation of mappings for the given project
+                stringFormatter.createMappingLockIriForProject(projectIri.toString), // use a special project specific IRI to lock the creation of mappings for the given project
                 () => createMappingAndCheck(
                     xml = xml,
                     label = label,

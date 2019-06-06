@@ -207,7 +207,7 @@ identifiers to make it unique. To keep data IRIs relatively short, each UUID is
 thus each UUID is a 22-character string.
 
 Data IRIs are not currently intended to be dereferenced as URLs.
-Instead, each Knora resource has a separate @ref:[permalink](resource-permalinks.md).
+Instead, each Knora resource has a separate @ref:[permalink](permalinks.md).
 
 A Knora value does not have a stable IRI throughout its version history.
 Each time a new version of a value is made, the new version gets a new IRI.

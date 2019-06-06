@@ -286,6 +286,14 @@ Knora values are versioned. Existing values are not modified. Instead, a
 new version of an existing value is created. The new version is linked
 to the old version via the `previousValue` property.
 
+Since each value version has a different IRI, there is no IRI that can
+be used to cite the value, such that it will always refer to the latest
+version of the value. Therefore, the latest version of each value has
+a separate UUID, as the object of the property `valueHasUUID`. When
+a new version of the value is created, this UUID is moved to the new
+version. This makes it possible to cite the latest version of a value
+by searching for the UUID.
+
 "Deleting" a value means marking it with `kb:isDeleted`. An optional
 `kb:deleteComment` may be added to explain why the value has been marked
 as deleted. Deleted values are normally hidden.
@@ -337,6 +345,11 @@ created by copying data from a deleted value.
 `previousValue` (0-1)
 
 :   The previous version of the value.
+
+`valueHasUUID` (0-1)
+
+:   The UUID that refers to all versions of the value. Only the latest
+    version of the value has this property.
 
 `isDeleted` (1)
 

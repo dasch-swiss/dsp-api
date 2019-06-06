@@ -18,8 +18,9 @@
  *@
 
 @import java.time.Instant
+@import java.util.UUID
 @import org.knora.webapi._
-@import org.knora.webapi.util.KnoraIdUtil
+@import org.knora.webapi.util.StringFormatter
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 
@@ -38,7 +39,7 @@
  * @param valuePermissions the permissions that should be attached to the value.
  * @param creationDate an xsd:dateTimeStamp to be attached to the value.
  * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
- * @param knoraIdUtil a [[KnoraIdUtil]].
+ * @param stringFormatter a [[StringFormatter]].
  *@
 @(resourceIri: IRI,
   propertyIri: IRI,
@@ -50,7 +51,7 @@
   valuePermissions: String,
   creationDate: Instant,
   maybeValueHasOrder: Option[Int],
-  knoraIdUtil: KnoraIdUtil)
+  stringFormatter: StringFormatter)
 
         # Value: @newValueIri
         # Property: @propertyIri
@@ -58,6 +59,7 @@
         @* Construct the value. *@
         <@newValueIri> rdf:type <@value.valueTypeIri> ;
             knora-base:isDeleted false  ;
+            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" ;
             knora-base:valueHasString """@value.toString""" .
 
         @value match {
@@ -120,7 +122,7 @@
                             }
 
                             knora-base:standoffTagHasStartIndex @createStandoff.standoffNode.startIndex ;
-                            knora-base:standoffTagHasUUID "@{knoraIdUtil.base64EncodeUuid(createStandoff.standoffNode.uuid)}" ;
+                            knora-base:standoffTagHasUUID "@{stringFormatter.base64EncodeUuid(createStandoff.standoffNode.uuid)}" ;
                             knora-base:standoffTagHasStart @createStandoff.standoffNode.startPosition ;
                             knora-base:standoffTagHasEnd @createStandoff.standoffNode.endPosition ;
                             rdf:type <@createStandoff.standoffNode.standoffTagClassIri> .
@@ -242,7 +244,8 @@
         @{
             queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(resourceIri = resourceIri,
                                                                            linkUpdates = linkUpdates,
-                                                                           creationDate = creationDate)
+                                                                           creationDate = creationDate,
+                                                                           stringFormatter = stringFormatter)
         }
 
         @* Attach the value to the resource. *@
