@@ -33,7 +33,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Knora
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{DateUtilV1, KnoraIdUtil, SmartIri, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -704,11 +704,9 @@ object StandoffTagUtilV2 {
       * Create a sequence of [[StandoffTagV2]] from the given standoff nodes (Sparql results).
       *
       * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]]
-      * @param knoraIdUtil        a [[KnoraIdUtil]].
       * @return a sequence of [[StandoffTagV2]].
       */
     def createStandoffTagsV2FromSparqlResults(standoffAssertions: Map[IRI, Map[IRI, String]],
-                                              knoraIdUtil: KnoraIdUtil,
                                               responderManager: ActorRef,
                                               requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[StandoffTagV2]] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -806,7 +804,7 @@ object StandoffTagUtilV2 {
                         dataType = standoffEntities.standoffClassInfoMap(standoffTagAssertions(OntologyConstants.Rdf.Type).toSmartIri).standoffDataType,
                         startIndex = startIndexFromAssertions,
                         endIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex).map(_.toInt),
-                        uuid = knoraIdUtil.decodeUuid(standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasUUID)),
+                        uuid = stringFormatter.decodeUuid(standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasUUID)),
                         originalXMLID = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
                         startParentIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasStartParent).flatMap(_.toSmartIri.getStandoffStartIndex),
                         endParentIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndParent).flatMap(_.toSmartIri.getStandoffStartIndex),

@@ -18,8 +18,9 @@
  *@
 
 @import java.time.Instant
+@import java.util.UUID
 @import org.knora.webapi._
-@import org.knora.webapi.util.{KnoraIdUtil, SmartIri}
+@import org.knora.webapi.util.{StringFormatter, SmartIri}
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v2.responder.valuemessages._
 
@@ -32,14 +33,15 @@
  * @param propertyIri the IRI of the property for which the value is being created.
  * @param value the value to insert.
  * @param newValueIri the IRI of the new value.
- * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
+ * @param valueHasUUID the UUID shared by all versions of this value.
+ * @param linkUpdates a list of [[SparqlTemplateLinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values. This list will be empty if the links and LinkValues
  *        are being created separately.
  * @param valueCreator the IRI of the user who created the value.
  * @param valuePermissions the permissions that should be attached to the value.
  * @param creationDate an xsd:dateTimeStamp that will be attached to the value.
  * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
- * @param knoraIdUtil a [[KnoraIdUtil]].
+ * @param stringFormatter a [[StringFormatter]].
  *@
 @(resourceIri: IRI,
   propertyIri: SmartIri,
@@ -50,7 +52,7 @@
   valuePermissions: String,
   creationDate: Instant,
   maybeValueHasOrder: Option[Int],
-  knoraIdUtil: KnoraIdUtil)
+  stringFormatter: StringFormatter)
 
         # Value: @newValueIri
         # Property: @propertyIri
@@ -58,12 +60,13 @@
         @* Construct the value. *@
         <@newValueIri> rdf:type <@value.valueType> ;
             knora-base:isDeleted false  ;
-            knora-base:valueHasString """@value.valueHasString""" .
+            knora-base:valueHasString """@value.valueHasString""" ;
+            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" .
 
         @{
             queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,
                                                                           newValueIri = newValueIri,
-                                                                          knoraIdUtil = knoraIdUtil)
+                                                                          stringFormatter = stringFormatter)
         }
 
         @* Insert the value's comment, if given. *@
@@ -92,7 +95,8 @@
         @{
             queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(resourceIri = resourceIri,
                                                                            linkUpdates = linkUpdates,
-                                                                           creationDate = creationDate)
+                                                                           creationDate = creationDate,
+                                                                           stringFormatter = stringFormatter)
         }
 
         @* Attach the value to the resource. *@

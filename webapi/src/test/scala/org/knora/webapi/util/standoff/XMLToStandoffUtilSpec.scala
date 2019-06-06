@@ -22,7 +22,7 @@ package org.knora.webapi.util.standoff
 import java.util.UUID
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.StringFormatter
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -30,8 +30,6 @@ import org.xmlunit.diff.Diff
   * Tests [[XMLToStandoffUtil]].
   */
 class XMLToStandoffUtilSpec extends CoreSpec {
-
-    val knoraIdUtil = new KnoraIdUtil
 
     "The XML to standoff utility" should {
 

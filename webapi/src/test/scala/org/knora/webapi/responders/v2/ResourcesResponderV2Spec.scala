@@ -387,7 +387,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     private val resourcesResponderV2SpecFullData = new ResourcesResponderV2SpecFullData
-    private val knoraIdUtil = new KnoraIdUtil
 
     private var standardMapping: Option[MappingXMLtoStandoff] = None
 
@@ -548,7 +547,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
+        "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
             responderManager ! ResourcesGetRequestV2(resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), versionDate = None, targetSchema = ApiV2Complex, requestingUser = incunabulaUserProfile)
 
@@ -570,7 +569,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "return two full description of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
+        "return two full descriptions of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
 
             responderManager ! ResourcesGetRequestV2(
                 resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
@@ -586,7 +585,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
+        "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
 
             responderManager ! ResourcesGetRequestV2(
                 resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
@@ -691,6 +690,35 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "get the latest version of a value, given its UUID" in {
+            responderManager ! ResourcesGetRequestV2(
+                resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+                valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
+                targetSchema = ApiV2Complex,
+                requestingUser = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuid, received = response)
+            }
+        }
+
+        "get a past version of a value, given its UUID and a timestamp" in {
+            responderManager ! ResourcesGetRequestV2(
+                resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+                valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
+                versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
+                targetSchema = ApiV2Complex,
+                requestingUser = anythingUserProfile
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuidAndVersionDate, received = response)
+            }
+        }
+
         "return a graph of resources reachable via links from/to a given resource" in {
             responderManager ! GraphDataGetRequestV2(
                 resourceIri = "http://rdfh.ch/0001/start",
@@ -760,7 +788,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a resource with no values" in {
             // Create the resource.
 
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputResource = CreateResourceV2(
                 resourceIri = resourceIri,
@@ -811,7 +839,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a resource with no values and custom permissions" in {
             // Create the resource.
 
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputResource = CreateResourceV2(
                 resourceIri = resourceIri,
@@ -846,7 +874,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a resource with values" in {
             // Create the resource.
 
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
@@ -1003,7 +1031,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a resource with a still image file value" in {
             // Create the resource.
 
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri -> Seq(
@@ -1053,7 +1081,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with missing required values" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputResource = CreateResourceV2(
                 resourceIri = resourceIri,
@@ -1075,7 +1103,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with too many values for the cardinality of a property" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1122,7 +1150,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a property for which there is no cardinality in the resource class" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1163,7 +1191,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with duplicate values" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1208,7 +1236,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource if the user doesn't have permission to create resources in the project" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1241,7 +1269,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a link to a nonexistent other resource" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
@@ -1274,7 +1302,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a standoff link to a nonexistent other resource" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val standoffWithInvalidLink: Vector[StandoffTagV2] = Vector(
                 StandoffTagV2(
@@ -1341,7 +1369,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a list value referring to a nonexistent list node" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
@@ -1374,7 +1402,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a value that's the wrong type for the property" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
@@ -1407,7 +1435,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a link to a resource of the wrong class for the link property" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
@@ -1440,7 +1468,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with invalid custom permissions" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val inputResource = CreateResourceV2(
                 resourceIri = resourceIri,
@@ -1463,7 +1491,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource with a value that has invalid custom permissions" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
             val values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
@@ -1498,7 +1526,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a resource that uses a class from another non-shared project" in {
-            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
             val inputResource = CreateResourceV2(
                 resourceIri = resourceIri,

@@ -189,9 +189,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         )
                     }
                 }
-            }
-        } ~ path("v2" / "resources") {
-            get {
+            } ~ get {
                 requestContext => {
                     val projectIri: SmartIri = RouteUtilV2.getProject(requestContext).getOrElse(throw BadRequestException(s"This route requires the request header ${RouteUtilV2.PROJECT_HEADER}"))
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
