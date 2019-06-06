@@ -29,7 +29,6 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.KnoraIdUtil
 
 import scala.concurrent.Future
 
@@ -38,11 +37,8 @@ import scala.concurrent.Future
   */
 class ProjectsResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
-    // Creates IRIs for new Knora user objects.
-    val knoraIdUtil = new KnoraIdUtil
-
     // Global lock IRI used for project creation and update
-    val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
+    private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
 
     /**
       * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
@@ -156,15 +152,13 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
             userADM: UserADM <- userProfile match {
                 case Some(profile) =>
                     profile.userData.user_id match {
-                        case Some(user_iri) => {
+                        case Some(user_iri) =>
                             (responderManager ? UserGetRequestADM(
                                 identifier = UserIdentifierADM(maybeIri = Some(user_iri)),
                                 requestingUser = KnoraSystemInstances.Users.SystemUser
                             )).mapTo[UserResponseADM].map(_.user)
-                        }
-                        case None => {
-                            FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
-                        }
+
+                        case None => FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
                     }
 
                 case None => FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)

@@ -20,6 +20,7 @@
 package org.knora.webapi.responders.v2
 
 import java.time.Instant
+import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
@@ -56,8 +57,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     /* actor materializer needed for http requests */
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-    private val knoraIdUtil = new KnoraIdUtil
-
     /**
       * Represents a resource that is ready to be created and whose contents can be verified afterwards.
       *
@@ -72,7 +71,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
       */
     def receive(msg: ResourcesResponderRequestV2) = msg match {
-        case ResourcesGetRequestV2(resIris, propertyIri, versionDate, targetSchema, schemaOptions, requestingUser) => getResourcesV2(resIris, propertyIri, versionDate, targetSchema, schemaOptions, requestingUser)
+        case ResourcesGetRequestV2(resIris, propertyIri, valueUuid, versionDate, targetSchema, schemaOptions, requestingUser) => getResourcesV2(resIris, propertyIri, valueUuid, versionDate, targetSchema, schemaOptions, requestingUser)
         case ResourcesPreviewGetRequestV2(resIris, targetSchema, requestingUser) => getResourcePreviewV2(resIris, targetSchema, requestingUser)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTeiV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
         case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
@@ -987,6 +986,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       *
       * @param resourceIris  the Iris of the requested resources.
       * @param preview       `true` if a preview of the resource is requested.
+      * @param propertyIri    if defined, requests only the values of the specified explicit property.
+      * @param valueUuid      if defined, requests only the value with the specified UUID.
       * @param versionDate   if defined, requests the state of the resources at the specified time in the past.
       *                      Cannot be used in conjunction with `preview`.
       * @param queryStandoff `true` if standoff should be queried.
@@ -995,6 +996,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     private def getResourcesFromTriplestore(resourceIris: Seq[IRI],
                                             preview: Boolean,
                                             propertyIri: Option[SmartIri],
+                                            valueUuid: Option[UUID],
                                             versionDate: Option[Instant],
                                             queryStandoff: Boolean,
                                             requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
@@ -1015,10 +1017,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 resourceIris = resourceIrisDistinct,
                 preview = preview,
                 maybePropertyIri = propertyIri,
+                maybeValueUuid = valueUuid,
                 maybeVersionDate = versionDate,
                 queryAllNonStandoff = true,
                 maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
-                maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex
+                maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
+                stringFormatter = stringFormatter
             ).toString())
 
             // _ = println(resourceRequestSparql)
@@ -1041,14 +1045,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     /**
       * Get one or several resources and return them as a sequence.
       *
-      * @param resourceIris   the resources to query for.
+      * @param resourceIris   the IRIs of the resources to be queried.
+      * @param propertyIri    if defined, requests only the values of the specified explicit property.
+      * @param valueUuid      if defined, requests only the value with the specified UUID.
       * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
-      * @param requestingUser the the client making the request.
+      * @param targetSchema   the target API schema.
       * @param schemaOptions  the schema options submitted with the request.
+      * @param requestingUser the user making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
     private def getResourcesV2(resourceIris: Seq[IRI],
                                propertyIri: Option[SmartIri] = None,
+                               valueUuid: Option[UUID] = None,
                                versionDate: Option[Instant] = None,
                                targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption],
@@ -1067,6 +1075,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 resourceIris = resourceIris,
                 preview = false,
                 propertyIri = propertyIri,
+                valueUuid = valueUuid,
                 versionDate = versionDate,
                 queryStandoff = queryStandoff,
                 requestingUser = requestingUser
@@ -1088,7 +1097,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         queryStandoff = queryStandoff,
                         versionDate = versionDate,
                         responderManager = responderManager,
-                        knoraIdUtil = knoraIdUtil,
                         targetSchema = targetSchema,
                         settings = settings,
                         requestingUser = requestingUser
@@ -1118,6 +1126,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 resourceIris = resourceIris,
                 preview = true,
                 propertyIri = None,
+                valueUuid = None,
                 versionDate = None,
                 queryStandoff = false, // This has no effect, because we are not querying values.
                 requestingUser = requestingUser
@@ -1132,7 +1141,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         queryStandoff = false,
                         versionDate = None,
                         responderManager = responderManager,
-                        knoraIdUtil = knoraIdUtil,
                         targetSchema = targetSchema,
                         settings = settings,
                         requestingUser = requestingUser

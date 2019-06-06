@@ -20,6 +20,7 @@
   beol:hasFamilyName <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA/values/7LhL_JdpTA-E0oQ1hdtPDQ> .
 
 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA/values/7LhL_JdpTA-E0oQ1hdtPDQ> a knora-base:TextValue;
+  knora-base:valueHasUUID "7LhL_JdpTA-E0oQ1hdtPDQ"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2018-06-04T08:55:34.086Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
@@ -28,6 +29,7 @@
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA/values/aWKIm2DCTn-hEY9GFJ5TLQ> a knora-base:TextValue;
+  knora-base:valueHasUUID "aWKIm2DCTn-hEY9GFJ5TLQ"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2018-06-04T08:55:34.086Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
@@ -46,6 +48,7 @@
   beol:hasFamilyName <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q> .
 
 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q> a knora-base:TextValue;
+  knora-base:valueHasUUID "5K24YxlwQ9OXcYjB0jRR4Q"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2018-06-04T08:56:22.513Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
@@ -54,6 +57,7 @@
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/Emsl7AdiTdS8uwSTo18YRw> a knora-base:TextValue;
+  knora-base:valueHasUUID "Emsl7AdiTdS8uwSTo18YRw"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2018-06-04T08:56:22.513Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
@@ -78,6 +82,7 @@
   beol:hasText <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw> .
 
 <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw> a knora-base:TextValue;
+  knora-base:valueHasUUID "3WVAi8UwSyulC3QhQJL1iw"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueHasStandoff <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/0>,
     <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/1>;
@@ -105,6 +110,7 @@
   knora-base:standoffTagHasUUID "5b78739b-05b5-478b-8f4f-263625013cf3" .
 
 <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/Cvp07eTqQQSnYdcvqlWW_g> a knora-base:LinkValue;
+  knora-base:valueHasUUID "Cvp07eTqQQSnYdcvqlWW_g"^^xsd:string;
   knora-base:isDeleted false;
   rdf:subject <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA>;
   rdf:predicate beol:hasAuthor;
@@ -117,6 +123,7 @@
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
 <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/DVqPKuBBSIauVqjUC7bNvA> a knora-base:LinkValue;
+  knora-base:valueHasUUID "DVqPKuBBSIauVqjUC7bNvA"^^xsd:string;
   knora-base:isDeleted false;
   rdf:subject <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA>;
   rdf:predicate beol:hasRecipient;
@@ -129,6 +136,7 @@
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
 <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/L2gv0paYSymiENk1c0fAAQ> a knora-base:DateValue;
+  knora-base:valueHasUUID "L2gv0paYSymiENk1c0fAAQ"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2018-06-04T08:56:33.879Z"^^xsd:dateTime;
   knora-base:valueHasCalendar "GREGORIAN";
@@ -142,6 +150,7 @@
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
 <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/LFXE4suQQdqsPkP3eq1IbA> a knora-base:ListValue;
+  knora-base:valueHasUUID "LFXE4suQQdqsPkP3eq1IbA"^^xsd:string;
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF>;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
   knora-base:isDeleted false;
@@ -151,6 +160,7 @@
   knora-base:valueHasString "http://rdfh.ch/lists/0801/logarithmic_curves" .
 
 <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/qhE8FcQfRImrDTL4GEtIJw> a knora-base:TextValue;
+  knora-base:valueHasUUID "qhE8FcQfRImrDTL4GEtIJw"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2018-06-04T08:56:33.879Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
@@ -169,6 +179,7 @@
   beol:title <http://rdfh.ch/0801/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> .
 
 <http://rdfh.ch/0801/letter_resource/values/naiFCtV2S5C6GIe_eKGTGQ> a knora-base:TextValue;
+  knora-base:valueHasUUID "naiFCtV2S5C6GIe_eKGTGQ"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2017-09-01T14:15:04.846+02:00"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
@@ -189,6 +200,7 @@
   beol:seqnum <http://rdfh.ch/0801/page_resource/values/f45WI-rpQTigeaJ84KZoBA> .
 
 <http://rdfh.ch/0801/page_resource/values/DX6m0TSuRGesYXA0iQyA9A> a knora-base:StillImageFileValue;
+  knora-base:valueHasUUID "DX6m0TSuRGesYXA0iQyA9A"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:dimX 2157;
   knora-base:dimY 2806;
@@ -203,6 +215,7 @@
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
 <http://rdfh.ch/0801/page_resource/values/dn2rUCg8TNq_qz6i62e51g> a knora-base:LinkValue;
+  knora-base:valueHasUUID "dn2rUCg8TNq_qz6i62e51g"^^xsd:string;
   knora-base:isDeleted false;
   rdf:subject <http://rdfh.ch/0801/page_resource>;
   rdf:predicate beol:partOf;
@@ -215,6 +228,7 @@
   knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
 <http://rdfh.ch/0801/page_resource/values/f45WI-rpQTigeaJ84KZoBA> a knora-base:IntValue;
+  knora-base:valueHasUUID "f45WI-rpQTigeaJ84KZoBA"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2017-09-01T15:21:10.735+02:00"^^xsd:dateTime;
   knora-base:valueHasInteger 0;

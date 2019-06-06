@@ -19,12 +19,19 @@
 
 package org.knora.webapi.util
 
+import java.nio.ByteBuffer
 import java.text.ParseException
 import java.time._
 import java.time.format.DateTimeFormatter
 import java.time.temporal.{ChronoField, TemporalAccessor}
 import java.util.concurrent.ConcurrentHashMap
+import java.util.{Base64, UUID}
 
+import akka.actor.ActorRef
+import akka.event.LoggingAdapter
+import akka.http.scaladsl.util.FastFuture
+import akka.pattern._
+import akka.util.Timeout
 import com.google.gwt.safehtml.shared.UriUtils._
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
@@ -32,12 +39,15 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.JavaUtil.Optional
 import spray.json._
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.Exception._
 import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
@@ -133,6 +143,26 @@ object StringFormatter {
       * The version number of the current version of Knora's ARK URL format.
       */
     val ArkVersion: String = "1"
+
+    /**
+      * The length of the canonical representation of a UUID.
+      */
+    val CanonicalUuidLength = 36
+
+    /**
+      * The length of a Base64-encoded UUID.
+      */
+    val Base64UuidLength = 22
+
+    /**
+      * The maximum number of times that `makeUnusedIri` will try to make a new, unused IRI.
+      */
+    val MAX_IRI_ATTEMPTS: Int = 5
+
+    /**
+      * The domain name used to construct Knora IRIs.
+      */
+    val IriDomain: String = "rdfh.ch"
 
     /**
       * A container for an XML import namespace and its prefix label.
@@ -545,13 +575,22 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     def fromLinkPropToLinkValueProp: SmartIri
 
     /**
-      * If this is a Knora data IRI representing a resource, returns the corresponding ARK URL. Throws
+      * If this is a Knora data IRI representing a resource, returns an ARK URL for the resource. Throws
       * [[DataConversionException]] if this IRI is not a Knora resource IRI.
       *
       * @param maybeTimestamp an optional timestamp indicating the point in the resource's version history that the ARK URL should
       *                       cite.
       */
     def fromResourceIriToArkUrl(maybeTimestamp: Option[Instant] = None): String
+
+    /**
+      * If this is a Knora data IRI representing a value, returns an ARK URL for the value. Throws
+      * [[DataConversionException]] if this IRI is not a Knora value IRI.
+      *
+      * @param maybeTimestamp an optional timestamp indicating the point in the value's version history that the ARK URL should
+      *                       cite.
+      */
+    def fromValueIriToArkUrl(valueUUID: UUID, maybeTimestamp: Option[Instant] = None): String
 
     override def equals(obj: scala.Any): Boolean = {
         // See the comment at the top of the SmartIri trait.
@@ -605,6 +644,9 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
     import StringFormatter._
 
+    private val base64Encoder = Base64.getUrlEncoder.withoutPadding
+    private val base64Decoder = Base64.getUrlDecoder
+
     // The host and port number that this Knora server is running on, and that should be used
     // when constructing IRIs for project-specific ontologies.
     private val knoraApiHostAndPort: Option[String] = if (initForTest) {
@@ -643,7 +685,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
     // The strings that Knora data IRIs can start with.
     private val DataIriStarts: Set[String] = Set(
-        "http://" + KnoraIdUtil.IriDomain + "/"
+        "http://" + IriDomain + "/"
     )
 
     // The project code of the default shared ontologies project.
@@ -783,13 +825,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     private val base64UrlCheckDigit = new Base64UrlCheckDigit
 
     // A regex that matches a Knora resource IRI.
-    private val ResourceIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")$").r
+    private val ResourceIriRegex: Regex = ("^http://" + IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")$").r
 
     // A regex that matches a Knora value IRI.
-    private val ValueIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + ")$").r
+    private val ValueIriRegex: Regex = ("^http://" + IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + ")$").r
 
     // A regex that matches a Knora standoff IRI.
-    private val StandoffIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + """)/standoff/(\d+)$""").r
+    private val StandoffIriRegex: Regex = ("^http://" + IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + """)/standoff/(\d+)$""").r
 
     // A regex that parses a Knora ARK timestamp.
     private val ArkTimestampRegex: Regex =
@@ -1455,6 +1497,28 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
                 makeArkUrl(
                     projectID = iriInfo.projectCode.get,
                     resourceID = iriInfo.resourceID.get,
+                    maybeValueUUID = None,
+                    maybeTimestamp = maybeTimestamp
+                )
+
+            }
+
+            arkUrlTry match {
+                case Success(arkUrl) => arkUrl
+                case Failure(ex) => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
+            }
+        }
+
+        override def fromValueIriToArkUrl(valueUUID: UUID, maybeTimestamp: Option[Instant] = None): String = {
+            if (!isKnoraValueIri) {
+                throw DataConversionException(s"IRI $iri is not a Knora value IRI")
+            }
+
+            val arkUrlTry = Try {
+                makeArkUrl(
+                    projectID = iriInfo.projectCode.get,
+                    resourceID = iriInfo.resourceID.get,
+                    maybeValueUUID = Some(valueUUID),
                     maybeTimestamp = maybeTimestamp
                 )
 
@@ -1607,7 +1671,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @param iri the IRI to be checked.
       */
     def isKnoraProjectIriStr(iri: IRI): Boolean = {
-        isIri(iri) && iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/projects/")
+        isIri(iri) && iri.startsWith("http://" + IriDomain + "/projects/")
     }
 
     /**
@@ -1616,7 +1680,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @param iri the IRI to be checked.
       */
     def isKnoraListIriStr(iri: IRI): Boolean = {
-        isIri(iri) && iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/lists/")
+        isIri(iri) && iri.startsWith("http://" + IriDomain + "/lists/")
     }
 
     /**
@@ -1625,7 +1689,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * @param iri the IRI to be checked.
       */
     def isKnoraUserIriStr(iri: IRI): Boolean = {
-        isIri(iri) && iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/users/")
+        isIri(iri) && iri.startsWith("http://" + IriDomain + "/users/")
     }
 
     /**
@@ -2571,37 +2635,52 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
-      * Generates an ARK URL for a resource as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
+      * Generates an ARK URL for a resource or value, as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
       *
       * @param projectID      the shortcode of the project that the resource belongs to.
       * @param resourceID     the resource's ID (the last component of its IRI).
+      * @param maybeValueUUID if this is an ARK URL for a value, the value's UUID.
       * @param maybeTimestamp a timestamp indicating the point in the resource's version history that the ARK URL should
       *                       cite.
-      * @return an ARK URL that can be resolved to obtain the resource.
+      * @return an ARK URL that can be resolved to obtain the resource or value.
       */
-    private def makeArkUrl(projectID: String, resourceID: String, maybeTimestamp: Option[Instant] = None): String = {
+    private def makeArkUrl(projectID: String, resourceID: String, maybeValueUUID: Option[UUID] = None, maybeTimestamp: Option[Instant] = None): String = {
+        /**
+          * Adds a check digit to a Base64-encoded ID, and escapes '-' as '=', because '-' can be ignored in ARK URLs.
+          *
+          * @param id a Base64-encoded ID.
+          * @return the ID with a check digit added.
+          */
+        def addCheckDigitAndEscape(id: String): String = {
+            val checkDigitTry: Try[String] = Try {
+                base64UrlCheckDigit.calculate(id)
+            }
+
+            val checkDigit: String = checkDigitTry match {
+                case Success(digit) => digit
+                case Failure(ex) => throw DataConversionException(ex.getMessage)
+            }
+
+            val idWithCheckDigit = id + checkDigit
+            idWithCheckDigit.replace('-', '=')
+        }
+
         val (resolver: String, assignedNumber: Int) = (arkResolver, arkAssignedNumber) match {
             case (Some(definedHost: String), Some(definedAssignedNumber: Int)) => (definedHost, definedAssignedNumber)
             case _ => throw AssertionException(s"StringFormatter has not been initialised with system settings")
         }
 
         // Calculate a check digit for the resource ID.
+        val resourceIDWithCheckDigit: String = addCheckDigitAndEscape(resourceID)
 
-        val checkDigitTry: Try[String] = Try {
-            base64UrlCheckDigit.calculate(resourceID)
+        // Construct an ARK URL for the resource, without a value UUID and without a timestamp.
+        val resourceArkUrl = s"$resolver/ark:/$assignedNumber/$ArkVersion/$projectID/$resourceIDWithCheckDigit"
+
+        // If a value UUID was provided, Base64-encode it, add a check digit, and append the result to the URL.
+        val arkUrlWithoutTimestamp = maybeValueUUID match {
+            case Some(valueUUID: UUID) => s"$resourceArkUrl/${addCheckDigitAndEscape(base64EncodeUuid(valueUUID))}"
+            case None => resourceArkUrl
         }
-
-        val checkDigit: String = checkDigitTry match {
-            case Success(digit) => digit
-            case Failure(ex) => throw DataConversionException(ex.getMessage)
-        }
-
-        val resourceIDWithCheckDigit = resourceID + checkDigit
-
-        // Escape '-' as '=' in the resource ID and check digit, because '-' can be ignored in ARK URLs.
-        val escapedResourceIDWithCheckDigit = resourceIDWithCheckDigit.replace('-', '=')
-
-        val arkUrlWithoutTimestamp = s"$resolver/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit"
 
         maybeTimestamp match {
             case Some(timestamp) =>
@@ -2611,5 +2690,308 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             case None =>
                 arkUrlWithoutTimestamp
         }
+    }
+
+    /**
+      * Attempts to create a new IRI that isn't already used in the triplestore. Will try up to [[MAX_IRI_ATTEMPTS]]
+      * times, then throw an exception if an unused IRI could not be created.
+      *
+      * @param iriFun       a function that generates a random IRI.
+      * @param storeManager a reference to the Knora store manager actor.
+      */
+    def makeUnusedIri(iriFun: => IRI,
+                      storeManager: ActorRef,
+                      log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IRI] = {
+        def makeUnusedIriRec(attempts: Int): Future[IRI] = {
+            val newIri = iriFun
+
+            for {
+                askString <- Future(queries.sparql.admin.txt.checkIriExists(iri = newIri).toString)
+                response <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+
+                result <- if (!response.result) {
+                    FastFuture.successful(newIri)
+                } else if (attempts > 1) {
+                    log.warning("KnoraIdUtil.makeUnusedIri generated an IRI that already exists in the triplestore, retrying")
+                    makeUnusedIriRec(attempts - 1)
+                } else {
+                    throw UpdateNotPerformedException(s"Could not make an unused new IRI after $MAX_IRI_ATTEMPTS attempts")
+                }
+            } yield result
+        }
+
+        makeUnusedIriRec(attempts = MAX_IRI_ATTEMPTS)
+    }
+
+    /**
+      * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
+      * Base64 encoder from [[java.util.Base64]], without padding. This results in a 22-character string that
+      * can be used as a unique identifier in IRIs.
+      *
+      * @return a random, Base64-encoded UUID.
+      */
+    def makeRandomBase64EncodedUuid: String = {
+        val uuid = UUID.randomUUID
+        base64EncodeUuid(uuid)
+    }
+
+    /**
+      * Base64-encodes a [[UUID]] using a URL and filename safe Base64 encoder from [[java.util.Base64]],
+      * without padding. This results in a 22-character string that can be used as a unique identifier in IRIs.
+      *
+      * @param uuid the [[UUID]] to be encoded.
+      * @return a 22-character string representing the UUID.
+      */
+    def base64EncodeUuid(uuid: UUID): String = {
+        val bytes = Array.ofDim[Byte](16)
+        val byteBuffer = ByteBuffer.wrap(bytes)
+        byteBuffer.putLong(uuid.getMostSignificantBits)
+        byteBuffer.putLong(uuid.getLeastSignificantBits)
+        base64Encoder.encodeToString(bytes)
+    }
+
+    /**
+      * Decodes a Base64-encoded UUID.
+      *
+      * @param base64Uuid the Base64-encoded UUID to be decoded.
+      * @return the equivalent [[UUID]].
+      */
+    def base64DecodeUuid(base64Uuid: String): UUID = {
+        val bytes = base64Decoder.decode(base64Uuid)
+        val byteBuffer = ByteBuffer.wrap(bytes)
+        new UUID(byteBuffer.getLong, byteBuffer.getLong)
+    }
+
+    /**
+      * Encodes a [[UUID]] as a string in one of two formats:
+      *
+      * - The canonical 36-character format.
+      * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
+      *
+      * @param uuid      the UUID to be encoded.
+      * @param useBase64 if `true`, uses Base64 encoding.
+      * @return the encoded UUID.
+      */
+    def encodeUuid(uuid: UUID, useBase64: Boolean): String = {
+        if (useBase64) {
+            base64EncodeUuid(uuid)
+        } else {
+            uuid.toString
+        }
+    }
+
+    /**
+      * Calls `decodeUuidWithErr`, throwing [[InconsistentTriplestoreDataException]] if the string cannot be parsed.
+      */
+    def decodeUuid(uuidStr: String): UUID = {
+        decodeUuidWithErr(uuidStr, throw InconsistentTriplestoreDataException(s"Invalid UUID: $uuidStr"))
+    }
+
+    /**
+      * Decodes a string representing a UUID in one of two formats:
+      *
+      * - The canonical 36-character format.
+      * - The 22-character Base64-encoded format returned by [[base64EncodeUuid]].
+      *
+      * Shorter strings are padded with leading zeroes to 22 characters and parsed in Base64 format
+      * (this is non-reversible, and is needed only for working with test data).
+      *
+      * @param uuidStr the string to be decoded.
+      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
+      * @return the decoded [[UUID]].
+      */
+    def decodeUuidWithErr(uuidStr: String, errorFun: => Nothing): UUID = {
+        if (uuidStr.length == CanonicalUuidLength) {
+            UUID.fromString(uuidStr)
+        } else if (uuidStr.length == Base64UuidLength) {
+            base64DecodeUuid(uuidStr)
+        } else if (uuidStr.length < Base64UuidLength) {
+            base64DecodeUuid(uuidStr.reverse.padTo(Base64UuidLength, '0').reverse)
+        } else {
+            errorFun
+        }
+    }
+
+    /**
+      * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
+      *
+      * @param idStr the string to check.
+      * @return `true` if the string is the right length to be a canonical or Base64-encoded UUID.
+      */
+    def couldBeUuid(idStr: String): Boolean = {
+        idStr.length == CanonicalUuidLength || idStr.length == Base64UuidLength
+    }
+
+    /**
+      * Creates a new resource IRI based on a UUID.
+      *
+      * @param projectShortcode the project's shortcode.
+      * @return a new resource IRI.
+      */
+    def makeRandomResourceIri(projectShortcode: String): IRI = {
+        val knoraResourceID = makeRandomBase64EncodedUuid
+        s"http://$IriDomain/$projectShortcode/$knoraResourceID"
+    }
+
+    /**
+      * Creates a new value IRI based on a UUID.
+      *
+      * @param resourceIri the IRI of the resource that will contain the value.
+      * @return a new value IRI.
+      */
+    def makeRandomValueIri(resourceIri: IRI): IRI = {
+        val knoraValueUuid = makeRandomBase64EncodedUuid
+        s"$resourceIri/values/$knoraValueUuid"
+    }
+
+    /**
+      * Creates a mapping IRI based on a project IRI and a mapping name.
+      *
+      * @param projectIri the IRI of the project the mapping will belong to.
+      * @return a mapping IRI.
+      */
+    def makeProjectMappingIri(projectIri: IRI, mappingName: String): IRI = {
+        val mappingIri = s"$projectIri/mappings/$mappingName"
+        // check that the mapping IRI is valid (mappingName is user input)
+        validateAndEscapeIri(mappingIri, throw BadRequestException(s"the created mapping IRI $mappingIri is invalid"))
+    }
+
+    /**
+      * Creates a random IRI for an element of a mapping based on a mapping IRI.
+      *
+      * @param mappingIri the IRI of the mapping the element belongs to.
+      * @return a new mapping element IRI.
+      */
+    def makeRandomMappingElementIri(mappingIri: IRI): IRI = {
+        val knoraMappingElementUuid = makeRandomBase64EncodedUuid
+        s"$mappingIri/elements/$knoraMappingElementUuid"
+    }
+
+    /**
+      * Creates an IRI used as a lock for the creation of mappings inside a given project.
+      * This method will always return the same IRI for the given project IRI.
+      *
+      * @param projectIri the IRI of the project the mapping will belong to.
+      * @return an IRI used as a lock for the creation of mappings inside a given project.
+      */
+    def createMappingLockIriForProject(projectIri: IRI): IRI = {
+        s"$projectIri/mappings"
+    }
+
+    /**
+      * Creates a new project IRI based on a UUID or project shortcode.
+      *
+      * @param shortcode the required project shortcode.
+      * @return a new project IRI.
+      */
+    def makeRandomProjectIri(shortcode: String): IRI = {
+        s"http://$IriDomain/projects/$shortcode"
+    }
+
+    /**
+      * Creates a new group IRI based on a UUID.
+      *
+      * @param shortcode the required project shortcode.
+      * @return a new group IRI.
+      */
+    def makeRandomGroupIri(shortcode: String): String = {
+        val knoraGroupUuid = makeRandomBase64EncodedUuid
+        s"http://$IriDomain/groups/$shortcode/$knoraGroupUuid"
+    }
+
+    /**
+      * Creates a new person IRI based on a UUID.
+      *
+      * @return a new person IRI.
+      */
+    def makeRandomPersonIri: IRI = {
+        val knoraPersonUuid = makeRandomBase64EncodedUuid
+        s"http://$IriDomain/users/$knoraPersonUuid"
+    }
+
+    /**
+      * Creates a new list IRI based on a UUID.
+      *
+      * @param shortcode the required project shortcode.
+      * @return a new list IRI.
+      */
+    def makeRandomListIri(shortcode: String): String = {
+        val knoraListUuid = makeRandomBase64EncodedUuid
+        s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
+    }
+
+    /**
+      * Creates a new standoff tag IRI based on a UUID.
+      *
+      * @param valueIri   the IRI of the text value containing the standoff tag.
+      * @param startIndex the standoff tag's start index.
+      * @return a standoff tag IRI.
+      */
+    def makeRandomStandoffTagIri(valueIri: IRI, startIndex: Int): IRI = {
+        s"$valueIri/standoff/$startIndex"
+    }
+
+    /**
+      * Converts the IRI of a property that points to a resource into the IRI of the corresponding link value property.
+      *
+      * @param linkPropertyIri the IRI of the property that points to a resource.
+      * @return the IRI of the corresponding link value property.
+      */
+    def linkPropertyIriToLinkValuePropertyIri(linkPropertyIri: IRI): IRI = {
+        implicit val stringFormatter: StringFormatter = this
+
+        linkPropertyIri.toSmartIri.fromLinkPropToLinkValueProp.toString
+    }
+
+    /**
+      * Converts the IRI of a property that points to a `knora-base:LinkValue` into the IRI of the corresponding link property.
+      *
+      * @param linkValuePropertyIri the IRI of the property that points to the `LinkValue`.
+      * @return the IRI of the corresponding link property.
+      */
+    def linkValuePropertyIri2LinkPropertyIri(linkValuePropertyIri: IRI): IRI = {
+        implicit val stringFormatter: StringFormatter = this
+
+        linkValuePropertyIri.toSmartIri.fromLinkValuePropToLinkProp.toString
+    }
+
+    /**
+      * Creates a new permission IRI based on a UUID.
+      *
+      * @param shortcode the required project shortcode.
+      * @return the IRI of the permission object.
+      */
+    def makeRandomPermissionIri(shortcode: String): IRI = {
+        val knoraPermissionUuid = makeRandomBase64EncodedUuid
+        s"http://$IriDomain/permissions/$shortcode/$knoraPermissionUuid"
+    }
+
+    /**
+      * Creates an IRI for a `knora-base:Map`.
+      *
+      * @param mapPath the map's path, which must be a sequence of names separated by slashes (`/`). Each name must
+      *                be a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
+      * @return the IRI of the map.
+      */
+    def makeMapIri(mapPath: String): IRI = {
+        s"http://$IriDomain/maps/$mapPath"
+    }
+
+    /**
+      * Extracts the path of a persistent map from the IRI of a `knora-base:Map`.
+      *
+      * @param mapIri the IRI of the `knora-base:Map`.
+      * @return the map's path.
+      */
+    def mapIriToMapPath(mapIri: IRI): String = {
+        mapIri.stripPrefix(s"http://$IriDomain/maps/")
+    }
+
+    /**
+      * Creates a random IRI for a `knora-base:MapEntry`.
+      */
+    def makeRandomMapEntryIri: IRI = {
+        val mapEntryUuid = makeRandomBase64EncodedUuid
+        s"http://$IriDomain/map-entries/$mapEntryUuid"
     }
 }

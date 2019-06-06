@@ -33,7 +33,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.slf4j.LoggerFactory
 import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtHeader, JwtSprayJson}
 import spray.json._
@@ -737,8 +737,7 @@ object JWTHelper {
       * @return a [[String]] containing the JWT.
       */
     def createToken(userIri: IRI, secret: String, longevity: FiniteDuration, content: Map[String, JsValue] = Map.empty): String = {
-
-        val knoraIdUtil = new KnoraIdUtil
+        val stringFormatter = StringFormatter.getGeneralInstance
 
         // now in seconds
         val now: Long = System.currentTimeMillis() / 1000l
@@ -746,7 +745,7 @@ object JWTHelper {
         // calculate expiration time (seconds)
         val nowPlusLongevity: Long = now + longevity.toSeconds
 
-        val identifier: String = knoraIdUtil.base64EncodeUuid(UUID.randomUUID)
+        val identifier: String = stringFormatter.base64EncodeUuid(UUID.randomUUID)
 
         val claim: String = JwtClaim(
             content = JsObject(content).compactPrint,
