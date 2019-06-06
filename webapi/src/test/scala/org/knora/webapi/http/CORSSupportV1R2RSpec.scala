@@ -27,6 +27,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi.R2RSpec
 import org.knora.webapi.http.CORSSupport.CORS
+import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 
 /**
@@ -42,19 +43,19 @@ class CORSSupportV1R2RSpec extends R2RSpec {
     val exampleOrigin = HttpOrigin("http://example.com")
     val corsSettings = CORSSupport.corsSettings
 
-    "A Route with enabled CORS support " should {
+    "A Route with enabled CORS support" should {
 
         "accept valid pre-flight requests" in {
 
             Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(GET) ~> {
-                CORS(sealedResourcesRoute, settings, log)
+                addServerHeader(CORS(sealedResourcesRoute, settings, log))
             } ~> check {
                 responseAs[String] shouldBe empty
                 status shouldBe StatusCodes.OK
-                response.headers should contain theSameElementsAs Seq(
+                response.headers should contain allElementsOf Seq(
                     `Access-Control-Allow-Origin`(exampleOrigin),
-                    `Access-Control-Allow-Methods`(corsSettings.allowedMethods),
-                    //`Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Authorization"),
+                    `Access-Control-Allow-Methods`(CORSSupport.allowedMethods),
+                    // `Access-Control-Allow-Headers`(CORSSupport.exposedHeaders),
                     `Access-Control-Max-Age`(1800),
                     `Access-Control-Allow-Credentials`(true)
                 )
