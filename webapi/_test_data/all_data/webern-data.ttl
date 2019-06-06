@@ -48,6 +48,7 @@
 # hasFamilyName
 
 <http://rdfh.ch/08AE/testperson1/values/576dede4-8cc9-4e72-ac8c-8ea5dff9c668> a knora-base:TextValue ;
+	knora-base:valueHasUUID "576dede4-8cc9-4e72-ac8c-8ea5dff9c668"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -60,6 +61,7 @@
 # hasGivenName
 
 <http://rdfh.ch/08AE/testperson1/values/20526fec-6106-4b9d-a41b-faccbe028340> a knora-base:TextValue ;
+	knora-base:valueHasUUID "20526fec-6106-4b9d-a41b-faccbe028340"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -72,6 +74,7 @@
 # hasAlternativeName
 
 <http://rdfh.ch/08AE/testperson1/values/88c91a1d-23bc-413d-b966-78b525715575> a knora-base:TextValue ;
+	knora-base:valueHasUUID "88c91a1d-23bc-413d-b966-78b525715575"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -84,6 +87,7 @@
 # hasIAFIdentifier
 
 <http://rdfh.ch/08AE/testperson1/values/50e58896-fd0f-49c7-9786-f9cdd4c9ce56> a knora-base:TextValue ;
+	knora-base:valueHasUUID "50e58896-fd0f-49c7-9786-f9cdd4c9ce56"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -96,6 +100,7 @@
 # hasBirthDate
 
 <http://rdfh.ch/08AE/testperson1/values/6f3e4026-18bd-4039-9805-7d0d4e317690> a knora-base:DateValue ;
+	knora-base:valueHasUUID "6f3e4026-18bd-4039-9805-7d0d4e317690"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -113,6 +118,7 @@
 # webern:hasDeathDate
 
 <http://rdfh.ch/08AE/testperson1/values/b5349bdd-6f5d-4538-ad0f-7b9440760f55> a knora-base:DateValue ;
+	knora-base:valueHasUUID "b5349bdd-6f5d-4538-ad0f-7b9440760f55"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -130,6 +136,7 @@
 # webern:hasBirthPlace
 
 <http://rdfh.ch/08AE/testperson1/values/a588947a-44e6-45fb-aec3-3d57887f038c> a knora-base:TextValue ;
+	knora-base:valueHasUUID "a588947a-44e6-45fb-aec3-3d57887f038c"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -142,6 +149,7 @@
 # webern:hasDeathPlace
 
 <http://rdfh.ch/08AE/testperson1/values/47b2992554d5> a knora-base:TextValue ;
+	knora-base:valueHasUUID "47b2992554d5"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -154,6 +162,7 @@
 # webern:hasBiography
 
 <http://rdfh.ch/08AE/testperson1/values/3855051b-c47c-4e61-8cd7-76404efdc67b> a knora-base:TextValue ;
+	knora-base:valueHasUUID "3855051b-c47c-4e61-8cd7-76404efdc67b"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -166,6 +175,7 @@
 # webern:hasBiographySource
 
 <http://rdfh.ch/08AE/testperson1/values/4ab0cfaa-479a-4cd6-946e-2b51c4b9d016> a knora-base:TextValue ;
+	knora-base:valueHasUUID "4ab0cfaa-479a-4cd6-946e-2b51c4b9d016"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -179,6 +189,7 @@
 # webern:hasRelation
 
 <http://rdfh.ch/08AE/testperson1/values/f7675f26-4b01-4432-be74-9ae3aa24d2af> a knora-base:TextValue ;
+	knora-base:valueHasUUID "f7675f26-4b01-4432-be74-9ae3aa24d2af"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
@@ -191,6 +202,7 @@
 # webern:comment
 
 <http://rdfh.ch/08AE/testperson1/values/df1260ad43d5> a knora-base:TextValue ;
+	knora-base:valueHasUUID "df1260ad43d5"^^xsd:string;
 	knora-base:attachedToUser <http://rdfh.ch/users/webernProjectMember> ;
 	knora-base:hasPermissions "CR knora-admin:Creator|D knora-admin:ProjectMember" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;

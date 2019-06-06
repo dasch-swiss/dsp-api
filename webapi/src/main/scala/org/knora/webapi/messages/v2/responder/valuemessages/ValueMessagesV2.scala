@@ -470,9 +470,20 @@ sealed trait ReadValueV2 extends IOValueV2 {
     def valueCreationDate: Instant
 
     /**
+      * The UUID shared by all the versions of this value.
+      */
+    def valueHasUUID: UUID
+
+    /**
       * The content of the value.
       */
     def valueContent: ValueContentV2
+
+    /**
+      * The IRI of the previous version of this value. Not returned in API responses, but needed
+      * here for testing.
+      */
+    def previousValueIri: Option[IRI]
 
     /**
       * If the value has been marked as deleted, information about its deletion.
@@ -511,6 +522,8 @@ sealed trait ReadValueV2 extends IOValueV2 {
                     case jsonLDObject: JsonLDObject =>
                         // Add the value's metadata.
 
+                        val valueSmartIri = valueIri.toSmartIri
+
                         val requiredMetadata = Map(
                             JsonLDConstants.ID -> JsonLDString(valueIri),
                             JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString),
@@ -520,6 +533,15 @@ sealed trait ReadValueV2 extends IOValueV2 {
                             OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
                                 value = valueCreationDate.toString,
                                 datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                            ),
+                            OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID)),
+                            OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+                                value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID),
+                                datatype = OntologyConstants.Xsd.Uri.toSmartIri
+                            ),
+                            OntologyConstants.KnoraApiV2Complex.VersionArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+                                value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID, maybeTimestamp = Some(valueCreationDate)),
+                                datatype = OntologyConstants.Xsd.Uri.toSmartIri
                             )
                         )
 
@@ -550,10 +572,13 @@ sealed trait ReadValueV2 extends IOValueV2 {
   * @param attachedToUser                the user that created the value.
   * @param permissions                   the permissions that the value grants to user groups.
   * @param userPermission                the permission that the requesting user has on the value.
+  * @param valueHasUUID                  the UUID shared by all the versions of this value.
   * @param valueContent                  the content of the value.
   * @param valueHasMaxStandoffStartIndex if this text value has standoff markup, the highest
   *                                      `knora-base:standoffTagHasEndIndex`
   *                                      used in its standoff tags.
+  * @param previousValueIri              the IRI of the previous version of this value. Not returned in API responses, but needed
+  *                                      here for testing.
   * @param deletionInfo                  if this value has been marked as deleted, provides the date when it was
   *                                      deleted and the reason why it was deleted.
   */
@@ -562,8 +587,10 @@ case class ReadTextValueV2(valueIri: IRI,
                            permissions: String,
                            userPermission: EntityPermission,
                            valueCreationDate: Instant,
+                           valueHasUUID: UUID,
                            valueContent: TextValueContentV2,
                            valueHasMaxStandoffStartIndex: Option[Int],
+                           previousValueIri: Option[IRI],
                            deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadTextValueV2] {
     /**
       * Converts this value to the specified ontology schema.
@@ -621,6 +648,7 @@ case class ReadTextValueV2(valueIri: IRI,
   * @param attachedToUser   the user that created the value.
   * @param permissions      the permissions that the value grants to user groups.
   * @param userPermission   the permission that the requesting user has on the value.
+  * @param valueHasUUID     the UUID shared by all the versions of this value.
   * @param valueContent     the content of the value.
   * @param valueHasRefCount if this is a link value, its reference count. Not returned in API responses, but needed
   *                         here for testing.
@@ -634,6 +662,7 @@ case class ReadLinkValueV2(valueIri: IRI,
                            permissions: String,
                            userPermission: EntityPermission,
                            valueCreationDate: Instant,
+                           valueHasUUID: UUID,
                            valueContent: LinkValueContentV2,
                            valueHasRefCount: Int,
                            previousValueIri: Option[IRI] = None,
@@ -651,20 +680,25 @@ case class ReadLinkValueV2(valueIri: IRI,
 /**
   * A non-text, non-link value as read from the triplestore.
   *
-  * @param valueIri       the IRI of the value.
-  * @param attachedToUser the user that created the value.
-  * @param permissions    the permissions that the value grants to user groups.
-  * @param userPermission the permission that the requesting user has on the value.
-  * @param valueContent   the content of the value.
-  * @param deletionInfo   if this value has been marked as deleted, provides the date when it was
-  *                       deleted and the reason why it was deleted.
+  * @param valueIri         the IRI of the value.
+  * @param attachedToUser   the user that created the value.
+  * @param permissions      the permissions that the value grants to user groups.
+  * @param userPermission   the permission that the requesting user has on the value.
+  * @param valueHasUUID     the UUID shared by all the versions of this value.
+  * @param valueContent     the content of the value.
+  * @param previousValueIri the IRI of the previous version of this value. Not returned in API responses, but needed
+  *                         here for testing.
+  * @param deletionInfo     if this value has been marked as deleted, provides the date when it was
+  *                         deleted and the reason why it was deleted.
   */
 case class ReadOtherValueV2(valueIri: IRI,
                             attachedToUser: IRI,
                             permissions: String,
                             userPermission: EntityPermission,
                             valueCreationDate: Instant,
+                            valueHasUUID: UUID,
                             valueContent: ValueContentV2,
+                            previousValueIri: Option[IRI],
                             deletionInfo: Option[DeletionInfo]) extends ReadValueV2 with KnoraReadV2[ReadOtherValueV2] {
     /**
       * Converts this value to the specified ontology schema.
@@ -764,7 +798,7 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
 
     /**
       * Returns `true` if creating this [[ValueContentV2]] as a new value would duplicate the specified other value.
-      * This means that if resource `R` has property `P` with value `V1`, and `V1` would dupliate `V2`, the API server
+      * This means that if resource `R` has property `P` with value `V1`, and `V1` would duplicate `V2`, the API server
       * should not add another instance of property `P` with value `V2`. It does not necessarily mean that `V1 == V2`.
       *
       * @param that a [[ValueContentV2]] in the same resource, as read from the triplestore.
@@ -1146,8 +1180,6 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                               mapping: Option[MappingXMLtoStandoff] = None,
                               xslt: Option[String] = None,
                               comment: Option[String] = None) extends ValueContentV2 {
-    private val knoraIdUtil = new KnoraIdUtil
-
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.TextValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1282,7 +1314,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                 standoffNode: StandoffTagV2 =>
                     CreateStandoffTagV2InTriplestore(
                         standoffNode = standoffNode,
-                        standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri = valueIri, startIndex = standoffNode.startIndex) // generate IRI for new standoff node
+                        standoffTagInstanceIri = stringFormatter.makeRandomStandoffTagIri(valueIri = valueIri, startIndex = standoffNode.startIndex) // generate IRI for new standoff node
                     )
             }
 

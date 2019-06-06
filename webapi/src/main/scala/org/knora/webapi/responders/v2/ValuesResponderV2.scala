@@ -38,7 +38,7 @@ import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{ChangeRightsPermission, DeletePermission, EntityPermission, ModifyPermission}
-import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM, SmartIri}
+import org.knora.webapi.util.{PermissionUtilADM, SmartIri}
 
 import scala.concurrent.Future
 
@@ -46,9 +46,6 @@ import scala.concurrent.Future
   * Handles requests to read and write Knora values.
   */
 class ValuesResponderV2(responderData: ResponderData) extends Responder(responderData) {
-    // Creates IRIs for new Knora value objects.
-    val knoraIdUtil = new KnoraIdUtil
-
     /**
       * The IRI and content of a new value or value version whose existence in the triplestore has been verified.
       *
@@ -347,7 +344,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                  requestingUser: UserADM): Future[UnverifiedValueV2] = {
         for {
             // Generate an IRI for the new value.
-            newValueIri <- FastFuture.successful(knoraIdUtil.makeRandomValueIri(resourceInfo.resourceIri))
+            newValueIri <- FastFuture.successful(stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
             currentTime: Instant = Instant.now
 
             // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
@@ -376,13 +373,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 resourceIri = resourceInfo.resourceIri,
                 propertyIri = propertyIri,
                 newValueIri = newValueIri,
-                valueTypeIri = value.valueType,
                 value = value,
                 linkUpdates = standoffLinkUpdates,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 creationDate = currentTime,
-                knoraIdUtil = knoraIdUtil
+                stringFormatter = stringFormatter
             ).toString()
 
             /*
@@ -439,7 +435,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 resourceIri = resourceInfo.resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
                 creationDate = currentTime,
-                maybeComment = linkValueContent.comment
+                maybeComment = linkValueContent.comment,
+                stringFormatter = stringFormatter
             ).toString()
 
             /*
@@ -525,7 +522,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                         creationDate: Instant,
                                                         requestingUser: UserADM): InsertSparqlWithUnverifiedValue = {
         // Make an IRI for the new value.
-        val newValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
+        val newValueIri = stringFormatter.makeRandomValueIri(resourceIri)
 
         // Generate the SPARQL.
         val insertSparql: String = valueToCreate.valueContent match {
@@ -555,7 +552,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     linkUpdate = sparqlTemplateLinkUpdate,
                     creationDate = creationDate,
                     maybeComment = valueToCreate.valueContent.comment,
-                    maybeValueHasOrder = Some(valueHasOrder)
+                    maybeValueHasOrder = Some(valueHasOrder),
+                    stringFormatter = stringFormatter
                 ).toString()
 
             case otherValueContentV2 =>
@@ -570,7 +568,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     valuePermissions = valueToCreate.permissions,
                     creationDate = creationDate,
                     maybeValueHasOrder = Some(valueHasOrder),
-                    knoraIdUtil = knoraIdUtil
+                    stringFormatter = stringFormatter
                 ).toString()
         }
 
@@ -631,7 +629,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     deleteDirectLink = false,
                     linkValueExists = false,
                     linkTargetExists = true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
-                    newLinkValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
+                    newLinkValueIri = stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
                     linkTargetIri = targetIri,
                     currentReferenceCount = 0,
                     newReferenceCount = initialReferenceCount,
@@ -644,7 +642,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
             resourceIri = createMultipleValuesRequest.resourceIri,
             linkUpdates = standoffLinkUpdates,
-            creationDate = createMultipleValuesRequest.creationDate
+            creationDate = createMultipleValuesRequest.creationDate,
+            stringFormatter = stringFormatter
         ).toString()
     }
 
@@ -901,7 +900,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 )
 
             case _ =>
-                val newValueIri = knoraIdUtil.makeRandomValueIri(resourceInfo.resourceIri)
+                val newValueIri = stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
 
                 updateOrdinaryValueV2AfterChecks(
                     dataNamedGraph = dataNamedGraph,
@@ -1000,7 +999,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 linkUpdates = standoffLinkUpdates,
                 currentTime = currentTime,
                 requestingUser = requestingUser.id,
-                knoraIdUtil = knoraIdUtil
+                stringFormatter = stringFormatter
             ).toString())
 
             /*
@@ -1074,7 +1073,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                 maybeComment = newLinkValue.comment,
                 currentTime = currentTime,
-                requestingUser = requestingUser.id
+                requestingUser = requestingUser.id,
+                stringFormatter = stringFormatter
             ).toString())
 
             /*
@@ -1392,7 +1392,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 maybeDeleteComment = deleteComment,
                 linkUpdates = linkUpdates,
                 currentTime = currentTime,
-                requestingUser = requestingUser.id
+                requestingUser = requestingUser.id,
+                stringFormatter = stringFormatter
             ).toString())
 
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
@@ -1747,7 +1748,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         )
 
         // Generate an IRI for the new LinkValue.
-        val newLinkValueIri = knoraIdUtil.makeRandomValueIri(sourceResourceInfo.resourceIri)
+        val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
 
         maybeLinkValueInfo match {
             case Some(linkValueInfo) =>
@@ -1835,7 +1836,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 val deleteDirectLink = newReferenceCount == 0
 
                 // Generate an IRI for the new LinkValue.
-                val newLinkValueIri = knoraIdUtil.makeRandomValueIri(sourceResourceInfo.resourceIri)
+                val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri)
 
                 SparqlTemplateLinkUpdate(
                     linkPropertyIri = linkPropertyIri,

@@ -34,7 +34,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
+import org.knora.webapi.util.CacheUtil
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 import scala.concurrent.Future
@@ -43,9 +43,6 @@ import scala.concurrent.Future
   * Provides information about Knora users to other responders.
   */
 class UsersResponderADM(responderData: ResponderData) extends Responder(responderData) {
-
-    // Creates IRIs for new Knora user objects.
-    private val knoraIdUtil = new KnoraIdUtil
 
     // The IRI used to lock user creation and update
     private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
@@ -265,7 +262,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             usernameTaken: Boolean <- userByUsernameExists(createRequest.username)
 
-            userIri = knoraIdUtil.makeRandomPersonIri
+            userIri = stringFormatter.makeRandomPersonIri
 
             encoder = new SCryptPasswordEncoder
             hashedPassword = encoder.encode(createRequest.password)

@@ -30,7 +30,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest,
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.admin.PermissionsResponderADM._
 import org.knora.webapi.responders.{Responder, ResponderData}
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, PermissionUtilADM}
+import org.knora.webapi.util.{CacheUtil, PermissionUtilADM}
 
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
@@ -42,9 +42,6 @@ import scala.concurrent.Future
   */
 class PermissionsResponderADM(responderData: ResponderData) extends Responder(responderData) {
 
-
-    // Creates IRIs for new Knora user objects.
-    private val knoraIdUtil = new KnoraIdUtil
 
     /* Entity types used to more clearly distinguish what kind of entity is meant */
     private val ResourceEntityType = "resource"
@@ -131,7 +128,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group for each project */
             projectAdmins: Seq[(IRI, IRI)] = if (projectIris.nonEmpty) {
                 for {
-                    projectAdminForGroup <- isInProjectAdminGroups.toSeq
+                    projectAdminForGroup <- isInProjectAdminGroups
                     res = (projectAdminForGroup, OntologyConstants.KnoraAdmin.ProjectAdmin)
                 } yield res
             } else {
@@ -245,10 +242,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
 
                 projectAdministrativePermissions: (IRI, Set[PermissionADM]) = permissionsListBuffer.length match {
-                    case 1 => {
+                    case 1 =>
                         log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, administrativePermissions: ${permissionsListBuffer.head._2}")
                         (projectIri, permissionsListBuffer.head._2)
-                    }
+
                     case 0 => (projectIri, Set.empty[PermissionADM])
                     case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
                 }
@@ -1113,9 +1110,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
             /* Create permissions string */
             result = permissionsListBuffer.length match {
-                case 1 => {
-                    PermissionUtilADM.formatPermissionADMs(permissionsListBuffer.head._2, PermissionType.OAP)
-                }
+                case 1 => PermissionUtilADM.formatPermissionADMs(permissionsListBuffer.head._2, PermissionType.OAP)
                 case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
             }
             _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - project: {}, precedence: {}, defaultObjectAccessPermissions: {}", projectIri, permissionsListBuffer.head._1, result)

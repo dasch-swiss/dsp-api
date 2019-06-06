@@ -55,10 +55,7 @@ import scala.util.{Failure, Success, Try}
 class ResourcesResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     // Converts SPARQL query results to ApiValueV1 objects.
-    val valueUtilV1 = new ValueUtilV1(settings)
-
-    // Creates IRIs for new Knora value objects.
-    val knoraIdUtil = new KnoraIdUtil
+    private val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
       * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message.
@@ -1122,7 +1119,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         // if the String would be empty, return a None (occurs when the the Array contains nly one element).
         val phrase: Option[String] = searchStringSpaceSeparated.dropRight(1).mkString(" ") match {
             case "" => None
-            case (searchPhrase: String) => Some(searchPhrase)
+            case searchPhrase: String => Some(searchPhrase)
         }
 
         // get the las element of the Array
@@ -1146,7 +1143,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             searchResponse <- (storeManager ? SparqlSelectRequest(searchResourcesSparql)).mapTo[SparqlSelectResponse]
 
             resultFutures: Seq[Future[ResourceSearchResultRowV1]] = searchResponse.results.bindings.map {
-                case (row: VariableResultsRow) =>
+                row: VariableResultsRow =>
                     val resourceIri = row.rowMap("resourceIri")
                     val resourceClass = row.rowMap("resourceClass")
                     val firstProp = row.rowMap("firstProp")
@@ -1289,7 +1286,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
             clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
-                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectADM.shortcode)).toMap,
+                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> stringFormatter.makeRandomResourceIri(projectADM.shortcode)).toMap,
                 errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
                 errorFun = { errorMsg => throw BadRequestException(errorMsg) }
             )
@@ -1987,7 +1984,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             }
 
             namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectResponse.project)
-            resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(projectResponse.project.shortcode)
+            resourceIri: IRI = stringFormatter.makeRandomResourceIri(projectResponse.project.shortcode)
 
             // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
             // create a new resource in the given project.
@@ -2670,7 +2667,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             // value object IRI, since links don't have IRIs of their own.
 
                             // Convert the link property IRI to a link value property IRI.
-                            val linkValuePropertyIri = knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(propertyIri)
+                            val linkValuePropertyIri = stringFormatter.linkPropertyIriToLinkValuePropertyIri(propertyIri)
 
                             // Get the details of the link value that's pointed to by that link value property, and that has the target resource as its rdf:object.
                             val (linkValueIri, linkValueProps) = groupedPropertiesByType.groupedLinkValueProperties.groupedProperties.getOrElse(linkValuePropertyIri,
