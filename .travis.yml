@@ -74,7 +74,8 @@ jobs:
         # hit graphdb with a request "waking-it-up"
         - curl http://localhost:7200/rest/repositories
         # start the built-in webapi server tests
-        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/test webapi/coverageReport
+        # - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/test webapi/coverageReport
+        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/test
         # upload code coverage report
         # - sbt codacyCoverage
     # integration tests
@@ -91,7 +92,8 @@ jobs:
         # start the sipi container (with production config)
         - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose up -d sipi-it
         # start the integration tests
-        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/it:test webapi/coverageReport
+        # - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/it:test webapi/coverageReport
+        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/it:test
         # upload code coverage report
         # - sbt codacyCoverage
         # print out Sipi logs
