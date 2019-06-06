@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, ErrorHandlingMap, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,7 +42,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class ValueUtilV1(private val settings: SettingsImpl) {
 
     private val stringFormatter = StringFormatter.getGeneralInstance
-    private val knoraIdUtil = new KnoraIdUtil
 
     /**
       * Given a [[ValueProps]] containing details of a `knora-base:Value` object, creates a [[ApiValueV1]].
@@ -554,7 +553,6 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
             standoffTags: Seq[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(
                 standoffAssertions = valueProps.standoff,
-                knoraIdUtil = knoraIdUtil,
                 responderManager = responderManager,
                 requestingUser = userProfile
             )

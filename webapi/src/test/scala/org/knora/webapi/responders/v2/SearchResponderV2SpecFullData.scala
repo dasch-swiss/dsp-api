@@ -17,8 +17,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
     implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
-    val settings: SettingsImpl = Settings(system)
-
     val fulltextSearchForNarr = ReadResourcesSequenceV2(
         numberOfResources = 25,
         resources = Vector(
@@ -40,8 +38,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/00505cf0a803/values/549527258a26",
+                    valueHasUUID = stringFormatter.decodeUuid("549527258a26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:46Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -68,8 +68,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/00c650d23303/values/af68552c3626",
+                    valueHasUUID = stringFormatter.decodeUuid("af68552c3626"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -96,8 +98,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/02abe871e903/values/1852a8aa8526",
+                    valueHasUUID = stringFormatter.decodeUuid("1852a8aa8526"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:49Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -124,8 +128,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/04416f64ef03/values/6ce3c0ef8b26",
+                    valueHasUUID = stringFormatter.decodeUuid("6ce3c0ef8b26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:50Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -152,8 +158,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/04f25db73f03/values/aa8971af4d26",
+                    valueHasUUID = stringFormatter.decodeUuid("aa8971af4d26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -180,8 +188,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/05c7acceb703/values/5f23f3171d26",
+                    valueHasUUID = stringFormatter.decodeUuid("5f23f3171d26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -208,8 +218,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/075d33c1bd03/values/77718ce21e26",
+                    valueHasUUID = stringFormatter.decodeUuid("77718ce21e26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -236,8 +248,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/0b8940a6c903/values/f752218c3b26",
+                    valueHasUUID = stringFormatter.decodeUuid("f752218c3b26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -264,8 +278,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/0d1fc798cf03/values/e75f1e764d26",
+                    valueHasUUID = stringFormatter.decodeUuid("e75f1e764d26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -292,8 +308,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/0d5ac1099503/values/4dcdbebc7126",
+                    valueHasUUID = stringFormatter.decodeUuid("4dcdbebc7126"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -320,8 +338,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/0fb54d8bd503/values/9a966e995f26",
+                    valueHasUUID = stringFormatter.decodeUuid("9a966e995f26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -348,8 +368,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/0ff047fc9a03/values/b9ac70cc7926",
+                    valueHasUUID = stringFormatter.decodeUuid("b9ac70cc7926"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -376,8 +398,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/114bd47ddb03/values/c99f73e26726",
+                    valueHasUUID = stringFormatter.decodeUuid("c99f73e26726"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:49Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -404,8 +428,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/14dd8cbc3403/values/7e39f54a3726",
+                    valueHasUUID = stringFormatter.decodeUuid("7e39f54a3726"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -432,8 +458,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/167313af3a03/values/1ab5d9ef4226",
+                    valueHasUUID = stringFormatter.decodeUuid("1ab5d9ef4226"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -460,8 +488,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/1b746fabbe03/values/8318d9c71f26",
+                    valueHasUUID = stringFormatter.decodeUuid("8318d9c71f26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -488,8 +518,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/1baf691c8403/values/2882816d3a26",
+                    valueHasUUID = stringFormatter.decodeUuid("2882816d3a26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:44Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -516,8 +548,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/1d0af69dc403/values/4e9dc2b53326",
+                    valueHasUUID = stringFormatter.decodeUuid("4e9dc2b53326"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -544,8 +578,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/1fa07c90ca03/values/c623c1aa3c26",
+                    valueHasUUID = stringFormatter.decodeUuid("c623c1aa3c26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -572,8 +608,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/1fdb76019003/values/118a3f426d26",
+                    valueHasUUID = stringFormatter.decodeUuid("118a3f426d26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -600,8 +638,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/21360383d003/values/b630be944e26",
+                    valueHasUUID = stringFormatter.decodeUuid("b630be944e26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -628,8 +668,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/2171fdf39503/values/59740ba27226",
+                    valueHasUUID = stringFormatter.decodeUuid("59740ba27226"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -656,8 +698,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/230784e69b03/values/4ba763247b26",
+                    valueHasUUID = stringFormatter.decodeUuid("4ba763247b26"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -684,8 +728,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/23427e576103/values/c32d62198426",
+                    valueHasUUID = stringFormatter.decodeUuid("c32d62198426"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:42Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -712,8 +758,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/23cc8975d603/values/a63dbb7e6026",
+                    valueHasUUID = stringFormatter.decodeUuid("a63dbb7e6026"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     deletionInfo = None
@@ -1053,8 +1101,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = Some(1),
                     valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
+                    valueHasUUID = stringFormatter.decodeUuid("1"),
                     permissions = "CR knora-admin:Creator",
                     userPermission = ChangeRightsPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
                     attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
                     deletionInfo = None
@@ -1375,8 +1425,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = Some(1),
                     valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
+                    valueHasUUID = stringFormatter.decodeUuid("2"),
                     permissions = "CR knora-admin:Creator",
                     userPermission = ChangeRightsPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
                     attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
                     deletionInfo = None
@@ -1441,8 +1493,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+                    valueHasUUID = stringFormatter.decodeUuid("c3295339"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None
@@ -1469,8 +1523,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     ),
                     valueHasMaxStandoffStartIndex = None,
                     valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
+                    valueHasUUID = stringFormatter.decodeUuid("d9a522845006"),
                     permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     userPermission = ViewPermission,
+                    previousValueIri = None,
                     valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     deletionInfo = None

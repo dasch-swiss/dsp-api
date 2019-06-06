@@ -52,10 +52,7 @@ import scala.util.Try
 class ResourcesResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     // Converts SPARQL query results to ApiValueV1 objects.
-    val valueUtilV1 = new ValueUtilV1(settings)
-
-    // Creates IRIs for new Knora value objects.
-    val knoraIdUtil = new KnoraIdUtil
+    private val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
       * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message.
@@ -1281,7 +1278,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
             clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
-                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortcode)).toMap,
+                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> stringFormatter.makeRandomResourceIri(projectInfoResponse.project_info.shortcode)).toMap,
                 errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
                 errorFun = { errorMsg => throw BadRequestException(errorMsg) }
             )
@@ -1944,7 +1941,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             }
 
             namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
-            resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortcode)
+            resourceIri: IRI = stringFormatter.makeRandomResourceIri(projectInfoResponse.project_info.shortcode)
 
             // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
             // create a new resource in the given project.
@@ -2642,7 +2639,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             // value object IRI, since links don't have IRIs of their own.
 
                             // Convert the link property IRI to a link value property IRI.
-                            val linkValuePropertyIri = knoraIdUtil.linkPropertyIriToLinkValuePropertyIri(propertyIri)
+                            val linkValuePropertyIri = stringFormatter.linkPropertyIriToLinkValuePropertyIri(propertyIri)
 
                             // Get the details of the link value that's pointed to by that link value property, and that has the target resource as its rdf:object.
                             val (linkValueIri, linkValueProps) = groupedPropertiesByType.groupedLinkValueProperties.groupedProperties.getOrElse(linkValuePropertyIri,
