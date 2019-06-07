@@ -23,8 +23,16 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
 
+/**
+  * Akka HTTP directives which can be wrapped around a [[akka.http.scaladsl.server.Route]]].
+  */
 object AroundDirectives {
 
+    /**
+      * When wrapped around a [[akka.http.scaladsl.server.Route]], logs the time it took for the route to run.
+      *
+      * @param log the logging adapter
+      */
     def logDuration(log: LoggingAdapter): Directive0 = extractRequestContext.flatMap { ctx =>
         val start = System.currentTimeMillis()
         mapResponse { resp =>
