@@ -17,14 +17,9 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Deploying Knora
+# Updating Repositories When Upgrading Knora
 
-@@toc { depth=1 }
-
-@@@ index
-
-- [Getting Started with Knora](getting-started.md)
-- [Configuration](configuration.md)
-- [Updating Repositories When Upgrading Knora](updates.md)
-
-@@@
+When a new version of Knora introduces changes that are not backwards-compatible
+with existing data, you will need to update your repository. Knora provides
+a command-line program that automatically makes any necessary changes to your
+data. See `upgrade/README.md` for instructions.
