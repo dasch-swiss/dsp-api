@@ -24,15 +24,11 @@ from datetime import timedelta
 import tempfile
 import argparse
 import getpass
-import requests
 import rdflib
-from collections import defaultdict
 import importlib
 import re
+from updatelib import rdftools
 
-
-# The directory in the Knora source tree where built-in Knora ontologies are stored.
-knora_ontologies_dir = "knora-ontologies"
 
 knora_ontologies = [
     {
@@ -56,11 +52,6 @@ knora_ontologies = [
 knora_ontology_contexts = set([onto["context"] for onto in knora_ontologies])
 
 knora_base_version_string_regex = re.compile(r"^PR ([0-9]+)$")
-
-
-class UpdateException(Exception):
-    def __init__(self, message):
-        self.message = message
 
 
 # Represents information about a GraphDB repository.
@@ -88,15 +79,8 @@ class NamedGraph:
     # Downloads the named graph from the repository to a file in download_dir.
     def download(self, download_dir):
         print("Downloading named graph {}...".format(self.context))
-        context_response = requests.get(self.graphdb_info.statements_url,
-                                        params={"infer": "false", "context": self.uri, "Accept": "text/turtle"},
-                                        auth=(self.graphdb_info.username, self.graphdb_info.password))
-        context_response.raise_for_status()
         downloaded_file_path = download_dir + "/" + self.filename
-
-        with open(downloaded_file_path, "wb") as downloaded_file:
-            for chunk in context_response.iter_content(chunk_size=1024):
-                downloaded_file.write(chunk)
+        rdftools.do_download_request(graphdb_info=self.graphdb_info, context=self.uri, file_path=downloaded_file_path)
 
     # Parses the input graph.
     def parse(self, download_dir):
@@ -104,8 +88,6 @@ class NamedGraph:
         input_file_path = download_dir + "/" + self.filename
         graph = rdflib.Graph()
         graph.parse(input_file_path, format="turtle")
-        graph_size = len(graph)
-        print("Transforming {} statements...".format(graph_size))
         return graph
 
     # Formats the output graph.
@@ -118,42 +100,7 @@ class NamedGraph:
     def upload(self, upload_dir):
         print("Uploading named graph {}...".format(self.context))
         upload_file_path = upload_dir + "/" + self.filename
-
-        with open(upload_file_path, "r") as file_to_upload:
-            file_content = file_to_upload.read().encode("utf-8")
-
-        upload_response = requests.post(self.graphdb_info.statements_url,
-                                        params={"context": self.uri},
-                                        headers={"Content-Type": "text/turtle"},
-                                        auth=(self.graphdb_info.username, self.graphdb_info.password),
-                                        data=file_content)
-
-        upload_response.raise_for_status()
-
-
-# Groups statements by subject and by predicate.
-def group_statements(input_graph):
-    grouped_statements = {}
-
-    for subj in input_graph.subjects():
-        grouped_pred_objs = defaultdict(list)
-
-        for pred, obj in input_graph.predicate_objects(subj):
-            grouped_pred_objs[pred].append(obj)
-
-        grouped_statements[subj] = grouped_pred_objs
-
-    return grouped_statements
-
-
-# Returns true if the specified generator is empty.
-def generator_is_empty(gen):
-    try:
-        next(gen)
-    except StopIteration:
-        return True
-
-    return False
+        rdftools.do_upload_request(graphdb_info=self.graphdb_info, context=self.uri, file_path=upload_file_path)
 
 
 # Represents a repository.
@@ -165,16 +112,7 @@ class Repository:
     # Downloads the repository, saving the named graphs in files in download_dir.
     def download(self, download_dir):
         print("Downloading named graphs...")
-
-        contexts_response = requests.get(url=self.graphdb_info.contexts_url,
-                                         auth=(self.graphdb_info.username, self.graphdb_info.password))
-        contexts_response.raise_for_status()
-        contexts = contexts_response.text.splitlines()
-
-        if contexts[0] != "contextID":
-            raise UpdateException("Unexpected response from GraphDB: " + contexts_response.text)
-
-        contexts.pop(0)
+        contexts = rdftools.do_contexts_request(graphdb_info=self.graphdb_info)
 
         for context in contexts:
             if not (context in knora_ontology_contexts):
@@ -184,12 +122,14 @@ class Repository:
 
         print("Downloaded named graphs to", download_dir)
 
-    # Transforms the named graphs, saving the output in files in upload_dir.
+    # Uses a GraphTransformer to transform the named graphs in download_dir, saving the output in upload_dir.
     def transform(self, graph_transformer, download_dir, upload_dir):
-        print("Transforming downloaded data...")
+        print("Transforming data...")
 
         for named_graph in self.named_graphs:
             input_graph = named_graph.parse(download_dir)
+            graph_size = len(input_graph)
+            print("Transforming {} statements...".format(graph_size))
             output_graph = graph_transformer.transform(input_graph)
             named_graph.format(output_graph, upload_dir)
 
@@ -198,15 +138,11 @@ class Repository:
     # Deletes the contents of the repository.
     def empty(self):
         print("Emptying repository...")
-        drop_all_response = requests.post(url=self.graphdb_info.statements_url,
-                                          headers={"Content-Type": "application/sparql-update"},
-                                          auth=(self.graphdb_info.username, self.graphdb_info.password),
-                                          data="DROP ALL")
-        drop_all_response.raise_for_status()
+        rdftools.do_update_request(graphdb_info=self.graphdb_info, sparql="DROP ALL")
         print("Emptied repository.")
 
-    # Uploads the transformed data to the repository.
-    def upload(self, upload_dir):
+    # Uploads the PR-specific knora ontologies and transformed named graphs to the repository.
+    def upload(self, knora_ontologies_dir, upload_dir):
         print("Uploading named graphs...")
 
         # Upload built-in Knora ontologies.
@@ -227,6 +163,7 @@ class Repository:
 
         print("Uploaded named graphs.")
 
+    # Updates the Lucene index.
     def update_lucene_index(self):
         print("Updating Lucene index...")
 
@@ -235,105 +172,111 @@ class Repository:
             INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
         """
 
-        update_lucene_index_response = requests.post(url=self.graphdb_info.statements_url,
-                                                     headers={"Content-Type": "application/sparql-update"},
-                                                     auth=(self.graphdb_info.username, self.graphdb_info.password),
-                                                     data=sparql)
-        update_lucene_index_response.raise_for_status()
+        rdftools.do_update_request(graphdb_info=self.graphdb_info, sparql=sparql)
         print("Updated Lucene index.")
 
 
-def do_select_request(graphdb_info, sparql):
-    headers = {
-        "Accept": "application/sparql-results+json"
-    }
-
-    data = {
-        "query": sparql
-    }
-
-    r = requests.post(
-        url=graphdb_info.graphdb_url,
-        data=data,
-        headers=headers,
-        auth=(graphdb_info.username, graphdb_info.password)
-    )
-
-    r.raise_for_status()
-    json_response = r.json()
-    return json_response["results"]["bindings"]
-
-
+# Updates the repository using the specified list of GraphTransformer instances.
 def run_updates(graphdb_info, transformers):
-    start = time.time()
     repository = Repository(graphdb_info)
     last_upload_dir = None
+    last_transformer = None
 
     for transformer in transformers:
         temp_dir = tempfile.mkdtemp()
-        print("Running transformation for PR {} using temporary directory {}".format(transformer.pr_num, temp_dir))
+        print("Running transformation for PR {}...".format(transformer.pr_num))
+        print("Using temporary directory {}".format(temp_dir))
 
         upload_dir = temp_dir + "/upload"
         os.mkdir(upload_dir)
 
+        # Is this the first transformation?
         if last_upload_dir is not None:
+            # No. Use the result of the last transformation as input.
             repository.transform(graph_transformer=transformer, download_dir=last_upload_dir, upload_dir=upload_dir)
         else:
+            # Yes. Download the repository.
             download_dir = temp_dir + "/download"
             os.mkdir(download_dir)
             repository.download(download_dir)
             repository.transform(graph_transformer=transformer, download_dir=download_dir, upload_dir=upload_dir)
-            last_upload_dir = upload_dir
 
-        repository.empty()
-        repository.upload(upload_dir)
-        print("Update for PR {} complete.".format(transformer.pr_num))
+        last_upload_dir = upload_dir
+        last_transformer = transformer
+        print("Transformation for PR {} complete.".format(transformer.pr_num))
 
+    # Empty the repository.
+    repository.empty()
+
+    # Upload the results of the last transformation.
+    last_transformer_knora_ontologies_dir = "plugins/{}/knora-ontologies".format(last_transformer.pr_num)
+    repository.upload(knora_ontologies_dir=last_transformer_knora_ontologies_dir, upload_dir=last_upload_dir)
     repository.update_lucene_index()
-    elapsed = time.time() - start
-    print("Update complete. Elapsed time: {}.".format(str(timedelta(seconds=elapsed))))
 
 
+# Determines which transformations need to be run, and returns a corresponding list of GraphTransformer instances.
 def load_transformers(graphdb_info):
+    # Get the list of available transformations.
     plugins_subdirs = os.listdir("plugins")
     pr_dirs = filter(lambda dirname: dirname.isdigit(), plugins_subdirs)
     pr_nums = map(int, pr_dirs)
+
+    # Get the version string attached to knora-base in the repository.
 
     knora_base_pr_num_sparql = """
         PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
         SELECT ?version
         WHERE {
-            <http://www.knora.org/ontology/knora-base> knora-base:version ?version .
+            <http://www.knora.org/ontology/knora-base> knora-base:ontologyVersion ?version .
         }
     """
 
-    query_result_rows = do_select_request(graphdb_info=graphdb_info, sparql=knora_base_pr_num_sparql)
-    repository_pr_num = 0
+    query_result_rows = rdftools.do_select_request(graphdb_info=graphdb_info, sparql=knora_base_pr_num_sparql)
 
+    # Did we find a version string?
     if len(query_result_rows) > 0:
-        version_string = query_result_rows[0]["version"]
-        match = knora_base_version_string_regex.match(version_string)
+        # Yes. Parse it.
+
+        ontology_version_string = query_result_rows[0]["version"]
+        match = knora_base_version_string_regex.match(ontology_version_string)
 
         if match is None:
-            raise UpdateException("Could not parse knora-base:version: {}".format(version_string))
+            raise rdftools.UpdateException("Could not parse knora-base:ontologyVersion: {}".format(ontology_version_string))
 
+        print("Repository version: {}".format(ontology_version_string))
         repository_pr_num = match.group(1)
+    else:
+        # No. Run all available transformations.
+        repository_pr_num = 0
+        print("Repository has no knora-base:ontologyVersion.")
 
+    # Make a sorted list of transformations needed for this repository.
     needed_pr_nums = sorted(list(filter(lambda pr_num: pr_num > repository_pr_num, pr_nums)))
 
+    # If the list of transformations is empty, do nothing.
     if len(needed_pr_nums) == 0:
-        print("No updates needed.")
         return []
 
     needed_pr_nums_str = ', '.join(map(str, needed_pr_nums))
     print("Required updates: " + needed_pr_nums_str)
     transformers = []
 
+    # Load a GraphTransformer instance for each transformation.
     for transformer_pr_num in needed_pr_nums:
-        transformer_module = importlib.import_module(str(transformer_pr_num) + ".update")
+        # Load the transformer's module.
+        transformer_module = importlib.import_module("plugins.{}.update".format(transformer_pr_num))
+
+        # Get the transformer class definition from the module.
         transformer_class = getattr(transformer_module, "GraphTransformer")
+
+        # Make an instance of the transformer class.
         transformer = transformer_class()
+
+        # Add its PR number to it.
+        transformer.pr_num = transformer_pr_num
+
+        # Add it to the list.
         transformers.append(transformer)
 
     return transformers
@@ -375,10 +318,15 @@ def main():
         password=password
     )
 
+    start = time.time()
     transformers = load_transformers(graphdb_info)
 
     if len(transformers) > 0:
         run_updates(graphdb_info=graphdb_info, transformers=transformers)
+        elapsed = time.time() - start
+        print("Update complete. Elapsed time: {}.".format(str(timedelta(seconds=elapsed))))
+    else:
+        print("No updates needed.")
 
 
 if __name__ == "__main__":
