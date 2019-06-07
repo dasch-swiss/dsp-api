@@ -10,7 +10,7 @@
 <configuration scan="false" debug="false">
     <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%date{ISO8601}] %-5level - %logger{0} - %msg%n</pattern>
+            <pattern>[%-5level] [%date{ISO8601}] [%logger{0}] %msg%n</pattern>
         </encoder>
     </appender>
     <!--<appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
