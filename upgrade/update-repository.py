@@ -226,9 +226,9 @@ def load_transformers(graphdb_info):
     knora_base_pr_num_sparql = """
         PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-        SELECT ?version
+        SELECT ?ontologyVersion
         WHERE {
-            <http://www.knora.org/ontology/knora-base> knora-base:ontologyVersion ?version .
+            <http://www.knora.org/ontology/knora-base> knora-base:ontologyVersion ?ontologyVersion .
         }
     """
 
@@ -238,14 +238,14 @@ def load_transformers(graphdb_info):
     if len(query_result_rows) > 0:
         # Yes. Parse it.
 
-        ontology_version_string = query_result_rows[0]["version"]
+        ontology_version_string = query_result_rows[0]["ontologyVersion"]["value"]
         match = knora_base_version_string_regex.match(ontology_version_string)
 
         if match is None:
             raise rdftools.UpdateException("Could not parse knora-base:ontologyVersion: {}".format(ontology_version_string))
 
         print("Repository version: {}".format(ontology_version_string))
-        repository_pr_num = match.group(1)
+        repository_pr_num = int(match.group(1))
     else:
         # No. Run all available transformations.
         repository_pr_num = 0

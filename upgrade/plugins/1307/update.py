@@ -45,6 +45,13 @@ value_has_max_standoff_start_index = rdflib.term.URIRef("http://www.knora.org/on
 # Updates standoff for PR 1307.
 class GraphTransformer(rdftools.GraphTransformer):
     def transform(self, graph):
+        # Check whether the transformation has already been done.
+        statements_with_max_start_index = graph.subject_objects(value_has_max_standoff_start_index)
+
+        if not rdftools.generator_is_empty(statements_with_max_start_index):
+            print("This transformation seems to have been done already.")
+            return graph
+
         # Group the statements in the named graph by subject and by predicate.
         grouped_statements = rdftools.group_statements(graph)
 

@@ -41,6 +41,13 @@ previous_value = rdflib.term.URIRef("http://www.knora.org/ontology/knora-base#pr
 # Updates values for PR 1322.
 class GraphTransformer(rdftools.GraphTransformer):
     def transform(self, graph):
+        # Check whether the transformation has already been done.
+        statements_with_value_has_uuid = graph.subject_objects(value_has_uuid)
+
+        if not rdftools.generator_is_empty(statements_with_value_has_uuid):
+            print("This transformation seems to have been done already.")
+            return graph
+
         # Group the statements in the named graph by subject and by predicate.
         grouped_statements = rdftools.group_statements(graph)
 
