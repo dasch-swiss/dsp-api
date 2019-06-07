@@ -64,7 +64,7 @@ def do_update_request(graphdb_info, sparql):
     }
 
     response = requests.post(
-        url=graphdb_info.graphdb_url,
+        url=graphdb_info.statements_url,
         headers=headers,
         data=sparql,
         auth=(graphdb_info.username, graphdb_info.password)
