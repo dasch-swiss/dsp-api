@@ -94,7 +94,7 @@ class ApplicationStateActor extends Actor with Timers with ActorLogging {
         }
         case GetAllowReloadOverHTTPState() => {
             log.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
-            sender ! allowReloadOverHTTPState
+            sender ! (allowReloadOverHTTPState | settings.allowReloadOverHTTP)
         }
 
         case SetPrometheusReporterState(value) => {

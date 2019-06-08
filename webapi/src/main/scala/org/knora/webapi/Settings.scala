@@ -207,6 +207,7 @@ class SettingsImpl(config: Config) extends Extension {
         mType: ConfigValue => mType.unwrapped.toString
     }.toSeq
 
+    val allowReloadOverHTTP: Boolean = config.getBoolean("app.allow-reload-over-http")
     // monitoring reporters
     val prometheusReporter: Boolean = config.getBoolean("app.monitoring.prometheus-reporter")
     val zipkinReporter: Boolean = config.getBoolean("app.monitoring.zipkin-reporter")
