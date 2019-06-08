@@ -624,7 +624,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             /* verify that the list node name is unique for the project */
             projectUniqueNodeName <- listNodeNameIsProjectUnique(createListRequest.projectIri, createListRequest.name)
             _ = if (!projectUniqueNodeName) {
-                throw BadRequestException(s"The node name ${createListRequest.name.get} is already by a list inside the project ${createListRequest.projectIri}.")
+                throw BadRequestException(s"The node name ${createListRequest.name.get} is already used by a list inside the project ${createListRequest.projectIri}.")
             }
 
             maybeShortcode = project.shortcode
@@ -813,7 +813,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             /* verify that the list node name is unique for the project */
             projectUniqueNodeName <- listNodeNameIsProjectUnique(createChildNodeRequest.projectIri, createChildNodeRequest.name)
             _ = if (!projectUniqueNodeName) {
-                throw BadRequestException(s"The node name ${createChildNodeRequest.name.get} is already by a list inside the project ${createChildNodeRequest.projectIri}.")
+                throw BadRequestException(s"The node name ${createChildNodeRequest.name.get} is already used by a list inside the project ${createChildNodeRequest.projectIri}.")
             }
 
             // calculate the data named graph
