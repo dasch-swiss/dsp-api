@@ -338,8 +338,6 @@ lazy val webapi = knoraModule("webapi")
             }, // allows sbt-javaagent to work with sbt-revolver
             reStart / javaOptions ++= webapiJavaRunOptions,
 
-            javaAgents += Dependencies.Compile.aspectJWeaver,
-
             Test / parallelExecution := false,
             Test / javaOptions ++= Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
             // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config

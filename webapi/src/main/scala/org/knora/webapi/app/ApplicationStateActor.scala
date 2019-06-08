@@ -39,9 +39,6 @@ class ApplicationStateActor extends Actor with Timers with ActorLogging {
 
     private var appState: AppState = AppState.Stopped
     private var allowReloadOverHTTPState = false
-    private var prometheusReporterState = false
-    private var zipkinReporterState = false
-    private var jaegerReporterState = false
     private var printConfigState = false
     private var skipOntologies = true
 
@@ -95,32 +92,6 @@ class ApplicationStateActor extends Actor with Timers with ActorLogging {
         case GetAllowReloadOverHTTPState() => {
             log.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
             sender ! (allowReloadOverHTTPState | settings.allowReloadOverHTTP)
-        }
-
-        case SetPrometheusReporterState(value) => {
-            log.debug("ApplicationStateActor - SetPrometheusReporterState - value: {}", value)
-            prometheusReporterState = value
-        }
-        case GetPrometheusReporterState() => {
-            log.debug("ApplicationStateActor - GetPrometheusReporterState - value: {}", prometheusReporterState)
-            sender ! (prometheusReporterState | settings.prometheusReporter)
-        }
-
-        case SetZipkinReporterState(value) => {
-            log.debug("ApplicationStateActor - SetZipkinReporterState - value: {}", value)
-            zipkinReporterState = value
-        }
-        case GetZipkinReporterState() => {
-            log.debug("ApplicationStateActor - GetZipkinReporterState - value: {}", zipkinReporterState)
-            sender ! (zipkinReporterState | settings.zipkinReporter)
-        }
-        case SetJaegerReporterState(value) => {
-            log.debug("ApplicationStateActor - SetJaegerReporterState - value: {}", value)
-            jaegerReporterState = value
-        }
-        case GetJaegerReporterState() => {
-            log.debug("ApplicationStateActor - GetJaegerReporterState - value: {}", jaegerReporterState)
-            sender ! (jaegerReporterState | settings.jaegerReporter)
         }
 
         case SetPrintConfigExtendedState(value) => {

@@ -208,10 +208,6 @@ class SettingsImpl(config: Config) extends Extension {
     }.toSeq
 
     val allowReloadOverHTTP: Boolean = config.getBoolean("app.allow-reload-over-http")
-    // monitoring reporters
-    val prometheusReporter: Boolean = config.getBoolean("app.monitoring.prometheus-reporter")
-    val zipkinReporter: Boolean = config.getBoolean("app.monitoring.zipkin-reporter")
-    val jaegerReporter: Boolean = config.getBoolean("app.monitoring.jaeger-reporter")
 
     private def getFiniteDuration(path: String, underlying: Config): FiniteDuration = Duration(underlying.getString(path)) match {
         case x: FiniteDuration ⇒ x

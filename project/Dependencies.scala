@@ -89,15 +89,6 @@ object Dependencies {
         // caching
         val ehcache                = "net.sf.ehcache"                           % "ehcache"                  % "2.10.3"
 
-        // monitoring
-        val kamonCore              = "io.kamon"                                %% "kamon-core"               % "1.1.3"
-        val kamonAkka              = "io.kamon"                                %% "kamon-akka-2.5"           % "1.1.1"
-        val kamonAkkaHttp          = "io.kamon"                                %% "kamon-akka-http-2.5"      % "1.1.0"
-        val kamonPrometheus        = "io.kamon"                                %% "kamon-prometheus"         % "1.1.1"
-        val kamonZipkin            = "io.kamon"                                %% "kamon-zipkin"             % "1.0.0"
-        val kamonJaeger            = "io.kamon"                                %% "kamon-jaeger"             % "1.0.2"
-        val aspectJWeaver          = "org.aspectj"                              % "aspectjweaver"            % "1.9.1"
-
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
         val commonsText            = "org.apache.commons"                       % "commons-text"             % "1.6"
@@ -176,7 +167,6 @@ object Dependencies {
     )
 
     val webapiLibraryDependencies = l ++= Seq[sbt.ModuleID](
-        aspectJWeaver,
         akkaActor.value,
         akkaAgent.value,
         akkaHttp.value,
@@ -209,12 +199,6 @@ object Dependencies {
         jenaLibs.value,
         jenaText.value,
         jwtSprayJson,
-        //library.kamonCore,
-        //library.kamonAkka,
-        //library.kamonAkkaHttp,
-        //library.kamonPrometheus,
-        //library.kamonZipkin,
-        //library.kamonJaeger,
         logbackClassic,
         rdf4jRuntime,
         saxonHE,
