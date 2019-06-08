@@ -215,6 +215,7 @@ lazy val salsah1 = knoraModule("salsah1")
 
             maintainer := "ivan.subotic@unibas.ch",
 
+            Docker / dockerExposedPorts ++= Seq(3335),
             Docker / dockerCommands := Seq(
                 Cmd("FROM", "openjdk:10-jre-slim-sid"),
                 Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
@@ -400,6 +401,7 @@ lazy val webapi = knoraModule("webapi")
 
             maintainer := "ivan.subotic@unibas.ch",
 
+            Docker / dockerExposedPorts ++= Seq(3333, 10001),
             Docker / dockerCommands := Seq(
                 Cmd("FROM", "openjdk:10-jre-slim-sid"),
                 Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
@@ -416,6 +418,7 @@ lazy val webapi = knoraModule("webapi")
 
                 ExecCmd("ENTRYPOINT", "bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"),
             )
+
         )
         .settings(
             buildInfoKeys ++= Seq[BuildInfoKey](

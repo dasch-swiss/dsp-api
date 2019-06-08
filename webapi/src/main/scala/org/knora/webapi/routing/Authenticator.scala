@@ -466,7 +466,7 @@ object Authenticator {
       * @return [[KnoraCredentialsV2]].
       */
     private def extractCredentialsV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
-        log.debug("extractCredentialsV2 start ...")
+        // log.debug("extractCredentialsV2 start ...")
 
         val credentialsFromParameters: Option[KnoraCredentialsV2] = extractCredentialsFromParametersV2(requestContext)
         log.debug("extractCredentialsV2 - credentialsFromParameters: {}", credentialsFromParameters)
@@ -496,17 +496,17 @@ object Authenticator {
 
         val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
 
-        log.debug("extractCredentialsFromParametersV2 - params: {}", params)
+        // log.debug("extractCredentialsFromParametersV2 - params: {}", params)
 
         // check for iri, email, or username parameters
         val maybeIriIdentifier: Option[String] = params.get("iri").map(_.head)
         val maybeEmailIdentifier: Option[String] = params.get("email").map(_.head)
         val maybeUsernameIdentifier: Option[String] = params.get("username").map(_.head)
         val maybeIdentifier: Option[String] = List(maybeIriIdentifier, maybeEmailIdentifier, maybeUsernameIdentifier).flatten.headOption
-        log.debug("extractCredentialsFromParametersV2 - maybeIdentifier: {}", maybeIdentifier)
+        // log.debug("extractCredentialsFromParametersV2 - maybeIdentifier: {}", maybeIdentifier)
 
         val maybePassword: Option[String] = params.get("password").map(_.head)
-        log.debug("extractCredentialsFromParametersV2 - maybePassword: {}", maybePassword)
+        // log.debug("extractCredentialsFromParametersV2 - maybePassword: {}", maybePassword)
 
         val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty) {
             Some(
@@ -531,8 +531,8 @@ object Authenticator {
             None
         }
 
-        log.debug("extractCredentialsFromParametersV2 - maybePassCreds: {}", maybePassCreds)
-        log.debug("extractCredentialsFromParametersV2 - maybeTokenCreds: {}", maybeTokenCreds)
+        // log.debug("extractCredentialsFromParametersV2 - maybePassCreds: {}", maybePassCreds)
+        // log.debug("extractCredentialsFromParametersV2 - maybeTokenCreds: {}", maybeTokenCreds)
 
         // prefer password credentials
         if (maybePassCreds.nonEmpty) {
