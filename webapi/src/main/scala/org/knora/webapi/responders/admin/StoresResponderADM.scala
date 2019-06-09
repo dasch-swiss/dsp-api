@@ -46,7 +46,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
       * Receives a message extending [[StoreResponderRequestADM]], and returns an appropriate response message.
       */
     def receive(msg: StoreResponderRequestADM) = msg match {
-        case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject]) => resetTriplestoreContent(rdfDataObjects)
+        case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) => resetTriplestoreContent(rdfDataObjects)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 

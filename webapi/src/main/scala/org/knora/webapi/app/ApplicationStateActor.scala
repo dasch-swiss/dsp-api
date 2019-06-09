@@ -158,7 +158,7 @@ class ApplicationStateActor extends Actor with Timers with ActorLogging {
         msg += s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}\n"
         msg += "----------------------------------------------------------------\n"
 
-        if (allowReloadOverHTTPState) {
+        if (allowReloadOverHTTPState | settings.allowReloadOverHTTP) {
             msg += "WARNING: Resetting Triplestore Content over HTTP is turned ON.\n"
             msg += "----------------------------------------------------------------\n"
         }

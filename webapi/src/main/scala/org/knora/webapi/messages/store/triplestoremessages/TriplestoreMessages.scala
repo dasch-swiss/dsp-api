@@ -172,7 +172,7 @@ case class SparqlAskResponse(result: Boolean)
   *
   * @param rdfDataObjects contains a list of [[RdfDataObject]].
   */
-case class ResetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]) extends TriplestoreRequest
+case class ResetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true) extends TriplestoreRequest
 
 /**
   * Sent as a response to [[ResetTriplestoreContent]] if the request was processed successfully.
@@ -480,6 +480,6 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     }
 
     implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
-    implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetTriplestoreContent] = jsonFormat1(ResetTriplestoreContent)
+    implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetTriplestoreContent] = jsonFormat2(ResetTriplestoreContent)
 
 }

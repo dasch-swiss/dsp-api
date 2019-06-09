@@ -119,7 +119,7 @@ class JenaTDBActor extends Actor with ActorLogging {
     def receive = {
         case SparqlSelectRequest(sparqlSelectString) => future2Message(sender(), executeSparqlSelectQuery(sparqlSelectString), log)
         case SparqlUpdateRequest(sparqlUpdateString) => future2Message(sender(), executeSparqlUpdateQuery(sparqlUpdateString), log)
-        case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
+        case ResetTriplestoreContent(rdfDataObjects, prependDefaults) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects, prependDefaults), log)
         case DropAllTriplestoreContent() => future2Message(sender(), Future(dropAllTriplestoreContent()), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), Future(insertDataIntoTriplestore(rdfDataObjects)), log)
         case HelloTriplestore(msg) if msg == tsType => sender ! HelloTriplestore(tsType)
@@ -257,7 +257,7 @@ class JenaTDBActor extends Actor with ActorLogging {
       * @param rdfDataObjects a list of [[RdfDataObject]] instances describing the files to be loaded.
       * @return an [[ResetTriplestoreContentACK]] indicating that the operation completed successfully.
       */
-    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentACK] = {
+    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Future[ResetTriplestoreContentACK] = {
 
         val resetTriplestoreResult = for {
 

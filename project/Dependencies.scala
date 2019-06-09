@@ -83,7 +83,7 @@ object Dependencies {
 
         // authentication
         val bcprov                 = "org.bouncycastle"                         % "bcprov-jdk15on"           % "1.59"
-        val springSecurityCore     = "org.springframework.security"             % "spring-security-core"     % "4.2.5.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
+        val springSecurityCore     = "org.springframework.security"             % "spring-security-core"     % "4.2.12.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
         val jwtSprayJson           = "com.pauldijou"                            %% "jwt-spray-json"          % "0.19.0"
 
         // caching
