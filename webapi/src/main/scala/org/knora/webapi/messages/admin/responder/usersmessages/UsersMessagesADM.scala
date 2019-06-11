@@ -473,8 +473,8 @@ case class UserADM(id: IRI,
     def passwordMatch(password: String): Boolean = {
         this.password.exists {
             hashedPassword =>
-                import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-                val encoder = new SCryptPasswordEncoder
+                import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+                val encoder = new BCryptPasswordEncoder()
                 encoder.matches(password, hashedPassword.toString)
         }
     }
@@ -781,6 +781,13 @@ class UserIdentifierADM private(maybeIri: Option[IRI] = None,
       */
     def toUsernameOption: Option[String] = {
         maybeUsername
+    }
+
+    /**
+      * Returns the string representation
+      */
+    override def toString: IRI = {
+        s"UserIdentifierADM(${this.maybeIri}, ${this.maybeEmail}, ${this.maybeUsername})"
     }
 
 }

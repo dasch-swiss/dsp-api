@@ -102,30 +102,34 @@ trait Authenticator {
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
-    def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = for {
+    def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = {
 
-        authenticated <- authenticateCredentialsV2(Some(credentials)) // will throw exception if not valid and thus trigger the correct response
+        log.debug(s"doLoginV2 - credentials: $credentials")
 
-        settings = Settings(system)
+        for {
+            authenticated <- authenticateCredentialsV2(Some(credentials)) // will throw exception if not valid and thus trigger the correct response
 
-        userADM <- getUserByIdentifier(credentials.identifier)
+            settings = Settings(system)
 
-        cookieDomain = Some(settings.cookieDomain)
-        token = JWTHelper.createToken(userADM.id, settings.jwtSecretKey, settings.jwtLongevity)
+            userADM <- getUserByIdentifier(credentials.identifier)
+
+            cookieDomain = Some(settings.cookieDomain)
+            token = JWTHelper.createToken(userADM.id, settings.jwtSecretKey, settings.jwtLongevity)
 
 
-        httpResponse = HttpResponse(
-            headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, token, domain = cookieDomain, path = Some("/"), httpOnly = true))), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
-            status = StatusCodes.OK,
-            entity = HttpEntity(
-                ContentTypes.`application/json`,
-                JsObject(
-                    "token" -> JsString(token)
-                ).compactPrint
+            httpResponse = HttpResponse(
+                headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, token, domain = cookieDomain, path = Some("/"), httpOnly = true))), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
+                status = StatusCodes.OK,
+                entity = HttpEntity(
+                    ContentTypes.`application/json`,
+                    JsObject(
+                        "token" -> JsString(token)
+                    ).compactPrint
+                )
             )
-        )
 
-    } yield httpResponse
+        } yield httpResponse
+    }
 
     def presentLoginFormV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
 

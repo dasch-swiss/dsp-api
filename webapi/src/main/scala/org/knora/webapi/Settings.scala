@@ -209,6 +209,8 @@ class SettingsImpl(config: Config) extends Extension {
 
     val allowReloadOverHTTP: Boolean = config.getBoolean("app.allow-reload-over-http")
 
+    val bcryptPasswordStrength: Int = config.getInt("app.bcrypt-password-strength")
+
     private def getFiniteDuration(path: String, underlying: Config): FiniteDuration = Duration(underlying.getString(path)) match {
         case x: FiniteDuration ⇒ x
         case _                 ⇒ throw new ConfigurationException(s"Config setting '$path' must be a finite duration")
