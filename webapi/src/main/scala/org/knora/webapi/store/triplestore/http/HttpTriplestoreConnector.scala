@@ -577,6 +577,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         }
 
         val triplestoreResponseTry = Try {
+
+            val start = System.currentTimeMillis()
+
             var maybeResponse: Option[CloseableHttpResponse] = None
 
             try {
@@ -594,6 +597,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                     log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr,SPARQL query was:\n$sparql")
                     throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
                 }
+
+                val took = System.currentTimeMillis() - start
+                log.info(s"[${statusCode}] GraphDB Query took: ${took}ms")
 
                 responseEntityStr
             } finally {
