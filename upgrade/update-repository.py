@@ -209,7 +209,7 @@ def run_updates(graphdb_info, transformers):
     repository.empty()
 
     # Upload the results of the last transformation.
-    last_transformer_knora_ontologies_dir = "plugins/{}/knora-ontologies".format(last_transformer.pr_num)
+    last_transformer_knora_ontologies_dir = "plugins/pr{}/knora-ontologies".format(last_transformer.pr_num)
     repository.upload(knora_ontologies_dir=last_transformer_knora_ontologies_dir, upload_dir=last_upload_dir)
     repository.update_lucene_index()
 
@@ -265,7 +265,7 @@ def load_transformers(graphdb_info):
     # Load a GraphTransformer instance for each transformation.
     for transformer_pr_num in needed_pr_nums:
         # Load the transformer's module.
-        transformer_module = importlib.import_module("plugins.{}.update".format(transformer_pr_num))
+        transformer_module = importlib.import_module("plugins.pr{}.update".format(transformer_pr_num))
 
         # Get the transformer class definition from the module.
         transformer_class = getattr(transformer_module, "GraphTransformer")
