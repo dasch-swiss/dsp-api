@@ -46,8 +46,8 @@ def test_update():
     values_with_uuids = set([row["value"] for row in query_result])
 
     assert values_with_uuids == {
-        URIRef('http://rdfh.ch/0001/thing-with-history/values/1c'),
-        URIRef('http://rdfh.ch/0001/thing-with-history/values/2c')
+        URIRef("http://rdfh.ch/0001/thing-with-history/values/1c"),
+        URIRef("http://rdfh.ch/0001/thing-with-history/values/2c")
     }
 
     if save_output:
