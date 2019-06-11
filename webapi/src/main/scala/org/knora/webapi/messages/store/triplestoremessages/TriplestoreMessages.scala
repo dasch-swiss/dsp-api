@@ -171,6 +171,7 @@ case class SparqlAskResponse(result: Boolean)
   * stored in an accessible path and supplied via the [[RdfDataObject]].
   *
   * @param rdfDataObjects contains a list of [[RdfDataObject]].
+  * @param prependDefaults denotes if a default set defined in application.conf should be also loaded
   */
 case class ResetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true) extends TriplestoreRequest
 
