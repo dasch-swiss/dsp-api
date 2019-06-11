@@ -30,6 +30,7 @@ import re
 from updatelib import rdftools
 
 
+# A list of built-in Knora ontologies in the order in which they should be uploaded.
 knora_ontologies = [
     {
         "filename": "knora-admin.ttl",
@@ -49,9 +50,14 @@ knora_ontologies = [
     }
 ]
 
+# A set of the IRIs of the named graphs containing built-in Knora ontologies.
 knora_ontology_contexts = set([onto["context"] for onto in knora_ontologies])
 
+# A regex that matches the object of knora-base:ontologyVersion.
 knora_base_version_string_regex = re.compile(r"^PR ([0-9]+)$")
+
+# A regex that matches the name of a directory containing an update plugin.
+plugin_dirname_regex = re.compile(r"^pr([0-9]+)$")
 
 
 # Represents information about a GraphDB repository.
@@ -217,9 +223,15 @@ def run_updates(graphdb_info, transformers):
 # Determines which transformations need to be run, and returns a corresponding list of GraphTransformer instances.
 def load_transformers(graphdb_info):
     # Get the list of available transformations.
+
     plugins_subdirs = os.listdir("plugins")
-    pr_dirs = filter(lambda dirname: dirname.isdigit(), plugins_subdirs)
-    pr_nums = map(int, pr_dirs)
+    pr_nums = []
+
+    for dirname in plugins_subdirs:
+        match = plugin_dirname_regex.match(dirname)
+
+        if match is not None:
+            pr_nums.append(int(match.group(1)))
 
     # Get the version string attached to knora-base in the repository.
 
