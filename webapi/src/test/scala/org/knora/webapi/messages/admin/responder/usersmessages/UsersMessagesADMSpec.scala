@@ -23,6 +23,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
 import org.knora.webapi.util.StringFormatter
 import org.scalatest.{Matchers, WordSpecLike}
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 /**
@@ -55,7 +56,7 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
         }
         "allow checking the password (1)" in {
             //hashedPassword =  encoder.encode(createRequest.password);
-            val encoder = new SCryptPasswordEncoder
+            val encoder = new BCryptPasswordEncoder()
             val hp = encoder.encode("123456")
             val up = UserADM(id = "something", username = "something" , email = "something", password = Some(hp), token = None, givenName = "something", familyName = "something", status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = PermissionsDataADM())
 
