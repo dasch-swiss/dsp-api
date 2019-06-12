@@ -479,11 +479,15 @@ case class UserADM(id: IRI,
                   import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
                   val encoder = new SCryptPasswordEncoder()
                   encoder.matches(password, hashedPassword.toString)
-              } else {
+              } else if (hashedPassword.startsWith("$2a$")) {
                   // BCrypt
                   import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
                   val encoder = new BCryptPasswordEncoder()
                   encoder.matches(password, hashedPassword.toString)
+              } else {
+                  // SHA-1
+                  val md = java.security.MessageDigest.getInstance("SHA-1")
+                  md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword)
               }
         }
     }

@@ -24,6 +24,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{Permission
 import org.knora.webapi.util.StringFormatter
 import org.scalatest.{Matchers, WordSpecLike}
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 /**
   * This spec is used to test subclasses of the [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]] class.
@@ -53,8 +54,20 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
 
             assert(rootUser.ofType(UserInformationTypeADM.RESTRICTED) === rootUserRestricted)
         }
-        "allow checking the password (1)" in {
-            //hashedPassword =  encoder.encode(createRequest.password);
+
+        "allow checking the SCrypt passwords" in {
+            val encoder = new SCryptPasswordEncoder()
+            val hp = encoder.encode("123456")
+            val up = UserADM(id = "something", username = "something" , email = "something", password = Some(hp), token = None, givenName = "something", familyName = "something", status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = PermissionsDataADM())
+
+            // test SCrypt
+            assert(encoder.matches("123456", encoder.encode("123456")))
+
+            // test UserADM SCrypt usage
+            assert(up.passwordMatch("123456"))
+        }
+
+        "allow checking the BCrypt passwords" in {
             val encoder = new BCryptPasswordEncoder()
             val hp = encoder.encode("123456")
             val up = UserADM(id = "something", username = "something" , email = "something", password = Some(hp), token = None, givenName = "something", familyName = "something", status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = PermissionsDataADM())
