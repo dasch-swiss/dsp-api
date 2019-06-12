@@ -5,10 +5,15 @@ sudo: required
 addons:
   chrome: stable
 
-language: scala
+language:
+  - scala
+  - python
 
 scala:
-  - 2.12.1
+  - "2.12.1"
+
+python:
+  - "3.7"
 
 jdk:
   - openjdk10
