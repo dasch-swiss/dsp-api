@@ -215,6 +215,7 @@ lazy val salsah1 = knoraModule("salsah1")
 
             maintainer := "ivan.subotic@unibas.ch",
 
+            Docker / dockerExposedPorts ++= Seq(3335),
             Docker / dockerCommands := Seq(
                 Cmd("FROM", "openjdk:10-jre-slim-sid"),
                 Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
@@ -338,8 +339,6 @@ lazy val webapi = knoraModule("webapi")
             }, // allows sbt-javaagent to work with sbt-revolver
             reStart / javaOptions ++= webapiJavaRunOptions,
 
-            javaAgents += Dependencies.Compile.aspectJWeaver,
-
             Test / parallelExecution := false,
             Test / javaOptions ++= Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
             // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
@@ -378,12 +377,14 @@ lazy val webapi = knoraModule("webapi")
             Universal / mappings ++= {
                 // copy the scripts folder
                 directory("webapi/scripts") ++
-                        // copy the configuration files to config directory
-                        contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
-                        // copy configuration files to config directory
-                        contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
-                // copy the aspectj weaver jar
-                // contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
+                  // add knora-ontologies
+                  directory("knora-ontologies") ++
+                  // add test-data directory
+                  directory("webapi/_test_data") ++
+                  // copy the configuration files to config directory
+                  contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
+                  // copy configuration files to config directory
+                  contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
             },
 
             // add 'config' directory to the classpath of the start script,
@@ -402,6 +403,7 @@ lazy val webapi = knoraModule("webapi")
 
             maintainer := "ivan.subotic@unibas.ch",
 
+            Docker / dockerExposedPorts ++= Seq(3333, 10001),
             Docker / dockerCommands := Seq(
                 Cmd("FROM", "openjdk:10-jre-slim-sid"),
                 Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
@@ -418,6 +420,7 @@ lazy val webapi = knoraModule("webapi")
 
                 ExecCmd("ENTRYPOINT", "bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"),
             )
+
         )
         .settings(
             buildInfoKeys ++= Seq[BuildInfoKey](

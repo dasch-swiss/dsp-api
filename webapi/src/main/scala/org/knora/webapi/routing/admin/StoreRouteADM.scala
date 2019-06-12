@@ -53,16 +53,20 @@ class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             post {
                 /* ResetTriplestoreContent */
                 entity(as[Seq[RdfDataObject]]) { apiRequest =>
-                    requestContext =>
-                        val requestMessage = Future.successful(ResetTriplestoreContentRequestADM(apiRequest))
+                    parameter('prependdefaults.as[Boolean] ? true) { prependDefaults =>
+                        requestContext =>
+                            val msg = ResetTriplestoreContentRequestADM(apiRequest, prependDefaults)
+                            val requestMessage = Future.successful(msg)
 
-                        RouteUtilADM.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )(timeout = 5.minutes, executionContext = executionContext)
+                            RouteUtilADM.runJsonRoute(
+                                requestMessage,
+                                requestContext,
+                                settings,
+                                responderManager,
+                                log
+                            )(timeout = 5.minutes, executionContext = executionContext)
+                  }
+
                 }
             }
         }
