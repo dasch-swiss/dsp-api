@@ -14,9 +14,7 @@ scripts:
 
 - Python 3 (`python3 --version` should print its version number)
 
-- The Python `requests` library (type `pip3 install requests` to install it)
-
-- The Python `rdflib` library (type `pip3 install rdflib` to install it)
+- The libraries in `requirements.txt` (use `pip3 install -r requirements.txt` to install them)
 
 ## General Instructions
 

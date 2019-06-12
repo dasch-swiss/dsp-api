@@ -82,6 +82,8 @@ class NamedGraph:
         else:
             self.filename = context.translate({ord(c): None for c in "/:"}) + ".ttl"
 
+        self.namespaces = []
+
     # Downloads the named graph from the repository to a file in download_dir.
     def download(self, download_dir):
         print("Downloading named graph {}...".format(self.context))
@@ -94,10 +96,14 @@ class NamedGraph:
         input_file_path = download_dir + "/" + self.filename
         graph = rdflib.Graph()
         graph.parse(input_file_path, format="turtle")
+        self.namespaces = list(graph.namespace_manager.namespaces())
         return graph
 
     # Formats the output graph.
     def format(self, graph, upload_dir):
+        for prefix, namespace in self.namespaces:
+            graph.namespace_manager.bind(prefix=prefix, namespace=namespace, override=True, replace=True)
+
         output_file_path = upload_dir + "/" + self.filename
         print("Writing transformed file...")
         graph.serialize(destination=output_file_path, format="turtle")
@@ -300,32 +306,22 @@ def main():
     default_repository = "knora-test"
 
     parser = argparse.ArgumentParser(description="Updates a Knora repository.")
-    parser.add_argument("-g", "--graphdb", help="GraphDB host (default '{}')".format(default_graphdb_host), type=str)
-    parser.add_argument("-r", "--repository", help="GraphDB repository (default '{}')".format(default_repository),
+    parser.add_argument("-g", "--graphdb", default=default_graphdb_host, help="GraphDB host (default '{}')".format(default_graphdb_host), type=str)
+    parser.add_argument("-r", "--repository", default=default_repository, help="GraphDB repository (default '{}')".format(default_repository),
                         type=str)
     parser.add_argument("-u", "--username", help="GraphDB username", type=str, required=True)
     parser.add_argument("-p", "--password", help="GraphDB password (if not provided, will prompt for password)",
                         type=str)
 
     args = parser.parse_args()
-    graphdb_host = args.graphdb
-
-    if not graphdb_host:
-        graphdb_host = default_graphdb_host
-
-    repository = args.repository
-
-    if not repository:
-        repository = default_repository
-
     password = args.password
 
     if not password:
         password = getpass.getpass()
 
     graphdb_info = GraphDBInfo(
-        graphdb_host=graphdb_host,
-        repository=repository,
+        graphdb_host=args.graphdb,
+        repository=args.repository,
         username=args.username,
         password=password
     )
