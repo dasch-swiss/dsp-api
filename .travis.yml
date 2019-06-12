@@ -96,6 +96,11 @@ jobs:
         # - sbt codacyCoverage
         # print out Sipi logs
         - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose logs
+     # upgrade tests
+        - stage: test
+          script:
+            # run tests
+            - cd $TRAVIS_BUILD_DIR/upgrade && ./test.sh
     # testing docs generation
     #- stage: test
     #  script:

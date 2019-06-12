@@ -2961,11 +2961,13 @@ case class SubClassInfoV2(id: SmartIri, label: String)
   * @param projectIri           the IRI of the project that the ontology belongs to.
   * @param label                the label of the ontology, if any.
   * @param lastModificationDate the ontology's last modification date, if any.
+  * @param ontologyVersion      the version string attached to the ontology, if any.
   */
 case class OntologyMetadataV2(ontologyIri: SmartIri,
                               projectIri: Option[SmartIri] = None,
                               label: Option[String] = None,
-                              lastModificationDate: Option[Instant] = None) extends KnoraContentV2[OntologyMetadataV2] {
+                              lastModificationDate: Option[Instant] = None,
+                              ontologyVersion: Option[String] = None) extends KnoraContentV2[OntologyMetadataV2] {
     override def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
