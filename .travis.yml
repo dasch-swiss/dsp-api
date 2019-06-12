@@ -100,7 +100,7 @@ jobs:
     - stage: test
       script:
         # run tests
-        - cd $TRAVIS_BUILD_DIR/upgrade && ./test.sh
+        - cd $TRAVIS_BUILD_DIR/upgrade && pip3 install -r requirements.txt && pytest -W ignore::DeprecationWarning
     # testing docs generation
     #- stage: test
     #  script:
