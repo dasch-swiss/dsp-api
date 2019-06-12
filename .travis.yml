@@ -105,6 +105,7 @@ jobs:
     - stage: test
       script:
         # run tests
+        - pyenv shell 3.7.1
         - cd $TRAVIS_BUILD_DIR/upgrade && pip3 install -r requirements.txt && pytest -W ignore::DeprecationWarning
     # testing docs generation
     #- stage: test
