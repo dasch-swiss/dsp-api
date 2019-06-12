@@ -473,9 +473,18 @@ case class UserADM(id: IRI,
     def passwordMatch(password: String): Boolean = {
         this.password.exists {
             hashedPassword =>
-                import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-                val encoder = new BCryptPasswordEncoder()
-                encoder.matches(password, hashedPassword.toString)
+              // check which type of hash we have
+              if (hashedPassword.startsWith("$e0801$")){
+                  // SCrypt
+                  import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+                  val encoder = new SCryptPasswordEncoder()
+                  encoder.matches(password, hashedPassword.toString)
+              } else {
+                  // BCrypt
+                  import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+                  val encoder = new BCryptPasswordEncoder()
+                  encoder.matches(password, hashedPassword.toString)
+              }
         }
     }
 
