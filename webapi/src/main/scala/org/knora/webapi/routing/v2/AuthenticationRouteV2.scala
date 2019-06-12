@@ -41,9 +41,18 @@ class AuthenticationRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeD
                 }
             } ~
             post { // login
-                /* send iri, username, or email and password in body as: {"identifier": "iri|username|email", "password": "userspassword"}
-                 * returns a JWT token (and session cookie), which can be supplied with every request thereafter in the authorization
-                 * header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
+                /* send iri, email, or username, and password in body as:
+                 * {
+                 *   "iri|username|email": "value_of_iri_username_or_email",
+                 *   "password": "userspassword"
+                 * }, e.g., for email:
+                 * {
+                 *   "email": "email@example.com",
+                 *   "password": "userspassword"
+                 * }
+                 *
+                 * Returns a JWT token (and session cookie), which can be supplied with every request thereafter in
+                 * the authorization header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
                  */
                 entity(as[LoginApiRequestPayloadV2]) { apiRequest =>
                     requestContext =>

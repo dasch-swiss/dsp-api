@@ -39,9 +39,6 @@ class ApplicationStateActor extends Actor with Timers with ActorLogging {
 
     private var appState: AppState = AppState.Stopped
     private var allowReloadOverHTTPState = false
-    private var prometheusReporterState = false
-    private var zipkinReporterState = false
-    private var jaegerReporterState = false
     private var printConfigState = false
     private var skipOntologies = true
 
@@ -94,33 +91,7 @@ class ApplicationStateActor extends Actor with Timers with ActorLogging {
         }
         case GetAllowReloadOverHTTPState() => {
             log.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
-            sender ! allowReloadOverHTTPState
-        }
-
-        case SetPrometheusReporterState(value) => {
-            log.debug("ApplicationStateActor - SetPrometheusReporterState - value: {}", value)
-            prometheusReporterState = value
-        }
-        case GetPrometheusReporterState() => {
-            log.debug("ApplicationStateActor - GetPrometheusReporterState - value: {}", prometheusReporterState)
-            sender ! (prometheusReporterState | settings.prometheusReporter)
-        }
-
-        case SetZipkinReporterState(value) => {
-            log.debug("ApplicationStateActor - SetZipkinReporterState - value: {}", value)
-            zipkinReporterState = value
-        }
-        case GetZipkinReporterState() => {
-            log.debug("ApplicationStateActor - GetZipkinReporterState - value: {}", zipkinReporterState)
-            sender ! (zipkinReporterState | settings.zipkinReporter)
-        }
-        case SetJaegerReporterState(value) => {
-            log.debug("ApplicationStateActor - SetJaegerReporterState - value: {}", value)
-            jaegerReporterState = value
-        }
-        case GetJaegerReporterState() => {
-            log.debug("ApplicationStateActor - GetJaegerReporterState - value: {}", jaegerReporterState)
-            sender ! (jaegerReporterState | settings.jaegerReporter)
+            sender ! (allowReloadOverHTTPState | settings.allowReloadOverHTTP)
         }
 
         case SetPrintConfigExtendedState(value) => {
@@ -187,7 +158,7 @@ class ApplicationStateActor extends Actor with Timers with ActorLogging {
         msg += s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}\n"
         msg += "----------------------------------------------------------------\n"
 
-        if (allowReloadOverHTTPState) {
+        if (allowReloadOverHTTPState | settings.allowReloadOverHTTP) {
             msg += "WARNING: Resetting Triplestore Content over HTTP is turned ON.\n"
             msg += "----------------------------------------------------------------\n"
         }
