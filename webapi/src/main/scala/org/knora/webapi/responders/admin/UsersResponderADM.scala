@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.CacheUtil
-import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 import scala.concurrent.Future
 
@@ -268,7 +268,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             userIri = stringFormatter.makeRandomPersonIri
 
-            encoder = new SCryptPasswordEncoder
+            encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
             hashedPassword = encoder.encode(createRequest.password)
 
             // Create the new user.
@@ -286,7 +286,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 preferredLanguage = createRequest.lang,
                 systemAdmin = createRequest.systemAdmin
             ).toString
-            //_ = log.debug(s"createNewUser: $createNewUserSparqlString")
+            // _ = log.debug(s"createNewUser: $createNewUserSparqlString")
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
 
 
@@ -427,7 +427,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             // create the update request
-            encoder = new SCryptPasswordEncoder
+            encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
             newHashedPassword = encoder.encode(changeUserRequest.newPassword.get)
             userUpdatePayload = UserUpdatePayloadADM(password = Some(newHashedPassword))
 

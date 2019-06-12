@@ -473,9 +473,22 @@ case class UserADM(id: IRI,
     def passwordMatch(password: String): Boolean = {
         this.password.exists {
             hashedPassword =>
-                import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-                val encoder = new SCryptPasswordEncoder
-                encoder.matches(password, hashedPassword.toString)
+              // check which type of hash we have
+              if (hashedPassword.startsWith("$e0801$")){
+                  // SCrypt
+                  import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+                  val encoder = new SCryptPasswordEncoder()
+                  encoder.matches(password, hashedPassword.toString)
+              } else if (hashedPassword.startsWith("$2a$")) {
+                  // BCrypt
+                  import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+                  val encoder = new BCryptPasswordEncoder()
+                  encoder.matches(password, hashedPassword.toString)
+              } else {
+                  // SHA-1
+                  val md = java.security.MessageDigest.getInstance("SHA-1")
+                  md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword)
+              }
         }
     }
 
@@ -800,6 +813,13 @@ class UserIdentifierADM private(maybeIri: Option[IRI] = None,
       */
     def toUsernameOption: Option[String] = {
         maybeUsername
+    }
+
+    /**
+      * Returns the string representation
+      */
+    override def toString: IRI = {
+        s"UserIdentifierADM(${this.maybeIri}, ${this.maybeEmail}, ${this.maybeUsername})"
     }
 
 }

@@ -38,9 +38,9 @@ object Dependencies {
     lazy val metricsVersion = settingKey[String]("The metrics library version")
 
     val Versions = Seq(
-        scalaVersion := "2.12.6",
-        akkaVersion := "2.5.19",
-        akkaHttpVersion := "10.1.5",
+        scalaVersion := "2.12.8",
+        akkaVersion := "2.5.21",
+        akkaHttpVersion := "10.1.7",
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
         sipiVersion := "v1.4.3",
@@ -67,7 +67,7 @@ object Dependencies {
         // testing
 
         //CORS support
-        val akkaHttpCors           = "ch.megard"                               %% "akka-http-cors"           % "0.3.0"
+        val akkaHttpCors           = "ch.megard"                               %% "akka-http-cors"           % "0.3.4"
 
         // jena
         val jenaLibs               = Def.setting {"org.apache.jena"             % "apache-jena-libs"         % jenaVersion.value exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")}
@@ -83,20 +83,11 @@ object Dependencies {
 
         // authentication
         val bcprov                 = "org.bouncycastle"                         % "bcprov-jdk15on"           % "1.59"
-        val springSecurityCore     = "org.springframework.security"             % "spring-security-core"     % "4.2.5.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
+        val springSecurityCore     = "org.springframework.security"             % "spring-security-core"     % "5.1.5.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
         val jwtSprayJson           = "com.pauldijou"                            %% "jwt-spray-json"          % "0.19.0"
 
         // caching
         val ehcache                = "net.sf.ehcache"                           % "ehcache"                  % "2.10.3"
-
-        // monitoring
-        val kamonCore              = "io.kamon"                                %% "kamon-core"               % "1.1.3"
-        val kamonAkka              = "io.kamon"                                %% "kamon-akka-2.5"           % "1.1.1"
-        val kamonAkkaHttp          = "io.kamon"                                %% "kamon-akka-http-2.5"      % "1.1.0"
-        val kamonPrometheus        = "io.kamon"                                %% "kamon-prometheus"         % "1.1.1"
-        val kamonZipkin            = "io.kamon"                                %% "kamon-zipkin"             % "1.0.0"
-        val kamonJaeger            = "io.kamon"                                %% "kamon-jaeger"             % "1.0.2"
-        val aspectJWeaver          = "org.aspectj"                              % "aspectjweaver"            % "1.9.1"
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
@@ -176,7 +167,6 @@ object Dependencies {
     )
 
     val webapiLibraryDependencies = l ++= Seq[sbt.ModuleID](
-        aspectJWeaver,
         akkaActor.value,
         akkaAgent.value,
         akkaHttp.value,
@@ -209,12 +199,6 @@ object Dependencies {
         jenaLibs.value,
         jenaText.value,
         jwtSprayJson,
-        //library.kamonCore,
-        //library.kamonAkka,
-        //library.kamonAkkaHttp,
-        //library.kamonPrometheus,
-        //library.kamonZipkin,
-        //library.kamonJaeger,
         logbackClassic,
         rdf4jRuntime,
         saxonHE,

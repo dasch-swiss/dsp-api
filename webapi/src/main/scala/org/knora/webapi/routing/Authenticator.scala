@@ -102,30 +102,34 @@ trait Authenticator {
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
-    def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = for {
+    def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = {
 
-        authenticated <- authenticateCredentialsV2(Some(credentials)) // will throw exception if not valid and thus trigger the correct response
+        log.debug(s"doLoginV2 - credentials: $credentials")
 
-        settings = Settings(system)
+        for {
+            authenticated <- authenticateCredentialsV2(Some(credentials)) // will throw exception if not valid and thus trigger the correct response
 
-        userADM <- getUserByIdentifier(credentials.identifier)
+            settings = Settings(system)
 
-        cookieDomain = Some(settings.cookieDomain)
-        token = JWTHelper.createToken(userADM.id, settings.jwtSecretKey, settings.jwtLongevity)
+            userADM <- getUserByIdentifier(credentials.identifier)
+
+            cookieDomain = Some(settings.cookieDomain)
+            token = JWTHelper.createToken(userADM.id, settings.jwtSecretKey, settings.jwtLongevity)
 
 
-        httpResponse = HttpResponse(
-            headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, token, domain = cookieDomain, path = Some("/"), httpOnly = true))), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
-            status = StatusCodes.OK,
-            entity = HttpEntity(
-                ContentTypes.`application/json`,
-                JsObject(
-                    "token" -> JsString(token)
-                ).compactPrint
+            httpResponse = HttpResponse(
+                headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, token, domain = cookieDomain, path = Some("/"), httpOnly = true))), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
+                status = StatusCodes.OK,
+                entity = HttpEntity(
+                    ContentTypes.`application/json`,
+                    JsObject(
+                        "token" -> JsString(token)
+                    ).compactPrint
+                )
             )
-        )
 
-    } yield httpResponse
+        } yield httpResponse
+    }
 
     def presentLoginFormV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
 
@@ -466,7 +470,7 @@ object Authenticator {
       * @return [[KnoraCredentialsV2]].
       */
     private def extractCredentialsV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
-        log.debug("extractCredentialsV2 start ...")
+        // log.debug("extractCredentialsV2 start ...")
 
         val credentialsFromParameters: Option[KnoraCredentialsV2] = extractCredentialsFromParametersV2(requestContext)
         log.debug("extractCredentialsV2 - credentialsFromParameters: {}", credentialsFromParameters)
@@ -496,17 +500,17 @@ object Authenticator {
 
         val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
 
-        log.debug("extractCredentialsFromParametersV2 - params: {}", params)
+        // log.debug("extractCredentialsFromParametersV2 - params: {}", params)
 
         // check for iri, email, or username parameters
         val maybeIriIdentifier: Option[String] = params.get("iri").map(_.head)
         val maybeEmailIdentifier: Option[String] = params.get("email").map(_.head)
         val maybeUsernameIdentifier: Option[String] = params.get("username").map(_.head)
         val maybeIdentifier: Option[String] = List(maybeIriIdentifier, maybeEmailIdentifier, maybeUsernameIdentifier).flatten.headOption
-        log.debug("extractCredentialsFromParametersV2 - maybeIdentifier: {}", maybeIdentifier)
+        // log.debug("extractCredentialsFromParametersV2 - maybeIdentifier: {}", maybeIdentifier)
 
         val maybePassword: Option[String] = params.get("password").map(_.head)
-        log.debug("extractCredentialsFromParametersV2 - maybePassword: {}", maybePassword)
+        // log.debug("extractCredentialsFromParametersV2 - maybePassword: {}", maybePassword)
 
         val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty) {
             Some(
@@ -531,8 +535,8 @@ object Authenticator {
             None
         }
 
-        log.debug("extractCredentialsFromParametersV2 - maybePassCreds: {}", maybePassCreds)
-        log.debug("extractCredentialsFromParametersV2 - maybeTokenCreds: {}", maybeTokenCreds)
+        // log.debug("extractCredentialsFromParametersV2 - maybePassCreds: {}", maybePassCreds)
+        // log.debug("extractCredentialsFromParametersV2 - maybeTokenCreds: {}", maybeTokenCreds)
 
         // prefer password credentials
         if (maybePassCreds.nonEmpty) {
