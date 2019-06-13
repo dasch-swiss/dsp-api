@@ -39,4 +39,5 @@ sipi/test
 .sbtrc
 
 
-upgrade/venv
+**/venv
+**/__pycache__
