@@ -39,8 +39,8 @@ class UpdateException(Exception):
         self.message = message
 
 
-# The directory in the Knora source tree where built-in Knora ontologies are stored.
-knora_ontologies_dir = "../../knora-ontologies"
+# The directory where this update's built-in Knora ontologies are stored.
+knora_ontologies_dir = "knora-ontologies"
 
 # The filename of the knora-base ontology.
 knora_base_filename = "knora-base.ttl"
