@@ -50,7 +50,6 @@ object ResourceUtilV2 {
       */
     def checkResourcePermission(resourceInfo: ReadResourceV2, permissionNeeded: EntityPermission, requestingUser: UserADM): Unit = {
         val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
-            entityIri = resourceInfo.resourceIri,
             entityCreator = resourceInfo.attachedToUser,
             entityProject = resourceInfo.projectADM.id,
             entityPermissionLiteral = resourceInfo.permissions,
@@ -76,7 +75,6 @@ object ResourceUtilV2 {
       */
     def checkValuePermission(resourceInfo: ReadResourceV2, valueInfo: ReadValueV2, permissionNeeded: EntityPermission, requestingUser: UserADM): Unit = {
         val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
-            entityIri = valueInfo.valueIri,
             entityCreator = valueInfo.attachedToUser,
             entityProject = resourceInfo.projectADM.id,
             entityPermissionLiteral = valueInfo.permissions,
