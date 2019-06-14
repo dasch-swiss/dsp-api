@@ -312,6 +312,7 @@ def main():
     parser.add_argument("-u", "--username", help="GraphDB username", type=str, required=True)
     parser.add_argument("-p", "--password", help="GraphDB password (if not provided, will prompt for password)",
                         type=str)
+    parser.add_argument("-t", "--tempdir", help="temporary directory", type=str)
 
     args = parser.parse_args()
     password = args.password
@@ -330,6 +331,7 @@ def main():
     transformers = load_transformers(graphdb_info)
 
     if len(transformers) > 0:
+        tempfile.tempdir = args.tempdir
         run_updates(graphdb_info=graphdb_info, transformers=transformers)
         elapsed = time.time() - start
         print("Update complete. Elapsed time: {}.".format(str(timedelta(seconds=elapsed))))

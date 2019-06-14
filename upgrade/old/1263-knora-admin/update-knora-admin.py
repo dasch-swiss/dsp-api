@@ -334,36 +334,28 @@ def main():
     default_repository = "knora-test"
 
     parser = argparse.ArgumentParser(description="Separates knora-admin from knora-base.")
-    parser.add_argument("-g", "--graphdb", help="GraphDB host (default '{}')".format(default_graphdb_host), type=str)
-    parser.add_argument("-r", "--repository", help="GraphDB repository (default '{}')".format(default_repository),
+    parser.add_argument("-g", "--graphdb", default=default_graphdb_host, help="GraphDB host (default '{}')".format(default_graphdb_host), type=str)
+    parser.add_argument("-r", "--repository", default=default_repository, help="GraphDB repository (default '{}')".format(default_repository),
                         type=str)
     parser.add_argument("-u", "--username", help="GraphDB username", type=str, required=True)
     parser.add_argument("-p", "--password", help="GraphDB password (if not provided, will prompt for password)",
                         type=str)
+    parser.add_argument("-t", "--tempdir", help="temporary directory", type=str)
 
     args = parser.parse_args()
-    graphdb_host = args.graphdb
-
-    if not graphdb_host:
-        graphdb_host = default_graphdb_host
-
-    repository = args.repository
-
-    if not repository:
-        repository = default_repository
-
     password = args.password
 
     if not password:
         password = getpass.getpass()
 
     graphdb_info = GraphDBInfo(
-        graphdb_host=graphdb_host,
-        repository=repository,
+        graphdb_host=args.graphdb,
+        repository=args.repository,
         username=args.username,
         password=password
     )
 
+    tempfile.tempdir = args.tempdir
     temp_dir = tempfile.mkdtemp()
     print("Using temporary directory", temp_dir)
 
