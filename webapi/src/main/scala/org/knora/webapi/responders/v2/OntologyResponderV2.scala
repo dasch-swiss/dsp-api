@@ -137,10 +137,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] = buildOntologyMetadata(allOntologyMetadataResponse)
 
             knoraBaseOntologyMetadata: OntologyMetadataV2 = allOntologyMetadata.getOrElse(OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri, throw InconsistentTriplestoreDataException(s"No knora-base ontology found"))
-            knoraBaseOntologyVersion: String = knoraBaseOntologyMetadata.ontologyVersion.getOrElse(throw InconsistentTriplestoreDataException("The knora-base ontology in the repository is not up to date. Please update your repository (see upgrade/README.md for instructions)."))
+            knoraBaseOntologyVersion: String = knoraBaseOntologyMetadata.ontologyVersion.getOrElse(throw InconsistentTriplestoreDataException("The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."))
 
             _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
-                throw InconsistentTriplestoreDataException(s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. Please update your repository (see upgrade/README.md for instructions).")
+                throw InconsistentTriplestoreDataException(s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates.")
             }
 
             // Get the contents of each named graph containing an ontology.
