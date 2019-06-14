@@ -36,8 +36,9 @@ sealed trait StoreResponderRequestADM extends KnoraRequestADM
   *
   * @param rdfDataObjects a sequence of [[RdfDataObject]] objects containing the path to the data and the name of
   *                       the named graph into which the data should be loaded.
+  * @param prependDefaults should a default set of [[RdfDataObject]]s be prepended. The default is `true`.
   */
-case class ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject]) extends StoreResponderRequestADM
+case class ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = false) extends StoreResponderRequestADM
 
 case class ResetTriplestoreContentResponseADM(message: String) extends KnoraResponseADM with StoresADMJsonProtocol {
     def toJsValue = resetTriplestoreContentResponseADMFormat.write(this)

@@ -23,9 +23,18 @@ package org.knora
   * Contains definitions shared by the whole application.
   */
 package object webapi {
+    /**
+      * The version of `knora-base` and of the other built-in ontologies that this version of Knora requires.
+      * Must be the same as the object of `knora-base:ontologyVersion` in the `knora-base` ontology being used.
+      */
+    val KnoraBaseVersion: String = "PR 1322"
+
+    /**
+      * `IRI` is a synonym for `String`, used to improve code readability.
+      */
     type IRI = String
 
 
-    def deserializationError(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) = throw new InvalidJsonLDException(msg, cause)
+    def deserializationError(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) = throw InvalidJsonLDException(msg, cause)
 
 }
