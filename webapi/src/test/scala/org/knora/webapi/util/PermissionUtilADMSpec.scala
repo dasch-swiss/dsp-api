@@ -59,7 +59,6 @@ class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with Implicit
             ) should equal(Some(6)) // modify permission
 
             PermissionUtilADM.getUserPermissionADM(
-                entityIri = "http://rdfh.ch/00014b43f902",
                 entityCreator = "http://rdfh.ch/users/91e19f1e01",
                 entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 entityPermissionLiteral = permissionLiteral,
@@ -77,7 +76,6 @@ class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with Implicit
             ) should equal(Some(8)) // change rights permission
 
             PermissionUtilADM.getUserPermissionADM(
-                entityIri = "http://rdfh.ch/00014b43f902",
                 entityCreator = "http://rdfh.ch/users/91e19f1e01",
                 entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 entityPermissionLiteral = permissionLiteral,
@@ -95,7 +93,6 @@ class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with Implicit
             ) should equal(Some(8)) // change rights permission
 
             PermissionUtilADM.getUserPermissionADM(
-                entityIri = "http://rdfh.ch/00014b43f902",
                 entityCreator = "http://rdfh.ch/users/91e19f1e01",
                 entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 entityPermissionLiteral = permissionLiteral,
@@ -113,7 +110,6 @@ class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with Implicit
             ) should equal(Some(8)) // change rights permission
 
             PermissionUtilADM.getUserPermissionADM(
-                entityIri = "http://rdfh.ch/00014b43f902",
                 entityCreator = "http://rdfh.ch/users/91e19f1e01",
                 entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 entityPermissionLiteral = permissionLiteral,
@@ -131,7 +127,6 @@ class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with Implicit
             ) should equal(Some(2)) // view permission
 
             PermissionUtilADM.getUserPermissionADM(
-                entityIri = "http://rdfh.ch/00014b43f902",
                 entityCreator = "http://rdfh.ch/users/91e19f1e01",
                 entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 entityPermissionLiteral = permissionLiteral,
@@ -149,7 +144,6 @@ class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with Implicit
             ) should equal(Some(1)) // restricted view permission
 
             PermissionUtilADM.getUserPermissionADM(
-                entityIri = "http://rdfh.ch/00014b43f902",
                 entityCreator = "http://rdfh.ch/users/91e19f1e01",
                 entityProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
                 entityPermissionLiteral = permissionLiteral,

@@ -1564,6 +1564,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         OntologyConstants.Rdf.Subject,
         OntologyConstants.Rdf.Predicate,
         OntologyConstants.Rdf.Object,
+        OntologyConstants.KnoraBase.OntologyVersion,
         OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted,
         OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
         OntologyConstants.KnoraBase.ObjectClassConstraint,

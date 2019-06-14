@@ -5,10 +5,15 @@ sudo: required
 addons:
   chrome: stable
 
-language: scala
+language:
+  - scala
+  - python
 
 scala:
-  - 2.12.1
+  - "2.12.1"
+
+python:
+  - "3.7"
 
 jdk:
   - openjdk10
@@ -96,6 +101,12 @@ jobs:
         # - sbt codacyCoverage
         # print out Sipi logs
         - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose logs
+    # upgrade tests
+    - stage: test
+      script:
+        # run tests
+        - pyenv shell 3.7.1
+        - cd $TRAVIS_BUILD_DIR/upgrade && pip3 install -r requirements.txt && ./test.sh
     # testing docs generation
     #- stage: test
     #  script:
