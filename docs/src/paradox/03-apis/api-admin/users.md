@@ -58,7 +58,9 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ### Get user
 
-  - Required permission: SystemAdmin / self
+  - Required permission:
+    - SystemAdmin / self: for getting all properties
+    - All other users: for getting only the public properties (`givenName` and `familyName`)
   - GET:`/admin/users/[iri | email | username ]/<identifier>`
 
 ### Create user
