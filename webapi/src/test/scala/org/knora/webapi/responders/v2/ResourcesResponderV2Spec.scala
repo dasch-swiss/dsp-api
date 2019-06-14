@@ -1727,5 +1727,173 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
             }
         }
+
+        "not accept custom resource permissions that would give the requesting user a higher permission on a resource than the default" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.imagesProject,
+                permissions = Some("CR knora-admin:Creator")
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.imagesReviewerUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a system admin" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.imagesProject,
+                permissions = Some("CR knora-admin:Creator")
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.rootUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgClass(classOf[ReadResourcesSequenceV2])
+        }
+
+        "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a project admin" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.imagesProject,
+                permissions = Some("CR knora-admin:Creator")
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.imagesUser01,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgClass(classOf[ReadResourcesSequenceV2])
+        }
+
+        "not accept custom value permissions that would give the requesting user a higher permission on a value than the default" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = IntegerValueContentV2(
+                            ontologySchema = ApiV2Complex,
+                            valueHasInteger = 5,
+                            comment = Some("this is the number five")
+                        ),
+                        permissions = Some("CR knora-admin:Creator")
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = inputValues,
+                projectADM = SharedTestDataADM.imagesProject
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.imagesReviewerUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = IntegerValueContentV2(
+                            ontologySchema = ApiV2Complex,
+                            valueHasInteger = 5,
+                            comment = Some("this is the number five")
+                        ),
+                        permissions = Some("CR knora-admin:Creator")
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = inputValues,
+                projectADM = SharedTestDataADM.imagesProject
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.rootUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgClass(classOf[ReadResourcesSequenceV2])
+        }
+
+        "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = IntegerValueContentV2(
+                            ontologySchema = ApiV2Complex,
+                            valueHasInteger = 5,
+                            comment = Some("this is the number five")
+                        ),
+                        permissions = Some("CR knora-admin:Creator")
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = inputValues,
+                projectADM = SharedTestDataADM.imagesProject
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.imagesUser01,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgClass(classOf[ReadResourcesSequenceV2])
+        }
     }
 }

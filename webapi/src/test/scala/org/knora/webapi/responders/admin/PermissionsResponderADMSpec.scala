@@ -244,8 +244,9 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     projectIri = IMAGES_PROJECT_IRI,
                     requestingUser = rootUser
                 )
+
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseADM(
-                    defaultObjectAccessPermissions = Seq(perm002_d1.p, perm002_d2.p)
+                    defaultObjectAccessPermissions = Seq(perm002_d1.p, perm0003_a4.p, perm002_d2.p)
                 ))
             }
 

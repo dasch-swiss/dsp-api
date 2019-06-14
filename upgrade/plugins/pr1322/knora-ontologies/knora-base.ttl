@@ -72,7 +72,6 @@
     :objectDatatypeConstraint xsd:boolean .
 
 
-
 ###  http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted
 
 :objectCannotBeMarkedAsDeleted rdf:type rdf:Property ;
