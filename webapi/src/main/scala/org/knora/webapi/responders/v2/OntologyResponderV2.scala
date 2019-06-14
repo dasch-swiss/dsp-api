@@ -132,9 +132,16 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             }
 
             // Get all ontology metadata.
-            allOntologyMetdataSparql <- FastFuture.successful(queries.sparql.v2.txt.getAllOntologyMetadata(triplestore = settings.triplestoreType).toString())
-            allOntologyMetadataResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(allOntologyMetdataSparql)).mapTo[SparqlSelectResponse]
+            allOntologyMetadataSparql <- FastFuture.successful(queries.sparql.v2.txt.getAllOntologyMetadata(triplestore = settings.triplestoreType).toString())
+            allOntologyMetadataResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql)).mapTo[SparqlSelectResponse]
             allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] = buildOntologyMetadata(allOntologyMetadataResponse)
+
+            knoraBaseOntologyMetadata: OntologyMetadataV2 = allOntologyMetadata.getOrElse(OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri, throw InconsistentTriplestoreDataException(s"No knora-base ontology found"))
+            knoraBaseOntologyVersion: String = knoraBaseOntologyMetadata.ontologyVersion.getOrElse(throw InconsistentTriplestoreDataException("The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."))
+
+            _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
+                throw InconsistentTriplestoreDataException(s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates.")
+            }
 
             // Get the contents of each named graph containing an ontology.
             ontologyGraphResponseFutures: Iterable[Future[OntologyGraph]] = allOntologyMetadata.keys.map {
@@ -579,7 +586,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       * Given the triplestore's response to `getAllOntologyMetadata.scala.txt`, constructs a map of ontology IRIs
       * to ontology metadata for the ontology cache.
       *
-      * @param allOntologyMetadataResponse the triplestore's response to the SPARQL query `getallOntologyMetadata.scala.txt`.
+      * @param allOntologyMetadataResponse the triplestore's response to the SPARQL query `getAllOntologyMetadata.scala.txt`.
       * @return a map of ontology IRIs to ontology metadata.
       */
     private def buildOntologyMetadata(allOntologyMetadataResponse: SparqlSelectResponse): Map[SmartIri, OntologyMetadataV2] = {
@@ -604,15 +611,17 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         pred -> obj
                 }.toMap
 
-                val projectIri = ontologyMetadataMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no knora-base:attachedToProject")).toSmartIri
-                val ontologyLabel = ontologyMetadataMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName)
-                val lastModificationDate = ontologyMetadataMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(instant => stringFormatter.xsdDateTimeStampToInstant(instant, throw InconsistentTriplestoreDataException(s"Invalid UTC instant: $instant")))
+                val projectIri: SmartIri = ontologyMetadataMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no knora-base:attachedToProject")).toSmartIri
+                val ontologyLabel: String = ontologyMetadataMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName)
+                val lastModificationDate: Option[Instant] = ontologyMetadataMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(instant => stringFormatter.xsdDateTimeStampToInstant(instant, throw InconsistentTriplestoreDataException(s"Invalid UTC instant: $instant")))
+                val ontologyVersion: Option[String] = ontologyMetadataMap.get(OntologyConstants.KnoraBase.OntologyVersion)
 
                 ontologySmartIri -> OntologyMetadataV2(
                     ontologyIri = ontologySmartIri,
                     projectIri = Some(projectIri),
                     label = Some(ontologyLabel),
-                    lastModificationDate = lastModificationDate
+                    lastModificationDate = lastModificationDate,
+                    ontologyVersion = ontologyVersion
                 )
         }
     }
