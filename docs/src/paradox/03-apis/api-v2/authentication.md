@@ -41,7 +41,7 @@ we support two options to do so:
   (e.g., <http://knora-host/v1/resources/resIri?email=userUrlEncodedIdentifier&password=pw>), and
 - in the HTTP header ([HTTP basic
   authentication](https://en.wikipedia.org/wiki/Basic_access_authentication)), where the
-  identifier can be the user's email (IRI and username not supported).
+  identifier can be the user's `email` (IRI and username not supported).
 
 When using Python's module `requests`, the credentials can simply be submitted as a tuple with
 each request using the param `auth` ([python requests](http://docs.python-requests.org/en/master/user/authentication/#basic-authentication)).

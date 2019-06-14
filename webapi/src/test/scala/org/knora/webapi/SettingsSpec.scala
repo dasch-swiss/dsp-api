@@ -64,10 +64,6 @@ class SettingsSpec extends CoreSpec("SettingsActorTestSystem", SettingsSpec.conf
             settings.externalSipiFileServerGetUrl should be ("http://0.0.0.0:1024/server")
 
             settings.internalSipiImageConversionUrlV1 should be ("http://0.0.0.0:1024")
-
-            settings.prometheusReporter should be (false)
-            settings.zipkinReporter should be (false)
-            settings.jaegerReporter should be (false)
         }
     }
 }

@@ -23,6 +23,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataType
 import org.scalatest.{Matchers, WordSpecLike}
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 /**
@@ -79,7 +80,8 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
 
             assert(rootUserProfileV1.ofType(UserProfileTypeV1.RESTRICTED) === rootUserProfileV1Safe)
         }
-        "allow checking the password (1)" in {
+
+        "allow checking SCrypt passwords" in {
             //hashedPassword =  encoder.encode(createRequest.password);
             val encoder = new SCryptPasswordEncoder
             val hp = encoder.encode("123456")
@@ -94,11 +96,30 @@ class UserMessagesV1Spec extends WordSpecLike with Matchers {
             // test SCrypt
             assert(encoder.matches("123456", encoder.encode("123456")))
 
+            // test UserProfileV1 SCrypt usage
+            assert(up.passwordMatch("123456"))
+        }
+
+        "allow checking BCrypt passwords" in {
+            //hashedPassword =  encoder.encode(createRequest.password);
+            val encoder = new BCryptPasswordEncoder
+            val hp = encoder.encode("123456")
+            val up = UserProfileV1(
+                userData = UserDataV1(
+                    password = Some(hp),
+                    lang = lang
+                ),
+                permissionData = permissionsmessages.PermissionsDataADM()
+            )
+
+            // test BCrypt
+            assert(encoder.matches("123456", encoder.encode("123456")))
+
             // test UserProfileV1 BCrypt usage
             assert(up.passwordMatch("123456"))
         }
 
-        "allow checking the password (2)" in {
+        "allow checking the password of root" in {
             SharedTestDataV1.rootUser.passwordMatch("test") should equal(true)
         }
     }
