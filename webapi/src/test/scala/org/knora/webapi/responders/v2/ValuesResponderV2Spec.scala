@@ -28,7 +28,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceRequestV2, CreateResourceV2, ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -3456,6 +3456,134 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not accept custom value permissions that would give the requesting user a higher permission on a value than the default" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.imagesProject,
+                permissions = Some("M knora-admin:ProjectMember")
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.imagesUser01,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = 5,
+                        comment = Some("this is the number five")
+                    ),
+                    permissions = Some("CR knora-admin:Creator")
+                ),
+                requestingUser = SharedTestDataADM.imagesReviewerUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.imagesProject,
+                permissions = Some("M knora-admin:ProjectMember")
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.imagesUser01,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = 5,
+                        comment = Some("this is the number five")
+                    ),
+                    permissions = Some("CR knora-admin:Creator")
+                ),
+                requestingUser = SharedTestDataADM.rootUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+
+            expectMsgClass(classOf[CreateValueResponseV2])
+        }
+
+        "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.imagesProject,
+                permissions = Some("M knora-admin:ProjectMember")
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.imagesUser01,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = 5,
+                        comment = Some("this is the number five")
+                    ),
+                    permissions = Some("CR knora-admin:Creator")
+                ),
+                requestingUser = SharedTestDataADM.imagesUser01,
+                apiRequestID = UUID.randomUUID
+            )
+
+
+            expectMsgClass(classOf[CreateValueResponseV2])
+        }
 
         "create and update text values with standoff links, managing value UUIDs correctly" in {
             val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
