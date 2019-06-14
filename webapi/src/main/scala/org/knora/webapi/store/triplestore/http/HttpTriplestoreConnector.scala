@@ -524,7 +524,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             val sesameTypeForSEShouldBe = "owlim:MonitorRepository"
             val sesameTypeForFreeShouldBe ="graphdb:FreeSailRepository"
 
-            val neededRepo = repositories.filter(_.id == idShouldBe).filter(x => x.sesameType == sesameTypeForSEShouldBe || x.sesameType == sesameTypeForFreeShouldBe)
+            val neededRepo = repositories.filter(_.id == idShouldBe).filter(repo => repo.sesameType == sesameTypeForSEShouldBe || repo.sesameType == sesameTypeForFreeShouldBe)
             if (neededRepo.length == 1) {
                 // everything looks good
                 Success(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceAvailable, msg = "Triplestore is available."))
