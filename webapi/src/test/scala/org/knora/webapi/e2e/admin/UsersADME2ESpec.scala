@@ -174,10 +174,28 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 response.status should be(StatusCodes.OK)
             }
 
-            "return 'Forbiden' for single user for non SystemAdmin" in {
+            "return only public information for single user for non SystemAdmin and self" in {
                 val request = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc") ~> addCredentials(BasicHttpCredentials(projectAdminCreds.email, projectAdminCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be(StatusCodes.Forbidden)
+                response.status should be(StatusCodes.OK)
+                val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+                result.givenName should be (SharedTestDataADM.normalUser.givenName)
+                result.familyName should be (SharedTestDataADM.normalUser.familyName)
+                result.status should be (false)
+                result.email should be ("")
+                result.username should be ("")
+            }
+
+            "return only public information for single user with anonymous access" in {
+                val request = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc")
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.OK)
+                val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+                result.givenName should be (SharedTestDataADM.normalUser.givenName)
+                result.familyName should be (SharedTestDataADM.normalUser.familyName)
+                result.status should be (false)
+                result.email should be ("")
+                result.username should be ("")
             }
 
             "return all users for SystemAdmin" in {
