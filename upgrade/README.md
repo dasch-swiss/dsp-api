@@ -1,20 +1,20 @@
 # Updating Repositories When Upgrading Knora
 
-Here you will find tools for updating your Knora repositories when a Knora
-upgrade introduces changes that are not backwards-compatible with existing data.
+The command-line program `update-repository.py`, located in this directory,
+updates a Knora repository when a Knora upgrade introduces changes that are not
+backwards-compatible with existing data. The program checks your repository
+and applies any necessary changes.
 
 ## Prerequisites
 
-You will need HTTP access to the triplestore, and shell access to Sipi.
+You will need HTTP access to the triplestore.
 
 On your local computer, you will need the following to run the update
 scripts:
 
 - Python 3 (`python3 --version` should print its version number)
 
-- The Python `requests` library (type `pip3 install requests` to install it)
-
-- The Python `rdflib` library (type `pip3 install rdflib` to install it)
+- The libraries in `requirements.txt` (use `pip3 install -r requirements.txt` to install them)
 
 ## General Instructions
 
@@ -22,14 +22,12 @@ scripts:
 
 1. Stop Knora and Sipi. Leave the triplestore running.
 
-2. Back up the data in the triplestore and the files in Sipi.
+2. Back up the data in the triplestore.
 
 ### Updating Repositories
 
-The Knora release notes specify the directories containing the updates you need
-to apply. Each directory's name begins with the number of the GitHub pull request
-that introduced the change. The updates must be applied in numerical order.
-Follow the instructions in each directory to apply the update.
+Run `./update-repository.py` in this directory. You will need to provide some
+command-line options; type `./update-repository.py --help` for instructions.
 
 ### After Updating Repositories
 

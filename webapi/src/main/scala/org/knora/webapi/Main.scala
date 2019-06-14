@@ -40,18 +40,6 @@ object Main extends App with LiveCore with KnoraService {
     if (arglist.contains("--allow-reload-over-http")) applicationStateActor ! SetAllowReloadOverHTTPState(true)
     if (arglist.contains("-r")) applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
-    // starts prometheus monitoring reporter
-    // if (arglist.contains("-p")) applicationStateActor ! SetPrometheusReporterState(true)
-
-    // starts zipkin monitoring reporter
-    // if (arglist.contains("-z")) applicationStateActor ! SetZipkinReporterState(true)
-
-    // starts zipkin monitoring reporter
-    // if (arglist.contains("-j")) applicationStateActor ! SetZipkinReporterState(true)
-
-    // print config on startup
-    // if (arglist.contains("-c")) applicationStateActor ! SetPrintConfigExtendedState(true)
-
     if (arglist.contains("--help")) {
         println(
             """
@@ -63,12 +51,6 @@ object Main extends App with LiveCore with KnoraService {
               |     allowReloadOverHTTP,
               |     --allow-reload-over-http,
               |     -r                          Allows reloading of data over HTTP.
-              |
-              |     -p                          Starts the Prometheus monitoring reporter.
-              |
-              |     -z                          Starts the Zipkin monitoring reporter.
-              |
-              |     -j                          Starts the Jaeger monitoring reporter.
               |
               |     -c                          Print the configuration on startup.
               |
