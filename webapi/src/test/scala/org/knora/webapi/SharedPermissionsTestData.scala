@@ -97,6 +97,18 @@ object SharedPermissionsTestData {
             ))
         )
 
+    val perm0003_a4: doap = doap(
+        iri = "http://rdfh.ch/permissions/00FF/a4",
+        p = DefaultObjectAccessPermissionADM(
+            iri = "http://rdfh.ch/permissions/00FF/a4",
+            forProject = IMAGES_PROJECT_IRI,
+            forGroup = Some("http://rdfh.ch/groups/00FF/images-reviewer"),
+            forResourceClass = None,
+            forProperty = None,
+            hasPermissions = Set(PermissionADM.deletePermission(OntologyConstants.KnoraAdmin.Creator))
+        )
+    )
+
     val perm002_d1: doap =
         doap(
             iri = "http://rdfh.ch/permissions/00FF/d1",
