@@ -542,6 +542,12 @@ object OntologyConstants {
     object KnoraAdminV2 {
         val VersionSegment = "/v2"
         val KnoraAdminOntologyIri: IRI = KnoraApi.ApiOntologyStart + KnoraAdmin.KnoraAdminOntologyLabel + VersionSegment
+        val KnoraAdminPrefixExpansion: IRI = KnoraAdminOntologyIri + "#"
+        val UsersResponse: IRI = KnoraAdminPrefixExpansion + "UsersResponse"
+        val UsersProperty: IRI = KnoraAdminPrefixExpansion + "users"
+        val UserResponse: IRI = KnoraAdminPrefixExpansion + "UserResponse"
+        val UserClass: IRI = KnoraAdminPrefixExpansion + "User"
+        val UserProperty: IRI = KnoraAdminPrefixExpansion + "user"
     }
 
     object Standoff {

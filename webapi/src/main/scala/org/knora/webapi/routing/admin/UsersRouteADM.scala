@@ -29,9 +29,14 @@ import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-import org.knora.webapi.{BadRequestException, KnoraSystemInstances}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.clientapi._
+import org.knora.webapi.{BadRequestException, KnoraSystemInstances, OntologyConstants}
 
 import scala.concurrent.Future
+
+
 
 /**
   * Provides a akka-http-routing function for API routes that deal with users.
@@ -610,4 +615,264 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 )
         }
     }
+}
+
+/**
+  * A definition of the users route for generating client library code.
+  */
+class UsersEndpoint extends ClientEndpoint {
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    private val usersResponseClassRef = ClientClassReference(
+        className = "UsersResponse",
+        classIri = OntologyConstants.KnoraAdminV2.UsersResponse.toSmartIri
+    )
+
+    private val userResponseClassRef = ClientClassReference(
+        className = "UserResponse",
+        classIri = OntologyConstants.KnoraAdminV2.UserResponse.toSmartIri
+    )
+
+    private val userClassRef = ClientClassReference(
+        className = "User",
+        classIri = OntologyConstants.KnoraAdminV2.UserClass.toSmartIri
+    )
+
+    private val getUsers = ClientFunction(
+        name = "getUsers",
+        params = Seq.empty,
+        returnType = usersResponseClassRef,
+        implementation = ClientHttpRequest(
+            httpMethod = GET,
+            urlPath = Seq(LiteralUrlComponent(""))
+        )
+    )
+
+    private val getUser = ClientFunction(
+        name = "getUser",
+        params = Seq(
+            FunctionParam(
+                name = "property",
+                objectType = ClientEnumLiteral(
+                    possibleValues = Set("iri", "email", "username")
+                )
+            ),
+            FunctionParam(
+                name = "value",
+                objectType = ClientStringLiteral
+            )
+        ),
+        returnType = usersResponseClassRef,
+        implementation = ClientHttpRequest(
+            httpMethod = GET,
+            urlPath = Seq(
+                SlashUrlComponent,
+                ArgValue("property"),
+                SlashUrlComponent,
+                ArgValue("value")
+            )
+        )
+    )
+
+    private val getUserByIri = ClientFunction(
+        name = "getUserByIri",
+        params = Seq(
+            FunctionParam(
+                name = "iri",
+                objectType = ClientStringLiteral
+            )
+        ),
+        returnType = userResponseClassRef,
+        implementation = FunctionCall(
+            name = "getUser",
+            args = Seq(
+                StringLiteralValue("iri"),
+                ArgValue("iri")
+            )
+        )
+    )
+
+    private val getUserByEmail = ClientFunction(
+        name = "getUserByEmail",
+        params = Seq(
+            FunctionParam(
+                name = "email",
+                objectType = ClientStringLiteral
+            )
+        ),
+        returnType = userResponseClassRef,
+        implementation = FunctionCall(
+            name = "getUser",
+            args = Seq(
+                StringLiteralValue("email"),
+                ArgValue("email")
+            )
+        )
+    )
+
+    private val getUserByUsername = ClientFunction(
+        name = "getUserByUsername",
+        params = Seq(
+            FunctionParam(
+                name = "username",
+                objectType = ClientStringLiteral
+            )
+        ),
+        returnType = userResponseClassRef,
+        implementation = FunctionCall(
+            name = "getUser",
+            args = Seq(
+                StringLiteralValue("username"),
+                ArgValue("username")
+            )
+        )
+    )
+
+    private val createUser = ClientFunction(
+        name = "createUser",
+        params = Seq(
+            FunctionParam(
+                name = "user",
+                objectType = userClassRef,
+            )
+        ),
+        returnType = userResponseClassRef,
+        implementation = ClientHttpRequest(
+            httpMethod = POST,
+            urlPath = Seq.empty,
+            requestBody = Some(ArgValue("user"))
+        )
+    )
+
+    private val updateUser = ClientFunction(
+        name = "updateUser",
+        params = Seq(
+            FunctionParam(
+                name = "user",
+                objectType = userClassRef,
+            )
+        ),
+        returnType = userResponseClassRef,
+        implementation = ClientHttpRequest(
+            httpMethod = PUT,
+            urlPath = Seq.empty,
+            requestBody = Some(ArgValue("user"))
+        )
+    )
+
+    private val updateUserStatus = ClientFunction(
+        name = "updateUserStatus",
+        params = Seq(
+            FunctionParam(
+                name = "user",
+                objectType = userClassRef,
+            )
+        ),
+        returnType = userResponseClassRef,
+        implementation = ClientHttpRequest(
+            httpMethod = PUT,
+            urlPath = Seq(
+                LiteralUrlComponent("/iri/"),
+                ArgValue(
+                    name = "user",
+                    memberVariableName = Some("id")
+                ),
+                LiteralUrlComponent("/Status")
+            ),
+            requestBody = Some(
+                JsonRequestBody(
+                    Map(
+                        "status" -> ArgValue(
+                            name = "user",
+                            memberVariableName = Some("status")
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    private val updateUserPassword = ClientFunction(
+        name = "updateUserPassword",
+        params = Seq(
+            FunctionParam(
+                name = "user",
+                objectType = userClassRef,
+            ),
+            FunctionParam(
+                name = "oldPassword",
+                objectType = ClientStringLiteral,
+            ),
+            FunctionParam(
+                name = "newPassword",
+                objectType = ClientStringLiteral,
+            )
+        ),
+        returnType = userResponseClassRef,
+        implementation = ClientHttpRequest(
+            httpMethod = PUT,
+            urlPath = Seq(
+                LiteralUrlComponent("/iri/"),
+                ArgValue(
+                    name = "user",
+                    memberVariableName = Some("id")
+                ),
+                LiteralUrlComponent("/Password")
+            ),
+            requestBody = Some(
+                JsonRequestBody(
+                    Map(
+                        "requesterPassword" -> ArgValue(
+                            name = "oldPassword"
+                        ),
+                        "newPassword" -> ArgValue(
+                            name = "newPassword"
+                        )
+                    )
+                )
+            )
+        )
+    )
+
+    private val deleteUser = ClientFunction(
+        name = "deleteUser",
+        params = Seq(
+            FunctionParam(
+                name = "user",
+                objectType = userClassRef,
+            )
+        ),
+        returnType = userResponseClassRef,
+        implementation = ClientHttpRequest(
+            httpMethod = PUT,
+            urlPath = Seq(
+                LiteralUrlComponent("/iri/"),
+                ArgValue(
+                    name = "user",
+                    memberVariableName = Some("id")
+                ),
+                LiteralUrlComponent("/Status")
+            ),
+            requestBody = Some(
+                JsonRequestBody(
+                    Map(
+                        "status" -> BooleanLiteralValue(false)
+                    )
+                )
+            )
+        )
+    )
+
+    override val functions: Seq[ClientFunction] = Seq(
+        getUsers,
+        getUser,
+        getUserByIri,
+        getUserByEmail,
+        getUserByUsername,
+        createUser,
+        updateUser,
+        updateUserStatus,
+        updateUserPassword,
+        deleteUser
+    )
 }
