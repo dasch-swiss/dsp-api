@@ -46,7 +46,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
       * Receives a message extending [[StoreResponderRequestADM]], and returns an appropriate response message.
       */
     def receive(msg: StoreResponderRequestADM) = msg match {
-        case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject]) => resetTriplestoreContent(rdfDataObjects)
+        case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) => resetTriplestoreContent(rdfDataObjects, prependDefaults)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -56,7 +56,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
       * @param rdfDataObjects the payload consisting of a list of [[RdfDataObject]] send inside the message.
       * @return a future containing a [[ResetTriplestoreContentResponseADM]].
       */
-    private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentResponseADM] = {
+    private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Future[ResetTriplestoreContentResponseADM] = {
 
         log.debug(s"resetTriplestoreContent - called")
 
@@ -66,7 +66,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
                 throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
             }
 
-            resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
+            resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects, prependDefaults)).mapTo[ResetTriplestoreContentACK]
             _ = log.debug(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
             loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(systemUser)).mapTo[LoadOntologiesResponse]

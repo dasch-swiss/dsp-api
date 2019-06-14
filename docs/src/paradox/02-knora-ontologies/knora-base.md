@@ -1529,8 +1529,13 @@ standardisation of generally useful entities proposed in
 user-created ontologies. We envisage a process in which two or more
 projects would initiate the process by starting a public discussion on
 proposed entities to be shared. Once a consensus was reached, the
-[DaSCH](http://dasch.swiss/) would publish these entities in an ontology
-that could be used by multiple projects, and would ensure that such
-ontologies are not subsequently modified in ways that break
-compatibility with existing data. Functionality may be added to
-Knora to facilitate this process.
+[DaSCH](http://dasch.swiss/) would publish these entities in a
+@ref:[shared ontology](../03-apis/api-v2/knora-iris.md#shared-ontologies)).
+
+## Knora Ontology Versions
+
+The Knora base ontology has the property `kb:ontologyVersion`, whose
+object is a string that indicates the deployed version of all the Knora
+built-in ontologies. This allows the
+@ref:[repository update program](../04-deployment/updates.md) to determine
+which repository updates are needed when Knora is upgraded.
