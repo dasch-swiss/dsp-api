@@ -28,7 +28,7 @@ import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
+import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.PrivateMethodTester
 
 import scala.collection.Map
@@ -50,8 +50,7 @@ object PermissionsResponderADMSpec {
   * This spec is used to test the [[PermissionsResponderADM]] actor.
   */
 class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.config) with ImplicitSender with PrivateMethodTester {
-
-    private val knoraIdUtil = new KnoraIdUtil
+    private val stringFormatter = StringFormatter.getGeneralInstance
 
     private val rootUser = SharedTestDataADM.rootUser
     private val multiuserUser = SharedTestDataADM.multiuserUser
@@ -207,7 +206,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {}
 
             "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
-                val iri = knoraIdUtil.makeRandomPermissionIri(imagesProject.shortcode)
+                val iri = stringFormatter.makeRandomPermissionIri(imagesProject.shortcode)
                 responderManager ! AdministrativePermissionCreateRequestADM(
                     newAdministrativePermission = NewAdministrativePermissionADM(
                         iri = iri,
@@ -245,8 +244,9 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     projectIri = IMAGES_PROJECT_IRI,
                     requestingUser = rootUser
                 )
+
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseADM(
-                    defaultObjectAccessPermissions = Seq(perm002_d1.p, perm002_d2.p)
+                    defaultObjectAccessPermissions = Seq(perm002_d1.p, perm0003_a4.p, perm002_d2.p)
                 ))
             }
 

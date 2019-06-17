@@ -473,9 +473,22 @@ case class UserADM(id: IRI,
     def passwordMatch(password: String): Boolean = {
         this.password.exists {
             hashedPassword =>
-                import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-                val encoder = new SCryptPasswordEncoder
-                encoder.matches(password, hashedPassword.toString)
+              // check which type of hash we have
+              if (hashedPassword.startsWith("$e0801$")){
+                  // SCrypt
+                  import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+                  val encoder = new SCryptPasswordEncoder()
+                  encoder.matches(password, hashedPassword.toString)
+              } else if (hashedPassword.startsWith("$2a$")) {
+                  // BCrypt
+                  import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+                  val encoder = new BCryptPasswordEncoder()
+                  encoder.matches(password, hashedPassword.toString)
+              } else {
+                  // SHA-1
+                  val md = java.security.MessageDigest.getInstance("SHA-1")
+                  md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword)
+              }
         }
     }
 
@@ -488,6 +501,23 @@ case class UserADM(id: IRI,
     def ofType(userTemplateType: UserInformationTypeADM): UserADM = {
 
         userTemplateType match {
+            case UserInformationTypeADM.PUBLIC => {
+                UserADM(
+                    id = id,
+                    username = "",
+                    email = "",
+                    password = None,
+                    token = None,
+                    givenName = givenName,
+                    familyName = familyName,
+                    status = false,
+                    lang = "",
+                    groups = Seq.empty[GroupADM],
+                    projects = Seq.empty[ProjectADM],
+                    sessionId = None,
+                    permissions = PermissionsDataADM()
+                )
+            }
             case UserInformationTypeADM.SHORT => {
 
                 UserADM(
@@ -653,6 +683,7 @@ case class UserADM(id: IRI,
   * full: everything
   * restricted: everything without sensitive information, i.e. token, password, session.
   * short: like restricted and additionally without groups, projects and permissions.
+  * public: temporary: givenName, familyName
   *
   * Mainly used in combination with the 'ofType' method, to make sure that a request receiving this information
   * also returns the user profile of the correct type. Should be used in cases where we don't want to expose
@@ -664,9 +695,10 @@ object UserInformationTypeADM extends Enumeration {
 
     type UserInformationTypeADM = Value
 
-    val SHORT = Value(0, "short") // only basic user information (restricted and additionally without grpuos
-    val RESTRICTED = Value(1, "restricted") // without sensitive information
-    val FULL = Value(2, "full") // everything, including sensitive information
+    val PUBLIC = Value(0, "public") // a temporary type which only returns firstname and lastname
+    val SHORT = Value(1, "short") // only basic user information (restricted and additionally without groups
+    val RESTRICTED = Value(2, "restricted") // without sensitive information
+    val FULL = Value(3, "full") // everything, including sensitive information
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -781,6 +813,13 @@ class UserIdentifierADM private(maybeIri: Option[IRI] = None,
       */
     def toUsernameOption: Option[String] = {
         maybeUsername
+    }
+
+    /**
+      * Returns the string representation
+      */
+    override def toString: IRI = {
+        s"UserIdentifierADM(${this.maybeIri}, ${this.maybeEmail}, ${this.maybeUsername})"
     }
 
 }

@@ -55,11 +55,13 @@ services:
     networks:
       - knora-net
     environment:
-      - KNORA_AKKA_LOGLEVEL=INFO
-      - KNORA_AKKA_STDOUT_LOGLEVEL=INFO
+      - KNORA_AKKA_LOGLEVEL=DEBUG
+      - KNORA_AKKA_STDOUT_LOGLEVEL=DEBUG
       - KNORA_WEBAPI_TRIPLESTORE_HOST=graphdb
+      - KNORA_WEBAPI_TRIPLESTORE_DBTYPE=${KNORA_GDB_TYPE}
       - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
       - KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_REPOSITORY_NAME=knora-test
+      - KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP=true
 
   salsah1:
     image: dhlabbasel/salsah1:${KNORA_VERSION_TAG}<localBuild>

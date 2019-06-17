@@ -45,12 +45,15 @@ lazy val root = Project(id = "knora", file("."))
             Dependencies.sysProps := sys.props.toString(),
             Dependencies.sysEnvs := sys.env.toString(),
 
+            // these can be set by the user as system environment variables
             ThisBuild / Dependencies.gdbHomePath := sys.env.getOrElse("KNORA_GDB_HOME", sys.props("user.dir") + "/triplestores/graphdb/home"),
             ThisBuild / Dependencies.gdbLicensePath := sys.env.getOrElse("KNORA_GDB_LICENSE", sys.props("user.dir") + "/triplestores/graphdb/graphdb.license"),
 
+            // use these values for variable substitution in the docker-compose.yml
             variablesForSubstitution := Map(
                 "KNORA_GDB_HOME" -> Dependencies.gdbHomePath.value,
                 "KNORA_GDB_LICENSE " -> Dependencies.gdbLicensePath.value,
+                "KNORA_GDB_TYPE" -> Dependencies.gdbTypeString,
                 "KNORA_GDB_IMAGE" -> Dependencies.gdbImage.value,
                 "SIPI_VERSION_TAG" -> Dependencies.sipiVersion.value,
                 "KNORA_VERSION_TAG" -> version.value
@@ -215,6 +218,7 @@ lazy val salsah1 = knoraModule("salsah1")
 
             maintainer := "ivan.subotic@unibas.ch",
 
+            Docker / dockerExposedPorts ++= Seq(3335),
             Docker / dockerCommands := Seq(
                 Cmd("FROM", "openjdk:10-jre-slim-sid"),
                 Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
@@ -338,8 +342,6 @@ lazy val webapi = knoraModule("webapi")
             }, // allows sbt-javaagent to work with sbt-revolver
             reStart / javaOptions ++= webapiJavaRunOptions,
 
-            javaAgents += Dependencies.Compile.aspectJWeaver,
-
             Test / parallelExecution := false,
             Test / javaOptions ++= Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
             // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
@@ -378,12 +380,14 @@ lazy val webapi = knoraModule("webapi")
             Universal / mappings ++= {
                 // copy the scripts folder
                 directory("webapi/scripts") ++
-                        // copy the configuration files to config directory
-                        contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
-                        // copy configuration files to config directory
-                        contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
-                // copy the aspectj weaver jar
-                // contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
+                  // add knora-ontologies
+                  directory("knora-ontologies") ++
+                  // add test-data directory
+                  directory("webapi/_test_data") ++
+                  // copy the configuration files to config directory
+                  contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
+                  // copy configuration files to config directory
+                  contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
             },
 
             // add 'config' directory to the classpath of the start script,
@@ -402,6 +406,7 @@ lazy val webapi = knoraModule("webapi")
 
             maintainer := "ivan.subotic@unibas.ch",
 
+            Docker / dockerExposedPorts ++= Seq(3333, 10001),
             Docker / dockerCommands := Seq(
                 Cmd("FROM", "openjdk:10-jre-slim-sid"),
                 Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
@@ -418,6 +423,7 @@ lazy val webapi = knoraModule("webapi")
 
                 ExecCmd("ENTRYPOINT", "bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"),
             )
+
         )
         .settings(
             buildInfoKeys ++= Seq[BuildInfoKey](

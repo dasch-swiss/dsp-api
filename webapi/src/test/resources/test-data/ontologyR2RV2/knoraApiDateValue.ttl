@@ -15,11 +15,15 @@ knora-api:DateValue a owl:Class;
   rdfs:subClassOf knora-api:DateBase, knora-api:Value, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:attachedToUser
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
-      owl:onProperty knora-api:dateValueHasCalendar
+      owl:onProperty knora-api:dateValueHasStartYear
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -58,6 +62,18 @@ knora-api:DateValue a owl:Class;
       owl:onProperty knora-api:valueHasComment
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasCalendar
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueHasUUID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:versionArkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:dateValueHasEndDay
     ], [ a owl:Restriction;
@@ -84,8 +100,4 @@ knora-api:DateValue a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:dateValueHasStartMonth
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:dateValueHasStartYear
     ] .

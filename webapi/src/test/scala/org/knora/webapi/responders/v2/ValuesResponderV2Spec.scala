@@ -28,7 +28,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceRequestV2, CreateResourceV2, ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -51,6 +51,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val generationeIri = "http://rdfh.ch/0803/c3f913666f"
     private val aThingIri = "http://rdfh.ch/0001/a-thing"
     private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
+    private val sierraIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
 
     private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
     private val incunabulaCreatorUser = SharedTestDataADM.incunabulaCreatorUser
@@ -290,6 +291,32 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 )
 
                 resourcePreview.lastModificationDate
+        }
+    }
+
+    private def getValueUUID(valueIri: IRI): Option[UUID] = {
+        val sparqlQuery =
+            s"""
+              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+              |
+              |SELECT ?valueUUID WHERE {
+              |    <$valueIri> knora-base:valueHasUUID ?valueUUID .
+              |}
+            """.stripMargin
+
+        storeManager ! SparqlSelectRequest(sparqlQuery)
+
+        expectMsgPF(timeout) {
+            case response: SparqlSelectResponse =>
+                val rows = response.results.bindings
+
+                if (rows.isEmpty) {
+                    None
+                } else if (rows.size > 1) {
+                    throw AssertionException(s"Expected one value UUID, got ${rows.size}")
+                } else {
+                    Some(stringFormatter.base64DecodeUuid(rows.head.rowMap("valueUUID")))
+                }
         }
     }
 
@@ -3427,6 +3454,270 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
             }
+        }
+
+        "not accept custom value permissions that would give the requesting user a higher permission on a value than the default" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.imagesProject,
+                permissions = Some("M knora-admin:ProjectMember")
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.imagesUser01,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = 5,
+                        comment = Some("this is the number five")
+                    ),
+                    permissions = Some("CR knora-admin:Creator")
+                ),
+                requestingUser = SharedTestDataADM.imagesReviewerUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.imagesProject,
+                permissions = Some("M knora-admin:ProjectMember")
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.imagesUser01,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = 5,
+                        comment = Some("this is the number five")
+                    ),
+                    permissions = Some("CR knora-admin:Creator")
+                ),
+                requestingUser = SharedTestDataADM.rootUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+
+            expectMsgClass(classOf[CreateValueResponseV2])
+        }
+
+        "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin" in {
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                label = "test bildformat",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.imagesProject,
+                permissions = Some("M knora-admin:ProjectMember")
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = SharedTestDataADM.imagesUser01,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgClass(timeout, classOf[ReadResourcesSequenceV2])
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bildformat".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = 5,
+                        comment = Some("this is the number five")
+                    ),
+                    permissions = Some("CR knora-admin:Creator")
+                ),
+                requestingUser = SharedTestDataADM.imagesUser01,
+                apiRequestID = UUID.randomUUID
+            )
+
+
+            expectMsgClass(classOf[CreateValueResponseV2])
+        }
+
+        "create and update text values with standoff links, managing value UUIDs correctly" in {
+            val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
+
+            // Create a text value with a standoff link.
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = sierraIri,
+                    resourceClassIri = resourceClassIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        maybeValueHasString = Some("Comment 1 for UUID checking"),
+                        standoff = sampleStandoffWithLink,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            val textValue1Iri: IRI = expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => createValueResponse.valueIri
+            }
+
+            val resourceVersion1: ReadResourceV2 = getResourceWithValues(
+                resourceIri = sierraIri,
+                propertyIrisForGravsearch = Seq(
+                    propertyIri,
+                    OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+                ),
+                requestingUser = anythingUser1
+            )
+
+            // Get the UUIDs of the text value and of the standoff link value.
+            val textValue1: ReadValueV2 = resourceVersion1.values(propertyIri).head
+            assert(textValue1.valueIri == textValue1Iri)
+            assert(getValueUUID(textValue1.valueIri).contains(textValue1.valueHasUUID))
+            val standoffLinkValueVersion1: ReadLinkValueV2 = resourceVersion1.values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri).head.asInstanceOf[ReadLinkValueV2]
+            assert(getValueUUID(standoffLinkValueVersion1.valueIri).contains(standoffLinkValueVersion1.valueHasUUID))
+            assert(standoffLinkValueVersion1.valueHasRefCount == 1)
+
+            // Create a second text value with the same standoff link.
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = sierraIri,
+                    resourceClassIri = resourceClassIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        maybeValueHasString = Some("Comment 2 for UUID checking"),
+                        standoff = sampleStandoffWithLink,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            val textValue2Version1Iri: IRI = expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => createValueResponse.valueIri
+            }
+
+            val resourceVersion2: ReadResourceV2 = getResourceWithValues(
+                resourceIri = sierraIri,
+                propertyIrisForGravsearch = Seq(
+                    propertyIri,
+                    OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+                ),
+                requestingUser = anythingUser1
+            )
+
+            // Get the second text value's UUID.
+            val textValue2Version1: ReadValueV2 = resourceVersion2.values(propertyIri).find(_.valueIri == textValue2Version1Iri).getOrElse(throw AssertionException("Value not found"))
+            assert(getValueUUID(textValue2Version1.valueIri).contains(textValue2Version1.valueHasUUID))
+
+            // We should have a new version of the standoff link value, containing the UUID that was in the previous version.
+            val standoffLinkValueVersion2: ReadLinkValueV2 = resourceVersion2.values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri).head.asInstanceOf[ReadLinkValueV2]
+            assert(standoffLinkValueVersion2.previousValueIri.contains(standoffLinkValueVersion1.valueIri))
+            assert(standoffLinkValueVersion2.valueHasUUID == standoffLinkValueVersion1.valueHasUUID)
+            assert(getValueUUID(standoffLinkValueVersion2.valueIri).contains(standoffLinkValueVersion2.valueHasUUID))
+            assert(standoffLinkValueVersion2.valueHasRefCount == 2)
+
+            // The previous version of the standoff link value should have no UUID.
+            assert(getValueUUID(standoffLinkValueVersion1.valueIri).isEmpty)
+
+            // Update the second text value.
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = sierraIri,
+                    resourceClassIri = resourceClassIri,
+                    propertyIri = propertyIri,
+                    valueIri = textValue2Version1Iri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        maybeValueHasString = Some("Comment 3 for UUID checking"),
+                        standoff = sampleStandoffWithLink,
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            val textValue2Version2Iri = expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => updateValueResponse.valueIri
+            }
+
+            val resourceVersion3: ReadResourceV2 = getResourceWithValues(
+                resourceIri = sierraIri,
+                propertyIrisForGravsearch = Seq(
+                    propertyIri,
+                    OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri
+                ),
+                requestingUser = anythingUser1
+            )
+
+            // We should now have a new version of the second text value, containing the UUID that was in the previous version.
+            val textValue2Version2: ReadValueV2 = resourceVersion3.values(propertyIri).find(_.valueIri == textValue2Version2Iri).getOrElse(throw AssertionException("Value not found"))
+            assert(getValueUUID(textValue2Version2.valueIri).contains(textValue2Version2.valueHasUUID))
+            assert(textValue2Version2.previousValueIri.contains(textValue2Version1.valueIri))
+
+            // The previous version of the second text value should have no UUID.
+            assert(getValueUUID(textValue2Version1.valueIri).isEmpty)
+
+            // We should not have a new version of the standoff link value.
+            assert(resourceVersion3.values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri).head.valueIri == standoffLinkValueVersion2.valueIri)
         }
     }
 }

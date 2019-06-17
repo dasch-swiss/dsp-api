@@ -23,9 +23,10 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Requirements
 
-Knora must produce an ARK URL for each resource. The ARK identifiers used
+Knora must produce an ARK URL for each resource and each value. The ARK identifiers used
 by Knora must respect
-[the draft ARK specification](https://tools.ietf.org/html/draft-kunze-ark-18). The format of Knora’s ARK URLs must be able to change over
+[the draft ARK specification](https://tools.ietf.org/html/draft-kunze-ark-18).
+The format of Knora’s ARK URLs must be able to change over
 time, while ensuring that previously generated ARK URLs still work.
 
 ## Design
@@ -35,7 +36,7 @@ time, while ensuring that previously generated ARK URLs still work.
 The format of a Knora ARK URL is as follows:
 
 ```
-http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
+http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[/VALUE_UUID][.TIMESTAMP]
 ```
 
 - `HOST`: the hostname of the ARK resolver.
@@ -51,6 +52,11 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
   @extref[base64url-encoded](rfc:4648#section-5) UUID, as described in
   @ref:[IRIs for Data](../../../03-apis/api-v2/knora-iris.md#iris-for-data).
 
+- `VALUE_UUID`: optionally, the `knora-base:valueHasUUID` of one of the
+  resource's values, normally a
+  @extref[base64url-encoded](rfc:4648#section-5) UUID, as described in
+  @ref:[IRIs for Data](../../../03-apis/api-v2/knora-iris.md#iris-for-data).
+
 - `TIMESTAMP`: an optional timestamp indicating that the ARK URL represents
   the state of the resource at a specific time in the past. The format
   of the timestamp is an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)
@@ -62,17 +68,18 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
 Following the ARK ID spec, `/`
 [represents object hierarchy](https://tools.ietf.org/html/draft-kunze-ark-18#section-2.5.1)
 and `.` [represents an object variant](https://tools.ietf.org/html/draft-kunze-ark-18#section-2.5.2).
-A resource is thus contained in its project, which is contained in a
-repository (represented by the URL version number). A timestamp is a type of variant.
+A value is thus contained in a resource, which is contained in its project,
+which is contained in a repository (represented by the URL version number).
+A timestamp is a type of variant.
 
 Since sub-objects are optional, there is also implicitly an ARK URL
 for each project, as well as for the repository as a whole.
 
-The `RESOURCE_UUID` is processed as follows:
+The `RESOURCE_UUID` and `VALUE_UUID` are processed as follows:
 
 1. A check digit is calculated, using the algorithm in
    the Scala class `org.knora.webapi.util.Base64UrlCheckDigit`, and appended
-   to the `RESOURCE_UUID`.
+   to the UUID.
 
 2. Any `-` characters in the resulting string are replaced with `=`, because
    `base64url` encoding uses `-`, which is a reserved character in ARK URLs.
@@ -89,6 +96,20 @@ The same ARK URL with an optional timestamp is:
 
 ```
 http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20180528T155203897Z
+```
+
+Given a value with `knora-api:valueHasUUID "4OOf3qJUTnCDXlPNnygSzQ"` in the resource
+`http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`, and using the DaSCH's ARK resolver
+hostname and NAAN, the corresponding ARK URL without a timestamp is:
+
+```
+http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY/4OOf3qJUTnCDXlPNnygSzQX
+```
+
+The same ARK URL with an optional timestamp is:
+
+```
+http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY/4OOf3qJUTnCDXlPNnygSzQX.20180604T085622513Z
 ```
 
 ### Serving ARK URLs

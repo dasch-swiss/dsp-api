@@ -10,7 +10,7 @@
 <configuration scan="false" debug="false">
     <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%date{ISO8601}] %-5level - %logger{0} - %msg%n</pattern>
+            <pattern>[%-5level] [%date{ISO8601}] [%logger{0}] %msg%n</pattern>
         </encoder>
     </appender>
     <!--<appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -50,7 +50,7 @@
     <logger name="org.knora.webapi.responders.v1.PermissionsResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ResourcesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
-    <logger name="org.knora.webapi.responders.admin.SipiResponderADM" level="DEBUG"/>
+    <logger name="org.knora.webapi.responders.admin.SipiResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>

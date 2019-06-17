@@ -31,7 +31,9 @@
 
     rdfs:label "The Knora base ontology"@en ;
 
-    :attachedToProject knora-admin:SystemProject .
+    :attachedToProject knora-admin:SystemProject ;
+
+    :ontologyVersion "PR 1322" .
 
 
 
@@ -40,6 +42,22 @@
 #    Properties
 #
 #################################################################
+
+
+
+### http://www.knora.org/ontology/knora-base#ontologyVersion
+
+:ontologyVersion rdf:type owl:DatatypeProperty ;
+
+    rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+    rdfs:comment "Indicates the version of the Knora built-in ontologies in a repository."@en ;
+
+    :subjectClassConstraint owl:Ontology ;
+
+    :objectDatatypeConstraint xsd:string .
+
+
 
 ### http://www.knora.org/ontology/knora-base#isMainResource
 
@@ -52,6 +70,7 @@
     :subjectClassConstraint :Resource ;
 
     :objectDatatypeConstraint xsd:boolean .
+
 
 
 ###  http://www.knora.org/ontology/knora-base#objectCannotBeMarkedAsDeleted
@@ -1322,6 +1341,20 @@
           :subjectClassConstraint :ValueBase ;
 
           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted .
+
+
+
+###  http://www.knora.org/ontology/knora-base#valueHasUUID
+
+:valueHasUUID  rdf:type owl:DatatypeProperty ;
+
+               rdfs:subPropertyOf :valueHas ;
+
+               rdfs:comment "The UUID of a value"@en ;
+
+               :subjectClassConstraint :Value ;
+
+               :objectDatatypeConstraint xsd:string .
 
 
 
@@ -2667,6 +2700,11 @@
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :valueHasString ;
                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :valueHasUUID ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ;
+
 
        rdfs:comment "The base class of classes representing Knora values"@en .

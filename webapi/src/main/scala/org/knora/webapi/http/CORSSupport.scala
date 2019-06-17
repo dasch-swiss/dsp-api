@@ -33,6 +33,8 @@ import scala.collection.immutable.Seq
 
 object CORSSupport extends Directives {
 
+    val allowedMethods = Seq(GET, PUT, POST, DELETE, HEAD, OPTIONS)
+    val exposedHeaders = Seq("Server")
     val age: Long = 30 * 60
 
     val corsSettings = CorsSettings.defaultSettings.
@@ -40,8 +42,8 @@ object CORSSupport extends Directives {
             withAllowCredentials(true).
             withAllowedOrigins(HttpOriginRange.*).
             withAllowedHeaders(HttpHeaderRange.*).
-            withAllowedMethods(Seq(GET, PUT, POST, DELETE, HEAD, OPTIONS)).
-            withExposedHeaders(Seq.empty).
+            withAllowedMethods(allowedMethods).
+            withExposedHeaders(exposedHeaders).
             withMaxAge(Some(age))
 
     /**

@@ -113,7 +113,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "Provides the ARK URL of a resource."
+                    LanguageCodes.EN -> "Provides the ARK URL of a resource or value."
                 )
             )
         ),
@@ -133,7 +133,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "Provides the ARK URL of a particular version of a resource."
+                    LanguageCodes.EN -> "Provides the ARK URL of a particular version of a resource or value."
                 )
             )
         ),
@@ -1495,7 +1495,10 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     private val ValueCardinalities = Map(
         OntologyConstants.KnoraApiV2Complex.ValueAsString -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraApiV2Complex.UserHasPermission -> Cardinality.MustHaveOne,
-        OntologyConstants.KnoraApiV2Complex.IsDeleted -> Cardinality.MayHaveOne
+        OntologyConstants.KnoraApiV2Complex.ArkUrl -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraApiV2Complex.VersionArkUrl -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraApiV2Complex.IsDeleted -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> Cardinality.MustHaveOne
     )
 
     private val TextValueCardinalities = Map(
@@ -1561,6 +1564,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         OntologyConstants.Rdf.Subject,
         OntologyConstants.Rdf.Predicate,
         OntologyConstants.Rdf.Object,
+        OntologyConstants.KnoraBase.OntologyVersion,
         OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted,
         OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
         OntologyConstants.KnoraBase.ObjectClassConstraint,

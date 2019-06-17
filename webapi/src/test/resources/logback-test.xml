@@ -80,7 +80,7 @@
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.OntologyResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ProjectsResponderV1" level="INFO"/>
-    <logger name="org.knora.webapi.responders.v1.SipiResponderV1" level="DEBUG"/>
+    <logger name="org.knora.webapi.responders.v1.SipiResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector" level="INFO"/>
@@ -104,7 +104,7 @@
     <!-- Spec Logging -->
 
     <logger name="org.knora.webapi.E2ESpec" level="DEBUG"/>
-    <logger name="org.knora.webapi.e2e.InstanceCheckerSpec" level="DEBUG"/>
+    <logger name="org.knora.webapi.e2e.InstanceCheckerSpec" level="INFO"/>
 
     <!-- V1 -->
     <logger name="org.knora.webapi.responders.v1.ListsResponderV1Spec" level="INFO"/>
@@ -121,6 +121,7 @@
 
     <!-- Admin -->
     <logger name="org.knora.webapi.http.ServerVersionE2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.http.CORSSupportE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.UsersResponderADMSpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.HealthRouteE2ESpec" level="INFO"/>

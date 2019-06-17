@@ -34,8 +34,8 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
-import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+import org.knora.webapi.util.CacheUtil
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 import scala.concurrent.Future
 
@@ -43,9 +43,6 @@ import scala.concurrent.Future
   * Provides information about Knora users to other responders.
   */
 class UsersResponderADM(responderData: ResponderData) extends Responder(responderData) {
-
-    // Creates IRIs for new Knora user objects.
-    private val knoraIdUtil = new KnoraIdUtil
 
     // The IRI used to lock user creation and update
     private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
@@ -156,56 +153,60 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     private def userGetADM(identifier: UserIdentifierADM, userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
         log.debug(s"userGetADM: identifier: {}, userInformationType: {}, requestingUser: {}", identifier, userInformationType, requestingUser)
 
-        for {
-            _ <- Future(
-                if (!requestingUser.permissions.isSystemAdmin && !requestingUser.isSelf(identifier) && !requestingUser.isSystemUser) {
-                    throw ForbiddenException("Operation not allowed.")
-                }
-            )
+        val maybeUserFromCache = identifier.hasType match {
+            case UserIdentifierType.IRI => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.toIri)
+            case UserIdentifierType.EMAIL => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
+            case UserIdentifierType.USERNAME => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
+        }
 
-            maybeUserFromCache = identifier.hasType match {
-                case UserIdentifierType.IRI => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.toIri)
-                case UserIdentifierType.EMAIL => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
-                case UserIdentifierType.USERNAME => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
-            }
+        val maybeUserADM: Future[Option[UserADM]] = maybeUserFromCache match {
+            case Some(user) =>
+                // found a user profile in the cache
+                log.debug("userGetADM - cache hit for: {}", identifier.value)
+                FastFuture.successful(Some(user.ofType(userInformationType)))
 
-            maybeUserADM: Future[Option[UserADM]] = maybeUserFromCache match {
-                case Some(user) =>
-                    // found a user profile in the cache
-                    log.debug("userGetADM - cache hit for: {}", identifier.value)
-                    FastFuture.successful(Some(user.ofType(userInformationType)))
+            case None =>
+                // didn't find a user profile in the cache
+                log.debug("userGetADM - no cache hit for: {}", identifier.value)
+                for {
+                    sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
+                        triplestore = settings.triplestoreType,
+                        maybeIri = identifier.toIriOption,
+                        maybeUsername = identifier.toUsernameOption,
+                        maybeEmail = identifier.toEmailOption
+                    ).toString())
 
-                case None =>
-                    // didn't find a user profile in the cache
-                    log.debug("userGetADM - no cache hit for: {}", identifier.value)
-                    for {
-                        sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
-                            triplestore = settings.triplestoreType,
-                            maybeIri = identifier.toIriOption,
-                            maybeUsername = identifier.toUsernameOption,
-                            maybeEmail = identifier.toEmailOption
-                        ).toString())
+                    userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
 
-                        userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
+                    maybeUserADM: Option[UserADM] <- if (userQueryResponse.statements.nonEmpty) {
+                        statements2UserADM(userQueryResponse.statements.head, requestingUser)
+                    } else {
+                        FastFuture.successful(None)
+                    }
 
-                        maybeUserADM: Option[UserADM] <- if (userQueryResponse.statements.nonEmpty) {
-                            statements2UserADM(userQueryResponse.statements.head, requestingUser)
-                        } else {
-                            FastFuture.successful(None)
-                        }
+                    _ = if (maybeUserADM.nonEmpty) {
+                        writeUserADMToCache(maybeUserADM.get)
+                    }
 
-                        _ = if (maybeUserADM.nonEmpty) {
-                            writeUserADMToCache(maybeUserADM.get)
-                        }
+                    result = maybeUserADM.map(_.ofType(userInformationType))
 
-                        result = maybeUserADM.map(_.ofType(userInformationType))
+                } yield result
+        }
 
-                    } yield result
-            }
+        // return the correct amount of information depending on user permissions
+        val res: Future[Option[UserADM]] = if (requestingUser.permissions.isSystemAdmin || requestingUser.isSelf(identifier) || requestingUser.isSystemUser) {
+            // return everything or what was requested
+            maybeUserADM
+        } else {
+            // all others should only see public information
+            for {
+                user <- maybeUserADM
+                result = user.map(_.ofType(UserInformationTypeADM.PUBLIC))
+            } yield result
+        }
 
-            // _ = log.debug("userGetADM - user: {}", MessageUtil.toSource(user))
-            result <- maybeUserADM
-        } yield result
+        // _ = log.debug("userGetADM - user: {}", res)
+        res
     }
 
     /**
@@ -265,9 +266,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             usernameTaken: Boolean <- userByUsernameExists(createRequest.username)
 
-            userIri = knoraIdUtil.makeRandomPersonIri
+            userIri = stringFormatter.makeRandomPersonIri
 
-            encoder = new SCryptPasswordEncoder
+            encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
             hashedPassword = encoder.encode(createRequest.password)
 
             // Create the new user.
@@ -285,7 +286,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 preferredLanguage = createRequest.lang,
                 systemAdmin = createRequest.systemAdmin
             ).toString
-            //_ = log.debug(s"createNewUser: $createNewUserSparqlString")
+            // _ = log.debug(s"createNewUser: $createNewUserSparqlString")
             createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
 
 
@@ -426,7 +427,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             // create the update request
-            encoder = new SCryptPasswordEncoder
+            encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
             newHashedPassword = encoder.encode(changeUserRequest.newPassword.get)
             userUpdatePayload = UserUpdatePayloadADM(password = Some(newHashedPassword))
 

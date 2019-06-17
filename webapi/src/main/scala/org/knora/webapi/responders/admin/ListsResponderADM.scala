@@ -31,7 +31,6 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.admin.ListsResponderADM._
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.KnoraIdUtil
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
@@ -57,9 +56,6 @@ object ListsResponderADM {
 class ListsResponderADM(responderData: ResponderData) extends Responder(responderData) {
 
 
-    // Creates IRIs for new Knora user objects.
-    private val knoraIdUtil = new KnoraIdUtil
-
     // The IRI used to lock user creation and update
     private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
 
@@ -84,7 +80,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       * (as lists can be very large), we only return the head of the list, i.e. the root node without
       * any children.
       *
-      * @param projectIri  the IRI of the project the list belongs to.
+      * @param projectIri     the IRI of the project the list belongs to.
       * @param requestingUser the user making the request.
       * @return a [[ListsGetResponseADM]].
       */
@@ -129,7 +125,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
       * Retrieves a complete list (root and all children) from the triplestore and returns it as a optional [[ListADM]].
       *
-      * @param rootNodeIri the Iri if the root node of the list to be queried.
+      * @param rootNodeIri    the Iri if the root node of the list to be queried.
       * @param requestingUser the user making the request.
       * @return a optional [[ListADM]].
       */
@@ -168,7 +164,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
       * Retrieves a complete list (root and all children) from the triplestore and returns it as a [[ListGetResponseADM]].
       *
-      * @param rootNodeIri the Iri if the root node of the list to be queried.
+      * @param rootNodeIri    the Iri if the root node of the list to be queried.
       * @param requestingUser the user making the request.
       * @return a [[ListGetResponseADM]].
       */
@@ -186,7 +182,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
       * Retrieves information about a list (root) node.
       *
-      * @param listIri the Iri if the list (root node) to be queried.
+      * @param listIri        the Iri if the list (root node) to be queried.
       * @param requestingUser the user making the request.
       * @return a [[ListInfoGetResponseADM]].
       */
@@ -211,7 +207,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       * Retrieves information about a single node (without information about children). The single node can be the
       * lists root node or child node
       *
-      * @param nodeIri the Iri if the list node to be queried.
+      * @param nodeIri        the Iri if the list node to be queried.
       * @param requestingUser the user making the request.
       * @return a optional [[ListNodeInfoADM]].
       */
@@ -279,7 +275,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                 comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
                             )
                         } else {
-                            ListChildNodeInfoADM (
+                            ListChildNodeInfoADM(
                                 id = nodeIri.toString,
                                 name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
                                 labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
@@ -304,7 +300,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       * Retrieves information about a single node (without information about children). The single node can be the
       * lists root node or child node
       *
-      * @param nodeIri the IRI of the list node to be queried.
+      * @param nodeIri        the IRI of the list node to be queried.
       * @param requestingUser the user making the request.
       * @return a [[ListNodeInfoGetResponseADM]].
       */
@@ -322,8 +318,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
       * Retrieves a complete node including children. The node can be the lists root node or child node.
       *
-      * @param nodeIri the IRI of the list node to be queried.
-      * @param shallow  denotes if all children or only the immediate children will be returned.
+      * @param nodeIri        the IRI of the list node to be queried.
+      * @param shallow        denotes if all children or only the immediate children will be returned.
       * @param requestingUser the user making the request.
       * @return a optional [[ListNodeADM]]
       */
@@ -395,7 +391,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                     children = children
                                 )
                             } else {
-                                ListChildNodeADM (
+                                ListChildNodeADM(
                                     id = nodeIri.toString,
                                     name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
                                     labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
@@ -421,8 +417,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       * Retrieves the child nodes from the triplestore. If shallow is true, then only the immediate children will be
       * returned, otherwise all children and their children's children will be returned.
       *
-      * @param nodeIri the IRI of the node for which children are to be returned.
-      * @param shallow denotes if all children or only the immediate children will be returned.
+      * @param ofNodeIri      the IRI of the node for which children are to be returned.
+      * @param shallow        denotes if all children or only the immediate children will be returned.
       * @param requestingUser the user making the request.
       * @return a sequence of [[ListChildNodeADM]].
       */
@@ -431,9 +427,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         /**
           * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListChildNodeADM]].
           *
-          * @param nodeIri          the IRI of the node to be created.
-          * @param groupedByNodeIri a [[Map]] in which each key is the IRI of a node in the hierarchical list, and each value is a [[Seq]]
-          *                         of SPARQL query results representing that node's children.
+          * @param nodeIri    the IRI of the node to be created.
+          * @param statements a [[Map]] in which each key is the IRI of a node in the hierarchical list, and each value is a [[Seq]]
+          *                   of SPARQL query results representing that node's children.
           * @return a [[ListChildNodeADM]].
           */
         def createChildNode(nodeIri: IRI, statements: Seq[(SubjectV2, Map[IRI, Seq[LiteralV2]])]): ListChildNodeADM = {
@@ -451,8 +447,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             val position = positionOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required position property missing for list node $nodeIri."))
 
             val children: Seq[ListChildNodeADM] = propsMap.get(OntologyConstants.KnoraBase.HasSubListNode) match {
-                case Some(iris: Seq[LiteralV2]) => {
-
+                case Some(iris: Seq[LiteralV2]) =>
                     if (!shallow) {
                         // if not shallow then get the children of this node
                         iris.map {
@@ -462,7 +457,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                         // if shallow, then we don't need the children
                         Seq.empty[ListChildNodeADM]
                     }
-                }
+
                 case None => Seq.empty[ListChildNodeADM]
             }
 
@@ -505,8 +500,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
       * Provides the path to a particular hierarchical list node.
       *
-      * @param queryNodeIri the IRI of the node whose path is to be queried.
-      * @param requestingUser  the user making the request.
+      * @param queryNodeIri   the IRI of the node whose path is to be queried.
+      * @param requestingUser the user making the request.
       */
     private def nodePathGetAdminRequest(queryNodeIri: IRI, requestingUser: UserADM): Future[NodePathGetResponseADM] = {
         /**
@@ -524,7 +519,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             val nodeData = nodeMap(node)
 
             // Construct a NodePathElementV2 containing those details.
-            val pathElement = NodePathElementADM (
+            val pathElement = NodePathElementADM(
                 id = nodeData("node"),
                 name = nodeData.get("nodeName"),
                 labels = if (nodeData.contains("label")) {
@@ -597,10 +592,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       * Creates a list.
       *
       * @param createListRequest the new list's information.
-      * @param requestingUser the user that is making the request.
-      * @param apiRequestID   the unique api request ID.
+      * @param requestingUser    the user that is making the request.
+      * @param apiRequestID      the unique api request ID.
       * @return a [[ListInfoGetResponseADM]]
-      * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
+      * @throws ForbiddenException  in the case that the user is not allowed to perform the operation.
       * @throws BadRequestException in the case when the project IRI or label is missing or invalid.
       */
     private def listCreateRequestADM(createListRequest: CreateListApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListGetResponseADM] = {
@@ -629,13 +624,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             /* verify that the list node name is unique for the project */
             projectUniqueNodeName <- listNodeNameIsProjectUnique(createListRequest.projectIri, createListRequest.name)
             _ = if (!projectUniqueNodeName) {
-                throw BadRequestException(s"The node name ${createListRequest.name.get} is already by a list inside the project ${createListRequest.projectIri}.")
+                throw BadRequestException(s"The node name ${createListRequest.name.get} is already used by a list inside the project ${createListRequest.projectIri}.")
             }
 
             maybeShortcode = project.shortcode
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
-            listIri = knoraIdUtil.makeRandomListIri(maybeShortcode)
+            listIri = stringFormatter.makeRandomListIri(maybeShortcode)
 
             // Create the new list
             createNewListSparqlString = queries.sparql.admin.txt.createNewList(
@@ -673,13 +668,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
       * Changes basic list information stored in the list's root node.
       *
-      * @param listIri the list's IRI.
+      * @param listIri           the list's IRI.
       * @param changeListRequest the new list information.
-      * @param requestingUser the user that is making the request.
-      * @param apiRequestID the unique api request ID.
+      * @param requestingUser    the user that is making the request.
+      * @param apiRequestID      the unique api request ID.
       * @return a [[ListInfoGetResponseADM]]
-      * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
-      * @throws BadRequestException in the case when the project IRI is missing or invalid.
+      * @throws ForbiddenException          in the case that the user is not allowed to perform the operation.
+      * @throws BadRequestException         in the case when the project IRI is missing or invalid.
       * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
       */
     private def listInfoChangeRequest(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = {
@@ -763,10 +758,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
       * Creates a new list node and appends it to an existing list node.
       *
-      * @param listNodeIri the existing list node to which we want to append.
-      * @param createListNodeRequest the new list node's information.
-      * @param requestingUser the user making the request.
-      * @param apiRequestID the unique api request ID.
+      * @param parentNodeIri          the existing list node to which we want to append.
+      * @param createChildNodeRequest the new list node's information.
+      * @param requestingUser         the user making the request.
+      * @param apiRequestID           the unique api request ID.
       * @return a [[ListNodeInfoGetResponseADM]]
       */
     private def listChildNodeCreateRequestADM(parentNodeIri: IRI, createChildNodeRequest: CreateChildNodeApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListNodeInfoGetResponseADM] = {
@@ -796,7 +791,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             // append child to the end
-            position: Int = if(children.isEmpty) {
+            position: Int = if (children.isEmpty) {
                 0
             } else {
                 children.size
@@ -818,7 +813,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             /* verify that the list node name is unique for the project */
             projectUniqueNodeName <- listNodeNameIsProjectUnique(createChildNodeRequest.projectIri, createChildNodeRequest.name)
             _ = if (!projectUniqueNodeName) {
-                throw BadRequestException(s"The node name ${createChildNodeRequest.name.get} is already by a list inside the project ${createChildNodeRequest.projectIri}.")
+                throw BadRequestException(s"The node name ${createChildNodeRequest.name.get} is already used by a list inside the project ${createChildNodeRequest.projectIri}.")
             }
 
             // calculate the data named graph
@@ -826,7 +821,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
             // calculate the new node's IRI
             maybeShortcode = project.shortcode
-            newListNodeIri = knoraIdUtil.makeRandomListIri(maybeShortcode)
+            newListNodeIri = stringFormatter.makeRandomListIri(maybeShortcode)
 
             // Create the new list node
             createNewListSparqlString = queries.sparql.admin.txt.createNewListChildNode(
@@ -923,7 +918,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     /**
       * Helper method for checking if a list node identified by name exists.
       *
-      * @param projectIri the IRI of the project.
+      * @param name the name of the list.
       * @return a [[Boolean]].
       */
     private def listNodeByNameExists(name: String): Future[Boolean] = {
@@ -941,7 +936,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
       * name is NOT used inside any list of this project.
       *
-      * @param rootNodeIri the list's root node.
+      * @param projectIri   the IRI of the project.
       * @param listNodeName the list node name.
       * @return a [[Boolean]].
       */

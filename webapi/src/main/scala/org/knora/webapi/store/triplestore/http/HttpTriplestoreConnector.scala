@@ -23,6 +23,7 @@ import java.io.StringReader
 import java.util
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
+import akka.event.LoggingAdapter
 import akka.stream.ActorMaterializer
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
@@ -46,7 +47,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.SparqlResultProtocol._
-import org.knora.webapi.util.{FakeTriplestore, FileUtil, StringFormatter}
+import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
 import spray.json._
 
 import scala.collection.JavaConverters._
@@ -70,6 +71,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private val settings = Settings(system)
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     private implicit val materializer: ActorMaterializer = ActorMaterializer()
+    override val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 
     private val triplestoreType = settings.triplestoreType
 
@@ -121,7 +123,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         case SparqlExtendedConstructRequest(sparql) => try2Message(sender(), sparqlHttpExtendedConstruct(sparql), log)
         case SparqlUpdateRequest(sparql) => try2Message(sender(), sparqlHttpUpdate(sparql), log)
         case SparqlAskRequest(sparql) => try2Message(sender(), sparqlHttpAsk(sparql), log)
-        case ResetTriplestoreContent(rdfDataObjects) => try2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
+        case ResetTriplestoreContent(rdfDataObjects, prependDefaults) => try2Message(sender(), resetTripleStoreContent(rdfDataObjects, prependDefaults), log)
         case DropAllTriplestoreContent() => try2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
         case HelloTriplestore(msg) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
@@ -384,7 +386,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         } yield SparqlAskResponse(result)
     }
 
-    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject]): Try[ResetTriplestoreContentACK] = {
+    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Try[ResetTriplestoreContentACK] = {
         log.debug("resetTripleStoreContent")
         val resetTriplestoreResult = for {
 
@@ -392,7 +394,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             _ <- dropAllTriplestoreContent()
 
             // insert new content
-            _ <- insertDataIntoTriplestore(rdfDataObjects)
+            _ <- insertDataIntoTriplestore(rdfDataObjects, prependDefaults)
 
             // any errors throwing exceptions until now are already covered so we can ACK the request
             result = ResetTriplestoreContentACK()
@@ -423,12 +425,14 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     }
 
     /**
-      * Inserts the data referenced inside the `rdfDataObjects`.
+      * Inserts the data referenced inside the `rdfDataObjects` by appending it to a default set of `rdfDataObjects`
+      * based on the list defined in `application.conf` under the `app.triplestore.default-rdf-data` key.
       *
       * @param rdfDataObjects a sequence of paths and graph names referencing data that needs to be inserted.
+      * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
       * @return [[InsertTriplestoreContentACK]]
       */
-    private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject]): Try[InsertTriplestoreContentACK] = {
+    private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true): Try[InsertTriplestoreContentACK] = {
         try {
             log.debug("==>> Loading Data Start")
 
@@ -437,7 +441,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 config => RdfDataObjectFactory(config)
             }
 
-            val completeRdfDataObjectList = defaultRdfDataObjectList ++ rdfDataObjects
+            val completeRdfDataObjectList = if (prependDefaults) {
+                defaultRdfDataObjectList ++ rdfDataObjects
+            } else {
+                rdfDataObjects
+            }
+
+            log.debug("insertDataIntoTriplestore - completeRdfDataObjectList: {}", completeRdfDataObjectList)
 
             for (elem <- completeRdfDataObjectList) {
 
@@ -511,15 +521,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             val repositories: Seq[GraphDBRepository] = jsonArr.elements.map(_.convertTo[GraphDBRepository])
 
             val idShouldBe = settings.triplestoreDatabaseName
-            val sesameTypeShouldBe = "owlim:MonitorRepository"
+            val sesameTypeForSEShouldBe = "owlim:MonitorRepository"
+            val sesameTypeForFreeShouldBe ="graphdb:FreeSailRepository"
 
-            val neededRepo = repositories.filter(_.id == idShouldBe).filter(_.sesameType == sesameTypeShouldBe)
+            val neededRepo = repositories.filter(_.id == idShouldBe).filter(repo => repo.sesameType == sesameTypeForSEShouldBe || repo.sesameType == sesameTypeForFreeShouldBe)
             if (neededRepo.length == 1) {
                 // everything looks good
                 Success(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceAvailable, msg = "Triplestore is available."))
             } else {
                 // none of the available repositories meet our requirements
-                Success(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.NotInitialized, msg = s"None of the available repositories meet our requirements of id: $idShouldBe, sesameType: $sesameTypeShouldBe."))
+                Success(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.NotInitialized, msg = s"None of the available repositories meet our requirements of id: $idShouldBe, sesameType: $sesameTypeForSEShouldBe or $sesameTypeForFreeShouldBe."))
             }
         } catch {
             case e: Exception =>
@@ -577,6 +588,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         }
 
         val triplestoreResponseTry = Try {
+
+            val start = System.currentTimeMillis()
+
             var maybeResponse: Option[CloseableHttpResponse] = None
 
             try {
@@ -594,6 +608,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                     log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr,SPARQL query was:\n$sparql")
                     throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
                 }
+
+                val took = System.currentTimeMillis() - start
+                log.info(s"[${statusCode}] GraphDB Query took: ${took}ms")
 
                 responseEntityStr
             } finally {

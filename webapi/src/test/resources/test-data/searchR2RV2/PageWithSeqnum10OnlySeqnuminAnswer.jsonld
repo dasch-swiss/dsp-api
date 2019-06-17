@@ -4,6 +4,10 @@
   "incunabula:seqnum" : {
     "@id" : "http://rdfh.ch/0803/68ef9568b903/values/ee2c66c2e20e",
     "@type" : "knora-api:IntValue",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/68ef9568b903O/0000000000ee2c66c2e20QI"
+    },
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
@@ -13,6 +17,11 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2016-03-02T15:05:47Z"
+    },
+    "knora-api:valueHasUUID" : "0000000000ee2c66c2e20Q",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/68ef9568b903O/0000000000ee2c66c2e20QI.20160302T150547Z"
     }
   },
   "knora-api:arkUrl" : {

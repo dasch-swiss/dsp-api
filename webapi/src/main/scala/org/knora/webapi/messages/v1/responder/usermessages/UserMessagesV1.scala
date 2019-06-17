@@ -218,12 +218,19 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
     def passwordMatch(password: String): Boolean = {
         userData.password.exists {
             hashedPassword =>
-                if (hashedPassword.startsWith("$e0801$")) {
-                    //println(s"UserProfileV1 - passwordMatch - password: $password, hashedPassword: hashedPassword")
+                // check which type of hash we have
+                if (hashedPassword.startsWith("$e0801$")){
+                    // SCrypt
                     import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
-                    val encoder = new SCryptPasswordEncoder
-                    encoder.matches(password, hashedPassword)
+                    val encoder = new SCryptPasswordEncoder()
+                    encoder.matches(password, hashedPassword.toString)
+                } else if (hashedPassword.startsWith("$2a$")) {
+                    // BCrypt
+                    import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+                    val encoder = new BCryptPasswordEncoder()
+                    encoder.matches(password, hashedPassword.toString)
                 } else {
+                    // SHA-1
                     val md = java.security.MessageDigest.getInstance("SHA-1")
                     md.digest(password.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(hashedPassword)
                 }

@@ -2,8 +2,12 @@
   "@id" : "http://rdfh.ch/0001/thing_with_list_value",
   "@type" : "anything:Thing",
   "anything:hasListItem" : {
-    "@id" : "http://rdfh.ch/0001/thing_with_list_value/list_value",
+    "@id" : "http://rdfh.ch/0001/thing_with_list_value/values/list_value",
     "@type" : "knora-api:ListValue",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_list_valueO/000000000000list_valuQm"
+    },
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
     },
@@ -15,6 +19,11 @@
     "knora-api:valueCreationDate" : {
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-01-31T15:05:10Z"
+    },
+    "knora-api:valueHasUUID" : "000000000000list_valuQ",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_list_valueO/000000000000list_valuQm.20180131T150510Z"
     }
   },
   "knora-api:arkUrl" : {

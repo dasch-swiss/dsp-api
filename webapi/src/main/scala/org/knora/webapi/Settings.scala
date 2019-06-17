@@ -207,10 +207,9 @@ class SettingsImpl(config: Config) extends Extension {
         mType: ConfigValue => mType.unwrapped.toString
     }.toSeq
 
-    // monitoring reporters
-    val prometheusReporter: Boolean = config.getBoolean("app.monitoring.prometheus-reporter")
-    val zipkinReporter: Boolean = config.getBoolean("app.monitoring.zipkin-reporter")
-    val jaegerReporter: Boolean = config.getBoolean("app.monitoring.jaeger-reporter")
+    val allowReloadOverHTTP: Boolean = config.getBoolean("app.allow-reload-over-http")
+
+    val bcryptPasswordStrength: Int = config.getInt("app.bcrypt-password-strength")
 
     private def getFiniteDuration(path: String, underlying: Config): FiniteDuration = Duration(underlying.getString(path)) match {
         case x: FiniteDuration ⇒ x

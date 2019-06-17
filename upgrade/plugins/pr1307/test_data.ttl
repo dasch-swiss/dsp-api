@@ -1,0 +1,99 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix standoff: <http://www.knora.org/ontology/standoff#> .
+@prefix anything: <http://www.knora.org/ontology/0001/anything#> .
+
+
+<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g> a anything:Thing;
+  rdfs:label "Something with a lot of markup";
+  knora-base:isDeleted false;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  knora-base:creationDate "2018-05-30T13:44:11.749Z"^^xsd:dateTime;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
+  anything:hasRichtext <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ> .
+
+<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ> a knora-base:TextValue;
+  knora-base:isDeleted false;
+  knora-base:valueHasStandoff <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/KVF0LM75SdWVn8cttIXeVg>,
+    <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/6Av1t-XhQWaFrqoc1ziHkw>,
+    <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/23_Uq7-zRG6K8c6YSQ2-CA>,
+    <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/YtjVUWRLTweR0x-nPnS2lg>,
+    <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/kZdxomDgQiCn3TvBYmNfnw>,
+    <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/9pE-0bn_Tjy5ZBVtH_Lxeg>,
+    <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/3MOCIz94Q2qaUOLHEy7sag>,
+    <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/9ERnVHlVQbG5HnitnB8QTQ>;
+  knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
+  knora-base:valueCreationDate "2018-05-30T13:44:11.749Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "Something with a lot of different markup. And more markup.";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/23_Uq7-zRG6K8c6YSQ2-CA>
+  a standoff:StandoffBoldTag;
+  knora-base:standoffTagHasStart 0;
+  knora-base:standoffTagHasEnd 9;
+  knora-base:standoffTagHasStartIndex 2;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/6Av1t-XhQWaFrqoc1ziHkw>;
+  knora-base:standoffTagHasUUID "7f3af890-c77d-4bf8-a81c-6786632520dd" .
+
+<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/3MOCIz94Q2qaUOLHEy7sag>
+  a standoff:StandoffSuperscriptTag;
+  knora-base:standoffTagHasStart 34;
+  knora-base:standoffTagHasEnd 40;
+  knora-base:standoffTagHasStartIndex 6;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/6Av1t-XhQWaFrqoc1ziHkw>;
+  knora-base:standoffTagHasUUID "e2ab65d2-6c80-494e-88ba-66767ed885f9" .
+
+<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/6Av1t-XhQWaFrqoc1ziHkw>
+  a standoff:StandoffParagraphTag;
+  knora-base:standoffTagHasStart 0;
+  knora-base:standoffTagHasEnd 58;
+  knora-base:standoffTagHasStartIndex 1;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/KVF0LM75SdWVn8cttIXeVg>;
+  knora-base:standoffTagHasUUID "f3c0773a-2eb3-4d2e-9a6f-c8f2582a146e" .
+
+<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/9ERnVHlVQbG5HnitnB8QTQ>
+  a knora-base:StandoffUriTag;
+  knora-base:standoffTagHasStart 51;
+  knora-base:standoffTagHasEnd 57;
+  knora-base:standoffTagHasStartIndex 7;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/6Av1t-XhQWaFrqoc1ziHkw>;
+  knora-base:standoffTagHasUUID "7b9f4609-3ba6-43e5-b945-d4329a155ca7";
+  knora-base:valueHasUri "http://www.google.ch"^^xsd:anyURI .
+
+<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/9pE-0bn_Tjy5ZBVtH_Lxeg>
+  a standoff:StandoffUnderlineTag;
+  knora-base:standoffTagHasStart 24;
+  knora-base:standoffTagHasEnd 33;
+  knora-base:standoffTagHasStartIndex 5;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/6Av1t-XhQWaFrqoc1ziHkw>;
+  knora-base:standoffTagHasUUID "df348cfa-c362-45e6-9e13-601442214064" .
+
+<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/KVF0LM75SdWVn8cttIXeVg>
+  a standoff:StandoffRootTag;
+  knora-base:standoffTagHasStart 0;
+  knora-base:standoffTagHasEnd 59;
+  knora-base:standoffTagHasStartIndex 0;
+  knora-base:standoffTagHasUUID "c41e4e78-8b4f-47fc-9d17-8af0a279c80c" .
+
+<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/YtjVUWRLTweR0x-nPnS2lg>
+  a standoff:StandoffItalicTag;
+  knora-base:standoffTagHasStart 10;
+  knora-base:standoffTagHasEnd 14;
+  knora-base:standoffTagHasStartIndex 3;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/6Av1t-XhQWaFrqoc1ziHkw>;
+  knora-base:standoffTagHasUUID "13f66d42-2b1f-4fb4-91aa-6c55e350b0f4" .
+
+<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/kZdxomDgQiCn3TvBYmNfnw>
+  a standoff:StandoffStrikethroughTag;
+  knora-base:standoffTagHasStart 17;
+  knora-base:standoffTagHasEnd 20;
+  knora-base:standoffTagHasStartIndex 4;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/6Av1t-XhQWaFrqoc1ziHkw>;
+  knora-base:standoffTagHasUUID "0aaa6e47-0e9b-494f-9b6a-f42c66471d30" .
