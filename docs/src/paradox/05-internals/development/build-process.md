@@ -73,8 +73,15 @@ The following SBT tasks are available:
 
 - `$ sbt dockerComposeUp` - starts the whole stack and prints out a summary
 - `$ sbt dockerComposeRestart` - stops and the starts again the whole stack
-- `$ sbt dockerComposeStop` - stops the whole stack 
+- `$ sbt dockerComposeStop` - stops the whole stack
 
+Running the whole Knora stack requires some configuration, which can be done through environment variables.
+These can be set in the shell before running `sbt`:
+
+- `KNORA_GDB_TYPE` - the type of GraphDB (SE or FREE). Possible values are `graphdb-se` or `graphdb-free`.
+   The default value is `graphdb-se`.
+- `KNORA_GDB_HOME` - the path to folder where the GraphDB data will be stored. Default is `GITREPOROOT/triplestores/graphdb/home`.
+- `KNORA_GDB_LICENSE` - the path to the GraphDB-SE license. Default is `GITREPOROOT/triplestores/graphdb/graphdb.license`.
 
 ## Building Documentation
 
