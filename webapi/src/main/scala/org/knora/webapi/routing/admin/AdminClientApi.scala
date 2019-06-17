@@ -19,9 +19,6 @@
 
 package org.knora.webapi.routing.admin
 
-import org.knora.webapi.OntologyConstants
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
-import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.clientapi._
 
@@ -32,45 +29,13 @@ import org.knora.webapi.util.clientapi._
 class AdminClientApi extends ClientApi {
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val userClassRef = ClientClassReference(
-        className = "User",
-        classIri = OntologyConstants.KnoraAdminV2.UserClass.toSmartIri
-    )
-
-    private val usersResponse = ClientClassDefinition(
-        className = "UsersResponse",
-        classIri = OntologyConstants.KnoraAdminV2.UsersResponse.toSmartIri,
-        properties = Vector(
-            ClientPropertyDefinition(
-                propertyName = "users",
-                propertyIri = OntologyConstants.KnoraAdminV2.UsersProperty.toSmartIri,
-                objectType = userClassRef,
-                cardinality = Cardinality.MayHaveMany,
-                isEditable = false
-            )
-        )
-    )
-
-    private val userResponse = ClientClassDefinition(
-        className = "UserResponse",
-        classIri = OntologyConstants.KnoraAdminV2.UserResponse.toSmartIri,
-        properties = Vector(
-            ClientPropertyDefinition(
-                propertyName = "user",
-                propertyIri = OntologyConstants.KnoraAdminV2.UserProperty.toSmartIri,
-                objectType = userClassRef,
-                cardinality = Cardinality.MustHaveOne,
-                isEditable = false
-            )
-        )
-    )
-
-    override val classDefs: Set[ClientClassDefinition] = Set(
-        usersResponse,
-        userResponse
-    )
-
     override val endpoints: Set[ClientEndpoint] = Set(
         new UsersEndpoint()
     )
+
+    override val name: String = "AdminApi"
+
+    override val description: String = "A client API for administering Knora."
+
+    override val modulePath: Seq[String] = Seq("admin")
 }

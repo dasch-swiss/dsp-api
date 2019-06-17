@@ -645,7 +645,8 @@ class UsersEndpoint extends ClientEndpoint {
         implementation = ClientHttpRequest(
             httpMethod = GET,
             urlPath = Seq(LiteralUrlComponent(""))
-        )
+        ),
+        description = "Returns a list of all users."
     )
 
     private val getUser = ClientFunction(
@@ -655,11 +656,13 @@ class UsersEndpoint extends ClientEndpoint {
                 name = "property",
                 objectType = ClientEnumLiteral(
                     possibleValues = Set("iri", "email", "username")
-                )
+                ),
+                description = "The name of the property by which the user is identified."
             ),
             FunctionParam(
                 name = "value",
-                objectType = ClientStringLiteral
+                objectType = ClientStringLiteral,
+                description = "The value of the property by which the user is identified."
             )
         ),
         returnType = usersResponseClassRef,
@@ -671,7 +674,8 @@ class UsersEndpoint extends ClientEndpoint {
                 SlashUrlComponent,
                 ArgValue("value")
             )
-        )
+        ),
+        description = "Gets a user by a property."
     )
 
     private val getUserByIri = ClientFunction(
@@ -679,7 +683,8 @@ class UsersEndpoint extends ClientEndpoint {
         params = Seq(
             FunctionParam(
                 name = "iri",
-                objectType = ClientStringLiteral
+                objectType = ClientStringLiteral,
+                description = "The IRI of the user."
             )
         ),
         returnType = userResponseClassRef,
@@ -689,7 +694,8 @@ class UsersEndpoint extends ClientEndpoint {
                 StringLiteralValue("iri"),
                 ArgValue("iri")
             )
-        )
+        ),
+        description = "Gets a user by IRI."
     )
 
     private val getUserByEmail = ClientFunction(
@@ -697,7 +703,8 @@ class UsersEndpoint extends ClientEndpoint {
         params = Seq(
             FunctionParam(
                 name = "email",
-                objectType = ClientStringLiteral
+                objectType = ClientStringLiteral,
+                description = "The email address of the user."
             )
         ),
         returnType = userResponseClassRef,
@@ -707,7 +714,8 @@ class UsersEndpoint extends ClientEndpoint {
                 StringLiteralValue("email"),
                 ArgValue("email")
             )
-        )
+        ),
+        description = "Gets a user by email address."
     )
 
     private val getUserByUsername = ClientFunction(
@@ -715,7 +723,8 @@ class UsersEndpoint extends ClientEndpoint {
         params = Seq(
             FunctionParam(
                 name = "username",
-                objectType = ClientStringLiteral
+                objectType = ClientStringLiteral,
+                description = "The username of the user."
             )
         ),
         returnType = userResponseClassRef,
@@ -725,7 +734,8 @@ class UsersEndpoint extends ClientEndpoint {
                 StringLiteralValue("username"),
                 ArgValue("username")
             )
-        )
+        ),
+        description = "Gets a user by username."
     )
 
     private val createUser = ClientFunction(
@@ -734,6 +744,7 @@ class UsersEndpoint extends ClientEndpoint {
             FunctionParam(
                 name = "user",
                 objectType = userClassRef,
+                description = "The user to be created."
             )
         ),
         returnType = userResponseClassRef,
@@ -741,7 +752,8 @@ class UsersEndpoint extends ClientEndpoint {
             httpMethod = POST,
             urlPath = Seq.empty,
             requestBody = Some(ArgValue("user"))
-        )
+        ),
+        description = "Creates a user."
     )
 
     private val updateUser = ClientFunction(
@@ -750,6 +762,7 @@ class UsersEndpoint extends ClientEndpoint {
             FunctionParam(
                 name = "user",
                 objectType = userClassRef,
+                description = "The user to be updated."
             )
         ),
         returnType = userResponseClassRef,
@@ -757,7 +770,8 @@ class UsersEndpoint extends ClientEndpoint {
             httpMethod = PUT,
             urlPath = Seq.empty,
             requestBody = Some(ArgValue("user"))
-        )
+        ),
+        description = "Updates a user."
     )
 
     private val updateUserStatus = ClientFunction(
@@ -766,6 +780,7 @@ class UsersEndpoint extends ClientEndpoint {
             FunctionParam(
                 name = "user",
                 objectType = userClassRef,
+                description = "The user to be updated."
             )
         ),
         returnType = userResponseClassRef,
@@ -789,7 +804,8 @@ class UsersEndpoint extends ClientEndpoint {
                     )
                 )
             )
-        )
+        ),
+        description = "Updates a user's status."
     )
 
     private val updateUserPassword = ClientFunction(
@@ -798,14 +814,17 @@ class UsersEndpoint extends ClientEndpoint {
             FunctionParam(
                 name = "user",
                 objectType = userClassRef,
+                description = "The user to be updated."
             ),
             FunctionParam(
                 name = "oldPassword",
                 objectType = ClientStringLiteral,
+                description = "The user's old password."
             ),
             FunctionParam(
                 name = "newPassword",
                 objectType = ClientStringLiteral,
+                description = "The user's new password."
             )
         ),
         returnType = userResponseClassRef,
@@ -831,7 +850,8 @@ class UsersEndpoint extends ClientEndpoint {
                     )
                 )
             )
-        )
+        ),
+        description = "Updates a user's password."
     )
 
     private val deleteUser = ClientFunction(
@@ -840,6 +860,7 @@ class UsersEndpoint extends ClientEndpoint {
             FunctionParam(
                 name = "user",
                 objectType = userClassRef,
+                description = "The user to be deleted."
             )
         ),
         returnType = userResponseClassRef,
@@ -860,7 +881,8 @@ class UsersEndpoint extends ClientEndpoint {
                     )
                 )
             )
-        )
+        ),
+        description = "Deletes a user. This method does not actually delete a user, but sets the status to false."
     )
 
     override val functions: Seq[ClientFunction] = Seq(
@@ -875,4 +897,10 @@ class UsersEndpoint extends ClientEndpoint {
         updateUserPassword,
         deleteUser
     )
+
+    override val name: String = "UsersEndpoint"
+
+    override val description: String = "An endpoint for working with Knora users."
+
+    override val modulePath: Seq[String] = Seq("admin", "users")
 }

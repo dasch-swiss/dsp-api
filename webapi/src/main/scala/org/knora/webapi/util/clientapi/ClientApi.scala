@@ -24,6 +24,104 @@ import org.knora.webapi.util.SmartIri
 
 
 /**
+  * Represents a client API.
+  */
+trait ClientApi {
+    /**
+      * The machine-readable name of the API.
+      */
+    val name: String
+
+    /**
+      * A human-readable description of the API.
+      */
+    val description: String
+
+    /**
+      * A relative directory path for the module containing this API.
+      */
+    val modulePath: Seq[String]
+
+    /**
+      * The endpoints available in the API.
+      */
+    val endpoints: Set[ClientEndpoint]
+}
+
+/**
+  * Represents a client endpoint.
+  */
+trait ClientEndpoint {
+    /**
+      * The machine-readable name of the endpoint.
+      */
+    val name: String
+
+    /**
+      * A human-readable description of the endpoint.
+      */
+    val description: String
+
+    /**
+      * A relative directory path for the module containing this endpoint.
+      */
+    val modulePath: Seq[String]
+
+    /**
+      * The functions provided by the endpoint.
+      */
+    val functions: Seq[ClientFunction]
+}
+
+/**
+  * Represents a client endpoint function.
+  *
+  * @param name           the name of the function.
+  * @param params         the parameters of the function.
+  * @param returnType     the function's return type.
+  * @param implementation the implementation of the function.
+  * @param description    a human-readable description of the function.
+  */
+case class ClientFunction(name: String,
+                          params: Seq[FunctionParam],
+                          returnType: ClientObjectType,
+                          implementation: FunctionImplementation,
+                          description: String)
+
+/**
+  * Represents a function parameter.
+  *
+  * @param name        the name of the parameter.
+  * @param objectType  the type of the parameter.
+  * @param description a human-readable description of the parameter.
+  */
+case class FunctionParam(name: String,
+                         objectType: ClientObjectType,
+                         description: String)
+
+/**
+  * Represents the implementation of a client endpoint function.
+  */
+trait FunctionImplementation
+
+/**
+  * Represents an HTTP request to be used as the implementation of a client function.
+  *
+  * @param httpMethod  the HTTP method to be used.
+  * @param urlPath     the URL path to be used.
+  * @param requestBody if provided, the body of the HTTP request.
+  */
+case class ClientHttpRequest(httpMethod: ClientHttpMethod, urlPath: Seq[UrlComponent], requestBody: Option[HttpRequestBody] = None) extends FunctionImplementation
+
+/**
+  * Represents a function call to be used as the implementation of a client endpoint function.
+  *
+  * @param name the name of the function to be called.
+  * @param args the arguments to be passed to the function call.
+  */
+case class FunctionCall(name: String, args: Seq[Value]) extends FunctionImplementation
+
+/**
   * Indicates the HTTP method used in a client endpoint function.
   */
 trait ClientHttpMethod
@@ -99,76 +197,15 @@ trait HttpRequestBody
 case class JsonRequestBody(jsonObject: Map[String, Value]) extends HttpRequestBody
 
 /**
-  * Represents an HTTP request to be used as the implementation of a client function.
-  *
-  * @param httpMethod  the HTTP method to be used.
-  * @param urlPath     the URL path to be used.
-  * @param requestBody if provided, the body of the HTTP request.
-  */
-case class ClientHttpRequest(httpMethod: ClientHttpMethod, urlPath: Seq[UrlComponent], requestBody: Option[HttpRequestBody] = None) extends FunctionImplementation
-
-/**
-  * Represents the implementation of a client endpoint function.
-  */
-trait FunctionImplementation
-
-/**
-  * Represents a function call to be used as the implementation of a client endpoint function.
-  *
-  * @param name the name of the function to be called.
-  * @param args the arguments to be passed to the function call.
-  */
-case class FunctionCall(name: String, args: Seq[Value]) extends FunctionImplementation
-
-/**
-  * Represents a function parameter.
-  *
-  * @param name       the name of the parameter.
-  * @param objectType the type of the parameter.
-  */
-case class FunctionParam(name: String, objectType: ClientObjectType)
-
-/**
-  * Represents a client endpoint function.
-  *
-  * @param name           the name of the function.
-  * @param params         the parameters of the function.
-  * @param returnType     the function's return type.
-  * @param implementation the implementation of the function.
-  */
-case class ClientFunction(name: String, params: Seq[FunctionParam], returnType: ClientObjectType, implementation: FunctionImplementation)
-
-/**
-  * Represents a client endpoint.
-  */
-trait ClientEndpoint {
-    val functions: Seq[ClientFunction]
-}
-
-/**
-  * Represents a client API.
-  */
-trait ClientApi {
-    /**
-      * The endpoints available in the API.
-      */
-    val endpoints: Set[ClientEndpoint]
-
-    /**
-      * The class definitions that the API uses and that are not included in ontologies that Knora
-      * can serve.
-      */
-    val classDefs: Set[ClientClassDefinition]
-}
-
-/**
   * A definition of a Knora API class, which can be used by a [[GeneratorBackEnd]] to generate client code.
   *
   * @param className  the name of the class.
   * @param classIri   the IRI of the class in the Knora API.
   * @param properties definitions of the properties used in the class.
   */
-case class ClientClassDefinition(className: String, classIri: SmartIri, properties: Vector[ClientPropertyDefinition])
+case class ClientClassDefinition(className: String,
+                                 classIri: SmartIri,
+                                 properties: Vector[ClientPropertyDefinition])
 
 /**
   * A definition of a Knora property as used in a particular class.
@@ -179,7 +216,11 @@ case class ClientClassDefinition(className: String, classIri: SmartIri, properti
   * @param cardinality  the cardinality of the property in the class.
   * @param isEditable   `true` if the property's value is editable via the API.
   */
-case class ClientPropertyDefinition(propertyName: String, propertyIri: SmartIri, objectType: ClientObjectType, cardinality: Cardinality, isEditable: Boolean)
+case class ClientPropertyDefinition(propertyName: String,
+                                    propertyIri: SmartIri,
+                                    objectType: ClientObjectType,
+                                    cardinality: Cardinality,
+                                    isEditable: Boolean)
 
 /**
   * A trait for types used in client API endpoints.

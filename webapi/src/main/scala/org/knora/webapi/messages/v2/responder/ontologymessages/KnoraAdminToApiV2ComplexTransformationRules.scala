@@ -40,6 +40,90 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         label = Some("The knora-admin ontology in the complex schema")
     )
 
+    private val UsersProperty: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.UsersProperty,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.UsersResponse),
+        objectType = Some(OntologyConstants.KnoraAdminV2.UserClass),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "users"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The users returned in a UsersResponse."
+                )
+            )
+        )
+    )
+
+    private val UserProperty: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.UserProperty,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.UserResponse),
+        objectType = Some(OntologyConstants.KnoraAdminV2.UserClass),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "user"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The user returned in a UserResponse."
+                )
+            )
+        )
+    )
+
+    private val UsersResponse: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.UsersResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "users response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response providing a collection of users."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.UsersProperty -> Cardinality.MayHaveMany
+        )
+    )
+
+    private val UserResponse = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.UserResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "user response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response providing a single user."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.UserProperty -> Cardinality.MustHaveOne
+        )
+    )
+
     /**
       * Properties to remove from the ontology before converting it to the target schema.
       */
@@ -59,12 +143,23 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
     /**
       * Classes that need to be added to the ontology after converting it to the target schema.
       */
-    override val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Map.empty // TODO
+    override val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
+        UsersResponse,
+        UserResponse
+    ).map {
+        classInfo => classInfo.entityInfoContent.classIri -> classInfo
+    }.toMap
 
     /**
       * Properties that need to be added to the ontology after converting it to the target schema.
       */
-    override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Map.empty // TODO
+    override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
+        UsersProperty,
+        UserProperty
+    ).map {
+        propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
+    }.toMap
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Convenience functions for building ontology entities, to make the code above more concise.
@@ -91,17 +186,15 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
     /**
       * Makes a [[ReadPropertyInfoV2]].
       *
-      * @param propertyIri     the IRI of the property.
-      * @param propertyType    the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
-      * @param subPropertyOf   the set of direct superproperties of this property.
-      * @param predicates      the property's predicates.
-      * @param subjectType     the required type of the property's subject.
-      * @param objectType      the required type of the property's object.
+      * @param propertyIri   the IRI of the property.
+      * @param propertyType  the type of the property (owl:ObjectProperty, owl:DatatypeProperty, or rdf:Property).
+      * @param predicates    the property's predicates.
+      * @param subjectType   the required type of the property's subject.
+      * @param objectType    the required type of the property's object.
       * @return a [[ReadPropertyInfoV2]].
       */
     private def makeProperty(propertyIri: IRI,
                              propertyType: IRI,
-                             subPropertyOf: Set[IRI] = Set.empty[IRI],
                              predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
                              subjectType: Option[IRI] = None,
                              objectType: Option[IRI] = None): ReadPropertyInfoV2 = {
@@ -134,9 +227,40 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
                 ontologySchema = ApiV2Complex,
                 predicates = predsWithTypes.map {
                     pred => pred.predicateIri -> pred
-                }.toMap,
-                subPropertyOf = subPropertyOf.map(iri => iri.toSmartIri)
+                }.toMap
             )
+        )
+    }
+
+    /**
+      * Makes a [[ReadClassInfoV2]].
+      *
+      * @param classIri            the IRI of the class.
+      * @param predicates          the predicates of the class.
+      * @param directCardinalities the direct cardinalities of the class.
+      * @return a [[ReadClassInfoV2]].
+      */
+    private def makeClass(classIri: IRI,
+                          predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
+                          directCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value]): ReadClassInfoV2 = {
+        val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+        )
+
+        ReadClassInfoV2(
+            entityInfoContent = ClassInfoContentV2(
+                classIri = classIri.toSmartIri,
+                predicates = predicates.map {
+                    pred => pred.predicateIri -> pred
+                }.toMap + rdfType,
+                directCardinalities = directCardinalities.map {
+                    case (propertyIri, cardinality) => propertyIri.toSmartIri -> KnoraCardinalityInfo(cardinality)
+                },
+                subClassOf = Set.empty,
+                ontologySchema = ApiV2Complex
+            ),
+            allBaseClasses = Set.empty
         )
     }
 }
