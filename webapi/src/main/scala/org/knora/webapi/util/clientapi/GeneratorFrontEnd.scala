@@ -153,6 +153,7 @@ class GeneratorFrontEnd {
 
     private def resourcePropObjectTypeToClientObjectType(ontologyObjectType: SmartIri): ClientObjectType = {
         ontologyObjectType.toString match {
+            case OntologyConstants.KnoraApiV2Complex.Value => ClientAbstractKnoraValue
             case OntologyConstants.KnoraApiV2Complex.TextValue => ClientTextValue
             case OntologyConstants.KnoraApiV2Complex.IntValue => ClientIntValue
             case OntologyConstants.KnoraApiV2Complex.DecimalValue => ClientDecimalValue

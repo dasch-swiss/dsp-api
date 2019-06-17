@@ -19,6 +19,7 @@
 
 package org.knora.webapi.util.clientapi
 
+import org.knora.webapi.OntologyConstants
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Cardinality
 import org.knora.webapi.util.SmartIri
 
@@ -46,6 +47,30 @@ trait ClientApi {
       * The endpoints available in the API.
       */
     val endpoints: Set[ClientEndpoint]
+
+    /**
+      * Returns the IRIs of the Knora API classes used by this API.
+      */
+    def getApiClassIrisUsed: Set[SmartIri] = {
+        endpoints.flatMap {
+            endpoint =>
+                endpoint.functions.flatMap {
+                    function =>
+                        val maybeReturnedClass: Option[SmartIri] = function.returnType match {
+                            case classRef: ClientClassReference => Some(classRef.classIri)
+                            case _ => None
+                        }
+
+                        val paramClasses: Set[SmartIri] = function.params.map {
+                            param => param.objectType
+                        }.collect {
+                            case classRef: ClientClassReference => classRef.classIri
+                        }.toSet
+
+                        paramClasses ++ maybeReturnedClass
+                }
+        }
+    }
 }
 
 /**
@@ -276,6 +301,11 @@ case class ClientClassReference(className: String, classIri: SmartIri) extends C
   * A trait for Knora value types.
   */
 sealed trait ClientKnoraValue extends ClientObjectType
+
+/**
+  * The type of abstract Knora values.
+  */
+case object ClientAbstractKnoraValue extends ClientKnoraValue
 
 /**
   * The type of text values.

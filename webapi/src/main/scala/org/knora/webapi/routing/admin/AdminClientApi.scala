@@ -19,7 +19,6 @@
 
 package org.knora.webapi.routing.admin
 
-import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.clientapi._
 
 
@@ -27,8 +26,6 @@ import org.knora.webapi.util.clientapi._
   * Represents the structure of generated client library code for the admin API.
   */
 class AdminClientApi extends ClientApi {
-    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
     override val endpoints: Set[ClientEndpoint] = Set(
         new UsersEndpoint()
     )
