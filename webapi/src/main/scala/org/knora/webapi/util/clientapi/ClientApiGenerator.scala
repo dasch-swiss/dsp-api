@@ -45,7 +45,7 @@ object ClientApiGenerator {
 
         // Save the source code to files.
         for (sourceCodeFileContent <- sourceCode) {
-            val outputFile: File = Paths.get(conf.outputDir(), sourceCodeFileContent.filename).toFile
+            val outputFile: File = Paths.get(conf.outputDir(), sourceCodeFileContent.filePath).toFile
             FileUtil.writeTextFile(file = outputFile, content = sourceCodeFileContent.text)
             println(s"Wrote ${outputFile.getAbsolutePath}")
         }
@@ -80,6 +80,6 @@ class GenerateClientClassConf(arguments: Seq[String]) extends ScallopConf(argume
     val port: ScallopOption[Int] = opt[Int](default = Some(3333))
     val useHttps: ScallopOption[Boolean] = opt[Boolean]()
     val target: ScallopOption[String] = opt[String](required = true)
-    val outputDir: ScallopOption[String] = opt[String](default = Some("."))
+    val outputDir: ScallopOption[String] = opt[String](required = true)
     verify()
 }

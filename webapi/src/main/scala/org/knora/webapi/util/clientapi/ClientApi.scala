@@ -46,6 +46,11 @@ trait ClientApi {
       * The endpoints available in the API.
       */
     val endpoints: Set[ClientEndpoint]
+
+    /**
+      * The IRIs of the classes used by this API.
+      */
+    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed)
 }
 
 /**
@@ -71,6 +76,25 @@ trait ClientEndpoint {
       * The functions provided by the endpoint.
       */
     val functions: Seq[ClientFunction]
+
+    /**
+      * The IRIs of the classes used by this endpoint.
+      */
+    lazy val classIrisUsed: Set[SmartIri] = functions.flatMap {
+        function =>
+            val maybeReturnedClass: Option[SmartIri] = function.returnType match {
+                case classRef: ClientClassReference => Some(classRef.classIri)
+                case _ => None
+            }
+
+            val paramClasses: Set[SmartIri] = function.params.map {
+                param => param.objectType
+            }.collect {
+                case classRef: ClientClassReference => classRef.classIri
+            }.toSet
+
+            paramClasses ++ maybeReturnedClass
+    }.toSet
 }
 
 /**

@@ -30,10 +30,10 @@ case class ClientApiBackendInput(apiDef: ClientApi, clientClassDefs: Set[ClientC
 /**
   * Represents a file containing generated client API source code.
   *
-  * @param filename the filename in which the source code should be saved.
+  * @param filePath the filename in which the source code should be saved.
   * @param text     the source code.
   */
-case class ClientSourceCodeFileContent(filename: String, text: String)
+case class ClientSourceCodeFileContent(filePath: String, text: String)
 
 /**
   * A trait for client API code generator back-ends.

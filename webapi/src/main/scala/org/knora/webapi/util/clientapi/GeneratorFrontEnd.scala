@@ -45,7 +45,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
       * Returns a set of [[ClientClassDefinition]] instances representing the Knora API classes used by a client API.
       */
     def getClientClassDefs(clientApi: ClientApi): Set[ClientClassDefinition] = {
-        getClassIris(clientApi).map {
+        clientApi.classIrisUsed.map {
             classIri =>
                 val classOntology: InputOntologyV2 = getOntology(classIri)
                 val rdfClassDef: ClassInfoContentV2 = classOntology.classes.getOrElse(classIri, throw ClientApiGenerationException(s"Class <$classIri> not found"))
@@ -61,30 +61,6 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
                 }.toMap
 
                 rdfClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
-        }
-    }
-
-    /**
-      * Returns the IRIs of the Knora API classes used by a client API.
-      */
-    private def getClassIris(clientApi: ClientApi): Set[SmartIri] = {
-        clientApi.endpoints.flatMap {
-            endpoint =>
-                endpoint.functions.flatMap {
-                    function =>
-                        val maybeReturnedClass: Option[SmartIri] = function.returnType match {
-                            case classRef: ClientClassReference => Some(classRef.classIri)
-                            case _ => None
-                        }
-
-                        val paramClasses: Set[SmartIri] = function.params.map {
-                            param => param.objectType
-                        }.collect {
-                            case classRef: ClientClassReference => classRef.classIri
-                        }.toSet
-
-                        paramClasses ++ maybeReturnedClass
-                }
         }
     }
 
