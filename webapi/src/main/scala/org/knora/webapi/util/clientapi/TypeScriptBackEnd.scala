@@ -21,6 +21,7 @@ package org.knora.webapi.util.clientapi
 
 import org.apache.commons.lang3.StringUtils
 import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.clientapi.TypeScriptBackEnd.{ClassInfo, EndpointInfo}
 
 /**
   * Generates client API source code in TypeScript.
@@ -50,9 +51,9 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
             clientSourceCodePaths = clientSourceCodePaths
         )
 
-        val endpointSourceCode: Set[ClientSourceCodeFileContent] = api.apiDef.endpoints.map {
+        val endpointInfos: Set[EndpointInfo] = api.apiDef.endpoints.map {
             endpoint =>
-                generateEndpointSourceCode(
+                generateEndpointInfo(
                     apiDef = api.apiDef,
                     endpoint = endpoint,
                     clientClassDefs = api.clientClassDefs,
@@ -62,41 +63,60 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
 
         val mainEndpointSourceCode = generateMainEndpointSourceCode(
             apiDef = api.apiDef,
-            endpointSourceCode = endpointSourceCode
+            endpointInfos = endpointInfos
         )
 
-        classSourceCode ++ endpointSourceCode + mainEndpointSourceCode
+        classSourceCode ++ endpointInfos.map(_.fileContent) + mainEndpointSourceCode
     }
 
 
     private def generateMainEndpointSourceCode(apiDef: ClientApi,
-                                               endpointSourceCode: Set[ClientSourceCodeFileContent]): ClientSourceCodeFileContent = {
+                                               endpointInfos: Set[EndpointInfo]): ClientSourceCodeFileContent = {
         val mainEndpointFilePath = makeMainEndpointFilePath(apiDef.name)
 
-        val endpointImportFilePaths: Set[String] = endpointSourceCode.map {
-            endpointFileContent => s"./${stripLeadingDirs(stripExtension(endpointFileContent.filePath), 2)}"
-        }
+        val text: String = clientapi.txt.generateTypeScriptMainEndpoint(
+            name = apiDef.name,
+            description = apiDef.description,
+            endpoints = endpointInfos
+        ).toString()
 
-        // TODO: run template
-        ClientSourceCodeFileContent(filePath = mainEndpointFilePath, text = "")
+        ClientSourceCodeFileContent(filePath = mainEndpointFilePath, text = text)
     }
 
-    private def generateEndpointSourceCode(apiDef: ClientApi,
+    private def generateEndpointInfo(apiDef: ClientApi,
                                            endpoint: ClientEndpoint,
                                            clientClassDefs: Set[ClientClassDefinition],
-                                           clientSourceCodePaths: Map[String, String]): ClientSourceCodeFileContent = {
+                                           clientSourceCodePaths: Map[String, String]): EndpointInfo = {
         val endpointFilePath = makeEndpointFilePath(apiName = apiDef.name, endpoint = endpoint)
 
         val classDefsImported: Set[ClientClassDefinition] = clientClassDefs.filter {
             clientClassDef => endpoint.classIrisUsed.contains(clientClassDef.classIri)
         }
 
-        val classDefImportPaths: Set[String] = classDefsImported.map {
-            clientClassDef => s"../../../${stripExtension(clientSourceCodePaths(clientClassDef.className))})"
+        val classInfos: Set[ClassInfo] = classDefsImported.map {
+            clientClassDef =>
+                ClassInfo(
+                    className = clientClassDef.className,
+                    importPathInEndpoint = s"../../../${stripExtension(clientSourceCodePaths(clientClassDef.className))})"
+                )
         }
 
-        // TODO: run template
-        ClientSourceCodeFileContent(filePath = endpointFilePath, text = "")
+        val text: String = clientapi.txt.generateTypeScriptEndpoint(
+            name = endpoint.name,
+            description = endpoint.description,
+            importedClasses = classInfos,
+            functions = endpoint.functions
+        ).toString()
+
+        val fileContent = ClientSourceCodeFileContent(filePath = endpointFilePath, text = text)
+
+        EndpointInfo(
+            className = endpoint.name,
+            variableName = endpoint.name.substring(0, 1).toLowerCase + endpoint.name.substring(1),
+            urlPath = endpoint.urlPath,
+            importPathInMainEndpoint = s"./${stripLeadingDirs(stripExtension(endpointFilePath), 2)}",
+            fileContent = fileContent
+        )
     }
 
     private def generateClassSourceCode(clientClassDefs: Set[ClientClassDefinition],
@@ -120,11 +140,13 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         s"api/$apiLocalName/$endpointLocalName/$endpointLocalName-endpoint.ts"
     }
 
+    /*
     private def makeInterfaceFilePath(apiName: String, className: String): String = {
         val apiLocalName = stringFormatter.camelCaseToSeparatedLowerCase(apiName)
         val classLocalName = stringFormatter.camelCaseToSeparatedLowerCase(className)
         s"interfaces/models/$apiLocalName/i-$classLocalName.ts"
     }
+    */
 
     private def makeClassFilePath(apiName: String, className: String): String = {
         val apiLocalName = stringFormatter.camelCaseToSeparatedLowerCase(apiName)
@@ -139,4 +161,15 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     private def stripExtension(filePath: String): String = {
         filePath.take(filePath.lastIndexOf("."))
     }
+}
+
+object TypeScriptBackEnd {
+    case class EndpointInfo(className: String,
+                            variableName: String,
+                            urlPath: String,
+                            importPathInMainEndpoint: String,
+                            fileContent: ClientSourceCodeFileContent)
+
+    case class ClassInfo(className: String,
+                         importPathInEndpoint: String)
 }

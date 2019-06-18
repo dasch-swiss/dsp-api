@@ -1,0 +1,60 @@
+@*
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.util._
+@import org.knora.webapi.util.clientapi._
+@import org.knora.webapi.util.clientapi.TypeScriptBackEnd.EndpointInfo
+
+@(name: String,
+  description: String,
+  endpoints: Set[EndpointInfo])
+
+import { KnoraApiConfig } from "../../knora-api-config";
+import { Endpoint } from "../endpoint";
+
+@for(endpoint <- endpoints) {
+import { @endpoint.className } from "@endpoint.importPathInMainEndpoint";
+}
+
+/**
+ * @description
+ */
+export class @name extends Endpoint {
+
+    @for(endpoint <- endpoints) {
+    readonly @endpoint.variableName: @endpoint.className;
+    }
+
+    /**
+     * Constructor.
+     * Sets up all endpoints for this endpoint.
+     * @@param knoraApiConfig
+     * @@param path
+     */
+    constructor(protected readonly knoraApiConfig: KnoraApiConfig, protected readonly path: string) {
+
+        super(knoraApiConfig, path);
+
+        // Instantiate the endpoints
+        @for(endpoint <- endpoints) {
+        this.@endpoint.variableName = new @{endpoint.className}(knoraApiConfig, path + "@endpoint.urlPath");
+        }
+    }
+}
