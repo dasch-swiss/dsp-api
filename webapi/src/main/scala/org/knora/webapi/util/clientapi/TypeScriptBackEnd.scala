@@ -84,9 +84,9 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     private def generateEndpointInfo(apiDef: ClientApi,
-                                           endpoint: ClientEndpoint,
-                                           clientClassDefs: Set[ClientClassDefinition],
-                                           clientSourceCodePaths: Map[String, String]): EndpointInfo = {
+                                     endpoint: ClientEndpoint,
+                                     clientClassDefs: Set[ClientClassDefinition],
+                                     clientSourceCodePaths: Map[String, String]): EndpointInfo = {
         val endpointFilePath = makeEndpointFilePath(apiName = apiDef.name, endpoint = endpoint)
 
         val classDefsImported: Set[ClientClassDefinition] = clientClassDefs.filter {
@@ -163,13 +163,33 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 }
 
+/**
+  * Classes used during code generation by [[TypeScriptBackEnd]] and by its Twirl templates.
+  */
 object TypeScriptBackEnd {
+
+    /**
+      * Represents information about an endpoint and its source code.
+      *
+      * @param className                the name of the endpoint class.
+      * @param variableName             a variable name that can be used for an instance of the endpoint class.
+      * @param urlPath                  the URL path of the endpoint, relative to the API path.
+      * @param importPathInMainEndpoint the file path to be used for importing the endpoint in the main endpoint.
+      * @param fileContent              the endpoint's source code.
+      */
     case class EndpointInfo(className: String,
                             variableName: String,
                             urlPath: String,
                             importPathInMainEndpoint: String,
                             fileContent: ClientSourceCodeFileContent)
 
+    /**
+      * Represents information about a Knora class used in an endpoint.
+      *
+      * @param className            the name of the class.
+      * @param importPathInEndpoint the file path to be used for importing the class in an endpoint.
+      */
     case class ClassInfo(className: String,
                          importPathInEndpoint: String)
+
 }

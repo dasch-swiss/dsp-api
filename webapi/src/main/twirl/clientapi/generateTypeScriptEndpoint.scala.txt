@@ -27,11 +27,6 @@
   importedClasses: Set[ClassInfo],
   functions: Seq[ClientFunction])
 
-@makeFunction(function: ClientFunction) = @{
-    
-}
-
-
 import { Observable } from "rxjs";
 import { catchError, map } from "rxjs/operators";
 
@@ -43,11 +38,39 @@ import { Endpoint } from "../../endpoint";
 import { @classInfo.className } from "@classInfo.importPathInEndpoint";
 }
 
+@makeObjectType(objectType: ClientObjectType) = @{
+
+}
+
 /**
  * @description
  */
 export class @name extends Endpoint {
 
+    @for(function <- functions) {
+    /**
+     * @function.description
+     @for(param <- function.params) {
+     * @@param @param.name @param.description
+     }
+     */
+    @{function.name}(@for((param, index) <- function.params.zipWithIndex) {
+        @if(index > 0) {,
+        }
+        @param.name: @makeObjectType(param)
+    }
+
+    property: "iri" | "email" | "username",
+            value: string): Observable<ApiResponseData<UserResponse> | ApiResponseError> {
+
+        return this.httpGet("/" + property + "/" + value).pipe(
+            map(ajaxResponse => ApiResponseData.fromAjaxResponse(ajaxResponse, UserResponse, this.jsonConvert)),
+            catchError(error => this.handleError(error))
+        );
+
+    }
+
+    }
 
 
 }
