@@ -2810,7 +2810,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
       * Shorter strings are padded with leading zeroes to 22 characters and parsed in Base64 format
       * (this is non-reversible, and is needed only for working with test data).
       *
-      * @param uuidStr the string to be decoded.
+      * @param uuidStr  the string to be decoded.
       * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
       * @return the decoded [[UUID]].
       */
@@ -3007,5 +3007,22 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     def makeRandomMapEntryIri: IRI = {
         val mapEntryUuid = makeRandomBase64EncodedUuid
         s"http://$IriDomain/map-entries/$mapEntryUuid"
+    }
+
+    /**
+      * Converts a camel-case string like `FooBar` into a string like `foo-bar`.
+      *
+      * @param str       the string to be converted.
+      * @param separator the word separator (defaults to `-`).
+      * @return the converted string.
+      */
+    def camelCaseToSeparatedLowerCase(str: String, separator: String = "-"): String = {
+        str.replaceAll(
+            "([A-Z]+)([A-Z][a-z])",
+            "$1" + separator + "$2"
+        ).replaceAll(
+            "([a-z\\d])([A-Z])",
+            "$1" + separator + "$2"
+        ).toLowerCase
     }
 }

@@ -900,7 +900,7 @@ class UsersEndpoint extends ClientEndpoint {
 
     override val name: String = "UsersEndpoint"
 
-    override val description: String = "An endpoint for working with Knora users."
+    override val urlPath: String = "/users"
 
-    override val modulePath: Seq[String] = Seq("admin", "users")
+    override val description: String = "An endpoint for working with Knora users."
 }

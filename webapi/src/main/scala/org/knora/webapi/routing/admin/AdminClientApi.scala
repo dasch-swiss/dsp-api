@@ -32,7 +32,7 @@ class AdminClientApi extends ClientApi {
 
     override val name: String = "AdminApi"
 
-    override val description: String = "A client API for administering Knora."
+    override val urlPath: String = "/admin"
 
-    override val modulePath: Seq[String] = Seq("admin")
+    override val description: String = "A client API for administering Knora."
 }

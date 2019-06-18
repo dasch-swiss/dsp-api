@@ -19,15 +19,112 @@
 
 package org.knora.webapi.util.clientapi
 
-import org.knora.webapi.messages.v2.responder.ontologymessages.{ClassInfoContentV2, PropertyInfoContentV2}
+import java.net.URLEncoder
+
+import org.apache.http.client.HttpClient
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.util.EntityUtils
+import org.knora.webapi.messages.v2.responder.ontologymessages.{ClassInfoContentV2, InputOntologyV2, PropertyInfoContentV2}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.jsonld.JsonLDUtil
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.{ClientApiGenerationException, InconsistentTriplestoreDataException, OntologyConstants}
+
+import scala.collection.mutable
+import scala.util.Try
 
 /**
   * The front-end of the client code generator.
   */
-class GeneratorFrontEnd {
+class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
+    private val httpClient: HttpClient = HttpClients.createDefault
+    private val ontologies: mutable.Map[SmartIri, InputOntologyV2] = mutable.Map.empty
+
+    /**
+      * Returns a set of [[ClientClassDefinition]] instances representing the Knora API classes used by a client API.
+      */
+    def getClientClassDefs(clientApi: ClientApi): Set[ClientClassDefinition] = {
+        getClassIris(clientApi).map {
+            classIri =>
+                val classOntology: InputOntologyV2 = getOntology(classIri)
+                val rdfClassDef: ClassInfoContentV2 = classOntology.classes.getOrElse(classIri, throw ClientApiGenerationException(s"Class <$classIri> not found"))
+
+                val rdfPropertyIris: Set[SmartIri] = rdfClassDef.directCardinalities.keySet.filter {
+                    propertyIri => propertyIri.isKnoraEntityIri
+                }
+
+                val rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = rdfPropertyIris.map {
+                    propertyIri =>
+                        val ontology = getOntology(propertyIri.getOntologyFromEntity)
+                        propertyIri -> ontology.properties.getOrElse(propertyIri, throw ClientApiGenerationException(s"Property <$propertyIri> not found"))
+                }.toMap
+
+                rdfClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
+        }
+    }
+
+    /**
+      * Returns the IRIs of the Knora API classes used by a client API.
+      */
+    private def getClassIris(clientApi: ClientApi): Set[SmartIri] = {
+        clientApi.endpoints.flatMap {
+            endpoint =>
+                endpoint.functions.flatMap {
+                    function =>
+                        val maybeReturnedClass: Option[SmartIri] = function.returnType match {
+                            case classRef: ClientClassReference => Some(classRef.classIri)
+                            case _ => None
+                        }
+
+                        val paramClasses: Set[SmartIri] = function.params.map {
+                            param => param.objectType
+                        }.collect {
+                            case classRef: ClientClassReference => classRef.classIri
+                        }.toSet
+
+                        paramClasses ++ maybeReturnedClass
+                }
+        }
+    }
+
+    /**
+      * Gets an ontology from Knora.
+      *
+      * @param ontologyIri the IRI of the ontology.
+      * @return an [[InputOntologyV2]] representing the ontology.
+      */
+    private def getOntology(ontologyIri: SmartIri): InputOntologyV2 = {
+        ontologies.get(ontologyIri) match {
+            case Some(ontology) => ontology
+
+            case None =>
+                val schema = if (useHttps) "https" else "http"
+                val ontologyApiPath = s"/v2/ontologies/allentities/${URLEncoder.encode(ontologyIri.toString, "UTF-8")}"
+                val uri = s"$schema://$host:$port/$ontologyApiPath"
+                val httpGet = new HttpGet(uri)
+                val response = httpClient.execute(httpGet)
+
+                val responseStrTry: Try[String] = Try {
+                    val statusCode = response.getStatusLine.getStatusCode
+
+                    if (statusCode / 100 != 2) {
+                        throw ClientApiGenerationException(s"Knora responded with error $statusCode: ${response.getStatusLine.getReasonPhrase}")
+                    }
+
+                    Option(response.getEntity) match {
+                        case Some(entity) => EntityUtils.toString(entity)
+                        case None => throw ClientApiGenerationException(s"Knora returned an empty response.")
+                    }
+                }
+
+                val responseStr: String = responseStrTry.get
+                val ontology = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(responseStr))
+                ontologies.put(ontologyIri, ontology)
+                ontology
+        }
+    }
+
     /**
       * Converts RDF class definitions into [[ClientClassDefinition]] instances.
       *
@@ -35,7 +132,7 @@ class GeneratorFrontEnd {
       * @param rdfPropertyDefs the definitions of the properties used in the class.
       * @return a [[ClientClassDefinition]] describing the class.
       */
-    def rdfClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
+    private def rdfClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val isResourceClass = rdfClassDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2Complex.IsResourceClass.toSmartIri)

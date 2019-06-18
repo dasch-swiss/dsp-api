@@ -19,7 +19,6 @@
 
 package org.knora.webapi.util.clientapi
 
-import org.knora.webapi.OntologyConstants
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Cardinality
 import org.knora.webapi.util.SmartIri
 
@@ -34,43 +33,19 @@ trait ClientApi {
     val name: String
 
     /**
+      * The URL path of the API.
+      */
+    val urlPath: String
+
+    /**
       * A human-readable description of the API.
       */
     val description: String
 
     /**
-      * A relative directory path for the module containing this API.
-      */
-    val modulePath: Seq[String]
-
-    /**
       * The endpoints available in the API.
       */
     val endpoints: Set[ClientEndpoint]
-
-    /**
-      * Returns the IRIs of the Knora API classes used by this API.
-      */
-    def getApiClassIrisUsed: Set[SmartIri] = {
-        endpoints.flatMap {
-            endpoint =>
-                endpoint.functions.flatMap {
-                    function =>
-                        val maybeReturnedClass: Option[SmartIri] = function.returnType match {
-                            case classRef: ClientClassReference => Some(classRef.classIri)
-                            case _ => None
-                        }
-
-                        val paramClasses: Set[SmartIri] = function.params.map {
-                            param => param.objectType
-                        }.collect {
-                            case classRef: ClientClassReference => classRef.classIri
-                        }.toSet
-
-                        paramClasses ++ maybeReturnedClass
-                }
-        }
-    }
 }
 
 /**
@@ -83,14 +58,14 @@ trait ClientEndpoint {
     val name: String
 
     /**
+      * The URL path of the endpoint, relative to its API path.
+      */
+    val urlPath: String
+
+    /**
       * A human-readable description of the endpoint.
       */
     val description: String
-
-    /**
-      * A relative directory path for the module containing this endpoint.
-      */
-    val modulePath: Seq[String]
 
     /**
       * The functions provided by the endpoint.

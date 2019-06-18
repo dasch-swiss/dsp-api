@@ -20,18 +20,23 @@
 package org.knora.webapi.util.clientapi
 
 /**
-  * Generates client API source code from the `JsonTypeScript` target.
+  * Generates client API source code in TypeScript.
   */
-class JsonTypeScriptBackEnd extends GeneratorBackEnd {
+class TypeScriptBackEnd extends GeneratorBackEnd {
     /**
-      * Generates client API class source code based on a [[ClientClassDefinition]].
+      * Generates client API source code.
       *
-      * @param clientClassDef the definition of the client class.
+      * @param apis the APIs from which source code is to be generated.
       * @return the generated source code.
       */
-    def generateClientClassSourceCode(clientClassDef: ClientClassDefinition): ClientClassSourceCode = {
+    def generateClientSourceCode(apis: Set[ClientApiBackendInput]): Set[ClientSourceCodeFileContent] = {
+
+
+        /*
         val filename: String = clientClassDef.className + ".ts"
-        val sourceCode: String = clientapi.txt.generateJsonTypeScriptClass(clientClassDef).toString()
-        ClientClassSourceCode(filename = filename, sourceCode = sourceCode)
+        val text: String = clientapi.txt.generateJsonTypeScriptClass(clientClassDef).toString()
+        ClientClassSourceCode(filename = filename, text = text)
+        */
+        Set.empty
     }
 }
