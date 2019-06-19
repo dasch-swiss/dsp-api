@@ -46,8 +46,21 @@ object ClientApiGenerator {
         // Save the source code to files.
         for (sourceCodeFileContent <- sourceCode) {
             val outputFile: File = Paths.get(conf.outputDir(), sourceCodeFileContent.filePath).toFile
+            makeParentDirs(outputFile)
             FileUtil.writeTextFile(file = outputFile, content = sourceCodeFileContent.text)
             println(s"Wrote ${outputFile.getAbsolutePath}")
+        }
+    }
+
+    /**
+      * Creates the parent directories in a file path if necessary.
+      *
+      * @param file the file path.
+      */
+    private def makeParentDirs(file: File): Unit = {
+        Option(file.getParentFile) match {
+            case Some(parent) => parent.mkdirs
+            case None => ()
         }
     }
 

@@ -224,7 +224,15 @@ case class JsonRequestBody(jsonObject: Map[String, Value]) extends HttpRequestBo
   */
 case class ClientClassDefinition(className: String,
                                  classIri: SmartIri,
-                                 properties: Vector[ClientPropertyDefinition])
+                                 properties: Vector[ClientPropertyDefinition]) {
+    lazy val classObjectTypesUsed: Set[ClientClassReference] = properties.foldLeft(Set.empty[ClientClassReference]) {
+        (acc, property) =>
+            property.objectType match {
+                case classRef: ClientClassReference => acc + classRef
+                case _ => acc
+            }
+    }
+}
 
 /**
   * A definition of a Knora property as used in a particular class.
@@ -270,6 +278,11 @@ case object ClientIntegerLiteral extends ClientLiteral
   * The type of decimal literals.
   */
 case object ClientDecimalLiteral extends ClientLiteral
+
+/**
+  * The type of URI literals.
+  */
+case object ClientUriLiteral extends ClientLiteral
 
 /**
   * The type of timestamp literals.

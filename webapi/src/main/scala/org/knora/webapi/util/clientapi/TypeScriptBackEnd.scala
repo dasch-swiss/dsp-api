@@ -21,13 +21,36 @@ package org.knora.webapi.util.clientapi
 
 import org.apache.commons.lang3.StringUtils
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.util.clientapi.TypeScriptBackEnd.{ClassInfo, EndpointInfo}
+import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
 
 /**
   * Generates client API source code in TypeScript.
   */
 class TypeScriptBackEnd extends GeneratorBackEnd {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    /**
+      * Represents information about an endpoint and its source code.
+      *
+      * @param className    the name of the endpoint class.
+      * @param variableName a variable name that can be used for an instance of the endpoint class.
+      * @param importPath   the file path to be used for importing the endpoint in the main endpoint.
+      * @param urlPath      the URL path of the endpoint, relative to the API path.
+      * @param fileContent  the endpoint's source code.
+      */
+    private case class EndpointInfo(className: String,
+                                    variableName: String,
+                                    importPath: String,
+                                    urlPath: String,
+                                    fileContent: ClientSourceCodeFileContent) {
+        def toImportInfo: ImportInfo = ImportInfo(
+            className = className,
+            importPath = importPath,
+            variableName = Some(variableName),
+            urlPath = Some(urlPath)
+        )
+    }
+
 
     /**
       * Generates client API source code.
@@ -40,15 +63,27 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     private def generateApiSourceCode(api: ClientApiBackendInput): Set[ClientSourceCodeFileContent] = {
-        val clientSourceCodePaths: Map[String, String] = api.clientClassDefs.map {
+        val clientClassCodePaths: Map[String, String] = api.clientClassDefs.map {
             clientClassDef =>
                 val filePath = makeClassFilePath(apiName = api.apiDef.name, className = clientClassDef.className)
                 clientClassDef.className -> filePath
         }.toMap
 
+        val clientInterfaceCodePaths: Map[String, String] = api.clientClassDefs.map {
+            clientClassDef =>
+                val filePath = makeInterfaceFilePath(apiName = api.apiDef.name, className = clientClassDef.className)
+                clientClassDef.className -> filePath
+        }.toMap
+
         val classSourceCode: Set[ClientSourceCodeFileContent] = generateClassSourceCode(
             clientClassDefs = api.clientClassDefs,
-            clientSourceCodePaths = clientSourceCodePaths
+            clientClassCodePaths = clientClassCodePaths,
+            clientInterfaceCodePaths = clientInterfaceCodePaths
+        )
+
+        val interfaceSourceCode: Set[ClientSourceCodeFileContent] = generateInterfaceSourceCode(
+            clientClassDefs = api.clientClassDefs,
+            clientInterfaceCodePaths = clientInterfaceCodePaths
         )
 
         val endpointInfos: Set[EndpointInfo] = api.apiDef.endpoints.map {
@@ -57,7 +92,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
                     apiDef = api.apiDef,
                     endpoint = endpoint,
                     clientClassDefs = api.clientClassDefs,
-                    clientSourceCodePaths = clientSourceCodePaths
+                    clientClassCodePaths = clientClassCodePaths
                 )
         }
 
@@ -66,7 +101,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
             endpointInfos = endpointInfos
         )
 
-        classSourceCode ++ endpointInfos.map(_.fileContent) + mainEndpointSourceCode
+        classSourceCode ++ interfaceSourceCode ++ endpointInfos.map(_.fileContent) + mainEndpointSourceCode
     }
 
 
@@ -77,7 +112,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         val text: String = clientapi.txt.generateTypeScriptMainEndpoint(
             name = apiDef.name,
             description = apiDef.description,
-            endpoints = endpointInfos
+            endpoints = endpointInfos.map(_.toImportInfo)
         ).toString()
 
         ClientSourceCodeFileContent(filePath = mainEndpointFilePath, text = text)
@@ -86,18 +121,18 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     private def generateEndpointInfo(apiDef: ClientApi,
                                      endpoint: ClientEndpoint,
                                      clientClassDefs: Set[ClientClassDefinition],
-                                     clientSourceCodePaths: Map[String, String]): EndpointInfo = {
+                                     clientClassCodePaths: Map[String, String]): EndpointInfo = {
         val endpointFilePath = makeEndpointFilePath(apiName = apiDef.name, endpoint = endpoint)
 
         val classDefsImported: Set[ClientClassDefinition] = clientClassDefs.filter {
             clientClassDef => endpoint.classIrisUsed.contains(clientClassDef.classIri)
         }
 
-        val classInfos: Set[ClassInfo] = classDefsImported.map {
+        val classInfos: Set[ImportInfo] = classDefsImported.map {
             clientClassDef =>
-                ClassInfo(
+                ImportInfo(
                     className = clientClassDef.className,
-                    importPathInEndpoint = s"../../../${stripExtension(clientSourceCodePaths(clientClassDef.className))})"
+                    importPath = s"../../../${stripExtension(clientClassCodePaths(clientClassDef.className))}"
                 )
         }
 
@@ -112,20 +147,50 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
 
         EndpointInfo(
             className = endpoint.name,
-            variableName = endpoint.name.substring(0, 1).toLowerCase + endpoint.name.substring(1),
+            variableName = makeVariableName(endpoint.name),
             urlPath = endpoint.urlPath,
-            importPathInMainEndpoint = s"./${stripLeadingDirs(stripExtension(endpointFilePath), 2)}",
+            importPath = s"./${stripLeadingDirs(stripExtension(endpointFilePath), 2)}",
             fileContent = fileContent
         )
     }
 
     private def generateClassSourceCode(clientClassDefs: Set[ClientClassDefinition],
-                                        clientSourceCodePaths: Map[String, String]): Set[ClientSourceCodeFileContent] = {
+                                        clientClassCodePaths: Map[String, String],
+                                        clientInterfaceCodePaths: Map[String, String]): Set[ClientSourceCodeFileContent] = {
         clientClassDefs.map {
             clientClassDef =>
-                val filePath = clientSourceCodePaths(clientClassDef.className)
-                val text: String = clientapi.txt.generateTypeScriptClass(clientClassDef).toString()
-                ClientSourceCodeFileContent(filePath = filePath, text = text)
+                val classFilePath = clientClassCodePaths(clientClassDef.className)
+                val interfacePathInClass = s"../../${stripExtension(clientInterfaceCodePaths(clientClassDef.className))}"
+
+                val classText: String = clientapi.txt.generateTypeScriptClass(
+                    classDef = clientClassDef,
+                    interfacePathInClass = interfacePathInClass
+                ).toString()
+
+                ClientSourceCodeFileContent(filePath = classFilePath, text = classText)
+        }
+    }
+
+    private def generateInterfaceSourceCode(clientClassDefs: Set[ClientClassDefinition],
+                                            clientInterfaceCodePaths: Map[String, String]): Set[ClientSourceCodeFileContent] = {
+        clientClassDefs.map {
+            clientClassDef =>
+                val interfaceFilePath = clientInterfaceCodePaths(clientClassDef.className)
+
+                val importedInterfaces = clientClassDef.classObjectTypesUsed.map {
+                    classRef =>
+                        ImportInfo(
+                            className = classRef.className,
+                            importPath = clientInterfaceCodePaths(classRef.className)
+                        )
+                }
+
+                val interfaceText: String = clientapi.txt.generateTypeScriptInterface(
+                    classDef = clientClassDef,
+                    importedInterfaces = importedInterfaces
+                ).toString()
+
+                ClientSourceCodeFileContent(filePath = interfaceFilePath, text = interfaceText)
         }
     }
 
@@ -137,21 +202,19 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     private def makeEndpointFilePath(apiName: String, endpoint: ClientEndpoint): String = {
         val apiLocalName = stringFormatter.camelCaseToSeparatedLowerCase(apiName)
         val endpointLocalName = stringFormatter.camelCaseToSeparatedLowerCase(endpoint.name)
-        s"api/$apiLocalName/$endpointLocalName/$endpointLocalName-endpoint.ts"
+        s"api/$apiLocalName/$endpointLocalName/$endpointLocalName.ts"
     }
-
-    /*
-    private def makeInterfaceFilePath(apiName: String, className: String): String = {
-        val apiLocalName = stringFormatter.camelCaseToSeparatedLowerCase(apiName)
-        val classLocalName = stringFormatter.camelCaseToSeparatedLowerCase(className)
-        s"interfaces/models/$apiLocalName/i-$classLocalName.ts"
-    }
-    */
 
     private def makeClassFilePath(apiName: String, className: String): String = {
         val apiLocalName = stringFormatter.camelCaseToSeparatedLowerCase(apiName)
         val classLocalName = stringFormatter.camelCaseToSeparatedLowerCase(className)
         s"models/$apiLocalName/$classLocalName.ts"
+    }
+
+    private def makeInterfaceFilePath(apiName: String, className: String): String = {
+        val apiLocalName = stringFormatter.camelCaseToSeparatedLowerCase(apiName)
+        val classLocalName = stringFormatter.camelCaseToSeparatedLowerCase(className)
+        s"interfaces/models/$apiLocalName/i-$classLocalName.ts"
     }
 
     private def stripLeadingDirs(filePath: String, numberToStrip: Int) = {
@@ -161,35 +224,28 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     private def stripExtension(filePath: String): String = {
         filePath.take(filePath.lastIndexOf("."))
     }
+
+    private def makeVariableName(className: String): String = {
+        className.substring(0, 1).toLowerCase + className.substring(1)
+    }
 }
 
 /**
-  * Classes used during code generation by [[TypeScriptBackEnd]] and by its Twirl templates.
+  * Classes used by Twirl templates.
   */
 object TypeScriptBackEnd {
 
     /**
-      * Represents information about an endpoint and its source code.
+      * Represents information about an imported class or interface.
       *
-      * @param className                the name of the endpoint class.
-      * @param variableName             a variable name that can be used for an instance of the endpoint class.
-      * @param urlPath                  the URL path of the endpoint, relative to the API path.
-      * @param importPathInMainEndpoint the file path to be used for importing the endpoint in the main endpoint.
-      * @param fileContent              the endpoint's source code.
+      * @param className    the name of the class.
+      * @param importPath   the file path to be used for importing the class.
+      * @param variableName a variable name that can be used for an instance of the class.
+      * @param urlPath      if this class represents an endpoint, the URL path of the endpoint.
       */
-    case class EndpointInfo(className: String,
-                            variableName: String,
-                            urlPath: String,
-                            importPathInMainEndpoint: String,
-                            fileContent: ClientSourceCodeFileContent)
-
-    /**
-      * Represents information about a Knora class used in an endpoint.
-      *
-      * @param className            the name of the class.
-      * @param importPathInEndpoint the file path to be used for importing the class in an endpoint.
-      */
-    case class ClassInfo(className: String,
-                         importPathInEndpoint: String)
+    case class ImportInfo(className: String,
+                          importPath: String,
+                          variableName: Option[String] = None,
+                          urlPath: Option[String] = None)
 
 }

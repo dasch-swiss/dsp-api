@@ -20,10 +20,11 @@
 @import org.knora.webapi._
 @import org.knora.webapi.util._
 @import org.knora.webapi.util.clientapi._
+@import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
 @import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 
 @(classDef: ClientClassDefinition,
-  interfacePathInClass: String)
+  importedInterfaces: Set[ImportInfo])
 
 @makeTypeScriptType(objectType: ClientObjectType) = @{
     objectType match {
@@ -33,32 +34,8 @@
         case ClientDecimalLiteral => "number"
         case ClientUriLiteral => "string"
         case ClientDateTimeStampLiteral => "string"
-        case classRef: ClientClassReference => "I" + classRef.className // or "any" to work like current handwritten code
+        case classRef: ClientClassReference => "I" + classRef.className
         case other => throw ClientApiGenerationException(s"Type $other not yet supported")
-    }
-}
-
-@makeDefaultValue(objectType: ClientObjectType, cardinality: Cardinality) = @{
-    if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
-        "[]"
-    } else {
-        objectType match {
-           case ClientStringLiteral => "\"\""
-           case ClientBooleanLiteral => "false"
-           case ClientIntegerLiteral => "0"
-           case ClientDecimalLiteral => "0"
-           case ClientDateTimeStampLiteral => "\"\""
-           case classRef: ClientClassReference => "null"
-           case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
-        }
-    }
-}
-
-@wrapInArrayForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
-    if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
-        s"[$typeScriptType]"
-    } else {
-        typeScriptType
     }
 }
 
@@ -72,16 +49,12 @@
     }
 }
 
-import { Any, JsonObject, JsonProperty } from "json2typescript";
+@for(classInfo <- importedInterfaces) {
+import { I@classInfo.className } from "@classInfo.importPath";
+}
 
-import { I@{classDef.className} } from "@interfacePathInClass";
-
-@@JsonObject("@{classDef.className}")
-export class @{classDef.className} implements I@{classDef.className} {
+export interface I@{classDef.className} {
     @for(property <- classDef.properties) {
-        @defining(makeTypeScriptType(property.objectType)) { typeScriptType =>
-            @@JsonProperty("@{property.propertyName}", @wrapInArrayForCardinality(typeScriptType.capitalize, property.cardinality))
-            public @{property.propertyName}: @addForCardinality(typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
-        }
+        @{property.propertyName}: @addForCardinality(makeTypeScriptType(property.objectType), property.cardinality);
     }
 }

@@ -45,23 +45,43 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
       * Returns a set of [[ClientClassDefinition]] instances representing the Knora API classes used by a client API.
       */
     def getClientClassDefs(clientApi: ClientApi): Set[ClientClassDefinition] = {
-        clientApi.classIrisUsed.map {
-            classIri =>
-                val classOntology: InputOntologyV2 = getOntology(classIri)
-                val rdfClassDef: ClassInfoContentV2 = classOntology.classes.getOrElse(classIri, throw ClientApiGenerationException(s"Class <$classIri> not found"))
+        def getClassDefRec(classIri: SmartIri, definitionAcc: Map[SmartIri, ClientClassDefinition]): Map[SmartIri, ClientClassDefinition] = {
+            val classOntology: InputOntologyV2 = getOntology(classIri.getOntologyFromEntity)
+            val rdfClassDef: ClassInfoContentV2 = classOntology.classes.getOrElse(classIri, throw ClientApiGenerationException(s"Class <$classIri> not found"))
 
-                val rdfPropertyIris: Set[SmartIri] = rdfClassDef.directCardinalities.keySet.filter {
-                    propertyIri => propertyIri.isKnoraEntityIri
-                }
+            val rdfPropertyIris: Set[SmartIri] = rdfClassDef.directCardinalities.keySet.filter {
+                propertyIri => propertyIri.isKnoraEntityIri
+            }
 
-                val rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = rdfPropertyIris.map {
-                    propertyIri =>
-                        val ontology = getOntology(propertyIri.getOntologyFromEntity)
-                        propertyIri -> ontology.properties.getOrElse(propertyIri, throw ClientApiGenerationException(s"Property <$propertyIri> not found"))
-                }.toMap
+            val rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = rdfPropertyIris.map {
+                propertyIri =>
+                    val ontology = getOntology(propertyIri.getOntologyFromEntity)
+                    propertyIri -> ontology.properties.getOrElse(propertyIri, throw ClientApiGenerationException(s"Property <$propertyIri> not found"))
+            }.toMap
 
-                rdfClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
+            val clientClassDef = rdfClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
+            val newDefinitionAcc = definitionAcc + (clientClassDef.classIri -> clientClassDef)
+
+            val propertyObjectClassDefs: Map[SmartIri, ClientClassDefinition] = clientClassDef.properties.foldLeft(newDefinitionAcc) {
+                case (acc, clientPropertyDef) =>
+                    clientPropertyDef.objectType match {
+                        case classRef: ClientClassReference =>
+                            if (newDefinitionAcc.contains(classRef.classIri)) {
+                                acc
+                            } else {
+                                acc ++ getClassDefRec(classIri = classRef.classIri, definitionAcc = acc)
+                            }
+
+                        case _ => acc
+                    }
+            }
+
+            propertyObjectClassDefs ++ propertyObjectClassDefs
         }
+
+        clientApi.classIrisUsed.foldLeft(Map.empty[SmartIri, ClientClassDefinition]) {
+            case (acc, classIri) => getClassDefRec(classIri = classIri, definitionAcc = acc)
+        }.values.toSet
     }
 
     /**
@@ -254,7 +274,9 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
             case OntologyConstants.Xsd.Boolean => ClientBooleanLiteral
             case OntologyConstants.Xsd.Integer => ClientIntegerLiteral
             case OntologyConstants.Xsd.Decimal => ClientDecimalLiteral
+            case OntologyConstants.Xsd.Uri => ClientUriLiteral
             case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => ClientDateTimeStampLiteral
+
             case _ => ClientClassReference(
                 className = makeClientClassName(ontologyObjectType),
                 classIri = ontologyObjectType

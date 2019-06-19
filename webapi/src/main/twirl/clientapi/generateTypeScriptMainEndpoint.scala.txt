@@ -20,17 +20,17 @@
 @import org.knora.webapi._
 @import org.knora.webapi.util._
 @import org.knora.webapi.util.clientapi._
-@import org.knora.webapi.util.clientapi.TypeScriptBackEnd.EndpointInfo
+@import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
 
 @(name: String,
   description: String,
-  endpoints: Set[EndpointInfo])
+  endpoints: Set[ImportInfo])
 
 import { KnoraApiConfig } from "../../knora-api-config";
 import { Endpoint } from "../endpoint";
 
 @for(endpoint <- endpoints) {
-import { @endpoint.className } from "@endpoint.importPathInMainEndpoint";
+import { @endpoint.className } from "@endpoint.importPath";
 }
 
 /**
@@ -39,12 +39,13 @@ import { @endpoint.className } from "@endpoint.importPathInMainEndpoint";
 export class @name extends Endpoint {
 
     @for(endpoint <- endpoints) {
-    readonly @endpoint.variableName: @endpoint.className;
+    readonly @endpoint.variableName.get: @endpoint.className;
     }
 
     /**
      * Constructor.
      * Sets up all endpoints for this endpoint.
+     *
      * @@param knoraApiConfig
      * @@param path
      */
@@ -54,7 +55,7 @@ export class @name extends Endpoint {
 
         // Instantiate the endpoints
         @for(endpoint <- endpoints) {
-        this.@endpoint.variableName = new @{endpoint.className}(knoraApiConfig, path + "@endpoint.urlPath");
+        this.@endpoint.variableName.get = new @{endpoint.className}(knoraApiConfig, path + "@endpoint.urlPath.get");
         }
     }
 }

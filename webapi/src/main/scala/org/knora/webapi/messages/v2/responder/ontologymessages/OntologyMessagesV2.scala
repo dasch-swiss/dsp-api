@@ -1078,7 +1078,8 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         // If we're converting from the external schema to an internal one, filter classes and properties that don't
         // exist in the target schema.
 
-        val (classesFilteredForTargetSchema, propsFilteredForTargetSchema) = if (ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraBase.KnoraBaseOntologyIri) {
+        val (classesFilteredForTargetSchema, propsFilteredForTargetSchema) = if (ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraBase.KnoraBaseOntologyIri ||
+            ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraAdmin.KnoraAdminOntologyIri) {
             val filteredClasses = classes.filterNot {
                 case (classIri, classDef) => transformationRules.internalClassesToRemove.contains(classIri) || (targetSchema == ApiV2Simple && classDef.isStandoffClass)
             }
@@ -1094,7 +1095,8 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
 
         // Convert everything to the target schema.
 
-        val ontologyMetadataInTargetSchema = if (ontologyMetadata.ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
+        val ontologyMetadataInTargetSchema = if (ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraBase.KnoraBaseOntologyIri ||
+            ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraAdmin.KnoraAdminOntologyIri) {
             transformationRules.ontologyMetadata
         } else {
             ontologyMetadata.toOntologySchema(targetSchema)
@@ -1115,7 +1117,9 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         // If we're converting from the internal schema to an external one, and this is the whole ontology,
         // add classes and properties that exist in the target schema but not in the source schema.
 
-        val (classesWithExtraOnesForSchema, propertiesWithExtraOnesForSchema) = if (isWholeOntology && ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraBase.KnoraBaseOntologyIri) {
+        val (classesWithExtraOnesForSchema, propertiesWithExtraOnesForSchema) = if (isWholeOntology &&
+            (ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraBase.KnoraBaseOntologyIri ||
+                ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraAdmin.KnoraAdminOntologyIri)) {
             (classesInTargetSchema ++ transformationRules.externalClassesToAdd, propertiesInTargetSchema ++ transformationRules.externalPropertiesToAdd)
         } else {
             (classesInTargetSchema, propertiesInTargetSchema)

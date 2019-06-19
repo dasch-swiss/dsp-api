@@ -76,7 +76,7 @@ object OntologyTransformationRules {
       */
     def getTransformationRules(ontologyIri: SmartIri, targetSchema: ApiV2Schema): OntologyTransformationRules = {
         // If this is the admin ontology, use its transformation rules.
-        if (ontologyIri.toString == OntologyConstants.KnoraAdminV2.KnoraAdminOntologyIri) {
+        if (ontologyIri.toString == OntologyConstants.KnoraAdmin.KnoraAdminOntologyIri) {
             targetSchema match {
                 case ApiV2Simple => throw BadRequestException(s"The knora-admin API is not available in the simple schema")
                 case ApiV2Complex => KnoraAdminToApiV2ComplexTransformationRules

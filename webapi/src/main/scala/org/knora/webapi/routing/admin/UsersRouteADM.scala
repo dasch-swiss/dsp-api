@@ -665,7 +665,7 @@ class UsersEndpoint extends ClientEndpoint {
                 description = "The value of the property by which the user is identified."
             )
         ),
-        returnType = usersResponseClassRef,
+        returnType = userResponseClassRef,
         implementation = ClientHttpRequest(
             httpMethod = GET,
             urlPath = Seq(

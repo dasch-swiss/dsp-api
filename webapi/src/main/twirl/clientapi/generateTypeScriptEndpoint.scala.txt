@@ -20,11 +20,11 @@
 @import org.knora.webapi._
 @import org.knora.webapi.util._
 @import org.knora.webapi.util.clientapi._
-@import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ClassInfo
+@import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
 
 @(name: String,
   description: String,
-  importedClasses: Set[ClassInfo],
+  importedClasses: Set[ImportInfo],
   functions: Seq[ClientFunction])
 
 import { Observable } from "rxjs";
@@ -35,7 +35,7 @@ import { ApiResponseError } from "../../../models/api-response-error";
 import { Endpoint } from "../../endpoint";
 
 @for(classInfo <- importedClasses) {
-import { @classInfo.className } from "@classInfo.importPathInEndpoint";
+import { @classInfo.className } from "@classInfo.importPath";
 }
 
 @makeObjectType(objectType: ClientObjectType) = @{
@@ -61,30 +61,42 @@ import { @classInfo.className } from "@classInfo.importPathInEndpoint";
 
 @makeValue(value: Value) = @{
     value match {
-        case literal: StringLiteralValue => "\"" + literal + "\""
-        case boolean: BooleanLiteralValue => "\"" + boolean.toString + "\""
+        case literal: StringLiteralValue => "\"" + literal.value + "\""
+        case boolean: BooleanLiteralValue => "\"" + boolean.value.toString + "\""
         case arg: ArgValue => arg.name + arg.memberVariableName.map(varName => "." + varName).getOrElse("")
     }
 }
 
 @makeUrlPath(urlPath: Seq[UrlComponent]) = @{
-    urlPath.map {
-        case SlashUrlComponent => "\"/\""
-        case value: Value => makeValue(value)
+    if (urlPath.isEmpty) {
+        "\"\""
+    } else {
+        urlPath.map {
+            case SlashUrlComponent => "\"/\""
+            case value: Value =>
+                value match {
+                    case arg: ArgValue => "encodeURI(" + makeValue(value) + ")"
+                    case _ => makeValue(value)
+                }
+        }.mkString(" + ")
     }
 }
 
 @makeHttpRequestBody(maybeRequestBody: Option[HttpRequestBody]) = @{
     maybeRequestBody match {
         case Some(requestBody) =>
-            requestBody match {
+            val requestBodyContent = requestBody match {
                 case jsonRequestBody: JsonRequestBody =>
                     "{ " +
                     jsonRequestBody.jsonObject.map {
                         case (key, value) => key + ": " + makeValue(value)
                     }.mkString(", ") +
                     " }"
+
+                case arg: ArgValue => makeValue(arg)
             }
+
+            ", " + requestBodyContent
 
         case None => ""
     }
@@ -98,9 +110,8 @@ export class @name extends Endpoint {
     @for(function <- functions) {
     /**
      * @function.description
-     @for(param <- function.params) {
-     * @@param @param.name @param.description
-     }
+     * @for(param <- function.params) {
+     * @@param @param.name @param.description}
      */
     @{function.name}(@for((param, index) <- function.params.zipWithIndex) {@if(index > 0) {, }@param.name: @makeObjectType(param.objectType)}): Observable<ApiResponseData<@makeObjectType(function.returnType)> | ApiResponseError> {
         @function.implementation match {
@@ -112,7 +123,7 @@ export class @name extends Endpoint {
         }
 
         case functionCall: FunctionCall => {
-            return this.@{functionCall.name}(@{functionCall.args.map(arg => makeValue(arg)).mkString(", ")})
+            return this.@{functionCall.name}(@{functionCall.args.map(arg => makeValue(arg)).mkString(", ")});
         }
         }
     }
