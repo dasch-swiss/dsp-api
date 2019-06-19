@@ -644,7 +644,7 @@ class UsersEndpoint extends ClientEndpoint {
         returnType = usersResponseClassRef,
         implementation = ClientHttpRequest(
             httpMethod = GET,
-            urlPath = Seq(LiteralUrlComponent(""))
+            urlPath = Seq(StringLiteralValue(""))
         ),
         description = "Returns a list of all users."
     )
@@ -787,12 +787,12 @@ class UsersEndpoint extends ClientEndpoint {
         implementation = ClientHttpRequest(
             httpMethod = PUT,
             urlPath = Seq(
-                LiteralUrlComponent("/iri/"),
+                StringLiteralValue("/iri/"),
                 ArgValue(
                     name = "user",
                     memberVariableName = Some("id")
                 ),
-                LiteralUrlComponent("/Status")
+                StringLiteralValue("/Status")
             ),
             requestBody = Some(
                 JsonRequestBody(
@@ -831,12 +831,12 @@ class UsersEndpoint extends ClientEndpoint {
         implementation = ClientHttpRequest(
             httpMethod = PUT,
             urlPath = Seq(
-                LiteralUrlComponent("/iri/"),
+                StringLiteralValue("/iri/"),
                 ArgValue(
                     name = "user",
                     memberVariableName = Some("id")
                 ),
-                LiteralUrlComponent("/Password")
+                StringLiteralValue("/Password")
             ),
             requestBody = Some(
                 JsonRequestBody(
@@ -867,12 +867,12 @@ class UsersEndpoint extends ClientEndpoint {
         implementation = ClientHttpRequest(
             httpMethod = PUT,
             urlPath = Seq(
-                LiteralUrlComponent("/iri/"),
+                StringLiteralValue("/iri/"),
                 ArgValue(
                     name = "user",
                     memberVariableName = Some("id")
                 ),
-                LiteralUrlComponent("/Status")
+                StringLiteralValue("/Status")
             ),
             requestBody = Some(
                 JsonRequestBody(

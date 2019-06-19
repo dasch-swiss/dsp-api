@@ -32,7 +32,7 @@
         case ClientDecimalLiteral => "number"
         case ClientDateTimeStampLiteral => "string"
         case classRef: ClientClassReference => "any"
-        case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
+        case other => throw ClientApiGenerationException(s"Type $other not yet supported")
     }
 }
 

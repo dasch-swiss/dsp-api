@@ -176,14 +176,9 @@ trait UrlComponent
 case object SlashUrlComponent extends UrlComponent
 
 /**
-  * Represents a string literal to be included in a URL path.
-  */
-case class LiteralUrlComponent(value: String) extends UrlComponent
-
-/**
   * Represents a value used in a function.
   */
-trait Value extends UrlComponent with HttpRequestBody
+trait Value extends UrlComponent
 
 /**
   * Represents a string literal value.
@@ -206,7 +201,7 @@ case class BooleanLiteralValue(value: Boolean) extends Value
   * @param memberVariableName if provided, the name of a member variable of the argument, to be used instead of
   *                           the argument itself.
   */
-case class ArgValue(name: String, memberVariableName: Option[String] = None) extends Value
+case class ArgValue(name: String, memberVariableName: Option[String] = None) extends Value with HttpRequestBody
 
 /**
   * Represents the body of an HTTP request.
