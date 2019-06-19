@@ -522,3 +522,41 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-admin:isInProject <http://rdfh.ch/projects/08AE> ;
   knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
   knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/08AE> .
+
+
+###################################
+# NeHiSc                          #
+###################################
+
+<http://rdfh.ch/projects/0802> a knora-admin:knoraProject ;
+  knora-admin:projectShortname "NeHiSc"^^xsd:string ;
+  knora-admin:projectShortcode "0802"^^xsd:string ;
+  knora-admin:projectLongname "Network of History of Science"^^xsd:string ;
+  knora-admin:projectDescription "Network of digital editions of historical scientific data"^^xsd:string ;
+  knora-admin:status "true"^^xsd:boolean ;
+  knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+## Project Member
+<http://rdfh.ch/users/NeHiScProjectMember> a knora-admin:User ;
+  knora-admin:username "sepideh.alassi"^^xsd:string ;
+  knora-admin:familyName "Alassi"^^xsd:string ;
+  knora-admin:givenName "Sepideh"^^xsd:string ;
+  knora-admin:password "test"^^xsd:string ;
+  knora-admin:email "nehisc-user@example.ch"^^xsd:string ;
+  knora-admin:preferredLanguage "en"^^xsd:string ;
+  knora-admin:status "true"^^xsd:boolean ;
+  knora-admin:isInProject <http://rdfh.ch/projects/0802> ;
+  knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+
+## Project Admin
+<http://rdfh.ch/users/NeHiScProjectAdmin> a knora-admin:User ;
+  knora-admin:username "nehisc-admin"^^xsd:string ;
+  knora-admin:familyName "NeHiSc"^^xsd:string ;
+  knora-admin:givenName "Admin"^^xsd:string ;
+  knora-admin:password "test"^^xsd:string ;
+  knora-admin:email "nehisc-admin@example.ch"^^xsd:string ;
+  knora-admin:preferredLanguage "en"^^xsd:string ;
+  knora-admin:status "true"^^xsd:boolean ;
+  knora-admin:isInProject <http://rdfh.ch/projects/0802> ;
+  knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
+  knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0802> .
