@@ -36,7 +36,8 @@ case class ClientApiBackendInput(apiDef: ClientApi, clientClassDefs: Set[ClientC
 case class ClientSourceCodeFileContent(filePath: String, text: String)
 
 /**
-  * A trait for client API code generator back-ends.
+  * A trait for client API code generator back ends. A back end is responsible for producing client API library
+  * source code in a particular programming language.
   */
 trait GeneratorBackEnd {
     /**
