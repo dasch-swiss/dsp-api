@@ -679,7 +679,7 @@ class UsersEndpoint extends ClientEndpoint {
     private val deleteUser: ClientFunction = "deleteUser" desc "Deletes a user. This method does not actually delete a user, but sets the status to false." params (
         "user" desc "The user to be deleted." paramType User
         ) httpPut(str("iri") / argMember("user", "id") / str("Status"),
-        json("status" -> boolean(false))) returns UserResponse
+        json("status" -> False)) returns UserResponse
 
     override val functions: Seq[ClientFunction] = Seq(
         getUsers,

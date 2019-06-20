@@ -161,7 +161,9 @@ object EndpointDSL {
 
     def str(value: String): StringLiteralValue = StringLiteralValue(value)
 
-    def boolean(value: Boolean): BooleanLiteralValue = BooleanLiteralValue(value)
+    val True: BooleanLiteralValue = BooleanLiteralValue(true)
+
+    val False: BooleanLiteralValue = BooleanLiteralValue(false)
 
     def arg(name: String) = ArgValue(name)
 
