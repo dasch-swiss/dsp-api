@@ -74,7 +74,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
             val propertyObjectClassDefs: Map[SmartIri, ClientClassDefinition] = clientClassDef.properties.foldLeft(newDefinitionAcc) {
                 case (acc, clientPropertyDef) =>
                     clientPropertyDef.objectType match {
-                        case classRef: ClientClassReference =>
+                        case classRef: ClassRef =>
                             // Do we have this class's definition already?
                             if (newDefinitionAcc.contains(classRef.classIri)) {
                                 // Yes. Nothing more to do.
@@ -184,7 +184,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
                         val isLinkValueProp = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2Complex.IsLinkValueProperty.toSmartIri)
 
                         val clientObjectType: ClientObjectType = if (isLinkValueProp) {
-                            ClientLinkValue(ontologyObjectType)
+                            LinkVal(ontologyObjectType)
                         } else {
                             resourcePropObjectTypeToClientObjectType(ontologyObjectType)
                         }
@@ -209,7 +209,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
                     ClientPropertyDefinition(
                         propertyName = propertyName,
                         propertyIri = propertyIri,
-                        objectType = ClientStringLiteral,
+                        objectType = StringLiteral,
                         cardinality = knoraCardinalityInfo.cardinality,
                         isEditable = propertyIri.toString == OntologyConstants.Rdfs.Label // Labels of resources are editable
                     )
@@ -252,7 +252,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
                     ClientPropertyDefinition(
                         propertyName = propertyName,
                         propertyIri = propertyIri,
-                        objectType = ClientStringLiteral,
+                        objectType = StringLiteral,
                         cardinality = knoraCardinalityInfo.cardinality,
                         isEditable = true
                     )
@@ -284,24 +284,24 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
       */
     private def resourcePropObjectTypeToClientObjectType(ontologyObjectType: SmartIri): ClientObjectType = {
         ontologyObjectType.toString match {
-            case OntologyConstants.KnoraApiV2Complex.Value => ClientAbstractKnoraValue
-            case OntologyConstants.KnoraApiV2Complex.TextValue => ClientTextValue
-            case OntologyConstants.KnoraApiV2Complex.IntValue => ClientIntValue
-            case OntologyConstants.KnoraApiV2Complex.DecimalValue => ClientDecimalValue
-            case OntologyConstants.KnoraApiV2Complex.BooleanValue => ClientBooleanValue
-            case OntologyConstants.KnoraApiV2Complex.DateValue => ClientDateValue
-            case OntologyConstants.KnoraApiV2Complex.GeomValue => ClientGeomValue
-            case OntologyConstants.KnoraApiV2Complex.IntervalValue => ClientIntervalValue
-            case OntologyConstants.KnoraApiV2Complex.ListValue => ClientListValue
-            case OntologyConstants.KnoraApiV2Complex.UriValue => ClientUriValue
-            case OntologyConstants.KnoraApiV2Complex.GeonameValue => ClientGeonameValue
-            case OntologyConstants.KnoraApiV2Complex.ColorValue => ClientColorValue
-            case OntologyConstants.KnoraApiV2Complex.StillImageFileValue => ClientStillImageFileValue
-            case OntologyConstants.KnoraApiV2Complex.MovingImageFileValue => ClientMovingImageFileValue
-            case OntologyConstants.KnoraApiV2Complex.AudioFileValue => ClientAudioFileValue
-            case OntologyConstants.KnoraApiV2Complex.DDDFileValue => ClientDDDFileValue
-            case OntologyConstants.KnoraApiV2Complex.TextFileValue => ClientTextFileValue
-            case OntologyConstants.KnoraApiV2Complex.DocumentFileValue => ClientDocumentFileValue
+            case OntologyConstants.KnoraApiV2Complex.Value => AbstractKnoraVal
+            case OntologyConstants.KnoraApiV2Complex.TextValue => TextVal
+            case OntologyConstants.KnoraApiV2Complex.IntValue => IntVal
+            case OntologyConstants.KnoraApiV2Complex.DecimalValue => DecimalVal
+            case OntologyConstants.KnoraApiV2Complex.BooleanValue => BooleanVal
+            case OntologyConstants.KnoraApiV2Complex.DateValue => DateVal
+            case OntologyConstants.KnoraApiV2Complex.GeomValue => GeomVal
+            case OntologyConstants.KnoraApiV2Complex.IntervalValue => IntervalVal
+            case OntologyConstants.KnoraApiV2Complex.ListValue => ListVal
+            case OntologyConstants.KnoraApiV2Complex.UriValue => UriVal
+            case OntologyConstants.KnoraApiV2Complex.GeonameValue => GeonameVal
+            case OntologyConstants.KnoraApiV2Complex.ColorValue => ColorVal
+            case OntologyConstants.KnoraApiV2Complex.StillImageFileValue => StillImageFileVal
+            case OntologyConstants.KnoraApiV2Complex.MovingImageFileValue => MovingImageFileVal
+            case OntologyConstants.KnoraApiV2Complex.AudioFileValue => AudioFileVal
+            case OntologyConstants.KnoraApiV2Complex.DDDFileValue => DDDFileVal
+            case OntologyConstants.KnoraApiV2Complex.TextFileValue => TextFileVal
+            case OntologyConstants.KnoraApiV2Complex.DocumentFileValue => DocumentFileVal
             case _ => throw ClientApiGenerationException(s"Unexpected value type: $ontologyObjectType")
         }
     }
@@ -314,14 +314,14 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
       */
     private def nonResourcePropObjectTypeToClientObjectType(ontologyObjectType: SmartIri): ClientObjectType = {
         ontologyObjectType.toString match {
-            case OntologyConstants.Xsd.String => ClientStringLiteral
-            case OntologyConstants.Xsd.Boolean => ClientBooleanLiteral
-            case OntologyConstants.Xsd.Integer => ClientIntegerLiteral
-            case OntologyConstants.Xsd.Decimal => ClientDecimalLiteral
-            case OntologyConstants.Xsd.Uri => ClientUriLiteral
-            case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => ClientDateTimeStampLiteral
+            case OntologyConstants.Xsd.String => StringLiteral
+            case OntologyConstants.Xsd.Boolean => BooleanLiteral
+            case OntologyConstants.Xsd.Integer => IntegerLiteral
+            case OntologyConstants.Xsd.Decimal => DecimalLiteral
+            case OntologyConstants.Xsd.Uri => UriLiteral
+            case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => DateTimeStampLiteral
 
-            case _ => ClientClassReference(
+            case _ => ClassRef(
                 className = makeClientClassName(ontologyObjectType),
                 classIri = ontologyObjectType
             )

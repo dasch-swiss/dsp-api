@@ -28,13 +28,13 @@
 
 @makeTypeScriptType(objectType: ClientObjectType) = @{
     objectType match {
-        case ClientStringLiteral => "string"
-        case ClientBooleanLiteral => "boolean"
-        case ClientIntegerLiteral => "number"
-        case ClientDecimalLiteral => "number"
-        case ClientUriLiteral => "string"
-        case ClientDateTimeStampLiteral => "string"
-        case classRef: ClientClassReference => "I" + classRef.className
+        case StringLiteral => "string"
+        case BooleanLiteral => "boolean"
+        case IntegerLiteral => "number"
+        case DecimalLiteral => "number"
+        case UriLiteral => "string"
+        case DateTimeStampLiteral => "string"
+        case classRef: ClassRef => "I" + classRef.className
         case other => throw ClientApiGenerationException(s"Type $other not yet supported")
     }
 }

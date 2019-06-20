@@ -83,18 +83,103 @@ trait ClientEndpoint {
     lazy val classIrisUsed: Set[SmartIri] = functions.flatMap {
         function =>
             val maybeReturnedClass: Option[SmartIri] = function.returnType match {
-                case classRef: ClientClassReference => Some(classRef.classIri)
+                case classRef: ClassRef => Some(classRef.classIri)
                 case _ => None
             }
 
             val paramClasses: Set[SmartIri] = function.params.map {
                 param => param.objectType
             }.collect {
-                case classRef: ClientClassReference => classRef.classIri
+                case classRef: ClassRef => classRef.classIri
             }.toSet
 
             paramClasses ++ maybeReturnedClass
     }.toSet
+}
+
+object EndpointDSL {
+    case class NameWithDescription(name: String, description: String) {
+        def params(paramList: FunctionParam*): NameWithDescriptionAndParams = NameWithDescriptionAndParams(
+            name = name,
+            description = description,
+            paramList = paramList
+        )
+
+        def paramType(objectType: ClientObjectType): FunctionParam = FunctionParam(
+            name = name,
+            objectType = objectType,
+            description = description
+        )
+    }
+
+    case class NameWithDescriptionAndParams(name: String, description: String, paramList: Seq[FunctionParam]) {
+        def http(httpMethod: ClientHttpMethod, urlPath: Seq[UrlComponent], requestBody: Option[HttpRequestBody] = None): NameWithDescriptionParamsAndImplementation =
+            NameWithDescriptionParamsAndImplementation(
+                name = name,
+                description = description,
+                paramList = paramList,
+                implementation = ClientHttpRequest(
+                    httpMethod = httpMethod,
+                    urlPath = urlPath,
+                    requestBody = requestBody
+                )
+            )
+
+        def httpGet(urlPath: Seq[UrlComponent], requestBody: Option[HttpRequestBody] = None): NameWithDescriptionParamsAndImplementation =
+            http(httpMethod = GET, urlPath = urlPath, requestBody = requestBody)
+
+        def httpPost(urlPath: Seq[UrlComponent], requestBody: Option[HttpRequestBody] = None): NameWithDescriptionParamsAndImplementation =
+            http(httpMethod = POST, urlPath = urlPath, requestBody = requestBody)
+
+        def httpPut(urlPath: Seq[UrlComponent], requestBody: Option[HttpRequestBody] = None): NameWithDescriptionParamsAndImplementation =
+            http(httpMethod = PUT, urlPath = urlPath, requestBody = requestBody)
+
+        def call(function: ClientFunction, args: Value*): NameWithDescriptionParamsAndImplementation =
+                NameWithDescriptionParamsAndImplementation(
+                    name = function.name,
+                    description = description,
+                    paramList = paramList,
+                    implementation = FunctionCall(name = name, args = args)
+                )
+    }
+
+    case class NameWithDescriptionParamsAndImplementation(name: String, description: String, paramList: Seq[FunctionParam], implementation: FunctionImplementation) {
+        def returns(clientObjectType: ClientObjectType): ClientFunction = ClientFunction(
+            name = name,
+            params = paramList,
+            returnType = clientObjectType,
+            implementation = implementation,
+            description = description
+        )
+    }
+
+    def enum(possibleValues: String*): EnumLiteral = EnumLiteral(possibleValues.toSet)
+
+    implicit class Identifier(val name: String) extends AnyVal {
+        def desc(description: String): NameWithDescription = NameWithDescription(name = name, description = description)
+    }
+
+    def str(value: String): StringLiteralValue = StringLiteralValue(value)
+
+    def boolean(value: Boolean): BooleanLiteralValue = BooleanLiteralValue(value)
+
+    def arg(name: String) = ArgValue(name)
+
+    def argMember(name: String, member: String) = ArgValue(name = name, memberVariableName = Some(member))
+
+    val emptyPath = Seq.empty[UrlComponent]
+
+    implicit class UrlComponentAsSeq(val urlComponent: UrlComponent) extends AnyVal {
+        def /(nextComponent: UrlComponent): Seq[UrlComponent] = Seq(urlComponent, SlashUrlComponent, nextComponent)
+    }
+
+    implicit class UrlComponentSeq(val urlComponents: Seq[UrlComponent]) extends AnyVal {
+        def /(nextComponent: UrlComponent): Seq[UrlComponent] = urlComponents :+ nextComponent
+    }
+
+    def json(pairs: (String, Value)*): Option[JsonRequestBody] = Some(JsonRequestBody(pairs.toMap))
+
+    def classRef(classIri: SmartIri) = ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
 }
 
 /**
@@ -225,10 +310,10 @@ case class JsonRequestBody(jsonObject: Map[String, Value]) extends HttpRequestBo
 case class ClientClassDefinition(className: String,
                                  classIri: SmartIri,
                                  properties: Vector[ClientPropertyDefinition]) {
-    lazy val classObjectTypesUsed: Set[ClientClassReference] = properties.foldLeft(Set.empty[ClientClassReference]) {
+    lazy val classObjectTypesUsed: Set[ClassRef] = properties.foldLeft(Set.empty[ClassRef]) {
         (acc, property) =>
             property.objectType match {
-                case classRef: ClientClassReference => acc + classRef
+                case classRef: ClassRef => acc + classRef
                 case _ => acc
             }
     }
@@ -262,39 +347,39 @@ sealed trait ClientLiteral extends ClientObjectType
 /**
   * The type of string literals.
   */
-case object ClientStringLiteral extends ClientLiteral
+case object StringLiteral extends ClientLiteral
 
 /**
   * The type of boolean literals.
   */
-case object ClientBooleanLiteral extends ClientLiteral
+case object BooleanLiteral extends ClientLiteral
 
 /**
   * The type of integer literals.
   */
-case object ClientIntegerLiteral extends ClientLiteral
+case object IntegerLiteral extends ClientLiteral
 
 /**
   * The type of decimal literals.
   */
-case object ClientDecimalLiteral extends ClientLiteral
+case object DecimalLiteral extends ClientLiteral
 
 /**
   * The type of URI literals.
   */
-case object ClientUriLiteral extends ClientLiteral
+case object UriLiteral extends ClientLiteral
 
 /**
   * The type of timestamp literals.
   */
-case object ClientDateTimeStampLiteral extends ClientLiteral
+case object DateTimeStampLiteral extends ClientLiteral
 
 /**
   * The type of enums.
   *
   * @param possibleValues the possible values of the enum.
   */
-case class ClientEnumLiteral(possibleValues: Set[String]) extends ClientLiteral
+case class EnumLiteral(possibleValues: Set[String]) extends ClientLiteral
 
 /**
   * The type of instances of classes.
@@ -302,106 +387,106 @@ case class ClientEnumLiteral(possibleValues: Set[String]) extends ClientLiteral
   * @param className the name of the class.
   * @param classIri  the IRI of the class.
   */
-case class ClientClassReference(className: String, classIri: SmartIri) extends ClientObjectType
+case class ClassRef(className: String, classIri: SmartIri) extends ClientObjectType
 
 /**
   * A trait for Knora value types.
   */
-sealed trait ClientKnoraValue extends ClientObjectType
+sealed trait KnoraVal extends ClientObjectType
 
 /**
   * The type of abstract Knora values.
   */
-case object ClientAbstractKnoraValue extends ClientKnoraValue
+case object AbstractKnoraVal extends KnoraVal
 
 /**
   * The type of text values.
   */
-case object ClientTextValue extends ClientKnoraValue
+case object TextVal extends KnoraVal
 
 /**
   * The type of integer values.
   */
-case object ClientIntValue extends ClientKnoraValue
+case object IntVal extends KnoraVal
 
 /**
   * The type of boolean values.
   */
-case object ClientBooleanValue extends ClientKnoraValue
+case object BooleanVal extends KnoraVal
 
 /**
   * The type of URI values.
   */
-case object ClientUriValue extends ClientKnoraValue
+case object UriVal extends KnoraVal
 
 /**
   * The type of decimal values.
   */
-case object ClientDecimalValue extends ClientKnoraValue
+case object DecimalVal extends KnoraVal
 
 /**
   * The type of date values.
   */
-case object ClientDateValue extends ClientKnoraValue
+case object DateVal extends KnoraVal
 
 /**
   * The type of color values.
   */
-case object ClientColorValue extends ClientKnoraValue
+case object ColorVal extends KnoraVal
 
 /**
   * The type of geometry values.
   */
-case object ClientGeomValue extends ClientKnoraValue
+case object GeomVal extends KnoraVal
 
 /**
   * The type of list values.
   */
-case object ClientListValue extends ClientKnoraValue
+case object ListVal extends KnoraVal
 
 /**
   * The type of interval values.
   */
-case object ClientIntervalValue extends ClientKnoraValue
+case object IntervalVal extends KnoraVal
 
 /**
   * The type of Geoname values.
   */
-case object ClientGeonameValue extends ClientKnoraValue
+case object GeonameVal extends KnoraVal
 
 /**
   * The type of audio file values.
   */
-case object ClientAudioFileValue extends ClientKnoraValue
+case object AudioFileVal extends KnoraVal
 
 /**
   * The type of 3D file values.
   */
-case object ClientDDDFileValue extends ClientKnoraValue
+case object DDDFileVal extends KnoraVal
 
 /**
   * The type of document file values.
   */
-case object ClientDocumentFileValue extends ClientKnoraValue
+case object DocumentFileVal extends KnoraVal
 
 /**
   * The type of still image file values.
   */
-case object ClientStillImageFileValue extends ClientKnoraValue
+case object StillImageFileVal extends KnoraVal
 
 /**
   * The type of moving image values.
   */
-case object ClientMovingImageFileValue extends ClientKnoraValue
+case object MovingImageFileVal extends KnoraVal
 
 /**
   * The type of text file values.
   */
-case object ClientTextFileValue extends ClientKnoraValue
+case object TextFileVal extends KnoraVal
 
 /**
   * The type of link values.
   *
   * @param classIri the IRI of the class that is the target of the link.
   */
-case class ClientLinkValue(classIri: SmartIri) extends ClientKnoraValue
+case class LinkVal(classIri: SmartIri) extends KnoraVal

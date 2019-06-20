@@ -40,13 +40,14 @@ import { @classInfo.className } from "@classInfo.importPath";
 
 @makeObjectType(objectType: ClientObjectType) = @{
     objectType match {
-        case ClientStringLiteral => "string"
-        case ClientBooleanLiteral => "boolean"
-        case ClientIntegerLiteral => "number"
-        case ClientDecimalLiteral => "number"
-        case ClientDateTimeStampLiteral => "string"
-        case enum: ClientEnumLiteral => enum.possibleValues.map(value => "\"" + value + "\"").mkString(" | ")
-        case classRef: ClientClassReference => classRef.className
+        case StringLiteral => "string"
+        case BooleanLiteral => "boolean"
+        case IntegerLiteral => "number"
+        case DecimalLiteral => "number"
+        case UriLiteral => "string"
+        case DateTimeStampLiteral => "string"
+        case enum: EnumLiteral => enum.possibleValues.map(value => "\"" + value + "\"").mkString(" | ")
+        case classRef: ClassRef => classRef.className
         case other => throw ClientApiGenerationException(s"Type $other not yet supported")
     }
 }
@@ -71,7 +72,7 @@ import { @classInfo.className } from "@classInfo.importPath";
     if (urlPath.isEmpty) {
         "\"\""
     } else {
-        urlPath.map {
+        (SlashUrlComponent +: urlPath).map {
             case SlashUrlComponent => "\"/\""
             case value: Value =>
                 value match {
