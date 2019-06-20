@@ -655,11 +655,11 @@ class UsersEndpoint extends ClientEndpoint {
 
     private val createUser: ClientFunction = "createUser" desc "Creates a user." params (
         "user" desc "The user to be created." paramType User
-        ) httpPost(emptyPath, Some(arg("user"))) returns UserResponse
+        ) httpPost(emptyPath, arg("user")) returns UserResponse
 
     private val updateUser: ClientFunction = "updateUser" desc "Updates a user." params (
         "user" desc "The user to be updated." paramType User
-        ) httpPut(emptyPath, Some(arg("user"))) returns UserResponse
+        ) httpPut(emptyPath, arg("user")) returns UserResponse
 
     private val updateUserStatus: ClientFunction = "updateUserStatus" desc "Updates a user's status." params (
         "user" desc "The user to be updated." paramType User

@@ -125,14 +125,14 @@ object EndpointDSL {
                 )
             )
 
-        def httpGet(urlPath: Seq[UrlComponent], requestBody: Option[HttpRequestBody] = None): NameWithDescriptionParamsAndImplementation =
-            http(httpMethod = GET, urlPath = urlPath, requestBody = requestBody)
+        def httpGet(urlPath: Seq[UrlComponent]): NameWithDescriptionParamsAndImplementation =
+            http(httpMethod = GET, urlPath = urlPath, requestBody = None)
 
-        def httpPost(urlPath: Seq[UrlComponent], requestBody: Option[HttpRequestBody] = None): NameWithDescriptionParamsAndImplementation =
-            http(httpMethod = POST, urlPath = urlPath, requestBody = requestBody)
+        def httpPost(urlPath: Seq[UrlComponent], requestBody: HttpRequestBody): NameWithDescriptionParamsAndImplementation =
+            http(httpMethod = POST, urlPath = urlPath, requestBody = Some(requestBody))
 
-        def httpPut(urlPath: Seq[UrlComponent], requestBody: Option[HttpRequestBody] = None): NameWithDescriptionParamsAndImplementation =
-            http(httpMethod = PUT, urlPath = urlPath, requestBody = requestBody)
+        def httpPut(urlPath: Seq[UrlComponent], requestBody: HttpRequestBody): NameWithDescriptionParamsAndImplementation =
+            http(httpMethod = PUT, urlPath = urlPath, requestBody = Some(requestBody))
 
         def call(function: ClientFunction, args: Value*): NameWithDescriptionParamsAndImplementation =
                 NameWithDescriptionParamsAndImplementation(
@@ -177,7 +177,7 @@ object EndpointDSL {
         def /(nextComponent: UrlComponent): Seq[UrlComponent] = urlComponents :+ nextComponent
     }
 
-    def json(pairs: (String, Value)*): Option[JsonRequestBody] = Some(JsonRequestBody(pairs.toMap))
+    def json(pairs: (String, Value)*): JsonRequestBody = JsonRequestBody(pairs.toMap)
 
     def classRef(classIri: SmartIri) = ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
 }
