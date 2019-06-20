@@ -45,12 +45,15 @@ lazy val root = Project(id = "knora", file("."))
             Dependencies.sysProps := sys.props.toString(),
             Dependencies.sysEnvs := sys.env.toString(),
 
+            // these can be set by the user as system environment variables
             ThisBuild / Dependencies.gdbHomePath := sys.env.getOrElse("KNORA_GDB_HOME", sys.props("user.dir") + "/triplestores/graphdb/home"),
             ThisBuild / Dependencies.gdbLicensePath := sys.env.getOrElse("KNORA_GDB_LICENSE", sys.props("user.dir") + "/triplestores/graphdb/graphdb.license"),
 
+            // use these values for variable substitution in the docker-compose.yml
             variablesForSubstitution := Map(
                 "KNORA_GDB_HOME" -> Dependencies.gdbHomePath.value,
                 "KNORA_GDB_LICENSE " -> Dependencies.gdbLicensePath.value,
+                "KNORA_GDB_TYPE" -> Dependencies.gdbTypeString,
                 "KNORA_GDB_IMAGE" -> Dependencies.gdbImage.value,
                 "SIPI_VERSION_TAG" -> Dependencies.sipiVersion.value,
                 "KNORA_VERSION_TAG" -> version.value
@@ -439,7 +442,7 @@ lazy val webapiJavaRunOptions = Seq(
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
     "-Dcom.sun.management.jmxremote",
-    "-Dcom.sun.management.jmxremote.port=1617",
+    // "-Dcom.sun.management.jmxremote.port=1617",
     "-Dcom.sun.management.jmxremote.authenticate=false",
     "-Dcom.sun.management.jmxremote.ssl=false",
     //"-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib"
