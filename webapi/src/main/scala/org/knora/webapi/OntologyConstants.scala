@@ -548,6 +548,13 @@ object OntologyConstants {
         val UserResponse: IRI = KnoraAdminPrefixExpansion + "UserResponse"
         val UserClass: IRI = KnoraAdminPrefixExpansion + "User"
         val UserProperty: IRI = KnoraAdminPrefixExpansion + "user"
+        val Lang: IRI = KnoraAdminPrefixExpansion + "lang"
+        val Projects: IRI = KnoraAdminPrefixExpansion + "projects"
+        val Groups: IRI = KnoraAdminPrefixExpansion + "groups"
+        val Project: IRI = KnoraAdminPrefixExpansion + "Project"
+        val ID: IRI = KnoraAdminPrefixExpansion + "id"
+        val Token: IRI = KnoraAdminPrefixExpansion + "token"
+        val SessionID: IRI = KnoraAdminPrefixExpansion + "sessionId"
     }
 
     object Standoff {
@@ -1073,7 +1080,11 @@ object OntologyConstants {
             KnoraBase.ValueHasListNode -> KnoraApiV2Complex.ListValueAsListNode,
             KnoraBase.ValueHasGeonameCode -> KnoraApiV2Complex.GeonameValueAsGeonameCode,
             KnoraBase.ValueHasColor -> KnoraApiV2Complex.ColorValueAsColor,
-            KnoraBase.ValueHasStandoff -> KnoraApiV2Complex.TextValueHasStandoff
+            KnoraBase.ValueHasStandoff -> KnoraApiV2Complex.TextValueHasStandoff,
+            KnoraAdmin.PreferredLanguage -> KnoraAdminV2.Lang,
+            KnoraAdmin.IsInProject -> KnoraAdminV2.Projects,
+            KnoraAdmin.IsInGroup -> KnoraAdminV2.Groups,
+            KnoraAdmin.KnoraProject -> KnoraAdminV2.Project
         ),
         (ApiV2Simple, InternalSchema) -> Map(
             // Not all types in ApiV2Simple can be converted here to types in KnoraBase. For example,
@@ -1111,7 +1122,11 @@ object OntologyConstants {
             KnoraApiV2Complex.ListValueAsListNode -> KnoraBase.ValueHasListNode,
             KnoraApiV2Complex.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
             KnoraApiV2Complex.ColorValueAsColor -> KnoraBase.ValueHasColor,
-            KnoraApiV2Complex.TextValueHasStandoff -> KnoraBase.ValueHasStandoff
+            KnoraApiV2Complex.TextValueHasStandoff -> KnoraBase.ValueHasStandoff,
+            KnoraAdminV2.Lang -> KnoraAdmin.PreferredLanguage,
+            KnoraAdminV2.Projects -> KnoraAdmin.IsInProject,
+            KnoraAdminV2.Groups -> KnoraAdmin.IsInGroup,
+            KnoraAdminV2.Project -> KnoraAdmin.KnoraProject
         )
     )
 

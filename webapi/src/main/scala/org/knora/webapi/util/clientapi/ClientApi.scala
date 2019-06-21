@@ -130,8 +130,31 @@ object EndpointFunctionDSL {
 
     def json(pairs: (String, Value)*): JsonRequestBody = JsonRequestBody(pairs.toMap)
 
-    private def http(httpMethod: ClientHttpMethod, path: Seq[UrlComponent], body: Option[HttpRequestBody] = None): ClientHttpRequest =
-        ClientHttpRequest(httpMethod = httpMethod, urlPath = path, requestBody = body)
+    private def http(httpMethod: ClientHttpMethod, path: Seq[UrlComponent], body: Option[HttpRequestBody] = None): ClientHttpRequest = {
+        // Collapse each run of strings into a single string.
+        val collapsedPath: Seq[UrlComponent] = (SlashUrlComponent +: path).foldLeft(Vector.empty[UrlComponent]) {
+            case (acc, component) =>
+                acc.lastOption match {
+                    case Some(last) =>
+                        (last, component) match {
+                            case (lastStr: StringLiteralValue, thisStr: StringLiteralValue)  =>
+                                acc.dropRight(1) :+ StringLiteralValue(lastStr.value + thisStr.value)
+
+                            case (SlashUrlComponent, thisStr: StringLiteralValue)  =>
+                                acc.dropRight(1) :+ StringLiteralValue("/" + thisStr.value)
+
+                            case (lastStr: StringLiteralValue, SlashUrlComponent)  =>
+                                acc.dropRight(1) :+ StringLiteralValue(lastStr.value + "/")
+
+                            case _ => acc :+ component
+                        }
+
+                    case None => acc :+ component
+                }
+        }
+
+        ClientHttpRequest(httpMethod = httpMethod, urlPath = collapsedPath, requestBody = body)
+    }
 
     implicit class Identifier(val name: String) extends AnyVal {
         def description(desc: String): NameWithDescription = NameWithDescription(name = name, description = desc)
@@ -142,7 +165,7 @@ object EndpointFunctionDSL {
     }
 
     implicit class UrlComponentSeq(val urlComponents: Seq[UrlComponent]) extends AnyVal {
-        def /(nextComponent: UrlComponent): Seq[UrlComponent] = urlComponents :+ nextComponent
+        def /(nextComponent: UrlComponent): Seq[UrlComponent] = urlComponents :+ SlashUrlComponent :+ nextComponent
     }
 
     case class NameWithDescription(name: String, description: String) {

@@ -72,7 +72,7 @@ import { @classInfo.className } from "@classInfo.importPath";
     if (urlPath.isEmpty) {
         "\"\""
     } else {
-        (SlashUrlComponent +: urlPath).map {
+        urlPath.map {
             case SlashUrlComponent => "\"/\""
             case value: Value =>
                 value match {

@@ -484,11 +484,10 @@ object InstanceCheckerSpec {
           |  "familyName" : "Tester",
           |  "givenName": "Test",
           |  "password" : "test",
-          |  "preferredLanguage" : "en",
+          |  "lang" : "en",
           |  "status" : true,
-          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
-          |  "isInGroup" : [],
-          |  "isInSystemAdminGroup" : false
+          |  "projects" : [ "http://rdfh.ch/projects/0001" ],
+          |  "groups" : []
           |}
         """.stripMargin
 
@@ -501,11 +500,10 @@ object InstanceCheckerSpec {
           |  "familyName" : "Tester",
           |  "givenName": "Test",
           |  "password" : "test",
-          |  "preferredLanguage" : "en",
+          |  "lang" : "en",
           |  "status" : true,
-          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
-          |  "isInGroup" : [],
-          |  "isInSystemAdminGroup" : false
+          |  "projects" : [ "http://rdfh.ch/projects/0001" ],
+          |  "groups" : []
           |}
         """.stripMargin
 
@@ -516,14 +514,12 @@ object InstanceCheckerSpec {
           |  "familyName" : "Tester",
           |  "givenName": "Test",
           |  "password" : "test",
-          |  "preferredLanguage" : "en",
+          |  "lang" : "en",
           |  "status" : true,
-          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
-          |  "isInGroup" : [],
-          |  "isInSystemAdminGroup" : false
+          |  "projects" : [ "http://rdfh.ch/projects/0001" ],
+          |  "groups" : []
           |}
         """.stripMargin
-
 
     val userWithInvalidObjectType: String =
         """
@@ -533,11 +529,10 @@ object InstanceCheckerSpec {
           |  "familyName" : "Tester",
           |  "givenName": "Test",
           |  "password" : "test",
-          |  "preferredLanguage" : "en",
+          |  "lang" : "en",
           |  "status" : "invalidValue",
-          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
-          |  "isInGroup" : [],
-          |  "isInSystemAdminGroup" : false
+          |  "projects" : [ "http://rdfh.ch/projects/0001" ],
+          |  "groups" : []
           |}
         """.stripMargin
 }

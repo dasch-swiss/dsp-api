@@ -203,9 +203,18 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
                 val classFilePath = clientClassCodePaths(clientClassDef.className)
                 val interfacePathInClass = s"../../${stripExtension(clientInterfaceCodePaths(clientClassDef.className))}"
 
+                val importedClasses = clientClassDef.classObjectTypesUsed.map {
+                    classRef =>
+                        ImportInfo(
+                            className = classRef.className,
+                            importPath = clientClassCodePaths(classRef.className)
+                        )
+                }
+
                 val classText: String = clientapi.txt.generateTypeScriptClass(
                     classDef = clientClassDef,
-                    interfacePathInClass = interfacePathInClass
+                    interfacePathInClass = interfacePathInClass,
+                    importedClasses = importedClasses
                 ).toString()
 
                 ClientSourceCodeFileContent(filePath = classFilePath, text = classText)

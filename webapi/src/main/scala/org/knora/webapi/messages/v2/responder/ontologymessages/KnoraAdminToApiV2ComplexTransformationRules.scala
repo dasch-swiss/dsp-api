@@ -82,6 +82,69 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val ID: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.ID,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.UserClass),
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "ID"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The user's ID."
+                )
+            )
+        )
+    )
+
+    private val Token: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.Token,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.UserClass),
+        objectType = Some(OntologyConstants.Xsd.String),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "token"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The user's token."
+                )
+            )
+        )
+    )
+
+    private val SessionID: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.SessionID,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.UserClass),
+        objectType = Some(OntologyConstants.Xsd.String),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "session ID"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The user's session ID."
+                )
+            )
+        )
+    )
+
     private val UsersResponse: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraAdminV2.UsersResponse,
         predicates = Seq(
@@ -127,18 +190,37 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
     /**
       * Properties to remove from the ontology before converting it to the target schema.
       */
-    override val internalPropertiesToRemove: Set[SmartIri] = Set.empty // TODO
+    override val internalPropertiesToRemove: Set[SmartIri] = Set(
+        OntologyConstants.KnoraAdmin.IsInSystemAdminGroup
+    ).map(_.toSmartIri)
 
     /**
       * Classes to remove from the ontology before converting it to the target schema.
       */
-    override val internalClassesToRemove: Set[SmartIri] = Set.empty // TODO
+    override val internalClassesToRemove: Set[SmartIri] = Set.empty
+
+    /**
+      * Cardinalities to add to the User class.
+      */
+    private val UserCardinalities = Map(
+        OntologyConstants.KnoraAdminV2.ID -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraAdminV2.Token -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraAdminV2.SessionID -> Cardinality.MayHaveOne
+    )
 
     /**
       * After the ontology has been converted to the target schema, these cardinalities must be
       * added to the specified classes.
       */
-    override val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map.empty // TODO
+    override val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
+        OntologyConstants.KnoraAdminV2.UserClass -> UserCardinalities
+    ).map {
+        case (classIri, cardinalities) =>
+            classIri.toSmartIri -> cardinalities.map {
+                case (propertyIri, cardinality) =>
+                    propertyIri.toSmartIri -> Cardinality.KnoraCardinalityInfo(cardinality)
+            }
+    }
 
     /**
       * Classes that need to be added to the ontology after converting it to the target schema.
@@ -155,7 +237,10 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       */
     override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         UsersProperty,
-        UserProperty
+        UserProperty,
+        ID,
+        Token,
+        SessionID
     ).map {
         propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
     }.toMap

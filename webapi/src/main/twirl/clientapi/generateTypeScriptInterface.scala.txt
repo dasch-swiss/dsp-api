@@ -39,10 +39,16 @@
     }
 }
 
-@addForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
+@handleOption(cardinality: Cardinality) = @{
     if (cardinality == MayHaveOne) {
-        s"$typeScriptType?"
-    } else if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
+        "?"
+    } else {
+        ""
+    }
+}
+
+@addForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
+    if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
         s"$typeScriptType[]"
     } else {
         typeScriptType
@@ -55,6 +61,6 @@ import { I@classInfo.className } from "@classInfo.importPath";
 
 export interface I@{classDef.className} {
     @for(property <- classDef.properties) {
-        @{property.propertyName}: @addForCardinality(makeTypeScriptType(property.objectType), property.cardinality);
+        @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(makeTypeScriptType(property.objectType), property.cardinality);
     }
 }
