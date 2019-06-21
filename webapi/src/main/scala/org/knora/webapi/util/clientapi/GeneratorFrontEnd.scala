@@ -219,7 +219,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
         ClientClassDefinition(
             className = makeClientClassName(rdfClassDef.classIri),
             classIri = rdfClassDef.classIri,
-            properties = clientPropertyDefs
+            properties = clientPropertyDefs.sortBy(_.propertyIri)
         )
     }
 
@@ -262,7 +262,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
         ClientClassDefinition(
             className = makeClientClassName(rdfClassDef.classIri),
             classIri = rdfClassDef.classIri,
-            properties = clientPropertyDefs
+            properties = clientPropertyDefs.sortBy(_.propertyIri)
         )
     }
 

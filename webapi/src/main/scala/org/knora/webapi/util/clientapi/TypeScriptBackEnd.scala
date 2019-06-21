@@ -132,7 +132,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         val text: String = clientapi.txt.generateTypeScriptMainEndpoint(
             name = apiDef.name,
             description = apiDef.description,
-            endpoints = endpointInfos.map(_.toImportInfo)
+            endpoints = endpointInfos.toVector.sortBy(_.className).map(_.toImportInfo)
         ).toString()
 
         ClientSourceCodeFileContent(filePath = mainEndpointFilePath, text = text)
@@ -160,7 +160,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         }
 
         // Make an ImportInfo for each imported class.
-        val classInfos: Set[ImportInfo] = classDefsImported.map {
+        val classInfos: Vector[ImportInfo] = classDefsImported.toVector.sortBy(_.classIri).map {
             clientClassDef =>
                 ImportInfo(
                     className = clientClassDef.className,
@@ -203,7 +203,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
                 val classFilePath = clientClassCodePaths(clientClassDef.className)
                 val interfacePathInClass = s"../../${stripExtension(clientInterfaceCodePaths(clientClassDef.className))}"
 
-                val importedClasses = clientClassDef.classObjectTypesUsed.map {
+                val importedClasses: Vector[ImportInfo] = clientClassDef.classObjectTypesUsed.toVector.sortBy(_.classIri).map {
                     classRef =>
                         ImportInfo(
                             className = classRef.className,
@@ -234,7 +234,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
             clientClassDef =>
                 val interfaceFilePath = clientInterfaceCodePaths(clientClassDef.className)
 
-                val importedInterfaces = clientClassDef.classObjectTypesUsed.map {
+                val importedInterfaces: Vector[ImportInfo] = clientClassDef.classObjectTypesUsed.toVector.sortBy(_.classIri).map {
                     classRef =>
                         ImportInfo(
                             className = classRef.className,

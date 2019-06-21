@@ -332,6 +332,9 @@ case class JsonRequestBody(jsonObject: Map[String, Value]) extends HttpRequestBo
 case class ClientClassDefinition(className: String,
                                  classIri: SmartIri,
                                  properties: Vector[ClientPropertyDefinition]) {
+    /**
+      * The classes used by this class.
+      */
     lazy val classObjectTypesUsed: Set[ClassRef] = properties.foldLeft(Set.empty[ClassRef]) {
         (acc, property) =>
             property.objectType match {

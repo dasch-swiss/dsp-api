@@ -24,7 +24,7 @@
 
 @(name: String,
   description: String,
-  importedClasses: Set[ImportInfo],
+  importedClasses: Seq[ImportInfo],
   functions: Seq[ClientFunction])
 
 import { Observable } from "rxjs";
@@ -33,9 +33,36 @@ import { catchError, map } from "rxjs/operators";
 import { ApiResponseData } from "../../../models/api-response-data";
 import { ApiResponseError } from "../../../models/api-response-error";
 import { Endpoint } from "../../endpoint";
-
 @for(classInfo <- importedClasses) {
-import { @classInfo.className } from "@classInfo.importPath";
+import { @classInfo.className } from "@classInfo.importPath";}
+
+/**
+ * @description
+ */
+export class @name extends Endpoint {
+
+    @for(function <- functions) {
+    /**
+     * @function.description
+     * @for(param <- function.params) {
+     * @@param @param.name @param.description}
+     */
+    @{function.name}(@for((param, index) <- function.params.zipWithIndex) {@if(index > 0) {, }@param.name: @makeObjectType(param.objectType)}): Observable<ApiResponseData<@makeObjectType(function.returnType)> | ApiResponseError> {
+        @function.implementation match {
+        case httpRequest: ClientHttpRequest => {
+            return this.@{makeHttpMethod(httpRequest.httpMethod)}(@makeUrlPath(httpRequest.urlPath)@makeHttpRequestBody(httpRequest.requestBody)).pipe(
+                map(ajaxResponse => ApiResponseData.fromAjaxResponse(ajaxResponse, @makeObjectType(function.returnType), this.jsonConvert)),
+                catchError(error => this.handleError(error))
+            );
+        }
+
+        case functionCall: FunctionCall => {
+            return this.@{functionCall.name}(@{functionCall.args.map(arg => makeValue(arg)).mkString(", ")});
+        }
+        }
+    }
+    }
+
 }
 
 @makeObjectType(objectType: ClientObjectType) = @{
@@ -101,33 +128,4 @@ import { @classInfo.className } from "@classInfo.importPath";
 
         case None => ""
     }
-}
-
-/**
- * @description
- */
-export class @name extends Endpoint {
-
-    @for(function <- functions) {
-    /**
-     * @function.description
-     * @for(param <- function.params) {
-     * @@param @param.name @param.description}
-     */
-    @{function.name}(@for((param, index) <- function.params.zipWithIndex) {@if(index > 0) {, }@param.name: @makeObjectType(param.objectType)}): Observable<ApiResponseData<@makeObjectType(function.returnType)> | ApiResponseError> {
-        @function.implementation match {
-        case httpRequest: ClientHttpRequest => {
-            return this.@{makeHttpMethod(httpRequest.httpMethod)}(@makeUrlPath(httpRequest.urlPath)@makeHttpRequestBody(httpRequest.requestBody)).pipe(
-                map(ajaxResponse => ApiResponseData.fromAjaxResponse(ajaxResponse, @makeObjectType(function.returnType), this.jsonConvert)),
-                catchError(error => this.handleError(error))
-            );
-        }
-
-        case functionCall: FunctionCall => {
-            return this.@{functionCall.name}(@{functionCall.args.map(arg => makeValue(arg)).mkString(", ")});
-        }
-        }
-    }
-    }
-
 }

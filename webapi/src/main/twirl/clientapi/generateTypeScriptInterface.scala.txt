@@ -24,7 +24,16 @@
 @import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 
 @(classDef: ClientClassDefinition,
-  importedInterfaces: Set[ImportInfo])
+  importedInterfaces: Seq[ImportInfo])
+
+@for(classInfo <- importedInterfaces) {
+import { I@classInfo.className } from "@classInfo.importPath";}
+
+export interface I@{classDef.className} {
+    @for(property <- classDef.properties) {
+        @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(makeTypeScriptType(property.objectType), property.cardinality);
+    }
+}
 
 @makeTypeScriptType(objectType: ClientObjectType) = @{
     objectType match {
@@ -52,15 +61,5 @@
         s"$typeScriptType[]"
     } else {
         typeScriptType
-    }
-}
-
-@for(classInfo <- importedInterfaces) {
-import { I@classInfo.className } from "@classInfo.importPath";
-}
-
-export interface I@{classDef.className} {
-    @for(property <- classDef.properties) {
-        @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(makeTypeScriptType(property.objectType), property.cardinality);
     }
 }

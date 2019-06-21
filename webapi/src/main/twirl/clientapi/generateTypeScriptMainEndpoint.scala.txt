@@ -24,14 +24,13 @@
 
 @(name: String,
   description: String,
-  endpoints: Set[ImportInfo])
+  endpoints: Seq[ImportInfo])
 
 import { KnoraApiConfig } from "../../knora-api-config";
 import { Endpoint } from "../endpoint";
 
 @for(endpoint <- endpoints) {
-import { @endpoint.className } from "@endpoint.importPath";
-}
+import { @endpoint.className } from "@endpoint.importPath";}
 
 /**
  * @description
