@@ -442,7 +442,7 @@ lazy val webapiJavaRunOptions = Seq(
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
     "-Dcom.sun.management.jmxremote",
-    "-Dcom.sun.management.jmxremote.port=1617",
+    // "-Dcom.sun.management.jmxremote.port=1617",
     "-Dcom.sun.management.jmxremote.authenticate=false",
     "-Dcom.sun.management.jmxremote.ssl=false",
     //"-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib"
