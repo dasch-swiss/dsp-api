@@ -37,7 +37,6 @@ import org.knora.webapi.{BadRequestException, KnoraSystemInstances, OntologyCons
 import scala.concurrent.Future
 
 
-
 /**
   * Provides a akka-http-routing function for API routes that deal with users.
   */
@@ -50,12 +49,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /* concatenate paths in the CORRECT order and return */
     override def knoraApiPath: Route =
         getUsers ~
-        addUser ~ getUserByIri ~ getUserByEmail ~ getUserByUsername ~
-        changeUserBasicInformation ~ changeUserPassword ~ changeUserStatus ~ deleteUser ~
-        changeUserSytemAdminMembership ~
-        getUsersProjectMemberships ~ addUserToProjectMembership ~ removeUserFromProjectMembership ~
-        getUsersProjectAdminMemberships ~ addUserToProjectAdminMembership ~ removeUserFromProjectAdminMembership ~
-        getUsersGroupMemberships ~ addUserToGroupMembership ~ removeUserFromGroupMembership
+            addUser ~ getUserByIri ~ getUserByEmail ~ getUserByUsername ~
+            changeUserBasicInformation ~ changeUserPassword ~ changeUserStatus ~ deleteUser ~
+            changeUserSytemAdminMembership ~
+            getUsersProjectMemberships ~ addUserToProjectMembership ~ removeUserFromProjectMembership ~
+            getUsersProjectAdminMemberships ~ addUserToProjectAdminMembership ~ removeUserFromProjectAdminMembership ~
+            getUsersGroupMemberships ~ addUserToGroupMembership ~ removeUserFromGroupMembership
 
 
     @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
@@ -114,7 +113,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
 
     /**
-      *  return a single user identified by iri
+      * return a single user identified by iri
       */
     private def getUserByIri: Route = path("admin" / "users" / "iri" / Segment) { value =>
         get {
@@ -134,7 +133,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /**
-      *  return a single user identified by email
+      * return a single user identified by email
       */
     private def getUserByEmail: Route = path("admin" / "users" / "email" / Segment) { value =>
         get {
@@ -154,7 +153,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /**
-      *  return a single user identified by username
+      * return a single user identified by username
       */
     private def getUserByUsername: Route = path("admin" / "users" / "username" / Segment) { value =>
         get {
@@ -193,10 +192,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     val requestMessage: Future[UsersResponderRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield UserChangeBasicUserInformationRequestADM(
-                            userIri,
-                            changeUserRequest = apiRequest,
-                            requestingUser,
-                            apiRequestID = UUID.randomUUID()
+                        userIri,
+                        changeUserRequest = apiRequest,
+                        requestingUser,
+                        apiRequestID = UUID.randomUUID()
                     )
 
                     RouteUtilADM.runJsonRoute(
@@ -358,10 +357,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
 
     /**
-      *  API MAY CHANGE: get user's project memberships
+      * API MAY CHANGE: get user's project memberships
       */
     @ApiMayChange
-    private def getUsersProjectMemberships: Route = path("admin" / "users" / "iri" / Segment / "project-memberships" ) { userIri =>
+    private def getUsersProjectMemberships: Route = path("admin" / "users" / "iri" / Segment / "project-memberships") { userIri =>
         get {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -415,7 +414,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /**
-      *  API MAY CHANGE: remove user from project (and all groups belonging to this project)
+      * API MAY CHANGE: remove user from project (and all groups belonging to this project)
       */
     @ApiMayChange
     private def removeUserFromProjectMembership: Route = path("admin" / "users" / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
@@ -535,7 +534,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: get user's group memberships
       */
     @ApiMayChange
-    private def getUsersGroupMemberships: Route = path("admin" / "users" / "iri" / Segment / "group-memberships" ) { userIri =>
+    private def getUsersGroupMemberships: Route = path("admin" / "users" / "iri" / Segment / "group-memberships") { userIri =>
         get {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -622,11 +621,17 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   */
 class UsersEndpoint extends ClientEndpoint {
 
-    import EndpointDSL._
+    import EndpointFunctionDSL._
 
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    // Class types.
+    override val name: String = "UsersEndpoint"
+
+    override val urlPath: String = "/users"
+
+    override val description: String = "An endpoint for working with Knora users."
+
+    // Classes used in function definitions.
 
     private val UsersResponse = classRef(OntologyConstants.KnoraAdminV2.UsersResponse.toSmartIri)
     private val UserResponse = classRef(OntologyConstants.KnoraAdminV2.UserResponse.toSmartIri)
@@ -634,52 +639,104 @@ class UsersEndpoint extends ClientEndpoint {
 
     // Function definitions.
 
-    private val getUsers: ClientFunction = "getUsers" desc "Returns a list of all users." params() http(GET, emptyPath) returns UsersResponse
+    private val getUsers = function {
+        "getUsers" description "Returns a list of all users." params() doThis {
+            httpGet(emptyPath)
+        } returns UsersResponse
+    }
 
-    private val getUser: ClientFunction = "getUser" desc "Gets a user by a property." params(
-        "property" desc "The name of the property by which the user is identified." paramType enum("iri", "email", "username"),
-        "value" desc "The value of the property by which the user is identified." paramType StringLiteral
-    ) httpGet (arg("property") / arg("value")) returns UserResponse
+    private val getUser = function {
+        "getUser" description "Gets a user by a property." params(
+            "property" description "The name of the property by which the user is identified." paramType enum("iri", "email", "username"),
+            "value" description "The value of the property by which the user is identified." paramType StringLiteral
+        ) doThis {
+            httpGet(arg("property") / arg("value"))
+        } returns UserResponse
+    }
 
-    private val getUserByIri: ClientFunction = "getUserByIri" desc "Gets a user by IRI." params (
-        "iri" desc "The IRI of the user." paramType StringLiteral
-        ) call(getUser, str("iri"), arg("iri")) returns UserResponse
+    private val getUserByIri = function {
+        "getUserByIri" description "Gets a user by IRI." params (
+            "iri" description "The IRI of the user." paramType StringLiteral
+            ) doThis {
+            getUser withArgs(str("iri"), arg("iri"))
+        } returns UserResponse
+    }
 
-    private val getUserByEmail: ClientFunction = "getUserByEmail" desc "Gets a user by email address." params (
-        "email" desc "The email address of the user." paramType StringLiteral
-        ) call(getUser, str("email"), arg("email")) returns UserResponse
+    private val getUserByEmail = function {
+        "getUserByEmail" description "Gets a user by email address." params (
+            "email" description "The email address of the user." paramType StringLiteral
+            ) doThis {
+            getUser withArgs(str("email"), arg("email"))
+        } returns UserResponse
+    }
 
-    private val getUserByUsername: ClientFunction = "getUserByUsername" desc "Gets a user by username." params (
-        "username" desc "The username of the user." paramType StringLiteral
-        ) call(getUser, str("username"), arg("username")) returns UserResponse
+    private val getUserByUsername = function {
+        "getUserByUsername" description "Gets a user by username." params (
+            "username" description "The username of the user." paramType StringLiteral
+            ) doThis {
+            getUser withArgs(str("username"), arg("username"))
+        } returns UserResponse
+    }
 
-    private val createUser: ClientFunction = "createUser" desc "Creates a user." params (
-        "user" desc "The user to be created." paramType User
-        ) httpPost(emptyPath, arg("user")) returns UserResponse
+    private val createUser = function {
+        "createUser" description "Creates a user." params (
+            "user" description "The user to be created." paramType User
+            ) doThis {
+            httpPost(
+                path = emptyPath,
+                body = arg("user")
+            )
+        } returns UserResponse
+    }
 
-    private val updateUser: ClientFunction = "updateUser" desc "Updates a user." params (
-        "user" desc "The user to be updated." paramType User
-        ) httpPut(emptyPath, arg("user")) returns UserResponse
+    private val updateUser = function {
+        "updateUser" description "Updates a user." params (
+            "user" description "The user to be updated." paramType User
+            ) doThis {
+            httpPut(
+                path = emptyPath,
+                body = arg("user")
+            )
+        } returns UserResponse
+    }
 
-    private val updateUserStatus: ClientFunction = "updateUserStatus" desc "Updates a user's status." params (
-        "user" desc "The user to be updated." paramType User
-        ) httpPut(str("iri") / argMember("user", "id") / str("Status"),
-        json("status" -> argMember("user", "status"))) returns UserResponse
+    private val updateUserStatus = function {
+        "updateUserStatus" description "Updates a user's status." params (
+            "user" description "The user to be updated." paramType User
+            ) doThis {
+            httpPut(
+                path = str("iri") / argMember("user", "id") / str("Status"),
+                body = json("status" -> argMember("user", "status"))
+            )
+        } returns UserResponse
+    }
 
-    private val updateUserPassword: ClientFunction = "updateUserPassword" desc "Updates a user's password." params(
-        "user" desc "The user to be updated." paramType User,
-        "oldPassword" desc "The user's old password." paramType StringLiteral,
-        "newPassword" desc "The user's new password." paramType StringLiteral
-    ) httpPut(str("iri") / argMember("user", "id") / str("Password"),
-        json(
-            "requesterPassword" -> arg("oldPassword"),
-            "newPassword" -> arg("newPassword")
-        )) returns UserResponse
+    private val updateUserPassword = function {
+        "updateUserPassword" description "Updates a user's password." params(
+            "user" description "The user to be updated." paramType User,
+            "oldPassword" description "The user's old password." paramType StringLiteral,
+            "newPassword" description "The user's new password." paramType StringLiteral
+        ) doThis {
+            httpPut(
+                path = str("iri") / argMember("user", "id") / str("Password"),
+                body = json(
+                    "requesterPassword" -> arg("oldPassword"),
+                    "newPassword" -> arg("newPassword")
+                )
+            )
+        } returns UserResponse
+    }
 
-    private val deleteUser: ClientFunction = "deleteUser" desc "Deletes a user. This method does not actually delete a user, but sets the status to false." params (
-        "user" desc "The user to be deleted." paramType User
-        ) httpPut(str("iri") / argMember("user", "id") / str("Status"),
-        json("status" -> False)) returns UserResponse
+    private val deleteUser = function {
+        "deleteUser" description "Deletes a user. This method does not actually delete a user, but sets the status to false." params (
+            "user" description "The user to be deleted." paramType User
+            ) doThis {
+            httpPut(
+                path = str("iri") / argMember("user", "id") / str("Status"),
+                body = json("status" -> False)
+            )
+        } returns UserResponse
+    }
 
     override val functions: Seq[ClientFunction] = Seq(
         getUsers,
@@ -693,10 +750,4 @@ class UsersEndpoint extends ClientEndpoint {
         updateUserPassword,
         deleteUser
     )
-
-    override val name: String = "UsersEndpoint"
-
-    override val urlPath: String = "/users"
-
-    override val description: String = "An endpoint for working with Knora users."
 }

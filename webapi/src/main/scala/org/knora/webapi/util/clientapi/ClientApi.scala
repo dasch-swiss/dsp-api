@@ -97,7 +97,54 @@ trait ClientEndpoint {
     }.toSet
 }
 
-object EndpointDSL {
+/**
+  * A DSL for defining functions in client endpoints.
+  */
+object EndpointFunctionDSL {
+    def function(clientFunction: ClientFunction): ClientFunction = clientFunction
+
+    def httpGet(path: Seq[UrlComponent]): ClientHttpRequest =
+        http(httpMethod = GET, path = path, body = None)
+
+    def httpPost(path: Seq[UrlComponent], body: HttpRequestBody): ClientHttpRequest =
+        http(httpMethod = POST, path = path, body = Some(body))
+
+    def httpPut(path: Seq[UrlComponent], body: HttpRequestBody): ClientHttpRequest =
+        http(httpMethod = PUT, path = path, body = Some(body))
+
+    def classRef(classIri: SmartIri) = ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
+
+    def str(value: String): StringLiteralValue = StringLiteralValue(value)
+
+    val True: BooleanLiteralValue = BooleanLiteralValue(true)
+
+    val False: BooleanLiteralValue = BooleanLiteralValue(false)
+
+    def enum(possibleValues: String*): EnumLiteral = EnumLiteral(possibleValues.toSet)
+
+    def arg(name: String) = ArgValue(name)
+
+    def argMember(name: String, member: String) = ArgValue(name = name, memberVariableName = Some(member))
+
+    val emptyPath = Seq.empty[UrlComponent]
+
+    def json(pairs: (String, Value)*): JsonRequestBody = JsonRequestBody(pairs.toMap)
+
+    private def http(httpMethod: ClientHttpMethod, path: Seq[UrlComponent], body: Option[HttpRequestBody] = None): ClientHttpRequest =
+        ClientHttpRequest(httpMethod = httpMethod, urlPath = path, requestBody = body)
+
+    implicit class Identifier(val name: String) extends AnyVal {
+        def description(desc: String): NameWithDescription = NameWithDescription(name = name, description = desc)
+    }
+
+    implicit class UrlComponentAsSeq(val urlComponent: UrlComponent) extends AnyVal {
+        def /(nextComponent: UrlComponent): Seq[UrlComponent] = Seq(urlComponent, SlashUrlComponent, nextComponent)
+    }
+
+    implicit class UrlComponentSeq(val urlComponents: Seq[UrlComponent]) extends AnyVal {
+        def /(nextComponent: UrlComponent): Seq[UrlComponent] = urlComponents :+ nextComponent
+    }
+
     case class NameWithDescription(name: String, description: String) {
         def params(paramList: FunctionParam*): NameWithDescriptionAndParams = NameWithDescriptionAndParams(
             name = name,
@@ -113,34 +160,12 @@ object EndpointDSL {
     }
 
     case class NameWithDescriptionAndParams(name: String, description: String, paramList: Seq[FunctionParam]) {
-        def http(httpMethod: ClientHttpMethod, urlPath: Seq[UrlComponent], requestBody: Option[HttpRequestBody] = None): NameWithDescriptionParamsAndImplementation =
-            NameWithDescriptionParamsAndImplementation(
-                name = name,
-                description = description,
-                paramList = paramList,
-                implementation = ClientHttpRequest(
-                    httpMethod = httpMethod,
-                    urlPath = urlPath,
-                    requestBody = requestBody
-                )
-            )
-
-        def httpGet(urlPath: Seq[UrlComponent]): NameWithDescriptionParamsAndImplementation =
-            http(httpMethod = GET, urlPath = urlPath, requestBody = None)
-
-        def httpPost(urlPath: Seq[UrlComponent], requestBody: HttpRequestBody): NameWithDescriptionParamsAndImplementation =
-            http(httpMethod = POST, urlPath = urlPath, requestBody = Some(requestBody))
-
-        def httpPut(urlPath: Seq[UrlComponent], requestBody: HttpRequestBody): NameWithDescriptionParamsAndImplementation =
-            http(httpMethod = PUT, urlPath = urlPath, requestBody = Some(requestBody))
-
-        def call(function: ClientFunction, args: Value*): NameWithDescriptionParamsAndImplementation =
-                NameWithDescriptionParamsAndImplementation(
-                    name = function.name,
-                    description = description,
-                    paramList = paramList,
-                    implementation = FunctionCall(name = name, args = args)
-                )
+        def doThis(implementation: FunctionImplementation): NameWithDescriptionParamsAndImplementation = NameWithDescriptionParamsAndImplementation(
+            name = name,
+            description = description,
+            paramList = paramList,
+            implementation = implementation
+        )
     }
 
     case class NameWithDescriptionParamsAndImplementation(name: String, description: String, paramList: Seq[FunctionParam], implementation: FunctionImplementation) {
@@ -152,36 +177,6 @@ object EndpointDSL {
             description = description
         )
     }
-
-    def enum(possibleValues: String*): EnumLiteral = EnumLiteral(possibleValues.toSet)
-
-    implicit class Identifier(val name: String) extends AnyVal {
-        def desc(description: String): NameWithDescription = NameWithDescription(name = name, description = description)
-    }
-
-    def str(value: String): StringLiteralValue = StringLiteralValue(value)
-
-    val True: BooleanLiteralValue = BooleanLiteralValue(true)
-
-    val False: BooleanLiteralValue = BooleanLiteralValue(false)
-
-    def arg(name: String) = ArgValue(name)
-
-    def argMember(name: String, member: String) = ArgValue(name = name, memberVariableName = Some(member))
-
-    val emptyPath = Seq.empty[UrlComponent]
-
-    implicit class UrlComponentAsSeq(val urlComponent: UrlComponent) extends AnyVal {
-        def /(nextComponent: UrlComponent): Seq[UrlComponent] = Seq(urlComponent, SlashUrlComponent, nextComponent)
-    }
-
-    implicit class UrlComponentSeq(val urlComponents: Seq[UrlComponent]) extends AnyVal {
-        def /(nextComponent: UrlComponent): Seq[UrlComponent] = urlComponents :+ nextComponent
-    }
-
-    def json(pairs: (String, Value)*): JsonRequestBody = JsonRequestBody(pairs.toMap)
-
-    def classRef(classIri: SmartIri) = ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
 }
 
 /**
@@ -197,7 +192,9 @@ case class ClientFunction(name: String,
                           params: Seq[FunctionParam],
                           returnType: ClientObjectType,
                           implementation: FunctionImplementation,
-                          description: String)
+                          description: String) {
+    def withArgs(args: Value*): FunctionCall = FunctionCall(name = name, args = args)
+}
 
 /**
   * Represents a function parameter.
