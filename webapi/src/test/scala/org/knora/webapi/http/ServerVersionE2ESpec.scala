@@ -37,14 +37,12 @@ class ServerVersionE2ESpec extends E2ESpec(ServerVersionE2ESpec.config) {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
-    override lazy val log = akka.event.Logging(system, this.getClass)
-
     "The Server" should {
 
         "return the custom 'Server' header with every response" in {
             val request = Get(baseApiUrl + s"/admin/projects")
             val response: HttpResponse = singleAwaitingRequest(request)
-            // log.debug(s"response: ${response.toString}")
+            // logger.debug(s"response: ${response.toString}")
             response.headers should contain (ServerVersion.getServerVersionHeader())
             response.status should be(StatusCodes.OK)
         }

@@ -41,7 +41,7 @@ trait StartupUtils {
 
         try {
             Await.result(applicationStateActor ? ActorReady(), 1.second).asInstanceOf[ActorReadyAck]
-            log.info("KnoraService - applicationStateActorReady")
+            logger.info("KnoraService - applicationStateActorReady")
         } catch {
             case e: AskTimeoutException => {
                 // if we are here, then the ask timed out, so we need to try again until the actor is ready

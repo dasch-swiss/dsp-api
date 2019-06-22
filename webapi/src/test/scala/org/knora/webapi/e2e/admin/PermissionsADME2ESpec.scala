@@ -49,7 +49,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
             val request = Get(baseApiUrl + s"/admin/permissions/$projectIri/$groupIri")
             val response = singleAwaitingRequest(request, 1.seconds)
-            log.debug("==>> " + response.toString)
+            logger.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)
         }
     }

@@ -29,7 +29,6 @@
     <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
     <logger name="net.sf.ehcache.config" level="ERROR"/>
 
-
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
     <logger name="org.knora.webapi.util.cache" level="INFO"/>
@@ -47,9 +46,9 @@
     <logger name="org.knora.webapi.responders.v1.CkanResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.UsersResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ProjectsResponderV1" level="INFO"/>
-    <logger name="org.knora.webapi.responders.v1.PermissionsResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ResourcesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
+    <logger name="org.knora.webapi.responders.admin.PermissionsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.SipiResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>

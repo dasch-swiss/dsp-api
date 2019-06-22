@@ -25,6 +25,7 @@ import java.nio.file.{Files, Paths}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.{FileWriteException, NotFoundException, SettingsImpl}
 import resource._
 
@@ -174,13 +175,13 @@ object FileUtil {
       * @param log a logging adapter.
       * @return `true` if the file was deleted by this method.
       */
-    def deleteFileFromTmpLocation(fileName: File, log: LoggingAdapter): Boolean = {
+    def deleteFileFromTmpLocation(fileName: File, log: Logger): Boolean = {
 
         val path = fileName.toPath
 
         if (!fileName.canWrite) {
             val ex = FileWriteException(s"File $path cannot be deleted.")
-            log.error(ex, ex.getMessage)
+            log.error(ex.getMessage, ex)
         }
 
         Files.deleteIfExists(path)

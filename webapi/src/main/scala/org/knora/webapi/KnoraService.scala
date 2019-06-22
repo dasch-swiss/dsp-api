@@ -20,12 +20,12 @@
 package org.knora.webapi
 
 import akka.actor._
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.http.ServerVersion.addServerHeader
@@ -127,20 +127,16 @@ trait KnoraService {
     private val systemUser = KnoraSystemInstances.Users.SystemUser
 
     /**
-      * Provide logging
-      */
-    protected lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
-
-    /**
       * Route data.
       */
     private val routeData = KnoraRouteData(system, applicationStateActor, responderManager, storeManager)
 
+    private val logger = Logger("KnoraService")
 
     /**
       * All routes composed together and CORS activated.
       */
-    private val apiRoutes: Route = logDuration(log) {
+    private val apiRoutes: Route = logDuration(logger) {
         addServerHeader {
             CORS(
                   new HealthRoute(routeData).knoraApiPath ~
@@ -171,8 +167,7 @@ trait KnoraService {
                   new UsersRouteADM(routeData).knoraApiPath ~
                   new SipiRouteADM(routeData).knoraApiPath ~
                   new SwaggerApiDocsRoute(routeData).knoraApiPath,
-                settings,
-                log
+                settings
             )
         }
     }
@@ -195,7 +190,7 @@ trait KnoraService {
                 applicationStateActor ! InitStartUp(skipLoadingOfOntologies)
             }
             case Failure(ex) => {
-                log.error("Failed to bind to {}:{}! - {}", settings.internalKnoraApiHost, settings.internalKnoraApiPort, ex.getMessage)
+                logger.error("Failed to bind to {}:{}! - {}", settings.internalKnoraApiHost, settings.internalKnoraApiPort, ex.getMessage)
                 stopService()
             }
         }
@@ -206,7 +201,7 @@ trait KnoraService {
       * Stops Knora.
       */
     def stopService(): Unit = {
-        log.info("KnoraService - Shutting down.")
+        logger.info("KnoraService - Shutting down.")
         Http().shutdownAllConnectionPools()
         CacheUtil.removeAllCaches()
         // Kamon.stopAllReporters()
