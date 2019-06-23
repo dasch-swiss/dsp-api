@@ -20,6 +20,7 @@
 package org.knora.webapi.util
 
 import akka.pattern.{AskTimeoutException, ask}
+import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages.{ActorReady, ActorReadyAck, AppState, GetAppState}
 import org.knora.webapi.{Core, KnoraService}
@@ -31,7 +32,7 @@ import scala.concurrent.{Await, Future}
   * This trait is only used for testing. It is necessary so that E2E tests will only start
   * after the KnoraService is ready.
   */
-trait StartupUtils {
+trait StartupUtils extends LazyLogging {
     this: Core with KnoraService =>
 
     /**
