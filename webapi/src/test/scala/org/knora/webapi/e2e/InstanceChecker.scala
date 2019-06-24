@@ -21,7 +21,7 @@ package org.knora.webapi.e2e
 
 import java.net.URLEncoder
 
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
@@ -45,12 +45,12 @@ object InstanceChecker {
     /**
       * Returns an [[InstanceChecker]] for Knora responses in JSON format.
       */
-    def getJsonChecker(log: LoggingAdapter): InstanceChecker = new InstanceChecker(new JsonInstanceInspector, log)
+    def getJsonChecker(): InstanceChecker = new InstanceChecker(new JsonInstanceInspector)
 
     /**
       * Returns an [[InstanceChecker]] for Knora responses in JSON-LD format.
       */
-    def getJsonLDChecker(log: LoggingAdapter): InstanceChecker = new InstanceChecker(new JsonLDInstanceInspector, log)
+    def getJsonLDChecker(): InstanceChecker = new InstanceChecker(new JsonLDInstanceInspector)
 }
 
 /**
@@ -58,9 +58,8 @@ object InstanceChecker {
   * the class definition.
   *
   * @param instanceInspector an [[InstanceInspector]] for working with instances in a particular format.
-  * @param log               a [[LoggingAdapter]] for debugging.
   */
-class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter) {
+class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging {
 
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -97,7 +96,7 @@ class InstanceChecker(instanceInspector: InstanceInspector, log: LoggingAdapter)
       * @param msg the error message.
       */
     private def throwAndLogAssertionException(msg: String): Nothing = {
-        log.debug(msg)
+        logger.debug(msg)
         throw AssertionException(msg)
     }
 

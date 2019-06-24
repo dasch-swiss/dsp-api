@@ -67,7 +67,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
     )
 
-    private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker(log)
+    private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker()
 
     "The resources v2 endpoint" should {
         "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {

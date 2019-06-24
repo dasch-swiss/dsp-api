@@ -48,8 +48,6 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
 
-    implicit override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-
     private val rootEmail = SharedTestDataADM.rootUser.email
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     private val imagesUser01Email = SharedTestDataADM.imagesUser01.email
@@ -129,7 +127,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
                 val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
                 val request = Put(baseApiUrl + "/admin/groups/" + groupIriEnc, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: {}", response)
+                logger.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
 
                 val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
@@ -147,7 +145,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
                 val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
                 val request = Delete(baseApiUrl + "/admin/groups/" + groupIriEnc) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: {}", response)
+                logger.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
 
                 val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]

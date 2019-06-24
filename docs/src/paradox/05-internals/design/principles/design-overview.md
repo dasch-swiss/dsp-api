@@ -315,3 +315,12 @@ routing utility: `RouteUtilV1`, `RouteUtilV2`, or `RouteUtilADM`.
 This utility function sends the message to `ResponderManager` (which
 forwards it to the relevant responder), returns a response to the client
 in the appropriate format, and handles any errors.
+
+## Logging
+
+Logging in Knora is configurable through `logback.xml`, allowing fine
+grain configuration of what classes / objects should be logged from which level.
+
+The Akka Actors use [Akka Logging](https://doc.akka.io/docs/akka/current/logging.html)
+while logging inside plain Scala Objects and Classes is done through
+[Scala Logging](https://github.com/lightbend/scala-logging).

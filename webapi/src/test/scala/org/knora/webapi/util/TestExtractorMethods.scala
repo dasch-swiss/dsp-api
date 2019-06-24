@@ -20,7 +20,6 @@
 package org.knora.webapi.util
 
 import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpResponse
 import org.knora.webapi.InvalidApiJsonException
 import spray.json.JsString
@@ -38,7 +37,7 @@ object ResourceResponseExtractorMethods {
       * @param response the response sent back from the API.
       * @return the value of `res_id`.
       */
-    def getResIriFromJsonResponse(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem, log: LoggingAdapter) = {
+    def getResIriFromJsonResponse(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem) = {
 
         AkkaHttpUtils.httpResponseToJson(response).fields.get("res_id") match {
             case Some(JsString(resourceId)) => resourceId
@@ -58,7 +57,7 @@ object ValuesResponseExtractorMethods {
       * @param response the response sent back from the API.
       * @return the value of `res_id`.
       */
-    def getNewValueIriFromJsonResponse(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem, log: LoggingAdapter) = {
+    def getNewValueIriFromJsonResponse(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem) = {
 
         AkkaHttpUtils.httpResponseToJson(response).fields.get("id") match {
             case Some(JsString(resourceId)) => resourceId

@@ -38,8 +38,6 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass)
-
     "The Health Route" should {
 
         "return 'OK' for state 'Running'" in {
@@ -57,7 +55,7 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
             val request = Get(baseApiUrl + s"/health")
             val response: HttpResponse = singleAwaitingRequest(request)
 
-            log.debug(response.toString())
+            logger.debug(response.toString())
 
             response.status should be(StatusCodes.ServiceUnavailable)
         }
@@ -68,7 +66,7 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
             val request = Get(baseApiUrl + s"/health")
             val response: HttpResponse = singleAwaitingRequest(request)
 
-            log.debug(response.toString())
+            logger.debug(response.toString())
 
             response.status should be(StatusCodes.ServiceUnavailable)
         }

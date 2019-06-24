@@ -20,9 +20,9 @@
 package org.knora.webapi.responders.v2
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{DeleteTemporaryFileRequestV2, MoveTemporaryFileToPermanentStorageRequestV2}
@@ -151,7 +151,7 @@ object ResourceUtilV2 {
                                                      requestingUser: UserADM,
                                                      responderManager: ActorRef,
                                                      storeManager: ActorRef,
-                                                     log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[T] = {
+                                                     log: Logger)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[T] = {
         // Was this a file value update?
         valueContent match {
             case fileValueContent: FileValueContentV2 =>
@@ -185,7 +185,7 @@ object ResourceUtilV2 {
 
                             case Failure(sipiException) =>
                                 // No. Log Sipi's error, and return the future we were given.
-                                log.error(cause = sipiException, message = "Sipi error")
+                                log.error( "Sipi error", sipiException)
                                 updateFuture
                         }
                 }
