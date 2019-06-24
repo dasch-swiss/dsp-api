@@ -23,8 +23,12 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
+import org.knora.webapi.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.clientapi._
 
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
@@ -53,4 +57,42 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
             }
         }
     }
+}
+
+class PermissionsEndpoint extends ClientEndpoint {
+
+    import EndpointFunctionDSL._
+
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    override val name: String = "PermissionsEndpoint"
+
+    override val urlPath: String = "/permissions"
+
+    override val description: String = "An endpoint for working with Knora permissions."
+
+    // Classes used in function definitions.
+
+    private val Project = classRef(OntologyConstants.KnoraAdminV2.ProjectClass.toSmartIri)
+    private val Group = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri)
+    private val AdministrativePermissionResponse = classRef(OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse.toSmartIri)
+
+    // Function definitions.
+
+    private val getAdministrativePermission = function {
+        "getAdministrativePermission" description "Gets the administrative permissions for a project and group." params(
+            "project" description "The project." paramType Project,
+            "group" description "The group." paramType Group,
+            "permissionType" description "The permission type." paramOptionType StringLiteral
+        ) doThis {
+            httpGet(
+                path = argMember("project", "id") / argMember("group", "id"),
+                params = Seq(("permissionType", arg("permissionType")))
+            )
+        } returns AdministrativePermissionResponse
+    }
+
+    override val functions: Seq[ClientFunction] = Seq(
+        getAdministrativePermission
+    )
 }

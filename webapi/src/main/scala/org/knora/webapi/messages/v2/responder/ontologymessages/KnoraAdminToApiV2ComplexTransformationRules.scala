@@ -312,6 +312,48 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val AdministrativePermissionsResponse: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.AdministrativePermissionsResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "administrative permissions response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response providing a collection of administrative permissions."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.AdministrativePermissions -> Cardinality.MayHaveMany
+        )
+    )
+
+    private val AdministrativePermissionResponse = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "administrative permission response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response providing a single administrative permission."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.AdministrativePermissionProperty -> Cardinality.MustHaveOne
+        )
+    )
+
     /**
       * Properties to remove from the ontology before converting it to the target schema.
       * See also [[OntologyConstants.CorrespondingIris]].
@@ -378,7 +420,9 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         ProjectsResponse,
         ProjectResponse,
         GroupsResponse,
-        GroupResponse
+        GroupResponse,
+        AdministrativePermissionsResponse,
+        AdministrativePermissionResponse
     ).map {
         classInfo => classInfo.entityInfoContent.classIri -> classInfo
     }.toMap

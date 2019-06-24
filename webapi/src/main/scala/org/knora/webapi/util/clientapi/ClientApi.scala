@@ -103,17 +103,17 @@ trait ClientEndpoint {
 object EndpointFunctionDSL {
     def function(clientFunction: ClientFunction): ClientFunction = clientFunction
 
-    def httpGet(path: Seq[UrlComponent]): ClientHttpRequest =
-        http(httpMethod = GET, path = path, body = None)
+    def httpGet(path: Seq[UrlComponent], params: Seq[(String, Value)] = Seq.empty): ClientHttpRequest =
+        http(httpMethod = GET, path = path, params = params, body = None)
 
-    def httpPost(path: Seq[UrlComponent], body: Option[HttpRequestBody] = None): ClientHttpRequest =
-        http(httpMethod = POST, path = path, body = body)
+    def httpPost(path: Seq[UrlComponent], params: Seq[(String, Value)] = Seq.empty, body: Option[HttpRequestBody] = None): ClientHttpRequest =
+        http(httpMethod = POST, path = path, params = params, body = body)
 
-    def httpPut(path: Seq[UrlComponent], body: Option[HttpRequestBody] = None): ClientHttpRequest =
-        http(httpMethod = PUT, path = path, body = body)
+    def httpPut(path: Seq[UrlComponent], params: Seq[(String, Value)] = Seq.empty, body: Option[HttpRequestBody] = None): ClientHttpRequest =
+        http(httpMethod = PUT, path = path, params = params, body = body)
 
-    def httpDelete(path: Seq[UrlComponent]): ClientHttpRequest =
-        http(httpMethod = DELETE, path = path, body = None)
+    def httpDelete(path: Seq[UrlComponent], params: Seq[(String, Value)] = Seq.empty): ClientHttpRequest =
+        http(httpMethod = DELETE, path = path, params = params, body = None)
 
     def classRef(classIri: SmartIri) = ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
 
@@ -133,7 +133,7 @@ object EndpointFunctionDSL {
 
     def json(pairs: (String, Value)*): JsonRequestBody = JsonRequestBody(pairs)
 
-    private def http(httpMethod: ClientHttpMethod, path: Seq[UrlComponent], body: Option[HttpRequestBody] = None): ClientHttpRequest = {
+    private def http(httpMethod: ClientHttpMethod, path: Seq[UrlComponent], params: Seq[(String, Value)], body: Option[HttpRequestBody] = None): ClientHttpRequest = {
         // Collapse each run of strings into a single string.
         val collapsedPath: Seq[UrlComponent] = (SlashUrlComponent +: path).foldLeft(Vector.empty[UrlComponent]) {
             case (acc, component) =>
@@ -156,7 +156,7 @@ object EndpointFunctionDSL {
                 }
         }
 
-        ClientHttpRequest(httpMethod = httpMethod, urlPath = collapsedPath, requestBody = body)
+        ClientHttpRequest(httpMethod = httpMethod, urlPath = collapsedPath, params = params, requestBody = body)
     }
 
     implicit class Identifier(val name: String) extends AnyVal {
@@ -181,6 +181,14 @@ object EndpointFunctionDSL {
         def paramType(objectType: ClientObjectType): FunctionParam = FunctionParam(
             name = name,
             objectType = objectType,
+            isOptional = false,
+            description = description
+        )
+
+        def paramOptionType(objectType: ClientObjectType): FunctionParam = FunctionParam(
+            name = name,
+            objectType = objectType,
+            isOptional = true,
             description = description
         )
     }
@@ -228,10 +236,12 @@ case class ClientFunction(name: String,
   *
   * @param name        the name of the parameter.
   * @param objectType  the type of the parameter.
+  * @param isOptional  `true` if the parameter is optional.
   * @param description a human-readable description of the parameter.
   */
 case class FunctionParam(name: String,
                          objectType: ClientObjectType,
+                         isOptional: Boolean,
                          description: String)
 
 /**
@@ -244,9 +254,10 @@ trait FunctionImplementation
   *
   * @param httpMethod  the HTTP method to be used.
   * @param urlPath     the URL path to be used.
+  * @param params      the URL parameters to be included.
   * @param requestBody if provided, the body of the HTTP request.
   */
-case class ClientHttpRequest(httpMethod: ClientHttpMethod, urlPath: Seq[UrlComponent], requestBody: Option[HttpRequestBody] = None) extends FunctionImplementation
+case class ClientHttpRequest(httpMethod: ClientHttpMethod, urlPath: Seq[UrlComponent], params: Seq[(String, Value)], requestBody: Option[HttpRequestBody] = None) extends FunctionImplementation
 
 /**
   * Represents a function call to be used as the implementation of a client endpoint function.
