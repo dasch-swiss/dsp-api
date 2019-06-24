@@ -1091,8 +1091,6 @@ object OntologyConstants {
             KnoraBase.ValueHasGeonameCode -> KnoraApiV2Complex.GeonameValueAsGeonameCode,
             KnoraBase.ValueHasColor -> KnoraApiV2Complex.ColorValueAsColor,
             KnoraBase.ValueHasStandoff -> KnoraApiV2Complex.TextValueHasStandoff,
-
-            // For knora-admin, only a one-way conversion is needed.
             KnoraAdmin.PreferredLanguage -> KnoraAdminV2.Lang,
             KnoraAdmin.IsInProject -> KnoraAdminV2.Projects,
             KnoraAdmin.IsInGroup -> KnoraAdminV2.Groups,
@@ -1145,7 +1143,20 @@ object OntologyConstants {
             KnoraApiV2Complex.ListValueAsListNode -> KnoraBase.ValueHasListNode,
             KnoraApiV2Complex.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
             KnoraApiV2Complex.ColorValueAsColor -> KnoraBase.ValueHasColor,
-            KnoraApiV2Complex.TextValueHasStandoff -> KnoraBase.ValueHasStandoff
+            KnoraApiV2Complex.TextValueHasStandoff -> KnoraBase.ValueHasStandoff,
+            KnoraAdminV2.Lang -> KnoraAdmin.PreferredLanguage,
+            KnoraAdminV2.Projects -> KnoraAdmin.IsInProject,
+            KnoraAdminV2.Groups -> KnoraAdmin.IsInGroup,
+            KnoraAdminV2.ProjectClass -> KnoraAdmin.KnoraProject,
+            KnoraAdminV2.Shortname -> KnoraAdmin.ProjectShortname,
+            KnoraAdminV2.Longname -> KnoraAdmin.ProjectLongname,
+            KnoraAdminV2.Shortcode -> KnoraAdmin.ProjectShortcode,
+            KnoraAdminV2.Keywords -> KnoraAdmin.ProjectKeyword,
+            KnoraAdminV2.Logo -> KnoraAdmin.ProjectLogo,
+            KnoraAdminV2.SelfJoin -> KnoraAdmin.HasSelfJoinEnabled,
+            KnoraAdminV2.Group -> KnoraAdmin.UserGroup,
+            KnoraAdminV2.Name -> KnoraAdmin.GroupName,
+            KnoraAdminV2.ProjectProperty -> KnoraAdmin.BelongsToProject
         )
     )
 

@@ -165,6 +165,26 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val Description: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.Description,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        objectType = Some(OntologyConstants.Xsd.String),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "description"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The description of a group or project."
+                )
+            )
+        )
+    )
+
     private val UsersResponse: ReadClassInfoV2 = makeClass(
         classIri = OntologyConstants.KnoraAdminV2.UsersResponse,
         predicates = Seq(
@@ -282,7 +302,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         ID,
         Token,
         SessionID,
-        Ontologies
+        Ontologies,
+        Description
     ).map {
         propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
     }.toMap
