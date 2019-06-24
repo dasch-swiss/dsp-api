@@ -106,11 +106,11 @@ object EndpointFunctionDSL {
     def httpGet(path: Seq[UrlComponent]): ClientHttpRequest =
         http(httpMethod = GET, path = path, body = None)
 
-    def httpPost(path: Seq[UrlComponent], body: HttpRequestBody): ClientHttpRequest =
-        http(httpMethod = POST, path = path, body = Some(body))
+    def httpPost(path: Seq[UrlComponent], body: Option[HttpRequestBody] = None): ClientHttpRequest =
+        http(httpMethod = POST, path = path, body = body)
 
-    def httpPut(path: Seq[UrlComponent], body: HttpRequestBody): ClientHttpRequest =
-        http(httpMethod = PUT, path = path, body = Some(body))
+    def httpPut(path: Seq[UrlComponent], body: Option[HttpRequestBody] = None): ClientHttpRequest =
+        http(httpMethod = PUT, path = path, body = body)
 
     def httpDelete(path: Seq[UrlComponent]): ClientHttpRequest =
         http(httpMethod = DELETE, path = path, body = None)

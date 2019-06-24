@@ -636,7 +636,10 @@ class UsersEndpoint extends ClientEndpoint {
     private val UsersResponse = classRef(OntologyConstants.KnoraAdminV2.UsersResponse.toSmartIri)
     private val UserResponse = classRef(OntologyConstants.KnoraAdminV2.UserResponse.toSmartIri)
     private val ProjectsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectsResponse.toSmartIri)
+    private val GroupsResponse = classRef(OntologyConstants.KnoraAdminV2.GroupsResponse.toSmartIri)
     private val User = classRef(OntologyConstants.KnoraAdminV2.UserClass.toSmartIri)
+    private val Group = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri)
+    private val Project = classRef(OntologyConstants.KnoraAdminV2.ProjectClass.toSmartIri)
 
     // Function definitions.
 
@@ -679,11 +682,27 @@ class UsersEndpoint extends ClientEndpoint {
         } returns UserResponse
     }
 
+    private val getUserGroupMemberships = function {
+        "getUserGroupMemberships" description "Gets a user's group memberships." params (
+            "user" description "The user whose group memberships are to be retrieved." paramType User
+            ) doThis {
+            httpGet(path = str("iri") / argMember("user", "id") / str("group-memberships"))
+        } returns GroupsResponse
+    }
+
     private val getUserProjectMemberships = function {
         "getUserProjectMemberships" description "Gets a user's project memberships." params (
             "user" description "The user whose project memberships are to be retrieved." paramType User
             ) doThis {
             httpGet(path = str("iri") / argMember("user", "id") / str("project-memberships"))
+        } returns ProjectsResponse
+    }
+
+    private val getUserProjectAdminMemberships = function {
+        "getUserProjectAdminMemberships" description "Gets a user's project admin memberships." params (
+            "user" description "The user whose project admin memberships are to be retrieved." paramType User
+            ) doThis {
+            httpGet(path = str("iri") / argMember("user", "id") / str("project-admin-memberships"))
         } returns ProjectsResponse
     }
 
@@ -693,7 +712,7 @@ class UsersEndpoint extends ClientEndpoint {
             ) doThis {
             httpPost(
                 path = emptyPath,
-                body = arg("user")
+                body = Some(arg("user"))
             )
         } returns UserResponse
     }
@@ -704,13 +723,13 @@ class UsersEndpoint extends ClientEndpoint {
             ) doThis {
             httpPut(
                 path = str("iri") / argMember("user", "id") / str("BasicUserInformation"),
-                body = json(
+                body = Some(json(
                     "username" -> argMember("user", "username"),
                     "email" -> argMember("user", "email"),
                     "givenName" -> argMember("user", "givenName"),
                     "familyName" -> argMember("user", "familyName"),
                     "lang" -> argMember("user", "lang")
-                )
+                ))
             )
         } returns UserResponse
     }
@@ -721,18 +740,7 @@ class UsersEndpoint extends ClientEndpoint {
             ) doThis {
             httpPut(
                 path = str("iri") / argMember("user", "id") / str("Status"),
-                body = json("status" -> argMember("user", "status"))
-            )
-        } returns UserResponse
-    }
-
-    private val updateUserSystemAdminMembership = function {
-        "updateUserSystemAdminMembership" description "Updates a user's SystemAdmin membership." params(
-            "user" description "The user to be updated." paramType User
-            ) doThis {
-            httpPut(
-                path = str("iri") / argMember("user", "id") / str("SystemAdmin"),
-                body = json("systemAdmin" -> argMember("user", "systemAdmin"))
+                body = Some(json("status" -> argMember("user", "status")))
             )
         } returns UserResponse
     }
@@ -745,10 +753,87 @@ class UsersEndpoint extends ClientEndpoint {
         ) doThis {
             httpPut(
                 path = str("iri") / argMember("user", "id") / str("Password"),
-                body = json(
+                body = Some(json(
                     "requesterPassword" -> arg("oldPassword"),
                     "newPassword" -> arg("newPassword")
-                )
+                ))
+            )
+        } returns UserResponse
+    }
+
+    private val addUserToGroupMembership = function {
+        "addUserToGroupMembership" description "Adds a user to a group." params(
+            "user" description "The user to be added to the group." paramType User,
+            "group" description "The group to which the user should be added." paramType Group
+        ) doThis {
+            httpPost(
+                path = str("iri") / argMember("user", "id") / str("group-memberships") / argMember("group", "id")
+            )
+        } returns UserResponse
+    }
+
+    private val removeUserFromGroupMembership = function {
+        "removeUserFromGroupMembership" description "Removes a user from a project." params(
+            "user" description "The user to be removed from the project." paramType User,
+            "group" description "The group from which the user should be removed." paramType Group
+        ) doThis {
+            httpDelete(
+                path = str("iri") / argMember("user", "id") / str("group-memberships") / argMember("group", "id")
+            )
+        } returns UserResponse
+    }
+
+    private val addUserToProjectMembership = function {
+        "addUserToProjectMembership" description "Adds a user to a project." params(
+            "user" description "The user to be added to the project." paramType User,
+            "project" description "The project to which the user should be added." paramType Project
+        ) doThis {
+            httpPost(
+                path = str("iri") / argMember("user", "id") / str("project-memberships") / argMember("project", "id")
+            )
+        } returns UserResponse
+    }
+
+    private val removeUserFromProjectMembership = function {
+        "removeUserFromProjectMembership" description "Removes a user from a project." params(
+            "user" description "The user to be removed from the project." paramType User,
+            "project" description "The project from which the user should be removed." paramType Project
+        ) doThis {
+            httpDelete(
+                path = str("iri") / argMember("user", "id") / str("project-memberships") / argMember("project", "id")
+            )
+        } returns UserResponse
+    }
+
+    private val addUserToProjectAdminMembership = function {
+        "addUserToProjectAdminMembership" description "Makes a user a project administrator." params(
+            "user" description "The user to be made administrator of a project." paramType User,
+            "project" description "The project in which the user should become a project administrator." paramType Project
+        ) doThis {
+            httpPost(
+                path = str("iri") / argMember("user", "id") / str("project-admin-memberships") / argMember("project", "id")
+            )
+        } returns UserResponse
+    }
+
+    private val removeUserFromProjectAdminMembership = function {
+        "removeUserFromProjectAdminMembership" description "Removes a user's project administrator status." params(
+            "user" description "The user whose project administrator status should be removed." paramType User,
+            "project" description "The project in which the user should no longer be a project administrator." paramType Project
+        ) doThis {
+            httpDelete(
+                path = str("iri") / argMember("user", "id") / str("project-admin-memberships") / argMember("project", "id")
+            )
+        } returns UserResponse
+    }
+
+    private val updateUserSystemAdminMembership = function {
+        "updateUserSystemAdminMembership" description "Updates a user's SystemAdmin membership." params(
+            "user" description "The user to be updated." paramType User
+            ) doThis {
+            httpPut(
+                path = str("iri") / argMember("user", "id") / str("SystemAdmin"),
+                body = Some(json("systemAdmin" -> argMember("user", "systemAdmin")))
             )
         } returns UserResponse
     }
@@ -769,11 +854,19 @@ class UsersEndpoint extends ClientEndpoint {
         getUserByIri,
         getUserByEmail,
         getUserByUsername,
+        getUserGroupMemberships,
         getUserProjectMemberships,
+        getUserProjectAdminMemberships,
         createUser,
         updateUserBasicInformation,
         updateUserStatus,
         updateUserPassword,
+        addUserToGroupMembership,
+        removeUserFromGroupMembership,
+        addUserToProjectMembership,
+        removeUserFromProjectMembership,
+        addUserToProjectAdminMembership,
+        removeUserFromProjectAdminMembership,
         updateUserSystemAdminMembership,
         deleteUser
     )

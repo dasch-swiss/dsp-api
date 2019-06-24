@@ -42,7 +42,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
     )
 
     private val UsersProperty: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraAdminV2.UsersProperty,
+        propertyIri = OntologyConstants.KnoraAdminV2.Users,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraAdminV2.UsersResponse),
         objectType = Some(OntologyConstants.KnoraAdminV2.UserClass),
@@ -203,7 +203,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
             )
         ),
         directCardinalities = Map(
-            OntologyConstants.KnoraAdminV2.UsersProperty -> Cardinality.MayHaveMany
+            OntologyConstants.KnoraAdminV2.Users -> Cardinality.MayHaveMany
         )
     )
 
@@ -270,6 +270,48 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val GroupsResponse: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.GroupsResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "groups response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response providing a collection of groups."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.Groups -> Cardinality.MayHaveMany
+        )
+    )
+
+    private val GroupResponse = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.GroupResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "group response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response providing a single group."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.GroupProperty -> Cardinality.MustHaveOne
+        )
+    )
+
     /**
       * Properties to remove from the ontology before converting it to the target schema.
       * See also [[OntologyConstants.CorrespondingIris]].
@@ -317,7 +359,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       */
     override val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
         OntologyConstants.KnoraAdminV2.UserClass -> UserCardinalities,
-        OntologyConstants.KnoraAdminV2.Group -> GroupCardinalities,
+        OntologyConstants.KnoraAdminV2.GroupClass -> GroupCardinalities,
         OntologyConstants.KnoraAdminV2.ProjectClass -> ProjectCardinalities
     ).map {
         case (classIri, cardinalities) =>
@@ -334,7 +376,9 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         UsersResponse,
         UserResponse,
         ProjectsResponse,
-        ProjectResponse
+        ProjectResponse,
+        GroupsResponse,
+        GroupResponse
     ).map {
         classInfo => classInfo.entityInfoContent.classIri -> classInfo
     }.toMap
