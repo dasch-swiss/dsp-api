@@ -479,6 +479,7 @@ object InstanceCheckerSpec {
     val correctUser: String =
         """
           |{
+          |  "id" : "http://rdfh.ch/users/normaluser",
           |  "username" : "test",
           |  "email" : "test@example.org",
           |  "familyName" : "Tester",
@@ -495,6 +496,7 @@ object InstanceCheckerSpec {
         """
           |{
           |  "username" : "test",
+          |  "id" : "http://rdfh.ch/users/normaluser",
           |  "extraProperty" : "test",
           |  "email" : "test@example.org",
           |  "familyName" : "Tester",
@@ -510,6 +512,7 @@ object InstanceCheckerSpec {
     val userWithMissingUsername: String =
         """
           |{
+          |  "id" : "http://rdfh.ch/users/normaluser",
           |  "email" : "test@example.org",
           |  "familyName" : "Tester",
           |  "givenName": "Test",
@@ -524,6 +527,7 @@ object InstanceCheckerSpec {
     val userWithInvalidObjectType: String =
         """
           |{
+          |  "id" : "http://rdfh.ch/users/normaluser",
           |  "username" : "test",
           |  "email" : "test@example.org",
           |  "familyName" : "Tester",
