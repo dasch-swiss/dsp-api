@@ -542,14 +542,18 @@ object OntologyConstants {
         val VersionSegment = "/v2"
         val KnoraAdminOntologyIri: IRI = KnoraApi.ApiOntologyStart + KnoraAdmin.KnoraAdminOntologyLabel + VersionSegment
         val KnoraAdminPrefixExpansion: IRI = KnoraAdminOntologyIri + "#"
-        val UsersResponse: IRI = KnoraAdminPrefixExpansion + "UsersResponse"
-        val UsersProperty: IRI = KnoraAdminPrefixExpansion + "users"
         val UserResponse: IRI = KnoraAdminPrefixExpansion + "UserResponse"
+        val UsersResponse: IRI = KnoraAdminPrefixExpansion + "UsersResponse"
+        val ProjectResponse: IRI = KnoraAdminPrefixExpansion + "ProjectResponse"
+        val ProjectsResponse: IRI = KnoraAdminPrefixExpansion + "ProjectsResponse"
+        val UsersProperty: IRI = KnoraAdminPrefixExpansion + "users"
         val UserClass: IRI = KnoraAdminPrefixExpansion + "User"
         val UserProperty: IRI = KnoraAdminPrefixExpansion + "user"
         val Lang: IRI = KnoraAdminPrefixExpansion + "lang"
         val Projects: IRI = KnoraAdminPrefixExpansion + "projects"
+        val ProjectsAdmin: IRI = KnoraAdminPrefixExpansion + "projectsAdmin"
         val Groups: IRI = KnoraAdminPrefixExpansion + "groups"
+        val SystemAdmin: IRI = KnoraAdminPrefixExpansion + "systemAdmin"
         val ProjectClass: IRI = KnoraAdminPrefixExpansion + "Project"
         val ID: IRI = KnoraAdminPrefixExpansion + "id"
         val Token: IRI = KnoraAdminPrefixExpansion + "token"
@@ -1094,6 +1098,7 @@ object OntologyConstants {
             KnoraAdmin.PreferredLanguage -> KnoraAdminV2.Lang,
             KnoraAdmin.IsInProject -> KnoraAdminV2.Projects,
             KnoraAdmin.IsInGroup -> KnoraAdminV2.Groups,
+            KnoraAdmin.IsInSystemAdminGroup -> KnoraAdminV2.SystemAdmin,
             KnoraAdmin.KnoraProject -> KnoraAdminV2.ProjectClass,
             KnoraAdmin.ProjectShortname -> KnoraAdminV2.Shortname,
             KnoraAdmin.ProjectLongname -> KnoraAdminV2.Longname,
@@ -1147,6 +1152,7 @@ object OntologyConstants {
             KnoraAdminV2.Lang -> KnoraAdmin.PreferredLanguage,
             KnoraAdminV2.Projects -> KnoraAdmin.IsInProject,
             KnoraAdminV2.Groups -> KnoraAdmin.IsInGroup,
+            KnoraAdminV2.SystemAdmin -> KnoraAdmin.IsInSystemAdminGroup,
             KnoraAdminV2.ProjectClass -> KnoraAdmin.KnoraProject,
             KnoraAdminV2.Shortname -> KnoraAdmin.ProjectShortname,
             KnoraAdminV2.Longname -> KnoraAdmin.ProjectLongname,

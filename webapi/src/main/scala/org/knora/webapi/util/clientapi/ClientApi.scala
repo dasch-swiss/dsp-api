@@ -112,6 +112,9 @@ object EndpointFunctionDSL {
     def httpPut(path: Seq[UrlComponent], body: HttpRequestBody): ClientHttpRequest =
         http(httpMethod = PUT, path = path, body = Some(body))
 
+    def httpDelete(path: Seq[UrlComponent]): ClientHttpRequest =
+        http(httpMethod = DELETE, path = path, body = None)
+
     def classRef(classIri: SmartIri) = ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
 
     def str(value: String): StringLiteralValue = StringLiteralValue(value)
@@ -128,7 +131,7 @@ object EndpointFunctionDSL {
 
     val emptyPath = Seq.empty[UrlComponent]
 
-    def json(pairs: (String, Value)*): JsonRequestBody = JsonRequestBody(pairs.toMap)
+    def json(pairs: (String, Value)*): JsonRequestBody = JsonRequestBody(pairs)
 
     private def http(httpMethod: ClientHttpMethod, path: Seq[UrlComponent], body: Option[HttpRequestBody] = None): ClientHttpRequest = {
         // Collapse each run of strings into a single string.
@@ -274,6 +277,11 @@ case object POST extends ClientHttpMethod
 case object PUT extends ClientHttpMethod
 
 /**
+  * Represents HTTP DELETE.
+  */
+case object DELETE extends ClientHttpMethod
+
+/**
   * Represents part of a URL path to be constructed for a client endpoint function.
   */
 trait UrlComponent
@@ -321,7 +329,7 @@ trait HttpRequestBody
   *
   * @param jsonObject the keys and values of the object.
   */
-case class JsonRequestBody(jsonObject: Map[String, Value]) extends HttpRequestBody
+case class JsonRequestBody(jsonObject: Seq[(String, Value)]) extends HttpRequestBody
 
 /**
   * A definition of a Knora API class, which can be used by a [[GeneratorBackEnd]] to generate client code.

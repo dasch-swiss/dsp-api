@@ -82,6 +82,7 @@ export class @name extends Endpoint {
         case GET => "httpGet"
         case POST => "httpPost"
         case PUT => "httpPut"
+        case DELETE => "httpDelete"
     }
 }
 

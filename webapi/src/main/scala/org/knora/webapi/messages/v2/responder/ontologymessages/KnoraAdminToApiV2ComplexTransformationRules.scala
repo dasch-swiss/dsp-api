@@ -228,12 +228,53 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val ProjectsResponse: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.ProjectsResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "projects response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response providing a collection of projects."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.Projects -> Cardinality.MayHaveMany
+        )
+    )
+
+    private val ProjectResponse = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.ProjectResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "project response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response providing a single project."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.ProjectProperty -> Cardinality.MustHaveOne
+        )
+    )
+
     /**
       * Properties to remove from the ontology before converting it to the target schema.
       * See also [[OntologyConstants.CorrespondingIris]].
       */
     override val internalPropertiesToRemove: Set[SmartIri] = Set(
-        OntologyConstants.KnoraAdmin.IsInSystemAdminGroup,
         OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize,
         OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark,
         OntologyConstants.KnoraAdmin.BelongsToInstitution
@@ -252,7 +293,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
     private val UserCardinalities = Map(
         OntologyConstants.KnoraAdminV2.ID -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraAdminV2.Token -> Cardinality.MayHaveOne,
-        OntologyConstants.KnoraAdminV2.SessionID -> Cardinality.MayHaveOne
+        OntologyConstants.KnoraAdminV2.SessionID -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraAdminV2.SystemAdmin -> Cardinality.MayHaveOne
     )
 
     /**
@@ -290,7 +332,9 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       */
     override val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
         UsersResponse,
-        UserResponse
+        UserResponse,
+        ProjectsResponse,
+        ProjectResponse
     ).map {
         classInfo => classInfo.entityInfoContent.classIri -> classInfo
     }.toMap

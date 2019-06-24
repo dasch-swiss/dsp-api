@@ -635,6 +635,7 @@ class UsersEndpoint extends ClientEndpoint {
 
     private val UsersResponse = classRef(OntologyConstants.KnoraAdminV2.UsersResponse.toSmartIri)
     private val UserResponse = classRef(OntologyConstants.KnoraAdminV2.UserResponse.toSmartIri)
+    private val ProjectsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectsResponse.toSmartIri)
     private val User = classRef(OntologyConstants.KnoraAdminV2.UserClass.toSmartIri)
 
     // Function definitions.
@@ -678,6 +679,14 @@ class UsersEndpoint extends ClientEndpoint {
         } returns UserResponse
     }
 
+    private val getUserProjectMemberships = function {
+        "getUserProjectMemberships" description "Gets a user's project memberships." params (
+            "user" description "The user whose project memberships are to be retrieved." paramType User
+            ) doThis {
+            httpGet(path = str("iri") / argMember("user", "id") / str("project-memberships"))
+        } returns ProjectsResponse
+    }
+
     private val createUser = function {
         "createUser" description "Creates a user." params (
             "user" description "The user to be created." paramType User
@@ -689,13 +698,19 @@ class UsersEndpoint extends ClientEndpoint {
         } returns UserResponse
     }
 
-    private val updateUser = function {
-        "updateUser" description "Updates a user." params (
+    private val updateUserBasicInformation = function {
+        "updateUserBasicInformation" description "Updates an existing user's basic information." params (
             "user" description "The user to be updated." paramType User
             ) doThis {
             httpPut(
-                path = emptyPath,
-                body = arg("user")
+                path = str("iri") / argMember("user", "id") / str("BasicUserInformation"),
+                body = json(
+                    "username" -> argMember("user", "username"),
+                    "email" -> argMember("user", "email"),
+                    "givenName" -> argMember("user", "givenName"),
+                    "familyName" -> argMember("user", "familyName"),
+                    "lang" -> argMember("user", "lang")
+                )
             )
         } returns UserResponse
     }
@@ -707,6 +722,17 @@ class UsersEndpoint extends ClientEndpoint {
             httpPut(
                 path = str("iri") / argMember("user", "id") / str("Status"),
                 body = json("status" -> argMember("user", "status"))
+            )
+        } returns UserResponse
+    }
+
+    private val updateUserSystemAdminMembership = function {
+        "updateUserSystemAdminMembership" description "Updates a user's SystemAdmin membership." params(
+            "user" description "The user to be updated." paramType User
+            ) doThis {
+            httpPut(
+                path = str("iri") / argMember("user", "id") / str("SystemAdmin"),
+                body = json("systemAdmin" -> argMember("user", "systemAdmin"))
             )
         } returns UserResponse
     }
@@ -731,9 +757,8 @@ class UsersEndpoint extends ClientEndpoint {
         "deleteUser" description "Deletes a user. This method does not actually delete a user, but sets the status to false." params (
             "user" description "The user to be deleted." paramType User
             ) doThis {
-            httpPut(
-                path = str("iri") / argMember("user", "id") / str("Status"),
-                body = json("status" -> False)
+            httpDelete(
+                path = str("iri") / argMember("user", "id")
             )
         } returns UserResponse
     }
@@ -744,10 +769,12 @@ class UsersEndpoint extends ClientEndpoint {
         getUserByIri,
         getUserByEmail,
         getUserByUsername,
+        getUserProjectMemberships,
         createUser,
-        updateUser,
+        updateUserBasicInformation,
         updateUserStatus,
         updateUserPassword,
+        updateUserSystemAdminMembership,
         deleteUser
     )
 }
