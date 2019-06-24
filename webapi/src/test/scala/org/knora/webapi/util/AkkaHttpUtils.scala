@@ -30,6 +30,7 @@ import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
+import com.typesafe.scalalogging.LazyLogging
 import spray.json._
 
 import scala.concurrent.duration._
@@ -38,7 +39,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 /**
   * Object containing methods for dealing with [[HttpResponse]]
   */
-object AkkaHttpUtils {
+object AkkaHttpUtils extends LazyLogging {
 
     /**
       * Given an [[HttpResponse]] containing json, return the said json.
@@ -46,7 +47,7 @@ object AkkaHttpUtils {
       * @param response the [[HttpResponse]] containing json
       * @return an [[JsObject]]
       */
-    def httpResponseToJson(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem, log: LoggingAdapter): JsObject = {
+    def httpResponseToJson(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem): JsObject = {
 
         import DefaultJsonProtocol._
         import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._

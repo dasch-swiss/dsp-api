@@ -41,8 +41,6 @@ object DrawingsGodsV1E2ESpec {
   */
 class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with TriplestoreJsonProtocol {
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass())
-
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1E2ESpec/rvp-admin-data.ttl", name = "http://www.knora.org/data/admin"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1E2ESpec/rvp-permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
@@ -87,7 +85,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
             val resId = ResourceResponseExtractorMethods.getResIriFromJsonResponse(response)
 
             thingIri.set(resId)
-            log.debug(s"1a. thingIri: ${thingIri.get}")
+            logger.debug(s"1a. thingIri: ${thingIri.get}")
         }
 
 
@@ -108,7 +106,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
             val valId = ValuesResponseExtractorMethods.getNewValueIriFromJsonResponse(response)
 
             firstValueIri.set(valId)
-            log.debug(s"1b. firstValueIri: ${firstValueIri.get}")
+            logger.debug(s"1b. firstValueIri: ${firstValueIri.get}")
         }
 
         "allow the drawings-gods user to change the existing value (2a)" in {
@@ -129,7 +127,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
             val valId = ValuesResponseExtractorMethods.getNewValueIriFromJsonResponse(response)
 
             firstValueIri.set(valId)
-            log.debug(s"2a. firstValueIri: ${firstValueIri.get}")
+            logger.debug(s"2a. firstValueIri: ${firstValueIri.get}")
         }
 
         "allow the drawings-gods user to create a new value inside the parole-religieuse project (2b)" in {
@@ -150,7 +148,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
             val valId = ValuesResponseExtractorMethods.getNewValueIriFromJsonResponse(response)
 
             secondValueIri.set(valId)
-            log.debug(s"2b. secondValueIri: ${secondValueIri.get}")
+            logger.debug(s"2b. secondValueIri: ${secondValueIri.get}")
         }
     }
 

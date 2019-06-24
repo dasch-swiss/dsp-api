@@ -22,7 +22,7 @@ package org.knora.webapi.util
 import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
-import com.typesafe.scalalogging.Logger
+import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupGetResponseADM, MultipleGroupsGetRequestADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.PermissionType
@@ -30,7 +30,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{Permission
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.v1.GroupedProps.{ValueLiterals, ValueProps}
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,7 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.
   */
-object PermissionUtilADM {
+object PermissionUtilADM extends LazyLogging {
 
     // TODO: unify EntityPermission with PermissionADM.
 
@@ -157,8 +156,6 @@ object PermissionUtilADM {
         OntologyConstants.KnoraBase.AttachedToProject,
         OntologyConstants.KnoraBase.HasPermissions
     )
-
-    private val log = Logger(LoggerFactory.getLogger(this.getClass))
 
     /**
       * Given the IRI of an RDF property, returns `true` if the property is relevant to calculating permissions. This
@@ -436,7 +433,7 @@ object PermissionUtilADM {
             case Some(permissionListStr) => {
                 val cleanedPermissionListStr = permissionListStr replaceAll("[<>]", "")
                 val permissions: Seq[String] = cleanedPermissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
-                log.debug(s"PermissionUtil.parsePermissionsWithType - split permissions: $permissions")
+                logger.debug(s"PermissionUtil.parsePermissionsWithType - split permissions: $permissions")
                 permissions.flatMap {
                     permission =>
                         val splitPermission = permission.split(' ')
@@ -483,7 +480,7 @@ object PermissionUtilADM {
 
             case OntologyConstants.KnoraAdmin.ProjectResourceCreateRestrictedPermission =>
                 if (iris.nonEmpty) {
-                    log.debug(s"buildPermissionObject - ProjectResourceCreateRestrictedPermission - iris: $iris")
+                    logger.debug(s"buildPermissionObject - ProjectResourceCreateRestrictedPermission - iris: $iris")
                     iris.map(iri => PermissionADM.projectResourceCreateRestrictedPermission(iri))
                 } else {
                     throw InconsistentTriplestoreDataException(s"Missing additional permission information.")

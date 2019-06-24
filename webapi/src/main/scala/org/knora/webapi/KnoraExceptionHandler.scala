@@ -1,9 +1,9 @@
 package org.knora.webapi
 
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.ExceptionHandler
+import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.http.{ApiStatusCodesV1, ApiStatusCodesV2}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDString}
 import spray.json.{JsNumber, JsObject, JsString, JsValue}
@@ -12,12 +12,12 @@ import spray.json.{JsNumber, JsObject, JsString, JsValue}
   * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing
   * into HttpResponses. It is brought implicitly into scope at the top level [[KnoraService]].
   */
-object KnoraExceptionHandler {
+object KnoraExceptionHandler extends LazyLogging {
 
     // A generic error message that we return to clients when an internal server error occurs.
     private val GENERIC_INTERNAL_SERVER_ERROR_MESSAGE = "The request could not be completed because of an internal server error."
 
-    def apply(settingsImpl: SettingsImpl, log: LoggingAdapter): ExceptionHandler = ExceptionHandler {
+    def apply(settingsImpl: SettingsImpl): ExceptionHandler = ExceptionHandler {
 
         /* TODO: Find out which response format should be generated, by looking at what the client is requesting / accepting (issue #292) */
 
@@ -44,7 +44,7 @@ object KnoraExceptionHandler {
                 val url = uri.path.toString
 
                 // println(s"KnoraExceptionHandler - case: ise - url: $url")
-                log.error(ise, s"Unable to run route $url")
+                logger.error(s"Unable to run route $url", ise)
 
                 if (url.startsWith("/v1")) {
                     complete(exceptionToJsonHttpResponseV1(ise, settingsImpl))
@@ -62,8 +62,8 @@ object KnoraExceptionHandler {
                 val uri = request.uri
                 val url = uri.path.toString
 
-                log.debug(s"KnoraExceptionHandler - case: other - url: $url")
-                log.error(other, s"Unable to run route $url")
+                logger.debug(s"KnoraExceptionHandler - case: other - url: $url")
+                logger.error(s"Unable to run route $url", other)
 
                 if (url.startsWith("/v1")) {
                     complete(exceptionToJsonHttpResponseV1(other, settingsImpl))
