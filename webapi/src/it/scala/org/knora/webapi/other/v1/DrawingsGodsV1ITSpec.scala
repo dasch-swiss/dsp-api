@@ -47,8 +47,6 @@ object DrawingsGodsV1ITSpec {
   */
 class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
-    implicit override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
@@ -145,7 +143,7 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
 
                 case _ => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
             }
-            log.debug("iiiURL: {}", iiifUrl)
+            logger.debug("iiiURL: {}", iiifUrl)
 
             // Request the image from Sipi.
             val sipiGetRequest = Get(iiifUrl) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))

@@ -20,9 +20,9 @@
 package org.knora.webapi.responders
 
 import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
+import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{KnoraDispatchers, Settings, SettingsImpl, UnexpectedMessageException}
 
@@ -38,10 +38,10 @@ object Responder {
       * An responder use this method to handle unexpected request messages in a consistent way.
       *
       * @param message the message that was received.
-      * @param log     a [[LoggingAdapter]].
+      * @param log     a [[Logger]].
       * @param who     the responder receiving the message.
       */
-    def handleUnexpectedMessage(message: Any, log: LoggingAdapter, who: String): Future[Nothing] = {
+    def handleUnexpectedMessage(message: Any, log: Logger, who: String): Future[Nothing] = {
         val unexpectedMessageException = UnexpectedMessageException(s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}")
         FastFuture.failed(unexpectedMessageException)
     }
@@ -61,7 +61,7 @@ case class ResponderData(system: ActorSystem, applicationStateActor: ActorRef, r
 /**
   * An abstract class providing values that are commonly used in Knora responders.
   */
-abstract class Responder(responderData: ResponderData) {
+abstract class Responder(responderData: ResponderData) extends LazyLogging {
 
     /**
       * The actor system.
@@ -106,7 +106,7 @@ abstract class Responder(responderData: ResponderData) {
     /**
       * Provides logging
       */
-    val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
+    val log: Logger = logger
 }
 
 

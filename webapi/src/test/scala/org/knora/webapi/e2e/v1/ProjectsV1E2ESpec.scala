@@ -50,8 +50,6 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass())
-
     private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")
@@ -67,10 +65,10 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
             "return all projects" in {
                 val request = Get(baseApiUrl + s"/v1/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
+                // logger.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
 
-                // log.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
+                // logger.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
 
                 val projects: Seq[ProjectInfoV1] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]]
 
@@ -81,14 +79,14 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
             "return the information for a single project identified by iri" in {
                 val request = Get(baseApiUrl + s"/v1/projects/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
+                // logger.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
 
             "return the information for a single project identified by shortname" in {
                 val request = Get(baseApiUrl + s"/v1/projects/$projectShortnameEnc?identifier=shortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
+                // logger.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
             }
         }
