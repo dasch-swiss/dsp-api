@@ -256,7 +256,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             loginToken.nonEmpty should be(true)
 
-            log.debug("token: {}", loginToken)
+            logger.debug("token: {}", loginToken)
         }
 
         "change a still image file" in {

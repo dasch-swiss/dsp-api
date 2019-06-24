@@ -48,7 +48,7 @@ class CORSSupportV1R2RSpec extends R2RSpec {
         "accept valid pre-flight requests" in {
 
             Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(GET) ~> {
-                addServerHeader(CORS(sealedResourcesRoute, settings, log))
+                addServerHeader(CORS(sealedResourcesRoute, settings))
             } ~> check {
                 responseAs[String] shouldBe empty
                 status shouldBe StatusCodes.OK
@@ -66,7 +66,7 @@ class CORSSupportV1R2RSpec extends R2RSpec {
 
             val invalidMethod = PATCH
             Options() ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(invalidMethod) ~> {
-                CORS(sealedResourcesRoute, settings, log)
+                CORS(sealedResourcesRoute, settings)
             } ~> check {
                 status shouldBe StatusCodes.BadRequest
                 entityAs[String] should equal("CORS: invalid method 'PATCH'")

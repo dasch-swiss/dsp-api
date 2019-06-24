@@ -39,8 +39,6 @@ object LumieresLausanneV2E2ESpec {
   */
 class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config) with TriplestoreJsonProtocol {
 
-    implicit override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_admin.ttl", name = "http://www.knora.org/data/admin"),
         RdfDataObject(path = "_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_permissions.ttl", name = "http://www.knora.org/data/permissions"),

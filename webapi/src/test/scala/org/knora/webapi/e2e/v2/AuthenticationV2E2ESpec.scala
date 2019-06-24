@@ -52,8 +52,6 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
 
     private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
-    implicit override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-
     private val rootIri = SharedTestDataADM.rootUser.id
     private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
     private val rootUsername = SharedTestDataADM.rootUser.username
@@ -73,7 +71,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             /* Correct username and password */
             val request = Get(baseApiUrl + s"/v2/authentication?iri=$rootIriEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
-            log.debug(s"response: ${response.toString}")
+            logger.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)
         }
 
@@ -81,7 +79,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             /* Correct username and password */
             val request = Get(baseApiUrl + s"/v2/authentication?email=$rootEmailEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
-            log.debug(s"response: ${response.toString}")
+            logger.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)
         }
 
@@ -89,7 +87,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             /* Correct username and password */
             val request = Get(baseApiUrl + s"/v2/authentication?username=$rootUsernameEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
-            log.debug(s"response: ${response.toString}")
+            logger.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.OK)
         }
 
@@ -97,14 +95,14 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             /* Correct email / wrong password */
             val request = Get(baseApiUrl + s"/v2/authentication?email=$rootEmail&password=$wrongPass")
             val response: HttpResponse = singleAwaitingRequest(request)
-            log.debug(s"response: ${response.toString}")
+            logger.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.Unauthorized)
         }
         "fail authentication with the user set as 'not active' " in {
             /* User not active */
             val request = Get(baseApiUrl + s"/v2/authentication?email=$inactiveUserEmailEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
-            log.debug(s"response: ${response.toString}")
+            logger.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.Unauthorized)
         }
     }
@@ -129,7 +127,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             /* User not active */
             val request = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(BasicHttpCredentials(inactiveUserEmail, testPass))
             val response: HttpResponse = singleAwaitingRequest(request)
-            log.debug(s"response: ${response.toString}")
+            logger.debug(s"response: ${response.toString}")
             assert(response.status === StatusCodes.Unauthorized)
         }
     }
@@ -152,12 +150,12 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK)
 
-            //println(response.toString)
+            // println(response.toString)
 
             val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
 
             lr.token.nonEmpty should be (true)
-            log.debug("token: {}", lr.token)
+            logger.debug("token: {}", lr.token)
 
             token.set(lr.token)
         }
@@ -176,12 +174,12 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK)
 
-            //println(response.toString)
+            // println(response.toString)
 
             val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
 
             lr.token.nonEmpty should be (true)
-            log.debug("token: {}", lr.token)
+            logger.debug("token: {}", lr.token)
         }
 
         "login with username" in {
@@ -198,19 +196,19 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK)
 
-            //println(response.toString)
+            // println(response.toString)
 
             val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
 
             lr.token.nonEmpty should be (true)
-            log.debug("token: {}", lr.token)
+            logger.debug("token: {}", lr.token)
         }
 
         "authenticate with token in header" in {
             // authenticate by calling '/v2/authenticate' without parameters but by providing token (from earlier login) in authorization header
             val request = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
             val response = singleAwaitingRequest(request)
-            log.debug("response: {}", response.toString())
+            logger.debug("response: {}", response.toString())
             assert(response.status === StatusCodes.OK)
         }
 
@@ -218,7 +216,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             // authenticate by calling '/v2/authenticate' with parameters providing the token (from earlier login)
             val request = Get(baseApiUrl + s"/v2/authentication?token=${token.get}")
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
         }
 
@@ -226,7 +224,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             // do logout with stored token
             val request = Delete(baseApiUrl + "/v2/authentication?") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
         }
 
@@ -247,14 +245,14 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
 
             val request2 = Delete(baseApiUrl + s"/v2/authentication?token=$token")
             val response2 = singleAwaitingRequest(request2)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             assert(response2.status === StatusCodes.OK)
         }
 
         "fail with authentication when providing the token after logout" in {
             val request = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
         }
 
@@ -333,7 +331,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
 
             lr.token.nonEmpty should be (true)
-            log.debug("token: {}", lr.token)
+            logger.debug("token: {}", lr.token)
 
             token.set(lr.token)
         }
@@ -342,7 +340,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             /* Correct email / correct password */
             val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=${token.get}")
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
         }
 
@@ -351,7 +349,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=wrong")
 
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
         }
 
@@ -359,7 +357,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             /* Correct email / correct password */
             val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
         }
 
@@ -367,14 +365,14 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             /* Correct email / wrong password */
             val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
         }
 
         "not return sensitive information (token, password) in the response " in {
             val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=${token.get}")
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             // assert(status === StatusCodes.OK)
 
             /* check for sensitive information leakage */
@@ -408,7 +406,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
 
             lr.token.nonEmpty should be (true)
-            // log.debug("token: {}", lr.token)
+            // logger.debug("token: {}", lr.token)
 
             token.set(lr.token)
         }
@@ -417,7 +415,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             /* Correct token */
             val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
             val response = singleAwaitingRequest(request)
-            // log.debug(response.toString())
+            // logger.debug(response.toString())
             assert(response.status === StatusCodes.OK)
         }
 
@@ -426,7 +424,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=wrong")
 
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
         }
 
@@ -434,7 +432,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             /* Correct token */
             val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
         }
 
@@ -442,14 +440,14 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
             /* Wrong token */
             val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.Unauthorized)
         }
 
         "not return sensitive information (token, password) in the response " in {
             val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
             val response = singleAwaitingRequest(request)
-            //log.debug("==>> " + responseAs[String])
+            // logger.debug("==>> " + responseAs[String])
             // assert(status === StatusCodes.OK)
 
             /* check for sensitive information leakage */
