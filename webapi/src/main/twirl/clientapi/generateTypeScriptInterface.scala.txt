@@ -29,10 +29,25 @@
 @for(classInfo <- importedInterfaces) {
 import { I@classInfo.className } from "@classInfo.importPath";}
 
+@classDef.classDescription match {
+    case Some(classDescStr) => {
+/**
+ * @classDescStr
+ */}
+
+    case None => {}
+}
 export interface I@{classDef.className} {
-    @for(property <- classDef.properties) {
-        @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(makeTypeScriptType(property.objectType), property.cardinality);
+@for(property <- classDef.properties) {
+@property.propertyDescription match {
+    case Some(propDescStr) => {   /**
+     * @propDescStr
+     */}
+
+    case None => {}
     }
+    @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(makeTypeScriptType(property.objectType), property.cardinality);
+}
 }
 
 @makeTypeScriptType(objectType: ClientObjectType) = @{

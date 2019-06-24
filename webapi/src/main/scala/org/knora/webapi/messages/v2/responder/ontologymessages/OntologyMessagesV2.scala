@@ -1284,7 +1284,8 @@ case class InputOntologyV2(ontologyMetadata: OntologyMetadataV2,
     /**
       * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used in tests after an update, when the
       * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
-      * read back from the triplestore (in which predicate objects are not escaped).
+      * read back from the triplestore (in which predicate objects are not escaped). It is also used in generating
+      * client API code.
       *
       * @return a copy of this [[InputOntologyV2]] with all predicate objects unescaped.
       */

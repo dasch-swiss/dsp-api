@@ -27,6 +27,7 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
   * Rules for converting `knora-admin` from the internal schema to the [[ApiV2Complex]] schema.
+  * See also [[OntologyConstants.CorrespondingIris]].
   */
 object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformationRules {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -229,6 +230,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
 
     /**
       * Properties to remove from the ontology before converting it to the target schema.
+      * See also [[OntologyConstants.CorrespondingIris]].
       */
     override val internalPropertiesToRemove: Set[SmartIri] = Set(
         OntologyConstants.KnoraAdmin.IsInSystemAdminGroup,
@@ -295,6 +297,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
 
     /**
       * Properties that need to be added to the ontology after converting it to the target schema.
+      * See also [[OntologyConstants.CorrespondingIris]].
       */
     override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         UsersProperty,

@@ -43,26 +43,24 @@ export class @name extends Endpoint {
 
     @for(function <- functions) {
     /**
-     * @function.description
+     * @function.description@if(function.params.nonEmpty) {
      * @for(param <- function.params) {
-     * @@param @param.name @param.description}
+     * @@param @param.name @param.description}}
      */
     @{function.name}(@for((param, index) <- function.params.zipWithIndex) {@if(index > 0) {, }@param.name: @makeObjectType(param.objectType)}): Observable<ApiResponseData<@makeObjectType(function.returnType)> | ApiResponseError> {
-        @function.implementation match {
-        case httpRequest: ClientHttpRequest => {
-            return this.@{makeHttpMethod(httpRequest.httpMethod)}(@makeUrlPath(httpRequest.urlPath)@makeHttpRequestBody(httpRequest.requestBody)).pipe(
-                map(ajaxResponse => ApiResponseData.fromAjaxResponse(ajaxResponse, @makeObjectType(function.returnType), this.jsonConvert)),
-                catchError(error => this.handleError(error))
-            );
-        }
-
-        case functionCall: FunctionCall => {
-            return this.@{functionCall.name}(@{functionCall.args.map(arg => makeValue(arg)).mkString(", ")});
-        }
-        }
-    }
+    @function.implementation match {
+    case httpRequest: ClientHttpRequest => {
+        return this.@{makeHttpMethod(httpRequest.httpMethod)}(@makeUrlPath(httpRequest.urlPath)@makeHttpRequestBody(httpRequest.requestBody)).pipe(
+            map(ajaxResponse => ApiResponseData.fromAjaxResponse(ajaxResponse, @makeObjectType(function.returnType), this.jsonConvert)),
+            catchError(error => this.handleError(error))
+        );
     }
 
+    case functionCall: FunctionCall => {
+        return this.@{functionCall.name}(@{functionCall.args.map(arg => makeValue(arg)).mkString(", ")});
+    }}
+    }
+    }
 }
 
 @makeObjectType(objectType: ClientObjectType) = @{

@@ -127,7 +127,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
                 }
 
                 val responseStr: String = responseStrTry.get
-                val ontology = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(responseStr))
+                val ontology = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(responseStr)).unescape
                 ontologies.put(ontologyIri, ontology)
                 ontology
         }
@@ -162,6 +162,8 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
     private def rdfResourceClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+        val classDescription: Option[String] = rdfClassDef.getPredicateStringLiteralObject(OntologyConstants.Rdfs.Comment.toSmartIri)
+
         val cardinalitiesWithoutLinkProps = rdfClassDef.directCardinalities.filter {
             case (propertyIri, _) =>
                 rdfPropertyDefs.get(propertyIri) match {
@@ -176,6 +178,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
 
                 if (propertyIri.isKnoraEntityIri) {
                     val rdfPropertyDef = rdfPropertyDefs(propertyIri)
+                    val propertyDescription: Option[String] = rdfPropertyDef.getPredicateStringLiteralObject(OntologyConstants.Rdfs.Comment.toSmartIri)
                     val ontologyObjectType: SmartIri = rdfPropertyDef.requireIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-api:objectType"))
                     val isResourceProp = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2Complex.IsResourceProperty.toSmartIri)
                     val isEditable = rdfPropertyDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2Complex.IsEditable.toSmartIri)
@@ -191,6 +194,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
 
                         ClientPropertyDefinition(
                             propertyName = propertyName,
+                            propertyDescription = propertyDescription,
                             propertyIri = propertyIri,
                             objectType = clientObjectType,
                             cardinality = knoraCardinalityInfo.cardinality,
@@ -199,6 +203,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
                     } else {
                         ClientPropertyDefinition(
                             propertyName = propertyName,
+                            propertyDescription = propertyDescription,
                             propertyIri = propertyIri,
                             objectType = nonResourcePropObjectTypeToClientObjectType(ontologyObjectType),
                             cardinality = knoraCardinalityInfo.cardinality,
@@ -208,6 +213,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
                 } else {
                     ClientPropertyDefinition(
                         propertyName = propertyName,
+                        propertyDescription = None,
                         propertyIri = propertyIri,
                         objectType = StringLiteral,
                         cardinality = knoraCardinalityInfo.cardinality,
@@ -218,6 +224,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
 
         ClientClassDefinition(
             className = makeClientClassName(rdfClassDef.classIri),
+            classDescription = classDescription,
             classIri = rdfClassDef.classIri,
             properties = clientPropertyDefs.sortBy(_.propertyIri)
         )
@@ -233,16 +240,20 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
     private def rdfNonResourceClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+        val classDescription: Option[String] = rdfClassDef.getPredicateStringLiteralObject(OntologyConstants.Rdfs.Comment.toSmartIri)
+
         val clientPropertyDefs = rdfClassDef.directCardinalities.map {
             case (propertyIri, knoraCardinalityInfo) =>
                 val propertyName = propertyIri.getEntityName
 
                 if (propertyIri.isKnoraEntityIri) {
                     val rdfPropertyDef = rdfPropertyDefs(propertyIri)
+                    val propertyDescription: Option[String] = rdfPropertyDef.getPredicateStringLiteralObject(OntologyConstants.Rdfs.Comment.toSmartIri)
                     val ontologyObjectType: SmartIri = rdfPropertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri).getOrElse(OntologyConstants.Xsd.String.toSmartIri)
 
                     ClientPropertyDefinition(
                         propertyName = propertyName,
+                        propertyDescription = propertyDescription,
                         propertyIri = propertyIri,
                         objectType = nonResourcePropObjectTypeToClientObjectType(ontologyObjectType),
                         cardinality = knoraCardinalityInfo.cardinality,
@@ -251,6 +262,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
                 } else {
                     ClientPropertyDefinition(
                         propertyName = propertyName,
+                        propertyDescription = None,
                         propertyIri = propertyIri,
                         objectType = StringLiteral,
                         cardinality = knoraCardinalityInfo.cardinality,
@@ -261,6 +273,7 @@ class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
 
         ClientClassDefinition(
             className = makeClientClassName(rdfClassDef.classIri),
+            classDescription = classDescription,
             classIri = rdfClassDef.classIri,
             properties = clientPropertyDefs.sortBy(_.propertyIri)
         )

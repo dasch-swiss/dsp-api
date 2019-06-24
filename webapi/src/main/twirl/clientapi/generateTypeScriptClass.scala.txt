@@ -33,13 +33,27 @@ import { I@{classDef.className} } from "@interfacePathInClass";
 @for(classInfo <- importedClasses) {
 import { @classInfo.className } from "@classInfo.importPath";}
 
+@classDef.classDescription match {
+    case Some(classDescStr) => {
+/**
+ * @classDescStr
+ */}
+
+    case None => {}
+}
 @@JsonObject("@{classDef.className}")
 export class @{classDef.className} implements I@{classDef.className} {
-    @for(property <- classDef.properties) {
-        @defining(makeTypeScriptType(property.objectType)) { typeScriptType =>
-            @@JsonProperty("@{property.propertyName}", @wrapInArrayForCardinality(typeScriptType.capitalize, property.cardinality))
-            public @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
-        }}
+@for(property <- classDef.properties) {
+@defining(makeTypeScriptType(property.objectType)) { typeScriptType => @property.propertyDescription match {
+    case Some(propDescStr) => {  /**
+     * @propDescStr
+     */}
+
+    case None => {}
+    }
+    @@JsonProperty("@{property.propertyName}", @wrapInArrayForCardinality(typeScriptType.capitalize, property.cardinality))
+    public @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
+}}
 }
 
 @makeTypeScriptType(objectType: ClientObjectType) = @{

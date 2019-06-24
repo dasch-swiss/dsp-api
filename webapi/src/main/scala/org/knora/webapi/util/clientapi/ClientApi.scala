@@ -137,13 +137,13 @@ object EndpointFunctionDSL {
                 acc.lastOption match {
                     case Some(last) =>
                         (last, component) match {
-                            case (lastStr: StringLiteralValue, thisStr: StringLiteralValue)  =>
+                            case (lastStr: StringLiteralValue, thisStr: StringLiteralValue) =>
                                 acc.dropRight(1) :+ StringLiteralValue(lastStr.value + thisStr.value)
 
-                            case (SlashUrlComponent, thisStr: StringLiteralValue)  =>
+                            case (SlashUrlComponent, thisStr: StringLiteralValue) =>
                                 acc.dropRight(1) :+ StringLiteralValue("/" + thisStr.value)
 
-                            case (lastStr: StringLiteralValue, SlashUrlComponent)  =>
+                            case (lastStr: StringLiteralValue, SlashUrlComponent) =>
                                 acc.dropRight(1) :+ StringLiteralValue(lastStr.value + "/")
 
                             case _ => acc :+ component
@@ -200,6 +200,7 @@ object EndpointFunctionDSL {
             description = description
         )
     }
+
 }
 
 /**
@@ -325,11 +326,13 @@ case class JsonRequestBody(jsonObject: Map[String, Value]) extends HttpRequestBo
 /**
   * A definition of a Knora API class, which can be used by a [[GeneratorBackEnd]] to generate client code.
   *
-  * @param className  the name of the class.
-  * @param classIri   the IRI of the class in the Knora API.
-  * @param properties definitions of the properties used in the class.
+  * @param className        the name of the class.
+  * @param classDescription a description of the class.
+  * @param classIri         the IRI of the class in the Knora API.
+  * @param properties       definitions of the properties used in the class.
   */
 case class ClientClassDefinition(className: String,
+                                 classDescription: Option[String],
                                  classIri: SmartIri,
                                  properties: Vector[ClientPropertyDefinition]) {
     /**
@@ -347,13 +350,15 @@ case class ClientClassDefinition(className: String,
 /**
   * A definition of a Knora property as used in a particular class.
   *
-  * @param propertyName the name of the property.
-  * @param propertyIri  the IRI of the property in the Knora API.
-  * @param objectType   the type of object that the property points to.
-  * @param cardinality  the cardinality of the property in the class.
-  * @param isEditable   `true` if the property's value is editable via the API.
+  * @param propertyName        the name of the property.
+  * @param propertyDescription a description of the property.
+  * @param propertyIri         the IRI of the property in the Knora API.
+  * @param objectType          the type of object that the property points to.
+  * @param cardinality         the cardinality of the property in the class.
+  * @param isEditable          `true` if the property's value is editable via the API.
   */
 case class ClientPropertyDefinition(propertyName: String,
+                                    propertyDescription: Option[String],
                                     propertyIri: SmartIri,
                                     objectType: ClientObjectType,
                                     cardinality: Cardinality,
