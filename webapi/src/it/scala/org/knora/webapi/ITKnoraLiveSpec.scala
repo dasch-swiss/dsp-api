@@ -20,22 +20,21 @@
 package org.knora.webapi
 
 import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.{StartupUtils, StringFormatter}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.util.{StartupUtils, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.json.{JsObject, _}
 
 import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 import scala.languageFeature.postfixOps
 
 object ITKnoraLiveSpec {
@@ -46,7 +45,7 @@ object ITKnoraLiveSpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol  {
+class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
 
     implicit lazy val settings: SettingsImpl = Settings(system)
 
@@ -66,9 +65,6 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
-
-    /* needed by the core trait */
-    override implicit lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
     protected val baseSipiUrl: String = settings.internalSipiBaseUrl
@@ -125,7 +121,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         val request = Get(baseApiUrl + "/health")
         val response = singleAwaitingRequest(request)
         assert(response.status == StatusCodes.OK, s"Knora is probably not running: ${response.status}")
-        if (response.status.isSuccess()) log.info("Knora is running.")
+        if (response.status.isSuccess()) logger.info("Knora is running.")
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
@@ -138,7 +134,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         val request = Get(baseSipiUrl + "/server/test.html")
         val response = singleAwaitingRequest(request)
         assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
-        if (response.status.isSuccess()) log.info("Sipi is running.")
+        if (response.status.isSuccess()) logger.info("Sipi is running.")
         response.entity.discardBytes()
     }
 

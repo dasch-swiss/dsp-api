@@ -28,6 +28,7 @@ import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
@@ -49,7 +50,7 @@ object E2ESpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
+class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
@@ -69,8 +70,6 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
     def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
 
     def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
-
-    override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
@@ -108,7 +107,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
         val request = Get(baseApiUrl + "/health")
         val response = singleAwaitingRequest(request)
         assert(response.status == StatusCodes.OK, s"Knora is probably not running: ${response.status}")
-        if (response.status.isSuccess()) log.info("Knora is running.")
+        if (response.status.isSuccess()) logger.info("Knora is running.")
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {

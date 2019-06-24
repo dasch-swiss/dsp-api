@@ -22,12 +22,12 @@ package org.knora.webapi
 import java.io.{File, StringReader}
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.pattern._
 import akka.util.Timeout
+import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.app.{APPLICATION_STATE_ACTOR_NAME, ApplicationStateActor}
@@ -35,7 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Reset
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.store.{MockableStoreManager, StoreManager, StoreManagerActorName}
+import org.knora.webapi.store.{MockableStoreManager, StoreManagerActorName}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{CacheUtil, FileUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
@@ -46,15 +46,14 @@ import scala.language.postfixOps
 /**
   * Created by subotic on 08.12.15.
   */
-class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Matchers with BeforeAndAfterAll {
+class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
 
     def actorRefFactory: ActorSystem = system
 
     val settings = Settings(system)
-    implicit val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
     StringFormatter.initForTest()
 
-    implicit val knoraExceptionHandler: ExceptionHandler = KnoraExceptionHandler(settings, log)
+    implicit val knoraExceptionHandler: ExceptionHandler = KnoraExceptionHandler(settings)
 
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
