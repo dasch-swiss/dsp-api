@@ -173,8 +173,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             loginToken = lr.token
 
             loginToken.nonEmpty should be(true)
-
-            log.debug("token: {}", loginToken)
         }
 
         "create an 'incunabula:page' with parameters" in {

@@ -80,8 +80,6 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
             loginToken = lr.token
 
             loginToken.nonEmpty should be(true)
-
-            log.debug("token: {}", loginToken)
         }
 
         "be able to create a resource, only find one DOAP (with combined resource class / property), and have permission to access the image" in {
