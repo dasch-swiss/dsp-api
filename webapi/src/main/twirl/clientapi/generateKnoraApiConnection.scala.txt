@@ -22,42 +22,37 @@
 @import org.knora.webapi.util.clientapi._
 @import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
 
-@(name: String,
-  description: String,
-  endpoints: Seq[ImportInfo])
+@(apis: Seq[ImportInfo])
 
-import { KnoraApiConfig } from "../../knora-api-config";
-import { Endpoint } from "../endpoint";
+import { KnoraApiConfig } from "./knora-api-config";
 
-@for(endpoint <- endpoints) {
-import { @endpoint.className } from "@endpoint.importPath";}
+@for(api <- apis) {
+import { @api.className } from "@api.importPath";}
 
 /**
- * @description
+ * Offers methods for JavaScript developers to interact with the Knora API.
  */
-export class @name extends Endpoint {
+export class KnoraApiConnection {
 
-    @for(endpoint <- endpoints) {
+    @for(api <- apis) {
     /**
-     * @endpoint.description.get
+     * @api.description.get
      */
-    readonly @endpoint.variableName.get: @endpoint.className;
+    readonly @api.variableName: @api.className;
     }
 
     /**
      * Constructor.
-     * Sets up all endpoints for this endpoint.
+     * Sets up all endpoints for the Knora API.
      *
      * @@param knoraApiConfig
-     * @@param path
      */
-    constructor(protected readonly knoraApiConfig: KnoraApiConfig, protected readonly path: string) {
-
-        super(knoraApiConfig, path);
+    constructor(knoraApiConfig: KnoraApiConfig) {
 
         // Instantiate the endpoints
-        @for(endpoint <- endpoints) {
-        this.@endpoint.variableName.get = new @{endpoint.className}(knoraApiConfig, path + "@endpoint.urlPath.get");
+        @for(api <- apis) {
+        this.@api.variableName.get = new @{api.className}(knoraApiConfig, "@api.urlPath.get");
         }
+
     }
 }

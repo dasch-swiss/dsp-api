@@ -33,12 +33,14 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
       * Represents information about an endpoint and its source code.
       *
       * @param className    the name of the endpoint class.
+      * @param description  a description of the endpoint.
       * @param variableName a variable name that can be used for an instance of the endpoint class.
       * @param importPath   the file path to be used for importing the endpoint in the main endpoint.
       * @param urlPath      the URL path of the endpoint, relative to the API path.
       * @param fileContent  the endpoint's source code.
       */
     private case class EndpointInfo(className: String,
+                                    description: String,
                                     variableName: String,
                                     importPath: String,
                                     urlPath: String,
@@ -46,6 +48,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         def toImportInfo: ImportInfo = ImportInfo(
             className = className,
             importPath = importPath,
+            description = Some(description),
             variableName = Some(variableName),
             urlPath = Some(urlPath)
         )
@@ -58,7 +61,8 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
       * @return the generated source code.
       */
     def generateClientSourceCode(apis: Set[ClientApiBackendInput]): Set[ClientSourceCodeFileContent] = {
-        apis.flatMap(api => generateApiSourceCode(api))
+        val knoraApiConnectionSourceCode = generateKnoraApiConnectionSourceCode(apis.map(_.apiDef))
+        apis.flatMap(api => generateApiSourceCode(api)) + knoraApiConnectionSourceCode
     }
 
     /**
@@ -115,6 +119,31 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         classSourceCode ++ interfaceSourceCode ++ endpointInfos.map(_.fileContent) + mainEndpointSourceCode
     }
 
+    /**
+      * Generates knora-api-connection.ts.
+      *
+      * @param apiDefs the API definitions to be used.
+      * @return the source code of knora-api-connection.ts.
+      */
+    private def generateKnoraApiConnectionSourceCode(apiDefs: Set[ClientApi]): ClientSourceCodeFileContent = {
+        val importInfos: Set[ImportInfo] = apiDefs.map {
+            apiDef =>
+                ImportInfo(
+                    className = apiDef.name,
+                    importPath = stripExtension(makeMainEndpointFilePath(apiDef.name)),
+                    description = Some(apiDef.description),
+                    variableName = Some(makeVariableName(apiDef.name)),
+                    urlPath = Some(apiDef.urlPath)
+                )
+        }
+
+        // Generate the source code of knora-api-connection.ts.
+        val text: String = clientapi.txt.generateKnoraApiConnection(
+            apis = importInfos.toVector.sortBy(_.className)
+        ).toString()
+
+        ClientSourceCodeFileContent(filePath = "knora-api-connection.ts", text = text)
+    }
 
     /**
       * Generates source code for the main endpoint of an API.
@@ -164,6 +193,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
             clientClassDef =>
                 ImportInfo(
                     className = clientClassDef.className,
+                    description = clientClassDef.classDescription,
                     importPath = s"../../../${stripExtension(clientClassCodePaths(clientClassDef.className))}"
                 )
         }
@@ -180,6 +210,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
 
         EndpointInfo(
             className = endpoint.name,
+            description = endpoint.description,
             variableName = makeVariableName(endpoint.name),
             urlPath = endpoint.urlPath,
             importPath = s"./${stripLeadingDirs(stripExtension(endpointFilePath), 2)}",
@@ -343,11 +374,13 @@ object TypeScriptBackEnd {
       *
       * @param className    the name of the class.
       * @param importPath   the file path to be used for importing the class.
+      * @param description  a description of the class.
       * @param variableName a variable name that can be used for an instance of the class.
       * @param urlPath      if this class represents an endpoint, the URL path of the endpoint.
       */
     case class ImportInfo(className: String,
                           importPath: String,
+                          description: Option[String] = None,
                           variableName: Option[String] = None,
                           urlPath: Option[String] = None)
 
