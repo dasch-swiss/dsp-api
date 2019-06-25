@@ -71,7 +71,7 @@ export class @name extends Endpoint {
         case DecimalLiteral => "number"
         case UriLiteral => "string"
         case DateTimeStampLiteral => "string"
-        case enum: EnumLiteral => enum.possibleValues.map(value => "\"" + value + "\"").mkString(" | ")
+        case enum: EnumLiteral => enum.values.map(value => "\"" + value + "\"").mkString(" | ")
         case classRef: ClassRef => classRef.className
         case other => throw ClientApiGenerationException(s"Type $other not yet supported")
     }
