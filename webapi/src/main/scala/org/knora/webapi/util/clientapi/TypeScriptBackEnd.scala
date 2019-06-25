@@ -138,7 +138,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         }
 
         // Generate the source code of knora-api-connection.ts.
-        val text: String = clientapi.txt.generateKnoraApiConnection(
+        val text: String = clientapi.typescript.txt.generateKnoraApiConnection(
             apis = importInfos.toVector.sortBy(_.className)
         ).toString()
 
@@ -158,7 +158,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         val mainEndpointFilePath = makeMainEndpointFilePath(apiDef.name)
 
         // Generate the main endpoint's source code.
-        val text: String = clientapi.txt.generateTypeScriptMainEndpoint(
+        val text: String = clientapi.typescript.txt.generateTypeScriptMainEndpoint(
             name = apiDef.name,
             description = apiDef.description,
             endpoints = endpointInfos.toVector.sortBy(_.className).map(_.toImportInfo)
@@ -199,7 +199,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         }
 
         // Generate the source code of the endpoint.
-        val text: String = clientapi.txt.generateTypeScriptEndpoint(
+        val text: String = clientapi.typescript.txt.generateTypeScriptEndpoint(
             name = endpoint.name,
             description = endpoint.description,
             importedClasses = classInfos,
@@ -242,7 +242,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
                         )
                 }
 
-                val classText: String = clientapi.txt.generateTypeScriptClass(
+                val classText: String = clientapi.typescript.txt.generateTypeScriptClass(
                     classDef = clientClassDef,
                     interfacePathInClass = interfacePathInClass,
                     importedClasses = importedClasses
@@ -273,7 +273,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
                         )
                 }
 
-                val interfaceText: String = clientapi.txt.generateTypeScriptInterface(
+                val interfaceText: String = clientapi.typescript.txt.generateTypeScriptInterface(
                     classDef = clientClassDef,
                     importedInterfaces = importedInterfaces
                 ).toString()
