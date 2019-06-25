@@ -172,10 +172,10 @@ object EndpointFunctionDSL {
     /**
       * Constructs an [[EnumLiteral]].
       *
-      * @param possibleValues the values of the enumeration.
+      * @param values the values of the enumeration.
       * @return an [[EnumLiteral]].
       */
-    def enum(possibleValues: String*): EnumLiteral = EnumLiteral(possibleValues.toSet)
+    def enum(values: String*): EnumLiteral = EnumLiteral(values.toSet)
 
     /**
       * Constructs an [[ArgValue]] referring to a function argument.
