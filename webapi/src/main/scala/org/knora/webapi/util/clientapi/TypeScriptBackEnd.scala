@@ -100,7 +100,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         )
 
         // Generate source code for endpoints.
-        val endpointInfos: Set[EndpointInfo] = api.apiDef.endpoints.map {
+        val endpointInfos: Seq[EndpointInfo] = api.apiDef.endpoints.map {
             endpoint =>
                 generateEndpointInfo(
                     apiDef = api.apiDef,
@@ -153,7 +153,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
       * @return the source code for the main endpoint.
       */
     private def generateMainEndpointSourceCode(apiDef: ClientApi,
-                                               endpointInfos: Set[EndpointInfo]): ClientSourceCodeFileContent = {
+                                               endpointInfos: Seq[EndpointInfo]): ClientSourceCodeFileContent = {
         // Generate the main endpoint's file path.
         val mainEndpointFilePath = makeMainEndpointFilePath(apiDef.name)
 
@@ -161,7 +161,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         val text: String = clientapi.typescript.txt.generateTypeScriptMainEndpoint(
             name = apiDef.name,
             description = apiDef.description,
-            endpoints = endpointInfos.toVector.sortBy(_.className).map(_.toImportInfo)
+            endpoints = endpointInfos.map(_.toImportInfo)
         ).toString()
 
         ClientSourceCodeFileContent(filePath = mainEndpointFilePath, text = text)

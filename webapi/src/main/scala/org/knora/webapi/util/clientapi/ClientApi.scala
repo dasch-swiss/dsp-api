@@ -45,12 +45,12 @@ trait ClientApi {
     /**
       * The endpoints available in the API.
       */
-    val endpoints: Set[ClientEndpoint]
+    val endpoints: Seq[ClientEndpoint]
 
     /**
       * The IRIs of the classes used by this API.
       */
-    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed)
+    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet
 }
 
 /**

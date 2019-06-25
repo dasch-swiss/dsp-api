@@ -57,7 +57,6 @@ export class @name extends Endpoint {
 
         // Instantiate the endpoints
         @for(endpoint <- endpoints) {
-        this.@endpoint.variableName.get = new @{endpoint.className}(knoraApiConfig, path + "@endpoint.urlPath.get");
-        }
+        this.@endpoint.variableName.get = new @{endpoint.className}(knoraApiConfig, path + "@endpoint.urlPath.get");}
     }
 }
