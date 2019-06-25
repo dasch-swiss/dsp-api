@@ -52,6 +52,12 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
       * Returns a set of [[ClientClassDefinition]] instances representing the Knora classes used by a client API.
       */
     def getClientClassDefs(clientApi: ClientApi): Future[Set[ClientClassDefinition]] = {
+        /**
+          * An accumulator for client class definitions and ontologies.
+          *
+          * @param clientDefs the client class definitions accumulated so far.
+          * @param ontologies the ontologies accumulated so far.
+          */
         case class ClientDefsWithOntologies(clientDefs: Map[SmartIri, ClientClassDefinition], ontologies: Map[SmartIri, InputOntologyV2])
 
         /**
@@ -62,18 +68,23 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
           * @return the class definitions and ontologies resulting from recursion.
           */
         def getClassDefsRec(classIri: SmartIri, definitionAcc: ClientDefsWithOntologies): Future[ClientDefsWithOntologies] = {
+            // Get the IRI of the ontology containing the class.
             val classOntologyIri: SmartIri = classIri.getOntologyFromEntity
 
             for {
+                // Get the ontology containing the class.
                 ontologiesWithClassOntology <- getOntology(classOntologyIri, definitionAcc.ontologies)
                 classOntology = ontologiesWithClassOntology(classOntologyIri)
 
+                // Get the RDF definition of the class.
                 rdfClassDef: ClassInfoContentV2 = classOntology.classes.getOrElse(classIri, throw ClientApiGenerationException(s"Class <$classIri> not found"))
 
+                // Get the IRIs of the class's Knora properties.
                 rdfPropertyIris: Set[SmartIri] = rdfClassDef.directCardinalities.keySet.filter {
                     propertyIri => propertyIri.isKnoraEntityIri
                 }
 
+                // Get the ontologies containing the definitions of those properties.
                 ontologiesWithPropertyDefs: Map[SmartIri, InputOntologyV2] <- rdfPropertyIris.foldLeft(FastFuture.successful(ontologiesWithClassOntology)) {
                     case (acc, propertyIri) =>
                         val propertyOntologyIri = propertyIri.getOntologyFromEntity
@@ -84,14 +95,18 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                         } yield ontologiesWithPropertyDef
                 }
 
+                // Get the definitions of the properties.
                 rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = rdfPropertyIris.map {
                     propertyIri =>
                         val ontology = ontologiesWithPropertyDefs(propertyIri.getOntologyFromEntity)
                         propertyIri -> ontology.properties.getOrElse(propertyIri, throw ClientApiGenerationException(s"Property <$propertyIri> not found"))
                 }.toMap
 
+                // Convert the RDF class definition into a ClientClassDefinition.
                 clientClassDef: ClientClassDefinition = rdfClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
 
+                // Make a new ClientDefsWithOntologies including that ClientClassDefinition as well as the ontologies
+                // we've collected.
                 accForRecursion = ClientDefsWithOntologies(
                     clientDefs = definitionAcc.clientDefs + (clientClassDef.classIri -> clientClassDef),
                     ontologies = ontologiesWithPropertyDefs

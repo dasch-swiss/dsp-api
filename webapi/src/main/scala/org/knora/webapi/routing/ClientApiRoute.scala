@@ -85,8 +85,13 @@ class ClientApiRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         }
     }
 
+    /**
+      * Generates a ZIP file containing generated client API source code.
+      *
+      * @param sourceCode the generated source code.
+      * @return a byte array representing the ZIP file.
+      */
     private def generateZipFile(sourceCode: Set[ClientSourceCodeFileContent]): Array[Byte] = {
-        // Generate the contents of the Zip file: a Map of file names to file contents (byte arrays).
         val zipFileContents: Map[String, Array[Byte]] = sourceCode.map {
             fileContent: ClientSourceCodeFileContent =>
                 fileContent.filePath -> fileContent.text.getBytes(StandardCharsets.UTF_8)

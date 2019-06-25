@@ -106,7 +106,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     private val getUsersFunction: ClientFunction =
         "getUsers" description "Returns a list of all users." params() doThis {
-            httpGet(emptyPath)
+            httpGet(EmptyPath)
         } returns UsersResponse
 
 
@@ -148,7 +148,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             "user" description "The user to be created." paramType User
             ) doThis {
             httpPost(
-                path = emptyPath,
+                path = EmptyPath,
                 body = Some(arg("user"))
             )
         } returns UserResponse

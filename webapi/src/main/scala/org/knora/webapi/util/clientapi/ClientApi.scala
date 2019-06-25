@@ -101,34 +101,110 @@ trait ClientEndpoint {
   * A DSL for defining functions in client endpoints.
   */
 object EndpointFunctionDSL {
+    /**
+      * Constructs a [[ClientHttpRequest]] for a `GET` request.
+      *
+      * @param path   the URL path to be used in the request.
+      * @param params the query parameters to be used in the request.
+      * @return a [[ClientHttpRequest]].
+      */
     def httpGet(path: Seq[UrlComponent], params: Seq[(String, Value)] = Seq.empty): ClientHttpRequest =
         http(httpMethod = GET, path = path, params = params, body = None)
 
+    /**
+      * Constructs a [[ClientHttpRequest]] for a `POST` request.
+      *
+      * @param path   the URL path to be used in the request.
+      * @param params the query parameters to be used in the request.
+      * @param body   the body of the request.
+      * @return a [[ClientHttpRequest]].
+      */
     def httpPost(path: Seq[UrlComponent], params: Seq[(String, Value)] = Seq.empty, body: Option[HttpRequestBody] = None): ClientHttpRequest =
         http(httpMethod = POST, path = path, params = params, body = body)
 
+    /**
+      * Constructs a [[ClientHttpRequest]] for a `PUT` request.
+      *
+      * @param path   the URL path to be used in the request.
+      * @param params the query parameters to be used in the request.
+      * @param body   the body of the request.
+      * @return a [[ClientHttpRequest]].
+      */
     def httpPut(path: Seq[UrlComponent], params: Seq[(String, Value)] = Seq.empty, body: Option[HttpRequestBody] = None): ClientHttpRequest =
         http(httpMethod = PUT, path = path, params = params, body = body)
 
+    /**
+      * Constructs a [[ClientHttpRequest]] for a `DELETE` request.
+      *
+      * @param path   the URL path to be used in the request.
+      * @param params the query parameters to be used in the request.
+      * @return a [[ClientHttpRequest]].
+      */
     def httpDelete(path: Seq[UrlComponent], params: Seq[(String, Value)] = Seq.empty): ClientHttpRequest =
         http(httpMethod = DELETE, path = path, params = params, body = None)
 
+    /**
+      * Constructs a [[ClassRef]] for referring to a class in a function definition.
+      *
+      * @param classIri the IRI of the class.
+      * @return a [[ClassRef]] that can be used for referring to the class.
+      */
     def classRef(classIri: SmartIri) = ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
 
+    /**
+      * Constructs a [[StringLiteralValue]].
+      *
+      * @param value the value of the string literal.
+      * @return a [[StringLiteralValue]].
+      */
     def str(value: String): StringLiteralValue = StringLiteralValue(value)
 
+    /**
+      * A [[BooleanLiteralValue]] with the value `true`.
+      */
     val True: BooleanLiteralValue = BooleanLiteralValue(true)
 
+    /**
+      * A [[BooleanLiteralValue]] with the value `false`.
+      */
     val False: BooleanLiteralValue = BooleanLiteralValue(false)
 
+    /**
+      * Constructs an [[EnumLiteral]].
+      *
+      * @param possibleValues the values of the enumeration.
+      * @return an [[EnumLiteral]].
+      */
     def enum(possibleValues: String*): EnumLiteral = EnumLiteral(possibleValues.toSet)
 
+    /**
+      * Constructs an [[ArgValue]] referring to a function argument.
+      *
+      * @param name the name of the argument.
+      * @return an [[ArgValue]].
+      */
     def arg(name: String) = ArgValue(name)
 
+    /**
+      * Constructs an [[ArgValue]] referring to a member of a function argument.
+      *
+      * @param name   the name of the argument.
+      * @param member the name of the member of the argument.
+      * @return an [[ArgValue]].
+      */
     def argMember(name: String, member: String) = ArgValue(name = name, memberVariableName = Some(member))
 
-    val emptyPath = Seq.empty[UrlComponent]
+    /**
+      * Represents an empty URL path.
+      */
+    val EmptyPath = Seq.empty[UrlComponent]
 
+    /**
+      * Constructs a [[JsonRequestBody]].
+      *
+      * @param pairs the key-value pairs to be included in the JSON.
+      * @return a [[JsonRequestBody]].
+      */
     def json(pairs: (String, Value)*): JsonRequestBody = JsonRequestBody(pairs)
 
     private def http(httpMethod: ClientHttpMethod, path: Seq[UrlComponent], params: Seq[(String, Value)], body: Option[HttpRequestBody] = None): ClientHttpRequest = {
@@ -424,9 +500,9 @@ case object DateTimeStampLiteral extends ClientLiteral
 /**
   * The type of enums.
   *
-  * @param possibleValues the possible values of the enum.
+  * @param values the values of the enum.
   */
-case class EnumLiteral(possibleValues: Set[String]) extends ClientLiteral
+case class EnumLiteral(values: Set[String]) extends ClientLiteral
 
 /**
   * The type of instances of classes.
