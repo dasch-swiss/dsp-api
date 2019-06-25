@@ -19,118 +19,161 @@
 
 package org.knora.webapi.util.clientapi
 
-import java.net.URLEncoder
-
-import org.apache.http.client.HttpClient
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.util.EntityUtils
-import org.knora.webapi.messages.v2.responder.ontologymessages.{ClassInfoContentV2, InputOntologyV2, PropertyInfoContentV2}
+import akka.actor.{ActorRef, ActorSystem}
+import akka.http.scaladsl.util.FastFuture
+import akka.pattern._
+import akka.util.Timeout
+import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.JsonLDUtil
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.{ClientApiGenerationException, InconsistentTriplestoreDataException, OntologyConstants}
 
-import scala.collection.mutable
-import scala.util.Try
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * The front end of the client code generator. It is responsible for producing [[ClientClassDefinition]] objects
   * representing the Knora classes used in an API.
   */
-class GeneratorFrontEnd(useHttps: Boolean, host: String, port: Int) {
-    private val httpClient: HttpClient = HttpClients.createDefault
-    private val ontologies: mutable.Map[SmartIri, InputOntologyV2] = mutable.Map.empty
+class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
+    implicit protected val system: ActorSystem = routeData.system
+    implicit protected val responderManager: ActorRef = routeData.responderManager
+    implicit protected val settings: SettingsImpl = Settings(system)
+    implicit protected val timeout: Timeout = settings.defaultTimeout
+    implicit protected val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    // Return code documentation in English.
+    private val userWithLang = requestingUser.copy(lang = LanguageCodes.EN)
 
     /**
       * Returns a set of [[ClientClassDefinition]] instances representing the Knora classes used by a client API.
       */
-    def getClientClassDefs(clientApi: ClientApi): Set[ClientClassDefinition] = {
+    def getClientClassDefs(clientApi: ClientApi): Future[Set[ClientClassDefinition]] = {
+        case class ClientDefsWithOntologies(clientDefs: Map[SmartIri, ClientClassDefinition], ontologies: Map[SmartIri, InputOntologyV2])
+
         /**
           * Recursively gets class definitions.
           *
-          * @param classIri the IRI of a class whose definition is needed.
-          * @param definitionAcc the class definitions collected so far.
-          * @return the additional class definitions that were found.
+          * @param classIri      the IRI of a class whose definition is needed.
+          * @param definitionAcc the class definitions and ontologies collected so far.
+          * @return the class definitions and ontologies resulting from recursion.
           */
-        def getClassDefsRec(classIri: SmartIri, definitionAcc: Map[SmartIri, ClientClassDefinition]): Map[SmartIri, ClientClassDefinition] = {
-            val classOntology: InputOntologyV2 = getOntology(classIri.getOntologyFromEntity)
-            val rdfClassDef: ClassInfoContentV2 = classOntology.classes.getOrElse(classIri, throw ClientApiGenerationException(s"Class <$classIri> not found"))
+        def getClassDefsRec(classIri: SmartIri, definitionAcc: ClientDefsWithOntologies): Future[ClientDefsWithOntologies] = {
+            val classOntologyIri: SmartIri = classIri.getOntologyFromEntity
 
-            val rdfPropertyIris: Set[SmartIri] = rdfClassDef.directCardinalities.keySet.filter {
-                propertyIri => propertyIri.isKnoraEntityIri
-            }
+            for {
+                ontologiesWithClassOntology <- getOntology(classOntologyIri, definitionAcc.ontologies)
+                classOntology = ontologiesWithClassOntology(classOntologyIri)
 
-            val rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = rdfPropertyIris.map {
-                propertyIri =>
-                    val ontology = getOntology(propertyIri.getOntologyFromEntity)
-                    propertyIri -> ontology.properties.getOrElse(propertyIri, throw ClientApiGenerationException(s"Property <$propertyIri> not found"))
-            }.toMap
+                rdfClassDef: ClassInfoContentV2 = classOntology.classes.getOrElse(classIri, throw ClientApiGenerationException(s"Class <$classIri> not found"))
 
-            val clientClassDef = rdfClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
-            val newDefinitionAcc = definitionAcc + (clientClassDef.classIri -> clientClassDef)
+                rdfPropertyIris: Set[SmartIri] = rdfClassDef.directCardinalities.keySet.filter {
+                    propertyIri => propertyIri.isKnoraEntityIri
+                }
 
-            // Recursively get definitions of classes used as property object types.
-            val propertyObjectClassDefs: Map[SmartIri, ClientClassDefinition] = clientClassDef.properties.foldLeft(newDefinitionAcc) {
-                case (acc, clientPropertyDef) =>
-                    clientPropertyDef.objectType match {
-                        case classRef: ClassRef =>
-                            // Do we have this class's definition already?
-                            if (newDefinitionAcc.contains(classRef.classIri)) {
-                                // Yes. Nothing more to do.
-                                acc
-                            } else {
-                                // No. Get it recursively.
-                                acc ++ getClassDefsRec(classIri = classRef.classIri, definitionAcc = acc)
-                            }
+                ontologiesWithPropertyDefs: Map[SmartIri, InputOntologyV2] <- rdfPropertyIris.foldLeft(FastFuture.successful(ontologiesWithClassOntology)) {
+                    case (acc, propertyIri) =>
+                        val propertyOntologyIri = propertyIri.getOntologyFromEntity
 
-                        case _ => acc
-                    }
-            }
+                        for {
+                            currentOntologies: Map[SmartIri, InputOntologyV2] <- acc
+                            ontologiesWithPropertyDef: Map[SmartIri, InputOntologyV2] <- getOntology(propertyOntologyIri, currentOntologies)
+                        } yield ontologiesWithPropertyDef
+                }
 
-            propertyObjectClassDefs ++ propertyObjectClassDefs
+                rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = rdfPropertyIris.map {
+                    propertyIri =>
+                        val ontology = ontologiesWithPropertyDefs(propertyIri.getOntologyFromEntity)
+                        propertyIri -> ontology.properties.getOrElse(propertyIri, throw ClientApiGenerationException(s"Property <$propertyIri> not found"))
+                }.toMap
+
+                clientClassDef: ClientClassDefinition = rdfClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
+
+                accForRecursion = ClientDefsWithOntologies(
+                    clientDefs = definitionAcc.clientDefs + (clientClassDef.classIri -> clientClassDef),
+                    ontologies = ontologiesWithPropertyDefs
+                )
+
+                // Recursively get definitions of classes used as property object types.
+                accFromRecursion: ClientDefsWithOntologies <- clientClassDef.properties.foldLeft(FastFuture.successful(accForRecursion)) {
+                    case (acc: Future[ClientDefsWithOntologies], clientPropertyDef: ClientPropertyDefinition) =>
+                        // Does this property have a class as its object type?
+                        clientPropertyDef.objectType match {
+                            case classRef: ClassRef =>
+                                // Yes.
+                                for {
+                                    currentAcc: ClientDefsWithOntologies <- acc
+
+                                    // Do we have this class definition already?
+                                    newAcc: ClientDefsWithOntologies <- if (currentAcc.clientDefs.contains(classRef.classIri)) {
+                                        // Yes. Nothing to do.
+                                        acc
+                                    } else {
+                                        // No. Recurse to get it.
+                                        for {
+                                            recursionResults: ClientDefsWithOntologies <- getClassDefsRec(
+                                                classIri = classRef.classIri,
+                                                definitionAcc = currentAcc
+                                            )
+                                        } yield recursionResults
+                                    }
+                                } yield newAcc
+
+                            // This property doesn't have a class as its object type.
+                            case _ => acc
+                        }
+                }
+            } yield accFromRecursion
         }
 
-        clientApi.classIrisUsed.foldLeft(Map.empty[SmartIri, ClientClassDefinition]) {
-            case (acc, classIri) => getClassDefsRec(classIri = classIri, definitionAcc = acc)
-        }.values.toSet
+        // Iterate over all the class IRIs used in the client API, making a client definition for each class,
+        // as well as for any other classes referred to by that class.
+
+        val initialAcc = ClientDefsWithOntologies(clientDefs = Map.empty, ontologies = Map.empty)
+
+        for {
+            allDefs: ClientDefsWithOntologies <- clientApi.classIrisUsed.foldLeft(FastFuture.successful(initialAcc)) {
+                case (acc: Future[ClientDefsWithOntologies], classIri) =>
+                    for {
+                        currentAcc: ClientDefsWithOntologies <- acc
+
+                        recursionResults: ClientDefsWithOntologies <- getClassDefsRec(
+                            classIri = classIri,
+                            definitionAcc = currentAcc
+                        )
+                    } yield recursionResults
+            }
+        } yield allDefs.clientDefs.values.toSet
     }
 
     /**
       * Gets an ontology from Knora.
       *
       * @param ontologyIri the IRI of the ontology.
-      * @return an [[InputOntologyV2]] representing the ontology.
+      * @param ontologies the ontologies collected so far.
+      * @return `ontologies` plus the requested ontology.
       */
-    private def getOntology(ontologyIri: SmartIri): InputOntologyV2 = {
-        ontologies.get(ontologyIri) match {
-            case Some(ontology) => ontology
+    private def getOntology(ontologyIri: SmartIri, ontologies: Map[SmartIri, InputOntologyV2]): Future[Map[SmartIri, InputOntologyV2]] = {
+        val requestMessage = OntologyEntitiesGetRequestV2(
+            ontologyIri = ontologyIri,
+            allLanguages = false,
+            requestingUser = userWithLang
+        )
 
-            case None =>
-                val schema = if (useHttps) "https" else "http"
-                val ontologyApiPath = s"/v2/ontologies/allentities/${URLEncoder.encode(ontologyIri.toString, "UTF-8")}"
-                val uri = s"$schema://$host:$port/$ontologyApiPath"
-                val httpGet = new HttpGet(uri)
-                val response = httpClient.execute(httpGet)
+        for {
+            ontologiesResponse: ReadOntologyV2 <- (responderManager ? requestMessage).mapTo[ReadOntologyV2]
 
-                val responseStrTry: Try[String] = Try {
-                    val statusCode = response.getStatusLine.getStatusCode
+            responseAsJsonLD = ontologiesResponse.toJsonLDDocument(
+                targetSchema = ApiV2Complex,
+                settings = settings,
+                schemaOptions = Set.empty
+            ).toCompactString
 
-                    if (statusCode / 100 != 2) {
-                        throw ClientApiGenerationException(s"Knora responded with error $statusCode: ${response.getStatusLine.getReasonPhrase}")
-                    }
-
-                    Option(response.getEntity) match {
-                        case Some(entity) => EntityUtils.toString(entity)
-                        case None => throw ClientApiGenerationException(s"Knora returned an empty response.")
-                    }
-                }
-
-                val responseStr: String = responseStrTry.get
-                val ontology = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(responseStr)).unescape
-                ontologies.put(ontologyIri, ontology)
-                ontology
-        }
+            ontology: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(responseAsJsonLD)).unescape
+        } yield ontologies + (ontologyIri -> ontology)
     }
 
     /**

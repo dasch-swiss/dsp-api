@@ -27,59 +27,60 @@ import org.knora.webapi.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.clientapi._
 
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
-
-    override def knoraApiPath: Route = {
-
-        path("admin" / "permissions" / Segment / Segment) { (projectIri, groupIri) =>
-            get {
-                requestContext =>
-                    val params = requestContext.request.uri.query().toMap
-                    val permissionType = params.getOrElse("permissionType", PermissionType.AP)
-                    val requestMessage = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield permissionType match {
-                        case _ => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
-                    }
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        }
-    }
-}
-
-class PermissionsEndpoint extends ClientEndpoint {
+class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
 
     import EndpointFunctionDSL._
 
-    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
+    /**
+      * The name of this [[ClientEndpoint]].
+      */
     override val name: String = "PermissionsEndpoint"
 
+    /**
+      * The URL path of of this [[ClientEndpoint]].
+      */
     override val urlPath: String = "/permissions"
 
+    /**
+      * A description of this [[ClientEndpoint]].
+      */
     override val description: String = "An endpoint for working with Knora permissions."
 
-    // Classes used in function definitions.
+    // Classes used in client function definitions.
 
     private val Project = classRef(OntologyConstants.KnoraAdminV2.ProjectClass.toSmartIri)
     private val Group = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri)
     private val AdministrativePermissionResponse = classRef(OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse.toSmartIri)
 
-    // Function definitions.
+    override def knoraApiPath: Route = getAdministrativePermission
 
-    private val getAdministrativePermission = function {
+    private def getAdministrativePermission = path("admin" / "permissions" / Segment / Segment) { (projectIri, groupIri) =>
+        get {
+            requestContext =>
+                val params = requestContext.request.uri.query().toMap
+                val permissionType = params.getOrElse("permissionType", PermissionType.AP)
+                val requestMessage = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield permissionType match {
+                    case _ => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
+                }
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    }
+
+    // #getAdministrativePermissionFunction
+    private val getAdministrativePermissionFunction: ClientFunction =
         "getAdministrativePermission" description "Gets the administrative permissions for a project and group." params(
             "project" description "The project." paramType Project,
             "group" description "The group." paramType Group,
@@ -90,9 +91,12 @@ class PermissionsEndpoint extends ClientEndpoint {
                 params = Seq(("permissionType", arg("permissionType")))
             )
         } returns AdministrativePermissionResponse
-    }
+    // #getAdministrativePermissionFunction
 
+    /**
+      * The functions defined by this [[ClientEndpoint]].
+      */
     override val functions: Seq[ClientFunction] = Seq(
-        getAdministrativePermission
+        getAdministrativePermissionFunction
     )
 }

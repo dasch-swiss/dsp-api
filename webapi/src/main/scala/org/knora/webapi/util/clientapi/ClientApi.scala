@@ -101,8 +101,6 @@ trait ClientEndpoint {
   * A DSL for defining functions in client endpoints.
   */
 object EndpointFunctionDSL {
-    def function(clientFunction: ClientFunction): ClientFunction = clientFunction
-
     def httpGet(path: Seq[UrlComponent], params: Seq[(String, Value)] = Seq.empty): ClientHttpRequest =
         http(httpMethod = GET, path = path, params = params, body = None)
 

@@ -19,20 +19,33 @@
 
 package org.knora.webapi.routing.admin
 
+import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.util.clientapi._
 
 
 /**
   * Represents the structure of generated client library code for the admin API.
   */
-class AdminClientApi extends ClientApi {
+class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
+    /**
+      * The endpoints in this [[ClientApi]].
+      */
     override val endpoints: Set[ClientEndpoint] = Set(
-        new UsersEndpoint()
+        new UsersRouteADM(routeData)
     )
 
+    /**
+      * The name of this [[ClientApi]].
+      */
     override val name: String = "AdminApi"
 
+    /**
+      * The URL path of this [[ClientApi]].
+      */
     override val urlPath: String = "/admin"
 
+    /**
+      * A description of this [[ClientApi]].
+      */
     override val description: String = "A client API for administering Knora."
 }
