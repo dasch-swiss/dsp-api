@@ -97,7 +97,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "The ID of a user or group."
+                    LanguageCodes.EN -> "The ID of the enclosing object."
                 )
             )
         )
@@ -180,7 +180,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "The description of a group or project."
+                    LanguageCodes.EN -> "A description of the enclosing object."
                 )
             )
         )
@@ -354,6 +354,284 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val AdministrativePermissionProperty: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.AdministrativePermissionProperty,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse),
+        objectType = Some(OntologyConstants.KnoraAdminV2.AdministrativePermissionClass),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "administrative permission"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides a single administrative permission."
+                )
+            )
+        )
+    )
+
+    private val AdministrativePermissions: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.AdministrativePermissions,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.AdministrativePermissionsResponse),
+        objectType = Some(OntologyConstants.KnoraAdminV2.AdministrativePermissionClass),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "administrative permissions"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides a collection of administrative permissions."
+                )
+            )
+        )
+    )
+
+    private val ForGroup: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.ForGroup,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.AdministrativePermissionClass),
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "for group"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The group that the permission applies to."
+                )
+            )
+        )
+    )
+
+    private val ForProject: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.ForProject,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.AdministrativePermissionClass),
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "for project"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The project that the permission applies to."
+                )
+            )
+        )
+    )
+
+    private val ForResourceClass: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.ForResourceClass,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.AdministrativePermissionClass),
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "for resource class"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The resource class that the permission applies to."
+                )
+            )
+        )
+    )
+
+    private val ForProperty: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.ForProperty,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.AdministrativePermissionClass),
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "for property"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The property that the permission applies to."
+                )
+            )
+        )
+    )
+
+    private val HasPermissions: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.HasPermissions,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.AdministrativePermissionClass),
+        objectType = Some(OntologyConstants.KnoraAdminV2.Permission),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "has permissions"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The permissions granted by an AdministrativePermission."
+                )
+            )
+        )
+    )
+
+    private val Name: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.Name,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        objectType = Some(OntologyConstants.Xsd.String),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "name"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The name of the enclosing object."
+                )
+            )
+        )
+    )
+
+    private val AdditionalInformation: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.AdditionalInformation,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.Permission),
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "additional information"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "An IRI representing additional information about the permission."
+                )
+            )
+        )
+    )
+
+    private val PermissionCode: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.PermissionCode,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.Permission),
+        objectType = Some(OntologyConstants.Xsd.Integer),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "permission code"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A permission's numeric permission code."
+                )
+            )
+        )
+    )
+
+    private val Iri: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.Iri,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "iri"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The IRI of the enclosing object."
+                )
+            )
+        )
+    )
+
+    private val AdministrativePermissionClass = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.AdministrativePermissionClass,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "administrative permission"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "An administrative permission."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.ForGroup -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.ForProject -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.ForProperty -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.ForResourceClass -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.HasPermissions -> Cardinality.MustHaveSome,
+            OntologyConstants.KnoraAdminV2.Iri -> Cardinality.MustHaveOne
+        )
+    )
+
+    private val Permission = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.Permission,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "permission"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A permission."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.AdditionalInformation -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.Name -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraAdminV2.PermissionCode -> Cardinality.MayHaveOne
+        )
+    )
+
     /**
       * Properties to remove from the ontology before converting it to the target schema.
       * See also [[OntologyConstants.CorrespondingIris]].
@@ -361,14 +639,22 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
     override val internalPropertiesToRemove: Set[SmartIri] = Set(
         OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize,
         OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark,
-        OntologyConstants.KnoraAdmin.BelongsToInstitution
+        OntologyConstants.KnoraAdmin.BelongsToInstitution,
+        OntologyConstants.KnoraAdmin.ForProject,
+        OntologyConstants.KnoraAdmin.ForGroup,
+        OntologyConstants.KnoraAdmin.ForResourceClass,
+        OntologyConstants.KnoraAdmin.ForProperty,
+        OntologyConstants.KnoraAdmin.GroupName
     ).map(_.toSmartIri)
 
     /**
       * Classes to remove from the ontology before converting it to the target schema.
       */
     override val internalClassesToRemove: Set[SmartIri] = Set(
-        OntologyConstants.KnoraAdmin.Institution
+        OntologyConstants.KnoraAdmin.Institution,
+        OntologyConstants.KnoraAdmin.Permission,
+        OntologyConstants.KnoraAdmin.AdministrativePermission,
+        OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission
     ).map(_.toSmartIri)
 
     /**
@@ -385,7 +671,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       * Cardinalities to add to the Group class.
       */
     private val GroupCardinalities = Map(
-        OntologyConstants.KnoraAdminV2.ID -> Cardinality.MustHaveOne
+        OntologyConstants.KnoraAdminV2.ID -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraAdminV2.Name -> Cardinality.MustHaveOne
     )
 
     /**
@@ -422,7 +709,9 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         GroupsResponse,
         GroupResponse,
         AdministrativePermissionsResponse,
-        AdministrativePermissionResponse
+        AdministrativePermissionResponse,
+        AdministrativePermissionClass,
+        Permission
     ).map {
         classInfo => classInfo.entityInfoContent.classIri -> classInfo
     }.toMap
@@ -438,7 +727,18 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         Token,
         SessionID,
         Ontologies,
-        Description
+        Description,
+        AdministrativePermissionProperty,
+        AdministrativePermissions,
+        ForGroup,
+        ForProject,
+        ForResourceClass,
+        ForProperty,
+        HasPermissions,
+        Name,
+        AdditionalInformation,
+        PermissionCode,
+        Iri
     ).map {
         propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
     }.toMap

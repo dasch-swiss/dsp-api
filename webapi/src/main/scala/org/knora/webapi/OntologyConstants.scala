@@ -572,11 +572,20 @@ object OntologyConstants {
         val SelfJoin: IRI = KnoraAdminPrefixExpansion + "selfjoin"
         val GroupClass: IRI = KnoraAdminPrefixExpansion + "Group"
         val GroupProperty: IRI = KnoraAdminPrefixExpansion + "group"
-        val Name: IRI = KnoraAdminPrefixExpansion + "name"
         val ProjectProperty: IRI = KnoraAdminPrefixExpansion + "project"
         val AdministrativePermissionProperty: IRI = KnoraAdminPrefixExpansion + "administrative_permission"
         val AdministrativePermissions: IRI = KnoraAdminPrefixExpansion + "administrative_permissions"
         val AdministrativePermissionClass: IRI = KnoraAdminPrefixExpansion + "AdministrativePermission"
+        val ForGroup: IRI = KnoraAdminPrefixExpansion + "forGroup"
+        val ForProject: IRI = KnoraAdminPrefixExpansion + "forProject"
+        val ForResourceClass: IRI = KnoraAdminPrefixExpansion + "forResourceClass"
+        val ForProperty: IRI = KnoraAdminPrefixExpansion + "forProperty"
+        val Permission: IRI = KnoraAdminPrefixExpansion + "Permission"
+        val HasPermissions: IRI = KnoraAdminPrefixExpansion + "hasPermissions"
+        val AdditionalInformation: IRI = KnoraAdminPrefixExpansion + "additionalInformation"
+        val PermissionCode: IRI = KnoraAdminPrefixExpansion + "permissionCode"
+        val Iri: IRI = KnoraAdminPrefixExpansion + "iri"
+        val Name: IRI = KnoraAdminPrefixExpansion + "name"
     }
 
     object Standoff {
@@ -1116,7 +1125,6 @@ object OntologyConstants {
             KnoraAdmin.ProjectLogo -> KnoraAdminV2.Logo,
             KnoraAdmin.HasSelfJoinEnabled -> KnoraAdminV2.SelfJoin,
             KnoraAdmin.UserGroup -> KnoraAdminV2.GroupClass,
-            KnoraAdmin.GroupName -> KnoraAdminV2.Name,
             KnoraAdmin.GroupDescription -> KnoraAdminV2.Description,
             KnoraAdmin.BelongsToProject -> KnoraAdminV2.ProjectProperty
         ),
@@ -1169,7 +1177,6 @@ object OntologyConstants {
             KnoraAdminV2.Logo -> KnoraAdmin.ProjectLogo,
             KnoraAdminV2.SelfJoin -> KnoraAdmin.HasSelfJoinEnabled,
             KnoraAdminV2.GroupClass -> KnoraAdmin.UserGroup,
-            KnoraAdminV2.Name -> KnoraAdmin.GroupName,
             KnoraAdminV2.ProjectProperty -> KnoraAdmin.BelongsToProject
         )
     )
