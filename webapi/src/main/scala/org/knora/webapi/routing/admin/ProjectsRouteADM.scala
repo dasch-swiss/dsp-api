@@ -68,6 +68,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     private val ProjectResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectResponse.toSmartIri)
     private val KeywordsResponse = classRef(OntologyConstants.KnoraAdminV2.KeywordsResponse.toSmartIri)
     private val MembersResponse = classRef(OntologyConstants.KnoraAdminV2.MembersResponse.toSmartIri)
+    private val ProjectRestrictedViewSettingsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettingsResponse.toSmartIri)
 
     override def knoraApiPath: Route =
         getProjects ~
@@ -409,7 +410,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             "value" description "The value of the property by which the project is identified." paramType StringDatatype
         ) doThis {
             httpGet(arg("property") / arg("value") / str("members"))
-        } returns ProjectResponse
+        } returns MembersResponse
 
     private val getProjectMembersByIriFunction: ClientFunction =
         "getProjectMembersByIri" description "Gets the members of a project by IRI." params(
@@ -508,7 +509,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             "value" description "The value of the property by which the project is identified." paramType StringDatatype
         ) doThis {
             httpGet(arg("property") / arg("value") / str("admin-members"))
-        } returns ProjectResponse
+        } returns MembersResponse
 
     private val getProjectAdminMembersByIriFunction: ClientFunction =
         "getProjectAdminMembersByIri" description "Gets the admin members of a project by IRI." params(
@@ -599,6 +600,21 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val getProjectRestrictedViewSettingsFunction: ClientFunction =
+        "getProjectRestrictedViewSettings" description "Gets a project's restricted view settings by a property." params(
+            "property" description "The name of the property by which the project is identified." paramType enum("iri", "shortname", "shortcode"),
+            "value" description "The value of the property by which the project is identified." paramType StringDatatype
+        ) doThis {
+            httpGet(arg("property") / arg("value") / str("RestrictedViewSettings"))
+        } returns ProjectRestrictedViewSettingsResponse
+
+    private val getProjectRestrictedViewSettingByIriFunction: ClientFunction =
+        "getProjectRestrictedViewSettingByIri" description "Gets a project's restricted view settings by IRI." params(
+            "iri" description "The IRI of the project." paramType UriDatatype
+            ) doThis {
+            getProjectRestrictedViewSettingsFunction withArgs(str("iri"), arg("iri") as StringDatatype)
+        } returns ProjectRestrictedViewSettingsResponse
+
     /**
       * Returns the project's restricted view settings identified through shortname.
       */
@@ -622,6 +638,13 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val getProjectRestrictedViewSettingByShortnameFunction: ClientFunction =
+        "getProjectRestrictedViewSettingByShortname" description "Gets a project's restricted view settings by shortname." params(
+            "shortname" description "The shortname of the project." paramType StringDatatype
+            ) doThis {
+            getProjectRestrictedViewSettingsFunction withArgs(str("shortname"), arg("shortname") as StringDatatype)
+        } returns ProjectRestrictedViewSettingsResponse
+
     /**
       * Returns the project's restricted view settings identified through shortcode.
       */
@@ -642,6 +665,13 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
+
+    private val getProjectRestrictedViewSettingByShortcodeFunction: ClientFunction =
+        "getProjectRestrictedViewSettingByShortcode" description "Gets a project's restricted view settings by shortcode." params(
+            "shortcode" description "The shortcode of the project." paramType StringDatatype
+            ) doThis {
+            getProjectRestrictedViewSettingsFunction withArgs(str("shortcode"), arg("shortcode") as StringDatatype)
+        } returns ProjectRestrictedViewSettingsResponse
 
     /**
       * The functions defined by this [[ClientEndpoint]].
@@ -664,6 +694,10 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         getProjectAdminMembersFunction,
         getProjectAdminMembersByIriFunction,
         getProjectAdminMembersByShortnameFunction,
-        getProjectAdminMembersByShortcodeFunction
+        getProjectAdminMembersByShortcodeFunction,
+        getProjectRestrictedViewSettingsFunction,
+        getProjectRestrictedViewSettingByIriFunction,
+        getProjectRestrictedViewSettingByShortnameFunction,
+        getProjectRestrictedViewSettingByShortcodeFunction
     )
 }

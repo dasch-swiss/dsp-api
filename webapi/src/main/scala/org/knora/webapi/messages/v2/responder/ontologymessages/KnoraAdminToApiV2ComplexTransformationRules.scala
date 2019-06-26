@@ -707,6 +707,112 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val Settings: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.Settings,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettingsResponse),
+        objectType = Some(OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettings),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "settings"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A project's restricted view settings."
+                )
+            )
+        )
+    )
+
+    private val Size: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.Size,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettings),
+        objectType = Some(OntologyConstants.Xsd.String),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "size"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The image size used in restricted image view in a project."
+                )
+            )
+        )
+    )
+
+    private val Watermark: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.Watermark,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettings),
+        objectType = Some(OntologyConstants.Xsd.String),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "watermark"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The watermark used in restricted image view in a project."
+                )
+            )
+        )
+    )
+
+    private val ProjectRestrictedViewSettings = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettings,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "project restricted view settings"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A project's restricted view settings."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.Size -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.Watermark -> Cardinality.MayHaveOne
+        )
+    )
+
+    private val ProjectRestrictedViewSettingsResponse = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettingsResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "project restricted view settings response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response providing a project's restricted view settings."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.Settings -> Cardinality.MustHaveOne
+        )
+    )
+
     private val AdministrativePermissionClass = makeClass(
         classIri = OntologyConstants.KnoraAdminV2.AdministrativePermissionClass,
         predicates = Seq(
@@ -841,7 +947,9 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         AdministrativePermissionClass,
         Permission,
         MembersResponse,
-        KeywordsResponse
+        KeywordsResponse,
+        ProjectRestrictedViewSettings,
+        ProjectRestrictedViewSettingsResponse
     ).map {
         classInfo => classInfo.entityInfoContent.classIri -> classInfo
     }.toMap
@@ -872,7 +980,10 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         Groups,
         Members,
         GroupProperty,
-        KeywordsProperty
+        KeywordsProperty,
+        Settings,
+        Size,
+        Watermark
     ).map {
         propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
     }.toMap
