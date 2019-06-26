@@ -548,6 +548,8 @@ object OntologyConstants {
         val ProjectsResponse: IRI = KnoraAdminPrefixExpansion + "ProjectsResponse"
         val GroupResponse: IRI = KnoraAdminPrefixExpansion + "GroupResponse"
         val GroupsResponse: IRI = KnoraAdminPrefixExpansion + "GroupsResponse"
+        val Members: IRI = KnoraAdminPrefixExpansion + "members"
+        val GroupMembersResponse: IRI = KnoraAdminPrefixExpansion + "GroupMembersResponse"
         val AdministrativePermissionResponse: IRI = KnoraAdminPrefixExpansion + "AdministrativePermissionResponse"
         val AdministrativePermissionsResponse: IRI = KnoraAdminPrefixExpansion + "AdministrativePermissionsResponse"
         val Users: IRI = KnoraAdminPrefixExpansion + "users"
@@ -1114,7 +1116,6 @@ object OntologyConstants {
             KnoraBase.ValueHasStandoff -> KnoraApiV2Complex.TextValueHasStandoff,
             KnoraAdmin.PreferredLanguage -> KnoraAdminV2.Lang,
             KnoraAdmin.IsInProject -> KnoraAdminV2.Projects,
-            KnoraAdmin.IsInGroup -> KnoraAdminV2.Groups,
             KnoraAdmin.IsInSystemAdminGroup -> KnoraAdminV2.SystemAdmin,
             KnoraAdmin.KnoraProject -> KnoraAdminV2.ProjectClass,
             KnoraAdmin.ProjectShortname -> KnoraAdminV2.Shortname,
@@ -1167,7 +1168,6 @@ object OntologyConstants {
             KnoraApiV2Complex.TextValueHasStandoff -> KnoraBase.ValueHasStandoff,
             KnoraAdminV2.Lang -> KnoraAdmin.PreferredLanguage,
             KnoraAdminV2.Projects -> KnoraAdmin.IsInProject,
-            KnoraAdminV2.Groups -> KnoraAdmin.IsInGroup,
             KnoraAdminV2.SystemAdmin -> KnoraAdmin.IsInSystemAdminGroup,
             KnoraAdminV2.ProjectClass -> KnoraAdmin.KnoraProject,
             KnoraAdminV2.Shortname -> KnoraAdmin.ProjectShortname,

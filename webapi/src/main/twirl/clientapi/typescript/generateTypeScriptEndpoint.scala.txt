@@ -50,7 +50,7 @@ export class @name extends Endpoint {
     @{function.name}(@for((param, index) <- function.params.zipWithIndex) {@if(index > 0) {, }@param.name: @makeObjectType(param.objectType)}): Observable<ApiResponseData<@makeObjectType(function.returnType)> | ApiResponseError> {
     @function.implementation match {
     case httpRequest: ClientHttpRequest => {
-        return this.@{makeHttpMethod(httpRequest.httpMethod)}(@makeUrlPath(httpRequest.urlPath)@makeHttpRequestBody(httpRequest.requestBody)).pipe(
+        return this.@{makeHttpMethod(httpRequest.httpMethod)}(@makeUrl(httpRequest.urlElementsAsValues)@makeHttpRequestBody(httpRequest.requestBody)).pipe(
             map(ajaxResponse => ApiResponseData.fromAjaxResponse(ajaxResponse, @makeObjectType(function.returnType), this.jsonConvert)),
             catchError(error => this.handleError(error))
         );
@@ -88,21 +88,21 @@ export class @name extends Endpoint {
 
 @makeValue(value: Value) = @{
     value match {
-        case literal: StringLiteralValue => "\"" + literal.value + "\""
-        case boolean: BooleanLiteralValue => "\"" + boolean.value.toString + "\""
+        case stringLiteral: StringLiteralValue => "\"" + stringLiteral + "\""
+        case booleanLiteral: BooleanLiteralValue => "\"" + booleanLiteral + "\""
+        case integerLiteral: IntegerLiteralValue => integerLiteral.toString
         case arg: ArgValue => arg.name + arg.memberVariableName.map(varName => "." + varName).getOrElse("")
     }
 }
 
-@makeUrlPath(urlPath: Seq[UrlComponent]) = @{
-    if (urlPath.isEmpty) {
+@makeUrl(urlElementsAsValues: Seq[Value]) = @{
+    if (urlElementsAsValues.isEmpty) {
         "\"\""
     } else {
-        urlPath.map {
-            case SlashUrlComponent => "\"/\""
-            case value: Value =>
+        urlElementsAsValues.map {
+            value: Value =>
                 value match {
-                    case arg: ArgValue => "encodeURI(" + makeValue(value) + ")"
+                    case arg: ArgValue => "encodeURI(" + makeValue(arg) + ")"
                     case _ => makeValue(value)
                 }
         }.mkString(" + ")

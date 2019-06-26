@@ -106,3 +106,6 @@ function, like this:
 
 @@snip [UsersRouteADM.scala]($src$/org/knora/webapi/routing/admin/UsersRouteADM.scala) { #getUserFunction }
 @@snip [UsersRouteADM.scala]($src$/org/knora/webapi/routing/admin/UsersRouteADM.scala) { #getUserByIriFunction }
+
+If an argument of the calling function needs to be converted to another type
+for the function call, use the `as` keyword as shown above.

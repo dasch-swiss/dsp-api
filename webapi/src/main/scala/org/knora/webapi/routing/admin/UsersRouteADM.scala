@@ -30,6 +30,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProto
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
 import org.knora.webapi.util.clientapi._
 import org.knora.webapi.{BadRequestException, KnoraSystemInstances, OntologyConstants}
 
@@ -43,7 +44,6 @@ import scala.concurrent.Future
 @Api(value = "users", produces = "application/json")
 @Path("/admin/users")
 class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
-    import EndpointFunctionDSL._
 
     /**
       * The name of this [[ClientEndpoint]].
@@ -187,9 +187,9 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // #getUserByIriFunction
     private val getUserByIriFunction: ClientFunction =
         "getUserByIri" description "Gets a user by IRI." params (
-            "iri" description "The IRI of the user." paramType StringLiteral
+            "iri" description "The IRI of the user." paramType UriLiteral
             ) doThis {
-            getUserFunction withArgs(str("iri"), arg("iri"))
+            getUserFunction withArgs(str("iri"), arg("iri") as StringLiteral)
         } returns UserResponse
     // #getUserByIriFunction
 

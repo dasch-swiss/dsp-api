@@ -27,13 +27,12 @@ import org.knora.webapi.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
 import org.knora.webapi.util.clientapi._
 
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
 class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
-
-    import EndpointFunctionDSL._
 
     /**
       * The name of this [[ClientEndpoint]].
@@ -88,7 +87,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         ) doThis {
             httpGet(
                 path = argMember("project", "id") / argMember("group", "id"),
-                params = Seq(("permissionType", arg("permissionType")))
+                params = Seq("permissionType" -> arg("permissionType"))
             )
         } returns AdministrativePermissionResponse
     // #getAdministrativePermissionFunction

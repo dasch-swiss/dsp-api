@@ -101,6 +101,8 @@ trait ClientEndpoint {
   * A DSL for defining functions in client endpoints.
   */
 object EndpointFunctionDSL {
+    import scala.language.implicitConversions
+
     /**
       * Constructs a [[ClientHttpRequest]] for a `GET` request.
       *
@@ -209,25 +211,29 @@ object EndpointFunctionDSL {
 
     private def http(httpMethod: ClientHttpMethod, path: Seq[UrlComponent], params: Seq[(String, Value)], body: Option[HttpRequestBody] = None): ClientHttpRequest = {
         // Collapse each run of strings into a single string.
-        val collapsedPath: Seq[UrlComponent] = (SlashUrlComponent +: path).foldLeft(Vector.empty[UrlComponent]) {
-            case (acc, component) =>
-                acc.lastOption match {
-                    case Some(last) =>
-                        (last, component) match {
-                            case (lastStr: StringLiteralValue, thisStr: StringLiteralValue) =>
-                                acc.dropRight(1) :+ StringLiteralValue(lastStr.value + thisStr.value)
+        val collapsedPath: Seq[UrlComponent] = if (path.isEmpty) {
+            path
+        } else {
+            (SlashUrlComponent +: path).foldLeft(Vector.empty[UrlComponent]) {
+                case (acc, component) =>
+                    acc.lastOption match {
+                        case Some(last) =>
+                            (last, component) match {
+                                case (lastStr: StringLiteralValue, thisStr: StringLiteralValue) =>
+                                    acc.dropRight(1) :+ StringLiteralValue(lastStr.value + thisStr.value)
 
-                            case (SlashUrlComponent, thisStr: StringLiteralValue) =>
-                                acc.dropRight(1) :+ StringLiteralValue("/" + thisStr.value)
+                                case (SlashUrlComponent, thisStr: StringLiteralValue) =>
+                                    acc.dropRight(1) :+ StringLiteralValue("/" + thisStr.value)
 
-                            case (lastStr: StringLiteralValue, SlashUrlComponent) =>
-                                acc.dropRight(1) :+ StringLiteralValue(lastStr.value + "/")
+                                case (lastStr: StringLiteralValue, SlashUrlComponent) =>
+                                    acc.dropRight(1) :+ StringLiteralValue(lastStr.value + "/")
 
-                            case _ => acc :+ component
-                        }
+                                case _ => acc :+ component
+                            }
 
-                    case None => acc :+ component
-                }
+                        case None => acc :+ component
+                    }
+            }
         }
 
         ClientHttpRequest(httpMethod = httpMethod, urlPath = collapsedPath, params = params, requestBody = body)
@@ -236,6 +242,8 @@ object EndpointFunctionDSL {
     implicit class Identifier(val name: String) extends AnyVal {
         def description(desc: String): NameWithDescription = NameWithDescription(name = name, description = desc)
     }
+
+    implicit def urlComponentToSeq(urlComponent: UrlComponent): Seq[UrlComponent] = Seq(urlComponent)
 
     implicit class UrlComponentAsSeq(val urlComponent: UrlComponent) extends AnyVal {
         def /(nextComponent: UrlComponent): Seq[UrlComponent] = Seq(urlComponent, SlashUrlComponent, nextComponent)
@@ -331,7 +339,54 @@ trait FunctionImplementation
   * @param params      the URL parameters to be included.
   * @param requestBody if provided, the body of the HTTP request.
   */
-case class ClientHttpRequest(httpMethod: ClientHttpMethod, urlPath: Seq[UrlComponent], params: Seq[(String, Value)], requestBody: Option[HttpRequestBody] = None) extends FunctionImplementation
+case class ClientHttpRequest(httpMethod: ClientHttpMethod,
+                             urlPath: Seq[UrlComponent],
+                             params: Seq[(String, Value)],
+                             requestBody: Option[HttpRequestBody] = None) extends FunctionImplementation {
+    /**
+      * Represents all URL elements, including query parameters, as a sequence of [[Value]] objects
+      * for concatenation.
+      */
+    lazy val urlElementsAsValues: Seq[Value] = urlPath.map {
+        case SlashUrlComponent => StringLiteralValue("/")
+        case value: Value => value
+    } ++ paramsAsValues
+
+    /**
+      * Represents the URL query parameters as a sequence of [[Value]] objects for concatenation.
+      */
+    lazy val paramsAsValues: Seq[Value] = {
+        if (params.isEmpty) {
+            Seq.empty
+        } else {
+            val pairsAsValues = params.foldLeft(Seq.empty[Value]) {
+                case (acc: Seq[Value], (paramName: String, paramValue: Value)) =>
+                    val pairAsValues: Seq[Value] = Seq(StringLiteralValue(paramName), StringLiteralValue("="), paramValue)
+
+                    if (acc.isEmpty) {
+                        pairAsValues
+                    } else {
+                        (acc :+ StringLiteralValue("&")) ++ pairAsValues
+                    }
+            }
+
+            (StringLiteralValue("?") +: pairsAsValues).foldLeft(Vector.empty[Value]) {
+                case (acc, value) =>
+                    acc.lastOption match {
+                        case Some(last) =>
+                            (last, value) match {
+                                case (lastStr: StringLiteralValue, thisStr: StringLiteralValue) =>
+                                    acc.dropRight(1) :+ StringLiteralValue(lastStr.value + thisStr.value)
+
+                                case _ => acc :+ value
+                            }
+
+                        case None => acc :+ value
+                    }
+            }
+        }
+    }
+}
 
 /**
   * Represents a function call to be used as the implementation of a client endpoint function.
@@ -382,18 +437,36 @@ case object SlashUrlComponent extends UrlComponent
 trait Value extends UrlComponent
 
 /**
+  * Represents a literal value.
+  */
+trait LiteralValue extends Value
+
+/**
   * Represents a string literal value.
   *
   * @param value the value of the string literal.
   */
-case class StringLiteralValue(value: String) extends Value
+case class StringLiteralValue(value: String) extends LiteralValue {
+    override def toString: String = value
+}
 
 /**
   * Represents a boolean literal value.
   *
   * @param value the value of the boolean literal.
   */
-case class BooleanLiteralValue(value: Boolean) extends Value
+case class BooleanLiteralValue(value: Boolean) extends LiteralValue {
+    override def toString: String = value.toString
+}
+
+/**
+  * Represents an integer literal value.
+  *
+  * @param value the value of the integer literal.
+  */
+case class IntegerLiteralValue(value: Int) extends LiteralValue {
+    override def toString: String = value.toString
+}
 
 /**
   * Represents a function argument.
@@ -401,8 +474,11 @@ case class BooleanLiteralValue(value: Boolean) extends Value
   * @param name               the name of the parameter whose value is the argument.
   * @param memberVariableName if provided, the name of a member variable of the argument, to be used instead of
   *                           the argument itself.
+  * @param convertTo          if provided, the type that the argument should be converted to.
   */
-case class ArgValue(name: String, memberVariableName: Option[String] = None) extends Value with HttpRequestBody
+case class ArgValue(name: String, memberVariableName: Option[String] = None, convertTo: Option[ClientObjectType] = None) extends Value with HttpRequestBody {
+    def as(convertTo: ClientObjectType):ArgValue = copy(convertTo = Some(convertTo))
+}
 
 /**
   * Represents the body of an HTTP request.
