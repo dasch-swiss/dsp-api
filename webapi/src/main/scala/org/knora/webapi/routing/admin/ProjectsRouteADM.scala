@@ -54,12 +54,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     /**
       * The URL path of this [[ClientEndpoint]].
       */
-    override val urlPath: String = "/groups"
+    override val urlPath: String = "/projects"
 
     /**
       * A description of this [[ClientEndpoint]].
       */
-    override val description: String = "An endpoint for working with Knora groups."
+    override val description: String = "An endpoint for working with Knora projects."
 
     // Classes used in client function definitions.
 
