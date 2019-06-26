@@ -172,12 +172,12 @@ object EndpointFunctionDSL {
     val False: BooleanLiteralValue = BooleanLiteralValue(false)
 
     /**
-      * Constructs an [[EnumLiteral]].
+      * Constructs an [[EnumDatatype]].
       *
       * @param values the values of the enumeration.
-      * @return an [[EnumLiteral]].
+      * @return an [[EnumDatatype]].
       */
-    def enum(values: String*): EnumLiteral = EnumLiteral(values.toSet)
+    def enum(values: String*): EnumDatatype = EnumDatatype(values.toSet)
 
     /**
       * Constructs an [[ArgValue]] referring to a function argument.
@@ -197,9 +197,9 @@ object EndpointFunctionDSL {
     def argMember(name: String, member: String) = ArgValue(name = name, memberVariableName = Some(member))
 
     /**
-      * Represents an empty URL path.
+      * A URL path representing the base path of an endpoint.
       */
-    val EmptyPath = Seq.empty[UrlComponent]
+    val BasePath: Seq[UrlComponent] = Seq.empty[UrlComponent]
 
     /**
       * Constructs a [[JsonRequestBody]].
@@ -539,46 +539,46 @@ case class ClientPropertyDefinition(propertyName: String,
 sealed trait ClientObjectType
 
 /**
-  * A trait for literal types.
+  * A trait for datatypes.
   */
-sealed trait ClientLiteral extends ClientObjectType
+sealed trait ClientDatatype extends ClientObjectType
 
 /**
-  * The type of string literals.
+  * The type of string datatype values.
   */
-case object StringLiteral extends ClientLiteral
+case object StringDatatype extends ClientDatatype
 
 /**
-  * The type of boolean literals.
+  * The type of boolean datatype values.
   */
-case object BooleanLiteral extends ClientLiteral
+case object BooleanDatatype extends ClientDatatype
 
 /**
-  * The type of integer literals.
+  * The type of integer datatype values.
   */
-case object IntegerLiteral extends ClientLiteral
+case object IntegerDatatype extends ClientDatatype
 
 /**
-  * The type of decimal literals.
+  * The type of decimal datatype values.
   */
-case object DecimalLiteral extends ClientLiteral
+case object DecimalDatatype extends ClientDatatype
 
 /**
-  * The type of URI literals.
+  * The type of URI datatype values.
   */
-case object UriLiteral extends ClientLiteral
+case object UriDatatype extends ClientDatatype
 
 /**
-  * The type of timestamp literals.
+  * The type of timestamp datatype values.
   */
-case object DateTimeStampLiteral extends ClientLiteral
+case object DateTimeStampDatatype extends ClientDatatype
 
 /**
   * The type of enums.
   *
   * @param values the values of the enum.
   */
-case class EnumLiteral(values: Set[String]) extends ClientLiteral
+case class EnumDatatype(values: Set[String]) extends ClientDatatype
 
 /**
   * The type of instances of classes.

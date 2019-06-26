@@ -26,10 +26,13 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
 import javax.ws.rs.Path
-import org.knora.webapi.BadRequestException
+import org.knora.webapi.{BadRequestException, OntologyConstants}
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
+import org.knora.webapi.util.clientapi._
 
 import scala.concurrent.Future
 
@@ -39,9 +42,32 @@ object ProjectsRouteADM {
 
 @Api(value = "projects", produces = "application/json")
 @Path("/admin/projects")
-class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ProjectsADMJsonProtocol {
+class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ProjectsADMJsonProtocol with ClientEndpoint {
 
     import ProjectsRouteADM.ProjectsBasePath
+
+    /**
+      * The name of this [[ClientEndpoint]].
+      */
+    override val name: String = "ProjectsEndpoint"
+
+    /**
+      * The URL path of this [[ClientEndpoint]].
+      */
+    override val urlPath: String = "/groups"
+
+    /**
+      * A description of this [[ClientEndpoint]].
+      */
+    override val description: String = "An endpoint for working with Knora groups."
+
+    // Classes used in client function definitions.
+
+    private val Project = classRef(OntologyConstants.KnoraAdminV2.ProjectClass.toSmartIri)
+    private val ProjectsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectsResponse.toSmartIri)
+    private val ProjectResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectResponse.toSmartIri)
+    private val KeywordsResponse = classRef(OntologyConstants.KnoraAdminV2.KeywordsResponse.toSmartIri)
+    private val MembersResponse = classRef(OntologyConstants.KnoraAdminV2.MembersResponse.toSmartIri)
 
     override def knoraApiPath: Route =
         getProjects ~
@@ -74,8 +100,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 log
             )
         }
-
     }
+
+    private val getProjectsFunction: ClientFunction =
+        "getProjects" description "Returns a list of all projects." params() doThis {
+            httpGet(BasePath)
+        } returns ProjectsResponse
 
     /* create a new project */
     @ApiOperation(value = "Add new project", nickname = "addProject", httpMethod = "POST", response = classOf[ProjectOperationResponseADM])
@@ -109,6 +139,16 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val createProjectFunction: ClientFunction =
+        "createProject" description "Creates a project." params (
+            "project" description "The project to be created." paramType Project
+            ) doThis {
+            httpPost(
+                path = BasePath,
+                body = Some(arg("project"))
+            )
+        } returns ProjectResponse
+
     /* returns all unique keywords for all projects as a list */
     private def getKeywords: Route = path(ProjectsBasePath / "Keywords") {
         get {
@@ -127,6 +167,10 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val getKeywordsFunction: ClientFunction =
+        "getKeywords" description "Gets all the unique keywords for all projects." params() doThis {
+            httpGet(str("Keywords"))
+        } returns KeywordsResponse
 
     /* returns all keywords for a single project */
     private def getProjectKeywords: Route = path(ProjectsBasePath / "iri" / Segment / "Keywords") { value =>
@@ -148,6 +192,13 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val getProjectKeywordsFunction: ClientFunction =
+        "getProjectKeywords" description "Gets all the keywords for a project." params(
+            "projectIri" description "The IRI of the project." paramType UriDatatype
+            ) doThis {
+            httpGet(str("iri") / arg("projectIri") / str("Keywords"))
+        } returns KeywordsResponse
+
     /**
       * returns a single project identified through iri
       */
@@ -157,7 +208,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 val requestMessage: Future[ProjectGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
                     checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-
                 } yield ProjectGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
@@ -170,6 +220,21 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val getProjectFunction: ClientFunction =
+        "getProject" description "Gets a project by a property." params(
+            "property" description "The name of the property by which the project is identified." paramType enum("iri", "shortname", "shortcode"),
+            "value" description "The value of the property by which the project is identified." paramType StringDatatype
+        ) doThis {
+            httpGet(arg("property") / arg("value"))
+        } returns ProjectResponse
+
+    private val getProjectByIriFunction: ClientFunction =
+        "getProjectByIri" description "Gets a project by IRI." params (
+            "iri" description "The IRI of the project." paramType UriDatatype
+            ) doThis {
+            getProjectFunction withArgs(str("iri"), arg("iri") as StringDatatype)
+        } returns ProjectResponse
+
     /**
       * returns a single project identified through shortname.
       */
@@ -178,7 +243,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                    shortNameDec = stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(s"Invalid project shotname $value"))
+                    shortNameDec = stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(s"Invalid project shortname $value"))
 
                 } yield ProjectGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
 
@@ -191,6 +256,13 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
+
+    private val getProjectByShortnameFunction: ClientFunction =
+        "getProjectByShortname" description "Gets a project by shortname." params (
+            "shortname" description "The shortname of the project." paramType StringDatatype
+            ) doThis {
+            getProjectFunction withArgs(str("shortname"), arg("shortname"))
+        } returns ProjectResponse
 
     /**
       * returns a single project identified through shortcode.
@@ -213,6 +285,13 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
+
+    private val getProjectByShortcodeFunction: ClientFunction =
+        "getProjectByShortcode" description "Gets a project by shortcode." params (
+            "shortcode" description "The shortcode of the project." paramType StringDatatype
+            ) doThis {
+            getProjectFunction withArgs(str("shortcode"), arg("shortcode"))
+        } returns ProjectResponse
 
     /**
       * update a project identified by iri
@@ -245,6 +324,24 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val updateProjectFunction: ClientFunction =
+        "updateProject" description "Updates a project." params(
+            "project" description "The project to be updated." paramType Project
+            ) doThis {
+            httpPut(
+                path = str("iri") / argMember("project", "id"),
+                body = Some(json(
+                    "shortname" -> argMember("project", "shortname"),
+                    "longname" -> argMember("project", "longname"),
+                    "description" -> argMember("project", "description"),
+                    "keywords" -> argMember("project", "keywords"),
+                    "logo" -> argMember("project", "logo"),
+                    "status" -> argMember("project", "status"),
+                    "selfjoin" -> argMember("project", "selfjoin")
+                ))
+            )
+        } returns ProjectResponse
+
     /**
       * API MAY CHANGE: update project status to false
       */
@@ -273,6 +370,15 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val deleteProjectFunction: ClientFunction =
+        "deleteProject" description "Deletes a project. This method does not actually delete a project, but sets the status to false." params (
+            "project" description "The project to be deleted." paramType Project
+            ) doThis {
+            httpDelete(
+                path = str("iri") / argMember("project", "id")
+            )
+        } returns ProjectResponse
+
     /**
       * API MAY CHANGE: returns all members part of a project identified through iri
       */
@@ -297,6 +403,21 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val getProjectMembersFunction: ClientFunction =
+        "getProjectMembers" description "Gets a project's members by a property." params(
+            "property" description "The name of the property by which the project is identified." paramType enum("iri", "shortname", "shortcode"),
+            "value" description "The value of the property by which the project is identified." paramType StringDatatype
+        ) doThis {
+            httpGet(arg("property") / arg("value") / str("members"))
+        } returns ProjectResponse
+
+    private val getProjectMembersByIriFunction: ClientFunction =
+        "getProjectMembersByIri" description "Gets the members of a project by IRI." params(
+            "iri" description "The IRI of the project." paramType UriDatatype
+            ) doThis {
+            getProjectMembersFunction withArgs(str("iri"), arg("iri") as StringDatatype)
+        } returns MembersResponse
+
     /**
       * API MAY CHANGE: returns all members part of a project identified through shortname
       */
@@ -319,6 +440,13 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
+
+    private val getProjectMembersByShortnameFunction: ClientFunction =
+        "getProjectMembersByShortname" description "Gets a project's members by shortname." params (
+            "shortname" description "The shortname of the project." paramType StringDatatype
+            ) doThis {
+            getProjectMembersFunction withArgs(str("shortname"), arg("shortname"))
+        } returns MembersResponse
 
     /**
       * API MAY CHANGE: returns all members part of a project identified through shortcode
@@ -344,6 +472,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val getProjectMembersByShortcodeFunction: ClientFunction =
+        "getProjectMembersByShortcode" description "Gets a project's members by shortcode." params (
+            "shortcode" description "The shortcode of the project." paramType StringDatatype
+            ) doThis {
+            getProjectMembersFunction withArgs(str("shortcode"), arg("shortcode"))
+        } returns MembersResponse
 
     /**
       * API MAY CHANGE: returns all admin members part of a project identified through iri
@@ -368,6 +502,21 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val getProjectAdminMembersFunction: ClientFunction =
+        "getProjectAdminMembers" description "Gets a project's admin members by a property." params(
+            "property" description "The name of the property by which the project is identified." paramType enum("iri", "shortname", "shortcode"),
+            "value" description "The value of the property by which the project is identified." paramType StringDatatype
+        ) doThis {
+            httpGet(arg("property") / arg("value") / str("admin-members"))
+        } returns ProjectResponse
+
+    private val getProjectAdminMembersByIriFunction: ClientFunction =
+        "getProjectAdminMembersByIri" description "Gets the admin members of a project by IRI." params(
+            "iri" description "The IRI of the project." paramType UriDatatype
+            ) doThis {
+            getProjectAdminMembersFunction withArgs(str("iri"), arg("iri") as StringDatatype)
+        } returns MembersResponse
+
     /**
       * API MAY CHANGE: returns all admin members part of a project identified through shortname
       */
@@ -390,6 +539,13 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
+
+    private val getProjectAdminMembersByShortnameFunction: ClientFunction =
+        "getProjectAdminMembersByShortname" description "Gets a project's admin members by shortname." params (
+            "shortname" description "The shortname of the project." paramType StringDatatype
+            ) doThis {
+            getProjectAdminMembersFunction withArgs(str("shortname"), arg("shortname"))
+        } returns MembersResponse
 
     /**
       * API MAY CHANGE: returns all admin members part of a project identified through shortcode
@@ -414,6 +570,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private val getProjectAdminMembersByShortcodeFunction: ClientFunction =
+        "getProjectAdminMembersByShortcode" description "Gets a project's admin members by shortcode." params (
+            "shortcode" description "The shortcode of the project." paramType StringDatatype
+            ) doThis {
+            getProjectAdminMembersFunction withArgs(str("shortcode"), arg("shortcode"))
+        } returns MembersResponse
 
     /**
       * Returns the project's restricted view settings identified through IRI.
@@ -480,4 +642,28 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 )
         }
     }
+
+    /**
+      * The functions defined by this [[ClientEndpoint]].
+      */
+    override val functions: Seq[ClientFunction] = Seq(
+        getProjectsFunction,
+        createProjectFunction,
+        getKeywordsFunction,
+        getProjectKeywordsFunction,
+        updateProjectFunction,
+        deleteProjectFunction,
+        getProjectFunction,
+        getProjectByIriFunction,
+        getProjectByShortnameFunction,
+        getProjectByShortcodeFunction,
+        getProjectMembersFunction,
+        getProjectMembersByIriFunction,
+        getProjectMembersByShortnameFunction,
+        getProjectMembersByShortcodeFunction,
+        getProjectAdminMembersFunction,
+        getProjectAdminMembersByIriFunction,
+        getProjectAdminMembersByShortnameFunction,
+        getProjectAdminMembersByShortcodeFunction
+    )
 }

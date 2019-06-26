@@ -58,12 +58,12 @@ export class @{classDef.className} implements I@{classDef.className} {
 
 @makeTypeScriptType(objectType: ClientObjectType) = @{
     objectType match {
-        case StringLiteral => "string"
-        case BooleanLiteral => "boolean"
-        case IntegerLiteral => "number"
-        case DecimalLiteral => "number"
-        case UriLiteral => "string"
-        case DateTimeStampLiteral => "string"
+        case StringDatatype => "string"
+        case BooleanDatatype => "boolean"
+        case IntegerDatatype => "number"
+        case DecimalDatatype => "number"
+        case UriDatatype => "string"
+        case DateTimeStampDatatype => "string"
         case classRef: ClassRef => classRef.className
         case other => throw ClientApiGenerationException(s"Type $other not yet supported")
     }
@@ -74,12 +74,12 @@ export class @{classDef.className} implements I@{classDef.className} {
         "[]"
     } else {
         objectType match {
-           case StringLiteral => "\"\""
-           case BooleanLiteral => "false"
-           case IntegerLiteral => "0"
-           case DecimalLiteral => "0"
-           case UriLiteral => "\"\""
-           case DateTimeStampLiteral => "\"\""
+           case StringDatatype => "\"\""
+           case BooleanDatatype => "false"
+           case IntegerDatatype => "0"
+           case DecimalDatatype => "0"
+           case UriDatatype => "\"\""
+           case DateTimeStampDatatype => "\"\""
            case classRef: ClassRef => "null"
            case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
         }

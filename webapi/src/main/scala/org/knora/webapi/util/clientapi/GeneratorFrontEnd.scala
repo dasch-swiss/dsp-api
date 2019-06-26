@@ -273,7 +273,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                         propertyName = propertyName,
                         propertyDescription = None,
                         propertyIri = propertyIri,
-                        objectType = StringLiteral,
+                        objectType = StringDatatype,
                         cardinality = knoraCardinalityInfo.cardinality,
                         isEditable = propertyIri.toString == OntologyConstants.Rdfs.Label // Labels of resources are editable
                     )
@@ -322,7 +322,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                         propertyName = propertyName,
                         propertyDescription = None,
                         propertyIri = propertyIri,
-                        objectType = StringLiteral,
+                        objectType = StringDatatype,
                         cardinality = knoraCardinalityInfo.cardinality,
                         isEditable = true
                     )
@@ -385,12 +385,12 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
       */
     private def nonResourcePropObjectTypeToClientObjectType(ontologyObjectType: SmartIri): ClientObjectType = {
         ontologyObjectType.toString match {
-            case OntologyConstants.Xsd.String => StringLiteral
-            case OntologyConstants.Xsd.Boolean => BooleanLiteral
-            case OntologyConstants.Xsd.Integer => IntegerLiteral
-            case OntologyConstants.Xsd.Decimal => DecimalLiteral
-            case OntologyConstants.Xsd.Uri => UriLiteral
-            case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => DateTimeStampLiteral
+            case OntologyConstants.Xsd.String => StringDatatype
+            case OntologyConstants.Xsd.Boolean => BooleanDatatype
+            case OntologyConstants.Xsd.Integer => IntegerDatatype
+            case OntologyConstants.Xsd.Decimal => DecimalDatatype
+            case OntologyConstants.Xsd.Uri => UriDatatype
+            case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => DateTimeStampDatatype
 
             case _ => ClassRef(
                 className = makeClientClassName(ontologyObjectType),

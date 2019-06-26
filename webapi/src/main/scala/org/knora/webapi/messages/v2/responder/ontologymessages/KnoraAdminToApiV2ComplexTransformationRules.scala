@@ -335,7 +335,6 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
     private val Members: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraAdminV2.Members,
         propertyType = OntologyConstants.Owl.ObjectProperty,
-        subjectType = Some(OntologyConstants.KnoraAdminV2.GroupMembersResponse),
         objectType = Some(OntologyConstants.KnoraAdminV2.UserClass),
         predicates = Seq(
             makePredicate(
@@ -347,7 +346,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "The members of a group."
+                    LanguageCodes.EN -> "The members of a group or project."
                 )
             )
         )
@@ -374,19 +373,61 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
-    private val GroupMembersResponse: ReadClassInfoV2 = makeClass(
-        classIri = OntologyConstants.KnoraAdminV2.GroupMembersResponse,
+    private val KeywordsProperty: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.KeywordsProperty,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.KeywordsResponse),
+        objectType = Some(OntologyConstants.Xsd.String),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "group members response"
+                    LanguageCodes.EN -> "keywords"
                 )
             ),
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "A response providing a collection of group members."
+                    LanguageCodes.EN -> "Project keywords."
+                )
+            )
+        )
+    )
+
+    private val KeywordsResponse: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.KeywordsResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "keywords response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response providing project keywords."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.KeywordsProperty -> Cardinality.MayHaveMany
+        )
+    )
+
+    private val MembersResponse: ReadClassInfoV2 = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.MembersResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "members response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response providing a collection of group or project members."
                 )
             )
         ),
@@ -764,6 +805,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       * Cardinalities to add to the Project class.
       */
     private val ProjectCardinalities = Map(
+        OntologyConstants.KnoraAdminV2.ID -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraAdminV2.Members -> Cardinality.MayHaveMany,
         OntologyConstants.KnoraAdminV2.Ontologies -> Cardinality.MayHaveMany
     )
 
@@ -797,7 +840,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         AdministrativePermissionResponse,
         AdministrativePermissionClass,
         Permission,
-        GroupMembersResponse
+        MembersResponse,
+        KeywordsResponse
     ).map {
         classInfo => classInfo.entityInfoContent.classIri -> classInfo
     }.toMap
@@ -827,7 +871,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         Iri,
         Groups,
         Members,
-        GroupProperty
+        GroupProperty,
+        KeywordsProperty
     ).map {
         propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
     }.toMap

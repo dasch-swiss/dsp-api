@@ -22,7 +22,7 @@ package org.knora.webapi.routing.admin
 import java.util.UUID
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.annotation.ApiMayChange
@@ -37,6 +37,10 @@ import org.knora.webapi.{BadRequestException, KnoraSystemInstances, OntologyCons
 import scala.concurrent.Future
 
 
+object UsersRouteADM {
+    val UsersBasePath = PathMatcher("admin" / "users")
+}
+
 /**
   * Provides a akka-http-routing function for API routes that deal with users.
   */
@@ -44,6 +48,8 @@ import scala.concurrent.Future
 @Api(value = "users", produces = "application/json")
 @Path("/admin/users")
 class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
+
+    import UsersRouteADM.UsersBasePath
 
     /**
       * The name of this [[ClientEndpoint]].
@@ -87,7 +93,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /* return all users */
-    def getUsers: Route = path("admin" / "users") {
+    def getUsers: Route = path(UsersBasePath) {
         get {
             requestContext =>
                 val requestMessage: Future[UsersGetRequestADM] = for {
@@ -106,7 +112,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     private val getUsersFunction: ClientFunction =
         "getUsers" description "Returns a list of all users." params() doThis {
-            httpGet(EmptyPath)
+            httpGet(BasePath)
         } returns UsersResponse
 
 
@@ -119,7 +125,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /* create a new user */
-    def addUser: Route = path("admin" / "users") {
+    def addUser: Route = path(UsersBasePath) {
         post {
             entity(as[CreateUserApiRequestADM]) { apiRequest =>
                 requestContext =>
@@ -148,7 +154,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             "user" description "The user to be created." paramType User
             ) doThis {
             httpPost(
-                path = EmptyPath,
+                path = BasePath,
                 body = Some(arg("user"))
             )
         } returns UserResponse
@@ -157,7 +163,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
       * return a single user identified by iri
       */
-    private def getUserByIri: Route = path("admin" / "users" / "iri" / Segment) { value =>
+    private def getUserByIri: Route = path(UsersBasePath / "iri" / Segment) { value =>
         get {
             requestContext =>
                 val requestMessage: Future[UserGetRequestADM] = for {
@@ -178,7 +184,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val getUserFunction: ClientFunction =
         "getUser" description "Gets a user by a property." params(
             "property" description "The name of the property by which the user is identified." paramType enum("iri", "email", "username"),
-            "value" description "The value of the property by which the user is identified." paramType StringLiteral
+            "value" description "The value of the property by which the user is identified." paramType StringDatatype
         ) doThis {
             httpGet(arg("property") / arg("value"))
         } returns UserResponse
@@ -187,16 +193,16 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // #getUserByIriFunction
     private val getUserByIriFunction: ClientFunction =
         "getUserByIri" description "Gets a user by IRI." params (
-            "iri" description "The IRI of the user." paramType UriLiteral
+            "iri" description "The IRI of the user." paramType UriDatatype
             ) doThis {
-            getUserFunction withArgs(str("iri"), arg("iri") as StringLiteral)
+            getUserFunction withArgs(str("iri"), arg("iri") as StringDatatype)
         } returns UserResponse
     // #getUserByIriFunction
 
     /**
       * return a single user identified by email
       */
-    private def getUserByEmail: Route = path("admin" / "users" / "email" / Segment) { value =>
+    private def getUserByEmail: Route = path(UsersBasePath / "email" / Segment) { value =>
         get {
             requestContext =>
                 val requestMessage: Future[UserGetRequestADM] = for {
@@ -215,7 +221,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     private val getUserByEmailFunction: ClientFunction =
         "getUserByEmail" description "Gets a user by email address." params (
-            "email" description "The email address of the user." paramType StringLiteral
+            "email" description "The email address of the user." paramType StringDatatype
             ) doThis {
             getUserFunction withArgs(str("email"), arg("email"))
         } returns UserResponse
@@ -223,7 +229,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
       * return a single user identified by username
       */
-    private def getUserByUsername: Route = path("admin" / "users" / "username" / Segment) { value =>
+    private def getUserByUsername: Route = path(UsersBasePath / "username" / Segment) { value =>
         get {
             requestContext =>
                 val requestMessage: Future[UserGetRequestADM] = for {
@@ -242,7 +248,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     private val getUserByUsernameFunction: ClientFunction =
         "getUserByUsername" description "Gets a user by username." params (
-            "username" description "The username of the user." paramType StringLiteral
+            "username" description "The username of the user." paramType StringDatatype
             ) doThis {
             getUserFunction withArgs(str("username"), arg("username"))
         } returns UserResponse
@@ -251,7 +257,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: Change existing user's basic information.
       */
     @ApiMayChange
-    private def changeUserBasicInformation: Route = path("admin" / "users" / "iri" / Segment / "BasicUserInformation") { value =>
+    private def changeUserBasicInformation: Route = path(UsersBasePath / "iri" / Segment / "BasicUserInformation") { value =>
         put {
             entity(as[ChangeUserApiRequestADM]) { apiRequest =>
                 requestContext =>
@@ -306,7 +312,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: Change user's password.
       */
     @ApiMayChange
-    private def changeUserPassword: Route = path("admin" / "users" / "iri" / Segment / "Password") { value =>
+    private def changeUserPassword: Route = path(UsersBasePath / "iri" / Segment / "Password") { value =>
         put {
             entity(as[ChangeUserApiRequestADM]) { apiRequest =>
                 requestContext =>
@@ -342,8 +348,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val updateUserPasswordFunction: ClientFunction =
         "updateUserPassword" description "Updates a user's password." params(
             "user" description "The user to be updated." paramType User,
-            "oldPassword" description "The user's old password." paramType StringLiteral,
-            "newPassword" description "The user's new password." paramType StringLiteral
+            "oldPassword" description "The user's old password." paramType StringDatatype,
+            "newPassword" description "The user's new password." paramType StringDatatype
         ) doThis {
             httpPut(
                 path = str("iri") / argMember("user", "id") / str("Password"),
@@ -358,7 +364,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: Change user's status.
       */
     @ApiMayChange
-    private def changeUserStatus: Route = path("admin" / "users" / "iri" / Segment / "Status") { value =>
+    private def changeUserStatus: Route = path(UsersBasePath / "iri" / Segment / "Status") { value =>
         put {
             entity(as[ChangeUserApiRequestADM]) { apiRequest =>
                 requestContext =>
@@ -405,7 +411,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: delete a user identified by iri (change status to false).
       */
     @ApiMayChange
-    private def deleteUser: Route = path("admin" / "users" / "iri" / Segment) { value =>
+    private def deleteUser: Route = path(UsersBasePath / "iri" / Segment) { value =>
         delete {
             requestContext => {
                 val userIri = stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
@@ -448,7 +454,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: Change user's SystemAdmin membership.
       */
     @ApiMayChange
-    private def changeUserSytemAdminMembership: Route = path("admin" / "users" / "iri" / Segment / "SystemAdmin") { value =>
+    private def changeUserSytemAdminMembership: Route = path(UsersBasePath / "iri" / Segment / "SystemAdmin") { value =>
         put {
             entity(as[ChangeUserApiRequestADM]) { apiRequest =>
                 requestContext =>
@@ -495,7 +501,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: get user's project memberships
       */
     @ApiMayChange
-    private def getUsersProjectMemberships: Route = path("admin" / "users" / "iri" / Segment / "project-memberships") { userIri =>
+    private def getUsersProjectMemberships: Route = path(UsersBasePath / "iri" / Segment / "project-memberships") { userIri =>
         get {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -529,7 +535,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: add user to project
       */
     @ApiMayChange
-    private def addUserToProjectMembership: Route = path("admin" / "users" / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
+    private def addUserToProjectMembership: Route = path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
         post {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -568,7 +574,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: remove user from project (and all groups belonging to this project)
       */
     @ApiMayChange
-    private def removeUserFromProjectMembership: Route = path("admin" / "users" / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
+    private def removeUserFromProjectMembership: Route = path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
 
         delete {
             requestContext =>
@@ -608,7 +614,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: get user's project admin memberships
       */
     @ApiMayChange
-    private def getUsersProjectAdminMemberships: Route = path("admin" / "users" / "iri" / Segment / "project-admin-memberships") { userIri =>
+    private def getUsersProjectAdminMemberships: Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
         get {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -642,7 +648,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: add user to project admin
       */
     @ApiMayChange
-    private def addUserToProjectAdminMembership: Route = path("admin" / "users" / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
+    private def addUserToProjectAdminMembership: Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
         post {
             /*  */
             requestContext =>
@@ -682,7 +688,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: remove user from project admin membership
       */
     @ApiMayChange
-    private def removeUserFromProjectAdminMembership: Route = path("admin" / "users" / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
+    private def removeUserFromProjectAdminMembership: Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
         delete {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -721,7 +727,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: get user's group memberships
       */
     @ApiMayChange
-    private def getUsersGroupMemberships: Route = path("admin" / "users" / "iri" / Segment / "group-memberships") { userIri =>
+    private def getUsersGroupMemberships: Route = path(UsersBasePath / "iri" / Segment / "group-memberships") { userIri =>
         get {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -757,7 +763,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: add user to group
       */
     @ApiMayChange
-    private def addUserToGroupMembership: Route = path("admin" / "users" / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
+    private def addUserToGroupMembership: Route = path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
         post {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
@@ -796,7 +802,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * API MAY CHANGE: remove user from group
       */
     @ApiMayChange
-    private def removeUserFromGroupMembership: Route = path("admin" / "users" / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
+    private def removeUserFromGroupMembership: Route = path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
         delete {
             requestContext =>
                 val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))

@@ -20,7 +20,7 @@
 package org.knora.webapi.routing.admin
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
 import org.knora.webapi.OntologyConstants
@@ -30,9 +30,15 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
 import org.knora.webapi.util.clientapi._
 
+object PermissionsRouteADM {
+    val PermissionsBasePath = PathMatcher("admin" / "permissions")
+}
+
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
 class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
+
+    import PermissionsRouteADM.PermissionsBasePath
 
     /**
       * The name of this [[ClientEndpoint]].
@@ -57,7 +63,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
 
     override def knoraApiPath: Route = getAdministrativePermission
 
-    private def getAdministrativePermission = path("admin" / "permissions" / Segment / Segment) { (projectIri, groupIri) =>
+    private def getAdministrativePermission: Route = path(PermissionsBasePath / Segment / Segment) { (projectIri, groupIri) =>
         get {
             requestContext =>
                 val params = requestContext.request.uri.query().toMap
@@ -83,7 +89,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         "getAdministrativePermission" description "Gets the administrative permissions for a project and group." params(
             "project" description "The project." paramType Project,
             "group" description "The group." paramType Group,
-            "permissionType" description "The permission type." paramOptionType StringLiteral
+            "permissionType" description "The permission type." paramOptionType StringDatatype
         ) doThis {
             httpGet(
                 path = argMember("project", "id") / argMember("group", "id"),

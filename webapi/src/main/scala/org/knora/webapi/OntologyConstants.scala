@@ -549,7 +549,7 @@ object OntologyConstants {
         val GroupResponse: IRI = KnoraAdminPrefixExpansion + "GroupResponse"
         val GroupsResponse: IRI = KnoraAdminPrefixExpansion + "GroupsResponse"
         val Members: IRI = KnoraAdminPrefixExpansion + "members"
-        val GroupMembersResponse: IRI = KnoraAdminPrefixExpansion + "GroupMembersResponse"
+        val MembersResponse: IRI = KnoraAdminPrefixExpansion + "MembersResponse"
         val AdministrativePermissionResponse: IRI = KnoraAdminPrefixExpansion + "AdministrativePermissionResponse"
         val AdministrativePermissionsResponse: IRI = KnoraAdminPrefixExpansion + "AdministrativePermissionsResponse"
         val Users: IRI = KnoraAdminPrefixExpansion + "users"
@@ -588,6 +588,8 @@ object OntologyConstants {
         val PermissionCode: IRI = KnoraAdminPrefixExpansion + "permissionCode"
         val Iri: IRI = KnoraAdminPrefixExpansion + "iri"
         val Name: IRI = KnoraAdminPrefixExpansion + "name"
+        val KeywordsProperty: IRI = KnoraAdminPrefixExpansion + "keywords"
+        val KeywordsResponse: IRI = KnoraAdminPrefixExpansion + "KeywordsResponse"
     }
 
     object Standoff {
