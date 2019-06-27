@@ -3,6 +3,7 @@ import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
+import sbt.Keys.version
 
 import scala.sys.process.Process
 
@@ -15,7 +16,7 @@ lazy val GDB = config("gdb") extend Default
 
 lazy val GDBSIPI = config("gdbsipi") extend Default
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs, salsah1, webapi)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs, salsah1, webapi, graphdbse, graphdbfree, sipi)
 
 lazy val buildSettings = Dependencies.Versions ++ Seq(
     organization := "org.knora",
@@ -52,16 +53,19 @@ lazy val root = Project(id = "knora", file("."))
             // use these values for variable substitution in the docker-compose.yml
             variablesForSubstitution := Map(
                 "KNORA_GDB_HOME" -> Dependencies.gdbHomePath.value,
-                "KNORA_GDB_LICENSE " -> Dependencies.gdbLicensePath.value,
+                "KNORA_GDB_LICENSE" -> Dependencies.gdbLicensePath.value,
                 "KNORA_GDB_TYPE" -> Dependencies.gdbTypeString,
-                "KNORA_GDB_IMAGE" -> Dependencies.gdbImage.value,
-                "SIPI_VERSION_TAG" -> Dependencies.sipiVersion.value,
+                "KNORA_GDB_IMAGE" -> (Dependencies.knoraGdbImage.value + ":" + version.value),
+                "KNORA_SIPI_IMAGE" -> (Dependencies.knoraSipiImage.value + ":" + version.value),
                 "KNORA_VERSION_TAG" -> version.value
             ),
 
             dockerImageCreationTask := Seq(
                 (salsah1 / Docker / publishLocal).value,
-                (webapi / Docker / publishLocal).value
+                (webapi / Docker / publishLocal).value,
+                (graphdbse / Docker / publishLocal).value,
+                (graphdbfree / Docker / publishLocal).value,
+                (sipi / Docker / publishLocal).value
             )
         )
 
@@ -162,6 +166,114 @@ docs / buildPrequisites := {
 
 
 //////////////////////////////////////
+// Knora's custom GraphDB-SE
+//////////////////////////////////////
+
+lazy val graphdbseCommonSettings = Seq(
+    name := "knora-graphdb-se"
+)
+
+lazy val graphdbse = knoraModule("graphdb-se")
+  .enablePlugins(DockerPlugin)
+  .settings(
+      graphdbseCommonSettings
+  )
+  .settings( // enable deployment staging with `sbt stage`
+      Universal / mappings ++= {
+          // copy the webapi/scripts folder
+          directory("webapi/scripts")
+      },
+
+      // add dockerCommands used to create the image
+      // docker:stage, docker:publishLocal, docker:publish, docker:clean
+
+      dockerRepository := Some("dhlabbasel"),
+
+      maintainer := "ivan.subotic@unibas.ch",
+
+      Docker / dockerExposedPorts ++= Seq(7200),
+      Docker / dockerCommands := Seq(
+          // FIXME: Someday find out how to reference here Dependencies.Versions.gdbSEImage
+          Cmd("FROM", "ontotext/graphdb:8.5.0-se"),
+          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
+          Cmd("ADD", "opt/docker/scripts", "/scripts"),
+          Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
+      )
+  )
+
+//////////////////////////////////////
+// Knora's custom GraphDB-Free
+//////////////////////////////////////
+
+lazy val graphdbfreeCommonSettings = Seq(
+    name := "knora-graphdb-free"
+)
+
+lazy val graphdbfree = knoraModule("graphdb-free")
+  .enablePlugins(DockerPlugin)
+  .settings(
+      graphdbfreeCommonSettings
+  )
+  .settings( // enable deployment staging with `sbt stage`
+      Universal / mappings ++= {
+          // copy the webapi/scripts folder
+          directory("webapi/scripts")
+      },
+
+      // add dockerCommands used to create the image
+      // docker:stage, docker:publishLocal, docker:publish, docker:clean
+
+      dockerRepository := Some("dhlabbasel"),
+
+      maintainer := "ivan.subotic@unibas.ch",
+
+      Docker / dockerExposedPorts ++= Seq(7200),
+      Docker / dockerCommands := Seq(
+          // FIXME: Someday find out how to reference here Dependencies.Versions.gdbFreeImage
+          Cmd("FROM", "dhlabbasel/graphdb:8.10.0-free"),
+          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
+          Cmd("ADD", "opt/docker/scripts", "/scripts"),
+          Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
+      )
+  )
+
+//////////////////////////////////////
+// Knora's custom Sipi
+//////////////////////////////////////
+
+lazy val sipiCommonSettings = Seq(
+    name := "knora-sipi"
+)
+
+lazy val sipi = knoraModule("sipi")
+  .enablePlugins(DockerPlugin)
+  .settings(
+      sipiCommonSettings
+  )
+  .settings( // enable deployment staging with `sbt stage`
+      Universal / mappings ++= {
+          // copy the sipi/scripts folder
+          directory("sipi/scripts")
+      },
+
+      // add dockerCommands used to create the image
+      // docker:stage, docker:publishLocal, docker:publish, docker:clean
+
+      dockerRepository := Some("dhlabbasel"),
+
+      maintainer := "ivan.subotic@unibas.ch",
+
+      Docker / dockerExposedPorts ++= Seq(7200),
+      Docker / dockerCommands := Seq(
+          // FIXME: Someday find out how to reference here Dependencies.Versions.sipiImage
+          Cmd("FROM", "dhlabbasel/sipi:v1.4.3"),
+          Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
+          Cmd("ADD", "opt/docker/scripts", "/sipi/scripts"),
+      )
+  )
+
+
+//////////////////////////////////////
 // SALSAH1 (./salsah1)
 //////////////////////////////////////
 
@@ -238,7 +350,6 @@ lazy val salsah1 = knoraModule("salsah1")
 
 
         )
-        .settings()
 
 lazy val javaRunOptions = Seq(
     // "-showversion",

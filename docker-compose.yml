@@ -10,13 +10,12 @@ version: '3'
 services:
 
   graphdb:
-    image: ${KNORA_GDB_IMAGE}
+    image: ${KNORA_GDB_IMAGE}<localBuild>
     ports:
       - "7200:7200"
     volumes:
       - ${KNORA_GDB_LICENSE}:/graphdb/GRAPHDB_SE.license
       - ${KNORA_GDB_HOME}:/opt/graphdb/home:delegated
-      - ${PWD}/webapi/scripts/KnoraRules.pie:/graphdb/KnoraRules.pie
     networks:
       - knora-net
     environment:
@@ -25,13 +24,12 @@ services:
     command: ["/graphdb/bin/graphdb"]
 
   sipi:
-    image: dhlabbasel/sipi:${SIPI_VERSION_TAG}
+    image: ${KNORA_SIPI_IMAGE}<localBuild>
     ports:
       - "1024:1024"
     volumes:
       - /tmp:/tmp
       - ${PWD}/sipi/config:/sipi/config
-      - ${PWD}/sipi/scripts:/sipi/scripts
       - ${PWD}/sipi/images:/sipi/images:delegated
       - ${PWD}/sipi/server:/sipi/server:delegated
     networks:

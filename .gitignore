@@ -23,6 +23,7 @@ webapi/_fuseki/run
 triplestores/graphdb-se-7
 idea.vmoptions
 sipi/test
+sipi/target
 **/project/target/
 /target/
 *.aux
@@ -38,6 +39,8 @@ sipi/test
 *.bak
 .sbtrc
 
+/graphdb-se
+/graphdb-free
 
 **/venv
 **/__pycache__

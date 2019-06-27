@@ -32,11 +32,14 @@ object Dependencies {
     lazy val gdbSEImage = settingKey[String]("The GraphDB-SE docker image")
     lazy val gdbFreeImage = settingKey[String]("The GraphDB-Free docker image")
 
-    lazy val sipiVersion = settingKey[String]("The SIPI version for the docker image")
+    lazy val sipiImage = settingKey[String]("The SIPI docker image")
     lazy val akkaVersion = settingKey[String]("The Akka version")
     lazy val akkaHttpVersion = settingKey[String]("The AkkaHttp version")
     lazy val jenaVersion = settingKey[String]("The Jena library version")
     lazy val metricsVersion = settingKey[String]("The metrics library version")
+    
+    lazy val knoraGdbImage = SettingKey[String]("The Knora specific GraphDB Image")
+    lazy val knoraSipiImage = SettingKey[String]("The Knora specific Sipi Image")
 
     val Versions = Seq(
         scalaVersion := "2.12.8",
@@ -44,20 +47,23 @@ object Dependencies {
         akkaHttpVersion := "10.1.7",
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
-        sipiVersion := "v1.4.3",
+        sipiImage := "dhlabbasel/sipi:v1.4.3",
         gdbSEImage := "ontotext/graphdb:8.5.0-se",
         gdbFreeImage := "dhlabbasel/graphdb:8.10.0-free"
     )
 
     // the user can change the default 'graphdb-se' value by creating an environment variable containing 'graphdb-free'
     // e.g., in '$ export KNORA_GDB_TYPE=graphdb-free' in the terminal before launching sbt.
-    lazy val gdbTypeString = sys.env.getOrElse("KNORA_GDB_TYPE", "graphdb-se")
+    lazy val gdbTypeString: String = sys.env.getOrElse("KNORA_GDB_TYPE", "graphdb-se")
 
-    // look at the defined graphdb type and select the supported image
-    lazy val gdbImage: SettingKey[String] = gdbTypeString match {
-        case "graphdb-se" => Dependencies.gdbSEImage
-        case "graphdb-free" => Dependencies.gdbFreeImage
+    // look at graphdbTypeString and create the corresponding repository name
+    knoraGdbImage := gdbTypeString match {
+            case "graphdb-free" => "dhlabbasel/knora-graphdb-free"
+            case default => "dhlabbasel/knora-graphdb-se"
     }
+
+    // the name of Knora's Sipi custom image
+    lazy val knoraSipiImage: SettingKey[String] = Def.settingKey(s"dhlabbasel/knora-sipi")
 
     object Compile {
         // akka
