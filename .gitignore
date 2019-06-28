@@ -23,7 +23,7 @@ webapi/_fuseki/run
 triplestores/graphdb-se-7
 idea.vmoptions
 sipi/test
-sipi/target
+
 **/project/target/
 /target/
 *.aux
@@ -39,8 +39,11 @@ sipi/target
 *.bak
 .sbtrc
 
-/graphdb-se
-/graphdb-free
+/knora-sipi
+/knora-graphdb-se
+/knora-graphdb-free
+/knora-assets
+/knora-upgrade
 
 **/venv
 **/__pycache__
