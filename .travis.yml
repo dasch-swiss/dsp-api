@@ -65,6 +65,11 @@ jobs:
         # - docker login -u $DOCKER_USER -p $DOCKER_PASS
         # - sbt webapi/docker:publish
         # - sbt salsah1/docker:publish
+        # - sbt knora-sipi/docker:publish
+        # - sbt knora-graphdb-se/docker:publish
+        # - sbt knora-graphdb-free/docker:publish
+        # - sbt knora-upgrade/docker:publish
+        # - sbt knora-assets/docker:publish
     # unit and e2e tests
     - stage: test
       script:
