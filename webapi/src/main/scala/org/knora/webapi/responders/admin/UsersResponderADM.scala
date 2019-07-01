@@ -34,7 +34,8 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.CacheUtil
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{CacheUtil, SmartIri}
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 import scala.concurrent.Future
@@ -107,16 +108,16 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             _ = log.debug("usersGetADM - statements: {}", statements)
 
             users: Seq[UserADM] = statements.map {
-                case (userIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                case (userIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
 
                     UserADM(
                         id = userIri.toString,
-                        username = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Username, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'username' defined.")).head.asInstanceOf[StringLiteralV2].value,
-                        email = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Email, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'email' defined.")).head.asInstanceOf[StringLiteralV2].value,
-                        givenName = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GivenName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'givenName' defined.")).head.asInstanceOf[StringLiteralV2].value,
-                        familyName = propsMap.getOrElse(OntologyConstants.KnoraAdmin.FamilyName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'familyName' defined.")).head.asInstanceOf[StringLiteralV2].value,
-                        status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'status' defined.")).head.asInstanceOf[BooleanLiteralV2].value,
-                        lang = propsMap.getOrElse(OntologyConstants.KnoraAdmin.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferedLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value)
+                        username = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Username.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'username' defined.")).head.asInstanceOf[StringLiteralV2].value,
+                        email = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Email.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'email' defined.")).head.asInstanceOf[StringLiteralV2].value,
+                        givenName = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GivenName.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'givenName' defined.")).head.asInstanceOf[StringLiteralV2].value,
+                        familyName = propsMap.getOrElse(OntologyConstants.KnoraAdmin.FamilyName.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'familyName' defined.")).head.asInstanceOf[StringLiteralV2].value,
+                        status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'status' defined.")).head.asInstanceOf[BooleanLiteralV2].value,
+                        lang = propsMap.getOrElse(OntologyConstants.KnoraAdmin.PreferredLanguage.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferedLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value)
             }
 
         } yield users.sorted
@@ -1270,19 +1271,19 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @param statements result from the SPARQL query containing user data.
       * @return a [[UserADM]] containing the user's data.
       */
-    private def statements2UserADM(statements: (SubjectV2, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): Future[Option[UserADM]] = {
+    private def statements2UserADM(statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]), requestingUser: UserADM): Future[Option[UserADM]] = {
 
         // log.debug("statements2UserADM - statements: {}", statements)
 
         val userIri: IRI = statements._1.toString
-        val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
+        val propsMap: Map[SmartIri, Seq[LiteralV2]] = statements._2
 
         log.debug("statements2UserADM - userIri: {}", userIri)
 
         if (propsMap.nonEmpty) {
 
             /* the groups the user is member of (only explicit groups) */
-            val groupIris: Seq[IRI] = propsMap.get(OntologyConstants.KnoraAdmin.IsInGroup) match {
+            val groupIris: Seq[IRI] = propsMap.get(OntologyConstants.KnoraAdmin.IsInGroup.toSmartIri) match {
                 case Some(groups) => groups.map(_.asInstanceOf[IriLiteralV2].value)
                 case None => Seq.empty[IRI]
             }
@@ -1290,7 +1291,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             // log.debug(s"statements2UserADM - groupIris: {}", MessageUtil.toSource(groupIris))
 
             /* the projects the user is member of (only explicit projects) */
-            val projectIris: Seq[IRI] = propsMap.get(OntologyConstants.KnoraAdmin.IsInProject) match {
+            val projectIris: Seq[IRI] = propsMap.get(OntologyConstants.KnoraAdmin.IsInProject.toSmartIri) match {
                 case Some(projects) => projects.map(_.asInstanceOf[IriLiteralV2].value)
                 case None => Seq.empty[IRI]
             }
@@ -1298,10 +1299,10 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             // log.debug(s"statements2UserADM - projectIris: {}", MessageUtil.toSource(projectIris))
 
             /* the projects for which the user is implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group */
-            val isInProjectAdminGroups: Seq[IRI] = propsMap.getOrElse(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup, Vector.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value)
+            val isInProjectAdminGroups: Seq[IRI] = propsMap.getOrElse(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup.toSmartIri, Vector.empty[IRI]).map(_.asInstanceOf[IriLiteralV2].value)
 
             /* is the user implicitly considered a member of the 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
-            val isInSystemAdminGroup = propsMap.get(OntologyConstants.KnoraAdmin.IsInSystemAdminGroup).exists(p => p.head.asInstanceOf[BooleanLiteralV2].value)
+            val isInSystemAdminGroup = propsMap.get(OntologyConstants.KnoraAdmin.IsInSystemAdminGroup.toSmartIri).exists(p => p.head.asInstanceOf[BooleanLiteralV2].value)
 
             for {
                 /* get the user's permission profile from the permissions responder */
@@ -1331,14 +1332,14 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 /* construct the user profile from the different parts */
                 user = UserADM(
                     id = userIri,
-                    username = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Username, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'username' defined.")).head.asInstanceOf[StringLiteralV2].value,
-                    email = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Email, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'email' defined.")).head.asInstanceOf[StringLiteralV2].value,
-                    password = propsMap.get(OntologyConstants.KnoraAdmin.Password).map(_.head.asInstanceOf[StringLiteralV2].value),
+                    username = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Username.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'username' defined.")).head.asInstanceOf[StringLiteralV2].value,
+                    email = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Email.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'email' defined.")).head.asInstanceOf[StringLiteralV2].value,
+                    password = propsMap.get(OntologyConstants.KnoraAdmin.Password.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value),
                     token = None,
-                    givenName = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GivenName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'givenName' defined.")).head.asInstanceOf[StringLiteralV2].value,
-                    familyName = propsMap.getOrElse(OntologyConstants.KnoraAdmin.FamilyName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'familyName' defined.")).head.asInstanceOf[StringLiteralV2].value,
-                    status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'status' defined.")).head.asInstanceOf[BooleanLiteralV2].value,
-                    lang = propsMap.getOrElse(OntologyConstants.KnoraAdmin.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferredLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value, groups = groups, projects = projects,
+                    givenName = propsMap.getOrElse(OntologyConstants.KnoraAdmin.GivenName.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'givenName' defined.")).head.asInstanceOf[StringLiteralV2].value,
+                    familyName = propsMap.getOrElse(OntologyConstants.KnoraAdmin.FamilyName.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'familyName' defined.")).head.asInstanceOf[StringLiteralV2].value,
+                    status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'status' defined.")).head.asInstanceOf[BooleanLiteralV2].value,
+                    lang = propsMap.getOrElse(OntologyConstants.KnoraAdmin.PreferredLanguage.toSmartIri, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferredLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value, groups = groups, projects = projects,
                     sessionId = None,
                     permissions = permissionData
                 )

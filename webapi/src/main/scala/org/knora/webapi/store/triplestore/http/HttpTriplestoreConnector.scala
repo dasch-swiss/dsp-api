@@ -47,8 +47,9 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.SparqlResultProtocol._
-import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
+import org.knora.webapi.util.{FakeTriplestore, SmartIri, StringFormatter}
 import spray.json._
+import org.knora.webapi.util.IriConversions._
 
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
@@ -259,12 +260,12 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
           */
         class ConstructResponseTurtleHandler extends RDFHandler {
 
-            private val stringFormatter = StringFormatter.getGeneralInstance
+            implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
             /**
               * A collection of all the statements in the input file, grouped and sorted by subject IRI.
               */
-            private var statements = Map.empty[SubjectV2, Map[IRI, Seq[LiteralV2]]]
+            private var statements = Map.empty[SubjectV2, Map[SmartIri, Seq[LiteralV2]]]
 
             override def handleComment(comment: IRI): Unit = {}
 
@@ -280,7 +281,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                     case other => throw InconsistentTriplestoreDataException(s"Unsupported subject in construct query result: $other")
                 }
 
-                val predicateIri = st.getPredicate.stringValue
+                val predicateIri: SmartIri = st.getPredicate.stringValue.toSmartIri
 
                 // log.debug("sparqlHttpExtendedConstruct - handleStatement - object: {}", st.getObject)
 
@@ -303,7 +304,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
                 // log.debug("sparqlHttpExtendedConstruct - handleStatement - objectLiteral: {}", objectLiteral)
 
-                val currentStatementsForSubject: Map[IRI, Seq[LiteralV2]] = statements.getOrElse(subject, Map.empty[IRI, Seq[LiteralV2]])
+                val currentStatementsForSubject: Map[SmartIri, Seq[LiteralV2]] = statements.getOrElse(subject, Map.empty[SmartIri, Seq[LiteralV2]])
                 val currentStatementsForPredicate: Seq[LiteralV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
 
                 val updatedPredicateStatements = currentStatementsForPredicate :+ objectLiteral

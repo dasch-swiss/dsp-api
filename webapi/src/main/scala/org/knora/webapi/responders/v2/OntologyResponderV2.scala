@@ -564,8 +564,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         ontologyGraphs.map {
             ontologyGraph =>
                 val entityIrisInGraph: Set[SmartIri] = ontologyGraph.constructResponse.statements.foldLeft(Set.empty[SmartIri]) {
-                    case (acc, (subjectIri: IriSubjectV2, subjectStatements)) =>
-                        val subjectTypeLiterals: Seq[IriLiteralV2] = subjectStatements.getOrElse(OntologyConstants.Rdf.Type, throw InconsistentTriplestoreDataException(s"Subject $subjectIri has no rdf:type")).collect {
+                    case (acc, (subjectIri: IriSubjectV2, subjectStatements: Map[SmartIri, Seq[LiteralV2]])) =>
+                        val subjectTypeLiterals: Seq[IriLiteralV2] = subjectStatements.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Subject $subjectIri has no rdf:type")).collect {
                             case iriLiteral: IriLiteralV2 => iriLiteral
                         }
 
@@ -3451,11 +3451,9 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       * @param entityDefMap a map of predicate IRIs to predicate objects.
       * @return a map of smart IRIs to [[PredicateInfoV2]] objects.
       */
-    private def getEntityPredicatesFromConstructResponse(entityDefMap: Map[IRI, Seq[LiteralV2]]): Map[SmartIri, PredicateInfoV2] = {
+    private def getEntityPredicatesFromConstructResponse(entityDefMap: Map[SmartIri, Seq[LiteralV2]]): Map[SmartIri, PredicateInfoV2] = {
         entityDefMap.map {
-            case (predIriStr: IRI, predObjs: Seq[LiteralV2]) =>
-                val predicateIri = predIriStr.toSmartIri
-
+            case (predicateIri: SmartIri, predObjs: Seq[LiteralV2]) =>
                 val predicateInfo = PredicateInfoV2(
                     predicateIri = predicateIri,
                     objects = predObjs.map {
@@ -3514,9 +3512,9 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         val statements = constructResponse.statements
 
         // Get the statements whose subject is the property.
-        val propertyDefMap: Map[IRI, Seq[LiteralV2]] = statements(IriSubjectV2(propertyIri.toString))
+        val propertyDefMap: Map[SmartIri, Seq[LiteralV2]] = statements(IriSubjectV2(propertyIri.toString))
 
-        val subPropertyOf: Set[SmartIri] = propertyDefMap.get(OntologyConstants.Rdfs.SubPropertyOf) match {
+        val subPropertyOf: Set[SmartIri] = propertyDefMap.get(OntologyConstants.Rdfs.SubPropertyOf.toSmartIri) match {
             case Some(baseProperties) =>
                 baseProperties.map {
                     case iriLiteral: IriLiteralV2 => iriLiteral.value.toSmartIri
@@ -3526,7 +3524,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             case None => Set.empty[SmartIri]
         }
 
-        val otherPreds: Map[SmartIri, PredicateInfoV2] = getEntityPredicatesFromConstructResponse(propertyDefMap - OntologyConstants.Rdfs.SubPropertyOf)
+        val otherPreds: Map[SmartIri, PredicateInfoV2] = getEntityPredicatesFromConstructResponse(propertyDefMap - OntologyConstants.Rdfs.SubPropertyOf.toSmartIri)
 
         // salsah-gui:guiOrder isn't allowed here.
         if (otherPreds.contains(OntologyConstants.SalsahGui.GuiOrder.toSmartIri)) {
@@ -3575,7 +3573,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         val statements = constructResponse.statements
 
         // Get the statements whose subject is the individual.
-        val individualMap: Map[IRI, Seq[LiteralV2]] = statements(IriSubjectV2(individualIri.toString))
+        val individualMap: Map[SmartIri, Seq[LiteralV2]] = statements(IriSubjectV2(individualIri.toString))
 
         val predicates: Map[SmartIri, PredicateInfoV2] = getEntityPredicatesFromConstructResponse(individualMap)
 
@@ -3642,11 +3640,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         val statements = constructResponse.statements
 
         // Get the statements whose subject is the class.
-        val classDefMap: Map[IRI, Seq[LiteralV2]] = statements(IriSubjectV2(classIri.toString))
+        val classDefMap: Map[SmartIri, Seq[LiteralV2]] = statements(IriSubjectV2(classIri.toString))
 
         // Get the IRIs of the class's base classes.
 
-        val subClassOfObjects: Seq[LiteralV2] = classDefMap.getOrElse(OntologyConstants.Rdfs.SubClassOf, Seq.empty[LiteralV2])
+        val subClassOfObjects: Seq[LiteralV2] = classDefMap.getOrElse(OntologyConstants.Rdfs.SubClassOf.toSmartIri, Seq.empty[LiteralV2])
 
         val subClassOf: Set[SmartIri] = subClassOfObjects.collect {
             case iriLiteral: IriLiteralV2 => iriLiteral.value.toSmartIri
@@ -3660,24 +3658,24 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         val directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = restrictionBlankNodeIDs.map {
             blankNodeID =>
-                val blankNode: Map[IRI, Seq[LiteralV2]] = statements.getOrElse(BlankNodeSubjectV2(blankNodeID.value), throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' not found in construct query result"))
+                val blankNode: Map[SmartIri, Seq[LiteralV2]] = statements.getOrElse(BlankNodeSubjectV2(blankNodeID.value), throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' not found in construct query result"))
 
-                val blankNodeTypeObjs: Seq[LiteralV2] = blankNode.getOrElse(OntologyConstants.Rdf.Type, throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' has no rdf:type"))
+                val blankNodeTypeObjs: Seq[LiteralV2] = blankNode.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' has no rdf:type"))
 
                 blankNodeTypeObjs match {
                     case Seq(IriLiteralV2(OntologyConstants.Owl.Restriction)) => ()
                     case _ => throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' is not an owl:Restriction")
                 }
 
-                val onPropertyObjs: Seq[LiteralV2] = blankNode.getOrElse(OntologyConstants.Owl.OnProperty, throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' has no owl:onProperty"))
+                val onPropertyObjs: Seq[LiteralV2] = blankNode.getOrElse(OntologyConstants.Owl.OnProperty.toSmartIri, throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' has no owl:onProperty"))
 
-                val propertyIri: IRI = onPropertyObjs match {
-                    case Seq(propertyIri: IriLiteralV2) => propertyIri.value
+                val propertyIri: SmartIri = onPropertyObjs match {
+                    case Seq(propertyIri: IriLiteralV2) => propertyIri.value.toSmartIri
                     case other => throw InconsistentTriplestoreDataException(s"Invalid object for owl:onProperty: $other")
                 }
 
-                val owlCardinalityPreds: Set[IRI] = blankNode.keySet.filter {
-                    predicate => OntologyConstants.Owl.cardinalityOWLRestrictions(predicate)
+                val owlCardinalityPreds: Set[SmartIri] = blankNode.keySet.filter {
+                    predicate => OntologyConstants.Owl.cardinalityOWLRestrictions(predicate.toString)
                 }
 
                 if (owlCardinalityPreds.size != 1) {
@@ -3691,7 +3689,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     case other => throw InconsistentTriplestoreDataException(s"Expected one integer object for predicate $owlCardinalityIri in blank node '${blankNodeID.value}', got $other")
                 }
 
-                val guiOrder: Option[Int] = blankNode.get(OntologyConstants.SalsahGui.GuiOrder) match {
+                val guiOrder: Option[Int] = blankNode.get(OntologyConstants.SalsahGui.GuiOrder.toSmartIri) match {
                     case Some(Seq(IntLiteralV2(intVal))) => Some(intVal)
                     case None => None
                     case other => throw InconsistentTriplestoreDataException(s"Expected one integer object for predicate ${OntologyConstants.SalsahGui.GuiOrder} in blank node '${blankNodeID.value}', got $other")
@@ -3699,18 +3697,18 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 // salsah-gui:guiElement and salsah-gui:guiAttribute aren't allowed here.
 
-                if (blankNode.contains(OntologyConstants.SalsahGui.GuiElementProp)) {
+                if (blankNode.contains(OntologyConstants.SalsahGui.GuiElementProp.toSmartIri)) {
                     throw InconsistentTriplestoreDataException(s"Class $classIri contains salsah-gui:guiElement in an owl:Restriction")
                 }
 
-                if (blankNode.contains(OntologyConstants.SalsahGui.GuiAttribute)) {
+                if (blankNode.contains(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri)) {
                     throw InconsistentTriplestoreDataException(s"Class $classIri contains salsah-gui:guiAttribute in an owl:Restriction")
                 }
 
-                propertyIri.toSmartIri -> Cardinality.owlCardinality2KnoraCardinality(
-                    propertyIri = propertyIri,
+                propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
+                    propertyIri = propertyIri.toString,
                     owlCardinality = Cardinality.OwlCardinalityInfo(
-                        owlCardinalityIri = owlCardinalityIri,
+                        owlCardinalityIri = owlCardinalityIri.toString,
                         owlCardinalityValue = owlCardinalityValue,
                         guiOrder = guiOrder
                     )
@@ -3719,7 +3717,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Get any other predicates of the class.
 
-        val otherPreds: Map[SmartIri, PredicateInfoV2] = getEntityPredicatesFromConstructResponse(classDefMap - OntologyConstants.Rdfs.SubClassOf)
+        val otherPreds: Map[SmartIri, PredicateInfoV2] = getEntityPredicatesFromConstructResponse(classDefMap - OntologyConstants.Rdfs.SubClassOf.toSmartIri)
 
         ClassInfoContentV2(
             classIri = classIri,
