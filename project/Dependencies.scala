@@ -27,16 +27,21 @@ object Dependencies {
     lazy val sysProps = settingKey[String]("all system properties")
     lazy val sysEnvs = settingKey[String]("all system environment variables")
 
-    lazy val gdbHomePath = settingKey[String]("Path to the GraphDB home directory")
-    lazy val gdbLicensePath = settingKey[String]("Path to the GraphDB license")
-    lazy val gdbSEImage = settingKey[String]("The GraphDB-SE docker image")
-    lazy val gdbFreeImage = settingKey[String]("The GraphDB-Free docker image")
+    lazy val gdbHomePath = settingKey[String]("path to the GraphDB home directory")
+    lazy val gdbLicensePath = settingKey[String]("path to the GraphDB license")
+    lazy val gdbSEImage = settingKey[String]("the GraphDB-SE docker image")
+    lazy val gdbFreeImage = settingKey[String]("the GraphDB-Free docker image")
 
-    lazy val sipiVersion = settingKey[String]("The SIPI version for the docker image")
-    lazy val akkaVersion = settingKey[String]("The Akka version")
-    lazy val akkaHttpVersion = settingKey[String]("The AkkaHttp version")
-    lazy val jenaVersion = settingKey[String]("The Jena library version")
-    lazy val metricsVersion = settingKey[String]("The metrics library version")
+    lazy val sipiImage = settingKey[String]("the SIPI docker image")
+    lazy val akkaVersion = settingKey[String]("the Akka version")
+    lazy val akkaHttpVersion = settingKey[String]("the AkkaHttp version")
+    lazy val jenaVersion = settingKey[String]("the Jena library version")
+    lazy val metricsVersion = settingKey[String]("the metrics library version")
+
+    lazy val knoraGdbImage = SettingKey[String]("the Knora specific GraphDB Image")
+    lazy val knoraSipiImage = SettingKey[String]("the Knora specific Sipi Image")
+    lazy val knoraWebapiImage = SettingKey[String]("the Knora webapi Image")
+    lazy val knoraSalsah1Image = SettingKey[String]("the Knora Salsah1 Image")
 
     val Versions = Seq(
         scalaVersion := "2.12.8",
@@ -44,20 +49,14 @@ object Dependencies {
         akkaHttpVersion := "10.1.7",
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
-        sipiVersion := "v1.4.3",
+        sipiImage := "dhlabbasel/sipi:v1.4.3",
         gdbSEImage := "ontotext/graphdb:8.5.0-se",
         gdbFreeImage := "dhlabbasel/graphdb:8.10.0-free"
     )
 
     // the user can change the default 'graphdb-se' value by creating an environment variable containing 'graphdb-free'
     // e.g., in '$ export KNORA_GDB_TYPE=graphdb-free' in the terminal before launching sbt.
-    lazy val gdbTypeString = sys.env.getOrElse("KNORA_GDB_TYPE", "graphdb-se")
-
-    // look at the defined graphdb type and select the supported image
-    lazy val gdbImage: SettingKey[String] = gdbTypeString match {
-        case "graphdb-se" => Dependencies.gdbSEImage
-        case "graphdb-free" => Dependencies.gdbFreeImage
-    }
+    lazy val gdbTypeString: String = sys.env.getOrElse("KNORA_GDB_TYPE", "graphdb-se")
 
     object Compile {
         // akka
