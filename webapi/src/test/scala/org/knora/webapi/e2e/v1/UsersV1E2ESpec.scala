@@ -47,8 +47,6 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass())
-
     val rootCreds = CredentialsV1(
         SharedTestDataV1.rootUser.userData.user_id.get,
         SharedTestDataV1.rootUser.userData.email.get,
@@ -125,7 +123,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
             "return all users" in {
                 val request = Get(baseApiUrl + s"/v1/users") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
+                // logger.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
             }
 
@@ -133,7 +131,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 /* Correct username and password */
                 val request = Get(baseApiUrl + s"/v1/users/${rootCreds.urlEncodedIri}") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
+                // logger.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
             }
 
@@ -141,7 +139,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
                 /* Correct username and password */
                 val request = Get(baseApiUrl + s"/v1/users/${rootCreds.urlEncodedEmail}?identifier=email") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
+                // logger.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
             }
 
@@ -152,7 +150,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
             "return all projects the user is a member of" in {
                 val request = Get(baseApiUrl + s"/v1/users/projects/$multiUserIriEnc") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                logger.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
 
                 val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]
@@ -168,7 +166,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
             "return all projects the user is a member of the project admin group" in {
                 val request = Get(baseApiUrl + s"/v1/users/projects-admin/$multiUserIriEnc") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                logger.debug(s"response: ${response.toString}")
                 assert(response.status === StatusCodes.OK)
 
                 val projects: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[IRI]]

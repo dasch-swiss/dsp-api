@@ -19,7 +19,6 @@
 
 package org.knora.webapi.http
 
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.headers.HttpOriginRange
 import akka.http.scaladsl.server.{Directives, RejectionHandler, Route}
@@ -27,11 +26,12 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.megard.akka.http.cors.scaladsl.model.HttpHeaderRange
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.{KnoraExceptionHandler, SettingsImpl}
 
 import scala.collection.immutable.Seq
 
-object CORSSupport extends Directives {
+object CORSSupport extends Directives with LazyLogging {
 
     val allowedMethods = Seq(GET, PUT, POST, DELETE, HEAD, OPTIONS)
     val exposedHeaders = Seq("Server")
@@ -54,11 +54,11 @@ object CORSSupport extends Directives {
       * @param route the route for which CORS support is enabled
       * @return the enabled route.
       */
-    def CORS(route: Route, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def CORS(route: Route, settings: SettingsImpl): Route = {
         handleRejections(CorsDirectives.corsRejectionHandler) {
             cors(corsSettings) {
                 handleRejections(RejectionHandler.default) {
-                    handleExceptions(KnoraExceptionHandler(settings, log)) {
+                    handleExceptions(KnoraExceptionHandler(settings)) {
                         route
                     }
                 }

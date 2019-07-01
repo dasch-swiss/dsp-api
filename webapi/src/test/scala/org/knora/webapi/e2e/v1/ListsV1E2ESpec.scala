@@ -45,8 +45,6 @@ class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProt
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass())
-
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")

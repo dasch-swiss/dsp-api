@@ -20,7 +20,6 @@
 package org.knora.webapi.e2e
 
 import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.util.IriConversions._
@@ -37,12 +36,10 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
-    implicit override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker(log)
-    private val jsonInstanceChecker: InstanceChecker = InstanceChecker.getJsonChecker(log)
+    private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker()
+    private val jsonInstanceChecker: InstanceChecker = InstanceChecker.getJsonChecker()
 
     "The InstanceChecker" should {
         "reject a JSON-LD instance of anything:Thing (in the complex schema) with an extra property" in {

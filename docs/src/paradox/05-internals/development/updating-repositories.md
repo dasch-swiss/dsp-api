@@ -35,7 +35,7 @@ the following must happen:
   a breaking change.
   
 - A plugin must be added to the
-  @ref:[repository update program](../../04-deployment/updates.md), to update
+  @ref:[repository update program](../../04-publishing-deployment/updates.md), to update
   existing repositories to work with the new version of Knora. The plugin will
   be used by `update-repository.py` if needed.
 

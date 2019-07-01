@@ -73,9 +73,9 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
               * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/admin/store/ResetTriplestoreContent
               */
 
-            log.debug("==>>")
+            logger.debug("==>>")
 			applicationStateActor ! SetAllowReloadOverHTTPState(true)
-            log.debug("==>>")
+            logger.debug("==>>")
             val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
             val response = singleAwaitingRequest(request, 300.seconds)
             // log.debug("==>> " + response.toString)
