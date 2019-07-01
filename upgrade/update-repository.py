@@ -30,7 +30,7 @@ import re
 from updatelib import rdftools
 
 
-# A list of built-in Knora ontologies in the order in which they should be uploaded.
+# A list of built-in Knora ontologies.
 knora_ontologies = [
     {
         "filename": "knora-admin.ttl",
@@ -95,7 +95,7 @@ class NamedGraph:
         print("Parsing input file for named graph {}...".format(self.context))
         input_file_path = download_dir + "/" + self.filename
         graph = rdflib.Graph()
-        graph.parse(input_file_path, format="turtle")
+        graph.parse(source=input_file_path, format="turtle")
         self.namespaces = list(graph.namespace_manager.namespaces())
         return graph
 
@@ -108,11 +108,12 @@ class NamedGraph:
         print("Writing transformed file...")
         graph.serialize(destination=output_file_path, format="turtle")
 
-    # Uploads the transformed file from upload_dir to the repository.
-    def upload(self, upload_dir):
-        print("Uploading named graph {}...".format(self.context))
-        upload_file_path = upload_dir + "/" + self.filename
-        rdftools.do_upload_request(graphdb_info=self.graphdb_info, context=self.uri, file_path=upload_file_path)
+    def to_turtle_file(self, upload_dir):
+        return rdftools.TurtleFile(
+            context=rdflib.URIRef(self.context),
+            namespaces=self.namespaces,
+            file_path=upload_dir + "/" + self.filename
+        )
 
 
 # Represents a repository.
@@ -155,9 +156,11 @@ class Repository:
 
     # Uploads the PR-specific knora ontologies and transformed named graphs to the repository.
     def upload(self, knora_ontologies_dir, upload_dir):
-        print("Uploading named graphs...")
+        print("Combining named graphs...")
 
-        # Upload built-in Knora ontologies.
+        # Make a TurtleFile for each built-in Knora ontology.
+
+        turtle_files = []
 
         for ontology in knora_ontologies:
             ontology_named_graph = NamedGraph(
@@ -166,14 +169,24 @@ class Repository:
                 filename=ontology["filename"]
             )
 
-            ontology_named_graph.upload(knora_ontologies_dir)
+            turtle_files.append(ontology_named_graph.to_turtle_file(knora_ontologies_dir))
 
-        # Upload the transformed named graphs.
+        # Make a TurtleFile for each transformed named graph.
 
         for named_graph in self.named_graphs:
-            named_graph.upload(upload_dir)
+            turtle_files.append(named_graph.to_turtle_file(upload_dir))
 
-        print("Uploaded named graphs.")
+        # Upload the whole repository.
+
+        trig_file_path = upload_dir + "/repository.trig"
+
+        rdftools.do_upload_request(
+            graphdb_info=self.graphdb_info,
+            turtle_files=turtle_files,
+            trig_file_path=trig_file_path
+        )
+
+        print("Uploaded repository.")
 
     # Updates the Lucene index.
     def update_lucene_index(self):
