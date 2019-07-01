@@ -1,7 +1,7 @@
 #  Defined in KnoraBuild.sbt:
-# - KNORA_GDB_LICENSE - path to the GraphDB-SE license file (can be overriden through environment variable KNORA_GDB_LICENSE)
-# - KNORA_GDB_HOME - path to a local folder where GraphDB should store it's data can be overriden through environment variable KNORA_GDB_HOME)
-# - KNORA_GDB_IMAGE - the GraphDB image used (can be overridden, by setting the value in SBT)
+# - KNORA_GDB_LICENSE - path to the GraphDB-SE license file (can be overridden through environment variable KNORA_GDB_LICENSE)
+# - KNORA_GDB_HOME - path to a local folder where GraphDB should store it's data can be overridden through environment variable KNORA_GDB_HOME)
+# - KNORA_GDB_TYPE - the GraphDB version used ('graphdb-se' or 'graphdb-free')
 #
 # To run: $ sbt dockerComposeUp
 
@@ -10,13 +10,12 @@ version: '3'
 services:
 
   graphdb:
-    image: ${KNORA_GDB_IMAGE}
+    image: ${KNORA_GDB_IMAGE}<localBuild>
     ports:
       - "7200:7200"
     volumes:
       - ${KNORA_GDB_LICENSE}:/graphdb/GRAPHDB_SE.license
       - ${KNORA_GDB_HOME}:/opt/graphdb/home:delegated
-      - ${PWD}/webapi/scripts/KnoraRules.pie:/graphdb/KnoraRules.pie
     networks:
       - knora-net
     environment:
@@ -25,13 +24,12 @@ services:
     command: ["/graphdb/bin/graphdb"]
 
   sipi:
-    image: dhlabbasel/sipi:${SIPI_VERSION_TAG}
+    image: ${KNORA_SIPI_IMAGE}<localBuild>
     ports:
       - "1024:1024"
     volumes:
       - /tmp:/tmp
       - ${PWD}/sipi/config:/sipi/config
-      - ${PWD}/sipi/scripts:/sipi/scripts
       - ${PWD}/sipi/images:/sipi/images:delegated
       - ${PWD}/sipi/server:/sipi/server:delegated
     networks:
@@ -46,7 +44,7 @@ services:
     command: --config=/sipi/config/sipi.knora-docker-it-config.lua
 
   webapi:
-    image: dhlabbasel/webapi:${KNORA_VERSION_TAG}<localBuild>
+    image: ${KNORA_WEBAPI_IMAGE}<localBuild>
     ports:
       - "3333:3333"
       - "10001:10001"
@@ -64,7 +62,7 @@ services:
       - KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP=true
 
   salsah1:
-    image: dhlabbasel/salsah1:${KNORA_VERSION_TAG}<localBuild>
+    image: ${KNORA_SALSAH1_IMAGE}<localBuild>
     ports:
       - "3335:3335"
     networks:
