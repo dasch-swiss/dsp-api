@@ -48,6 +48,32 @@ Each image is tagged with a version number, where the version is derived by usin
 of `git describe`. The describe version is built from the
 `last tag + number of commits since tag + short hash`, e.g., `8.0.0-7-ga7827e9`.
 
+### Using SBT for publishing
+
+The images can be published locally by running:
+
+```bash
+$ - sbt webapi/docker:publishLocal
+$ sbt salsah1/docker:publishLocal
+$ sbt knora-sipi/docker:publishLocal
+$ sbt knora-graphdb-se/docker:publishLocal
+$ sbt knora-graphdb-free/docker:publishLocal
+$ sbt knora-upgrade/docker:publishLocal
+$ sbt knora-assets/docker:publishLocal
+```
+
+or to Dockerhub:
+
+```bash
+$ sbt webapi/docker:publish
+$ sbt salsah1/docker:publish
+$ sbt knora-sipi/docker:publish
+$ sbt knora-graphdb-se/docker:publish
+$ sbt knora-graphdb-free/docker:publish
+$ sbt knora-upgrade/docker:publish
+$ sbt knora-assets/docker:publish
+```
+
 ## GraphDB Licensing
 
 **GraphDB-Free** is the Free Edition of the triplestore from Ontotext (http://ontotext.com).
