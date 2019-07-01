@@ -27,7 +27,7 @@ Knora Documentation
 * [Introduction](01-introduction/index.md)
 * [Knora Ontologies](02-knora-ontologies/index.md)
 * [Knora APIs](03-apis/index.md)
-* [Deploying Knora](04-deployment/index.md)
+* [Publishing and Deployment](04-publishing-deployment/index.md)
 * [Knora Internals](05-internals/index.md)
 * [Salsah](06-salsah/index.md)
 * [Sipi](07-sipi/index.md)
