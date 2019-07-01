@@ -229,8 +229,11 @@ case class CheckRepositoryResponse(repositoryStatus: RepositoryStatus, msg: Stri
 
 /**
   * Updates the triplestore's full-text search index.
+  *
+  * @param subjectIri if a subject has changed, update the index for that subject. Otherwise, updates
+  *                   the index to add any subjects not yet indexed.
   */
-case class SearchIndexUpdateRequest() extends TriplestoreRequest
+case class SearchIndexUpdateRequest(subjectIri: Option[String] = None) extends TriplestoreRequest
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
