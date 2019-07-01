@@ -1522,6 +1522,22 @@
                 rdfs:label  "Kommentar von"@de ,
                             "Comment of"@en .
 
+### ###########################################
+### beol:letterHasURI
+
+:letterHasURI rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:UriValue ;
+
+                   knora-base:subjectClassConstraint :basicLetter ;
+
+                   rdfs:subPropertyOf knora-base:hasValue ;
+
+                   rdfs:label "PDF des Briefes in der Vollfassung"@de ,
+                              "PDF of the letter"@en ;
+
+                   rdfs:comment """Link zu dem PDF des Briefes in der Vollfassung"""@de ,
+                              """Link to the printed version of the letter"""@en .
 ##########################################################
 #
 # RESOURCES
@@ -1777,6 +1793,12 @@
                             owl:onProperty :letterHasLanguage ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :letterHasURI ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                         ] ;
 
                       knora-base:resourceIcon "letter.png" ;
