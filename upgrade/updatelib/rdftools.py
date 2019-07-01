@@ -22,6 +22,7 @@ import requests
 import rdflib
 from collections import defaultdict
 from abc import ABC, abstractmethod
+import re
 
 
 # An abstract class representing a PR-specific graph transformation. Each
@@ -115,22 +116,65 @@ def do_download_request(graphdb_info, context, file_path):
             downloaded_file.write(chunk)
 
 
-# Uploads a file in Turtle format to the triplestore.
-def do_upload_request(graphdb_info, context, file_path):
-    params = {
-        "context": context
+# Represents a file in Turtle format.
+class TurtleFile:
+    def __init__(self, context, namespaces, file_path):
+        self.context = context
+        self.namespaces = namespaces
+        self.file_path = file_path
+
+
+# A regex that matches the name of a Knora named graph that needs a prefix.
+context_regex = re.compile(r"^http://www.knora.org/(.+)/(.+)/(.+)$")
+
+
+# Given a collection of TurtleFiles, combines them into a Trig file and uploads that file to the triplestore.
+def do_upload_request(graphdb_info, turtle_files, trig_file_path):
+    namespaces = {
+        "ontology": rdflib.URIRef("http://www.knora.org/ontology/"),
+        "data": rdflib.URIRef("http://www.knora.org/data/")
     }
+
+    for turtle_file in turtle_files:
+        namespaces.update(turtle_file.namespaces)
+
+        # Add prefixes, otherwise rdflib will add random ones.
+
+        context_str = str(turtle_file.context)
+        match = context_regex.match(context_str)
+
+        if match is not None:
+            prefix = match.group(1) + "-" + match.group(2)
+            namespaces[prefix] = "http://www.knora.org/{}/{}/".format(match.group(1), match.group(2))
+
+    for prefix, namespace in namespaces.items():
+        print("prefix {}: {}".format(prefix, namespace))
+
+    dataset = rdflib.Dataset()
+
+    for turtle_file in turtle_files:
+        print("Reading named graph {}...".format(turtle_file.context))
+        graph = dataset.graph(turtle_file.context)
+        graph.parse(source=turtle_file.file_path, format="turtle")
+
+    for prefix, namespace in namespaces.items():
+        dataset.namespace_manager.bind(prefix=prefix, namespace=namespace, override=True, replace=True)
+
+    print("Writing repository file for upload...")
+
+    dataset.serialize(destination=trig_file_path, format="trig")
 
     headers = {
-        "Content-Type": "text/turtle"
+        "Content-Type": "application/trig"
     }
 
-    with open(file_path, "r") as file_to_upload:
+    print("Uploading repository...")
+
+    with open(trig_file_path, "r") as file_to_upload:
         file_content = file_to_upload.read().encode("utf-8")
 
     response = requests.post(
         url=graphdb_info.statements_url,
-        params=params,
         headers=headers,
         auth=(graphdb_info.username, graphdb_info.password),
         data=file_content
