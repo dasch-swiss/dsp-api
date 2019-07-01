@@ -93,10 +93,11 @@ object Dependencies {
         // authentication
         val bcprov                 = "org.bouncycastle"                         % "bcprov-jdk15on"           % "1.59"
         val springSecurityCore     = "org.springframework.security"             % "spring-security-core"     % "5.1.5.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
-        val jwtSprayJson           = "com.pauldijou"                            %% "jwt-spray-json"          % "0.19.0"
+        val jwtSprayJson           = "com.pauldijou"                           %% "jwt-spray-json"           % "0.19.0"
 
         // caching
         val ehcache                = "net.sf.ehcache"                           % "ehcache"                  % "2.10.3"
+        val scalaCacheRedis        = "com.github.cb372"                        %% "scalacache-redis"         % "0.28.0"
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
@@ -212,6 +213,7 @@ object Dependencies {
         rdf4jRuntime,
         saxonHE,
         scalaArm,
+        scalaCacheRedis,
         scalaJava8Compat,
         scalaLogging,
         WebapiTest.scalaTest,
