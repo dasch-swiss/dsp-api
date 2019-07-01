@@ -36,11 +36,11 @@ with the test configuration (`--config=config/sipi.knora-docker-test-config.lua`
 the same SBT session:
 
 ```
-$ cd KNORA_PROJECT_DIRECTORY/salsah1
+$ cd KNORA_PROJECT_DIRECTORY
 $ sbt
-> compile
-> reStart
-> test
+> salsah1 / compile
+> salsah1 / reStart
+> salsah1 / test
 ```
 
 Note: please be patient as SALSAH 1 can take up to one minute (end of a

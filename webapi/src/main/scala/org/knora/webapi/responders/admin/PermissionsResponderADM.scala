@@ -21,6 +21,7 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages
@@ -38,10 +39,9 @@ import scala.concurrent.Future
 
 
 /**
-  * Provides information about Knora users to other responders.
+  * Provides information about permissions to other responders.
   */
 class PermissionsResponderADM(responderData: ResponderData) extends Responder(responderData) {
-
 
     /* Entity types used to more clearly distinguish what kind of entity is meant */
     private val ResourceEntityType = "resource"
@@ -703,7 +703,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         val maybeDefaultObjectAccessPermissionADM: Future[Option[DefaultObjectAccessPermissionADM]] = permissionFromCache match {
             case Some(permission) =>
                 // found permission in the cache
-                log.debug("defaultObjectAccessPermissionGetADM - cache hit for key: {}", key)
+                logger.debug("defaultObjectAccessPermissionGetADM - cache hit for key: {}", key)
                 FastFuture.successful(Some(permission))
 
             case None =>
@@ -724,7 +724,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                         maybeResourceClassIri = resourceClassIri,
                         maybePropertyIri = propertyIri
                     ).toString()
-                    // _ = log.debug(s"defaultObjectAccessPermissionGetADM - query: $sparqlQueryString")
+
+                    // _ = logger.debug(s"defaultObjectAccessPermissionGetADM - query: $sparqlQueryString")
 
                     permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
                     // _ = log.debug(s"defaultObjectAccessPermissionGetADM - result: ${MessageUtil.toSource(permissionQueryResponse)}")
@@ -753,11 +754,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                     } else {
                         None
                     }
-                    _ = log.debug(s"defaultObjectAccessPermissionGetADM - p: $projectIri, g: $groupIri, r: $resourceClassIri, p: $propertyIri, permission: $permission")
+                    _ = logger.debug(s"defaultObjectAccessPermissionGetADM - p: $projectIri, g: $groupIri, r: $resourceClassIri, p: $propertyIri, permission: $permission")
                 } yield permission
         }
 
-        // _ = log.debug("defaultObjectAccessPermissionGetADM - permission: {}", MessageUtil.toSource(maybeDefaultObjectAccessPermissionADM))
+        // logger.debug(s"defaultObjectAccessPermissionGetADM - permission: $maybeDefaultObjectAccessPermissionADM")
         maybeDefaultObjectAccessPermissionADM
     }
 
@@ -835,7 +836,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             /* Remove possible duplicate permissions */
             result: Set[PermissionADM] = PermissionUtilADM.removeDuplicatePermissions(combined)
 
-            //_ = log.debug(s"defaultObjectAccessPermissionsForGroupsGetV1 - result: $result")
+            _ = logger.debug(s"defaultObjectAccessPermissionsForGroupsGetADM - INPUT [ projectIri: $projectIri, groups: $groups ], RESULT [ $result ]")
         } yield result
         result
     }
@@ -905,8 +906,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       * @return an optional string with object access permission statements
       */
     private def defaultObjectAccessPermissionsStringForEntityGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: Option[IRI], entityType: String, targetUser: UserADM, requestingUser: UserADM): Future[DefaultObjectAccessPermissionsStringResponseADM] = {
-
-        //log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - projectIRI: $projectIRI, resourceClassIRI: $resourceClassIRI, propertyIRI: $propertyIRI, permissionData:$permissionData")
+        // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetADM (input) - projectIRI: $projectIri, resourceClassIRI: $resourceClassIri, propertyIRI: $propertyIri, entityType: $entityType, targetUser: $targetUser")
         for {
             // check if necessary field are defined.
             _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
@@ -939,6 +939,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             permissionsListBuffer = ListBuffer.empty[(String, Set[PermissionADM])]
 
 
+            ///////////////////////
+            // PROJECT ADMIN
+            ///////////////////////
             /* Get the default object access permissions for the knora-base:ProjectAdmin group */
             defaultPermissionsOnProjectAdminGroup: Set[PermissionADM] <- defaultObjectAccessPermissionsForGroupsGetADM(projectIri, List(OntologyConstants.KnoraAdmin.ProjectAdmin))
             _ = if (defaultPermissionsOnProjectAdminGroup.nonEmpty) {
@@ -1021,7 +1024,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             }
             _ = if (defaultPermissionsOnProjectProperty.nonEmpty) {
                 permissionsListBuffer += (("ProjectProperty", defaultPermissionsOnProjectProperty))
-                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectProperty: {}", defaultPermissionsOnProjectProperty)
+                // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectProperty: {}", defaultPermissionsOnProjectProperty)
             }
 
             /* system property */
@@ -1035,7 +1038,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             }
             _ = if (defaultPermissionsOnSystemProperty.nonEmpty) {
                 permissionsListBuffer += (("SystemProperty", defaultPermissionsOnSystemProperty))
-                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemProperty: {}", defaultPermissionsOnSystemProperty)
+                // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemProperty: {}", defaultPermissionsOnSystemProperty)
             }
 
             ///////////////////////
@@ -1057,7 +1060,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             }
             _ = if (defaultPermissionsOnCustomGroups.nonEmpty) {
                 permissionsListBuffer += (("CustomGroups", defaultPermissionsOnCustomGroups))
-                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
+                // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
             }
 
             ///////////////////////
@@ -1075,7 +1078,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectMember) || extendedUserGroups.contains(OntologyConstants.KnoraAdmin.SystemAdmin)) {
                     permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
                 }
-                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
+                // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
             }
 
             ///////////////////////
@@ -1092,7 +1095,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             _ = if (defaultPermissionsOnKnownUserGroup.nonEmpty) {
                 if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.KnownUser)) {
                     permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
-                    // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
+                    // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
                 }
             }
 
@@ -1103,7 +1106,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             _ = if (permissionsListBuffer.isEmpty) {
                 val defaultFallbackPermission = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator))
                 permissionsListBuffer += (("Fallback", defaultFallbackPermission))
-                // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultFallbackPermission: $defaultFallbackPermission")
+                // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultFallbackPermission: $defaultFallbackPermission")
             } else {
                 FastFuture.successful(Set.empty[PermissionADM])
             }
@@ -1113,7 +1116,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 case 1 => PermissionUtilADM.formatPermissionADMs(permissionsListBuffer.head._2, PermissionType.OAP)
                 case _ => throw AssertionException("The permissions list buffer holding default object permissions should never be larger then 1.")
             }
-            _ = log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - project: {}, precedence: {}, defaultObjectAccessPermissions: {}", projectIri, permissionsListBuffer.head._1, result)
+            _ = logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetADM (result) - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, defaultObjectAccessPermissions: $result")
         } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
     }
 

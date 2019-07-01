@@ -52,8 +52,6 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass())
-
     val rootCreds = CredentialsV1(
         SharedTestDataADM.rootUser.id,
         SharedTestDataADM.rootUser.email,
@@ -138,7 +136,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
             "return all users" in {
                 val request = Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: ${response.toString}")
+                logger.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
             }
 
@@ -322,7 +320,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
                 val request1 = Put(baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(BasicHttpCredentials(normalUserCreds.email, "test")) // requester's password
                 val response1: HttpResponse = singleAwaitingRequest(request1)
-                log.debug(s"response: ${response1.toString}")
+                logger.debug(s"response: ${response1.toString}")
                 response1.status should be(StatusCodes.OK)
 
                 // check if the password was changed, i.e. if the new one is accepted
@@ -344,7 +342,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
                 val request1 = Put(baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, "test")) // requester's password
                 val response1: HttpResponse = singleAwaitingRequest(request1)
-                log.debug(s"response: ${response1.toString}")
+                logger.debug(s"response: ${response1.toString}")
                 response1.status should be(StatusCodes.OK)
 
                 // check if the password was changed, i.e. if the new one is accepted

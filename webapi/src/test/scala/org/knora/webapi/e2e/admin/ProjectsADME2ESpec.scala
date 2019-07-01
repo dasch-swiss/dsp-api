@@ -50,8 +50,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass())
-
     private val rootEmail = SharedTestDataADM.rootUser.email
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")
@@ -101,7 +99,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             "return the project's restricted view settings" in {
                 val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/RestrictedViewSettings") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: {}", response)
+                logger.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
 
                 val settings: ProjectRestrictedViewSettingsADM = AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
@@ -133,7 +131,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
                 val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                log.debug(s"response: {}", response)
+                logger.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
 
                 val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]

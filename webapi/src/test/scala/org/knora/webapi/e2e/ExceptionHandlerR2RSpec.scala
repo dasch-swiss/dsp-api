@@ -80,7 +80,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         }
     }
 
-    private val route: Route = Route.seal(handleExceptions(KnoraExceptionHandler(settings, log)) {
+    private val route: Route = Route.seal(handleExceptions(KnoraExceptionHandler(settings)) {
         nfe ~ fe ~ bce ~ dve ~ oce ~ ece ~ sse ~ unpe ~ ae
     })
 

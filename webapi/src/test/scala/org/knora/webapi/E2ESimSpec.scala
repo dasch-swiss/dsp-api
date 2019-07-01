@@ -26,6 +26,7 @@ import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse}
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.scalalogging.LazyLogging
 import io.gatling.core.scenario.Simulation
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
@@ -52,7 +53,7 @@ object E2ESimSpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core with KnoraService with TriplestoreJsonProtocol with RequestBuilding {
+abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core with KnoraService with TriplestoreJsonProtocol with RequestBuilding with LazyLogging {
 
     /* needed by the core trait */
 
@@ -75,8 +76,6 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
 
-    override lazy val log: LoggingAdapter = akka.event.Logging(system, "PerfSpec")
-
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
     // needs to be overridden in subclass
@@ -84,7 +83,7 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
 
     before {
         /* Set the startup flags and start the Knora Server */
-        log.info(s"executing before setup started")
+        logger.info(s"executing before setup started")
 
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
@@ -94,12 +93,12 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
         // loadTestData
         loadTestData(rdfDataObjects)
 
-        log.info(s"executing before setup finished")
+        logger.info(s"executing before setup finished")
     }
 
     after {
         /* Stop the server when everything else has finished */
-        log.info(s"executing after setup")
+        logger.info(s"executing after setup")
         stopService()
     }
 
