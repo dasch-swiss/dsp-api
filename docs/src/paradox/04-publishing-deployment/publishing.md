@@ -24,14 +24,29 @@ Knora is published as a set of [Docker](https://www.docker.com) images under the
 
 The following Docker images are published:
 
-- Knora-API: https://hub.docker.com/r/dhlabbasel/webapi
-- GraphDB-SE: https://hub.docker.com/r/dhlabbasel/knora-graphdb-se
-- GraphDB-Free: https://hub.docker.com/r/dhlabbasel/knora-graphdb-free
-- Sipi: https://hub.docker.com/r/dhlabbasel/knora-sipi
-- Knora-Assets: https://hub.docker.com/r/dhlabbasel/knora-assets
-- Knora-Upgrade: https://hub.docker.com/r/dhlabbasel/knora-upgrade
-- Salsah 1: https://hub.docker.com/r/dhlabbasel/salsah1
-- Salsah 2: https://hub.docker.com/r/daschswiss/knora-app-web
+- Knora-API:
+  - https://hub.docker.com/r/dhlabbasel/webapi
+- GraphDB-SE (includes `KnoraRules.pie`):
+  - https://hub.docker.com/r/dhlabbasel/knora-graphdb-se
+- GraphDB-Free (includes `KnoraRules.pie`):
+  - https://hub.docker.com/r/dhlabbasel/knora-graphdb-free
+- Sipi (includes Knora's Sipi scripts):
+  - https://hub.docker.com/r/dhlabbasel/knora-sipi
+- Knora-Assets (Knora-Base ontologies, test data, and scripts):
+  - https://hub.docker.com/r/dhlabbasel/knora-assets
+- Knora-Upgrade (Knora upgrade tool):
+  - https://hub.docker.com/r/dhlabbasel/knora-upgrade
+- Salsah 1:
+  - https://hub.docker.com/r/dhlabbasel/salsah1
+- Salsah 2:
+  - https://hub.docker.com/r/daschswiss/knora-app-web
+
+Knora's Docker images are published automatically through Travis each time a pull-request
+is merged into the `develop` branch.
+
+Each image is tagged with a version number, where the version is derived by using the result
+of `git describe`. The describe version is built from the
+`last tag + number of commits since tag + short hash`, e.g., `8.0.0-7-ga7827e9`.
 
 ## GraphDB Licensing
 
