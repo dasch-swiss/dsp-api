@@ -227,6 +227,11 @@ case class CheckRepositoryRequest() extends TriplestoreRequest
   */
 case class CheckRepositoryResponse(repositoryStatus: RepositoryStatus, msg: String)
 
+/**
+  * Updates the triplestore's full-text search index.
+  */
+case class SearchIndexUpdateRequest() extends TriplestoreRequest
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
