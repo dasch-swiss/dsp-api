@@ -31,10 +31,10 @@
 :letterID rdf:type owl:ObjectProperty ;
 
 
-                rdfs:label "Brief-ID in dem Briefportal Leibniz"@de ,
-                           "Letter ID in the Briefportal Leibniz"@en ;
+                rdfs:label "Brief in dem Briefportal Leibniz"@de ,
+                           "Letter in the Briefportal Leibniz"@en ;
 
-                rdfs:comment """Represents the ID of the letter in The Newton Project."""@en ;
+                rdfs:comment """Represents the letter in the Briefportal Leibniz."""@en ;
 
                 knora-base:objectClassConstraint knora-base:TextValue ;
                 knora-base:subjectClassConstraint :letter ;
