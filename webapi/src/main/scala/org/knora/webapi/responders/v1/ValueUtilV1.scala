@@ -551,7 +551,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             // v2 responder is used here directly, v1 responder would inernally use v2 responder anyway and do unnecessary back and forth conversions
             mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, requestingUser = userProfile)).mapTo[GetMappingResponseV2]
 
-            standoffTags: Seq[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(
+            standoffTags: Seq[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(
                 standoffAssertions = valueProps.standoff,
                 responderManager = responderManager,
                 requestingUser = userProfile

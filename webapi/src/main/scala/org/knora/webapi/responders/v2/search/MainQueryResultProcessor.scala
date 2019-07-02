@@ -21,12 +21,12 @@ package org.knora.webapi.responders.v2.search
 
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructResponse, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstructResponse, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 import org.knora.webapi.responders.v2.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryGenerator
 import org.knora.webapi.responders.v2.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{ConstructResponseUtilV2, ErrorHandlingMap, StringFormatter}
+import org.knora.webapi.util.{ConstructResponseUtilV2, ErrorHandlingMap, SmartIri, StringFormatter}
 
 object MainQueryResultProcessor {
 
@@ -46,32 +46,32 @@ object MainQueryResultProcessor {
       * @param valuePropertyAssertions the assertions to be traversed.
       * @return a [[ResourceIrisAndValueObjectIris]] representing all resource and value object IRIs that have been found in `valuePropertyAssertions`.
       */
-    def collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropertyAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]]): ResourceIrisAndValueObjectIris = {
+    def collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropertyAssertions: Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]])(implicit stringFormatter: StringFormatter): ResourceIrisAndValueObjectIris = {
 
         // look at the value objects and ignore the property IRIs (we are only interested in value instances)
         val resAndValObjIris: Seq[ResourceIrisAndValueObjectIris] = valuePropertyAssertions.values.flatten.foldLeft(Seq.empty[ResourceIrisAndValueObjectIris]) {
-            (acc: Seq[ResourceIrisAndValueObjectIris], assertion) =>
+            (acc: Seq[ResourceIrisAndValueObjectIris], valueRdfData: ConstructResponseUtilV2.ValueRdfData) =>
 
-                if (assertion.nestedResource.nonEmpty) {
+                if (valueRdfData.nestedResource.nonEmpty) {
                     // this is a link value
                     // recursively traverse the dependent resource's values
 
-                    val dependentRes: ConstructResponseUtilV2.ResourceWithValueRdfData = assertion.nestedResource.get
+                    val dependentRes: ConstructResponseUtilV2.ResourceWithValueRdfData = valueRdfData.nestedResource.get
 
                     // recursively traverse the link value's nested resource and its assertions
                     val resAndValObjIrisForDependentRes: ResourceIrisAndValueObjectIris = collectResourceIrisAndValueObjectIrisFromMainQueryResult(dependentRes.valuePropertyAssertions)
 
                     // get the dependent resource's IRI from the current link value's rdf:object, or rdf:subject in case of an incoming link
-                    val dependentResIri: IRI = if (assertion.isIncomingLink) {
-                        assertion.assertions.getOrElse(OntologyConstants.Rdf.Subject, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Subject} for link value ${assertion.valueObjectIri}"))
+                    val dependentResIri: IRI = if (valueRdfData.isIncomingLink) {
+                        valueRdfData.requireIriObject(OntologyConstants.Rdf.Subject.toSmartIri)
                     } else {
-                        assertion.assertions.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Object} for link value ${assertion.valueObjectIri}"))
+                        valueRdfData.requireIriObject(OntologyConstants.Rdf.Object.toSmartIri)
                     }
 
                     // append results from recursion and current value object
                     ResourceIrisAndValueObjectIris(
                         resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri,
-                        valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + assertion.valueObjectIri
+                        valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + valueRdfData.subjectIri
                     ) +: acc
                 } else {
                     // not a link value or no dependent resource given (in order to avoid infinite recursion)
@@ -79,7 +79,7 @@ object MainQueryResultProcessor {
                     // append results for current value object
                     ResourceIrisAndValueObjectIris(
                         resourceIris = Set.empty[IRI],
-                        valueObjectIris = Set(assertion.valueObjectIri)
+                        valueObjectIris = Set(valueRdfData.subjectIri)
                     ) +: acc
                 }
         }
@@ -210,10 +210,10 @@ object MainQueryResultProcessor {
       * @param valueObjectVarsAndIrisPerMainResource variable names and Iris of value objects per main resource.
       * @return a Map of main resource Iris and their values.
       */
-    def getMainQueryResultsWithFullGraphPattern(mainQueryResponse: SparqlConstructResponse,
+    def getMainQueryResultsWithFullGraphPattern(mainQueryResponse: SparqlExtendedConstructResponse,
                                                 dependentResourceIrisPerMainResource: DependentResourcesPerMainResource,
                                                 valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris,
-                                                requestingUser: UserADM): Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = {
+                                                requestingUser: UserADM)(implicit stringFormatter: StringFormatter): Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = {
 
         // separate main resources and value objects (dependent resources are nested)
         // this method removes resources and values the requesting users has insufficient permissions on (missing view permissions).
@@ -232,7 +232,7 @@ object MainQueryResultProcessor {
                 val expectedValueObjects: Set[IRI] = valueObjectVarsAndIrisPerMainResource.valueObjectVariablesAndValueObjectIris(mainResIri).values.flatten.toSet
 
                 // value property assertions for the current main resource
-                val valuePropAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
+                val valuePropAssertions: Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
 
                 // all the IRIs of dependent resources and value objects contained in `valuePropAssertions`
                 val resAndValueObjIris: MainQueryResultProcessor.ResourceIrisAndValueObjectIris = MainQueryResultProcessor.collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropAssertions)
@@ -351,15 +351,15 @@ object MainQueryResultProcessor {
                   * @param values the values to be filtered.
                   * @return filtered values.
                   */
-                def traverseAndFilterValues(values: ConstructResponseUtilV2.ResourceWithValueRdfData): Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = {
-                    values.valuePropertyAssertions.foldLeft(Map.empty[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]]) {
-                        case (acc, (propIri: IRI, values: Seq[ConstructResponseUtilV2.ValueRdfData])) =>
+                def traverseAndFilterValues(values: ConstructResponseUtilV2.ResourceWithValueRdfData): Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]] = {
+                    values.valuePropertyAssertions.foldLeft(Map.empty[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]]) {
+                        case (acc, (propIri: SmartIri, values: Seq[ConstructResponseUtilV2.ValueRdfData])) =>
 
                             // filter values for the current resource
                             val valuesFiltered: Seq[ConstructResponseUtilV2.ValueRdfData] = values.filter {
                                 valueObj: ConstructResponseUtilV2.ValueRdfData =>
                                     // only return those value objects whose Iris are contained in valueObjIrisRequestedForRes
-                                    valueObjIrisRequestedForRes(valueObj.valueObjectIri)
+                                    valueObjIrisRequestedForRes(valueObj.subjectIri)
                             }
 
                             // if there are link values including a target resource, apply filter to their values too
@@ -370,7 +370,7 @@ object MainQueryResultProcessor {
                                         val targetResourceAssertions: ConstructResponseUtilV2.ResourceWithValueRdfData = valObj.nestedResource.get
 
                                         // apply filter to the target resource's values
-                                        val targetResourceAssertionsFiltered: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(targetResourceAssertions)
+                                        val targetResourceAssertionsFiltered: Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(targetResourceAssertions)
 
                                         valObj.copy(
                                             nestedResource = Some(targetResourceAssertions.copy(
@@ -397,7 +397,7 @@ object MainQueryResultProcessor {
                 }
 
                 // filter values for the current main resource
-                val requestedValuePropertyAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(assertions)
+                val requestedValuePropertyAssertions: Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(assertions)
 
                 // only return the requested values for the current main resource
                 mainResIri -> assertions.copy(
