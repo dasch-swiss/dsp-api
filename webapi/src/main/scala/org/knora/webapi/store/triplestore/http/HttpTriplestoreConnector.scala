@@ -129,6 +129,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         case InsertTriplestoreContent(rdfDataObjects) => try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
         case HelloTriplestore(msg) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
         case CheckRepositoryRequest() => try2Message(sender(), checkRepository(), log)
+        case SearchIndexUpdateRequest(subjectIri) => try2Message(sender(), updateLuceneIndex(subjectIri), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -349,6 +350,29 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     }
 
     /**
+      * Updates the Lucene full-text search index.
+      */
+    private def updateLuceneIndex(subjectIri: Option[IRI] = None): Try[SparqlUpdateResponse] = {
+        val indexUpdateSparqlString = subjectIri match {
+            case Some(definedSubjectIri) =>
+                // A subject's content has changed. Update the index for that subject.
+                s"""PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
+                  |INSERT DATA { luc:fullTextSearchIndex luc:addToIndex <$definedSubjectIri> . }
+                """.stripMargin
+
+            case None =>
+                // Add new subjects to the index.
+                """PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
+                  |INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
+                """.stripMargin
+        }
+
+        for {
+            _ <- getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true)
+        } yield SparqlUpdateResponse()
+    }
+
+    /**
       * Performs a SPARQL update operation.
       *
       * @param sparqlUpdate the SPARQL update.
@@ -363,12 +387,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             // If we're using GraphDB, update the full-text search index.
             _ = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-                val indexUpdateSparqlString =
-                    """
-                        PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
-                        INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
-                    """
-                getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true)
+                updateLuceneIndex()
             }
         } yield SparqlUpdateResponse()
     }
@@ -460,12 +479,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             if (triplestoreType == TriplestoreTypes.HttpGraphDBSE || triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
                 /* need to update the lucene index */
-                val indexUpdateSparqlString =
-                    """
-                        PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
-                        INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
-                    """
-                getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true)
+                updateLuceneIndex()
             }
 
             log.debug("==>> Loading Data End")
@@ -612,7 +626,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 }
 
                 val took = System.currentTimeMillis() - start
-                log.info(s"[${statusCode}] GraphDB Query took: ${took}ms")
+                log.info(s"[$statusCode] GraphDB Query took: ${took}ms")
 
                 responseEntityStr
             } finally {

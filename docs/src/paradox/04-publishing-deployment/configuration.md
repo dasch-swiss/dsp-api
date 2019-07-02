@@ -28,16 +28,12 @@ to the number of CPUs and cores per CPU.
 The relevant sections for tuning are:
 
  - `akka.actor.deployment`
- - `knora-ask-dispatcher`
- - `knora-store-dispatcher`
- - `knora-sipi-dispatcher`
- - `knora-v1-dispatcher`
- - `knora-v2-dispatcher`
- - `knora-admin-dispatcher`
+ - `knora-actor-dispatcher`
+ - `knora-blocking-dispatcher`
+
+## System Environment Variables
  
- ## System Environment Variables
- 
- A number of core settings is additionally configurable through system environment variables. These are:
+A number of core settings is additionally configurable through system environment variables. These are:
  
 | key in application.conf                  | environment variable                              | default value        |
 |------------------------------------------|---------------------------------------------------|----------------------|
@@ -46,9 +42,11 @@ The relevant sections for tuning are:
 | akka.stdout-loglevel                     | KNORA_AKKA_STDOUT_LOGLEVEL                        | INFO                 |
 | app.print-short-config                   | KNORA_WEBAPI_PRINT_SHORT_CONFIG                   | true                 |
 | app.print-extended-config                | KNORA_WEBAPI_PRINT_EXTENDED_CONFIG                | false                |
+| app.bcrypt-password-strength             | KNORA_WEBAPI_BCRYPT_PASSWORD_STRENGTH             | 12                   |
 | app.jwt-secret-key                       | KNORA_WEBAPI_JWT_SECRET_KEY                       | super-secret-key     |
 | app.jwt-longevity                        | KNORA_WEBAPI_JWT_LONGEVITY                        | 30 days              |
 | app.cookie-domain                        | KNORA_WEBAPI_COOKIE_DOMAIN                        | localhost            |
+| app.allow-reload-over-http               | KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP               | false                |
 | app.ark.resolver                         | KNORA_WEBAPI_ARK_RESOLVER_URL                     | http://0.0.0.0:3336  |
 | app.ark.assigned-number                  | KNORA_WEBAPI_ARK_NAAN                             | 72163                |
 | app.knora-api.internal-host              | KNORA_WEBAPI_KNORA_API_INTERNAL_HOST              | 0.0.0.0              |
@@ -62,6 +60,8 @@ The relevant sections for tuning are:
 | app.sipi.external-protocol               | KNORA_WEBAPI_SIPI_EXTERNAL_PROTOCOL               | http                 |
 | app.sipi.external-host                   | KNORA_WEBAPI_SIPI_EXTERNAL_HOST                   | localhost            |
 | app.sipi.external-port                   | KNORA_WEBAPI_SIPI_EXTERNAL_PORT                   | 443                  |
+| app.ark.resolver                         | KNORA_WEBAPI_ARK_RESOLVER_URL                     | http://0.0.0.0:3336  |
+| app.ark.assigned-number                  | KNORA_WEBAPI_ARK_NAAN                             | 72163
 | app.salsah1.base-url                     | KNORA_WEBAPI_SALSAH1_BASE_URL                     | http://localhost:3335|
 | app.triplestore.dbtype                   | KNORA_WEBAPI_TRIPLESTORE_DBTYPE                   | graphdb-se           |
 | app.triplestore.use-https                | KNORA_WEBAPI_TRIPLESTORE_USE_HTTPS                | false                |
@@ -72,3 +72,22 @@ The relevant sections for tuning are:
 | app.triplestore.graphdb.password         | KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_PASSWORD         | root                 |
 | app.triplestore.fuseki.port              | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PORT              | 3030                 |
 | app.triplestore.fuseki.repository-name   | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME   | knora-test           |
+
+## Selectively Disabling Routes
+
+In `application.conf` the setting `app.routes-to-reject` contains a list
+of strings, representing routes which should be rejected.
+
+For Example, the string `"v1/users"` would lead to rejection of any
+route which contains this string.
+
+## Startup Flags
+
+There is a number of flags that can be set on startup, they will
+override any value set in the application configuration file:
+
+  - `loadDemoData`, `--loadDemoData`, `-d`: Loads the demo data.
+  - `allowReloadOverHTTP`, `--allow-reload-over-http`, `-r`: Allows
+    reloading of data over HTTP.
+  - `-c`: Print the configuration at startup.
+  - `--help`: Shows the help message with all startup flags.
