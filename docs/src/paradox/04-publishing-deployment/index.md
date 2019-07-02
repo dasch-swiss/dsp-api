@@ -23,6 +23,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 @@@ index
 
+- [Publishing](publishing.md)
 - [Getting Started with Knora](getting-started.md)
 - [Configuration](configuration.md)
 - [Updating Repositories When Upgrading Knora](updates.md)
