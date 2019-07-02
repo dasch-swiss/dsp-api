@@ -107,6 +107,11 @@ case class CheckRepository() extends ApplicationStateRequest
 case class CreateCaches() extends ApplicationStateRequest
 
 /**
+  * Message for updating the triplestore's full-text search index. Used only inside the actor itself.
+  */
+case class UpdateSearchIndex() extends ApplicationStateRequest
+
+/**
   * Message for initiating loading of ontologies. Used only inside the actor itself.
   */
 case class LoadOntologies() extends ApplicationStateRequest
@@ -116,6 +121,7 @@ case class LoadOntologies() extends ApplicationStateRequest
   */
 object AppState extends Enumeration {
     type AppState = Value
-    val Stopped, StartingUp, WaitingForRepository, RepositoryReady, CreatingCaches, CachesReady, LoadingOntologies, OntologiesReady, MaintenanceMode, Running = Value
+    val Stopped, StartingUp, WaitingForRepository, RepositoryReady, CreatingCaches, CachesReady,
+    UpdatingSearchIndex, SearchIndexReady, LoadingOntologies, OntologiesReady, MaintenanceMode, Running = Value
 }
 
