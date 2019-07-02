@@ -46,6 +46,7 @@ before_install:
   - tar -C travis -xvf travis/secrets.tar
   - sudo apt-get -qq update
   - sudo apt-get install -y expect
+  - sudo apt-get install redis-server
 
 stages:
   - compile and stage

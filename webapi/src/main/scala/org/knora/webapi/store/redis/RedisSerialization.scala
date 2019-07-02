@@ -17,12 +17,26 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.store.redismessages
+package org.knora.webapi.store.redis
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
-sealed trait RedisRequest
+object RedisSerialization {
 
-case class RedisPutProjectADM(key: String, value: ProjectADM) extends RedisRequest
+    // FIXME: Add checks
+    def serialize[T](value: T): Array[Byte] = {
+        val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
+        val oos = new ObjectOutputStream(stream)
+        oos.writeObject(value)
+        oos.close()
+        stream.toByteArray
+    }
 
-case class RedisGetProjectADM(key: String) extends RedisRequest
+    // FIXME: Add checks
+    def deserialize[T](bytes: Array[Byte]): T = {
+        val ois = new ObjectInputStream(new ByteArrayInputStream(bytes))
+        val value = ois.readObject
+        ois.close()
+        value.asInstanceOf[T]
+    }
+}

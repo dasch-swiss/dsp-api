@@ -17,12 +17,27 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.store.redismessages
+package org.knora.webapi.store.redis
 
+
+
+import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.scalatest.{Matchers, WordSpecLike}
 
-sealed trait RedisRequest
+/**
+  * This spec is used to test [[org.knora.webapi.store.redis.RedisSerialization]].
+  */
+class RedisSerializationSpec extends WordSpecLike with Matchers {
 
-case class RedisPutProjectADM(key: String, value: ProjectADM) extends RedisRequest
+    "serialize and deserialize" should {
 
-case class RedisGetProjectADM(key: String) extends RedisRequest
+        "work succeed with the ProjectADM case class" in {
+            val serialized: Array[Byte] =  RedisSerialization.serialize(SharedTestDataADM.imagesProject)
+            val deserialized: ProjectADM = RedisSerialization.deserialize(serialized).asInstanceOf[ProjectADM]
+            deserialized should equal (SharedTestDataADM.imagesProject)
+        }
+
+
+    }
+}

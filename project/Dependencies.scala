@@ -97,7 +97,7 @@ object Dependencies {
 
         // caching
         val ehcache                = "net.sf.ehcache"                           % "ehcache"                  % "2.10.3"
-        val scalaCacheRedis        = "com.github.cb372"                        %% "scalacache-redis"         % "0.28.0"
+        val redisClient            = "net.debasishg"                           %% "redisclient"              % "3.10"
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
@@ -211,9 +211,9 @@ object Dependencies {
         jwtSprayJson,
         logbackClassic,
         rdf4jRuntime,
+        redisClient,
         saxonHE,
         scalaArm,
-        scalaCacheRedis,
         scalaJava8Compat,
         scalaLogging,
         WebapiTest.scalaTest,
