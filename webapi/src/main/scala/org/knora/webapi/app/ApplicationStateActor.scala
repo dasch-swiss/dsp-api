@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorSelection, Timers}
 import org.knora.webapi._
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
-import org.knora.webapi.messages.store.triplestoremessages.{CheckRepositoryRequest, CheckRepositoryResponse, RepositoryStatus}
+import org.knora.webapi.messages.store.triplestoremessages.{CheckRepositoryRequest, CheckRepositoryResponse, RepositoryStatus, SearchIndexUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
@@ -65,15 +65,17 @@ class ApplicationStateActor extends Actor with Timers with ActorLogging {
                 case AppState.Stopped => // do nothing
                 case AppState.StartingUp => self ! SetAppState(AppState.WaitingForRepository)
                 case AppState.WaitingForRepository => self ! CheckRepository() // check DB
-                case AppState.RepositoryReady =>  self ! SetAppState(AppState.CreatingCaches)
+                case AppState.RepositoryReady => self ! SetAppState(AppState.CreatingCaches)
                 case AppState.CreatingCaches => self ! CreateCaches()
-                case AppState.CachesReady => self ! SetAppState(AppState.LoadingOntologies)
-                case AppState.LoadingOntologies if skipOntologies => self ! SetAppState(AppState.OntologiesReady)  // skipping loading of ontologies
+                case AppState.CachesReady => self ! SetAppState(AppState.UpdatingSearchIndex)
+                case AppState.UpdatingSearchIndex => self ! UpdateSearchIndex()
+                case AppState.SearchIndexReady => self ! SetAppState(AppState.LoadingOntologies)
+                case AppState.LoadingOntologies if skipOntologies => self ! SetAppState(AppState.OntologiesReady) // skipping loading of ontologies
                 case AppState.LoadingOntologies if !skipOntologies => self ! LoadOntologies() // load ontologies
                 case AppState.OntologiesReady => self ! SetAppState(AppState.Running)
                 case AppState.Running => printWelcomeMsg()
                 case AppState.MaintenanceMode => // do nothing
-                case value => throw UnsupportedValueException(s"The value: $value is not supported.")
+                case other => throw UnsupportedValueException(s"The value: $other is not supported.")
             }
         }
         case GetAppState() => {
@@ -130,15 +132,25 @@ class ApplicationStateActor extends Actor with Timers with ActorLogging {
             self ! SetAppState(AppState.CachesReady)
         }
 
+        case UpdateSearchIndex() => {
+            storeManager ! SearchIndexUpdateRequest()
+        }
+
+        case SparqlUpdateResponse() => {
+            self ! SetAppState(AppState.SearchIndexReady)
+        }
+
         /* load ontologies request */
         case LoadOntologies() => {
-            responderManager !  LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
+            responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
         }
 
         /* load ontologies response */
-        case SuccessResponseV2(msg) => {
+        case SuccessResponseV2(_) => {
             self ! SetAppState(AppState.OntologiesReady)
         }
+
+        case other => throw UnexpectedMessageException(s"ApplicationStateActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
     }
 
     override def postStop(): Unit = {
