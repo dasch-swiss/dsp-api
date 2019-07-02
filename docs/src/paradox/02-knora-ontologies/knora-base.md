@@ -1537,5 +1537,5 @@ proposed entities to be shared. Once a consensus was reached, the
 The Knora base ontology has the property `kb:ontologyVersion`, whose
 object is a string that indicates the deployed version of all the Knora
 built-in ontologies. This allows the
-@ref:[repository update program](../04-deployment/updates.md) to determine
+@ref:[repository update program](../04-publishing-deployment/updates.md) to determine
 which repository updates are needed when Knora is upgraded.
