@@ -25,6 +25,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{SparqlExtendedConstr
 import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 import org.knora.webapi.responders.v2.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryGenerator
 import org.knora.webapi.responders.v2.search.gravsearch.types.GravsearchTypeInspectionResult
+import org.knora.webapi.util.ConstructResponseUtilV2.{RdfPropertyValues, RdfResources}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{ConstructResponseUtilV2, ErrorHandlingMap, SmartIri, StringFormatter}
 
@@ -46,7 +47,7 @@ object MainQueryResultProcessor {
       * @param valuePropertyAssertions the assertions to be traversed.
       * @return a [[ResourceIrisAndValueObjectIris]] representing all resource and value object IRIs that have been found in `valuePropertyAssertions`.
       */
-    def collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropertyAssertions: Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]])(implicit stringFormatter: StringFormatter): ResourceIrisAndValueObjectIris = {
+    def collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropertyAssertions: RdfPropertyValues)(implicit stringFormatter: StringFormatter): ResourceIrisAndValueObjectIris = {
 
         // look at the value objects and ignore the property IRIs (we are only interested in value instances)
         val resAndValObjIris: Seq[ResourceIrisAndValueObjectIris] = valuePropertyAssertions.values.flatten.foldLeft(Seq.empty[ResourceIrisAndValueObjectIris]) {
@@ -213,14 +214,14 @@ object MainQueryResultProcessor {
     def getMainQueryResultsWithFullGraphPattern(mainQueryResponse: SparqlExtendedConstructResponse,
                                                 dependentResourceIrisPerMainResource: DependentResourcesPerMainResource,
                                                 valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris,
-                                                requestingUser: UserADM)(implicit stringFormatter: StringFormatter): Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = {
+                                                requestingUser: UserADM)(implicit stringFormatter: StringFormatter): RdfResources = {
 
         // separate main resources and value objects (dependent resources are nested)
         // this method removes resources and values the requesting users has insufficient permissions on (missing view permissions).
-        val queryResultsSep: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = mainQueryResponse, requestingUser = requestingUser)
+        val queryResultsSep: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = mainQueryResponse, requestingUser = requestingUser)
 
-        queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
-            case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
+        queryResultsSep.foldLeft(ConstructResponseUtilV2.emptyRdfResources) {
+            case (acc: RdfResources, (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
 
                 // check for presence of dependent resources: dependentResourceIrisPerMainResource plus the dependent resources whose Iris where provided in the Gravsearch query.
                 val expectedDependentResources: Set[IRI] = dependentResourceIrisPerMainResource.dependentResourcesPerMainResource(mainResIri) /*++ dependentResourceIrisFromTypeInspection*/
@@ -232,7 +233,7 @@ object MainQueryResultProcessor {
                 val expectedValueObjects: Set[IRI] = valueObjectVarsAndIrisPerMainResource.valueObjectVariablesAndValueObjectIris(mainResIri).values.flatten.toSet
 
                 // value property assertions for the current main resource
-                val valuePropAssertions: Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
+                val valuePropAssertions: RdfPropertyValues = values.valuePropertyAssertions
 
                 // all the IRIs of dependent resources and value objects contained in `valuePropAssertions`
                 val resAndValueObjIris: MainQueryResultProcessor.ResourceIrisAndValueObjectIris = MainQueryResultProcessor.collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropAssertions)
@@ -284,13 +285,13 @@ object MainQueryResultProcessor {
       * @param typeInspectionResult                    results of type inspection of the input query.
       * @return results with only the values the user asked for in the input query's CONSTRUCT clause.
       */
-    def getRequestedValuesFromResultsWithFullGraphPattern(queryResultsWithFullGraphPattern: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData],
+    def getRequestedValuesFromResultsWithFullGraphPattern(queryResultsWithFullGraphPattern: RdfResources,
                                                           valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris,
                                                           allResourceVariablesFromTypeInspection: Set[QueryVariable],
                                                           dependentResourceIrisFromTypeInspection: Set[IRI],
                                                           transformer: NonTriplestoreSpecificGravsearchToPrequeryGenerator,
                                                           typeInspectionResult: GravsearchTypeInspectionResult,
-                                                          inputQuery: ConstructQuery): Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = {
+                                                          inputQuery: ConstructQuery): RdfResources = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
@@ -351,8 +352,8 @@ object MainQueryResultProcessor {
                   * @param values the values to be filtered.
                   * @return filtered values.
                   */
-                def traverseAndFilterValues(values: ConstructResponseUtilV2.ResourceWithValueRdfData): Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]] = {
-                    values.valuePropertyAssertions.foldLeft(Map.empty[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]]) {
+                def traverseAndFilterValues(values: ConstructResponseUtilV2.ResourceWithValueRdfData): RdfPropertyValues = {
+                    values.valuePropertyAssertions.foldLeft(ConstructResponseUtilV2.emptyRdfPropertyValues) {
                         case (acc, (propIri: SmartIri, values: Seq[ConstructResponseUtilV2.ValueRdfData])) =>
 
                             // filter values for the current resource
@@ -370,7 +371,7 @@ object MainQueryResultProcessor {
                                         val targetResourceAssertions: ConstructResponseUtilV2.ResourceWithValueRdfData = valObj.nestedResource.get
 
                                         // apply filter to the target resource's values
-                                        val targetResourceAssertionsFiltered: Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(targetResourceAssertions)
+                                        val targetResourceAssertionsFiltered: RdfPropertyValues = traverseAndFilterValues(targetResourceAssertions)
 
                                         valObj.copy(
                                             nestedResource = Some(targetResourceAssertions.copy(
@@ -397,7 +398,7 @@ object MainQueryResultProcessor {
                 }
 
                 // filter values for the current main resource
-                val requestedValuePropertyAssertions: Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(assertions)
+                val requestedValuePropertyAssertions: RdfPropertyValues = traverseAndFilterValues(assertions)
 
                 // only return the requested values for the current main resource
                 mainResIri -> assertions.copy(
