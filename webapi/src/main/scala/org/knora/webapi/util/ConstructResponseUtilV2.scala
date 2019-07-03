@@ -59,7 +59,7 @@ object ConstructResponseUtilV2 {
     /**
       * Makes an empty instance of [[RdfResources]].
       */
-    private def emptyRdfResources: Map[IRI, ResourceWithValueRdfData] = Map.empty
+    private def emptyRdfResources: RdfResources = Map.empty
 
     /**
       * A map of property IRIs to value RDF data.
@@ -69,7 +69,7 @@ object ConstructResponseUtilV2 {
     /**
       * Makes an empty instance of [[RdfPropertyValues]].
       */
-    private def emptyRdfPropertyValues: Map[SmartIri, Seq[ValueRdfData]] = Map.empty
+    private def emptyRdfPropertyValues: RdfPropertyValues = Map.empty
 
     /**
       * A map of subject IRIs to [[ConstructPredicateObjects]] instances.
@@ -90,7 +90,7 @@ object ConstructResponseUtilV2 {
     /**
       * Makes an empty instance of [[FlatStatements]].
       */
-    private def emptyFlatStatements: Map[IRI, Map[SmartIri, LiteralV2]] = Map.empty
+    private def emptyFlatStatements: FlatStatements = Map.empty
 
     /**
       * Represents assertions about an RDF subject.
