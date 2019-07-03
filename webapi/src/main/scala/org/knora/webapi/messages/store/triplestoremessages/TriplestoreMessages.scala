@@ -131,12 +131,21 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
   */
 case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
 
+object SparqlExtendedConstructResponse {
+    /**
+      * A map of predicate IRIs to literal objects.
+      */
+    type ConstructPredicateObjects = Map[SmartIri, Seq[LiteralV2]]
+}
+
+import SparqlExtendedConstructResponse.ConstructPredicateObjects
+
 /**
   * A response to a [[SparqlExtendedConstructRequest]].
   *
   * @param statements a map of subjects to statements about each subject.
   */
-case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]])
+case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, ConstructPredicateObjects])
 
 /**
   * Represents a SPARQL Update operation to be performed.
