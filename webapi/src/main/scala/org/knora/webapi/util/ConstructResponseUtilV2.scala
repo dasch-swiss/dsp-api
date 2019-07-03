@@ -57,9 +57,19 @@ object ConstructResponseUtilV2 {
     type RdfResources = Map[IRI, ResourceWithValueRdfData]
 
     /**
+      * Makes an empty instance of [[RdfResources]].
+      */
+    private def emptyRdfResources: Map[IRI, ResourceWithValueRdfData] = Map.empty
+
+    /**
       * A map of property IRIs to value RDF data.
       */
     type RdfPropertyValues = Map[SmartIri, Seq[ValueRdfData]]
+
+    /**
+      * Makes an empty instance of [[RdfPropertyValues]].
+      */
+    private def emptyRdfPropertyValues: Map[SmartIri, Seq[ValueRdfData]] = Map.empty
 
     /**
       * A map of subject IRIs to [[ConstructPredicateObjects]] instances.
@@ -76,6 +86,11 @@ object ConstructResponseUtilV2 {
       * A map of subject IRIs to flattened maps of predicates to objects.
       */
     type FlatStatements = Map[IRI, Map[SmartIri, LiteralV2]]
+
+    /**
+      * Makes an empty instance of [[FlatStatements]].
+      */
+    private def emptyFlatStatements: Map[IRI, Map[SmartIri, LiteralV2]] = Map.empty
 
     /**
       * Represents assertions about an RDF subject.
@@ -441,7 +456,7 @@ object ConstructResponseUtilV2 {
                                             valueObjectClass = valueObjectClass,
                                             userPermission = valueRdfWithUserPermission.maybeUserPermission.get,
                                             assertions = valueStatements,
-                                            standoff = Map.empty[IRI, FlatPredicateObjects] // link value does not contain standoff
+                                            standoff = emptyFlatStatements // link value does not contain standoff
                                         )
                                     )
 
@@ -486,10 +501,10 @@ object ConstructResponseUtilV2 {
             case (resourceIri: IRI, values: ResourceWithValueRdfData) =>
 
                 // get all incoming links for resourceIri
-                val incomingLinksForRes: RdfResources = flatResourcesWithValues.foldLeft(Map.empty[IRI, ResourceWithValueRdfData]) {
+                val incomingLinksForRes: RdfResources = flatResourcesWithValues.foldLeft(emptyRdfResources) {
                     case (acc: RdfResources, (otherResourceIri: IRI, otherResource: ResourceWithValueRdfData)) =>
 
-                        val incomingLinkPropertyAssertions: RdfPropertyValues = otherResource.valuePropertyAssertions.foldLeft(Map.empty[SmartIri, Seq[ValueRdfData]]) {
+                        val incomingLinkPropertyAssertions: RdfPropertyValues = otherResource.valuePropertyAssertions.foldLeft(emptyRdfPropertyValues) {
                             case (acc: RdfPropertyValues, (prop: SmartIri, otherResourceValues: Seq[ValueRdfData])) =>
 
                                 // collect all link values that point to resourceIri
@@ -583,7 +598,7 @@ object ConstructResponseUtilV2 {
             }
 
             // link value assertions that point to this resource
-            val incomingLinkAssertions: RdfPropertyValues = referringResources.values.foldLeft(Map.empty[SmartIri, Seq[ValueRdfData]]) {
+            val incomingLinkAssertions: RdfPropertyValues = referringResources.values.foldLeft(emptyRdfPropertyValues) {
                 case (acc: RdfPropertyValues, assertions: ResourceWithValueRdfData) =>
 
                     val values: RdfPropertyValues = assertions.valuePropertyAssertions.flatMap {
