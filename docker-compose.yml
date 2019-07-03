@@ -43,6 +43,11 @@ services:
       - SIPI_WEBAPI_PORT=3333
     command: --config=/sipi/config/sipi.knora-docker-it-config.lua
 
+  redis:
+    image: redis:5
+    ports:
+      - "6379:6379"
+
   webapi:
     image: ${KNORA_WEBAPI_IMAGE}<localBuild>
     ports:
@@ -59,6 +64,8 @@ services:
       - KNORA_WEBAPI_TRIPLESTORE_DBTYPE=${KNORA_GDB_TYPE}
       - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
       - KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_REPOSITORY_NAME=knora-test
+      - KNORA_WEBAPI_REDIS_HOST=redis
+      - KNORA_WEBAPI_REDIS_PORT=6379
       - KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP=true
 
   salsah1:

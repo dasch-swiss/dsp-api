@@ -30,6 +30,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{Permission
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadADM, _}
+import org.knora.webapi.messages.store.redismessages.{RedisGetUserADM, RedisPutUserADM}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
@@ -123,7 +124,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
-      * Gets all the users and returns them as a [[UsersGetResponseV1]].
+      * Gets all the users and returns them as a [[UsersGetResponseADM]].
       *
       * @param userInformationType the extent of the information returned.
       * @param requestingUser      the user initiating the request.
@@ -151,62 +152,36 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @return a [[UserADM]] describing the user.
       */
     private def userGetADM(identifier: UserIdentifierADM, userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
+
         log.debug(s"userGetADM: identifier: {}, userInformationType: {}, requestingUser: {}", identifier, userInformationType, requestingUser)
 
-        val maybeUserFromCache = identifier.hasType match {
-            case UserIdentifierType.IRI => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.toIri)
-            case UserIdentifierType.EMAIL => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
-            case UserIdentifierType.USERNAME => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
-        }
+        for {
+            maybeUserFromCache <- (storeManager ? RedisGetUserADM(identifier)).mapTo[Option[UserADM]]
 
-        val maybeUserADM: Future[Option[UserADM]] = maybeUserFromCache match {
-            case Some(user) =>
-                // found a user profile in the cache
-                log.debug("userGetADM - cache hit for: {}", identifier.value)
-                FastFuture.successful(Some(user.ofType(userInformationType)))
+            maybeUserADM <- maybeUserFromCache match {
+                case Some(user) =>
+                    // found a user profile in the cache
+                    log.debug("userGetADM - cache hit for: {}", identifier.value)
+                    FastFuture.successful(Some(user.ofType(userInformationType)))
 
-            case None =>
-                // didn't find a user profile in the cache
-                log.debug("userGetADM - no cache hit for: {}", identifier.value)
-                for {
-                    sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
-                        triplestore = settings.triplestoreType,
-                        maybeIri = identifier.toIriOption,
-                        maybeUsername = identifier.toUsernameOption,
-                        maybeEmail = identifier.toEmailOption
-                    ).toString())
+                case None =>
+                    // didn't find a user profile in the cache
+                    log.debug("userGetADM - no cache hit for: {}", identifier.value)
 
-                    userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
+                    // didn't find the user in the cache, so lets try to get him from the triplestore
+                    getUserFromTriplestore(identifier).map(maybeUser => maybeUser.map(user => user.ofType(userInformationType)))
+            }
 
-                    maybeUserADM: Option[UserADM] <- if (userQueryResponse.statements.nonEmpty) {
-                        statements2UserADM(userQueryResponse.statements.head, requestingUser)
-                    } else {
-                        FastFuture.successful(None)
-                    }
+            // return the correct amount of information depending on user permissions
+            finalResponse = if (requestingUser.permissions.isSystemAdmin || requestingUser.isSelf(identifier) || requestingUser.isSystemUser) {
+                // return everything or what was requested
+                maybeUserADM
+            } else {
+                // all others should only see public information
+                maybeUserADM.map(user => user.ofType(UserInformationTypeADM.PUBLIC))
+            }
 
-                    _ = if (maybeUserADM.nonEmpty) {
-                        writeUserADMToCache(maybeUserADM.get)
-                    }
-
-                    result = maybeUserADM.map(_.ofType(userInformationType))
-
-                } yield result
-        }
-
-        // return the correct amount of information depending on user permissions
-        val res: Future[Option[UserADM]] = if (requestingUser.permissions.isSystemAdmin || requestingUser.isSelf(identifier) || requestingUser.isSystemUser) {
-            // return everything or what was requested
-            maybeUserADM
-        } else {
-            // all others should only see public information
-            for {
-                user <- maybeUserADM
-                result = user.map(_.ofType(UserInformationTypeADM.PUBLIC))
-            } yield result
-        }
-
-        // _ = log.debug("userGetADM - user: {}", res)
-        res
+        } yield finalResponse
     }
 
     /**
@@ -300,7 +275,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             userDataQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
             // create the user profile
-            maybeNewUserADM <- statements2UserADM(userDataQueryResponse.statements.head, requestingUser)
+            maybeNewUserADM <- statements2UserADM(userDataQueryResponse.statements.head)
 
             newUserADM = maybeNewUserADM.getOrElse(throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug."))
 
@@ -1224,45 +1199,35 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     ////////////////////
 
     /**
-      * Helper method used to create a [[UserDataV1]] from the [[SparqlSelectResponse]] containing user data.
+      * Helper method used to retrieve a [[UserADM]] from the triplestore.
       *
-      * @param userDataQueryResponse a [[SparqlSelectResponse]] containing user data.
-      * @param short                 denotes if all information should be returned. If short == true, then no token and password should be returned.
-      * @return a [[UserDataV1]] containing the user's basic data.
+      * @param identifier the identifier for the user.
+      * @return a [[UserADM]].
       */
-    private def userDataQueryResponse2UserData(userDataQueryResponse: SparqlSelectResponse, short: Boolean): Future[Option[UserDataV1]] = {
+    def getUserFromTriplestore(identifier: UserIdentifierADM): Future[Option[UserADM]] = for {
+        sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
+            triplestore = settings.triplestoreType,
+            maybeIri = identifier.toIriOption,
+            maybeUsername = identifier.toUsernameOption,
+            maybeEmail = identifier.toEmailOption
+        ).toString())
 
-        // log.debug("userDataQueryResponse2UserData - " + MessageUtil.toSource(userDataQueryResponse))
+        userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
 
-        if (userDataQueryResponse.results.bindings.nonEmpty) {
-            val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
-
-            val groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-                case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-            }
-
-            // _ = log.debug(s"userDataQueryResponse2UserProfile - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
-
-            val userDataV1 = UserDataV1(
-                lang = groupedUserData.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
-                    case Some(langList) => langList.head
-                    case None => settings.fallbackLanguage
-                },
-                user_id = Some(returnedUserIri),
-                email = groupedUserData.get(OntologyConstants.KnoraAdmin.Email).map(_.head),
-                firstname = groupedUserData.get(OntologyConstants.KnoraAdmin.GivenName).map(_.head),
-                lastname = groupedUserData.get(OntologyConstants.KnoraAdmin.FamilyName).map(_.head),
-                password = if (!short) {
-                    groupedUserData.get(OntologyConstants.KnoraAdmin.Password).map(_.head)
-                } else None,
-                status = groupedUserData.get(OntologyConstants.KnoraAdmin.Status).map(_.head.toBoolean)
-            )
-            // _ = log.debug(s"userDataQueryResponse - userDataV1: {}", MessageUtil.toSource(userDataV1)")
-            FastFuture.successful(Some(userDataV1))
+        maybeUserADM: Option[UserADM] <- if (userQueryResponse.statements.nonEmpty) {
+            statements2UserADM(userQueryResponse.statements.head)
         } else {
             FastFuture.successful(None)
         }
-    }
+
+        _ = if (maybeUserADM.nonEmpty) {
+            writeUserADMToCache(maybeUserADM.get)
+        }
+
+        result = maybeUserADM
+
+    } yield result
+
 
     /**
       * Helper method used to create a [[UserADM]] from the [[SparqlExtendedConstructResponse]] containing user data.
@@ -1270,7 +1235,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @param statements result from the SPARQL query containing user data.
       * @return a [[UserADM]] containing the user's data.
       */
-    private def statements2UserADM(statements: (SubjectV2, Map[IRI, Seq[LiteralV2]]), requestingUser: UserADM): Future[Option[UserADM]] = {
+    private def statements2UserADM(statements: (SubjectV2, Map[IRI, Seq[LiteralV2]])): Future[Option[UserADM]] = {
 
         // log.debug("statements2UserADM - statements: {}", statements)
 
@@ -1444,33 +1409,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @return true if writing was successful.
       * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
       */
-    private def writeUserADMToCache(user: UserADM): Boolean = {
-
-        val iri = user.id
-
-        val email = user.email
-
-        val username = user.username
-
-        // write to cache identified by IRI
-        CacheUtil.put(USER_ADM_CACHE_NAME, iri, user)
-        if (CacheUtil.get(USER_ADM_CACHE_NAME, iri).isEmpty) {
-            throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
-        }
-
-        // write to cache identified by username
-        CacheUtil.put(USER_ADM_CACHE_NAME, username, user)
-        if (CacheUtil.get(USER_ADM_CACHE_NAME, username).isEmpty) {
-            throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
-        }
-
-        // write to cache identified by email
-        CacheUtil.put(USER_ADM_CACHE_NAME, email, user)
-        if (CacheUtil.get(USER_ADM_CACHE_NAME, email).isEmpty) {
-            throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
-        }
-
-        true
+    private def writeUserADMToCache(user: UserADM): Future[Option[Boolean]] = {
+        (storeManager ? RedisPutUserADM(user)).mapTo[Option[Boolean]]
     }
 
     /**

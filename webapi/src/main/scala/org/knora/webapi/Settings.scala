@@ -132,6 +132,9 @@ class SettingsImpl(config: Config) extends Extension {
                 cacheConfigMap("time-to-idle-seconds").asInstanceOf[Int])
     }.toVector
 
+    val redisHost: String = config.getString("app.redis.host")
+    val redisPort: Int = config.getInt("app.redis.port")
+
     val defaultTimeout: FiniteDuration = getFiniteDuration("app.default-timeout", config)
 
     val dumpMessages: Boolean = config.getBoolean("app.dump-messages")

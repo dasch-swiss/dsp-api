@@ -802,10 +802,24 @@ class UserIdentifierADM private(maybeIri: Option[IRI] = None,
     }
 
     /**
+      * Tries to return the value as email.
+      */
+    def toEmail: IRI = {
+        maybeEmail.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.EMAIL' type."))
+    }
+
+    /**
       * Returns an optional value of the identifier.
       */
     def toEmailOption: Option[String] = {
         maybeEmail
+    }
+
+    /**
+      * Tries to return the value as username.
+      */
+    def toUsername: IRI = {
+        maybeUsername.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.USERNAME' type."))
     }
 
     /**

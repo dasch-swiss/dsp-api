@@ -66,11 +66,12 @@ class StoreManager extends Actor with ActorLogging {
       */
     protected lazy val iiifManager = makeActor(Props(new IIIFManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), IIIFManagerActorName)
 
-
     /**
       * Instantiates the Redis Manager
       */
-    protected lazy val redisManager: RedisManager = new RedisManager(host = "localhost", port = 6379)
+    protected lazy val redisManager: RedisManager = new RedisManager(host = settings.redisHost, port = settings.redisPort)
+
+
 
     def receive = LoggingReceive {
         case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage

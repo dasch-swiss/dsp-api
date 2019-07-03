@@ -19,10 +19,15 @@
 
 package org.knora.webapi.messages.store.redismessages
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
 
 sealed trait RedisRequest
 
-case class RedisPutProjectADM(key: String, value: ProjectADM) extends RedisRequest
+case class RedisPutProjectADM(value: ProjectADM) extends RedisRequest
 
-case class RedisGetProjectADM(key: String) extends RedisRequest
+case class RedisGetProjectADM(identifier: ProjectIdentifierADM) extends RedisRequest
+
+case class RedisPutUserADM(value: UserADM) extends RedisRequest
+
+case class RedisGetUserADM(identifier: UserIdentifierADM) extends RedisRequest

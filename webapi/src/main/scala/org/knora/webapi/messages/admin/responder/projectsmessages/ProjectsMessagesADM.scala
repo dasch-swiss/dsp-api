@@ -486,7 +486,9 @@ object ProjectIdentifierADM {
 
 /**
   * Represents the project's identifier. It can be an IRI, shortcode or shortname.
-  * @param value the user's identifier.
+  * @param iri the project's IRI.
+  * @param shortname the project's shortname.
+  * @param shortcode the project's shortcode
   */
 class ProjectIdentifierADM private (iri: Option[IRI] = None,
                                     shortname: Option[String] = None,
@@ -525,10 +527,24 @@ class ProjectIdentifierADM private (iri: Option[IRI] = None,
     }
 
     /**
+      * Tries to return the value as an SHORTNAME.
+      */
+    def toShortname: String = {
+        shortname.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTNAME' type."))
+    }
+
+    /**
       * Returns an optional value of the identifier.
       */
     def toShortnameOption: Option[String] = {
         shortname
+    }
+
+    /**
+      * Tries to return the value as an SHORTCODE.
+      */
+    def toShortcode: String = {
+        shortcode.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTCODE' type."))
     }
 
     /**
@@ -560,8 +576,7 @@ object ProjectIdentifierType extends Enumeration {
 /**
   * API MAY CHANGE: Represents the project's restricted view settings.
   *
-  * @param size     the x size.
-  * @param sizeY the y size.
+  * @param size      the size as defined by IIIF.
   * @param watermark the watermark file.
   */
 @ApiMayChange
