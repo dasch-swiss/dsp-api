@@ -234,7 +234,7 @@ object ConstructResponseUtilV2 {
     /**
       * Represents the RDF data about a value, possibly including standoff.
       *
-      * @param subjectIri   the value object's IRI.
+      * @param subjectIri       the value object's IRI.
       * @param valueObjectClass the type (class) of the value object.
       * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[isIncomingLink]]).
       * @param isIncomingLink   indicates if it is an incoming or outgoing link in case of a link value.
@@ -253,8 +253,8 @@ object ConstructResponseUtilV2 {
     /**
       * Represents a resource and its values.
       *
-      * @param subjectIri the resource IRI.
-      * @param assertions      assertions about the resource (direct statements).
+      * @param subjectIri              the resource IRI.
+      * @param assertions              assertions about the resource (direct statements).
       * @param isMainResource          indicates if this represents a top level resource or a referred resource (depending on the query).
       * @param userPermission          the permission that the requesting user has on the resource.
       * @param valuePropertyAssertions assertions about value properties.
