@@ -50,10 +50,10 @@
 :newtonProjectID rdf:type owl:ObjectProperty ;
 
 
-                rdfs:label "Newton Project ID"@de ,
-                           "Newton Project ID"@en ;
+                rdfs:label "Letter in The Newton Project"@de ,
+                           "Letter in The Newton Project"@en ;
 
-                rdfs:comment """Represents the ID of the letter in The Newton Project."""@en ;
+                rdfs:comment """Represents the letter in The Newton Project."""@en ;
 
                 knora-base:objectClassConstraint knora-base:TextValue ;
                 knora-base:subjectClassConstraint :letter ;
