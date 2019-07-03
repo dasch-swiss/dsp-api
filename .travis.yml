@@ -6,8 +6,8 @@ addons:
   chrome: stable
 
 language:
-  - scala
-  - python
+  - "scala"
+  - "python"
 
 scala:
   - "2.12.1"
