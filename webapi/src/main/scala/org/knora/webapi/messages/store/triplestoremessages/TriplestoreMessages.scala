@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
+import java.io.File
 import java.time.Instant
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -117,6 +118,20 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
 case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
+  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
+  * written to the specified file in Trig format. A successful response message will be a [[FileWrittenResponse]].
+  *
+  * @param sparql     the SPARQL string.
+  * @param outputFile the file to be written.
+  */
+case class SparqlConstructFileRequest(sparql: String, outputFile: File) extends TriplestoreRequest
+
+/**
+  * Indicates that a file was written successfully.
+  */
+case class FileWrittenResponse()
+
+/**
   * A response to a [[SparqlConstructRequest]].
   *
   * @param statements a map of subject IRIs to statements about each subject.
@@ -137,6 +152,15 @@ case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreReq
   * @param statements a map of subjects to statements about each subject. TODO: use SmartIri for the predicate.
   */
 case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, Map[IRI, Seq[LiteralV2]]])
+
+/**
+  * Requests a named graph, which will be written to the specified file in Trig format. A successful response
+  * will be a [[FileWrittenResponse]].
+  *
+  * @param graphIri   the IRI of the named graph.
+  * @param outputFile the destination file.
+  */
+case class SparqlGraphFileRequest(graphIri: IRI, outputFile: File) extends TriplestoreRequest
 
 /**
   * Represents a SPARQL Update operation to be performed.
@@ -170,7 +194,7 @@ case class SparqlAskResponse(result: Boolean)
   * Message for resetting the contents of the triplestore and loading a fresh set of data. The data needs to be
   * stored in an accessible path and supplied via the [[RdfDataObject]].
   *
-  * @param rdfDataObjects contains a list of [[RdfDataObject]].
+  * @param rdfDataObjects  contains a list of [[RdfDataObject]].
   * @param prependDefaults denotes if a default set defined in application.conf should be also loaded
   */
 case class ResetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true) extends TriplestoreRequest
@@ -223,7 +247,7 @@ case class CheckRepositoryRequest() extends TriplestoreRequest
   * Response indicating whether the triplestore has finished initialization and is ready for processing messages
   *
   * @param repositoryStatus the state of the repository.
-  * @param msg further description.
+  * @param msg              further description.
   */
 case class CheckRepositoryResponse(repositoryStatus: RepositoryStatus, msg: String)
 
