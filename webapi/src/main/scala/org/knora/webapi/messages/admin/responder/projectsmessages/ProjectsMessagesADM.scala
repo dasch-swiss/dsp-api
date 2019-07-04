@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
+import java.io.File
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -108,6 +109,7 @@ case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
 sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
 
 // Requests
+
 /**
   * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
   * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
@@ -238,7 +240,7 @@ case class ProjectKeywordsGetRequestADM(projectIri: IRI,
 /**
   * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
   *
-  * @param projectIri     the IRI of the project.
+  * @param identifier     the identifier of the project.
   * @param requestingUser the user making the request.
   */
 @ApiMayChange
@@ -247,12 +249,21 @@ case class ProjectRestrictedViewSettingsGetADM(identifier: ProjectIdentifierADM,
 /**
   * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
   *
-  * @param projectIri     the IRI of the project.
+  * @param identifier     the identifier of the project.
   * @param requestingUser the user making the request.
   */
 @ApiMayChange
 case class ProjectRestrictedViewSettingsGetRequestADM(identifier: ProjectIdentifierADM,
                                                       requestingUser: UserADM) extends ProjectsResponderRequestADM
+
+/**
+  * Requests all the data in the project. A successful response will be a [[ProjectDataGetResponseADM]].
+  *
+  * @param projectIri     the IRI of the project.
+  * @param requestingUser the user making the request.
+  */
+case class ProjectDataGetRequestADM(projectIri: IRI,
+                                    requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
   * Requests the creation of a new project.
@@ -279,6 +290,7 @@ case class ProjectChangeRequestADM(projectIri: IRI,
                                    apiRequestID: UUID) extends ProjectsResponderRequestADM
 
 // Responses
+
 /**
   * Represents the Knora API ADM JSON response to a request for information about all projects.
   *
@@ -354,6 +366,13 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
     def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 }
 
+/**
+  * Represents a project's data in TriG format.
+  *
+  * @param projectDataFile a file containing the project's data in TriG format.
+  */
+case class ProjectDataGetResponseADM(projectDataFile: File)
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -427,15 +446,15 @@ case class ProjectADM(id: IRI,
         that match {
             case otherProj: ProjectADM =>
                 id == otherProj.id &&
-                        shortname == otherProj.shortname &&
-                        shortcode == otherProj.shortcode &&
-                        longname == otherProj.longname &&
-                        description.toSet == otherProj.description.toSet &&
-                        keywords.toSet == otherProj.keywords.toSet &&
-                        logo == otherProj.logo &&
-                        ontologies.toSet == otherProj.ontologies.toSet &&
-                        status == otherProj.status &&
-                        selfjoin == otherProj.selfjoin
+                    shortname == otherProj.shortname &&
+                    shortcode == otherProj.shortcode &&
+                    longname == otherProj.longname &&
+                    description.toSet == otherProj.description.toSet &&
+                    keywords.toSet == otherProj.keywords.toSet &&
+                    logo == otherProj.logo &&
+                    ontologies.toSet == otherProj.ontologies.toSet &&
+                    status == otherProj.status &&
+                    selfjoin == otherProj.selfjoin
 
             case _ => false
         }
@@ -444,16 +463,16 @@ case class ProjectADM(id: IRI,
     override def hashCode(): Int = {
         // Ignore the order of sequences when generating hash codes for this class.
         new HashCodeBuilder(19, 39).
-                append(id).
-                append(shortname).
-                append(shortcode).
-                append(longname).
-                append(description.toSet).
-                append(keywords.toSet).
-                append(logo).
-                append(ontologies.toSet).
-                append(status).
-                append(selfjoin).hashCode()
+            append(id).
+            append(shortname).
+            append(shortcode).
+            append(longname).
+            append(description.toSet).
+            append(keywords.toSet).
+            append(logo).
+            append(ontologies.toSet).
+            append(status).
+            append(selfjoin).hashCode()
     }
 }
 
@@ -486,11 +505,14 @@ object ProjectIdentifierADM {
 
 /**
   * Represents the project's identifier. It can be an IRI, shortcode or shortname.
-  * @param value the user's identifier.
+  *
+  * @param iri       the project's IRI.
+  * @param shortname the project's shortname.
+  * @param shortcode the project's shortcode.
   */
-class ProjectIdentifierADM private (iri: Option[IRI] = None,
-                                    shortname: Option[String] = None,
-                                    shortcode: Option[String] = None) {
+class ProjectIdentifierADM private(iri: Option[IRI] = None,
+                                   shortname: Option[String] = None,
+                                   shortcode: Option[String] = None) {
 
     // squash and return value.
     val value: String = List(
@@ -550,18 +572,16 @@ object ProjectIdentifierType extends Enumeration {
 
     type ProjectIdentifierType
 
-    val IRI = Value(0, "iri")
-    val SHORTCODE = Value(1, "shortcode")
-    val SHORTNAME = Value(2, "shortname")
+    val IRI: Value = Value(0, "iri")
+    val SHORTCODE: Value = Value(1, "shortcode")
+    val SHORTNAME: Value = Value(2, "shortname")
 }
-
 
 
 /**
   * API MAY CHANGE: Represents the project's restricted view settings.
   *
-  * @param size     the x size.
-  * @param sizeY the y size.
+  * @param size      the restricted view size.
   * @param watermark the watermark file.
   */
 @ApiMayChange

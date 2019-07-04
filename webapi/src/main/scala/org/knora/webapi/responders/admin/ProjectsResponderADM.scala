@@ -19,10 +19,14 @@
 
 package org.knora.webapi.responders.admin
 
+import java.io.{File, FileReader, FileWriter}
+import java.nio.file.Files
 import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import org.eclipse.rdf4j.model.Statement
+import org.eclipse.rdf4j.rio.{RDFFormat, RDFHandler, RDFWriter, Rio}
 import org.knora.webapi._
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -62,6 +66,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         case ProjectRestrictedViewSettingsGetRequestADM(identifier, requestingUser) => projectRestrictedViewSettingsGetRequestADM(identifier, requestingUser)
         case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) => projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
         case ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID) => changeBasicInformationRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID)
+        case ProjectDataGetRequestADM(projectIri, requestingUser) => projectDataGetADM(projectIri, requestingUser)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -372,6 +377,68 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         } yield ProjectKeywordsGetResponseADM(keywords = keywords)
     }
 
+    private def projectDataGetADM(projectIri: IRI, requestingUser: UserADM): Future[ProjectDataGetResponseADM] = {
+        case class TriGFile(graphIri: IRI, tempDir: File) {
+            lazy val dataFile: File = {
+                val filename = graphIri.replaceAll(":", "_").replaceAll("/", "_").replaceAll("""\.""", "_") + ".trig"
+                new File(tempDir, filename)
+            }
+        }
+
+        class CombiningRdfHandler(outputWriter: RDFWriter) extends RDFHandler {
+            override def startRDF(): Unit = {}
+
+            override def endRDF(): Unit = {}
+
+            override def handleNamespace(prefix: IRI, uri: IRI): Unit = outputWriter.handleNamespace(prefix, uri)
+
+            override def handleStatement(st: Statement): Unit = outputWriter.handleStatement(st)
+
+            override def handleComment(comment: IRI): Unit = outputWriter.handleComment(comment)
+        }
+
+        for {
+            maybeProject: Option[ProjectADM] <- projectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = requestingUser)
+            project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '$projectIri' not found."))
+
+            _ = if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(projectIri))) {
+                throw ForbiddenException(s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can request a project's data")
+            }
+
+            projectDataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
+            graphsToDownload: Seq[IRI] = project.ontologies :+ projectDataNamedGraph
+            tempDir = Files.createTempDirectory(project.shortname + "-dump").toFile
+            _ = log.info("Downloading project data to temporary directory " + tempDir.getAbsolutePath)
+            trigFiles: Seq[TriGFile] = graphsToDownload.map(graphIri => TriGFile(graphIri = graphIri, tempDir = tempDir))
+
+            trigFileWriteFutures: Seq[Future[FileWrittenResponse]] = trigFiles.map {
+                trigFile =>
+                    for {
+                        fileWrittenResponse: FileWrittenResponse <- (
+                            responderManager ?
+                                SparqlGraphFileRequest(
+                                    graphIri = trigFile.graphIri,
+                                    outputFile = trigFile.dataFile
+                                )
+                            ).mapTo[FileWrittenResponse]
+                    } yield fileWrittenResponse
+            }
+
+            _: Seq[FileWrittenResponse] <- Future.sequence(trigFileWriteFutures)
+            resultFile: File = new File(tempDir, "output.trig")
+            trigFileWriter: RDFWriter = Rio.createWriter(RDFFormat.TRIG, new FileWriter(resultFile))
+            _ = trigFileWriter.startRDF()
+
+            _ = for (trigFile <- trigFiles) {
+                val trigFileParser = Rio.createParser(RDFFormat.TRIG)
+                trigFileParser.setRDFHandler(trigFileWriter)
+                val fileReader = new FileReader(trigFile.dataFile)
+                trigFileParser.parse(fileReader, "")
+            }
+
+            _ = trigFileWriter.endRDF()
+        } yield ProjectDataGetResponseADM(resultFile)
+    }
 
     /**
       * Get project's restricted view settings.
@@ -383,7 +450,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     @ApiMayChange
     private def projectRestrictedViewSettingsGetADM(identifier: ProjectIdentifierADM, requestingUser: UserADM): Future[Option[ProjectRestrictedViewSettingsADM]] = {
 
-        // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestricedViewSettings resource. How to send the client the correct NotFound reply?
+        // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestrictedViewSettings resource. How to send the client the correct NotFound reply?
 
         val maybeIri = identifier.toIriOption
         val maybeShortname = identifier.toShortnameOption
