@@ -838,6 +838,8 @@ class UserIdentifierADM private(maybeIri: Option[IRI] = None,
 
 }
 
+
+
 /**
   * Payload used for updating of an existing user.
   *

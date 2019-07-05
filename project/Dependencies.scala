@@ -98,6 +98,7 @@ object Dependencies {
         // caching
         val ehcache                = "net.sf.ehcache"                           % "ehcache"                  % "2.10.3"
         val redisClient            = "net.debasishg"                           %% "redisclient"              % "3.10"
+        val chill                  = "com.twitter"                             %% "chill"                    % "0.9.3"
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
@@ -191,6 +192,7 @@ object Dependencies {
         WebapiTest.akkaStreamTestkit.value,
         WebapiTest.akkaTestkit.value,
         bcprov,
+        chill,
         commonsBeanUtil,
         commonsIo,
         commonsText,

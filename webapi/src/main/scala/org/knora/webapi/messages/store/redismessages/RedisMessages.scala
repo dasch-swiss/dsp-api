@@ -31,3 +31,9 @@ case class RedisGetProjectADM(identifier: ProjectIdentifierADM) extends RedisReq
 case class RedisPutUserADM(value: UserADM) extends RedisRequest
 
 case class RedisGetUserADM(identifier: UserIdentifierADM) extends RedisRequest
+
+case class RedisPutString(key: String, value: String) extends RedisRequest
+
+case class RedisGetString(key: String) extends RedisRequest
+
+case class RedisRemoveValues(keys: Seq[String]) extends RedisRequest

@@ -76,7 +76,7 @@ class StoreManager extends Actor with ActorLogging {
     def receive = LoggingReceive {
         case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage
         case iiifMessages: IIIFRequest => iiifManager forward iiifMessages
-        case redisMessages: RedisRequest => ActorUtil.try2Message(sender(), redisManager receive redisMessages, log)
+        case redisMessages: RedisRequest => ActorUtil.future2Message(sender(), redisManager receive redisMessages, log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))
     }
 }

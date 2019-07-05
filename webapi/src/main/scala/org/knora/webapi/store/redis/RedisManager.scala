@@ -19,16 +19,16 @@
 
 package org.knora.webapi.store.redis
 
-import java.io
-
+import akka.http.scaladsl.util.FastFuture
 import com.redis._
 import com.redis.serialization.Parse.Implicits.parseByteArray
 import com.typesafe.scalalogging.LazyLogging
+import org.knora.webapi.UnexpectedMessageException
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM, ProjectIdentifierType}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM, UserIdentifierType}
-import org.knora.webapi.messages.store.redismessages.{RedisGetProjectADM, RedisGetUserADM, RedisPutProjectADM, RedisPutUserADM, RedisRequest}
-import org.knora.webapi.{IRI, RedisException, SettingsImpl, UnexpectedMessageException}
+import org.knora.webapi.messages.store.redismessages._
 
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 class RedisManager(host: String, port: Int) extends LazyLogging {
@@ -40,6 +40,9 @@ class RedisManager(host: String, port: Int) extends LazyLogging {
         case RedisGetUserADM(identifier) => redisGetUserADM(identifier)
         case RedisPutProjectADM(value) => redisPutProjectADM(value)
         case RedisGetProjectADM(identifier) => redisGetProjectADM(identifier)
+        case RedisPutString(key, value) => redisPutString(key, value)
+        case RedisGetString(key) => redisGetString(key)
+        case RedisRemoveValues(keys) => redisRemoveValues(keys)
         case other => throw UnexpectedMessageException(s"RedisManager received an unexpected message: $other")
     }
 
@@ -51,20 +54,28 @@ class RedisManager(host: String, port: Int) extends LazyLogging {
       *
       * @param value the stored value
       */
-    private def redisPutUserADM(value: UserADM): Try[Boolean] = {
+    private def redisPutUserADM(value: UserADM): Future[Boolean] = {
 
         val start = System.currentTimeMillis()
 
-        val result: Try[Boolean] = redisSetBytes(value.id, RedisSerialization.serialize(value))
+        val maybeBytes: Try[Array[Byte]] = RedisSerialization.serialize(value)
 
-        //FIXME: failure of these is not checked
-        redisSetString(value.username, value.id)
-        redisSetString(value.email, value.id)
+        val result = maybeBytes match {
+            case Success(bytes) =>
+                val res: Boolean = setBytesValue(value.id, bytes)
+                //FIXME: failure of these is not checked
+                setStringValue(value.username, value.id)
+                setStringValue(value.email, value.id)
+                res
+            case Failure(exception) =>
+                logger.error("Serialization failed. Aborting writing 'UserADM' to Redis.", exception)
+                false
+        }
 
         val took = System.currentTimeMillis() - start
         logger.info(s"Redis write user: ${took}ms")
 
-        result
+        FastFuture.successful(result)
     }
 
     /**
@@ -72,25 +83,39 @@ class RedisManager(host: String, port: Int) extends LazyLogging {
       *
       * @param identifier the project identifier.
       */
-    private def redisGetUserADM(identifier: UserIdentifierADM): Try[Option[UserADM]] = {
+    private def redisGetUserADM(identifier: UserIdentifierADM): Future[Option[UserADM]] = {
 
         val start = System.currentTimeMillis()
 
         // The data is stored under the IRI key.
         // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
-        val result: Try[Option[io.Serializable]] = identifier.hasType match {
+        val result: Option[Array[Byte]] = identifier.hasType match {
             case UserIdentifierType.IRI =>
-                redisGetBytes(identifier.toIri)
+                getBytesValue(identifier.toIri)
             case UserIdentifierType.USERNAME =>
-                redisGetString(identifier.toEmail).map(maybeIriKey => maybeIriKey.map(iriKey => redisGetBytes(iriKey)))
+                getStringValue(identifier.toUsername).flatMap(iriKey => getBytesValue(iriKey))
             case UserIdentifierType.EMAIL =>
-                redisGetString(identifier.toEmail).map(maybeIriKey => maybeIriKey.map(iriKey => redisGetBytes(iriKey)))
+                getStringValue(identifier.toEmail).flatMap(iriKey => getBytesValue(iriKey))
+        }
+
+        val res = if (result.isDefined) {
+            val bytes = result.get
+            val maybeUser = RedisSerialization.deserialize[UserADM](bytes)
+            maybeUser match {
+                case Success(user) =>
+                    Some(user)
+                case Failure(exception) =>
+                    logger.error("Deserialization failed. Aborting reading 'UserADM' from Redis.", exception)
+                    None
+            }
+        } else {
+            None
         }
 
         val took = System.currentTimeMillis() - start
-        logger.info(s"Redis read project: ${took}ms")
+        logger.info(s"Redis read user: ${took}ms")
 
-        result.map(maybeBytes => maybeBytes.map(bytes => RedisSerialization.deserialize[UserADM](bytes)))
+        FastFuture.successful(res)
     }
 
 
@@ -102,20 +127,29 @@ class RedisManager(host: String, port: Int) extends LazyLogging {
       *
       * @param value the stored value
       */
-    private def redisPutProjectADM(value: ProjectADM): Try[Boolean] = {
+    private def redisPutProjectADM(value: ProjectADM): Future[Boolean] = {
 
         val start = System.currentTimeMillis()
 
-        val result: Try[Boolean] = redisSetBytes(value.id, RedisSerialization.serialize(value))
+        val maybeBytes: Try[Array[Byte]] = RedisSerialization.serialize(value)
 
-        //FIXME: failure of these is not checked
-        redisSetString(value.shortcode, value.id)
-        redisSetString(value.shortname, value.id)
+        val result: Boolean = maybeBytes match {
+            case Success(bytes) =>
+                val res: Boolean = setBytesValue(value.id, bytes)
+                //FIXME: failure of these is not checked
+                setStringValue(value.shortcode, value.id)
+                setStringValue(value.shortname, value.id)
+                res
+            case Failure(exception) =>
+                logger.error("Serialization failed. Aborting writing 'ProjectADM' to Redis.", exception)
+                false
+
+        }
 
         val took = System.currentTimeMillis() - start
         logger.info(s"Redis write project: ${took}ms")
 
-        result
+        FastFuture.successful(result)
     }
 
     /**
@@ -123,49 +157,87 @@ class RedisManager(host: String, port: Int) extends LazyLogging {
       *
       * @param identifier the project identifier.
       */
-    private def redisGetProjectADM(identifier: ProjectIdentifierADM): Try[Option[ProjectADM]] = {
+    private def redisGetProjectADM(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = {
 
         val start = System.currentTimeMillis()
 
         // The data is stored under the IRI key.
         // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
-        val result: Try[Option[Array[Byte]]] = identifier.hasType match {
+        val result: Option[Array[Byte]] = identifier.hasType match {
             case ProjectIdentifierType.IRI =>
-                redisGetBytes(identifier.toIri)
+                getBytesValue(identifier.toIri)
             case ProjectIdentifierType.SHORTCODE =>
-                val res: Try[Option[String]] = redisGetString(identifier.toShortcode)
-                res.flatMap(maybeIriKey => maybeIriKey.flatMap((iriKey => redisGetBytes(iriKey)))
+                getStringValue(identifier.toShortcode).flatMap(iriKey => getBytesValue(iriKey))
             case ProjectIdentifierType.SHORTNAME =>
-                redisGetString(identifier.toShortname).map(maybeIriKey => maybeIriKey.map((iriKey: String) => redisGetBytes(iriKey)))
+                getStringValue(identifier.toShortname).flatMap(iriKey => getBytesValue(iriKey))
+        }
+
+        val res: Option[ProjectADM] = if (result.isDefined) {
+            val bytes = result.get
+            val maybeProject = RedisSerialization.deserialize[ProjectADM](bytes)
+            maybeProject match {
+                case Success(project) =>
+                    Some(project)
+                case Failure(exception) =>
+                    logger.error("Deserialization failed. Aborting reading 'ProjectADM' from Redis.", exception)
+                    None
+            }
+        } else {
+            None
         }
 
         val took = System.currentTimeMillis() - start
         logger.info(s"Redis read project: ${took}ms")
 
-        result.map(maybeBytes => maybeBytes.map(bytes => RedisSerialization.deserialize[ProjectADM](bytes)))
+        FastFuture.successful(res)
+    }
+
+    /**
+      * Store a string value under the key.
+      *
+      * @param key the key.
+      * @param value the string value.
+      */
+    private def redisPutString(key: String, value: String): Future[Boolean] = {
+        FastFuture.successful(setStringValue(key, value))
+    }
+
+    /**
+      * Get the string value stored under the key.
+      *
+      * @param key the key.
+      */
+    private def redisGetString(key: String): Future[Option[String]] = {
+        FastFuture.successful(getStringValue(key))
+    }
+
+    /**
+      * Removes the values stored under the keys. Any invalid keys are ignored.
+      *
+      * @param keys the keys.
+      */
+    private def redisRemoveValues(keys: Seq[String]): Future[Boolean] = {
+        FastFuture.successful(removeValues(keys))
     }
 
     /**
       * Get value stored under the key as a byte array.
       * @param key the key.
       */
-    private def redisGetBytes(key: String): Try[Option[Array[Byte]]] = {
+    private def getBytesValue(key: String): Option[Array[Byte]] = {
 
+        // try to get the byte array stored under the key
         val redisResponseTry = Try {
-            val start = System.currentTimeMillis()
-
             val response: Option[Array[Byte]] = r.get[Array[Byte]](key)
-
-            val took = System.currentTimeMillis() - start
-
-            logger.info(s"Redis read byte array: ${took}ms")
-
             response
         }
 
-        redisResponseTry.recover {
-            case e: Exception =>
-                throw RedisException(s"Reading from Redis failed.", Some(e))
+        redisResponseTry match {
+            case Success(value) => value
+            case Failure(exception) =>
+                // Log any errors.
+                logger.error("Reading byte array from Redis failed.", exception)
+                None
         }
     }
 
@@ -173,23 +245,20 @@ class RedisManager(host: String, port: Int) extends LazyLogging {
       * Get value stored under the key as a string.
       * @param key the key.
       */
-    private def redisGetString(key: String): Try[Option[String]] = {
+    private def getStringValue(key: String): Option[String] = {
 
+        // try to get the string sored under the key
         val redisResponseTry = Try {
-            val start = System.currentTimeMillis()
-
             val response: Option[String] = r.get[String](key)
-
-            val took = System.currentTimeMillis() - start
-
-            logger.info(s"Redis read string: ${took}ms")
-
             response
         }
 
-        redisResponseTry.recover {
-            case e: Exception =>
-                throw RedisException(s"Reading from Redis failed.", Some(e))
+        redisResponseTry match {
+            case Success(value) => value
+            case Failure(exception) =>
+                // Log any errors.
+                logger.error("Reading string from Redis failed.", exception)
+                None
         }
     }
 
@@ -198,23 +267,20 @@ class RedisManager(host: String, port: Int) extends LazyLogging {
       * @param key the key.
       * @param value the byte array value.
       */
-    private def redisSetBytes(key: String, value: Array[Byte]): Try[Boolean] = {
+    private def setBytesValue(key: String, value: Array[Byte]): Boolean = {
 
+        // try to set the byte array under the supplied key
         val redisResponseTry = Try {
-
-            val start = System.currentTimeMillis()
-
             val response = r.set(key, value)
-
-            val took = System.currentTimeMillis() - start
-            logger.info(s"Redis write: ${took}ms")
-
             response
         }
 
-        redisResponseTry.recover {
-            case e: Exception =>
-                throw RedisException(s"Writing to Redis failed.", Some(e))
+        redisResponseTry match {
+            case Success(value) => value
+            case Failure(exception) =>
+                // Log any errors.
+                logger.error("Writing byte array to Redis failed.", exception)
+                false
         }
     }
 
@@ -223,24 +289,46 @@ class RedisManager(host: String, port: Int) extends LazyLogging {
       * @param key the key.
       * @param value the string value.
       */
-    private def redisSetString(key: String, value: String): Try[Boolean] = {
+    private def setStringValue(key: String, value: String): Boolean = {
 
+        // try to set the string under the supplied key
         val redisResponseTry = Try {
-
-            val start = System.currentTimeMillis()
-
-            val response = r.set(key, value)
-
-            val took = System.currentTimeMillis() - start
-            logger.info(s"Redis write: ${took}ms")
-
+            val response: Boolean = r.set(key, value)
             response
         }
 
-        redisResponseTry.recover {
-            case e: Exception =>
-                throw RedisException(s"Writing to Redis failed.", Some(e))
+        redisResponseTry match {
+            case Success(value) => value
+            case Failure(exception) =>
+                // Log any errors.
+                logger.error("Writing string to Redis failed.", exception)
+                false
         }
     }
 
+    /**
+      * Removes values for the provided keys. Any invalid keys are ignored.
+      *
+      * @param keys the keys.
+      */
+    private def removeValues(keys: Seq[String]): Boolean = {
+        // try to remove all values
+        val redisResponseTry = Try {
+            // Returns the number of deleted values. Any unknown keys are ignored.
+            val response: Option[Long] = r.del(keys)
+            if (response.isDefined) {
+                true
+            } else {
+                false
+            }
+        }
+
+        redisResponseTry match {
+            case Success(value) => value
+            case Failure(exception) =>
+                // Log any errors.
+                logger.error("Writing string to Redis failed.", exception)
+                false
+        }
+    }
 }

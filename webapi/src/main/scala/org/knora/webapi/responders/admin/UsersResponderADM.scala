@@ -30,12 +30,11 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{Permission
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadADM, _}
-import org.knora.webapi.messages.store.redismessages.{RedisGetUserADM, RedisPutUserADM}
+import org.knora.webapi.messages.store.redismessages.{RedisGetUserADM, RedisPutUserADM, RedisRemoveValues}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.CacheUtil
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 import scala.concurrent.Future
@@ -262,8 +261,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 systemAdmin = createRequest.systemAdmin
             ).toString
             // _ = log.debug(s"createNewUser: $createNewUserSparqlString")
-            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
-
+            createNewUserResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
 
             // Verify that the user was created.
             sparqlQuery = queries.sparql.admin.txt.getUsers(
@@ -1409,25 +1407,20 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @return true if writing was successful.
       * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
       */
-    private def writeUserADMToCache(user: UserADM): Future[Option[Boolean]] = {
-        (storeManager ? RedisPutUserADM(user)).mapTo[Option[Boolean]]
+    private def writeUserADMToCache(user: UserADM): Future[Boolean] = {
+        (storeManager ? RedisPutUserADM(user)).mapTo[Boolean]
     }
 
     /**
       * Removes the user profile from cache.
       *
-      * @param userIri the user's IRI und which a profile could be cached.
-      * @param email   the user's email under which a profile could be cached.
+      * @param userIri  the user's IRI under which a profile could be cached.
+      * @param email    the user's email under which a profile could be cached.
+      * @param username the user's username under which a profile could be cached.
       */
-    private def invalidateCachedUserADM(userIri: Option[IRI] = None, email: Option[String] = None): Unit = {
-
-        if (userIri.nonEmpty) {
-            CacheUtil.remove(USER_ADM_CACHE_NAME, userIri.get)
-        }
-
-        if (email.nonEmpty) {
-            CacheUtil.remove(USER_ADM_CACHE_NAME, email.get)
-        }
+    private def invalidateCachedUserADM(userIri: Option[IRI] = None, email: Option[String] = None, username: Option[String] = None): Unit = {
+        val keys: Seq[String] = Seq(userIri, email, username).flatten
+        (storeManager ? RedisRemoveValues(keys)).mapTo[Boolean]
     }
 
 }

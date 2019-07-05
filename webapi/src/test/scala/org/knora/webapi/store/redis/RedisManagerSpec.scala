@@ -19,28 +19,71 @@
 
 package org.knora.webapi.store.redis
 
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
-import org.knora.webapi.messages.store.redismessages.{RedisGetProjectADM, RedisPutProjectADM}
-import org.scalatest.{Matchers, WordSpecLike}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.store.redismessages.{RedisGetProjectADM, RedisGetUserADM, RedisPutProjectADM, RedisPutUserADM}
+import org.knora.webapi.util.StringFormatter
 
-import scala.util.Success
+object RedisManagerSpec {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
 
 /**
   * This spec is used to test [[org.knora.webapi.store.redis.RedisSerialization]].
   */
-class RedisManagerSpec extends WordSpecLike with Matchers {
+class RedisManagerSpec extends CoreSpec(RedisManagerSpec.config) {
 
-    "" when {
-        "The RedisManager" should {
-            "successfully store a project" in {
-                val rm = new RedisManager("localhost", 6379)
-                rm.receive(RedisPutProjectADM("test1", SharedTestDataADM.imagesProject)) should be (Success(true))
-            }
+    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-            "successfully retrieve a project" in {
-                val rm = new RedisManager("localhost", 6379)
-                rm.receive(RedisGetProjectADM("test1")) should be (Success(Some(SharedTestDataADM.imagesProject)))
-            }
+    val user = SharedTestDataADM.imagesUser01
+    val project = SharedTestDataADM.imagesProject
+
+    "The RedisManager" should {
+
+        "successfully store a user" in {
+            storeManager ! RedisPutUserADM(user)
+            expectMsg(true)
+        }
+
+        "successfully retrieve a user by IRI" in {
+            storeManager ! RedisGetUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
+            expectMsg(Some(user))
+        }
+
+        "successfully retrieve a user by USERNAME" in {
+            storeManager ! RedisGetUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
+            expectMsg(Some(user))
+        }
+
+        "successfully retrieve a user by EMAIL" in {
+            storeManager ! RedisGetUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
+            expectMsg(Some(user))
+        }
+
+        "successfully store a project" in {
+            storeManager ! RedisPutProjectADM(project)
+            expectMsg(true)
+        }
+
+        "successfully retrieve a project by IRI" in {
+            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(iri = Some(project.id)))
+            expectMsg(Some(project))
+        }
+
+        "successfully retrieve a project by SHORTNAME" in {
+            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(shortname = Some(project.shortname)))
+            expectMsg(Some(project))
+        }
+
+        "successfully retrieve a project by SHORTCODE" in {
+            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(shortcode = Some(project.shortcode)))
+            expectMsg(Some(project))
         }
     }
 }

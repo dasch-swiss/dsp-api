@@ -18,25 +18,45 @@
  */
 
 package org.knora.webapi.store.redis
-
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
+
+import com.twitter.chill.MeatLocker
+
+import scala.util.Try
 
 object RedisSerialization {
 
-    // FIXME: Add checks
-    def serialize[T](value: T): Array[Byte] = {
+
+    /**
+      * Serialize objects by using plain java serialization. Java serialization is not
+      * capable to serialize all our objects (e.g., UserADM) and that is why we use the
+      * [[MeatLocker]], which does some magic and allows our case classes to be
+      * serializable.
+      * @param value the value we want to serialize as a array of bytes.
+      * @tparam T the type parameter of our value.
+      */
+    def serialize[T](value: T): Try[Array[Byte]] = Try {
+        // FIXME: Add checks
+        val boxedItem: MeatLocker[T] = MeatLocker[T](value)
         val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
         val oos = new ObjectOutputStream(stream)
-        oos.writeObject(value)
+        oos.writeObject(boxedItem)
         oos.close()
         stream.toByteArray
     }
 
-    // FIXME: Add checks
-    def deserialize[T](bytes: Array[Byte]): T = {
+    /**
+      * Deserialize objects by using plain java serialization. Java serialization is not
+      * capable to serialize all our objects (e.g., UserADM) and that is why we use the
+      * [[MeatLocker]], which does some magic and allows our case classes to be
+      * serializable.
+      * @tparam T the type parameter of our value.
+      */
+    def deserialize[T](bytes: Array[Byte]): Try[T] = Try {
+        // FIXME: Add checks
         val ois = new ObjectInputStream(new ByteArrayInputStream(bytes))
-        val value = ois.readObject
+        val box = ois.readObject
         ois.close()
-        value.asInstanceOf[T]
+        box.asInstanceOf[MeatLocker[T]].get
     }
 }

@@ -19,11 +19,12 @@
 
 package org.knora.webapi.store.redis
 
-
-
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.scalatest.{Matchers, WordSpecLike}
+
+import scala.util.Try
 
 /**
   * This spec is used to test [[org.knora.webapi.store.redis.RedisSerialization]].
@@ -32,10 +33,18 @@ class RedisSerializationSpec extends WordSpecLike with Matchers {
 
     "serialize and deserialize" should {
 
-        "work succeed with the ProjectADM case class" in {
-            val serialized: Array[Byte] =  RedisSerialization.serialize(SharedTestDataADM.imagesProject)
-            val deserialized: ProjectADM = RedisSerialization.deserialize(serialized).asInstanceOf[ProjectADM]
-            deserialized should equal (SharedTestDataADM.imagesProject)
+        "work with the UserADM case class" in {
+            val user = SharedTestDataADM.imagesUser01
+            val serialized: Try[Array[Byte]] = RedisSerialization.serialize(user)
+            val deserialized: UserADM = RedisSerialization.deserialize(serialized.get).get.asInstanceOf[UserADM]
+            deserialized shouldBe user
+        }
+
+        "work with the ProjectADM case class" in {
+            val project = SharedTestDataADM.imagesProject
+            val serialized: Try[Array[Byte]] = RedisSerialization.serialize(project)
+            val deserialized: ProjectADM = RedisSerialization.deserialize(serialized.get).get.asInstanceOf[ProjectADM]
+            deserialized shouldBe project
         }
 
 
