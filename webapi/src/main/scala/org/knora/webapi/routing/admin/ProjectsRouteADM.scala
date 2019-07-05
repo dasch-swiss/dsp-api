@@ -489,6 +489,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    /**
+      * Returns all ontologies, data, and configuration belonging to a project.
+      */
     private def getProjectData: Route = path(ProjectsBasePath / "iri" / Segment / "AllData") { projectIri: IRI =>
         get {
             requestContext =>
@@ -498,6 +501,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser <- getUserADM(requestContext)
                     requestMessage = ProjectDataGetRequestADM(projectIdentifier, requestingUser)
                     responseMessage <- (responderManager ? requestMessage).mapTo[ProjectDataGetResponseADM]
+
+                    // Stream the output file back to the client, then delete the file.
 
                     source: Source[ByteString, Unit] = FileIO.fromPath(responseMessage.projectDataFile.toPath).watchTermination() {
                         case (_: Future[IOResult], result: Future[Done]) =>

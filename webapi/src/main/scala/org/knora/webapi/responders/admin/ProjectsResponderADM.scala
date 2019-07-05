@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders.admin
 
-import java.io.{File, FileReader, FileWriter}
+import java.io.{BufferedReader, BufferedWriter, File, FileReader, FileWriter}
 import java.nio.file.Files
 import java.util.UUID
 
@@ -48,7 +48,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
 
     // Global lock IRI used for project creation and update
-    val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
+    private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
+
+    private val ADMIN_DATA_GRAPH = "http://www.knora.org/data/admin"
+    private val PERMISSIONS_DATA_GRAPH = "http://www.knora.org/data/permissions"
 
     /**
       * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
@@ -378,23 +381,35 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     private def projectDataGetADM(projectIdentifier: ProjectIdentifierADM, requestingUser: UserADM): Future[ProjectDataGetResponseADM] = {
-        case class TriGFile(graphIri: IRI, tempDir: File) {
+        /**
+          * Represents a named graph to be saved to a TriG file.
+          *
+          * @param graphIri the IRI of the named graph.
+          * @param tempDir  the directory in which the file is to be saved.
+          */
+        case class NamedGraphTrigFile(graphIri: IRI, tempDir: File) {
             lazy val dataFile: File = {
-                val filename = graphIri.replaceAll(":", "_").replaceAll("/", "_").replaceAll("""\.""", "_") + ".trig"
+                val filename = graphIri.replaceAll(":", "_").
+                    replaceAll("/", "_").
+                    replaceAll("""\.""", "_") +
+                    ".trig"
+
                 new File(tempDir, filename)
             }
         }
 
         /**
-          * Combines several named graphs into one.
+          * An [[RDFHandler]] for combining several named graphs into one.
           *
           * @param outputWriter an [[RDFWriter]] for writing the combined result.
           */
         class CombiningRdfHandler(outputWriter: RDFWriter) extends RDFHandler {
             private var startedStatements = false
 
+            // Ignore this, since it will be done before the first file is written.
             override def startRDF(): Unit = {}
 
+            // Ignore this, since it will be done after the last file is written.
             override def endRDF(): Unit = {}
 
             override def handleNamespace(prefix: IRI, uri: IRI): Unit = {
@@ -412,6 +427,41 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             override def handleComment(comment: IRI): Unit = outputWriter.handleComment(comment)
         }
 
+        /**
+          * Combines several TriG files into one.
+          *
+          * @param namedGraphTrigFiles the TriG files to combine.
+          * @param resultFile          the output file.
+          */
+        def combineGraphs(namedGraphTrigFiles: Seq[NamedGraphTrigFile], resultFile: File): Unit = {
+            var maybeBufferedFileWriter: Option[BufferedWriter] = None
+
+            try {
+                maybeBufferedFileWriter = Some(new BufferedWriter(new FileWriter(resultFile)))
+                val trigFileWriter: RDFWriter = Rio.createWriter(RDFFormat.TRIG, maybeBufferedFileWriter.get)
+                val combiningRdfHandler = new CombiningRdfHandler(trigFileWriter)
+                trigFileWriter.startRDF()
+
+                for (namedGraphTrigFile: NamedGraphTrigFile <- namedGraphTrigFiles) {
+                    var maybeBufferedFileReader: Option[BufferedReader] = None
+
+                    try {
+                        maybeBufferedFileReader = Some(new BufferedReader(new FileReader(namedGraphTrigFile.dataFile)))
+                        val trigFileParser = Rio.createParser(RDFFormat.TRIG)
+                        trigFileParser.setRDFHandler(combiningRdfHandler)
+                        trigFileParser.parse(maybeBufferedFileReader.get, "")
+                        namedGraphTrigFile.dataFile.delete
+                    } finally {
+                        maybeBufferedFileReader.foreach(_.close)
+                    }
+                }
+
+                trigFileWriter.endRDF()
+            } finally {
+                maybeBufferedFileWriter.foreach(_.close)
+            }
+        }
+
         for {
             // Get the project info.
             maybeProject: Option[ProjectADM] <- projectGetADM(
@@ -423,28 +473,27 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
             project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '${projectIdentifier.value}' not found."))
 
-            /*
             // Check that the user has permission to download the data.
             _ = if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(project.id))) {
                 throw ForbiddenException(s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can request a project's data")
             }
-            */
 
             // Make a temporary directory for the downloaded data.
             tempDir = Files.createTempDirectory(project.shortname).toFile
             _ = log.info("Downloading project data to temporary directory " + tempDir.getAbsolutePath)
 
             // Download the project's named graphs.
+
             projectDataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
             graphsToDownload: Seq[IRI] = project.ontologies :+ projectDataNamedGraph
-            trigFiles: Seq[TriGFile] = graphsToDownload.map(graphIri => TriGFile(graphIri = graphIri, tempDir = tempDir))
+            projectSpecificNamedGraphTrigFiles: Seq[NamedGraphTrigFile] = graphsToDownload.map(graphIri => NamedGraphTrigFile(graphIri = graphIri, tempDir = tempDir))
 
-            trigFileWriteFutures: Seq[Future[FileWrittenResponse]] = trigFiles.map {
+            projectSpecificNamedGraphTrigFileWriteFutures: Seq[Future[FileWrittenResponse]] = projectSpecificNamedGraphTrigFiles.map {
                 trigFile =>
                     for {
                         fileWrittenResponse: FileWrittenResponse <- (
                             storeManager ?
-                                SparqlGraphFileRequest(
+                                GraphFileRequest(
                                     graphIri = trigFile.graphIri,
                                     outputFile = trigFile.dataFile
                                 )
@@ -452,24 +501,43 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                     } yield fileWrittenResponse
             }
 
-            _: Seq[FileWrittenResponse] <- Future.sequence(trigFileWriteFutures)
+            _: Seq[FileWrittenResponse] <- Future.sequence(projectSpecificNamedGraphTrigFileWriteFutures)
 
-            // Combine the downloaded files into one TriG file.
+            // Download the project's admin data.
 
+            adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = ADMIN_DATA_GRAPH, tempDir = tempDir)
+
+            adminDataSparql: String = queries.sparql.admin.txt.getProjectAdminData(
+                triplestore = settings.triplestoreType,
+                projectIri = project.id
+            ).toString()
+
+            _: FileWrittenResponse <- (storeManager ? SparqlConstructFileRequest(
+                sparql = adminDataSparql,
+                graphIri = adminDataNamedGraphTrigFile.graphIri,
+                outputFile = adminDataNamedGraphTrigFile.dataFile
+            )).mapTo[FileWrittenResponse]
+
+            // Download the project's permission data.
+
+            permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = PERMISSIONS_DATA_GRAPH, tempDir = tempDir)
+
+            permissionDataSparql: String = queries.sparql.admin.txt.getProjectPermissions(
+                triplestore = settings.triplestoreType,
+                projectIri = project.id
+            ).toString()
+
+            _: FileWrittenResponse <- (storeManager ? SparqlConstructFileRequest(
+                sparql = permissionDataSparql,
+                graphIri = permissionDataNamedGraphTrigFile.graphIri,
+                outputFile = permissionDataNamedGraphTrigFile.dataFile
+            )).mapTo[FileWrittenResponse]
+
+            // Stream the combined results into the output file.
+
+            namedGraphTrigFiles: Seq[NamedGraphTrigFile] = projectSpecificNamedGraphTrigFiles :+ adminDataNamedGraphTrigFile :+ permissionDataNamedGraphTrigFile
             resultFile: File = new File(tempDir, project.shortname + ".trig")
-            trigFileWriter: RDFWriter = Rio.createWriter(RDFFormat.TRIG, new FileWriter(resultFile))
-            combiningRdfHandler = new CombiningRdfHandler(trigFileWriter)
-            _ = trigFileWriter.startRDF()
-
-            _ = for (trigFile <- trigFiles) {
-                val trigFileParser = Rio.createParser(RDFFormat.TRIG)
-                trigFileParser.setRDFHandler(combiningRdfHandler)
-                val fileReader = new FileReader(trigFile.dataFile)
-                trigFileParser.parse(fileReader, "")
-                trigFile.dataFile.delete
-            }
-
-            _ = trigFileWriter.endRDF()
+            _ = combineGraphs(namedGraphTrigFiles = namedGraphTrigFiles, resultFile = resultFile)
         } yield ProjectDataGetResponseADM(resultFile)
     }
 

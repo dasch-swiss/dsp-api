@@ -122,9 +122,10 @@ case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
   * written to the specified file in Trig format. A successful response message will be a [[FileWrittenResponse]].
   *
   * @param sparql     the SPARQL string.
+  * @param graphIri   the named graph IRI to be used in the TriG file.
   * @param outputFile the file to be written.
   */
-case class SparqlConstructFileRequest(sparql: String, outputFile: File) extends TriplestoreRequest
+case class SparqlConstructFileRequest(sparql: String, graphIri: IRI, outputFile: File) extends TriplestoreRequest
 
 /**
   * Indicates that a file was written successfully.
@@ -160,7 +161,7 @@ case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, Map[IRI, S
   * @param graphIri   the IRI of the named graph.
   * @param outputFile the destination file.
   */
-case class SparqlGraphFileRequest(graphIri: IRI, outputFile: File) extends TriplestoreRequest
+case class GraphFileRequest(graphIri: IRI, outputFile: File) extends TriplestoreRequest
 
 /**
   * Represents a SPARQL Update operation to be performed.
