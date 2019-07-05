@@ -602,7 +602,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         httpContext.setAuthCache(authCache)
 
         val uriBuilder: URIBuilder = new URIBuilder(graphPath)
-        uriBuilder.setParameter("infer", "false").setParameter("context", graphIri)
+        uriBuilder.setParameter("infer", "false").setParameter("context", s"<$graphIri>")
         val httpGet = new HttpGet(uriBuilder.build())
         httpGet.addHeader("Accept", mimeTypeApplicationTrig)
 

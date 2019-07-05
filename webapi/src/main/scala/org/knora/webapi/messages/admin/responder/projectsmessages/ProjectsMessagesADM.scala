@@ -259,10 +259,10 @@ case class ProjectRestrictedViewSettingsGetRequestADM(identifier: ProjectIdentif
 /**
   * Requests all the data in the project. A successful response will be a [[ProjectDataGetResponseADM]].
   *
-  * @param projectIri     the IRI of the project.
-  * @param requestingUser the user making the request.
+  * @param projectIdentifier the identifier of the project.
+  * @param requestingUser    the user making the request.
   */
-case class ProjectDataGetRequestADM(projectIri: IRI,
+case class ProjectDataGetRequestADM(projectIdentifier: ProjectIdentifierADM,
                                     requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**

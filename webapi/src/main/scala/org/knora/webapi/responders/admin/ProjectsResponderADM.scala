@@ -66,7 +66,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         case ProjectRestrictedViewSettingsGetRequestADM(identifier, requestingUser) => projectRestrictedViewSettingsGetRequestADM(identifier, requestingUser)
         case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) => projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
         case ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID) => changeBasicInformationRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID)
-        case ProjectDataGetRequestADM(projectIri, requestingUser) => projectDataGetADM(projectIri, requestingUser)
+        case ProjectDataGetRequestADM(projectIdentifier, requestingUser) => projectDataGetADM(projectIdentifier, requestingUser)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -377,7 +377,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         } yield ProjectKeywordsGetResponseADM(keywords = keywords)
     }
 
-    private def projectDataGetADM(projectIri: IRI, requestingUser: UserADM): Future[ProjectDataGetResponseADM] = {
+    private def projectDataGetADM(projectIdentifier: ProjectIdentifierADM, requestingUser: UserADM): Future[ProjectDataGetResponseADM] = {
         case class TriGFile(graphIri: IRI, tempDir: File) {
             lazy val dataFile: File = {
                 val filename = graphIri.replaceAll(":", "_").replaceAll("/", "_").replaceAll("""\.""", "_") + ".trig"
@@ -385,37 +385,65 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             }
         }
 
+        /**
+          * Combines several named graphs into one.
+          *
+          * @param outputWriter an [[RDFWriter]] for writing the combined result.
+          */
         class CombiningRdfHandler(outputWriter: RDFWriter) extends RDFHandler {
+            private var startedStatements = false
+
             override def startRDF(): Unit = {}
 
             override def endRDF(): Unit = {}
 
-            override def handleNamespace(prefix: IRI, uri: IRI): Unit = outputWriter.handleNamespace(prefix, uri)
+            override def handleNamespace(prefix: IRI, uri: IRI): Unit = {
+                // Only accept namespaces from the first graph, to prevent conflicts.
+                if (!startedStatements) {
+                    outputWriter.handleNamespace(prefix, uri)
+                }
+            }
 
-            override def handleStatement(st: Statement): Unit = outputWriter.handleStatement(st)
+            override def handleStatement(st: Statement): Unit = {
+                startedStatements = true
+                outputWriter.handleStatement(st)
+            }
 
             override def handleComment(comment: IRI): Unit = outputWriter.handleComment(comment)
         }
 
         for {
-            maybeProject: Option[ProjectADM] <- projectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = requestingUser)
-            project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '$projectIri' not found."))
+            // Get the project info.
+            maybeProject: Option[ProjectADM] <- projectGetADM(
+                maybeIri = projectIdentifier.toIriOption,
+                maybeShortcode = projectIdentifier.toShortcodeOption,
+                maybeShortname = projectIdentifier.toShortnameOption,
+                requestingUser = requestingUser
+            )
 
-            _ = if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(projectIri))) {
+            project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '${projectIdentifier.value}' not found."))
+
+            /*
+            // Check that the user has permission to download the data.
+            _ = if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(project.id))) {
                 throw ForbiddenException(s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can request a project's data")
             }
+            */
 
+            // Make a temporary directory for the downloaded data.
+            tempDir = Files.createTempDirectory(project.shortname).toFile
+            _ = log.info("Downloading project data to temporary directory " + tempDir.getAbsolutePath)
+
+            // Download the project's named graphs.
             projectDataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
             graphsToDownload: Seq[IRI] = project.ontologies :+ projectDataNamedGraph
-            tempDir = Files.createTempDirectory(project.shortname + "-dump").toFile
-            _ = log.info("Downloading project data to temporary directory " + tempDir.getAbsolutePath)
             trigFiles: Seq[TriGFile] = graphsToDownload.map(graphIri => TriGFile(graphIri = graphIri, tempDir = tempDir))
 
             trigFileWriteFutures: Seq[Future[FileWrittenResponse]] = trigFiles.map {
                 trigFile =>
                     for {
                         fileWrittenResponse: FileWrittenResponse <- (
-                            responderManager ?
+                            storeManager ?
                                 SparqlGraphFileRequest(
                                     graphIri = trigFile.graphIri,
                                     outputFile = trigFile.dataFile
@@ -425,15 +453,20 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             }
 
             _: Seq[FileWrittenResponse] <- Future.sequence(trigFileWriteFutures)
-            resultFile: File = new File(tempDir, "output.trig")
+
+            // Combine the downloaded files into one TriG file.
+
+            resultFile: File = new File(tempDir, project.shortname + ".trig")
             trigFileWriter: RDFWriter = Rio.createWriter(RDFFormat.TRIG, new FileWriter(resultFile))
+            combiningRdfHandler = new CombiningRdfHandler(trigFileWriter)
             _ = trigFileWriter.startRDF()
 
             _ = for (trigFile <- trigFiles) {
                 val trigFileParser = Rio.createParser(RDFFormat.TRIG)
-                trigFileParser.setRDFHandler(trigFileWriter)
+                trigFileParser.setRDFHandler(combiningRdfHandler)
                 val fileReader = new FileReader(trigFile.dataFile)
                 trigFileParser.parse(fileReader, "")
+                trigFile.dataFile.delete
             }
 
             _ = trigFileWriter.endRDF()

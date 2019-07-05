@@ -22,16 +22,23 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
+import akka.Done
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.pattern._
+import akka.stream.IOResult
+import akka.stream.scaladsl.{FileIO, Source}
+import akka.util.ByteString
 import io.swagger.annotations._
 import javax.ws.rs.Path
-import org.knora.webapi.BadRequestException
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.{BadRequestException, IRI}
 
 import scala.concurrent.Future
+import scala.util.Try
 
 object ProjectsRouteADM {
     val ProjectsBasePath = PathMatcher("admin" / "projects")
@@ -45,15 +52,16 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
     override def knoraApiPath: Route =
         getProjects ~
-        addProject ~
-        getKeywords ~
-        getProjectKeywords ~
-        getProjectByIri ~ getProjectByShortname ~ getProjectByShortcode ~
-        changeProject ~
-        deleteProject ~
-        getProjectMembersByIri ~ getProjectMembersByShortname ~ getProjectMembersByShortcode ~
-        getProjectAdminMembersByIri ~ getProjectAdminMembersByShortname ~ getProjectAdminMembersByShortcode ~
-        getProjectRestrictedViewSettingsByIri ~ getProjectRestrictedViewSettingsByShortname ~ getProjectRestrictedViewSettingsByShortcode
+            addProject ~
+            getKeywords ~
+            getProjectKeywords ~
+            getProjectByIri ~ getProjectByShortname ~ getProjectByShortcode ~
+            changeProject ~
+            deleteProject ~
+            getProjectMembersByIri ~ getProjectMembersByShortname ~ getProjectMembersByShortcode ~
+            getProjectAdminMembersByIri ~ getProjectAdminMembersByShortname ~ getProjectAdminMembersByShortcode ~
+            getProjectRestrictedViewSettingsByIri ~ getProjectRestrictedViewSettingsByShortname ~
+            getProjectRestrictedViewSettingsByShortcode ~ getProjectData
 
 
     /* return all projects */
@@ -478,6 +486,28 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     responderManager,
                     log
                 )
+        }
+    }
+
+    private def getProjectData: Route = path(ProjectsBasePath / "iri" / Segment / "AllData") { projectIri: IRI =>
+        get {
+            requestContext =>
+                val projectIdentifier = ProjectIdentifierADM(iri = Some(projectIri))
+
+                val httpEntityFuture: Future[HttpEntity.Chunked] = for {
+                    requestingUser <- getUserADM(requestContext)
+                    requestMessage = ProjectDataGetRequestADM(projectIdentifier, requestingUser)
+                    responseMessage <- (responderManager ? requestMessage).mapTo[ProjectDataGetResponseADM]
+
+                    source: Source[ByteString, Unit] = FileIO.fromPath(responseMessage.projectDataFile.toPath).watchTermination() {
+                        case (_: Future[IOResult], result: Future[Done]) =>
+                            result.onComplete((_: Try[Done]) => responseMessage.projectDataFile.delete)
+                    }
+
+                    httpEntity: HttpEntity.Chunked = HttpEntity(ContentTypes.`application/octet-stream`, source)
+                } yield httpEntity
+
+                requestContext.complete(httpEntityFuture)
         }
     }
 }
