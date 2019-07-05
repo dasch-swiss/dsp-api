@@ -69,7 +69,7 @@ class StoreManager extends Actor with ActorLogging {
     /**
       * Instantiates the Redis Manager
       */
-    protected lazy val redisManager: RedisManager = new RedisManager(host = settings.redisHost, port = settings.redisPort)
+    protected lazy val redisManager: RedisManager = new RedisManager()
 
 
 
