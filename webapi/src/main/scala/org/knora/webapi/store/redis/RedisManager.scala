@@ -21,14 +21,13 @@ package org.knora.webapi.store.redis
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.util.FastFuture
-import cats.syntax.flatMap
 import com.redis._
 import com.redis.serialization.Parse.Implicits.parseByteArray
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.{KnoraDispatchers, Settings, UnexpectedMessageException}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM, ProjectIdentifierType}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM, UserIdentifierType}
 import org.knora.webapi.messages.store.redismessages._
+import org.knora.webapi.{KnoraDispatchers, Settings, UnexpectedMessageException}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
