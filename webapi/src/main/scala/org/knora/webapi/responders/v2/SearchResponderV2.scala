@@ -830,9 +830,9 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             mainResourceIris: Set[IRI] = searchResourceByLabelResponse.statements.foldLeft(Set.empty[IRI]) {
                 case (acc: Set[IRI], (subject: SubjectV2, assertions: Map[SmartIri, Seq[LiteralV2]])) =>
                     // check if the assertions represent a main resource and include its IRI if so
-                    val subjectIsMainResource: Boolean = assertions.get(OntologyConstants.KnoraBase.IsMainResource.toSmartIri) match {
-                        case Some(objs) => objs.contains(BooleanLiteralV2(true))
-                        case None => false
+                    val subjectIsMainResource: Boolean = assertions.getOrElse(OntologyConstants.KnoraBase.IsMainResource.toSmartIri, Seq.empty).headOption match {
+                        case Some(BooleanLiteralV2(booleanVal)) => booleanVal
+                        case _ => false
                     }
 
                     if (subjectIsMainResource) {
