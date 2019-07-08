@@ -24,25 +24,36 @@
 #    Object Properties
 #
 #################################################################
+###  http://www.knora.org/ontology/0801/biblio#hasTitle
+:hasTitle rdf:type owl:ObjectProperty ;
 
-
-###  http://www.knora.org/ontology/0801/biblio#publicationHasTitle
-:publicationHasTitle rdf:type owl:ObjectProperty ;
+                    rdfs:subPropertyOf knora-base:hasValue, dcterms:title ;
 
                     rdfs:label "Titel"@de ,
                                "Titre"@fr ,
                                "Titolo"@it ,
                                "Title"@en ;
 
-                    rdfs:comment """Represents a title of a publication."""@en ;
-
                     knora-base:objectClassConstraint knora-base:TextValue ;
 
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                    knora-base:subjectClassConstraint :Publication ;
 
-                    rdfs:subPropertyOf knora-base:hasValue, dcterms:title .
+                    rdfs:comment """Represents a title."""@en .
+
+
+###  http://www.knora.org/ontology/0801/biblio#publicationHasTitle
+:publicationHasTitle rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Publikationstitel"@de ,
+                               "Publication Title"@en ;
+
+                    rdfs:comment """Repräsentiert den Titel der Publikation."""@de,
+                               """Represents the title of a publication."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    rdfs:subPropertyOf :hasTitle .
 
 
 ###  http://www.knora.org/ontology/0801/biblio#publicationHasSubtitle
@@ -63,6 +74,17 @@
 
                     rdfs:subPropertyOf knora-base:hasValue .
 
+###  http://www.knora.org/ontology/0801/biblio#hasDate
+:hasDate rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Datum"@de ,
+                               "Date"@en;
+
+                    rdfs:comment """Represents a Publication Date."""@en ;
+                    knora-base:objectClassConstraint knora-base:DateValue ;
+
+                    salsah-gui:guiElement salsah-gui:Date ;
+                    rdfs:subPropertyOf knora-base:hasValue, dcterms:date .
 
 ###  http://www.knora.org/ontology/0801/biblio#publicationHasDate
 :publicationHasDate rdf:type owl:ObjectProperty ;
@@ -71,17 +93,12 @@
                                "Publication Date "@en,
                                "date de publication"@fr ,
                                "data di pubblicazione"@it ;
-
+                    knora-base:subjectClassConstraint :Publication ;
+                    knora-base:objectClassConstraint knora-base:DateValue ;
 
                     rdfs:comment """Represents a Publication Date."""@en ;
 
-                    knora-base:subjectClassConstraint knora-base:Resource ;
-
-                    knora-base:objectClassConstraint knora-base:DateValue  ;
-
-                    salsah-gui:guiElement salsah-gui:Date ;
-
-                    rdfs:subPropertyOf knora-base:hasValue, dcterms:issued .
+                    rdfs:subPropertyOf :hasDate .
 
 
 ###  http://www.knora.org/ontology/0801/biblio#publicationHasLocation
@@ -668,6 +685,36 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
+###  http://www.knora.org/ontology/0801/biblio#editionHasManuscript
+:editionHasManuscript rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Manuskript der Edition"@de ,
+                               "Mansucript of Edition"@en ;
+
+                    rdfs:comment """Represents the manuscript of an edition."""@en ;
+
+                    knora-base:objectClassConstraint beol:manuscript ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+                    knora-base:subjectClassConstraint :Edition ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo .
+
+
+###  http://www.knora.org/ontology/0801/biblio#editionHasManuscriptValue
+:editionHasManuscriptValue rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Manuskript der Edition"@de ,
+                               "Mansucript of Edition"@en ;
+
+                    rdfs:comment """Represents the manuscript of an edition."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    knora-base:subjectClassConstraint :Edition ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 ###  http://www.knora.org/ontology/0801/biblio#editionHasNumber
 :editionHasNumber rdf:type owl:ObjectProperty ;
@@ -685,20 +732,19 @@
                     rdfs:subPropertyOf knora-base:hasValue .
 
 
-###  http://www.knora.org/ontology/0801/biblio#editionHasName
-:editionHasName rdf:type owl:ObjectProperty ;
+###  http://www.knora.org/ontology/0801/biblio#editionHasTitle
+:editionHasTitle rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "Edition Name"@de ,
-                               "Edition Name"@en ;
+                    rdfs:label "Edition Titel"@de ,
+                               "Edition Title"@en ;
 
-                    rdfs:comment """Repräsentiert der Name einer Edition."""@de,
-                               """Represents the name of Edition."""@en ;
+                    rdfs:comment """Repräsentiert den Titel der Edition."""@de,
+                               """Represents the title of edition."""@en ;
 
                     knora-base:objectClassConstraint knora-base:TextValue ;
+                    knora-base:subjectClassConstraint :Edition ;
 
-                    salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                    rdfs:subPropertyOf knora-base:hasValue .
+                    rdfs:subPropertyOf :hasTitle .
 
 
 ###  http://www.knora.org/ontology/0801/biblio#hasName
@@ -833,11 +879,9 @@
                                "fait partie de"@fr ,
                                "fa parte di"@it ;
 
-                    rdfs:comment """Represents the collection the article is published in."""@en ;
+                    rdfs:comment """Represents the collection of the edited articles."""@en ;
 
                     knora-base:objectClassConstraint :EditedBook ;
-
-                    knora-base:subjectClassConstraint :CollectionArticle ;
 
                     salsah-gui:guiElement salsah-gui:Searchbox ;
 
@@ -1136,9 +1180,7 @@
 
                     knora-base:objectClassConstraint knora-base:TextValue ;
 
-                    salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                    rdfs:subPropertyOf knora-base:hasValue, dcterms:title .
+                    rdfs:subPropertyOf :hasTitle .
 
 
 ###  http://www.knora.org/ontology/0801/biblio#publicationHasTranslator
@@ -1179,17 +1221,21 @@
                     rdfs:label "Datum der Übersetzung"@de ,
                                "Translation Date "@en ;
 
-
-                    rdfs:comment """Represents a Publication Date."""@en ;
-
+                    rdfs:comment """Represents a translation date."""@en ;
                     knora-base:objectClassConstraint knora-base:DateValue ;
 
-                    salsah-gui:guiElement salsah-gui:Date ;
+                    rdfs:subPropertyOf :hasDate .
 
-                    knora-base:subjectClassConstraint :Translation ;
+###  http://www.knora.org/ontology/0801/biblio#editionHasDate
+:editionHasDate rdf:type owl:ObjectProperty ;
 
-                    rdfs:subPropertyOf knora-base:hasValue .
+                    rdfs:label "Datum der Bearbeitung"@de ,
+                               "Edition Date "@en ;
 
+                    rdfs:comment """Represents an edition date."""@en ;
+                    knora-base:objectClassConstraint knora-base:DateValue ;
+
+                    rdfs:subPropertyOf :hasDate .
 
 ###  http://www.knora.org/ontology/0801/biblio#collectionNumber
 :collectionNumber rdf:type owl:ObjectProperty ;
@@ -1239,7 +1285,58 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
+###  http://www.knora.org/ontology/0801/biblio#hasManuscriptEntry
+:hasManuscriptEntry rdf:type owl:ObjectProperty ;
 
+                    rdfs:label "Edition der Manuskripteintrag"@de ,
+                               "Edition of the Manuscript"@en ;
+
+                    rdfs:comment """Represents the manuscript entry corresponding to a Varia Posthuma article."""@en ;
+
+                    knora-base:objectClassConstraint beol:manuscriptEntry ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox ;
+
+
+                    rdfs:subPropertyOf knora-base:hasLinkTo, dcterms:isPartOf .
+
+
+###  http://www.knora.org/ontology/0801/biblio#hasManuscriptEntryValue
+:hasManuscriptEntryValue rdf:type owl:ObjectProperty ;
+                    rdfs:label "Edition der Manuskripteintrag"@de ,
+                               "Edition of the Manuscript"@en ;
+
+                    rdfs:comment """Represents the manuscript entry corresponding to a Varia Posthuma article."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue .
+
+###  http://www.knora.org/ontology/0801/biblio#vpEndFolium
+:vpEndFolium rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "End Folium"@en ;
+
+                    rdfs:comment """Represents the last folium of Varia Posthuma Article."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+###  http://www.knora.org/ontology/0801/biblio#vpStartFolium
+:vpStartFolium rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Start Folium"@en ;
+
+                    rdfs:comment """Represents the start folium of Varia Posthuma Article."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
 #################################################################
 #
 #    Classes
@@ -1494,7 +1591,7 @@
                     rdfs:subClassOf knora-base:Resource,
                                         [
                                             rdf:type owl:Restriction ;
-                                            owl:onProperty :editionHasName ;
+                                            owl:onProperty :editionHasTitle ;
                                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                             salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                                         ] ,
@@ -1539,6 +1636,36 @@
                                             owl:onProperty beol:beolIDs ;
                                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                                             salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                                        ] ,
+                                        [
+                                            rdf:type owl:Restriction ;
+                                            owl:onProperty :editionHasManuscript;
+                                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                                            salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
+                                        ] ,
+                                        [
+                                            rdf:type owl:Restriction ;
+                                            owl:onProperty :editionHasManuscriptValue ;
+                                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                                            salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
+                                        ] ,
+                                        [
+                                            rdf:type owl:Restriction ;
+                                            owl:onProperty :editionHasDate ;
+                                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                                            salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
+                                        ] ,
+                                        [
+                                            rdf:type owl:Restriction ;
+                                            owl:onProperty :isPartOfEditedBook ;
+                                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                                            salsah-gui:guiOrder "8"^^xsd:nonNegativeInteger
+                                        ] ,
+                                        [
+                                            rdf:type owl:Restriction ;
+                                            owl:onProperty :isPartOfEditedBookValue ;
+                                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                                            salsah-gui:guiOrder "8"^^xsd:nonNegativeInteger
                                         ] ;
 
                     rdfs:label "Edition"@de ,
@@ -2125,3 +2252,42 @@
                                 "Website Article"@en ;
 
                     rdfs:comment "A resource representing a website article "@en .
+
+
+###  http://www.knora.org/ontology/0801/biblio#VPArticle
+:VPArticle rdf:type owl:Class ;
+                    rdfs:subClassOf :Edition,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :vpEndFolium;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :vpStartFolium;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasManuscriptEntry ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasManuscriptEntryValue ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasURI;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                    ] ;
+                    rdfs:label "Varia Posthuma Artikel"@de ,
+                               "Varia Posthuma Article"@en ;
+
+                    rdfs:comment "A resource representing a Varia Posthuma article "@en .
