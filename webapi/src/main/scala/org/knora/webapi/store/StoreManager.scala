@@ -69,9 +69,7 @@ class StoreManager extends Actor with ActorLogging {
     /**
       * Instantiates the Redis Manager
       */
-    protected lazy val redisManager: RedisManager = new RedisManager()
-
-
+    protected lazy val redisManager: RedisManager = new RedisManager(system)
 
     def receive = LoggingReceive {
         case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage

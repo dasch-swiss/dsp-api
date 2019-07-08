@@ -19,32 +19,40 @@
 
 package org.knora.webapi.store.redis
 
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.scalatest.{Matchers, WordSpecLike}
 
-import scala.util.Try
+object RedisSerializationSpec {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
 
 /**
   * This spec is used to test [[org.knora.webapi.store.redis.RedisSerialization]].
   */
-class RedisSerializationSpec extends WordSpecLike with Matchers {
+class RedisSerializationSpec extends CoreSpec(RedisSerializationSpec.config) {
 
     "serialize and deserialize" should {
 
         "work with the UserADM case class" in {
             val user = SharedTestDataADM.imagesUser01
-            val serialized: Try[Array[Byte]] = RedisSerialization.serialize(user)
-            val deserialized: UserADM = RedisSerialization.deserialize(serialized.get).get.asInstanceOf[UserADM]
-            deserialized shouldBe user
+            for {
+                serialized <- RedisSerialization.serialize(user)
+                deserialized: UserADM <- RedisSerialization.deserialize[UserADM](serialized)
+            } yield deserialized shouldBe user
         }
 
         "work with the ProjectADM case class" in {
             val project = SharedTestDataADM.imagesProject
-            val serialized: Try[Array[Byte]] = RedisSerialization.serialize(project)
-            val deserialized: ProjectADM = RedisSerialization.deserialize(serialized.get).get.asInstanceOf[ProjectADM]
-            deserialized shouldBe project
+            for {
+                serialized <- RedisSerialization.serialize(project)
+                deserialized: ProjectADM <- RedisSerialization.deserialize[ProjectADM](serialized)
+            } yield deserialized shouldBe project
         }
 
 

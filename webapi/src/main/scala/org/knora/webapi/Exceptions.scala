@@ -341,12 +341,11 @@ object InvalidApiJsonException {
 }
 
 /**
-  * Indicates that the triplestore returned an error message, or a response that could not be parsed.
+  * Indicates that the during caching with Redis something went wrong.
   *
   * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
   */
-case class RedisException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
+abstract class RedisException(message: String) extends InternalServerException(message)
 
 /**
   * Indicates that an application lock could not be acquired.

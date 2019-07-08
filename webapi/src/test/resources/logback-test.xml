@@ -130,6 +130,9 @@
     <logger name="org.knora.webapi.e2e.admin.StoreRouteADME2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="INFO"/>
 
+    <!-- Redis Cache -->
+    <logger name="org.knora.webapi.store.redis.RedisManager" level="DEBUG"/>
+
 
     <root level="INFO">
         <appender-ref ref="stdout"/>

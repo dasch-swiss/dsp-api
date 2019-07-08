@@ -21,8 +21,11 @@ package org.knora.webapi.store.redis
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
 import com.twitter.chill.MeatLocker
+import org.knora.webapi.RedisException
 
-import scala.util.Try
+import scala.concurrent.{ExecutionContext, Future}
+
+case class EmptyByteArray(message: String) extends RedisException(message)
 
 object RedisSerialization {
 
@@ -35,7 +38,7 @@ object RedisSerialization {
       * @param value the value we want to serialize as a array of bytes.
       * @tparam T the type parameter of our value.
       */
-    def serialize[T](value: T): Try[Array[Byte]] = Try {
+    def serialize[T](value: T)(implicit ec: ExecutionContext): Future[Array[Byte]] = Future {
         // FIXME: Add checks
         val boxedItem: MeatLocker[T] = MeatLocker[T](value)
         val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
@@ -52,8 +55,11 @@ object RedisSerialization {
       * serializable.
       * @tparam T the type parameter of our value.
       */
-    def deserialize[T](bytes: Array[Byte]): Try[T] = Try {
+    def deserialize[T](bytes: Array[Byte])(implicit ec: ExecutionContext): Future[T] = Future {
         // FIXME: Add checks
+
+        if (bytes.isEmpty) throw EmptyByteArray("The byte array which should be deserialized is empty. Aborting deserialization.")
+
         val ois = new ObjectInputStream(new ByteArrayInputStream(bytes))
         val box = ois.readObject
         ois.close()
