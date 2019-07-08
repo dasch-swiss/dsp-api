@@ -34,7 +34,7 @@ import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch._
 import org.knora.webapi.responders.v2.search.gravsearch.prequery._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
-import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
+import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, RdfResources, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
@@ -706,7 +706,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(resourceRequestSparql)).mapTo[SparqlExtendedConstructResponse]
 
                     // separate resources and values
-                    queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = resourcesInProjectGetRequestV2.requestingUser)
+                    queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = resourcesInProjectGetRequestV2.requestingUser)
 
                     // check if there are resources the user does not have sufficient permissions to see
                     forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparated.size) {

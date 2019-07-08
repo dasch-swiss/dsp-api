@@ -27,10 +27,10 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2}
 import org.knora.webapi.responders.v2.{ResourcesResponderV2SpecFullData, ResourcesResponseCheckerV2}
-import org.knora.webapi.util.ConstructResponseUtilV2.ResourceWithValueRdfData
+import org.knora.webapi.util.ConstructResponseUtilV2.RdfResources
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 /**
   * Tests [[ConstructResponseUtilV2]].
@@ -45,9 +45,9 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
 
         "convert a Turtle response into a resource" in {
             val resourceIri: IRI = "http://rdfh.ch/0803/c5058f3a"
-            val turtleStr = FileUtil.readTextFile(new File("src/test/resources/test-data/constructResponseUtilV2/Zeitglöcklein.ttl"))
-            val resourceRequestResponse = SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log).get
-            val queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = incunabulaUser)
+            val turtleStr: String = FileUtil.readTextFile(new File("src/test/resources/test-data/constructResponseUtilV2/Zeitglöcklein.ttl"))
+            val resourceRequestResponse: SparqlExtendedConstructResponse = SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log).get
+            val queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = incunabulaUser)
 
             val resourceFuture: Future[ReadResourceV2] = ConstructResponseUtilV2.createFullResourceResponse(
                 resourceIri = resourceIri,
@@ -61,7 +61,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
                 requestingUser = incunabulaUser
             )
 
-            val resource = Await.result(resourceFuture, 10.seconds)
+            val resource: ReadResourceV2 = Await.result(resourceFuture, 10.seconds)
             val resourceSequence = ReadResourcesSequenceV2(numberOfResources = 1, resources = Seq(resource))
             ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein, received = resourceSequence)
         }

@@ -42,7 +42,7 @@ import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.responders.{IriLocker, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
-import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
+import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, RdfResources, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{AGreaterThanB, DeletePermission, ModifyPermission, PermissionComparisonResult}
 import org.knora.webapi.util._
@@ -1009,7 +1009,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                             valueUuid: Option[UUID],
                                             versionDate: Option[Instant],
                                             queryStandoff: Boolean,
-                                            requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
+                                            requestingUser: UserADM): Future[RdfResources] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -1040,7 +1040,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(resourceRequestSparql)).mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and values
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = requestingUser)
+            queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = requestingUser)
 
             // check if all the requested resources were returned
             requestedButMissing: Set[IRI] = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
@@ -1081,7 +1081,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         for {
 
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(
+            queryResultsSeparated: RdfResources <- getResourcesFromTriplestore(
                 resourceIris = resourceIris,
                 preview = false,
                 propertyIri = propertyIri,
@@ -1132,7 +1132,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(
+            queryResultsSeparated: RdfResources <- getResourcesFromTriplestore(
                 resourceIris = resourceIris,
                 preview = true,
                 propertyIri = None,
