@@ -19,14 +19,25 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import java.io.File
+import java.io.{File, StringReader}
 import java.time.Instant
 
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.apache.commons.lang3.StringUtils
+import org.eclipse.rdf4j
+import org.eclipse.rdf4j.model.Statement
+import org.eclipse.rdf4j.rio.RDFHandler
+import org.eclipse.rdf4j.rio.turtle.TurtleParser
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RepositoryStatus.RepositoryStatus
-import org.knora.webapi.util.{ErrorHandlingMap, SmartIri}
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologySchema, TriplestoreResponseException}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{ErrorHandlingMap, SmartIri, StringFormatter}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
+
+import scala.collection.mutable
+import scala.compat.java8.OptionConverters._
+import scala.util.{Failure, Success, Try}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -148,11 +159,111 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
 case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
+  * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.
+  */
+object SparqlExtendedConstructResponse {
+    /**
+      * A map of predicate IRIs to literal objects.
+      */
+    type ConstructPredicateObjects = Map[SmartIri, Seq[LiteralV2]]
+
+    private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
+
+    /**
+      * Converts a graph in parsed Turtle to a [[SparqlExtendedConstructResponse]].
+      */
+    class ConstructResponseTurtleHandler extends RDFHandler {
+
+        implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        /**
+          * A collection of all the statements in the input file, grouped and sorted by subject IRI.
+          */
+        private val statements: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
+
+        override def handleComment(comment: IRI): Unit = {}
+
+        /**
+          * Adds a statement to the collection `statements`.
+          *
+          * @param st the statement to be added.
+          */
+        override def handleStatement(st: Statement): Unit = {
+            val subject: SubjectV2 = st.getSubject match {
+                case iri: rdf4j.model.IRI => IriSubjectV2(iri.stringValue)
+                case blankNode: rdf4j.model.BNode => BlankNodeSubjectV2(blankNode.getID)
+                case other => throw InconsistentTriplestoreDataException(s"Unsupported subject in construct query result: $other")
+            }
+
+            val predicateIri: SmartIri = st.getPredicate.stringValue.toSmartIri
+
+            val objectLiteral: LiteralV2 = st.getObject match {
+                case iri: rdf4j.model.IRI => IriLiteralV2(value = iri.stringValue)
+                case blankNode: rdf4j.model.BNode => BlankNodeLiteralV2(value = blankNode.getID)
+
+                case literal: rdf4j.model.Literal => literal.getDatatype.toString match {
+                    case OntologyConstants.Rdf.LangString => StringLiteralV2(value = literal.stringValue, language = literal.getLanguage.asScala)
+                    case OntologyConstants.Xsd.String => StringLiteralV2(value = literal.stringValue, language = None)
+                    case OntologyConstants.Xsd.Boolean => BooleanLiteralV2(value = literal.booleanValue)
+                    case OntologyConstants.Xsd.Int | OntologyConstants.Xsd.Integer | OntologyConstants.Xsd.NonNegativeInteger => IntLiteralV2(value = literal.intValue)
+                    case OntologyConstants.Xsd.Decimal => DecimalLiteralV2(value = literal.decimalValue)
+                    case OntologyConstants.Xsd.DateTime => DateTimeLiteralV2(stringFormatter.xsdDateTimeStampToInstant(literal.stringValue, throw InconsistentTriplestoreDataException(s"Invalid xsd:dateTime: ${literal.stringValue}")))
+                    case OntologyConstants.Xsd.Uri => IriLiteralV2(value = literal.stringValue)
+                    case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
+                }
+
+                case other => throw InconsistentTriplestoreDataException(s"Unsupported object in construct query result: $other")
+            }
+
+            val currentStatementsForSubject: Map[SmartIri, Seq[LiteralV2]] = statements.getOrElse(subject, Map.empty[SmartIri, Seq[LiteralV2]])
+            val currentStatementsForPredicate: Seq[LiteralV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
+
+            val updatedPredicateStatements = currentStatementsForPredicate :+ objectLiteral
+            val updatedSubjectStatements = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
+
+            statements += (subject -> updatedSubjectStatements)
+        }
+
+        override def endRDF(): Unit = {}
+
+        override def handleNamespace(prefix: IRI, uri: IRI): Unit = {}
+
+        override def startRDF(): Unit = {}
+
+        def getConstructResponse: SparqlExtendedConstructResponse = SparqlExtendedConstructResponse(statements.toMap)
+    }
+
+    /**
+      * Parses a Turtle document, converting it to a [[SparqlExtendedConstructResponse]].
+      *
+      * @param turtleStr the Turtle document.
+      * @param log       a [[LoggingAdapter]].
+      * @return a [[SparqlExtendedConstructResponse]] representing the document.
+      */
+    def parseTurtleResponse(turtleStr: String, log: LoggingAdapter): Try[SparqlExtendedConstructResponse] = {
+        val parseTry = Try {
+            val turtleParser = new TurtleParser()
+            val handler = new ConstructResponseTurtleHandler
+            turtleParser.setRDFHandler(handler)
+            turtleParser.parse(new StringReader(turtleStr), "")
+            handler.getConstructResponse
+        }
+
+        parseTry match {
+            case Success(parsed) => Success(parsed)
+            case Failure(e) =>
+                log.error(e, s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter")
+                Failure(DataConversionException("Couldn't parse Turtle document"))
+        }
+    }
+}
+
+/**
   * A response to a [[SparqlExtendedConstructRequest]].
   *
-  * @param statements a map of subjects to statements about each subject. TODO: use SmartIri for the predicate.
+  * @param statements a map of subjects to statements about each subject.
   */
-case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, Map[IRI, Seq[LiteralV2]]])
+case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, SparqlExtendedConstructResponse.ConstructPredicateObjects])
 
 /**
   * Requests a named graph, which will be written to the specified file in Trig format. A successful response
@@ -306,7 +417,92 @@ case class BlankNodeSubjectV2(value: String) extends SubjectV2 {
   * Represents a literal read from the triplestore. There are different subclasses
   * representing literals with the extended type information stored in the triplestore.
   */
-sealed trait LiteralV2
+sealed trait LiteralV2 {
+    /**
+      * Returns this [[LiteralV2]] as an [[IriLiteralV2]].
+      *
+      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+      *                 an [[IriLiteralV2]].
+      * @return an [[IriLiteralV2]].
+      */
+    def asIriLiteral(errorFun: => Nothing): IriLiteralV2 = {
+        this match {
+            case iriLiteral: IriLiteralV2 => iriLiteral
+            case _ => errorFun
+        }
+    }
+
+    /**
+      * Returns this [[LiteralV2]] as a [[StringLiteralV2]].
+      *
+      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+      *                 a [[StringLiteralV2]].
+      * @return a [[StringLiteralV2]].
+      */
+    def asStringLiteral(errorFun: => Nothing): StringLiteralV2 = {
+        this match {
+            case stringLiteral: StringLiteralV2 => stringLiteral
+            case _ => errorFun
+        }
+    }
+
+    /**
+      * Returns this [[LiteralV2]] as a [[BooleanLiteralV2]].
+      *
+      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+      *                 a [[BooleanLiteralV2]].
+      * @return a [[BooleanLiteralV2]].
+      */
+    def asBooleanLiteral(errorFun: => Nothing): BooleanLiteralV2 = {
+        this match {
+            case booleanLiteral: BooleanLiteralV2 => booleanLiteral
+            case _ => errorFun
+        }
+    }
+
+    /**
+      * Returns this [[LiteralV2]] as an [[IntLiteralV2]].
+      *
+      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+      *                 an [[IntLiteralV2]].
+      * @return an [[IntLiteralV2]].
+      */
+    def asIntLiteral(errorFun: => Nothing): IntLiteralV2 = {
+        this match {
+            case intLiteral: IntLiteralV2 => intLiteral
+            case _ => errorFun
+        }
+    }
+
+    /**
+      * Returns this [[LiteralV2]] as a [[DecimalLiteralV2]].
+      *
+      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+      *                 a [[DecimalLiteralV2]].
+      * @return a [[DecimalLiteralV2]].
+      */
+    def asDecimalLiteral(errorFun: => Nothing): DecimalLiteralV2 = {
+        this match {
+            case decimalLiteral: DecimalLiteralV2 => decimalLiteral
+            case _ => errorFun
+        }
+    }
+
+
+    /**
+      * Returns this [[LiteralV2]] as a [[DateTimeLiteralV2]].
+      *
+      * @param errorFun a function that throws an exception. It will be called if this [[LiteralV2]] is not
+      *                 a [[DateTimeLiteralV2]].
+      * @return a [[DateTimeLiteralV2]].
+      */
+    def asDateTimeLiteral(errorFun: => Nothing): DateTimeLiteralV2 = {
+        this match {
+            case dateTimeLiteral: DateTimeLiteralV2 => dateTimeLiteral
+            case _ => errorFun
+        }
+    }
+}
 
 /**
   * Represents a literal read from an ontology in the triplestore.
