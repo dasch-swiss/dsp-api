@@ -374,6 +374,13 @@ case class ApplicationCacheException(message: String) extends InternalServerExce
 case class SparqlGenerationException(message: String) extends InternalServerException(message)
 
 /**
+  * Indicates that an error occurred during the generation of client API code.
+  *
+  * @param message a description of the error.
+  */
+case class ClientApiGenerationException(message: String) extends InternalServerException(message)
+
+/**
   * A generic [[InternalServerException]] for wrapping any non-serializable exception in a serializable form.
   */
 case class WrapperException(e: Throwable) extends InternalServerException(e.toString)

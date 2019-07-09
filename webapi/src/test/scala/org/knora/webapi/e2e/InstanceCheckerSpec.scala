@@ -476,16 +476,16 @@ object InstanceCheckerSpec {
     val correctUser: String =
         """
           |{
+          |  "id" : "http://rdfh.ch/users/normaluser",
           |  "username" : "test",
           |  "email" : "test@example.org",
           |  "familyName" : "Tester",
           |  "givenName": "Test",
           |  "password" : "test",
-          |  "preferredLanguage" : "en",
+          |  "lang" : "en",
           |  "status" : true,
-          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
-          |  "isInGroup" : [],
-          |  "isInSystemAdminGroup" : false
+          |  "projects" : [ "http://rdfh.ch/projects/0001" ],
+          |  "groups" : []
           |}
         """.stripMargin
 
@@ -493,48 +493,47 @@ object InstanceCheckerSpec {
         """
           |{
           |  "username" : "test",
+          |  "id" : "http://rdfh.ch/users/normaluser",
           |  "extraProperty" : "test",
           |  "email" : "test@example.org",
           |  "familyName" : "Tester",
           |  "givenName": "Test",
           |  "password" : "test",
-          |  "preferredLanguage" : "en",
+          |  "lang" : "en",
           |  "status" : true,
-          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
-          |  "isInGroup" : [],
-          |  "isInSystemAdminGroup" : false
+          |  "projects" : [ "http://rdfh.ch/projects/0001" ],
+          |  "groups" : []
           |}
         """.stripMargin
 
     val userWithMissingUsername: String =
         """
           |{
+          |  "id" : "http://rdfh.ch/users/normaluser",
           |  "email" : "test@example.org",
           |  "familyName" : "Tester",
           |  "givenName": "Test",
           |  "password" : "test",
-          |  "preferredLanguage" : "en",
+          |  "lang" : "en",
           |  "status" : true,
-          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
-          |  "isInGroup" : [],
-          |  "isInSystemAdminGroup" : false
+          |  "projects" : [ "http://rdfh.ch/projects/0001" ],
+          |  "groups" : []
           |}
         """.stripMargin
-
 
     val userWithInvalidObjectType: String =
         """
           |{
+          |  "id" : "http://rdfh.ch/users/normaluser",
           |  "username" : "test",
           |  "email" : "test@example.org",
           |  "familyName" : "Tester",
           |  "givenName": "Test",
           |  "password" : "test",
-          |  "preferredLanguage" : "en",
+          |  "lang" : "en",
           |  "status" : "invalidValue",
-          |  "isInProject" : [ "http://rdfh.ch/projects/0001" ],
-          |  "isInGroup" : [],
-          |  "isInSystemAdminGroup" : false
+          |  "projects" : [ "http://rdfh.ch/projects/0001" ],
+          |  "groups" : []
           |}
         """.stripMargin
 }

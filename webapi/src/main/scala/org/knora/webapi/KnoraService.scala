@@ -141,6 +141,7 @@ trait KnoraService {
             CORS(
                   new HealthRoute(routeData).knoraApiPath ~
                   new RejectingRoute(routeData).knoraApiPath ~
+                  new ClientApiRoute(routeData).knoraApiPath ~
                   new ResourcesRouteV1(routeData).knoraApiPath ~
                   new ValuesRouteV1(routeData).knoraApiPath ~
                   new StandoffRouteV1(routeData).knoraApiPath ~
