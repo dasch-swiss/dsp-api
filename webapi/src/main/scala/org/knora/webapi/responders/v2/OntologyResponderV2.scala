@@ -1104,7 +1104,9 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             classesUnavailableInSchema: Set[SmartIri] = classIris.foldLeft(Set.empty[SmartIri]) {
                 case (acc, classIri) =>
                     // Is this class IRI hard-coded in the requested schema?
-                    if (KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.contains(classIri) || KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.contains(classIri)) {
+                    if (KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.contains(classIri) ||
+                        KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.contains(classIri) ||
+                        KnoraAdminToApiV2ComplexTransformationRules.externalClassesToAdd.contains(classIri)) {
                         // Yes, so it's available.
                         acc
                     } else {
@@ -1130,7 +1132,9 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             propertiesUnavailableInSchema: Set[SmartIri] = propertyIris.foldLeft(Set.empty[SmartIri]) {
                 case (acc, propertyIri) =>
                     // Is this property IRI hard-coded in the requested schema?
-                    if (KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.contains(propertyIri) || KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.contains(propertyIri)) {
+                    if (KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.contains(propertyIri) ||
+                        KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.contains(propertyIri) ||
+                        KnoraAdminToApiV2ComplexTransformationRules.externalPropertiesToAdd.contains(propertyIri)) {
                         // Yes, so it's available.
                         acc
                     } else {
@@ -1169,16 +1173,18 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
             // See if any of the requested entities are hard-coded for knora-api.
 
-            hardCodedKnoraApiClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.filterKeys(classIris) ++
-                KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.filterKeys(classIris)
+            hardCodedExternalClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.filterKeys(classIris) ++
+                KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.filterKeys(classIris) ++
+                KnoraAdminToApiV2ComplexTransformationRules.externalClassesToAdd.filterKeys(classIris)
 
-            hardCodedKnoraApiPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris) ++
-                KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris)
+            hardCodedExternalPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris) ++
+                KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris) ++
+                KnoraAdminToApiV2ComplexTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris)
 
             // Convert the remaining external entity IRIs to internal ones.
 
-            internalToExternalClassIris: Map[SmartIri, SmartIri] = (classIris -- hardCodedKnoraApiClassesAvailable.keySet).map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri).toMap
-            internalToExternalPropertyIris: Map[SmartIri, SmartIri] = (propertyIris -- hardCodedKnoraApiPropertiesAvailable.keySet).map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri).toMap
+            internalToExternalClassIris: Map[SmartIri, SmartIri] = (classIris -- hardCodedExternalClassesAvailable.keySet).map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri).toMap
+            internalToExternalPropertyIris: Map[SmartIri, SmartIri] = (propertyIris -- hardCodedExternalPropertiesAvailable.keySet).map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri).toMap
 
             classIrisForCache = internalToExternalClassIris.keySet
             propertyIrisForCache = internalToExternalPropertyIris.keySet
@@ -1196,8 +1202,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 ontology => ontology.properties.filterKeys(propertyIrisForCache)
             }.toMap
 
-            allClassesAvailable: Map[SmartIri, ReadClassInfoV2] = classesAvailableFromCache ++ hardCodedKnoraApiClassesAvailable
-            allPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = propertiesAvailableFromCache ++ hardCodedKnoraApiPropertiesAvailable
+            allClassesAvailable: Map[SmartIri, ReadClassInfoV2] = classesAvailableFromCache ++ hardCodedExternalClassesAvailable
+            allPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = propertiesAvailableFromCache ++ hardCodedExternalPropertiesAvailable
 
             // See if any entities are missing.
 

@@ -17,24 +17,15 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Development
+# Generating Client API Code
 
-@@toc { depth=1 }
+The following route returns a Zip file containing generated client API
+code for the specified target:
 
-@@@ index
+```
+HTTP GET to http://host/v2/clientapi/TARGET
+```
 
-- [Overview](overview.md)
-- [Starting Fuseki 3](fuseki.md)
-- [Starting GraphDB](graphdb.md)
-- [Build and Running](building-and-running.md)
-- [Build Process](build-process.md)
-- [Setup IntelliJ for development of Knora](intellij-config.md)
-- [Testing](testing.md)
-- [Docker Cheat Sheet](docker-cheat-sheet.md)
-- [Monitoring Knora](monitoring.md)
-- [Profiling Knora](profiling.md)
-- [Starting the Knora Stack inside Docker Container](docker-compose.md)
-- [Updating Repositories](updating-repositories.md)
-- [Generating Client API Code](generating-client-apis.md)
-
-@@@
+Currently the only supported `TARGET` is `typescript`. For documentation
+on defining client APIs, see
+@ref:[Client API Code Generation Framework](../design/client-api/index.md).
