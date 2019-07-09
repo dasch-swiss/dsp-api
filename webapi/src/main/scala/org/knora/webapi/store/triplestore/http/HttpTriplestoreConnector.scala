@@ -47,8 +47,9 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.SparqlResultProtocol._
-import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
+import org.knora.webapi.util.{FakeTriplestore, SmartIri, StringFormatter}
 import spray.json._
+import org.knora.webapi.util.IriConversions._
 
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
@@ -252,99 +253,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @return a [[SparqlExtendedConstructResponse]]
       */
     private def sparqlHttpExtendedConstruct(sparql: String): Try[SparqlExtendedConstructResponse] = {
-
-        // println(logDelimiter + sparql)
-
-        /**
-          * Converts a graph in parsed Turtle to a [[SparqlExtendedConstructResponse]].
-          */
-        class ConstructResponseTurtleHandler extends RDFHandler {
-
-            private val stringFormatter = StringFormatter.getGeneralInstance
-
-            /**
-              * A collection of all the statements in the input file, grouped and sorted by subject IRI.
-              */
-            private var statements = Map.empty[SubjectV2, Map[IRI, Seq[LiteralV2]]]
-
-            override def handleComment(comment: IRI): Unit = {}
-
-            /**
-              * Adds a statement to the collection `statements`.
-              *
-              * @param st the statement to be added.
-              */
-            override def handleStatement(st: Statement): Unit = {
-                val subject: SubjectV2 = st.getSubject match {
-                    case iri: rdf4j.model.IRI => IriSubjectV2(iri.stringValue)
-                    case blankNode: rdf4j.model.BNode => BlankNodeSubjectV2(blankNode.getID)
-                    case other => throw InconsistentTriplestoreDataException(s"Unsupported subject in construct query result: $other")
-                }
-
-                val predicateIri = st.getPredicate.stringValue
-
-                // log.debug("sparqlHttpExtendedConstruct - handleStatement - object: {}", st.getObject)
-
-                val objectLiteral: LiteralV2 = st.getObject match {
-                    case iri: rdf4j.model.IRI => IriLiteralV2(value = iri.stringValue)
-                    case blankNode: rdf4j.model.BNode => BlankNodeLiteralV2(value = blankNode.getID)
-
-                    case literal: rdf4j.model.Literal => literal.getDatatype.toString match {
-                        case OntologyConstants.Rdf.LangString => StringLiteralV2(value = literal.stringValue, language = literal.getLanguage.asScala)
-                        case OntologyConstants.Xsd.String => StringLiteralV2(value = literal.stringValue, language = None)
-                        case OntologyConstants.Xsd.Boolean => BooleanLiteralV2(value = literal.booleanValue)
-                        case OntologyConstants.Xsd.Int | OntologyConstants.Xsd.Integer | OntologyConstants.Xsd.NonNegativeInteger => IntLiteralV2(value = literal.intValue)
-                        case OntologyConstants.Xsd.Decimal => DecimalLiteralV2(value = literal.decimalValue)
-                        case OntologyConstants.Xsd.DateTime => DateTimeLiteralV2(stringFormatter.xsdDateTimeStampToInstant(literal.stringValue, throw InconsistentTriplestoreDataException(s"Invalid xsd:dateTime: ${literal.stringValue}")))
-                        case unknown => throw NotImplementedException(s"The literal type '$unknown' is not implemented.")
-                    }
-
-                    case other => throw InconsistentTriplestoreDataException(s"Unsupported object in construct query result: $other")
-                }
-
-                // log.debug("sparqlHttpExtendedConstruct - handleStatement - objectLiteral: {}", objectLiteral)
-
-                val currentStatementsForSubject: Map[IRI, Seq[LiteralV2]] = statements.getOrElse(subject, Map.empty[IRI, Seq[LiteralV2]])
-                val currentStatementsForPredicate: Seq[LiteralV2] = currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
-
-                val updatedPredicateStatements = currentStatementsForPredicate :+ objectLiteral
-                val updatedSubjectStatements = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
-
-                statements += (subject -> updatedSubjectStatements)
-            }
-
-            override def endRDF(): Unit = {}
-
-            override def handleNamespace(prefix: IRI, uri: IRI): Unit = {}
-
-            override def startRDF(): Unit = {}
-
-            def getConstructResponse: SparqlExtendedConstructResponse = {
-                SparqlExtendedConstructResponse(statements)
-            }
-        }
-
-        def parseTurtleResponse(sparql: String, turtleStr: String): Try[SparqlExtendedConstructResponse] = {
-            val parseTry = Try {
-                val turtleParser = new TurtleParser()
-                val handler = new ConstructResponseTurtleHandler
-                turtleParser.setRDFHandler(handler)
-                turtleParser.parse(new StringReader(turtleStr), "query-result.ttl")
-                handler.getConstructResponse
-            }
-
-            parseTry match {
-                case Success(parsed) => Success(parsed)
-                case Failure(e) =>
-                    log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
-                    Failure(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
-            }
-        }
-
-        for {
+        val parseTry = for {
             turtleStr <- getTriplestoreHttpResponse(sparql, isUpdate = false, isConstruct = true)
-            response <- parseTurtleResponse(sparql, turtleStr)
+            response <- SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log)
         } yield response
+
+        parseTry match {
+            case Success(parsed) => Success(parsed)
+            case Failure(e) =>
+                Failure(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
+        }
     }
 
     /**

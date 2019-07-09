@@ -28,6 +28,8 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupGetRespons
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
+import org.knora.webapi.messages.store.triplestoremessages.{IriSubjectV2, LiteralV2, SparqlExtendedConstructResponse}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.v1.GroupedProps.{ValueLiterals, ValueProps}
 
@@ -354,6 +356,38 @@ object PermissionUtilADM extends LazyLogging {
                     AGreaterThanB
                 }
         }
+    }
+
+    /**
+      * Given data from a [[SparqlExtendedConstructResponse]], determines the permissions that a user has on a entity,
+      * and returns an [[EntityPermission]].
+      *
+      * @param entityIri      the IRI of the entity.
+      * @param assertions     a [[Seq]] containing all the permission-relevant predicates and objects
+      *                       pertaining to the entity. The predicates must include
+      *                       [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToUser]] and
+      *                       [[org.knora.webapi.OntologyConstants.KnoraBase.AttachedToProject]], and should include
+      *                       [[org.knora.webapi.OntologyConstants.KnoraBase.HasPermissions]].
+      *                       Other predicates may be included, but they will be ignored, so there is no need to filter
+      *                       them before passing them to this function.
+      * @param requestingUser the profile of the user making the request.
+      * @return a code representing the user's permission level for the entity.
+      */
+    def getUserPermissionFromConstructAssertionsADM(entityIri: IRI,
+                                                    assertions: ConstructPredicateObjects,
+                                                    requestingUser: UserADM): Option[EntityPermission] = {
+        val assertionsAsStrings: Seq[(IRI, String)] = assertions.toSeq.flatMap {
+            case (pred: SmartIri, objs: Seq[LiteralV2]) =>
+                objs.map {
+                    obj => pred.toString -> obj.toString
+                }
+        }
+
+        getUserPermissionFromAssertionsADM(
+            entityIri = entityIri,
+            assertions = assertionsAsStrings,
+            requestingUser = requestingUser
+        )
     }
 
     /**
