@@ -47,7 +47,7 @@
 
                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-               rdfs:comment "Indicates which Institution a knoraProject belongs to"@en ;
+               rdfs:comment "Indicates which Institution a project belongs to."@en ;
 
                knora-base:subjectClassConstraint :knoraProject ;
 
@@ -61,7 +61,7 @@
 
                   rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-                  rdfs:comment "Indicates which knoraProject a UserGroup belongs to"@en ;
+                  rdfs:comment "Indicates which project a group belongs to."@en ;
 
                   knora-base:subjectClassConstraint :UserGroup ;
 
@@ -89,7 +89,7 @@
 
            rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-           rdfs:comment "The given User is part of the given UserGroup"@en ;
+           rdfs:comment "The given user is part of the given group."@en ;
 
            rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> ;
 
@@ -105,7 +105,7 @@
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-             rdfs:comment "The given User is part of the given knoraProject"@en ;
+             rdfs:comment "The given user is part of the given project."@en ;
 
              rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> ;
 
@@ -121,7 +121,7 @@
 
                        rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-                       rdfs:comment "The given User is part of the given Project's ProjectAdmin group"@en ;
+                       rdfs:comment "The given user is part of the given project's ProjectAdmin group."@en ;
 
                        rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/member> ;
 
@@ -146,7 +146,7 @@
 
          knora-base:objectDatatypeConstraint xsd:string ;
 
-         rdfs:comment "Address of a person or an institution"@en .
+         rdfs:comment "The address of a person or an institution"@en .
 
 
 ###  http://www.knora.org/ontology/knora-admin#groupName
@@ -155,7 +155,7 @@
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-             rdfs:comment "The group's name"@en ;
+             rdfs:comment "The group's name."@en ;
 
              knora-base:subjectClassConstraint :UserGroup ;
 
@@ -185,7 +185,7 @@
 
             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-            rdfs:comment "Exists and is true if users can add themselves to the project or group"@en ;
+            rdfs:comment "Exists and is true if users can add themselves to the project or group."@en ;
 
             # No knora-base:subjectClassConstraint, because this can be used with :knoraProject or :UserGroup.
 
@@ -199,7 +199,7 @@
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-             rdfs:comment "The institutions's name"@en ;
+             rdfs:comment "The institutions's name."@en ;
 
              rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> ;
 
@@ -215,7 +215,7 @@
 
             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-            rdfs:comment "A description of an institution"@en ;
+            rdfs:comment "A description of an institution."@en ;
 
             knora-base:subjectClassConstraint :Institution ;
 
@@ -229,7 +229,7 @@
 
             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-            rdfs:comment "The URL of a web site"@en ;
+            rdfs:comment "The URL of a web site."@en ;
 
             knora-base:subjectClassConstraint :Institution ;
 
@@ -256,6 +256,8 @@
 :givenName rdf:type owl:DatatypeProperty ;
 
       rdfs:subPropertyOf foaf:givenName, :objectCannotBeMarkedAsDeleted ;
+      
+      rdfs:comment "The user's given name."@en ;
 
       knora-base:objectDatatypeConstraint xsd:string .
 
@@ -266,6 +268,8 @@
 :familyName rdf:type owl:DatatypeProperty ;
 
       rdfs:subPropertyOf foaf:familyName, :objectCannotBeMarkedAsDeleted ;
+
+      rdfs:comment "The user's family name."@en ;
 
       knora-base:objectDatatypeConstraint xsd:string .
 
@@ -291,7 +295,7 @@
 
        rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-       rdfs:comment "Phone number of a person, institution, etc."@en ;
+       rdfs:comment "The phone number of a person, institution, etc."@en ;
 
        knora-base:objectDatatypeConstraint xsd:string .
 
@@ -303,7 +307,7 @@
 
                    rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-                   rdfs:comment "Language (\"en\", \"de\", \"fr\", \"it\", \"gr\", etc.)"@en ;
+                   rdfs:comment "The ISO 639-1 code of the user's preferred language."@en ;
 
                    knora-base:objectDatatypeConstraint xsd:string .
 
@@ -315,7 +319,7 @@
 
             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-            rdfs:comment "A description of a Knora project"@en ;
+            rdfs:comment "A description of a Knora project."@en ;
 
             knora-base:subjectClassConstraint :knoraProject ;
 
@@ -329,7 +333,7 @@
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-             rdfs:comment "A keyword describing a project"@en ;
+             rdfs:comment "A keyword describing a project."@en ;
 
              knora-base:subjectClassConstraint :knoraProject ;
 
@@ -343,7 +347,7 @@
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-             rdfs:comment "The longname of a Knora project"@en ;
+             rdfs:comment "The longname of a Knora project."@en ;
 
              rdfs:subPropertyOf <http://xmlns.com/foaf/0.1/name> ;
 
@@ -359,7 +363,7 @@
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-             rdfs:comment "Path to the projects logo"@en ;
+             rdfs:comment "The path to the projects's logo."@en ;
 
              knora-base:subjectClassConstraint :knoraProject ;
 
@@ -372,7 +376,7 @@
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-             rdfs:comment "The size of the image (as defined by IIIF) returned for restricted view"@en ;
+             rdfs:comment "The size of the image (as defined by IIIF) returned for restricted view."@en ;
 
              knora-base:subjectClassConstraint :knoraProject ;
 
@@ -385,7 +389,7 @@
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-             rdfs:comment "Path to the restricted view watermark"@en ;
+             rdfs:comment "The path to the restricted view watermark."@en ;
 
              knora-base:subjectClassConstraint :knoraProject ;
 
@@ -430,7 +434,7 @@
 
           rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-          rdfs:comment "The username and login name of a user of Knora"@en ;
+          rdfs:comment "The username and login name of a user."@en ;
 
           knora-base:subjectClassConstraint :User ;
 
@@ -444,7 +448,7 @@
 
         rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-        rdfs:comment "The email address and login name of a user of Knora"@en ;
+        rdfs:comment "The email address and login name of a user."@en ;
 
         knora-base:objectDatatypeConstraint xsd:string .
 
@@ -456,7 +460,7 @@
 
           rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-          rdfs:comment "The status of the user / group / project. It is false if the entity has been deactivated (deleted)"@en ;
+          rdfs:comment "The status of the user / group / project. It is false if the entity has been deactivated (deleted)."@en ;
 
           knora-base:objectDatatypeConstraint xsd:boolean .
 
@@ -500,7 +504,7 @@
                               owl:minCardinality "0"^^xsd:nonNegativeInteger
                             ] ;
 
-             rdfs:comment "An institution that has data in Knora"@en .
+             rdfs:comment "An institution that has data in Knora."@en .
 
 
 
@@ -550,7 +554,7 @@
                         owl:cardinality "1"^^xsd:nonNegativeInteger
                       ] ;
 
-      rdfs:comment "Represents a Knora user"@en .
+      rdfs:comment "Represents a Knora user."@en .
 
 
 
@@ -576,7 +580,7 @@
                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ];
 
-           rdfs:comment "A group of Knora users"@en .
+           rdfs:comment "A group of Knora users."@en .
 
 
 
@@ -631,7 +635,7 @@
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ;
 
-              rdfs:comment "Represents a project that uses Knora"@en .
+              rdfs:comment "Represents a project that uses Knora."@en .
 
 
 
