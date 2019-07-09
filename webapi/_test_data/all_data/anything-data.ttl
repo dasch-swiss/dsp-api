@@ -1185,7 +1185,7 @@
   knora-base:valueCreationDate "2019-02-10T10:05:10Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "one";
-  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
+  knora-base:hasPermissions "CR knora-admin:Creator|CR knora-admin:ProjectMember|V knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/thing-with-history/values/2b> a knora-base:TextValue;
