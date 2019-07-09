@@ -677,11 +677,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       * @return a [[UpdateValueResponseV2]].
       */
     private def updateValueV2(updateValueRequest: UpdateValueRequestV2): Future[UpdateValueResponseV2] = {
-        def makeTaskFuture: Future[UpdateValueResponseV2] = {
+        def makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2: UpdateValuePermissionsV2): Future[UpdateValueResponseV2] = {
+            ??? // TODO
+        }
+
+        def makeTaskFutureToUpdateValueContent(updateValueContentV2: UpdateValueContentV2): Future[UpdateValueResponseV2] = {
             for {
                 // Convert the submitted value to the internal schema.
-                submittedInternalPropertyIri: SmartIri <- Future(updateValueRequest.updateValue.propertyIri.toOntologySchema(InternalSchema))
-                submittedInternalValueContent: ValueContentV2 = updateValueRequest.updateValue.valueContent.toOntologySchema(InternalSchema)
+                submittedInternalPropertyIri: SmartIri <- Future(updateValueContentV2.propertyIri.toOntologySchema(InternalSchema))
+                submittedInternalValueContent: ValueContentV2 = updateValueContentV2.valueContent.toOntologySchema(InternalSchema)
 
                 // Get ontology information about the submitted property.
 
@@ -700,8 +704,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 }
 
                 // Don't accept knora-api:hasStandoffLinkToValue.
-                _ = if (updateValueRequest.updateValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
-                    throw BadRequestException(s"Values of <${updateValueRequest.updateValue.propertyIri}> cannot be updated directly")
+                _ = if (updateValueContentV2.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
+                    throw BadRequestException(s"Values of <${updateValueContentV2.propertyIri}> cannot be updated directly")
                 }
 
                 // Make an adjusted version of the submitted property: if it's a link value property, substitute the
@@ -709,8 +713,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // adjusted property.
 
                 adjustedInternalPropertyInfo: ReadPropertyInfoV2 <- getAdjustedInternalPropertyInfo(
-                    submittedPropertyIri = updateValueRequest.updateValue.propertyIri,
-                    maybeSubmittedValueType = Some(updateValueRequest.updateValue.valueContent.valueType),
+                    submittedPropertyIri = updateValueContentV2.propertyIri,
+                    maybeSubmittedValueType = Some(updateValueContentV2.valueContent.valueType),
                     propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
                     requestingUser = updateValueRequest.requestingUser
                 )
@@ -721,28 +725,28 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // so we can see objects that the user doesn't have permission to see.
 
                 resourceInfo: ReadResourceV2 <- getResourceWithPropertyValues(
-                    resourceIri = updateValueRequest.updateValue.resourceIri,
+                    resourceIri = updateValueContentV2.resourceIri,
                     propertyInfo = adjustedInternalPropertyInfo,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
 
                 // Check that the resource has the rdf:type that the client thinks it has.
 
-                _ = if (resourceInfo.resourceClassIri != updateValueRequest.updateValue.resourceClassIri.toOntologySchema(InternalSchema)) {
-                    throw BadRequestException(s"The rdf:type of resource <${updateValueRequest.updateValue.resourceIri}> is not <${updateValueRequest.updateValue.resourceClassIri}>")
+                _ = if (resourceInfo.resourceClassIri != updateValueContentV2.resourceClassIri.toOntologySchema(InternalSchema)) {
+                    throw BadRequestException(s"The rdf:type of resource <${updateValueContentV2.resourceIri}> is not <${updateValueContentV2.resourceClassIri}>")
                 }
 
                 // Check that the resource has the value that the user wants to update, as an object of the submitted property.
 
-                maybeCurrentValue: Option[ReadValueV2] = resourceInfo.values.get(submittedInternalPropertyIri).flatMap(_.find(_.valueIri == updateValueRequest.updateValue.valueIri))
+                maybeCurrentValue: Option[ReadValueV2] = resourceInfo.values.get(submittedInternalPropertyIri).flatMap(_.find(_.valueIri == updateValueContentV2.valueIri))
 
                 currentValue: ReadValueV2 = maybeCurrentValue match {
                     case Some(value) => value
-                    case None => throw NotFoundException(s"Resource <${updateValueRequest.updateValue.resourceIri}> does not have value <${updateValueRequest.updateValue.valueIri}> as an object of property <${updateValueRequest.updateValue.propertyIri}>")
+                    case None => throw NotFoundException(s"Resource <${updateValueContentV2.resourceIri}> does not have value <${updateValueContentV2.valueIri}> as an object of property <${updateValueContentV2.propertyIri}>")
                 }
 
                 // Did the user submit permissions for the new value?
-                newValueVersionPermissionLiteral <- updateValueRequest.updateValue.permissions match {
+                newValueVersionPermissionLiteral <- updateValueContentV2.permissions match {
                     case Some(permissions) =>
                         // Yes. Validate them.
                         PermissionUtilADM.validatePermissions(permissionLiteral = permissions, responderManager = responderManager)
@@ -773,7 +777,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 // Check that the current value and the submitted value have the same type.
                 _ = if (currentValue.valueContent.valueType != submittedInternalValueContent.valueType) {
-                    throw BadRequestException(s"Value <${updateValueRequest.updateValue.valueIri}> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted new version has type <${updateValueRequest.updateValue.valueContent.valueType}>")
+                    throw BadRequestException(s"Value <${updateValueContentV2.valueIri}> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted new version has type <${updateValueContentV2.valueContent.valueType}>")
                 }
 
                 // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
@@ -802,7 +806,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 // Check that the updated value would not duplicate another existing value of the resource.
 
-                currentValuesForProp: Seq[ReadValueV2] = resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2]).filter(_.valueIri != updateValueRequest.updateValue.valueIri)
+                currentValuesForProp: Seq[ReadValueV2] = resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2]).filter(_.valueIri != updateValueContentV2.valueIri)
 
                 _ = if (currentValuesForProp.exists(currentVal => unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent))) {
                     throw DuplicateValueException()
@@ -846,7 +850,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // Check that the value was written correctly to the triplestore.
 
                 verifiedValue <- verifyValue(
-                    resourceIri = updateValueRequest.updateValue.resourceIri,
+                    resourceIri = updateValueContentV2.resourceIri,
                     propertyIri = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
                     requestingUser = updateValueRequest.requestingUser
@@ -858,32 +862,34 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             )
         }
 
-        val triplestoreUpdateFuture: Future[UpdateValueResponseV2] = for {
-            // Don't allow anonymous users to create values.
-            _ <- Future {
-                if (updateValueRequest.requestingUser.isAnonymousUser) {
-                    throw ForbiddenException("Anonymous users aren't allowed to update values")
-                } else {
-                    updateValueRequest.requestingUser.id
-                }
+        if (updateValueRequest.requestingUser.isAnonymousUser) {
+            FastFuture.failed(ForbiddenException("Anonymous users aren't allowed to update values"))
+        } else {
+            updateValueRequest.updateValue match {
+                case updateValueContentV2: UpdateValueContentV2 =>
+                    val triplestoreUpdateFuture: Future[UpdateValueResponseV2] = IriLocker.runWithIriLock(
+                        updateValueRequest.apiRequestID,
+                        updateValueContentV2.resourceIri,
+                        () => makeTaskFutureToUpdateValueContent(updateValueContentV2)
+                    )
+
+                    ResourceUtilV2.doSipiPostUpdate(
+                        updateFuture = triplestoreUpdateFuture,
+                        valueContent = updateValueContentV2.valueContent,
+                        requestingUser = updateValueRequest.requestingUser,
+                        responderManager = responderManager,
+                        storeManager = storeManager,
+                        log = log
+                    )
+
+                case updateValuePermissionsV2: UpdateValuePermissionsV2 =>
+                    IriLocker.runWithIriLock(
+                        updateValueRequest.apiRequestID,
+                        updateValuePermissionsV2.resourceIri,
+                        () => makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2)
+                    )
             }
-
-            // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-            taskResult <- IriLocker.runWithIriLock(
-                updateValueRequest.apiRequestID,
-                updateValueRequest.updateValue.resourceIri,
-                () => makeTaskFuture
-            )
-        } yield taskResult
-
-        ResourceUtilV2.doSipiPostUpdate(
-            updateFuture = triplestoreUpdateFuture,
-            valueContent = updateValueRequest.updateValue.valueContent,
-            requestingUser = updateValueRequest.requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            log = log
-        )
+        }
     }
 
     /**

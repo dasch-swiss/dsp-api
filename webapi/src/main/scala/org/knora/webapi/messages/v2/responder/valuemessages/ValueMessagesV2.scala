@@ -24,6 +24,7 @@ import java.util.UUID
 
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
@@ -211,27 +212,52 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
             // Get the resource property and the new value version.
             updateValue: UpdateValueV2 <- jsonLDDocument.getResourcePropertyValue match {
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-                    for {
-                        valueContent: ValueContentV2 <-
-                        ValueContentV2.fromJsonLDObject(
-                            jsonLDObject = jsonLDObject,
-                            requestingUser = requestingUser,
-                            responderManager = responderManager,
-                            storeManager = storeManager,
-                            settings = settings,
-                            log = log
+                    val valueIri: IRI = jsonLDObject.getIDAsKnoraDataIri.toString
+
+                    // Does the value object just contain knora-api:hasPermissions?
+
+                    val valuePredicatesMinusIDAndType: Set[IRI] = jsonLDObject.value.keySet - JsonLDConstants.ID - JsonLDConstants.TYPE
+
+                    if (valuePredicatesMinusIDAndType == Set(OntologyConstants.KnoraApiV2Complex.HasPermissions)) {
+                        // Yes. This is a request to change the value's permissions.
+
+                        val valueType: SmartIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+                        val permissions = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
+
+                        FastFuture.successful(
+                            UpdateValuePermissionsV2(
+                                resourceIri = resourceIri.toString,
+                                resourceClassIri = resourceClassIri,
+                                propertyIri = propertyIri,
+                                valueIri = valueIri,
+                                valueType = valueType,
+                                permissions = permissions
+                            )
+                        )
+                    } else {
+                        // No. This is a request to change the value content.
+
+                        for {
+                            valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
+                                jsonLDObject = jsonLDObject,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                storeManager = storeManager,
+                                settings = settings,
+                                log = log
+                            )
+
+                            maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
+                        } yield UpdateValueContentV2(
+                            resourceIri = resourceIri.toString,
+                            resourceClassIri = resourceClassIri,
+                            propertyIri = propertyIri,
+                            valueIri = valueIri,
+                            valueContent = valueContent,
+                            permissions = maybePermissions
                         )
 
-                        valueIri = jsonLDObject.getIDAsKnoraDataIri
-                        maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
-                    } yield UpdateValueV2(
-                        resourceIri = resourceIri.toString,
-                        resourceClassIri = resourceClassIri,
-                        propertyIri = propertyIri,
-                        valueIri = valueIri.toString,
-                        valueContent = valueContent,
-                        permissions = maybePermissions
-                    )
+                    }
             }
         } yield UpdateValueRequestV2(
             updateValue = updateValue,
@@ -725,6 +751,14 @@ case class CreateValueV2(resourceIri: IRI,
                          valueContent: ValueContentV2,
                          permissions: Option[String] = None) extends IOValueV2
 
+
+trait UpdateValueV2 {
+    def resourceIri: IRI
+    def resourceClassIri: SmartIri
+    def propertyIri: SmartIri
+    def valueIri: IRI
+}
+
 /**
   * A new version of a value of a Knora property to be created.
   *
@@ -734,13 +768,32 @@ case class CreateValueV2(resourceIri: IRI,
   *                         this must be a link value property.
   * @param valueIri         the IRI of the value to be updated.
   * @param valueContent     the content of the new version of the value.
+  * @param permissions      the permissions to be attached to the new value version.
   */
-case class UpdateValueV2(resourceIri: IRI,
-                         resourceClassIri: SmartIri,
-                         propertyIri: SmartIri,
-                         valueIri: IRI,
-                         valueContent: ValueContentV2,
-                         permissions: Option[String] = None) extends IOValueV2
+case class UpdateValueContentV2(resourceIri: IRI,
+                                resourceClassIri: SmartIri,
+                                propertyIri: SmartIri,
+                                valueIri: IRI,
+                                valueContent: ValueContentV2,
+                                permissions: Option[String] = None) extends IOValueV2 with UpdateValueV2
+
+/**
+  * New permissions for a value.
+  *
+  * @param resourceIri      the resource that the current value version is attached to.
+  * @param resourceClassIri the resource class that the client believes the resource belongs to.
+  * @param propertyIri      the property that the client believes points to the value. If the value is a link value,
+  *                         this must be a link value property.
+  * @param valueIri         the IRI of the value to be updated.
+  * @param valueType        the IRI of the value type.
+  * @param permissions      the permissions to be attached to the new value version.
+  */
+case class UpdateValuePermissionsV2(resourceIri: IRI,
+                                    resourceClassIri: SmartIri,
+                                    propertyIri: SmartIri,
+                                    valueIri: IRI,
+                                    valueType: SmartIri,
+                                    permissions: String) extends UpdateValueV2
 
 /**
   * The IRI and content of a new value or value version whose existence in the triplestore needs to be verified.

@@ -1830,7 +1830,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val intValue = 5
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -1879,7 +1879,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val intValue = 3
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -1906,7 +1906,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val intValue = 6
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -1952,7 +1952,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val intValue = 10
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -1979,7 +1979,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val intValue = 7
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2006,7 +2006,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val intValue = 8
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2032,7 +2032,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val intValue = 9
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2057,7 +2057,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val intValue = 1
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2082,7 +2082,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val intValue = 6
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2107,7 +2107,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = zeitglöckleinIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
@@ -2149,7 +2149,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = zeitglöckleinIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
@@ -2222,7 +2222,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = zeitglöckleinIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
@@ -2296,7 +2296,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = zeitglöckleinIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
@@ -2325,7 +2325,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = zeitglöckleinIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
@@ -2375,7 +2375,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = zeitglöckleinIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
@@ -2402,7 +2402,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = zeitglöckleinIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
@@ -2428,7 +2428,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2469,7 +2469,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasDecimal = BigDecimal("3.1415926")
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2503,7 +2503,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2555,7 +2555,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2578,7 +2578,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2619,7 +2619,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasBoolean = false
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2645,7 +2645,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2686,7 +2686,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasGeometry = """{"status":"active","lineColor":"#ff3334","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2713,7 +2713,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2759,7 +2759,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasIntervalEnd = BigDecimal("3.45")
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2786,7 +2786,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2829,7 +2829,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasListNode = "http://rdfh.ch/lists/0001/treeList02"
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2854,7 +2854,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasListNode = "http://rdfh.ch/lists/0001/nonexistent"
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2880,7 +2880,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2923,7 +2923,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasColor = "#ff3334"
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2949,7 +2949,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -2992,7 +2992,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasUri = "https://en.wikipedia.org"
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -3018,7 +3018,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -3061,7 +3061,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasGeonameCode = "2988507"
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
@@ -3087,7 +3087,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             val updateValueRequest = UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
                     propertyIri = linkValuePropertyIri,
@@ -3130,7 +3130,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
 
             val updateValueRequest = UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
                     propertyIri = linkValuePropertyIri,
@@ -3153,7 +3153,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not update a standoff link directly" in {
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = zeitglöckleinIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
@@ -3189,7 +3189,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val updateValueRequest = UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
                     propertyIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
@@ -3238,7 +3238,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
                     propertyIri = propertyIri,
@@ -3292,7 +3292,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             // Knora will reject this request.
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
                     propertyIri = propertyIri,
@@ -3327,7 +3327,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             // Knora will accept this request, but the mock Sipi responder will say it failed to move the file to permanent storage.
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
                     propertyIri = propertyIri,
@@ -3709,7 +3709,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             // Update the second text value.
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueV2(
+                UpdateValueContentV2(
                     resourceIri = sierraIri,
                     resourceClassIri = resourceClassIri,
                     propertyIri = propertyIri,
