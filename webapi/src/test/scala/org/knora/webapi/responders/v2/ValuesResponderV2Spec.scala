@@ -28,7 +28,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceRequestV2, CreateResourceV2, ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -297,12 +297,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private def getValueUUID(valueIri: IRI): Option[UUID] = {
         val sparqlQuery =
             s"""
-              |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-              |
-              |SELECT ?valueUUID WHERE {
-              |    <$valueIri> knora-base:valueHasUUID ?valueUUID .
-              |}
-            """.stripMargin
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |SELECT ?valueUUID WHERE {
+               |    <$valueIri> knora-base:valueHasUUID ?valueUUID .
+               |}
+             """.stripMargin
 
         storeManager ! SparqlSelectRequest(sparqlQuery)
 
@@ -313,9 +313,35 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 if (rows.isEmpty) {
                     None
                 } else if (rows.size > 1) {
-                    throw AssertionException(s"Expected one value UUID, got ${rows.size}")
+                    throw AssertionException(s"Expected one knora-base:valueHasUUID, got ${rows.size}")
                 } else {
                     Some(stringFormatter.base64DecodeUuid(rows.head.rowMap("valueUUID")))
+                }
+        }
+    }
+
+    private def getValuePermissions(valueIri: IRI): Option[UUID] = {
+        val sparqlQuery =
+            s"""
+               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+               |
+               |SELECT ?valuePermissions WHERE {
+               |    <$valueIri> knora-base:hasPermissions ?valuePermissions .
+               |}
+             """.stripMargin
+
+        storeManager ! SparqlSelectRequest(sparqlQuery)
+
+        expectMsgPF(timeout) {
+            case response: SparqlSelectResponse =>
+                val rows = response.results.bindings
+
+                if (rows.isEmpty) {
+                    None
+                } else if (rows.size > 1) {
+                    throw AssertionException(s"Expected one knora-base:hasPermissions, got ${rows.size}")
+                } else {
+                    Some(stringFormatter.base64DecodeUuid(rows.head.rowMap("valuePermissions")))
                 }
         }
     }
@@ -1837,9 +1863,14 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case savedValue: IntegerValueContentV2 =>
                     savedValue.valueHasInteger should ===(intValue)
                     updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
+                    updatedValueFromTriplestore.valueHasUUID should ===(previousValueFromTriplestore.valueHasUUID)
 
                 case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
             }
+
+            // Check that the permissions and UUID were deleted from the previous version of the value.
+            assert(getValueUUID(previousValueFromTriplestore.valueIri).isEmpty)
+            assert(getValuePermissions(previousValueFromTriplestore.valueIri).isEmpty)
         }
 
         "not update a value if an outdated value IRI is given" in {

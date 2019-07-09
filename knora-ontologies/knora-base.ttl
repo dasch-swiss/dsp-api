@@ -33,7 +33,7 @@
 
     :attachedToProject knora-admin:SystemProject ;
 
-    :ontologyVersion "PR 1367" .
+    :ontologyVersion "PR 1372" .
 
 
 
@@ -2667,7 +2667,7 @@
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :hasPermissions ;
-                         owl:cardinality "1"^^xsd:nonNegativeInteger
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :valueHasOrder ;

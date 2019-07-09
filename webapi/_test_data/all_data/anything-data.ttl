@@ -554,8 +554,7 @@
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-base:dimX 512;
-  knora-base:dimY 256;
-  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser" .
+  knora-base:dimY 256 .
 
 <http://rdfh.ch/0001/a-thing-with-picture> a anything:Thing;
   knora-base:isDeleted false;
@@ -1156,7 +1155,6 @@
   knora-base:valueHasInteger 1;
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "1";
-  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/thing-with-history/values/1b> a knora-base:IntValue;
@@ -1165,7 +1163,6 @@
   knora-base:valueHasInteger 2;
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "2";
-  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
   knora-base:previousValue <http://rdfh.ch/0001/thing-with-history/values/1a> .
 
@@ -1185,7 +1182,6 @@
   knora-base:valueCreationDate "2019-02-10T10:05:10Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "one";
-  knora-base:hasPermissions "CR knora-admin:Creator|CR knora-admin:ProjectMember|V knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
 <http://rdfh.ch/0001/thing-with-history/values/2b> a knora-base:TextValue;
@@ -1193,7 +1189,6 @@
   knora-base:valueCreationDate "2019-02-11T10:05:10Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "two";
-  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
   knora-base:previousValue <http://rdfh.ch/0001/thing-with-history/values/2a> .
 
@@ -1213,7 +1208,6 @@
   rdf:object <http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ>;
   knora-base:isDeleted false;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
-  knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
   knora-base:valueCreationDate "2019-02-10T10:30:10Z"^^xsd:dateTime;
   knora-base:valueHasString "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ";
   knora-base:valueHasRefCount 1 .
