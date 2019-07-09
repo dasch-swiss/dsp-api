@@ -26,6 +26,7 @@ import org.knora.webapi.util.SmartIri
 // #OntologyTransformationRules
 /**
   * A trait for objects that provide rules for converting an ontology from the internal schema to an external schema.
+  * * See also [[OntologyConstants.CorrespondingIris]].
   */
 trait OntologyTransformationRules {
     /**
@@ -35,6 +36,7 @@ trait OntologyTransformationRules {
 
     /**
       * Properties to remove from the ontology before converting it to the target schema.
+      * See also [[OntologyConstants.CorrespondingIris]].
       */
     val internalPropertiesToRemove: Set[SmartIri]
 
@@ -56,6 +58,7 @@ trait OntologyTransformationRules {
 
     /**
       * Properties that need to be added to the ontology after converting it to the target schema.
+      * See also [[OntologyConstants.CorrespondingIris]].
       */
     val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2]
 }
@@ -76,7 +79,7 @@ object OntologyTransformationRules {
       */
     def getTransformationRules(ontologyIri: SmartIri, targetSchema: ApiV2Schema): OntologyTransformationRules = {
         // If this is the admin ontology, use its transformation rules.
-        if (ontologyIri.toString == OntologyConstants.KnoraAdminV2.KnoraAdminOntologyIri) {
+        if (ontologyIri.toString == OntologyConstants.KnoraAdmin.KnoraAdminOntologyIri) {
             targetSchema match {
                 case ApiV2Simple => throw BadRequestException(s"The knora-admin API is not available in the simple schema")
                 case ApiV2Complex => KnoraAdminToApiV2ComplexTransformationRules

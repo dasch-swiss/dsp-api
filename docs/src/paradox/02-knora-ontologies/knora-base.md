@@ -19,7 +19,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # The Knora Base Ontology
 
-@@toc { depth=2 }
+@@toc { depth=3 }
 
 ## Overview
 
