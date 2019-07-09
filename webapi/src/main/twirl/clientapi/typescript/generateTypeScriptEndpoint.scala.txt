@@ -1,0 +1,130 @@
+@*
+ * Copyright © 2015-2019 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.util._
+@import org.knora.webapi.util.clientapi._
+@import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
+
+@(name: String,
+  description: String,
+  importedClasses: Seq[ImportInfo],
+  functions: Seq[ClientFunction])
+
+import { Observable } from "rxjs";
+import { catchError, map } from "rxjs/operators";
+
+import { ApiResponseData } from "../../../models/api-response-data";
+import { ApiResponseError } from "../../../models/api-response-error";
+import { Endpoint } from "../../endpoint";
+@for(classInfo <- importedClasses) {
+import { @classInfo.className } from "@classInfo.importPath";}
+
+/**
+ * @description
+ */
+export class @name extends Endpoint {
+
+    @for(function <- functions) {
+    /**
+     * @function.description@if(function.params.nonEmpty) {
+     * @for(param <- function.params) {
+     * @@param @param.name @param.description}}
+     */
+    @{function.name}(@for((param, index) <- function.params.zipWithIndex) {@if(index > 0) {, }@param.name: @makeObjectType(param.objectType)}): Observable<ApiResponseData<@makeObjectType(function.returnType)> | ApiResponseError> {
+    @function.implementation match {
+    case httpRequest: ClientHttpRequest => {
+        return this.@{makeHttpMethod(httpRequest.httpMethod)}(@makeUrl(httpRequest.urlElementsAsValues)@makeHttpRequestBody(httpRequest.requestBody)).pipe(
+            map(ajaxResponse => ApiResponseData.fromAjaxResponse(ajaxResponse, @makeObjectType(function.returnType), this.jsonConvert)),
+            catchError(error => this.handleError(error))
+        );
+    }
+
+    case functionCall: FunctionCall => {
+        return this.@{functionCall.name}(@{functionCall.args.map(arg => makeValue(arg)).mkString(", ")});
+    }}
+    }
+    }
+}
+
+@makeObjectType(objectType: ClientObjectType) = @{
+    objectType match {
+        case StringDatatype => "string"
+        case BooleanDatatype => "boolean"
+        case IntegerDatatype => "number"
+        case DecimalDatatype => "number"
+        case UriDatatype => "string"
+        case DateTimeStampDatatype => "string"
+        case enum: EnumDatatype => enum.values.map(value => "\"" + value + "\"").mkString(" | ")
+        case classRef: ClassRef => classRef.className
+        case other => throw ClientApiGenerationException(s"Type $other not yet supported")
+    }
+}
+
+@makeHttpMethod(httpMethod: ClientHttpMethod) = @{
+    httpMethod match {
+        case GET => "httpGet"
+        case POST => "httpPost"
+        case PUT => "httpPut"
+        case DELETE => "httpDelete"
+    }
+}
+
+@makeValue(value: Value) = @{
+    value match {
+        case stringLiteral: StringLiteralValue => "\"" + stringLiteral + "\""
+        case booleanLiteral: BooleanLiteralValue => "\"" + booleanLiteral + "\""
+        case integerLiteral: IntegerLiteralValue => integerLiteral.toString
+        case arg: ArgValue => arg.name + arg.memberVariableName.map(varName => "." + varName).getOrElse("")
+    }
+}
+
+@makeUrl(urlElementsAsValues: Seq[Value]) = @{
+    if (urlElementsAsValues.isEmpty) {
+        "\"\""
+    } else {
+        urlElementsAsValues.map {
+            value: Value =>
+                value match {
+                    case arg: ArgValue => "encodeURI(" + makeValue(arg) + ")"
+                    case _ => makeValue(value)
+                }
+        }.mkString(" + ")
+    }
+}
+
+@makeHttpRequestBody(maybeRequestBody: Option[HttpRequestBody]) = @{
+    maybeRequestBody match {
+        case Some(requestBody) =>
+            val requestBodyContent = requestBody match {
+                case jsonRequestBody: JsonRequestBody =>
+                    "{ " +
+                    jsonRequestBody.jsonObject.map {
+                        case (key, value) => key + ": " + makeValue(value)
+                    }.mkString(", ") +
+                    " }"
+
+                case arg: ArgValue => makeValue(arg)
+            }
+
+            ", " + requestBodyContent
+
+        case None => ""
+    }
+}

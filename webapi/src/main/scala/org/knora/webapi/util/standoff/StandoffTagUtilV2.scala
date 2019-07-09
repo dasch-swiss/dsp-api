@@ -27,7 +27,7 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SmartIriLiteralV2}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
@@ -701,12 +701,35 @@ object StandoffTagUtilV2 {
     }
 
     /**
-      * Create a sequence of [[StandoffTagV2]] from the given standoff nodes (Sparql results).
+      * Creates a sequence of [[StandoffTagV2]] from the given standoff nodes resulting from a SPARQL CONSTRUCT query.
       *
-      * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]]
-      * @return a sequence of [[StandoffTagV2]].
+      * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]] objects.
+      * @return a sequence of [[StandoffTagV2]] objects.
       */
-    def createStandoffTagsV2FromSparqlResults(standoffAssertions: Map[IRI, Map[IRI, String]],
+    def createStandoffTagsV2FromConstructResults(standoffAssertions: Map[IRI, Map[SmartIri, LiteralV2]],
+                                                 responderManager: ActorRef,
+                                                 requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[StandoffTagV2]] = {
+        val unwrappedStandoffAssertions: Map[IRI, Map[IRI, String]] = standoffAssertions.map {
+            case (standoffTagIri, standoffTagAssertions: Map[SmartIri, LiteralV2]) =>
+                standoffTagIri -> standoffTagAssertions.map {
+                    case (predicateIri: SmartIri, literal: LiteralV2) => predicateIri.toString -> literal.toString
+                }
+        }
+
+        createStandoffTagsV2FromSelectResults(
+            standoffAssertions = unwrappedStandoffAssertions,
+            responderManager = responderManager,
+            requestingUser = requestingUser
+        )
+    }
+
+    /**
+      * Creates a sequence of [[StandoffTagV2]] from the given standoff nodes resulting from a SPARQL SELECT query.
+      *
+      * @param standoffAssertions standoff assertions to be converted into [[StandoffTagV2]] objects.
+      * @return a sequence of [[StandoffTagV2]] objects.
+      */
+    def createStandoffTagsV2FromSelectResults(standoffAssertions: Map[IRI, Map[IRI, String]],
                                               responderManager: ActorRef,
                                               requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[StandoffTagV2]] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

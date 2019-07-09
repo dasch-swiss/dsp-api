@@ -35,5 +35,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Profiling Knora](profiling.md)
 - [Starting the Knora Stack inside Docker Container](docker-compose.md)
 - [Updating Repositories](updating-repositories.md)
+- [Generating Client API Code](generating-client-apis.md)
 
 @@@

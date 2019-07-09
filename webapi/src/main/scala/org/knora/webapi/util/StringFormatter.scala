@@ -303,6 +303,18 @@ object StringFormatter {
     }
 
     /**
+      * Initialises the singleton instance of [[StringFormatter]] for use in a client program that will connect to Knora.
+      */
+    def initForClient(knoraHostAndPort: String): Unit = {
+        this.synchronized {
+            generalInstance match {
+                case Some(_) => ()
+                case None => generalInstance = Some(new StringFormatter(maybeKnoraHostAndPort = Some(knoraHostAndPort)))
+            }
+        }
+    }
+
+    /**
       * Initialises the singleton instance of [[StringFormatter]] for a test.
       */
     def initForTest(): Unit = {
@@ -640,7 +652,7 @@ object IriConversions {
 /**
   * Handles string parsing, formatting, conversion, and validation.
   */
-class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTest: Boolean = false) {
+class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, maybeKnoraHostAndPort: Option[String] = None, initForTest: Boolean = false) {
 
     import StringFormatter._
 
@@ -653,8 +665,10 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         // Use the default host and port for automated testing.
         Some("0.0.0.0:3333")
     } else {
-        // Use the configured host and port.
-        maybeSettings.map(_.externalOntologyIriHostAndPort)
+        maybeSettings match {
+            case Some(settings) => Some(settings.externalOntologyIriHostAndPort)
+            case None => maybeKnoraHostAndPort
+        }
     }
 
     // The protocol and host that the ARK resolver is running on.
@@ -2807,7 +2821,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       * Shorter strings are padded with leading zeroes to 22 characters and parsed in Base64 format
       * (this is non-reversible, and is needed only for working with test data).
       *
-      * @param uuidStr the string to be decoded.
+      * @param uuidStr  the string to be decoded.
       * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
       * @return the decoded [[UUID]].
       */
@@ -3004,5 +3018,22 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     def makeRandomMapEntryIri: IRI = {
         val mapEntryUuid = makeRandomBase64EncodedUuid
         s"http://$IriDomain/map-entries/$mapEntryUuid"
+    }
+
+    /**
+      * Converts a camel-case string like `FooBar` into a string like `foo-bar`.
+      *
+      * @param str       the string to be converted.
+      * @param separator the word separator (defaults to `-`).
+      * @return the converted string.
+      */
+    def camelCaseToSeparatedLowerCase(str: String, separator: String = "-"): String = {
+        str.replaceAll(
+            "([A-Z]+)([A-Z][a-z])",
+            "$1" + separator + "$2"
+        ).replaceAll(
+            "([a-z\\d])([A-Z])",
+            "$1" + separator + "$2"
+        ).toLowerCase
     }
 }

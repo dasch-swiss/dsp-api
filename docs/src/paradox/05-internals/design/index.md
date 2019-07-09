@@ -27,5 +27,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [API v1 Design](api-v1/index.md)
 - [API v2 Design](api-v2/index.md)
 - [Admin API Design](api-admin/index.md)
+- [Client API Code Generation Framework](client-api/index.md)
 
 @@@

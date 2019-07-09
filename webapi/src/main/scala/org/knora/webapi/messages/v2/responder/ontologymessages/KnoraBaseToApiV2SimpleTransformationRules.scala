@@ -27,6 +27,7 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
   * Rules for converting `knora-base` (or an ontology based on it) into `knora-api` in the [[ApiV2Simple]] schema.
+  * See also [[OntologyConstants.CorrespondingIris]].
   */
 object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationRules {
 
@@ -368,6 +369,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
     /**
       * Properties to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema.
+      * See also [[OntologyConstants.CorrespondingIris]].
       */
     override val internalPropertiesToRemove: Set[SmartIri] = Set(
         OntologyConstants.KnoraBase.OntologyVersion,
@@ -529,6 +531,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
     /**
       * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2Simple]] schema, to obtain `knora-api`.
+      * See also [[OntologyConstants.CorrespondingIris]].
       */
     override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Result,
