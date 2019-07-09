@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class EmptyByteArray(message: String) extends RedisException(message)
 
-object RedisSerialization {
+object RedisSerialization{
 
 
     /**

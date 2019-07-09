@@ -87,6 +87,12 @@ object Dependencies {
         val scalaLogging           = "com.typesafe.scala-logging"              %% "scala-logging"            % "3.8.0"
         val logbackClassic         = "ch.qos.logback"                           % "logback-classic"          % "1.2.3"
 
+        // Metrics
+        val kamonCore              = "io.kamon"                                %% "kamon-core"               % "2.0.0-RC1"
+        val kamonScalaFuture       = "io.kamon"                                %% "kamon-scala-future"       % "2.0.0-RC1"
+        val kamonPrometheus        = "io.kamon"                                %% "kamon-prometheus"         % "2.0.0-RC1"
+        val aspectJWeaver          = "org.aspectj"                              % "aspectjweaver"            % "1.9.4"
+
         // input validation
         val commonsValidator       = "commons-validator"                        % "commons-validator"        % "1.6" exclude("commons-logging", "commons-logging")
 
@@ -211,6 +217,9 @@ object Dependencies {
         jenaLibs.value,
         jenaText.value,
         jwtSprayJson,
+        kamonCore,
+        kamonPrometheus,
+        kamonScalaFuture,
         logbackClassic,
         rdf4jRuntime,
         redisClient,

@@ -25,7 +25,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.typesafe.scalalogging.{LazyLogging, Logger}
+import com.typesafe.scalalogging.Logger
+import kamon.Kamon
+import kamon.prometheus.PrometheusReporter
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.http.ServerVersion.addServerHeader
@@ -183,9 +185,6 @@ trait KnoraService {
         bindingFuture onComplete {
             case Success(_) => {
 
-                // start monitoring reporters
-                startReporters()
-
                 // Kick of startup procedure.
                 applicationStateActor ! InitStartUp(skipLoadingOfOntologies)
             }
@@ -204,32 +203,7 @@ trait KnoraService {
         logger.info("KnoraService - Shutting down.")
         Http().shutdownAllConnectionPools()
         CacheUtil.removeAllCaches()
-        // Kamon.stopAllReporters()
         system.terminate()
         Await.result(system.whenTerminated, 30 seconds)
-    }
-
-    /**
-      * Start the different reporters if defined. Reporters are the connection points between kamon (the collector) and
-      * the application which we will use to look at the collected data.
-      */
-    private def startReporters(): Unit = {
-
-        /*
-        val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
-        if (prometheusReporter) {
-            Kamon.addReporter(new PrometheusReporter()) // metrics
-        }
-
-        val zipkinReporter = Await.result(applicationStateActor ? GetZipkinReporterState(), 1.second).asInstanceOf[Boolean]
-        if (zipkinReporter) {
-            Kamon.addReporter(new ZipkinReporter()) // tracing
-        }
-
-        val jaegerReporter = Await.result(applicationStateActor ? GetJaegerReporterState(), 1.second).asInstanceOf[Boolean]
-        if (jaegerReporter) {
-            Kamon.addReporter(new JaegerReporter()) // tracing
-        }
-        */
     }
 }

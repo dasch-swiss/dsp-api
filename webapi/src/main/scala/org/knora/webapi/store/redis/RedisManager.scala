@@ -26,8 +26,8 @@ import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM, ProjectIdentifierType}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM, UserIdentifierType}
-import org.knora.webapi.messages.store.redismessages.{RedisGetProjectADM, RedisGetString, RedisGetUserADM, RedisPutProjectADM, RedisPutString, RedisPutUserADM, RedisRemoveValues, RedisRequest}
-import org.knora.webapi.util.Metrics.timed
+import org.knora.webapi.messages.store.redismessages._
+import org.knora.webapi.util.InstrumentationSupport
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,7 +35,7 @@ case class EmptyKey(message: String) extends RedisException(message)
 case class EmptyValue(message: String) extends RedisException(message)
 case class UnsupportedValueType(message: String) extends RedisException(message)
 
-class RedisManager(system: ActorSystem) extends LazyLogging {
+class RedisManager(system: ActorSystem) extends LazyLogging with InstrumentationSupport {
 
     /**
       * The Knora Akka actor system.
@@ -83,8 +83,6 @@ class RedisManager(system: ActorSystem) extends LazyLogging {
       */
     private def redisPutUserADM(value: UserADM): Future[Boolean] = {
 
-        val start = System.currentTimeMillis()
-
         val resultFuture = for {
             bytes: Array[Byte] <- RedisSerialization.serialize(value)
             result: Boolean <- writeValue(value.id, bytes)
@@ -100,9 +98,6 @@ class RedisManager(system: ActorSystem) extends LazyLogging {
                 false
         }
 
-        val took = System.currentTimeMillis() - start
-        logger.info(s"Redis write user: ${took}ms")
-
         timed("Redis write user:")(recoverableResultFuture)
     }
 
@@ -113,8 +108,6 @@ class RedisManager(system: ActorSystem) extends LazyLogging {
       * @param identifier the project identifier.
       */
     private def redisGetUserADM(identifier: UserIdentifierADM): Future[Option[UserADM]] = {
-
-        val start = System.currentTimeMillis()
 
         // The data is stored under the IRI key.
         // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
@@ -146,10 +139,6 @@ class RedisManager(system: ActorSystem) extends LazyLogging {
                 None
         }
 
-
-        val took = System.currentTimeMillis() - start
-        logger.info(s"Redis read user: ${took}ms")
-
         timed("Redis read user:")(recoverableResultFuture)
     }
 
@@ -165,8 +154,6 @@ class RedisManager(system: ActorSystem) extends LazyLogging {
       * @param value the stored value
       */
     private def redisPutProjectADM(value: ProjectADM): Future[Boolean] = timed("Redis write project.") {
-
-        val start = System.currentTimeMillis()
 
         val resultFuture = for {
             bytes: Array[Byte] <- RedisSerialization.serialize(value)
@@ -185,9 +172,6 @@ class RedisManager(system: ActorSystem) extends LazyLogging {
 
         }
 
-        val took = System.currentTimeMillis() - start
-        logger.info(s"Redis write project: ${took}ms")
-
         recoverableResultFuture
     }
 
@@ -197,8 +181,6 @@ class RedisManager(system: ActorSystem) extends LazyLogging {
       * @param identifier the project identifier.
       */
     private def redisGetProjectADM(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = timed("Redis read project.") {
-
-        val start = System.currentTimeMillis()
 
         // The data is stored under the IRI key.
         // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
@@ -227,9 +209,6 @@ class RedisManager(system: ActorSystem) extends LazyLogging {
                 logger.error("Aborting reading 'ProjectADM' from Redis.", e)
                 None
         }
-
-        val took = System.currentTimeMillis() - start
-        logger.info(s"Redis read project: ${took}ms")
 
         recoverableResultFuture
     }
@@ -359,6 +338,6 @@ class RedisManager(system: ActorSystem) extends LazyLogging {
                 false
         }
 
-        recoverableOperationFuture
+        timed("Remove values from Redis")(recoverableOperationFuture)
     }
 }
