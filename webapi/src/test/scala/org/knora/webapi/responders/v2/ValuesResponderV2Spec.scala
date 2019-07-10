@@ -1898,6 +1898,31 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not update a value if the user does not have modify permission on the value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 9
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasInteger = intValue
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
         "update a value with custom permissions" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
@@ -2026,28 +2051,120 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not update a value if the user does not have modify permission on the value" in {
+        "update a value, changing only its permissions" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val intValue = 9
+            val permissions = "CR knora-admin:Creator|V knora-admin:KnownUser"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            val oldValueFromTriplestore: ReadValueV2 = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = None,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIri.get,
+                requestingUser = anythingUser1,
+                checkLastModDateChanged = false
+            )
 
             responderManager ! UpdateValueRequestV2(
-                UpdateValueContentV2(
+                UpdateValuePermissionsV2(
                     resourceIri = resourceIri,
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueIri = intValueIri.get,
-                    valueContent = IntegerValueContentV2(
-                        ontologySchema = ApiV2Complex,
-                        valueHasInteger = intValue
-                    )
+                    valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+                    permissions = permissions
                 ),
-                requestingUser = incunabulaUser,
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => intValueIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedValueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intValueIri.get,
+                requestingUser = anythingUser1
+            )
+
+            updatedValueFromTriplestore.valueContent should ===(oldValueFromTriplestore.valueContent)
+            updatedValueFromTriplestore.permissions should ===(permissions)
+        }
+
+        "not update a value, changing only its permissions, if the requesting user does not have ChangeRightsPermission on the value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val permissions = "CR knora-admin:Creator"
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValuePermissionsV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIri.get,
+                    valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+                    permissions = permissions
+                ),
+                requestingUser = anythingUser2,
                 apiRequestID = UUID.randomUUID
             )
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "not update a value, changing only its permissions, with syntactically invalid custom permissions" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val permissions = "M knora-admin:Creator,V knora-admin:KnownUser"
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValuePermissionsV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIri.get,
+                    valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+                    permissions = permissions
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not update a value, changing only its permissions, with permissions referring to a nonexistent group" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val permissions = "M knora-admin:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValuePermissionsV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIri.get,
+                    valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+                    permissions = permissions
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
             }
         }
 
