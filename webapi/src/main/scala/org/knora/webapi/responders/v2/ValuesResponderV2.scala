@@ -46,6 +46,7 @@ import scala.concurrent.Future
   * Handles requests to read and write Knora values.
   */
 class ValuesResponderV2(responderData: ResponderData) extends Responder(responderData) {
+
     /**
       * The IRI and content of a new value or value version whose existence in the triplestore has been verified.
       *
@@ -677,15 +678,40 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       * @return a [[UpdateValueResponseV2]].
       */
     private def updateValueV2(updateValueRequest: UpdateValueRequestV2): Future[UpdateValueResponseV2] = {
-        def makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2: UpdateValuePermissionsV2): Future[UpdateValueResponseV2] = {
-            ??? // TODO
-        }
+        /**
+          * Information about a resource, a submitted property, and a value of the property.
+          *
+          * @param resource                     the contents of the resource.
+          * @param submittedInternalPropertyIri the internal IRI of the submitted property.
+          * @param adjustedInternalPropertyInfo the internal definition of the submitted property, adjusted
+          *                                     as follows: an adjusted version of the submitted property:
+          *                                     if it's a link value property, substitute the
+          *                                     corresponding link property.
+          * @param value                        the requested value.
+          */
+        case class ResourcePropertyValue(resource: ReadResourceV2,
+                                         submittedInternalPropertyIri: SmartIri,
+                                         adjustedInternalPropertyInfo: ReadPropertyInfoV2,
+                                         value: ReadValueV2)
 
-        def makeTaskFutureToUpdateValueContent(updateValueContentV2: UpdateValueContentV2): Future[UpdateValueResponseV2] = {
+        /**
+          * Gets information about a resource, a submitted property, and a value of the property, and does
+          * some checks to see if the submitted information is correct.
+          *
+          * @param resourceIri the IRI of the resource.
+          * @param submittedExternalResourceClassIri the submitted external IRI of the resource class.
+          * @param submittedExternalPropertyIri the submitted external IRI of the property.
+          * @param valueIri the IRI of the value.
+          * @param submittedExternalValueType the submitted external IRI of the value type.
+          * @return a [[ResourcePropertyValue]].
+          */
+        def getResourcePropertyValue(resourceIri: IRI,
+                                     submittedExternalResourceClassIri: SmartIri,
+                                     submittedExternalPropertyIri: SmartIri,
+                                     valueIri: IRI,
+                                     submittedExternalValueType: SmartIri): Future[ResourcePropertyValue] = {
             for {
-                // Convert the submitted value to the internal schema.
-                submittedInternalPropertyIri: SmartIri <- Future(updateValueContentV2.propertyIri.toOntologySchema(InternalSchema))
-                submittedInternalValueContent: ValueContentV2 = updateValueContentV2.valueContent.toOntologySchema(InternalSchema)
+                submittedInternalPropertyIri: SmartIri <- Future(submittedExternalPropertyIri.toOntologySchema(InternalSchema))
 
                 // Get ontology information about the submitted property.
 
@@ -704,8 +730,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 }
 
                 // Don't accept knora-api:hasStandoffLinkToValue.
-                _ = if (updateValueContentV2.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
-                    throw BadRequestException(s"Values of <${updateValueContentV2.propertyIri}> cannot be updated directly")
+                _ = if (submittedExternalPropertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue) {
+                    throw BadRequestException(s"Values of <$submittedExternalPropertyIri> cannot be updated directly")
                 }
 
                 // Make an adjusted version of the submitted property: if it's a link value property, substitute the
@@ -713,37 +739,147 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 // adjusted property.
 
                 adjustedInternalPropertyInfo: ReadPropertyInfoV2 <- getAdjustedInternalPropertyInfo(
-                    submittedPropertyIri = updateValueContentV2.propertyIri,
-                    maybeSubmittedValueType = Some(updateValueContentV2.valueContent.valueType),
+                    submittedPropertyIri = submittedExternalPropertyIri,
+                    maybeSubmittedValueType = Some(submittedExternalValueType),
                     propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
                     requestingUser = updateValueRequest.requestingUser
                 )
-
-                adjustedInternalPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri
 
                 // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
                 // so we can see objects that the user doesn't have permission to see.
 
                 resourceInfo: ReadResourceV2 <- getResourceWithPropertyValues(
-                    resourceIri = updateValueContentV2.resourceIri,
+                    resourceIri = resourceIri,
                     propertyInfo = adjustedInternalPropertyInfo,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
 
-                // Check that the resource has the rdf:type that the client thinks it has.
-
-                _ = if (resourceInfo.resourceClassIri != updateValueContentV2.resourceClassIri.toOntologySchema(InternalSchema)) {
-                    throw BadRequestException(s"The rdf:type of resource <${updateValueContentV2.resourceIri}> is not <${updateValueContentV2.resourceClassIri}>")
+                _ = if (resourceInfo.resourceClassIri != submittedExternalResourceClassIri.toOntologySchema(InternalSchema)) {
+                    throw BadRequestException(s"The rdf:type of resource <$resourceIri> is not <$submittedExternalResourceClassIri>")
                 }
 
                 // Check that the resource has the value that the user wants to update, as an object of the submitted property.
-
-                maybeCurrentValue: Option[ReadValueV2] = resourceInfo.values.get(submittedInternalPropertyIri).flatMap(_.find(_.valueIri == updateValueContentV2.valueIri))
-
-                currentValue: ReadValueV2 = maybeCurrentValue match {
-                    case Some(value) => value
-                    case None => throw NotFoundException(s"Resource <${updateValueContentV2.resourceIri}> does not have value <${updateValueContentV2.valueIri}> as an object of property <${updateValueContentV2.propertyIri}>")
+                currentValue: ReadValueV2 = resourceInfo.values.get(submittedInternalPropertyIri).flatMap(_.find(_.valueIri == valueIri)).getOrElse {
+                    throw NotFoundException(s"Resource <$resourceIri> does not have value <$valueIri> as an object of property <$submittedExternalPropertyIri>")
                 }
+
+                // Check that the current value has the submitted value type.
+                _ = if (currentValue.valueContent.valueType != submittedExternalValueType.toOntologySchema(InternalSchema)) {
+                    throw BadRequestException(s"Value <$valueIri> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted type was <$submittedExternalValueType>")
+                }
+            } yield ResourcePropertyValue(
+                resource = resourceInfo,
+                submittedInternalPropertyIri = submittedInternalPropertyIri,
+                adjustedInternalPropertyInfo = adjustedInternalPropertyInfo,
+                value = currentValue
+            )
+        }
+
+        /**
+          * Updates the permissions attached to a value.
+          *
+          * @param updateValuePermissionsV2 the update request.
+          * @return an [[UpdateValueResponseV2]].
+          */
+        def makeTaskFutureToUpdateValuePermissions(updateValuePermissionsV2: UpdateValuePermissionsV2): Future[UpdateValueResponseV2] = {
+            for {
+                // Do the initial checks, and get information about the resource, the property, and the value.
+                resourcePropertyValue: ResourcePropertyValue <- getResourcePropertyValue(
+                    resourceIri = updateValuePermissionsV2.resourceIri,
+                    submittedExternalResourceClassIri = updateValuePermissionsV2.resourceClassIri,
+                    submittedExternalPropertyIri = updateValuePermissionsV2.propertyIri,
+                    valueIri = updateValuePermissionsV2.valueIri,
+                    submittedExternalValueType = updateValuePermissionsV2.valueType
+                )
+
+                resourceInfo: ReadResourceV2 = resourcePropertyValue.resource
+                submittedInternalPropertyIri: SmartIri = resourcePropertyValue.submittedInternalPropertyIri
+                currentValue: ReadValueV2 = resourcePropertyValue.value
+
+                // Validate and reformat the submitted permissions.
+
+                newValuePermissionLiteral: String <- PermissionUtilADM.validatePermissions(permissionLiteral = updateValuePermissionsV2.permissions, responderManager = responderManager)
+
+                // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
+                // different from the current ones.
+
+                currentPermissionsParsed: Map[EntityPermission, Set[IRI]] = PermissionUtilADM.parsePermissions(currentValue.permissions)
+                newPermissionsParsed: Map[EntityPermission, Set[IRI]] = PermissionUtilADM.parsePermissions(updateValuePermissionsV2.permissions, { permissionLiteral: String => throw AssertionException(s"Invalid permission literal: $permissionLiteral") })
+
+                _ = if (newPermissionsParsed == currentPermissionsParsed) {
+                    throw BadRequestException(s"The submitted permissions are the same as the current ones")
+                }
+
+                _ = ResourceUtilV2.checkValuePermission(
+                    resourceInfo = resourceInfo,
+                    valueInfo = currentValue,
+                    permissionNeeded = ChangeRightsPermission,
+                    requestingUser = updateValueRequest.requestingUser
+                )
+
+                // Do the update.
+
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
+                newValueIri: IRI = stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
+                currentTime: Instant = Instant.now
+
+                sparqlUpdate = queries.sparql.v2.txt.changeValuePermissions(
+                    dataNamedGraph = dataNamedGraph,
+                    triplestore = settings.triplestoreType,
+                    resourceIri = resourceInfo.resourceIri,
+                    propertyIri = submittedInternalPropertyIri,
+                    currentValueIri = currentValue.valueIri,
+                    valueTypeIri = currentValue.valueContent.valueType,
+                    newValueIri = newValueIri,
+                    newPermissions = newValuePermissionLiteral,
+                    currentTime = currentTime
+                ).toString()
+
+                _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+
+                // Check that the value was written correctly to the triplestore.
+
+                unverifiedValue = UnverifiedValueV2(
+                    newValueIri = newValueIri,
+                    valueContent = currentValue.valueContent,
+                    permissions = newValuePermissionLiteral,
+                    creationDate = currentTime
+                )
+
+                verifiedValue: VerifiedValueV2 <- verifyValue(
+                    resourceIri = resourceInfo.resourceIri,
+                    propertyIri = submittedInternalPropertyIri,
+                    unverifiedValue = unverifiedValue,
+                    requestingUser = updateValueRequest.requestingUser
+                )
+            } yield UpdateValueResponseV2(
+                valueIri = verifiedValue.newValueIri,
+                valueType = unverifiedValue.valueContent.valueType,
+                projectADM = resourceInfo.projectADM
+            )
+        }
+
+        /**
+          * Updates the contents of a value.
+          *
+          * @param updateValueContentV2 the update request.
+          * @return an [[UpdateValueResponseV2]].
+          */
+        def makeTaskFutureToUpdateValueContent(updateValueContentV2: UpdateValueContentV2): Future[UpdateValueResponseV2] = {
+            for {
+                // Do the initial checks, and get information about the resource, the property, and the value.
+                resourcePropertyValue: ResourcePropertyValue <- getResourcePropertyValue(
+                    resourceIri = updateValueContentV2.resourceIri,
+                    submittedExternalResourceClassIri = updateValueContentV2.resourceClassIri,
+                    submittedExternalPropertyIri = updateValueContentV2.propertyIri,
+                    valueIri = updateValueContentV2.valueIri,
+                    submittedExternalValueType = updateValueContentV2.valueContent.valueType
+                )
+
+                resourceInfo: ReadResourceV2 = resourcePropertyValue.resource
+                submittedInternalPropertyIri: SmartIri = resourcePropertyValue.submittedInternalPropertyIri
+                adjustedInternalPropertyInfo: ReadPropertyInfoV2 = resourcePropertyValue.adjustedInternalPropertyInfo
+                currentValue: ReadValueV2 = resourcePropertyValue.value
 
                 // Did the user submit permissions for the new value?
                 newValueVersionPermissionLiteral <- updateValueContentV2.permissions match {
@@ -775,10 +911,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     requestingUser = updateValueRequest.requestingUser
                 )
 
-                // Check that the current value and the submitted value have the same type.
-                _ = if (currentValue.valueContent.valueType != submittedInternalValueContent.valueType) {
-                    throw BadRequestException(s"Value <${updateValueContentV2.valueIri}> has type <${currentValue.valueContent.valueType.toOntologySchema(ApiV2Complex)}>, but the submitted new version has type <${updateValueContentV2.valueContent.valueType}>")
-                }
+                // Convert the submitted value content to the internal schema.
+                submittedInternalValueContent: ValueContentV2 = updateValueContentV2.valueContent.toOntologySchema(InternalSchema)
 
                 // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
                 // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -836,10 +970,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 // Create the new value version.
 
-                unverifiedValue <- updateValueV2AfterChecks(
+                unverifiedValue: UnverifiedValueV2 <- updateValueV2AfterChecks(
                     dataNamedGraph = dataNamedGraph,
                     resourceInfo = resourceInfo,
-                    propertyIri = adjustedInternalPropertyIri,
+                    propertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
                     currentValue = currentValue,
                     newValueVersion = submittedInternalValueContent,
                     valueCreator = updateValueRequest.requestingUser.id,
@@ -849,14 +983,14 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 // Check that the value was written correctly to the triplestore.
 
-                verifiedValue <- verifyValue(
+                verifiedValue: VerifiedValueV2 <- verifyValue(
                     resourceIri = updateValueContentV2.resourceIri,
                     propertyIri = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
                     requestingUser = updateValueRequest.requestingUser
                 )
             } yield UpdateValueResponseV2(
-                valueIri = unverifiedValue.newValueIri,
+                valueIri = verifiedValue.newValueIri,
                 valueType = unverifiedValue.valueContent.valueType,
                 projectADM = resourceInfo.projectADM
             )
@@ -867,6 +1001,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         } else {
             updateValueRequest.updateValue match {
                 case updateValueContentV2: UpdateValueContentV2 =>
+                    // This is a request to update the content of a value.
                     val triplestoreUpdateFuture: Future[UpdateValueResponseV2] = IriLocker.runWithIriLock(
                         updateValueRequest.apiRequestID,
                         updateValueContentV2.resourceIri,
@@ -883,6 +1018,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     )
 
                 case updateValuePermissionsV2: UpdateValuePermissionsV2 =>
+                    // This is a request to update the permissions attached to a value.
                     IriLocker.runWithIriLock(
                         updateValueRequest.apiRequestID,
                         updateValuePermissionsV2.resourceIri,
@@ -929,7 +1065,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 )
 
             case _ =>
-                val newValueIri = stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
+                val newValueIri: IRI = stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
 
                 updateOrdinaryValueV2AfterChecks(
                     dataNamedGraph = dataNamedGraph,
@@ -1478,7 +1614,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       * If not, throws an exception.
       *
       * @param targetResourceIris the IRIs to be checked.
-      * @param requestingUser    the user making the request.
+      * @param requestingUser     the user making the request.
       */
     private def checkResourceIris(targetResourceIris: Set[IRI], requestingUser: UserADM): Future[Unit] = {
         if (targetResourceIris.isEmpty) {
