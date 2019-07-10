@@ -752,11 +752,29 @@ case class CreateValueV2(resourceIri: IRI,
                          permissions: Option[String] = None) extends IOValueV2
 
 
+/**
+  * A trait for classes representing information to be updated in a value.
+  */
 trait UpdateValueV2 {
-    def resourceIri: IRI
-    def resourceClassIri: SmartIri
-    def propertyIri: SmartIri
-    def valueIri: IRI
+    /**
+      * The IRI of the resource containing the value.
+      */
+    val resourceIri: IRI
+
+    /**
+      * The external IRI of the resource class.
+      */
+    val resourceClassIri: SmartIri
+
+    /**
+      * The external IRI of the property pointing to the value.
+      */
+    val propertyIri: SmartIri
+
+    /**
+      * The value IRI.
+      */
+    val valueIri: IRI
 }
 
 /**
