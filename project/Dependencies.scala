@@ -90,7 +90,9 @@ object Dependencies {
         // Metrics
         val kamonCore              = "io.kamon"                                %% "kamon-core"               % "2.0.0-RC1"
         val kamonScalaFuture       = "io.kamon"                                %% "kamon-scala-future"       % "2.0.0-RC1"
+        val kamonAkkaHttpd         = "io.kamon"                                %% "kamon-akka-http"          % "2.0.0-RC3"
         val kamonPrometheus        = "io.kamon"                                %% "kamon-prometheus"         % "2.0.0-RC1"
+        val kamonLogback           = "io.kamon"                                %% "kamon-logback"            % "2.0.0-RC1"
         val aspectJWeaver          = "org.aspectj"                              % "aspectjweaver"            % "1.9.4"
 
         // input validation
@@ -217,7 +219,9 @@ object Dependencies {
         jenaLibs.value,
         jenaText.value,
         jwtSprayJson,
+        kamonAkkaHttpd,
         kamonCore,
+        kamonLogback,
         kamonPrometheus,
         kamonScalaFuture,
         logbackClassic,

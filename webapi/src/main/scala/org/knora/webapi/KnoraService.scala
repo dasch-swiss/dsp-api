@@ -185,6 +185,9 @@ trait KnoraService {
         bindingFuture onComplete {
             case Success(_) => {
 
+                // Load Kamon monitoring
+                Kamon.loadModules()
+
                 // Kick of startup procedure.
                 applicationStateActor ! InitStartUp(skipLoadingOfOntologies)
             }
@@ -203,6 +206,10 @@ trait KnoraService {
         logger.info("KnoraService - Shutting down.")
         Http().shutdownAllConnectionPools()
         CacheUtil.removeAllCaches()
+
+        // Stop Kamon monitoring
+        Kamon.stopModules()
+
         system.terminate()
         Await.result(system.whenTerminated, 30 seconds)
     }

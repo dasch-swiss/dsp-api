@@ -81,7 +81,7 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
       *
       * @param value the stored value
       */
-    private def redisPutUserADM(value: UserADM): Future[Boolean] = {
+    private def redisPutUserADM(value: UserADM): Future[Boolean] = tracedFuture("redis-write-user") {
 
         val resultFuture = for {
             bytes: Array[Byte] <- RedisSerialization.serialize(value)
@@ -98,7 +98,7 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
                 false
         }
 
-        timed("Redis write user:")(recoverableResultFuture)
+        recoverableResultFuture
     }
 
     /**
@@ -107,7 +107,7 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
       *
       * @param identifier the project identifier.
       */
-    private def redisGetUserADM(identifier: UserIdentifierADM): Future[Option[UserADM]] = {
+    private def redisGetUserADM(identifier: UserIdentifierADM): Future[Option[UserADM]] = tracedFuture("redis-read-user") {
 
         // The data is stored under the IRI key.
         // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
@@ -139,7 +139,7 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
                 None
         }
 
-        timed("Redis read user:")(recoverableResultFuture)
+        recoverableResultFuture
     }
 
 
@@ -153,7 +153,7 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
       *
       * @param value the stored value
       */
-    private def redisPutProjectADM(value: ProjectADM): Future[Boolean] = timed("Redis write project.") {
+    private def redisPutProjectADM(value: ProjectADM): Future[Boolean] = tracedFuture("redis-write-project") {
 
         val resultFuture = for {
             bytes: Array[Byte] <- RedisSerialization.serialize(value)
@@ -180,7 +180,7 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
       *
       * @param identifier the project identifier.
       */
-    private def redisGetProjectADM(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = timed("Redis read project.") {
+    private def redisGetProjectADM(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = tracedFuture("redis-read-project") {
 
         // The data is stored under the IRI key.
         // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
@@ -320,7 +320,7 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
       *
       * @param keys the keys.
       */
-    private def removeValues(keys: Seq[String]): Future[Boolean] = {
+    private def removeValues(keys: Seq[String]): Future[Boolean] = tracedFuture("redis-remove-values") {
 
         logger.debug("removeValues - {}", keys)
 
@@ -338,6 +338,6 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
                 false
         }
 
-        timed("Remove values from Redis")(recoverableOperationFuture)
+        recoverableOperationFuture
     }
 }

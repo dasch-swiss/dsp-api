@@ -10,24 +10,26 @@
 <configuration scan="false" debug="false">
     <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%-5level] [%date{ISO8601}] [%logger{0}] %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} | %-5level | %logger{0} | %msg%n</pattern>
         </encoder>
     </appender>
-    <!--<appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>logs/console.log</File>
+
+    <conversionRule conversionWord="traceID" converterClass="kamon.instrumentation.logback.tools.LogbackTraceIDConverter" />
+
+    <appender name="STDOUTMETRICS" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%date{ISO8601}] %-5level %logger{0} - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} | %-5level | %traceID | %c{0} -> %m%n</pattern>
         </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/console.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
-        </rollingPolicy>
-    </appender>-->
+    </appender>
 
     <logger name="org.apache.jena.riot" level="ERROR"/>
     <logger name="org.apache.jena.tdb" level="ERROR"/>
     <logger name="akka" level="ERROR"/>
     <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
     <logger name="net.sf.ehcache.config" level="ERROR"/>
+    <logger name="kamon.metric" level="ERROR"/>
+
+    <!-- V1 -->
 
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
@@ -58,6 +60,6 @@
 
     <root level="INFO">
         <appender-ref ref="stdout"/>
-        <!--<appender-ref ref="R"/>-->
+        <appender-ref ref="STDOUTMETRICS"/>
     </root>
 </configuration>

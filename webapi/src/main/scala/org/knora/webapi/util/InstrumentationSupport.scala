@@ -20,8 +20,7 @@
 package org.knora.webapi.util
 
 import com.typesafe.scalalogging.Logger
-import kamon.Kamon
-import kamon.instrumentation.futures.scala.ScalaFutureInstrumentation.{traced, tracedCallback}
+import kamon.instrumentation.futures.scala.ScalaFutureInstrumentation.traced
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -35,7 +34,7 @@ trait InstrumentationSupport {
       *
       * Example:
       *
-      * val f = Timing.timed {
+      * val f = tracedFuture {
       *     Future {
       *         work inside the future
       *     }
@@ -46,13 +45,14 @@ trait InstrumentationSupport {
       * @param logger the logger use to output the message.
       */
     def tracedFuture[A](name: String)(future: => Future[A])(implicit logger: Logger, ec: ExecutionContext): Future[A] = {
-        val start = System.currentTimeMillis()
-        traced(name)(future).andThen(case completed => logger.info(s"$name: " + (System.currentTimeMillis() - start) + "ms"))
+        //val start = System.currentTimeMillis()
+        traced(name)(future).map(logger.info(tra))
+          //.andThen(case completed => logger.info(s"$name: " + (System.currentTimeMillis() - start) + "ms"))
     }
 
-    def counter(name: String) = Kamon.metrics.counter(name)
-    def minMaxCounter(name: String) = Kamon.metrics.minMaxCounter(name)
-    def time[A](name: String)(thunk: => A) = Latency.measure(Kamon.metrics.histogram(name))(thunk)
+//    def counter(name: String) = Kamon.metrics.counter(name)
+//    def minMaxCounter(name: String) = Kamon.metrics.minMaxCounter(name)
+//    def time[A](name: String)(thunk: => A) = Latency.measure(Kamon.metrics.histogram(name))(thunk)
 //    def traceFuture[A](name:String)(future: => Future[A]):Future[A] =
 //        Tracer.withContext(Kamon.tracer.newContext(name)) {
 //            future.andThen { case completed ⇒ Tracer.currentContext.finish() }(SameThreadExecutionContext)
