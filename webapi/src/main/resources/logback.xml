@@ -14,13 +14,13 @@
         </encoder>
     </appender>
 
-    <conversionRule conversionWord="traceID" converterClass="kamon.instrumentation.logback.tools.LogbackTraceIDConverter" />
+    <!--<conversionRule conversionWord="traceID" converterClass="kamon.instrumentation.logback.tools.LogbackTraceIDConverter" />
 
     <appender name="STDOUTMETRICS" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} | %-5level | %traceID | %c{0} -> %m%n</pattern>
         </encoder>
-    </appender>
+    </appender>-->
 
     <logger name="org.apache.jena.riot" level="ERROR"/>
     <logger name="org.apache.jena.tdb" level="ERROR"/>
@@ -56,10 +56,14 @@
     <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
 
+    <!-- metrics logging -->
+    <logger name="M-Routing" level="INFO"/>
+    <logger name="M-UsersResponderADM" level="INFO"/>
+    <logger name="M-RedisManager" level="INFO"/>
+
     <!-- for logging during tests, please see/use logback-test.xml under test/resources -->
 
-    <root level="INFO">
+    <root level="ERROR">
         <appender-ref ref="stdout"/>
-        <appender-ref ref="STDOUTMETRICS"/>
     </root>
 </configuration>

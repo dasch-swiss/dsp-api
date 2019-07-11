@@ -35,6 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
+import org.knora.webapi.util.InstrumentationSupport
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 import scala.concurrent.Future
@@ -42,7 +43,7 @@ import scala.concurrent.Future
 /**
   * Provides information about Knora users to other responders.
   */
-class UsersResponderADM(responderData: ResponderData) extends Responder(responderData) {
+class UsersResponderADM(responderData: ResponderData) extends Responder(responderData) with InstrumentationSupport {
 
     // The IRI used to lock user creation and update
     private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
@@ -150,7 +151,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @param requestingUser      the user initiating the request.
       * @return a [[UserADM]] describing the user.
       */
-    private def userGetADM(identifier: UserIdentifierADM, userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
+    private def userGetADM(identifier: UserIdentifierADM, userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = tracedFuture("admin-get-user") {
 
         log.debug(s"userGetADM: identifier: {}, userInformationType: {}, requestingUser: {}", identifier, userInformationType, requestingUser)
 
@@ -170,6 +171,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                     // didn't find the user in the cache, so lets try to get him from the triplestore
                     getUserFromTriplestore(identifier).map(maybeUser => maybeUser.map(user => user.ofType(userInformationType)))
             }
+
+            _ = if (maybeUserFromCache.isEmpty) maybeUserADM.map(user => writeUserADMToCache(user))
 
             // return the correct amount of information depending on user permissions
             finalResponse = if (requestingUser.permissions.isSystemAdmin || requestingUser.isSelf(identifier) || requestingUser.isSystemUser) {

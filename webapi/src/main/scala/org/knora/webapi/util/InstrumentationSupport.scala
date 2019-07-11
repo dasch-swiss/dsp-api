@@ -21,6 +21,7 @@ package org.knora.webapi.util
 
 import com.typesafe.scalalogging.Logger
 import kamon.instrumentation.futures.scala.ScalaFutureInstrumentation.traced
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,11 +43,22 @@ trait InstrumentationSupport {
       *
       * @param name the name identifying the span.
       * @param future the future we want to instrument.
-      * @param logger the logger use to output the message.
       */
-    def tracedFuture[A](name: String)(future: => Future[A])(implicit logger: Logger, ec: ExecutionContext): Future[A] = {
-        //val start = System.currentTimeMillis()
-        traced(name)(future).map(logger.info(tra))
+    def tracedFuture[A](name: String)(future: => Future[A])(implicit ec: ExecutionContext): Future[A] = {
+
+        /**
+          * NOTE: The elapsed time of the span is saved somewhere by kamon, but
+          * I have no idea how to get to it and this is why I'm calculating
+          * it in the metricsLogger.info line. This is a quick and dirty hack to
+          * have at least something.
+          */
+
+        val metricsLogger = getMetricsLoggerForClass
+        val start = System.currentTimeMillis()
+        traced(name)(future.andThen {
+            case completed =>
+                metricsLogger.info(s"$name: {} ms", System.currentTimeMillis() - start)
+        })
           //.andThen(case completed => logger.info(s"$name: " + (System.currentTimeMillis() - start) + "ms"))
     }
 
@@ -58,4 +70,14 @@ trait InstrumentationSupport {
 //            future.andThen { case completed ⇒ Tracer.currentContext.finish() }(SameThreadExecutionContext)
 //        }
 
+    /**
+      * Based on the current class name, create a logger with the name in the
+      * form 'M-ClassName', e.g., 'M-RedisManager'.
+      * All loggers returned by this method can be configured in 'logback.xml',
+      * i.e., turned on or off.
+      */
+    def getMetricsLoggerForClass : Logger = {
+        val simpleClassName = this.getClass.getSimpleName
+        Logger(LoggerFactory.getLogger(s"M-$simpleClassName"))
+    }
 }
