@@ -23,12 +23,11 @@ import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.util.InstrumentationSupport
-import org.slf4j.LoggerFactory
 
 /**
   * Akka HTTP directives which can be wrapped around a [[akka.http.scaladsl.server.Route]]].
   */
-object AroundDirectives extends InstrumentationSupport {
+trait AroundDirectives extends InstrumentationSupport {
 
     /**
       * When wrapped around a [[akka.http.scaladsl.server.Route]], logs the time it took for the route to run.
@@ -36,7 +35,7 @@ object AroundDirectives extends InstrumentationSupport {
       * @param logger the logger
       */
     def logDuration(logger: Logger): Directive0 = extractRequestContext.flatMap { ctx =>
-        val metricsLogger = Logger(LoggerFactory.getLogger(s"M-Routing"))
+        // val metricsLogger = Logger(LoggerFactory.getLogger(s"M-Routing"))
         val start = System.currentTimeMillis()
         mapResponse { resp =>
             val took = System.currentTimeMillis() - start

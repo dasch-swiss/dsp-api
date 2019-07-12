@@ -27,13 +27,11 @@ import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import kamon.Kamon
-import kamon.prometheus.PrometheusReporter
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.responders._
-import org.knora.webapi.routing.AroundDirectives.logDuration
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
@@ -91,7 +89,7 @@ trait LiveCore extends Core {
   * along with the three main supervisor actors is started. All further actors are started and supervised by those
   * three actors.
   */
-trait KnoraService {
+trait KnoraService extends AroundDirectives {
     this: Core =>
 
     // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.

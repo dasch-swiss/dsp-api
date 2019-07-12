@@ -118,6 +118,7 @@
     <logger name="org.knora.webapi.http.ServerVersionE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.http.CORSSupportE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="INFO"/>
+    <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="DEBUG"/>
     <logger name="org.knora.webapi.responders.admin.UsersResponderADMSpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.HealthRouteE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.ListsADME2ESpec" level="INFO"/>
@@ -126,10 +127,17 @@
     <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="INFO"/>
 
     <!-- Redis Cache -->
-    <logger name="org.knora.webapi.store.redis.RedisManager" level="DEBUG"/>
+    <logger name="org.knora.webapi.store.redis.RedisManager" level="INFO"/>
+
+    <!-- metrics logging -->
+    <logger name="M-Main$" level="ERROR"/>
+    <logger name="M-UsersResponderADM" level="ERROR"/>
+    <logger name="M-HttpTriplestoreConnector" level="ERROR"/>
+    <logger name="M-RedisManager" level="ERROR"/>
+    <logger name="M-RedisSerialization" level="ERROR"/>
 
 
-    <root level="INFO">
+    <root level="ERROR">
         <appender-ref ref="stdout"/>
         <!--<appender-ref ref="R"/>-->
     </root>

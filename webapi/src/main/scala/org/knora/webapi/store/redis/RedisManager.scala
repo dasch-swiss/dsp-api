@@ -20,6 +20,7 @@
 package org.knora.webapi.store.redis
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.util.FastFuture
 import com.redis._
 import com.redis.serialization.Parse.Implicits.parseByteArray
 import com.typesafe.scalalogging.{LazyLogging, Logger}
@@ -55,7 +56,7 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
     /**
       * The Redis Client Pool
       */
-    val clients = new RedisClientPool(host = s.redisHost, port = s.redisPort)
+    implicit val clients: RedisClientPool = new RedisClientPool(host = s.redisHost, port = s.redisPort)
 
     // this is needed for time measurements using 'org.knora.webapi.Timing'
     implicit val l: Logger = logger
@@ -68,6 +69,7 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
         case RedisPutString(key, value) => writeValue(key, value)
         case RedisGetString(key) => getStringValue(key)
         case RedisRemoveValues(keys) => removeValues(keys)
+        case RedisFlushDB(requestingUser) => flushDB(requestingUser)
         case other => throw UnexpectedMessageException(s"RedisManager received an unexpected message: $other")
     }
 
@@ -91,10 +93,9 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
             _ = writeValue(value.email, value.id)
         } yield result
 
-
         val recoverableResultFuture = resultFuture.recover{
-            case exception: Exception =>
-                logger.error("Aborting writing 'UserADM' to Redis - {}", exception.getMessage)
+            case e: Exception =>
+                logger.warn("Aborting writing 'UserADM' to Redis - {}", e.getMessage)
                 false
         }
 
@@ -114,28 +115,37 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
         val resultFuture: Future[Option[UserADM]] = identifier.hasType match {
             case UserIdentifierType.IRI =>
                 for {
-                    bytes <- getBytesValue(identifier.toIri)
-                    user: UserADM <- RedisSerialization.deserialize[UserADM](bytes)
-                } yield Some(user)
+                    maybeBytes: Option[Array[Byte]] <- getBytesValue(identifier.toIriOption)
+                    maybeUser: Option[UserADM] <- maybeBytes match {
+                        case Some(bytes) => RedisSerialization.deserialize[UserADM](bytes)
+                        case None => FastFuture.successful(None)
+                    }
+                } yield maybeUser
 
             case UserIdentifierType.USERNAME =>
                 for {
-                    iriKey <- getStringValue(identifier.toUsername)
-                    bytes <- getBytesValue(iriKey)
-                    user: UserADM <- RedisSerialization.deserialize[UserADM](bytes)
-                } yield Some(user)
+                    maybeIriKey: Option[String] <- getStringValue(identifier.toUsernameOption)
+                    maybeBytes: Option[Array[Byte]] <- getBytesValue(maybeIriKey)
+                    maybeUser: Option[UserADM] <- maybeBytes match {
+                        case Some(bytes) => RedisSerialization.deserialize[UserADM](bytes)
+                        case None => FastFuture.successful(None)
+                    }
+                } yield maybeUser
 
             case UserIdentifierType.EMAIL =>
                 for {
-                    iriKey <- getStringValue(identifier.toEmail)
-                    bytes <- getBytesValue(iriKey)
-                    user: UserADM <- RedisSerialization.deserialize[UserADM](bytes)
-                } yield Some(user)
+                    maybeIriKey: Option[String] <- getStringValue(identifier.toEmailOption)
+                    maybeBytes: Option[Array[Byte]] <- getBytesValue(maybeIriKey)
+                    maybeUser: Option[UserADM] <- maybeBytes match {
+                        case Some(bytes) => RedisSerialization.deserialize[UserADM](bytes)
+                        case None => FastFuture.successful(None)
+                    }
+                } yield maybeUser
         }
 
         val recoverableResultFuture = resultFuture.recover {
             case e: Exception =>
-                logger.error(s"Aborting reading 'UserADM' from Redis - ${e.getMessage}")
+                logger.warn("Aborting reading 'UserADM' from Redis - {}", e.getMessage)
                 None
         }
 
@@ -162,14 +172,10 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
             _ = writeValue(value.shortname, value.id)
         } yield result
 
-        val bytesF: Future[Array[Byte]] = RedisSerialization.serialize(value)
-
         val recoverableResultFuture = resultFuture.recover {
-
             case e: Exception =>
-                logger.error("Aborting writing 'ProjectADM' to Redis.", e)
+                logger.warn("Aborting writing 'ProjectADM' to Redis - {}", e.getMessage)
                 false
-
         }
 
         recoverableResultFuture
@@ -187,26 +193,35 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
         val resultFuture: Future[Option[ProjectADM]] = identifier.hasType match {
             case ProjectIdentifierType.IRI =>
                 for {
-                    bytes <- getBytesValue(identifier.toIri)
-                    project: ProjectADM <- RedisSerialization.deserialize[ProjectADM](bytes)
-                } yield Some(project)
+                    maybeBytes <- getBytesValue(identifier.toIriOption)
+                    maybeProject <- maybeBytes match {
+                        case Some(bytes) => RedisSerialization.deserialize[ProjectADM](bytes)
+                        case None => FastFuture.successful(None)
+                    }
+                } yield maybeProject
             case ProjectIdentifierType.SHORTCODE =>
                 for {
-                    iriKey <- getStringValue(identifier.toShortcode)
-                    bytes <- getBytesValue(iriKey)
-                    project: ProjectADM <- RedisSerialization.deserialize[ProjectADM](bytes)
-                } yield Some(project)
+                    maybeIriKey <- getStringValue(identifier.toShortcodeOption)
+                    maybeBytes <- getBytesValue(maybeIriKey)
+                    maybeProject: Option[ProjectADM] <- maybeBytes match {
+                        case Some(bytes) => RedisSerialization.deserialize[ProjectADM](bytes)
+                        case None => FastFuture.successful(None)
+                    }
+                } yield maybeProject
             case ProjectIdentifierType.SHORTNAME =>
                 for {
-                    iriKey <- getStringValue(identifier.toShortname)
-                    bytes <- getBytesValue(iriKey)
-                    project: ProjectADM <- RedisSerialization.deserialize[ProjectADM](bytes)
-                } yield Some(project)
+                    maybeIriKey <- getStringValue(identifier.toShortnameOption)
+                    maybeBytes <- getBytesValue(maybeIriKey)
+                    maybeProject: Option[ProjectADM] <- maybeBytes match {
+                        case Some(bytes) => RedisSerialization.deserialize[ProjectADM](bytes)
+                        case None => FastFuture.successful(None)
+                    }
+                } yield maybeProject
         }
 
         val recoverableResultFuture = resultFuture.recover {
             case e: Exception =>
-                logger.error("Aborting reading 'ProjectADM' from Redis.", e)
+                logger.warn("Aborting reading 'ProjectADM' from Redis - {}", e.getMessage)
                 None
         }
 
@@ -215,39 +230,27 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
 
     /**
       * Get value stored under the key as a byte array. If no value is found
-      * under the key, then [[Array.emptyByteArray]] is returned.
-      * @param key the key.
+      * under the key, then a [[None]] is returned..
+      * @param maybeKey the key.
       */
-    private def getBytesValue(key: String): Future[Array[Byte]] = {
+    private def getBytesValue(maybeKey: Option[String]): Future[Option[Array[Byte]]] = {
 
-        if (key.isEmpty)
-            throw EmptyKey("Empty key. Aborting getting bytes value.")
-
-        val operationFuture: Future[Array[Byte]] = clients.withClient {
-            client =>
+        val operationFuture: Future[Option[Array[Byte]]] = maybeKey match {
+            case Some(key) =>
                 Future {
-                    /** Note to future self: This call to redis returns an
-                      * optional value and thus would result in Future[Option].
-                      * In later processing, this option needs to be combined
-                      * with other futures. To make it possible to do this in
-                      * the same for comprehension, there are two solutions:
-                      * 1. Monad transformers (have fun reading and understanding):
-                      *     - https://www.47deg.com/blog/fp-for-the-average-joe-part-2-scalaz-monad-transformers/
-                      *     - http://debasishg.blogspot.com/2011/07/monad-transformers-in-scala.html
-                      * 2. Get rid of the option
-                      *
-                      * Guess what I implemented.
-                      */
-                    val maybeByteAray = client.get[Array[Byte]](key)
-                    maybeByteAray.getOrElse(Array.emptyByteArray)
+                    clients.withClient {
+                        client => client.get[Array[Byte]](key)
+                    }
                 }
+            case None =>
+                FastFuture.successful(None)
         }
 
         val recoverableOperationFuture = operationFuture.recover {
             case e: Exception =>
                 // Log any errors.
-                logger.error("Reading byte array from Redis failed - {}", e.getMessage)
-                Array.emptyByteArray
+                logger.warn("Reading byte array from Redis failed - {}", e.getMessage)
+                None
         }
 
         recoverableOperationFuture
@@ -255,27 +258,26 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
 
     /**
       * Get value stored under the key as a string.
-      * @param key the key.
+      * @param maybeKey the key.
       */
-    private def getStringValue(key: String): Future[String] = {
+    private def getStringValue(maybeKey: Option[String]): Future[Option[String]] = {
 
-        if (key.isEmpty)
-            throw EmptyKey("Empty key. Aborting getting string value.")
-
-        val operationFuture: Future[String] = clients.withClient {
-            client =>
+        val operationFuture: Future[Option[String]] = maybeKey match {
+            case Some(key) =>
                 Future {
-                    // See note to myself in getBytesValue!
-                    val maybeString = client.get[String](key)
-                    maybeString.getOrElse("")
+                    clients.withClient {
+                        client => client.get[String](key)
+                    }
                 }
+            case None =>
+                FastFuture.successful(None)
         }
 
         val recoverableOperationFuture = operationFuture.recover {
-            case exception: Exception =>
+            case e: Exception =>
                 // Log any errors.
-                logger.error("Reading string from Redis failed.", exception)
-                ""
+                logger.warn("Reading string from Redis failed {}", e.getMessage)
+                None
         }
 
         recoverableOperationFuture
@@ -298,17 +300,16 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
             case other => throw UnsupportedValueType(s"Writing '${other.getClass}' natively to Redis is not supported. Aborting writing to redis.")
         }
 
-        val operationFuture: Future[Boolean] = clients.withClient {
-            client =>
-                Future {
-                    client.set(key, value)
-                }
+        val operationFuture: Future[Boolean] = Future {
+            clients.withClient {
+                client => client.set(key, value)
+            }
         }
 
         val recoverableOperationFuture = operationFuture.recover {
-            case exception: Exception =>
+            case e: Exception =>
                 // Log any errors.
-                logger.error("Writing to Redis failed.", exception)
+                logger.warn("Writing to Redis failed - {}", e.getMessage)
                 false
         }
 
@@ -324,18 +325,44 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
 
         logger.debug("removeValues - {}", keys)
 
-        val operationFuture: Future[Boolean] = clients.withClient {
-            client =>
-                Future {
-                    client.del(keys)
-                } map (_.isDefined)
+        val operationFuture: Future[Boolean] = Future {
+            clients.withClient {
+                client => client.del(keys)
+            }
+        }.map(_.isDefined)
+
+        val recoverableOperationFuture = operationFuture.recover {
+            case e: Exception =>
+                // Log any errors.
+                logger.warn("Removing keys from Redis failed.", e.getMessage)
+                false
+        }
+
+        recoverableOperationFuture
+    }
+
+    /**
+      * Flushes (removes) all stored content from the Redis store.
+      */
+    private def flushDB(requestingUser: UserADM): Future[RedisFlushDBACK] = tracedFuture("redis-flush-db") {
+
+        if (!requestingUser.isSystemUser) {
+            throw ForbiddenException("Only the system user is allowed to perform this operation.")
+        }
+
+        val operationFuture: Future[RedisFlushDBACK] = Future {
+            clients.withClient {
+                client =>
+                    client.flushdb
+                    RedisFlushDBACK()
+            }
         }
 
         val recoverableOperationFuture = operationFuture.recover {
-            case exception: Exception =>
+            case e: Exception =>
                 // Log any errors.
-                logger.error("Removing keys from Redis failed.", exception)
-                false
+                logger.error("Flushing DB failed", e.getMessage)
+                throw e
         }
 
         recoverableOperationFuture

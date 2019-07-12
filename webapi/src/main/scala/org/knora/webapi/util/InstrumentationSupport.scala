@@ -24,11 +24,18 @@ import kamon.instrumentation.futures.scala.ScalaFutureInstrumentation.traced
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 
 /**
   * A set of methods used for measuring stuff that is happening.
   */
 trait InstrumentationSupport {
+
+    /**
+      * For convenience. Returns the metrics logger based on the current
+      * class name.
+      */
+    protected lazy val metricsLogger: Logger = getMetricsLoggerForClass
 
     /**
       * Measures the time the future needs to complete.
@@ -53,10 +60,9 @@ trait InstrumentationSupport {
           * have at least something.
           */
 
-        val metricsLogger = getMetricsLoggerForClass
         val start = System.currentTimeMillis()
         traced(name)(future.andThen {
-            case completed =>
+            case Success(_) =>
                 metricsLogger.info(s"$name: {} ms", System.currentTimeMillis() - start)
         })
           //.andThen(case completed => logger.info(s"$name: " + (System.currentTimeMillis() - start) + "ms"))

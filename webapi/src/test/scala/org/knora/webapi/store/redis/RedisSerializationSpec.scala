@@ -43,16 +43,16 @@ class RedisSerializationSpec extends CoreSpec(RedisSerializationSpec.config) {
             val user = SharedTestDataADM.imagesUser01
             for {
                 serialized <- RedisSerialization.serialize(user)
-                deserialized: UserADM <- RedisSerialization.deserialize[UserADM](serialized)
-            } yield deserialized shouldBe user
+                deserialized: Option[UserADM] <- RedisSerialization.deserialize[UserADM](serialized)
+            } yield deserialized shouldBe Some(user)
         }
 
         "work with the ProjectADM case class" in {
             val project = SharedTestDataADM.imagesProject
             for {
                 serialized <- RedisSerialization.serialize(project)
-                deserialized: ProjectADM <- RedisSerialization.deserialize[ProjectADM](serialized)
-            } yield deserialized shouldBe project
+                deserialized: Option[ProjectADM] <- RedisSerialization.deserialize[ProjectADM](serialized)
+            } yield deserialized shouldBe Some(project)
         }
 
 

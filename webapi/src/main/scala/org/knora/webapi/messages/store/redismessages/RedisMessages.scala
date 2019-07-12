@@ -24,16 +24,47 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIde
 
 sealed trait RedisRequest
 
+/**
+  * Message equesting to write project to cache.
+  */
 case class RedisPutProjectADM(value: ProjectADM) extends RedisRequest
 
+/**
+  * Message requesting to retrieve project from cache.
+  */
 case class RedisGetProjectADM(identifier: ProjectIdentifierADM) extends RedisRequest
 
+/**
+  * Message requesting to write user to cache.
+  */
 case class RedisPutUserADM(value: UserADM) extends RedisRequest
 
+/**
+  * Message requesting to retrieve user from cache.
+  */
 case class RedisGetUserADM(identifier: UserIdentifierADM) extends RedisRequest
 
+/**
+  * Message requesting to store a simple string under the supplied key.
+  */
 case class RedisPutString(key: String, value: String) extends RedisRequest
 
-case class RedisGetString(key: String) extends RedisRequest
+/**
+  * Message requesting to retrieve simple string stored under the key.
+  */
+case class RedisGetString(key: Option[String]) extends RedisRequest
 
+/**
+  * Message requesting to remove anything stored under the keys.
+  */
 case class RedisRemoveValues(keys: Seq[String]) extends RedisRequest
+
+/**
+  * Message requesting to completely empty the cache (wipe everything).
+  */
+case class RedisFlushDB(requestingUser: UserADM) extends RedisRequest
+
+/**
+  * Message acknowledging the flush.
+  */
+case class RedisFlushDBACK()

@@ -23,6 +23,7 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM, StoreResponderRequestADM}
 import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
+import org.knora.webapi.messages.store.redismessages.{RedisFlushDB, RedisFlushDBACK}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
@@ -71,6 +72,9 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
 
             loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(systemUser)).mapTo[LoadOntologiesResponse]
             _ = log.debug(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
+
+            redisFlushDB <- (storeManager? RedisFlushDB(systemUser)).mapTo[RedisFlushDBACK]
+            _ = log.debug(s"resetTriplestoreContent - flushing Redis store done - {}", redisFlushDB.toString)
 
             result = ResetTriplestoreContentResponseADM(message = "success")
 

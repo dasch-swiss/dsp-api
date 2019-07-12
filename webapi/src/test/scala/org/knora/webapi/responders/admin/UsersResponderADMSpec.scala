@@ -222,15 +222,13 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.anonymousUser,
                     apiRequestID = UUID.randomUUID
                 )
-                expectMsgPF(timeout) {
-                    case UserOperationResponseADM(newUser) => {
-                        assert(newUser.username.equals("donald.duck"))
-                        assert(newUser.givenName.equals("Donald"))
-                        assert(newUser.familyName.equals("Duck"))
-                        assert(newUser.email.equals("donald.duck@example.com"))
-                        assert(newUser.lang.equals("en"))
-                    }
-                }
+                val u = expectMsgType[UserOperationResponseADM](timeout).user
+                u.username shouldBe "donald.duck"
+                u.givenName shouldBe "Donald"
+                u.familyName shouldBe "Duck"
+                u.email shouldBe "donald.duck@example.com"
+                u.lang shouldBe "en"
+
             }
 
             "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {

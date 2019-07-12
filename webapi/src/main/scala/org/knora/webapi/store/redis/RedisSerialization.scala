@@ -22,12 +22,13 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, 
 
 import com.twitter.chill.MeatLocker
 import org.knora.webapi.RedisException
+import org.knora.webapi.util.InstrumentationSupport
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class EmptyByteArray(message: String) extends RedisException(message)
 
-object RedisSerialization{
+object RedisSerialization extends InstrumentationSupport {
 
 
     /**
@@ -38,14 +39,16 @@ object RedisSerialization{
       * @param value the value we want to serialize as a array of bytes.
       * @tparam T the type parameter of our value.
       */
-    def serialize[T](value: T)(implicit ec: ExecutionContext): Future[Array[Byte]] = Future {
-        // FIXME: Add checks
-        val boxedItem: MeatLocker[T] = MeatLocker[T](value)
-        val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
-        val oos = new ObjectOutputStream(stream)
-        oos.writeObject(boxedItem)
-        oos.close()
-        stream.toByteArray
+    def serialize[T](value: T)(implicit ec: ExecutionContext): Future[Array[Byte]] = tracedFuture("redis-serialize") {
+
+        Future {
+            val boxedItem: MeatLocker[T] = MeatLocker[T](value)
+            val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
+            val oos = new ObjectOutputStream(stream)
+            oos.writeObject(boxedItem)
+            oos.close()
+            stream.toByteArray
+        }
     }
 
     /**
@@ -55,14 +58,18 @@ object RedisSerialization{
       * serializable.
       * @tparam T the type parameter of our value.
       */
-    def deserialize[T](bytes: Array[Byte])(implicit ec: ExecutionContext): Future[T] = Future {
-        // FIXME: Add checks
+    def deserialize[T](bytes: Array[Byte])(implicit ec: ExecutionContext): Future[Option[T]] =  tracedFuture("redis-deserialize"){
 
-        if (bytes.isEmpty) throw EmptyByteArray("The byte array which should be deserialized is empty. Aborting deserialization.")
+        Future {
+            if (bytes.isEmpty) {
+                None
+            } else {
+                val ois = new ObjectInputStream(new ByteArrayInputStream(bytes))
+                val box = ois.readObject
+                ois.close()
+                Some(box.asInstanceOf[MeatLocker[T]].get)
+            }
+        }
 
-        val ois = new ObjectInputStream(new ByteArrayInputStream(bytes))
-        val box = ois.readObject
-        ois.close()
-        box.asInstanceOf[MeatLocker[T]].get
     }
 }

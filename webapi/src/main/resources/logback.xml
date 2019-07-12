@@ -57,9 +57,11 @@
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
 
     <!-- metrics logging -->
-    <logger name="M-Routing" level="INFO"/>
+    <logger name="M-Main$" level="INFO"/>
     <logger name="M-UsersResponderADM" level="INFO"/>
+    <logger name="M-HttpTriplestoreConnector" level="INFO"/>
     <logger name="M-RedisManager" level="INFO"/>
+    <logger name="M-RedisSerialization" level="INFO"/>
 
     <!-- for logging during tests, please see/use logback-test.xml under test/resources -->
 
