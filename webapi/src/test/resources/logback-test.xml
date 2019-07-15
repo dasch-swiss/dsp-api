@@ -118,7 +118,7 @@
     <logger name="org.knora.webapi.http.ServerVersionE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.http.CORSSupportE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="INFO"/>
-    <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="DEBUG"/>
+    <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.UsersResponderADMSpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.HealthRouteE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.ListsADME2ESpec" level="INFO"/>
@@ -127,7 +127,7 @@
     <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="INFO"/>
 
     <!-- Redis Cache -->
-    <logger name="org.knora.webapi.store.redis.RedisManager" level="INFO"/>
+    <logger name="org.knora.webapi.store.redis.RedisManager" level="ERROR"/>
 
     <!-- metrics logging -->
     <logger name="M-Main$" level="ERROR"/>

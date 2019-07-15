@@ -25,7 +25,6 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem}
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
@@ -37,7 +36,6 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPassword
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.StringFormatter
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 
@@ -47,6 +45,7 @@ object UsersResponderADMSpec {
         """
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
+         app.use-redis-cache = true
         """.stripMargin)
 }
 

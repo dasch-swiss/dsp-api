@@ -105,7 +105,8 @@ object Dependencies {
 
         // caching
         val ehcache                = "net.sf.ehcache"                           % "ehcache"                  % "2.10.3"
-        val redisClient            = "net.debasishg"                           %% "redisclient"              % "3.10"
+        val jedis                  = "redis.clients"                            % "jedis"                    % "3.1.0-m4"
+        // serialization
         val chill                  = "com.twitter"                             %% "chill"                    % "0.9.3"
 
         // other
@@ -216,6 +217,7 @@ object Dependencies {
         jodd,
         jodaTime,
         jodaConvert,
+        jedis,
         jenaLibs.value,
         jenaText.value,
         jwtSprayJson,
@@ -225,7 +227,6 @@ object Dependencies {
         kamonScalaFuture,
         logbackClassic,
         rdf4jRuntime,
-        redisClient,
         saxonHE,
         scalaArm,
         scalaJava8Compat,

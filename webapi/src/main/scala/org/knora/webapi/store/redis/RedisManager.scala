@@ -19,58 +19,64 @@
 
 package org.knora.webapi.store.redis
 
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
 import akka.http.scaladsl.util.FastFuture
-import com.redis._
-import com.redis.serialization.Parse.Implicits.parseByteArray
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM, ProjectIdentifierType}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM, UserIdentifierType}
 import org.knora.webapi.messages.store.redismessages._
-import org.knora.webapi.util.InstrumentationSupport
+import org.knora.webapi.util.{ActorUtil, InstrumentationSupport}
+import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 case class EmptyKey(message: String) extends RedisException(message)
 case class EmptyValue(message: String) extends RedisException(message)
 case class UnsupportedValueType(message: String) extends RedisException(message)
 
-class RedisManager(system: ActorSystem) extends LazyLogging with InstrumentationSupport {
+class RedisManager extends Actor with ActorLogging with LazyLogging with InstrumentationSupport {
 
     /**
       * The Knora Akka actor system.
       */
-    protected implicit val _system: ActorSystem = system
+    protected implicit val _system: ActorSystem = context.system
 
     /**
       * The Akka actor system's execution context for futures.
       */
-    protected implicit val ec: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+    protected implicit val ec: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     /**
       * The Knora settings.
       */
-    protected val s: SettingsImpl = Settings(system)
+    protected val s: SettingsImpl = Settings(context.system)
 
     /**
       * The Redis Client Pool
       */
-    implicit val clients: RedisClientPool = new RedisClientPool(host = s.redisHost, port = s.redisPort)
+    val pool: JedisPool = new JedisPool(new JedisPoolConfig(), s.redisHost, s.redisPort)
 
     // this is needed for time measurements using 'org.knora.webapi.Timing'
+
     implicit val l: Logger = logger
 
-    def receive(msg: RedisRequest) = msg match {
-        case RedisPutUserADM(value) => redisPutUserADM(value)
-        case RedisGetUserADM(identifier) => redisGetUserADM(identifier)
-        case RedisPutProjectADM(value) => redisPutProjectADM(value)
-        case RedisGetProjectADM(identifier) => redisGetProjectADM(identifier)
-        case RedisPutString(key, value) => writeValue(key, value)
-        case RedisGetString(key) => getStringValue(key)
-        case RedisRemoveValues(keys) => removeValues(keys)
-        case RedisFlushDB(requestingUser) => flushDB(requestingUser)
-        case other => throw UnexpectedMessageException(s"RedisManager received an unexpected message: $other")
+    // close the redis client pool
+    override def postStop(): Unit = {
+        pool.close()
+    }
+
+    def receive = {
+        case RedisPutUserADM(value) => ActorUtil.future2Message(sender(), redisPutUserADM(value), log)
+        case RedisGetUserADM(identifier) => ActorUtil.future2Message(sender(), redisGetUserADM(identifier), log)
+        case RedisPutProjectADM(value) => ActorUtil.future2Message(sender(), redisPutProjectADM(value), log)
+        case RedisGetProjectADM(identifier) => ActorUtil.future2Message(sender(), redisGetProjectADM(identifier), log)
+        case RedisPutString(key, value) => ActorUtil.future2Message(sender(), writeStringValue(key, value), log)
+        case RedisGetString(key) => ActorUtil.future2Message(sender(), getStringValue(key), log)
+        case RedisRemoveValues(keys) => ActorUtil.future2Message(sender(), removeValues(keys), log)
+        case RedisFlushDB(requestingUser) => ActorUtil.future2Message(sender(), flushDB(requestingUser), log)
+        case other =>  sender ! Status.Failure(UnexpectedMessageException(s"RedisManager received an unexpected message: $other"))
     }
 
     /**
@@ -87,10 +93,10 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
 
         val resultFuture = for {
             bytes: Array[Byte] <- RedisSerialization.serialize(value)
-            result: Boolean <- writeValue(value.id, bytes)
+            result: Boolean <- writeBytesValue(value.id, bytes)
             // additionally store the IRI under the username and email key
-            _ = writeValue(value.username, value.id)
-            _ = writeValue(value.email, value.id)
+            _ = writeStringValue(value.username, value.id)
+            _ = writeStringValue(value.email, value.id)
         } yield result
 
         val recoverableResultFuture = resultFuture.recover{
@@ -167,9 +173,9 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
 
         val resultFuture = for {
             bytes: Array[Byte] <- RedisSerialization.serialize(value)
-            result: Boolean <- writeValue(value.id, bytes)
-            _ = writeValue(value.shortcode, value.id)
-            _ = writeValue(value.shortname, value.id)
+            result: Boolean <- writeBytesValue(value.id, bytes)
+            _ = writeStringValue(value.shortcode, value.id)
+            _ = writeStringValue(value.shortname, value.id)
         } yield result
 
         val recoverableResultFuture = resultFuture.recover {
@@ -238,8 +244,16 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
         val operationFuture: Future[Option[Array[Byte]]] = maybeKey match {
             case Some(key) =>
                 Future {
-                    clients.withClient {
-                        client => client.get[Array[Byte]](key)
+                    val conn = pool.getResource
+                    try {
+                        val res: Array[Byte] = conn.get(key.getBytes)
+                        if (res.nonEmpty) {
+                            Some(res)
+                        } else {
+                            None
+                        }
+                    } finally {
+                        conn.close()
                     }
                 }
             case None =>
@@ -257,6 +271,40 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
     }
 
     /**
+      * Store string or byte array value under key.
+      *
+      * @param key the key.
+      * @param value the value.
+      */
+    private def writeBytesValue(key: String, value: Array[Byte]): Future[Boolean] = {
+
+        if (key.isEmpty)
+            throw EmptyKey("The key under which the value should be written is empty. Aborting writing to redis.")
+
+        if (value.isEmpty)
+            throw EmptyValue("The byte array value is empty. Aborting writing to redis.")
+
+        val operationFuture: Future[Boolean] = Future {
+            val conn: Jedis = pool.getResource
+            try {
+                conn.set(key.getBytes, value)
+                true
+            } finally {
+                conn.close()
+            }
+        }
+
+        val recoverableOperationFuture = operationFuture.recover {
+            case e: Exception =>
+                // Log any errors.
+                logger.warn("Writing to Redis failed - {}", e.getMessage)
+                false
+        }
+
+        recoverableOperationFuture
+    }
+
+    /**
       * Get value stored under the key as a string.
       * @param maybeKey the key.
       */
@@ -265,8 +313,16 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
         val operationFuture: Future[Option[String]] = maybeKey match {
             case Some(key) =>
                 Future {
-                    clients.withClient {
-                        client => client.get[String](key)
+                    val conn: Jedis = pool.getResource
+                    try {
+                        val res: String = conn.get(key)
+                        if (res.nonEmpty) {
+                            Some(res)
+                        } else {
+                            None
+                        }
+                    } finally {
+                        conn.close()
                     }
                 }
             case None =>
@@ -289,21 +345,24 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
       * @param key the key.
       * @param value the value.
       */
-    private def writeValue(key: String, value: Any): Future[Boolean] = {
+    private def writeStringValue(key: String, value: String): Future[Boolean] = {
 
         if (key.isEmpty)
             throw EmptyKey("The key under which the value should be written is empty. Aborting writing to redis.")
 
-        value match {
-            case s: String => if (s.isEmpty) throw EmptyValue("The string value is empty. Aborting writing to redis.")
-            case ba: Array[Byte] => if (ba.isEmpty) throw EmptyValue("The byte array value is empty. Aborting writing to redis.")
-            case other => throw UnsupportedValueType(s"Writing '${other.getClass}' natively to Redis is not supported. Aborting writing to redis.")
-        }
+        if (value.isEmpty)
+            throw throw EmptyValue("The string value is empty. Aborting writing to redis.")
 
         val operationFuture: Future[Boolean] = Future {
-            clients.withClient {
-                client => client.set(key, value)
+
+            val conn: Jedis = pool.getResource
+            try {
+                conn.set(key, value)
+                true
+            } finally {
+                conn.close()
             }
+
         }
 
         val recoverableOperationFuture = operationFuture.recover {
@@ -321,15 +380,20 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
       *
       * @param keys the keys.
       */
-    private def removeValues(keys: Seq[String]): Future[Boolean] = tracedFuture("redis-remove-values") {
+    private def removeValues(keys: Set[String]): Future[Boolean] = tracedFuture("redis-remove-values") {
 
         logger.debug("removeValues - {}", keys)
 
         val operationFuture: Future[Boolean] = Future {
-            clients.withClient {
-                client => client.del(keys)
+            // del takes a vararg so I nee to convert the set to a swq and then to vararg
+            val conn: Jedis = pool.getResource
+            try {
+                conn.del(keys.toSeq: _*)
+                true
+            } finally {
+                conn.close()
             }
-        }.map(_.isDefined)
+        }
 
         val recoverableOperationFuture = operationFuture.recover {
             case e: Exception =>
@@ -351,17 +415,20 @@ class RedisManager(system: ActorSystem) extends LazyLogging with Instrumentation
         }
 
         val operationFuture: Future[RedisFlushDBACK] = Future {
-            clients.withClient {
-                client =>
-                    client.flushdb
-                    RedisFlushDBACK()
+
+            val conn: Jedis = pool.getResource
+            try {
+                conn.flushDB()
+                RedisFlushDBACK()
+            } finally {
+                conn.close()
             }
         }
 
         val recoverableOperationFuture = operationFuture.recover {
             case e: Exception =>
                 // Log any errors.
-                logger.error("Flushing DB failed", e.getMessage)
+                logger.warn("Flushing DB failed", e.getMessage)
                 throw e
         }
 

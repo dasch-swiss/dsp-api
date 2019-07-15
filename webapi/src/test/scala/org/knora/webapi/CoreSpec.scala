@@ -84,7 +84,6 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     val responderData: ResponderData = ResponderData(system, applicationStateActor, responderManager, storeManager)
 
     final override def beforeAll() {
-        flushRedisDB
         CacheUtil.createCaches(settings.caches)
         loadTestData(rdfDataObjects)
         // memusage()
@@ -113,10 +112,6 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
         Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
-    }
-
-    protected def flushRedisDB(): Unit = {
-        implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
         Await.result(storeManager ? RedisFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
     }
 

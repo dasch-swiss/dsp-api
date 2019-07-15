@@ -132,6 +132,7 @@ class SettingsImpl(config: Config) extends Extension {
                 cacheConfigMap("time-to-idle-seconds").asInstanceOf[Int])
     }.toVector
 
+    val useRedisCache: Boolean = config.getBoolean("app.use-redis-cache")
     val redisHost: String = config.getString("app.redis.host")
     val redisPort: Int = config.getInt("app.redis.port")
 

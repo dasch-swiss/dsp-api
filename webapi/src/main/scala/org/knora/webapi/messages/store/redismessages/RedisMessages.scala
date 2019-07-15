@@ -57,7 +57,7 @@ case class RedisGetString(key: Option[String]) extends RedisRequest
 /**
   * Message requesting to remove anything stored under the keys.
   */
-case class RedisRemoveValues(keys: Seq[String]) extends RedisRequest
+case class RedisRemoveValues(keys: Set[String]) extends RedisRequest
 
 /**
   * Message requesting to completely empty the cache (wipe everything).
