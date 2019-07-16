@@ -204,7 +204,7 @@ trait KnoraService extends AroundDirectives {
       */
     def stopService(): Unit = {
         logger.info("KnoraService - Shutting down.")
-        
+
         if (settings.prometheusEndpoint) {
             // Stop Kamon monitoring
             Kamon.stopModules()

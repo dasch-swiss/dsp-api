@@ -246,12 +246,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
                 Future {
                     val conn = pool.getResource
                     try {
-                        val res: Array[Byte] = conn.get(key.getBytes)
-                        if (res.nonEmpty) {
-                            Some(res)
-                        } else {
-                            None
-                        }
+                        Option(conn.get(key.getBytes))
                     } finally {
                         conn.close()
                     }
@@ -315,12 +310,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
                 Future {
                     val conn: Jedis = pool.getResource
                     try {
-                        val res: String = conn.get(key)
-                        if (res.nonEmpty) {
-                            Some(res)
-                        } else {
-                            None
-                        }
+                        Option(conn.get(key))
                     } finally {
                         conn.close()
                     }
@@ -332,7 +322,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
         val recoverableOperationFuture = operationFuture.recover {
             case e: Exception =>
                 // Log any errors.
-                logger.warn("Reading string from Redis failed {}", e.getMessage)
+                logger.warn("Reading string from Redis failed, {}", e)
                 None
         }
 
