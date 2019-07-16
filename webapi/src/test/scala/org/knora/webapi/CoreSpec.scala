@@ -84,12 +84,14 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     val responderData: ResponderData = ResponderData(system, applicationStateActor, responderManager, storeManager)
 
     final override def beforeAll() {
+        println("beforeAll")
         CacheUtil.createCaches(settings.caches)
         loadTestData(rdfDataObjects)
         // memusage()
     }
 
     final override def afterAll() {
+        println("afterAll")
         Http().shutdownAllConnectionPools()
         system.terminate()
         atTermination()

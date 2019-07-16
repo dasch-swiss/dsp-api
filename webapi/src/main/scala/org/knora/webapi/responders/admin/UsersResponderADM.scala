@@ -176,7 +176,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     private def getSingleUserADM(identifier: UserIdentifierADM,
                                  userInformationType: UserInformationTypeADM,
                                  requestingUser: UserADM,
-                                 skipCache: Boolean = false): Future[Option[UserADM]] = tracedFuture("admin-get-user") {
+                                 skipCache: Boolean = false
+                                ): Future[Option[UserADM]] = tracedFuture("admin-get-user") {
 
         log.debug(s"getSingleUserADM - id: {}, type: {}, requester: {}, skipCache: {}",
             identifier.value,
@@ -1265,21 +1266,24 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                   case None =>
                       // none found in cache. getting from triplestore.
                       getUserFromTriplestore(identifier)
-                        .map {
+                        .flatMap {
                             case None =>
                                 // also none found in triplestore. finally returning none.
-                                None
+                                log.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
+                                FastFuture.successful(None)
                             case Some(user) =>
                                 // found a user in the triplestore. need to write to cache.
-                                writeUserADMToCache(user)
-                                // finally return the found user.
-                                Some(user)
+                                log.debug("getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache.")
+                                // writing user to cache and afterwards returning the user found in the triplestore
+                                writeUserADMToCache(user).map(res => Some(user))
                         }
                   case Some(user) =>
+                      log.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
                       FastFuture.successful(Some(user))
               }
         } else {
-            // caching not enabled
+            // caching disabled
+            log.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
             getUserFromTriplestore(identifier)
         }
     }

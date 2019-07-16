@@ -128,48 +128,21 @@ case class ProjectsGetADM(requestingUser: UserADM) extends ProjectsResponderRequ
   * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
   * of [[ProjectGetResponseADM]]. External use.
   *
-  * @param maybeIri       the IRI of the project.
-  * @param maybeShortname the project's short name.
-  * @param maybeShortcode the project's shortcode.
+  * @param identifier     the IRI, email, or username of the project.
   * @param requestingUser the user making the request.
   */
-case class ProjectGetRequestADM(maybeIri: Option[IRI] = None,
-                                maybeShortname: Option[String] = None,
-                                maybeShortcode: Option[String] = None,
-                                requestingUser: UserADM) extends ProjectsResponderRequestADM {
-    val parametersCount: Int = List(
-        maybeIri,
-        maybeShortname,
-        maybeShortcode
-    ).flatten.size
-
-    // only one is allowed
-    if (parametersCount == 0 || parametersCount > 1) throw BadRequestException("Need to provide either project IRI, shortname, or shortcode.")
-}
+case class ProjectGetRequestADM(identifier: ProjectIdentifierADM,
+                                requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
   * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
   * of [[ProjectADM]]. Internal use only.
   *
-  * @param maybeIri       the IRI of the project.
-  * @param maybeShortname the project's short name.
-  * @param maybeShortcode the project's shortcode.
+  * @param identifier     the IRI, email, or username of the project.
   * @param requestingUser the user making the request.
   */
-case class ProjectGetADM(maybeIri: Option[IRI],
-                         maybeShortname: Option[String],
-                         maybeShortcode: Option[String],
-                         requestingUser: UserADM) extends ProjectsResponderRequestADM {
-
-    val parametersCount: Int = List(
-        maybeIri,
-        maybeShortname,
-        maybeShortcode
-    ).flatten.size
-
-    // Only one is allowed
-    if (parametersCount == 0 || parametersCount > 1) throw BadRequestException("Need to provide either project IRI, shortname, or shortcode.")
-}
+case class ProjectGetADM(identifier: ProjectIdentifierADM,
+                         requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
   * Returns all users belonging to a project identified either through its IRI, shortname or shortcode.
@@ -238,7 +211,7 @@ case class ProjectKeywordsGetRequestADM(projectIri: IRI,
 /**
   * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
   *
-  * @param projectIri     the IRI of the project.
+  * @param identifier     the identifier for the project.
   * @param requestingUser the user making the request.
   */
 @ApiMayChange
@@ -247,7 +220,7 @@ case class ProjectRestrictedViewSettingsGetADM(identifier: ProjectIdentifierADM,
 /**
   * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
   *
-  * @param projectIri     the IRI of the project.
+  * @param identifier     the identifier for the project.
   * @param requestingUser the user making the request.
   */
 @ApiMayChange
@@ -462,14 +435,14 @@ case class ProjectADM(id: IRI,
   * validated and escaped.
   */
 object ProjectIdentifierADM {
-    def apply(iri: Option[IRI] = None,
-              shortname: Option[String] = None,
-              shortcode: Option[String] = None)(implicit sf: StringFormatter): ProjectIdentifierADM = {
+    def apply(maybeIri: Option[IRI] = None,
+              maybeShortname: Option[String] = None,
+              maybeShortcode: Option[String] = None)(implicit sf: StringFormatter): ProjectIdentifierADM = {
 
         val parametersCount: Int = List(
-            iri,
-            shortname,
-            shortcode
+            maybeIri,
+            maybeShortname,
+            maybeShortcode
         ).flatten.size
 
         // something needs to be set
@@ -478,34 +451,34 @@ object ProjectIdentifierADM {
         if (parametersCount > 1) throw BadRequestException("Only one option allowed for project identifier.")
 
         new ProjectIdentifierADM(
-            iri = sf.validateAndEscapeOptionalProjectIri(iri, throw BadRequestException(s"Invalid user project $iri")),
-            shortname = sf.validateAndEscapeOptionalProjectShortname(shortname, throw BadRequestException(s"Invalid user project shortname $shortname")),
-            shortcode = sf.validateAndEscapeOptionalProjectShortcode(shortcode, throw BadRequestException(s"Invalid user project shortcode $shortcode")))
+            maybeIri = sf.validateAndEscapeOptionalProjectIri(maybeIri, throw BadRequestException(s"Invalid user project $maybeIri")),
+            maybeShortname = sf.validateAndEscapeOptionalProjectShortname(maybeShortname, throw BadRequestException(s"Invalid user project shortname $maybeShortname")),
+            maybeShortcode = sf.validateAndEscapeOptionalProjectShortcode(maybeShortcode, throw BadRequestException(s"Invalid user project shortcode $maybeShortcode")))
     }
 }
 
 /**
   * Represents the project's identifier. It can be an IRI, shortcode or shortname.
-  * @param iri the project's IRI.
-  * @param shortname the project's shortname.
-  * @param shortcode the project's shortcode
+  * @param maybeIri the project's IRI.
+  * @param maybeShortname the project's shortname.
+  * @param maybeShortcode the project's shortcode
   */
-class ProjectIdentifierADM private (iri: Option[IRI] = None,
-                                    shortname: Option[String] = None,
-                                    shortcode: Option[String] = None) {
+class ProjectIdentifierADM private (maybeIri: Option[IRI] = None,
+                                    maybeShortname: Option[String] = None,
+                                    maybeShortcode: Option[String] = None) {
 
     // squash and return value.
     val value: String = List(
-        iri,
-        shortname,
-        shortcode
+        maybeIri,
+        maybeShortname,
+        maybeShortcode
     ).flatten.head
 
     def hasType: ProjectIdentifierType.Value = {
 
-        if (iri.isDefined) {
+        if (maybeIri.isDefined) {
             ProjectIdentifierType.IRI
-        } else if (shortcode.isDefined) {
+        } else if (maybeShortcode.isDefined) {
             ProjectIdentifierType.SHORTCODE
         } else {
             ProjectIdentifierType.SHORTNAME
@@ -516,42 +489,42 @@ class ProjectIdentifierADM private (iri: Option[IRI] = None,
       * Tries to return the value as an IRI.
       */
     def toIri: IRI = {
-        iri.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.IRI' type."))
+        maybeIri.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.IRI' type."))
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toIriOption: Option[IRI] = {
-        iri
+        maybeIri
     }
 
     /**
       * Tries to return the value as an SHORTNAME.
       */
     def toShortname: String = {
-        shortname.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTNAME' type."))
+        maybeShortname.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTNAME' type."))
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toShortnameOption: Option[String] = {
-        shortname
+        maybeShortname
     }
 
     /**
       * Tries to return the value as an SHORTCODE.
       */
     def toShortcode: String = {
-        shortcode.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTCODE' type."))
+        maybeShortcode.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTCODE' type."))
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toShortcodeOption: Option[String] = {
-        shortcode
+        maybeShortcode
     }
 }
 
