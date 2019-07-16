@@ -183,8 +183,10 @@ trait KnoraService extends AroundDirectives {
         bindingFuture onComplete {
             case Success(_) => {
 
-                // Load Kamon monitoring
-                Kamon.loadModules()
+                if (settings.prometheusEndpoint) {
+                    // Load Kamon monitoring
+                    Kamon.loadModules()
+                }
 
                 // Kick of startup procedure.
                 applicationStateActor ! InitStartUp(skipLoadingOfOntologies)
@@ -202,11 +204,14 @@ trait KnoraService extends AroundDirectives {
       */
     def stopService(): Unit = {
         logger.info("KnoraService - Shutting down.")
+        
+        if (settings.prometheusEndpoint) {
+            // Stop Kamon monitoring
+            Kamon.stopModules()
+        }
+
         Http().shutdownAllConnectionPools()
         CacheUtil.removeAllCaches()
-
-        // Stop Kamon monitoring
-        Kamon.stopModules()
 
         system.terminate()
         Await.result(system.whenTerminated, 30 seconds)

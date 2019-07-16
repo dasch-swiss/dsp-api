@@ -30,7 +30,6 @@ import org.knora.webapi.util.{ActorUtil, InstrumentationSupport}
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 case class EmptyKey(message: String) extends RedisException(message)
 case class EmptyValue(message: String) extends RedisException(message)
@@ -64,6 +63,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
 
     // close the redis client pool
     override def postStop(): Unit = {
+        logger.info("postStop - shutting down jedis pool")
         pool.close()
     }
 

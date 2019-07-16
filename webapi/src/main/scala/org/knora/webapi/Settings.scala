@@ -220,6 +220,8 @@ class SettingsImpl(config: Config) extends Extension {
         case _                 ⇒ throw new ConfigurationException(s"Config setting '$path' must be a finite duration")
     }
 
+    val prometheusEndpoint = config.getBoolean("app.monitoring.prometheus-endpoint")
+
 }
 
 object Settings extends ExtensionId[SettingsImpl] with ExtensionIdProvider {
