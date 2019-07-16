@@ -109,8 +109,42 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         .setDefaultRequestConfig(updateTimeoutConfig)
         .build
 
-    private val queryPath: String = s"/repositories/${settings.triplestoreDatabaseName}"
-    private val updatePath: String = s"/repositories/${settings.triplestoreDatabaseName}/statements"
+    private val queryPath: String = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+        s"/repositories/${settings.triplestoreDatabaseName}"
+    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+        if (settings.fusekiTomcat) {
+            s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/query"
+        } else {
+            s"/${settings.triplestoreDatabaseName}/query"
+        }
+    } else {
+        throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+    }
+
+    private val updatePath: String = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+        s"/repositories/${settings.triplestoreDatabaseName}/statements"
+    } else if (triplestoreType == TriplestoreTypes.HttpFuseki && settings.fusekiTomcat) {
+        if (settings.fusekiTomcat) {
+            s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/update"
+        } else {
+            s"/${settings.triplestoreDatabaseName}/update"
+        }
+    } else {
+        throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+    }
+
+    private val checkRepositoryPath: String = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+        "/rest/repositories"
+    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+        if (settings.fusekiTomcat) {
+            s"/${settings.fusekiTomcatContext}/$$/server"
+        } else {
+            "$/server"
+        }
+    } else {
+        throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+    }
+
     private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
     /**
@@ -269,23 +303,27 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * Updates the Lucene full-text search index.
       */
     private def updateLuceneIndex(subjectIri: Option[IRI] = None): Try[SparqlUpdateResponse] = {
-        val indexUpdateSparqlString = subjectIri match {
-            case Some(definedSubjectIri) =>
-                // A subject's content has changed. Update the index for that subject.
-                s"""PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
-                  |INSERT DATA { luc:fullTextSearchIndex luc:addToIndex <$definedSubjectIri> . }
+        if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+            val indexUpdateSparqlString = subjectIri match {
+                case Some(definedSubjectIri) =>
+                    // A subject's content has changed. Update the index for that subject.
+                    s"""PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
+                       |INSERT DATA { luc:fullTextSearchIndex luc:addToIndex <$definedSubjectIri> . }
                 """.stripMargin
 
-            case None =>
-                // Add new subjects to the index.
-                """PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
-                  |INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
-                """.stripMargin
+                case None =>
+                    // Add new subjects to the index.
+                    """PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
+                      |INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
+                    """.stripMargin
+            }
+
+            for {
+                _ <- getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true)
+            } yield SparqlUpdateResponse()
+        } else {
+            Success(SparqlUpdateResponse())
         }
-
-        for {
-            _ <- getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true)
-        } yield SparqlUpdateResponse()
     }
 
     /**
@@ -302,9 +340,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             _ <- getTriplestoreHttpResponse(sparqlUpdate, isUpdate = true)
 
             // If we're using GraphDB, update the full-text search index.
-            _ = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-                updateLuceneIndex()
-            }
+            _ = updateLuceneIndex()
         } yield SparqlUpdateResponse()
     }
 
@@ -404,20 +440,84 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             case e: TriplestoreUnsupportedFeatureException => Failure(e)
             case e: Exception => Failure(TriplestoreResponseException("Reset: Failed to execute insert into triplestore", e, log))
         }
-
     }
 
     /**
       * Checks connection to the triplestore.
       */
     private def checkRepository(): Try[CheckRepositoryResponse] = {
+        if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
+            checkGraphDBRepository()
+        } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+            checkFusekiRepository()
+        } else {
+            throw UnsuportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
+        }
+    }
 
+    /**
+      * Checks the connection to a Fuseki triplestore.
+      */
+    private def checkFusekiRepository(): Try[CheckRepositoryResponse] = {
+        import org.knora.webapi.messages.store.triplestoremessages.FusekiJsonProtocol._
+
+        try {
+            log.debug("checkFusekiRepository entered")
+
+            // call endpoint returning all datasets
+
+            val authCache: AuthCache = new BasicAuthCache
+            val basicAuth: BasicScheme = new BasicScheme
+            authCache.put(targetHost, basicAuth)
+
+            val context: HttpClientContext = HttpClientContext.create
+            context.setCredentialsProvider(credsProvider)
+            context.setAuthCache(authCache)
+
+            val httpGet = new HttpGet(checkRepositoryPath)
+            httpGet.addHeader("Accept", mimeTypeApplicationJson)
+
+            val responseStr = {
+                var maybeResponse: Option[CloseableHttpResponse] = None
+
+                try {
+                    maybeResponse = Some(queryHttpClient.execute(targetHost, httpGet, context))
+                    EntityUtils.toString(maybeResponse.get.getEntity)
+                } finally {
+                    maybeResponse match {
+                        case Some(response) => response.close()
+                        case None => ()
+                    }
+                }
+            }
+
+            val nameShouldBe = settings.triplestoreDatabaseName
+            val fusekiServer: FusekiServer = JsonParser(responseStr).convertTo[FusekiServer]
+            val neededDataset: Option[FusekiDataset] = fusekiServer.datasets.find(dataset => dataset.dsName == s"/$nameShouldBe" && dataset.dsState)
+
+            if (neededDataset.nonEmpty) {
+                // everything looks good
+                Success(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceAvailable, msg = "Triplestore is available."))
+            } else {
+                // none of the available datasets meet our requirements
+                Success(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.NotInitialized, msg = s"None of the active datasets meet our requirement of name: $nameShouldBe"))
+            }
+        } catch {
+            case e: Exception =>
+                // println("checkRepository - exception", e)
+                Success(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceUnavailable, msg = s"Triplestore not available: ${e.getMessage}"))
+        }
+    }
+
+    /**
+      * Checks the connection to a GraphDB triplestore.
+      */
+    private def checkGraphDBRepository(): Try[CheckRepositoryResponse] = {
         // needs to be a local import or other things don't work (spray json black magic)
         import org.knora.webapi.messages.store.triplestoremessages.GraphDBJsonProtocol._
 
         try {
-
-            log.debug("checkRepository entered")
+            log.debug("checkGraphDBRepository entered")
 
             // call endpoint returning all repositories
 
@@ -429,7 +529,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             context.setCredentialsProvider(credsProvider)
             context.setAuthCache(authCache)
 
-            val httpGet = new HttpGet("/rest/repositories")
+            val httpGet = new HttpGet(checkRepositoryPath)
             httpGet.addHeader("Accept", mimeTypeApplicationJson)
 
             val responseStr = {
@@ -456,8 +556,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             val sesameTypeForSEShouldBe = "owlim:MonitorRepository"
             val sesameTypeForFreeShouldBe ="graphdb:FreeSailRepository"
 
-            val neededRepo = repositories.filter(_.id == idShouldBe).filter(repo => repo.sesameType == sesameTypeForSEShouldBe || repo.sesameType == sesameTypeForFreeShouldBe)
-            if (neededRepo.length == 1) {
+            val neededRepo: Option[GraphDBRepository] = repositories.find(repo => repo.id == idShouldBe && (repo.sesameType == sesameTypeForSEShouldBe || repo.sesameType == sesameTypeForFreeShouldBe))
+
+            if (neededRepo.nonEmpty) {
                 // everything looks good
                 Success(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceAvailable, msg = "Triplestore is available."))
             } else {
@@ -542,7 +643,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 }
 
                 val took = System.currentTimeMillis() - start
-                log.info(s"[$statusCode] GraphDB Query took: ${took}ms")
+                log.info(s"[$statusCode] Triplestore query took: ${took}ms")
 
                 responseEntityStr
             } finally {
