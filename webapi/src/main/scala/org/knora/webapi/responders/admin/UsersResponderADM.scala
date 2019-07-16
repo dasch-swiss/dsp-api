@@ -185,30 +185,12 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             skipCache)
 
         for {
-            // first try to get the user from cache if caching is enables and we don't want to refresh it
-            maybeUserFromCache <- if (settings.useRedisCache && !skipCache) {
-                (storeManager ? RedisGetUserADM(identifier)).mapTo[Option[UserADM]]
+            maybeUserADM <- if (skipCache) {
+                // getting directly from triplestore
+                getUserFromTriplestore(identifier)
             } else {
-                FastFuture.successful(None)
-            }
-
-            // see if we have found a user in the cache
-            maybeUserADM: Option[UserADM] <- maybeUserFromCache match {
-                case Some(user) =>
-                    // found a user profile in the cache
-                    log.debug("getSingleUserADM - cache hit for: {}", identifier.value)
-                    FastFuture.successful(Some(user))
-
-                case None =>
-                    // didn't find a user profile in the cache
-                    log.debug("getSingleUserADM - no cache hit for: {}, will try to get from triplestore", identifier.value)
-
-                    // didn't find the user in the cache, so lets try to get him from the triplestore and write to cache (if caching is enabled)
-                    val maybeUserFuture = getUserFromTriplestore(identifier)
-                    if (settings.useRedisCache) {
-                        maybeUserFuture.map(maybeUser => maybeUser.map(user => writeUserADMToCache(user)))
-                    }
-                    maybeUserFuture
+                // getting from cache or triplestore
+                getUserFromCacheOrTriplestore(identifier)
             }
 
             // return the correct amount of information depending on either the request or user permission
@@ -1197,8 +1179,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         for {
-            currentUser <- getSingleUserADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL)
-
+            currentUser <- getSingleUserADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL, skipCache = true)
             // we are changing the user, so lets get rid of the cached copy
             _ = invalidateCachedUserADM(currentUser)
 
@@ -1220,10 +1201,10 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 maybeSystemAdmin = userUpdatePayload.systemAdmin
             ).toString)
             // _ = log.debug(s"updateUserV1 - query: $updateUserSparqlString")
-            createResourceResponse <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
+            updateResult <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
             /* Verify that the user was updated. */
-            maybeUpdatedUserADM <- getSingleUserADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL)
+            maybeUpdatedUserADM <- getSingleUserADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL, skipCache = true)
             updatedUserADM: UserADM = maybeUpdatedUserADM.getOrElse(throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
 
             // _ = log.debug(s"===>>> apiUpdateRequest: $userUpdatePayload /  updatedUserADM: $updatedUserADM")
@@ -1273,12 +1254,40 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     ////////////////////
 
     /**
-      * Helper method used to retrieve a [[UserADM]] from the triplestore.
-      *
-      * @param identifier the identifier for the user.
-      * @return a [[UserADM]].
+      * Tries to retrieve a [[UserADM]] either from triplestore or cache if caching is enabled.
+      * If user is not found in cache but in triplestore, then user is written to cache.
       */
-    def getUserFromTriplestore(identifier: UserIdentifierADM): Future[Option[UserADM]] = for {
+    private def getUserFromCacheOrTriplestore(identifier: UserIdentifierADM): Future[Option[UserADM]] = {
+        if (settings.useRedisCache) {
+            // caching enabled
+            getUserFromCache(identifier)
+              .flatMap {
+                  case None =>
+                      // none found in cache. getting from triplestore.
+                      getUserFromTriplestore(identifier)
+                        .map {
+                            case None =>
+                                // also none found in triplestore. finally returning none.
+                                None
+                            case Some(user) =>
+                                // found a user in the triplestore. need to write to cache.
+                                writeUserADMToCache(user)
+                                // finally return the found user.
+                                Some(user)
+                        }
+                  case Some(user) =>
+                      FastFuture.successful(Some(user))
+              }
+        } else {
+            // caching not enabled
+            getUserFromTriplestore(identifier)
+        }
+    }
+
+    /**
+      * Tries to retrieve a [[UserADM]] from the triplestore.
+      */
+    private def getUserFromTriplestore(identifier: UserIdentifierADM): Future[Option[UserADM]] = for {
         sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
             triplestore = settings.triplestoreType,
             maybeIri = identifier.toIriOption,
@@ -1289,8 +1298,10 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
 
         maybeUserADM: Option[UserADM] <- if (userQueryResponse.statements.nonEmpty) {
+            log.debug("getUserFromTriplestore - triplestore hit for: {}", identifier)
             statements2UserADM(userQueryResponse.statements.head)
         } else {
+            log.debug("getUserFromTriplestore - no triplestore hit for: {}", identifier)
             FastFuture.successful(None)
         }
 
@@ -1473,6 +1484,21 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     /**
+      * Tries to retrieve a [[UserADM]] from the cache.
+      */
+    private def getUserFromCache(identifier: UserIdentifierADM): Future[Option[UserADM]] = {
+        val result = (storeManager ? RedisGetUserADM(identifier)).mapTo[Option[UserADM]]
+        result.map {
+            case Some(user) =>
+                log.debug("getUserFromCache - cache hit for: {}", identifier)
+                Some(user)
+            case None =>
+                log.debug("getUserFromCache - no cache hit for: {}", identifier)
+                None
+        }
+    }
+
+    /**
       * Writes the user profile to cache.
       *
       * @param user a [[UserADM]].
@@ -1481,27 +1507,34 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       */
     private def writeUserADMToCache(user: UserADM): Future[Boolean] = {
         val result = (storeManager ? RedisPutUserADM(user)).mapTo[Boolean]
-        result.map(res => log.debug("writeUserADMToCache - result: {}", res))
-        result
+        result.map { res =>
+            log.debug("writeUserADMToCache - result: {}", result)
+            res
+        }
     }
 
     /**
-      * Removes the user profile from cache.
-      *
-      * @param maybeUser the user which cached profile should be invalidated.
+      * Removes the user from cache.
       */
     private def invalidateCachedUserADM(maybeUser: Option[UserADM]): Future[Boolean] = {
-        val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
-
-        // only send to Redis if keys are not empty
-        if (keys.nonEmpty) {
-            val result = (storeManager ? RedisRemoveValues(keys)).mapTo[Boolean]
-            result.map(res => log.debug("invalidateCachedUserADM - result: {}", res))
-            result
+        if(settings.useRedisCache) {
+            val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
+            // only send to Redis if keys are not empty
+            if (keys.nonEmpty) {
+                val result = (storeManager ? RedisRemoveValues(keys)).mapTo[Boolean]
+                result.map { res =>
+                    log.debug("invalidateCachedUserADM - result: {}", res)
+                    res
+                }
+            } else {
+                // since there was nothing to remove, we can immediately return
+                FastFuture.successful(true)
+            }
         } else {
-            // since there was nothing to remove, we can immediately return
+            // caching is turned off, so nothing to do.
             FastFuture.successful(true)
         }
+
     }
 
 }
