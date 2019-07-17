@@ -52,6 +52,14 @@ trait WhereVisitor[Acc] {
   */
 trait WhereTransformer {
     /**
+      * Optimises the position of `knora-base:isDeleted` in a sequence of statement patterns. Does not recurse.
+      *
+      * @param patterns the query patterns to be optimised.
+      * @return the optimised query patterns.
+      */
+    def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern]
+
+    /**
       * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
       *
       * @param statementPattern the statement to be transformed.
@@ -181,7 +189,7 @@ object QueryTraverser {
     def transformWherePatterns(patterns: Seq[QueryPattern],
                                inputOrderBy: Seq[OrderCriterion],
                                whereTransformer: WhereTransformer): Seq[QueryPattern] = {
-        patterns.flatMap {
+        val transformedPatterns: Seq[QueryPattern] = patterns.flatMap {
             case statementPattern: StatementPattern =>
                 whereTransformer.transformStatementInWhere(
                     statementPattern = statementPattern,
@@ -235,6 +243,8 @@ object QueryTraverser {
 
             case bindPattern: BindPattern => Seq(bindPattern)
         }
+
+        whereTransformer.optimiseIsDeleted(transformedPatterns)
     }
 
     /**

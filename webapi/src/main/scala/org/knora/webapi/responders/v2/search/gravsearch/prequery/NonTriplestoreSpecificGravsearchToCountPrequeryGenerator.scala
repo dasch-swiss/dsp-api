@@ -92,4 +92,8 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryGenerator(typeInspectionRes
         // count queries do not consider offsets since there is only one result row
         0
     }
+
+    override def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        SparqlTransformer.moveIsDeletedToEnd(patterns)
+    }
 }

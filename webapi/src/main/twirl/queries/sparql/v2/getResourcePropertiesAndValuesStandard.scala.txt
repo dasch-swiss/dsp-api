@@ -93,14 +93,7 @@ CONSTRUCT {
             ?resourceLinkProperty ?referredResource .
 
         ?referredResource a knora-base:Resource ;
-            knora-base:isDeleted false ;
-            rdfs:label ?referredResourceLabel ;
-            a ?referredResourceType ;
-            knora-base:attachedToUser ?referredResourceCreator ;
-            knora-base:hasPermissions ?referredResourcePermissions ;
-            knora-base:attachedToProject ?referredResourceProject  ;
-            knora-base:creationDate ?referredResourceCreationDate ;
-            knora-base:lastModificationDate ?referredResourceLastModificationDate .
+            ?referredResourcePred ?referredResourceObj .
     }
 
 } WHERE {
@@ -271,19 +264,12 @@ CONSTRUCT {
                         rdf:predicate ?resourceLinkProperty ;
                         rdf:object ?referredResource .
 
-                    ?referredResource rdf:type ?referredResourceType .
-                    ?referredResourceType rdfs:subClassOf* knora-base:Resource .
-
                     ?referredResource knora-base:isDeleted false ;
-                        rdfs:label ?referredResourceLabel ;
-                        knora-base:attachedToUser ?referredResourceCreator ;
-                        knora-base:hasPermissions ?referredResourcePermissions ;
-                        knora-base:attachedToProject ?referredResourceProject ;
-                        knora-base:creationDate ?referredResourceCreationDate .
+                        ?referredResourcePred ?referredResourceObj .
 
-                    OPTIONAL {
-                        ?referredResource knora-base:lastModificationDate ?lastModificationDate .
-                    }
+      				FILTER NOT EXISTS {
+                        ?referredResourcePred rdfs:subPropertyOf* knora-base:resourceProperty .
+     				}
                 }
             }
         }

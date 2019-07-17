@@ -53,59 +53,95 @@ object SparqlTransformer {
     }
 
     /**
-      * Transforms a non triplestore specific SELECT query to a query for GraphDB.
+      * Optimises `knora-base:isDeleted` by moving it to the end of a block.
+      *
+      * @param patterns the block of patterns to be optimised.
+      * @return the result of the optimisation.
       */
-    class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
-        def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
+    def moveIsDeletedToEnd(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        val (isDeletedPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
+            case statementPattern: StatementPattern =>
+                statementPattern.pred match {
+                    case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.IsDeleted => true
+                    case _ => false
+                }
 
-        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
-            transformKnoraExplicitToGraphDBExplicit(statementPattern)
+            case _ => false
         }
 
-        def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
-
+        otherPatterns ++ isDeletedPatterns
     }
 
     /**
-      * Transforms non triplestore specific SELECT query to a query for a triplestore other than GraphDB (e.g., Fuseki, TODO: to be implemented)
+      * Transforms a non triplestore specific SELECT query to a query for GraphDB.
       */
-    class NoInferenceSelectToSelectTransformer extends SelectToSelectTransformer {
-        def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
+    class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
+        override def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
-            // TODO: if OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph occurs, remove it and use property path syntax to emulate inference.
-            Seq(statementPattern)
+        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
+            transformKnoraExplicitToGraphDBExplicit(statementPattern)
         }
 
-        def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
+        override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
+        override def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+            moveIsDeletedToEnd(patterns)
+        }
+    }
+
+    /**
+      * Transforms non triplestore specific SELECT query to a query for a triplestore other than GraphDB (e.g., Fuseki).
+      */
+    class NoInferenceSelectToSelectTransformer extends SelectToSelectTransformer {
+        private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        override def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
+
+        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
+            expandStatementForNoInference(statementPattern)
+        }
+
+        override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
+
+        override def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+            moveIsDeletedToEnd(patterns)
+        }
     }
 
     /**
       * Transforms non-triplestore-specific query patterns to GraphDB-specific ones.
       */
     class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
-        def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
+        override def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
+        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
             transformKnoraExplicitToGraphDBExplicit(statementPattern)
         }
 
-        def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
+        override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
+
+        override def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+            moveIsDeletedToEnd(patterns)
+        }
     }
 
     /**
       * Transforms non-triplestore-specific query patterns for a triplestore that does not have inference enabled.
       */
     class NoInferenceConstructToConstructTransformer extends ConstructToConstructTransformer {
-        def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
+        private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
-            // TODO: if OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph occurs, remove it and use property path syntax to emulate inference.
-            Seq(statementPattern)
+        override def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
+
+        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
+            expandStatementForNoInference(statementPattern)
         }
 
-        def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
+        override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
+
+        override def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+            moveIsDeletedToEnd(patterns)
+        }
     }
 
     /**
@@ -143,4 +179,74 @@ object SparqlTransformer {
         }
     }
 
+    /**
+      * If inference is not being used, expands non-explicit statements to simulate inference using `rdfs:subClassOf*`
+      * and `rdfs:subPropertyOf*`.
+      *
+      * @param statementPattern the statement to be expanded.
+      * @return the result of the expansion.
+      */
+    private def expandStatementForNoInference(statementPattern: StatementPattern)(implicit stringFormatter: StringFormatter): Seq[StatementPattern] = {
+        // Is the statement in KnoraExplicitNamedGraph?
+        statementPattern.namedGraph match {
+            case Some(graphIri: IriRef) if graphIri.iri.toString == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph =>
+                // Yes. No expansion needed. Just remove KnoraExplicitNamedGraph.
+                Seq(statementPattern.copy(namedGraph = None))
+
+            case _ =>
+                // The statement isn't in KnoraExplicitNamedGraph, so it might need to be expanded. Is the predicate a property IRI?
+                statementPattern.pred match {
+                    case iriRef: IriRef =>
+                        // Yes.
+                        val propertyIri = iriRef.iri.toString
+
+                        // Is the property rdf:type?
+                        if (propertyIri == OntologyConstants.Rdf.Type) {
+                            // Yes. Expand using rdfs:subClassOf*.
+
+                            val rdfTypeVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = statementPattern.subj, propertyIri = propertyIri)
+
+                            Seq(
+                                StatementPattern(
+                                    subj = rdfTypeVariable,
+                                    pred = IriRef(
+                                        iri = OntologyConstants.Rdfs.SubClassOf.toSmartIri,
+                                        propertyPathOperator = Some('*')
+                                    ),
+                                    obj = statementPattern.obj
+                                ),
+                                StatementPattern(
+                                    subj = statementPattern.subj,
+                                    pred = statementPattern.pred,
+                                    obj = rdfTypeVariable
+                                )
+                            )
+                        } else {
+                            // No. Expand using rdfs:subPropertyOf*.
+
+                            val propertyVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = statementPattern.pred, propertyIri = OntologyConstants.Rdfs.SubPropertyOf)
+
+                            Seq(
+                                StatementPattern(
+                                    subj = propertyVariable,
+                                    pred = IriRef(
+                                        iri = OntologyConstants.Rdfs.SubPropertyOf.toSmartIri,
+                                        propertyPathOperator = Some('*')
+                                    ),
+                                    obj = statementPattern.pred
+                                ),
+                                StatementPattern(
+                                    subj = statementPattern.subj,
+                                    pred = propertyVariable,
+                                    obj = statementPattern.obj
+                                )
+                            )
+                        }
+
+                    case _ =>
+                        // The predicate isn't a property IRI, so no expansion needed.
+                        Seq(statementPattern)
+                }
+        }
+    }
 }

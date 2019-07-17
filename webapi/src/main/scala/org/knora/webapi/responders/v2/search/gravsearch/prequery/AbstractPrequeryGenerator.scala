@@ -308,7 +308,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             // transforms the statement given in the input query so the list node and any of its subnodes are matched
             Seq(
                 statementPatternToInternalSchema(statementPattern, typeInspectionResult).copy(obj = listNodeVar),
-                StatementPattern(
+                StatementPattern.makeExplicit(
                     subj = listNode,
                     pred = IriRef(iri = OntologyConstants.KnoraBase.HasSubListNode.toSmartIri, propertyPathOperator = Some('*')),
                     obj = listNodeVar
