@@ -40,8 +40,31 @@
   offset: Int,
   limit: Int)
 
-@*
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-TODO
+SELECT DISTINCT ?resource
+WHERE {
+    ?resource knora-base:attachedToProject <@projectIri> ;
+        rdf:type <@resourceClassIri> ;
+        knora-base:isDeleted false .
 
-*@
+    @maybeOrderByProperty match {
+        case Some(orderByProperty) => {
+            OPTIONAL {
+                ?resource <@orderByProperty> ?orderByValue .
+                ?orderByValue <@{maybeOrderByValuePredicate.get}> ?orderByValueLiteral .
+            }
+        }
+
+        case None => {}
+    }
+}
+ORDER BY
+    @if(maybeOrderByProperty.nonEmpty) {
+        ASC(?orderByValueLiteral)
+    }
+    ASC(?resource)
+OFFSET @offset
+LIMIT @limit

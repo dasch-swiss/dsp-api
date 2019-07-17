@@ -87,7 +87,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                 ?resource knora-base:lastModificationDate ?lastModificationDate .
             }
         }
-        # there might by resources that have neither values nor links
+        # there might be resources that have neither values nor links
         UNION {
             ?resource knora-base:hasValue ?valueObject .
             ?valueObject a knora-base:Value .

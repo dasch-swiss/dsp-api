@@ -533,6 +533,9 @@ This is useful only if the project does not contain a large amount of data;
 otherwise, you should use @ref:[Gravsearch](query-language.md) to search
 using more specific criteria.
 
+The specified class and property are used without inference; they will not
+match subclasses or subproperties.
+
 The HTTP header `X-Knora-Accept-Project` must be submitted; its value is
 a Knora project IRI. In the request URL, the values of `resourceClass` and `orderByProperty`
 are URL-encoded IRIs in the @ref:[complex schema](introduction.md#api-schema).

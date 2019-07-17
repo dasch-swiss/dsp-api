@@ -73,15 +73,12 @@ WHERE {
             @if(limitToStandoffClass.nonEmpty) {
 
                 # ?matchingSubject is expected to be a TextValue
-                ?matchingSubject a knora-base:TextValue .
+                ?matchingSubject a knora-base:TextValue ;
+                    knora-base:valueHasStandoff ?standoffNode .
 
-                ?matchingSubject knora-base:valueHasStandoff ?standoffNode .
-
-                ?standoffNode a <@limitToStandoffClass.get> .
-
-                ?standoffNode knora-base:standoffTagHasStart ?start .
-
-                ?standoffNode knora-base:standoffTagHasEnd ?end .
+                ?standoffNode a <@limitToStandoffClass.get> ;
+                    knora-base:standoffTagHasStart ?start ;
+                    knora-base:standoffTagHasEnd ?end .
 
                 # https://www.w3.org/TR/xpath-functions/#func-substring
                 # The first character of a string is located at position 1, not position 0. -> standoff uses a 0 based index
@@ -120,12 +117,20 @@ WHERE {
     ?resource a knora-base:Resource ;
         knora-base:isDeleted false .
 
-    @if(limitToResourceClass.nonEmpty) {
-        ?resource a <@limitToResourceClass.get> .
+    @limitToResourceClass match {
+        case Some(definedLimitToResourceClass) => {
+            ?resource a <@definedLimitToResourceClass> .
+        }
+
+        case None => {}
     }
 
-    @if(limitToProject.nonEmpty) {
-        ?resource knora-base:attachedToProject <@limitToProject.get>
+    @limitToProject match {
+        case Some(definedLimitToProject) => {
+            ?resource knora-base:attachedToProject <@definedLimitToProject> .
+        }
+
+        case None => {}
     }
 
 }

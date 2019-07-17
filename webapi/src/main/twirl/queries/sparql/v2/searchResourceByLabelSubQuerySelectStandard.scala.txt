@@ -45,22 +45,21 @@
     SELECT (count(distinct ?resource) as ?count)
 }
 WHERE {
-    ?resource a knora-base:Resource ;
-        knora-base:isDeleted false .
+    ?resource a ?resourceClass ;
+        knora-base:isDeleted false ;
+        rdfs:label ?label .
+
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
 
     @if(limitToResourceClass.nonEmpty) {
-        ?resource a <@limitToResourceClass.get> .
+        ?resourceClass rdfs:subClassOf* <@limitToResourceClass.get> .
     }
 
     @if(limitToProject.nonEmpty) {
         ?resource knora-base:attachedToProject <@limitToProject.get>
     }
 
-    GRAPH <http://www.ontotext.com/explicit> {
-        ?resource rdfs:label ?label .
-    }
-
-    ?label <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> @searchTerm.generateLiteralForLuceneIndexWithoutExactSequence .
+    ?resource <http://jena.apache.org/text#query> @searchTerm.generateLiteralForLuceneIndexWithoutExactSequence .
 }
 @if(!countQuery) {
 ORDER BY ?resource @* Needed for paging: order needs to be deterministic *@
