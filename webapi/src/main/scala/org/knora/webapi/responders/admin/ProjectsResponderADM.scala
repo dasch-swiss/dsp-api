@@ -55,8 +55,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         case ProjectsGetRequestADM(requestingUser) => projectsGetRequestADM(requestingUser)
         case ProjectGetADM(identifier, requestingUser) => getSingleProjectADM(identifier, requestingUser)
         case ProjectGetRequestADM(identifier, requestingUser) => getSingleProjectADMRequest(identifier, requestingUser)
-        case ProjectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => projectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser)
-        case ProjectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => projectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser)
+        case ProjectMembersGetRequestADM(identifier, requestingUser) => projectMembersGetRequestADM(identifier, requestingUser)
+        case ProjectAdminMembersGetRequestADM(identifier, requestingUser) => projectAdminMembersGetRequestADM(identifier, requestingUser)
         case ProjectsKeywordsGetRequestADM(requestingUser) => projectsKeywordsGetRequestADM(requestingUser)
         case ProjectKeywordsGetRequestADM(projectIri, requestingUser) => projectKeywordsGetRequestADM(projectIri, requestingUser)
         case ProjectRestrictedViewSettingsGetADM(identifier, requestingUser) => projectRestrictedViewSettingsGetADM(identifier, requestingUser)
@@ -283,7 +283,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // log.debug("projectAdminMembersGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
 
         for {
-
             /* Get project and verify permissions. */
             project <- getSingleProjectADM(identifier, KnoraSystemInstances.Users.SystemUser)
             _ = if (project.isEmpty) {
@@ -351,7 +350,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     private def projectKeywordsGetRequestADM(projectIri: IRI, requestingUser: UserADM): Future[ProjectKeywordsGetResponseADM] = {
 
         for {
-            maybeProject <- getSingleProjectADM(ProjectIdentifierADM(ma), requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeProject <- getSingleProjectADM(ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = KnoraSystemInstances.Users.SystemUser)
 
             keywords: Seq[String] = maybeProject match {
                 case Some(p) => p.keywords
@@ -374,16 +373,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestricedViewSettings resource. How to send the client the correct NotFound reply?
 
-        val maybeIri = identifier.toIriOption
-        val maybeShortname = identifier.toShortnameOption
-        val maybeShortcode = identifier.toShortcodeOption
-
         for {
             sparqlQuery <- Future(queries.sparql.admin.txt.getProjects(
                 triplestore = settings.triplestoreType,
-                maybeIri = maybeIri,
-                maybeShortname = maybeShortname,
-                maybeShortcode = maybeShortcode
+                maybeIri = identifier.toIriOption,
+                maybeShortname = identifier.toShortnameOption,
+                maybeShortcode = identifier.toShortcodeOption
             ).toString())
 
             projectResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
@@ -428,112 +423,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         } yield ProjectRestrictedViewSettingsGetResponseADM(settings)
 
-    }
-
-
-    /**
-      * Creates a project.
-      *
-      * @param createRequest  the new project's information.
-      * @param requestingUser the user that is making the request.
-      * @param apiRequestID   the unique api request ID.
-      * @return a [[ProjectOperationResponseADM]].
-      * @throws ForbiddenException      in the case that the user is not allowed to perform the operation.
-      * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
-      * @throws BadRequestException     in the case when the shortcode is invalid.
-      */
-    private def projectCreateRequestADM(createRequest: CreateProjectApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
-
-        // log.debug("projectCreateRequestV1 - createRequest: {}", createRequest)
-
-        def projectCreateTask(createRequest: CreateProjectApiRequestADM, requestingUser: UserADM): Future[ProjectOperationResponseADM] = for {
-            // check if required properties are not empty
-            _ <- Future(if (createRequest.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty"))
-
-            // check if the requesting user is allowed to create project
-            _ = if (!requestingUser.permissions.isSystemAdmin) {
-                // not a system admin
-                throw ForbiddenException("A new project can only be created by a system admin.")
-            }
-
-            // check if the supplied shortname is unique
-            shortnameExists <- projectByShortnameExists(createRequest.shortname)
-            _ = if (shortnameExists) {
-                throw DuplicateValueException(s"Project with the shortname: '${createRequest.shortname}' already exists")
-            }
-
-            validatedShortcode = StringFormatter.getGeneralInstance.validateProjectShortcode(
-                createRequest.shortcode,
-                errorFun = throw BadRequestException(s"The supplied short code: '${createRequest.shortcode}' is not valid.")
-            )
-
-            // check if the optionally supplied shortcode is valid and unique
-            shortcodeExists <- {
-                projectByShortcodeExists(validatedShortcode)
-            }
-            _ = if (shortcodeExists) {
-                throw DuplicateValueException(s"Project with the shortcode: '${createRequest.shortcode}' already exists")
-            }
-
-            newProjectIRI = stringFormatter.makeRandomProjectIri(validatedShortcode)
-
-            // Create the new project.
-            createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
-                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-                triplestore = settings.triplestoreType,
-                projectIri = newProjectIRI,
-                projectClassIri = OntologyConstants.KnoraAdmin.KnoraProject,
-                shortname = createRequest.shortname,
-                shortcode = validatedShortcode,
-                maybeLongname = createRequest.longname,
-                maybeDescriptions = if (createRequest.description.nonEmpty) {
-                    Some(createRequest.description)
-                } else None,
-                maybeKeywords = if (createRequest.keywords.nonEmpty) {
-                    Some(createRequest.keywords)
-                } else None,
-                maybeLogo = createRequest.logo,
-                status = createRequest.status,
-                hasSelfJoinEnabled = createRequest.selfjoin
-            ).toString
-            // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
-
-            createProjectResponse <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString)).mapTo[SparqlUpdateResponse]
-
-            // Verify that the project was created.
-            sparqlQuery = queries.sparql.admin.txt.getProjects(
-                triplestore = settings.triplestoreType,
-                maybeIri = Some(newProjectIRI),
-                maybeShortcode = None,
-                maybeShortname = None
-            ).toString
-
-            projectResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
-
-            projectIris = projectResponse.statements.keySet.map(_.toString)
-
-            ontologies <- if (projectResponse.statements.nonEmpty) {
-                getOntologiesForProjects(projectIris, requestingUser)
-            } else {
-                FastFuture.successful(Map.empty[IRI, Seq[IRI]])
-            }
-
-            projectADM = if (projectResponse.statements.nonEmpty) {
-                val projectOntologies = ontologies.getOrElse(projectIris.head, Seq.empty[IRI])
-                statements2ProjectADM(statements = projectResponse.statements.head, ontologies = projectOntologies, requestingUser = requestingUser)
-            } else {
-                throw UpdateNotPerformedException(s"Project $newProjectIRI was not created. Please report this as a possible bug.")
-            }
-        } yield ProjectOperationResponseADM(project = projectADM)
-
-        for {
-            // run user creation with an global IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                PROJECTS_GLOBAL_LOCK_IRI,
-                () => projectCreateTask(createRequest, requestingUser)
-            )
-        } yield taskResult
     }
 
     /**
@@ -617,11 +506,13 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting update request.")
 
         for {
-            /* Verify that the project exists. */
-            projectExists <- projectByIriExists(projectIri)
-            _ = if (!projectExists) {
+
+            maybeCurrentProject: Option[ProjectADM] <- getSingleProjectADM(identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = requestingUser, skipCache = true)
+            _ = if (maybeCurrentProject.isEmpty) {
                 throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
             }
+            // we are changing the project, so lets get rid of the cached copy
+            _ = invalidateCachedProjectADM(maybeCurrentProject)
 
             /* Update project */
             updateProjectSparqlString <- Future(queries.sparql.admin.txt.updateProject(
@@ -642,7 +533,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             updateProjectResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
 
             /* Verify that the project was updated. */
-            maybeUpdatedProject <- getSingleProjectADM(maybeIri = Some(projectIri), maybeShortname = None, maybeShortcode = None, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeUpdatedProject <- getSingleProjectADM(identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = KnoraSystemInstances.Users.SystemUser, skipCache = true)
             updatedProject: ProjectADM = maybeUpdatedProject.getOrElse(throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
 
             _ = log.debug("updateProjectADM - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
@@ -675,10 +566,102 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                 if (updatedProject.selfjoin != projectUpdatePayload.selfjoin.get) throw UpdateNotPerformedException("Project's 'selfjoin' status was not updated. Please report this as a possible bug.")
             }
 
-            // create the project operation response
-            projectOperationResponseV1 = ProjectOperationResponseADM(project = updatedProject)
-        } yield projectOperationResponseV1
+        } yield ProjectOperationResponseADM(project = updatedProject)
 
+    }
+
+    /**
+      * Creates a project.
+      *
+      * @param createRequest  the new project's information.
+      * @param requestingUser the user that is making the request.
+      * @param apiRequestID   the unique api request ID.
+      * @return a [[ProjectOperationResponseADM]].
+      * @throws ForbiddenException      in the case that the user is not allowed to perform the operation.
+      * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
+      * @throws BadRequestException     in the case when the shortcode is invalid.
+      */
+    private def projectCreateRequestADM(createRequest: CreateProjectApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
+
+        // log.debug("projectCreateRequestV1 - createRequest: {}", createRequest)
+
+        def projectCreateTask(createRequest: CreateProjectApiRequestADM, requestingUser: UserADM): Future[ProjectOperationResponseADM] = for {
+            // check if required properties are not empty
+            _ <- Future(if (createRequest.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty"))
+
+            // check if the requesting user is allowed to create project
+            _ = if (!requestingUser.permissions.isSystemAdmin) {
+                // not a system admin
+                throw ForbiddenException("A new project can only be created by a system admin.")
+            }
+
+            // check if the supplied shortname is unique
+            shortnameExists <- projectByShortnameExists(createRequest.shortname)
+            _ = if (shortnameExists) {
+                throw DuplicateValueException(s"Project with the shortname: '${createRequest.shortname}' already exists")
+            }
+
+            validatedShortcode = StringFormatter.getGeneralInstance.validateProjectShortcode(
+                createRequest.shortcode,
+                errorFun = throw BadRequestException(s"The supplied short code: '${createRequest.shortcode}' is not valid.")
+            )
+
+            // check if the optionally supplied shortcode is valid and unique
+            shortcodeExists <- {
+                projectByShortcodeExists(validatedShortcode)
+            }
+            _ = if (shortcodeExists) {
+                throw DuplicateValueException(s"Project with the shortcode: '${createRequest.shortcode}' already exists")
+            }
+
+            newProjectIRI = stringFormatter.makeRandomProjectIri(validatedShortcode)
+
+            // Create the new project.
+            createNewProjectSparqlString = queries.sparql.admin.txt.createNewProject(
+                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                triplestore = settings.triplestoreType,
+                projectIri = newProjectIRI,
+                projectClassIri = OntologyConstants.KnoraAdmin.KnoraProject,
+                shortname = createRequest.shortname,
+                shortcode = validatedShortcode,
+                maybeLongname = createRequest.longname,
+                maybeDescriptions = if (createRequest.description.nonEmpty) {
+                    Some(createRequest.description)
+                } else None,
+                maybeKeywords = if (createRequest.keywords.nonEmpty) {
+                    Some(createRequest.keywords)
+                } else None,
+                maybeLogo = createRequest.logo,
+                status = createRequest.status,
+                hasSelfJoinEnabled = createRequest.selfjoin
+            ).toString
+            // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
+
+            createProjectResponse <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString)).mapTo[SparqlUpdateResponse]
+
+            // try to retrieve newly created project (will also add to cache)
+            maybeNewProjectADM
+            <- getSingleProjectADM(
+                identifier = ProjectIdentifierADM(maybeIri = Some(newProjectIRI)),
+                requestingUser = KnoraSystemInstances.Users.SystemUser,
+                skipCache = true
+            )
+
+            // check to see if we could retrieve the new project
+            newProjectADM = maybeNewProjectADM.getOrElse(
+                throw UpdateNotPerformedException(s"Project $newProjectIRI was not created. Please report this as a possible bug.")
+            )
+
+        } yield ProjectOperationResponseADM(project = newProjectADM)
+
+        for {
+            // run user creation with an global IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                PROJECTS_GLOBAL_LOCK_IRI,
+                () => projectCreateTask(createRequest, requestingUser)
+            )
+        } yield taskResult
     }
 
 
@@ -742,7 +725,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             FastFuture.successful(Map.empty[IRI, Seq[IRI]])
         }
 
-        projectADM = if (projectResponse.statements.nonEmpty) {
+        maybeProjectADM: Option[ProjectADM] = if (projectResponse.statements.nonEmpty) {
             log.debug("getProjectFromTriplestore - triplestore hit for: {}", identifier)
             val projectOntologies = ontologies.getOrElse(projectIris.head, Seq.empty[IRI])
             Some(statements2ProjectADM(statements = projectResponse.statements.head, ontologies = projectOntologies))
@@ -751,7 +734,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             None
         }
 
-    } yield projectADM
+    } yield maybeProjectADM
 
     /**
       * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].

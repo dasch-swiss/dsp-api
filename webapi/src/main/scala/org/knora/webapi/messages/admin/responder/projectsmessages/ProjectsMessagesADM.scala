@@ -147,49 +147,21 @@ case class ProjectGetADM(identifier: ProjectIdentifierADM,
 /**
   * Returns all users belonging to a project identified either through its IRI, shortname or shortcode.
   *
-  * @param maybeIri       the IRI of the project.
-  * @param maybeShortname the project's short name.
-  * @param maybeShortcode the project's shortcode.
+  * @param identifier     the IRI, email, or username of the project.
   * @param requestingUser the user making the request.
   */
-case class ProjectMembersGetRequestADM(maybeIri: Option[IRI],
-                                       maybeShortname: Option[String],
-                                       maybeShortcode: Option[String],
-                                       requestingUser: UserADM) extends ProjectsResponderRequestADM {
-
-    val parametersCount: Int = List(
-        maybeIri,
-        maybeShortname,
-        maybeShortcode
-    ).flatten.size
-
-    // Only one is allowed
-    if (parametersCount == 0 || parametersCount > 1) throw BadRequestException("Need to provide either project IRI, shortname, or shortcode.")
-}
+case class ProjectMembersGetRequestADM(identifier: ProjectIdentifierADM,
+                                       requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 
 /**
   * Returns all admin users of a project identified either through its IRI, shortname or shortcode.
   *
-  * @param maybeIri       the IRI of the project.
-  * @param maybeShortname the project's short name.
-  * @param maybeShortcode the project's shortcode.
+  * @param identifier     the IRI, email, or username of the project.
   * @param requestingUser the user making the request.
   */
-case class ProjectAdminMembersGetRequestADM(maybeIri: Option[IRI],
-                                            maybeShortname: Option[String],
-                                            maybeShortcode: Option[String],
-                                            requestingUser: UserADM) extends ProjectsResponderRequestADM {
-
-    val parametersCount: Int = List(
-        maybeIri,
-        maybeShortname,
-        maybeShortcode
-    ).flatten.size
-
-    // Only one is allowed
-    if (parametersCount == 0 || parametersCount > 1) throw BadRequestException("Need to provide either project IRI, shortname, or shortcode.")
-}
+case class ProjectAdminMembersGetRequestADM(identifier: ProjectIdentifierADM,
+                                            requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
   * Returns all unique keywords for all projects.
@@ -206,7 +178,6 @@ case class ProjectsKeywordsGetRequestADM(requestingUser: UserADM) extends Projec
   */
 case class ProjectKeywordsGetRequestADM(projectIri: IRI,
                                         requestingUser: UserADM) extends ProjectsResponderRequestADM
-
 
 /**
   * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
@@ -526,6 +497,14 @@ class ProjectIdentifierADM private (maybeIri: Option[IRI] = None,
     def toShortcodeOption: Option[String] = {
         maybeShortcode
     }
+
+    /**
+      * Returns the string representation
+      */
+    override def toString: IRI = {
+        s"ProjectIdentifierADM(${this.value})"
+    }
+
 }
 
 

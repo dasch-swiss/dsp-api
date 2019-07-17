@@ -25,7 +25,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
@@ -615,7 +615,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             )
 
             /* Verify that the project exists. */
-            maybeProject <- (responderManager ? ProjectGetADM(maybeIri = Some(createListRequest.projectIri), maybeShortname = None, maybeShortcode = None, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(createListRequest.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
             project: ProjectADM = maybeProject match {
                 case Some(project: ProjectADM) => project
                 case None => throw BadRequestException(s"Project '${createListRequest.projectIri}' not found.")
@@ -704,7 +704,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             /* Get the project information */
-            maybeProject <- (responderManager ? ProjectGetADM(maybeIri = Some(list.listinfo.projectIri), maybeShortname = None, maybeShortcode = None, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(list.listinfo.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
             project: ProjectADM = maybeProject match {
                 case Some(project: ProjectADM) => project
                 case None => throw BadRequestException(s"Project '${list.listinfo.projectIri}' not found.")
@@ -804,7 +804,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
-            maybeProject <- (responderManager ? ProjectGetADM(maybeIri = Some(createChildNodeRequest.projectIri), maybeShortname = None, maybeShortcode = None, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            maybeProject <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(createChildNodeRequest.projectIri)), KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
             project: ProjectADM = maybeProject match {
                 case Some(project: ProjectADM) => project
                 case None => throw BadRequestException(s"Project '${createChildNodeRequest.projectIri}' not found.")

@@ -72,17 +72,17 @@ class RedisManagerSpec extends CoreSpec(RedisManagerSpec.config) {
         }
 
         "successfully retrieve a project by IRI" in {
-            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(iri = Some(project.id)))
+            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
             expectMsg(Some(project))
         }
 
         "successfully retrieve a project by SHORTNAME" in {
-            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(shortname = Some(project.shortname)))
+            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
             expectMsg(Some(project))
         }
 
         "successfully retrieve a project by SHORTCODE" in {
-            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(shortcode = Some(project.shortcode)))
+            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
             expectMsg(Some(project))
         }
     }

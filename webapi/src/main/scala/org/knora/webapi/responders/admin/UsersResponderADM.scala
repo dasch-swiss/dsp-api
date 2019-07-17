@@ -27,7 +27,7 @@ import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadADM, _}
 import org.knora.webapi.messages.store.redismessages.{RedisGetUserADM, RedisPutUserADM, RedisRemoveValues}
@@ -230,95 +230,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         } yield result
     }
 
-    /**
-      * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
-      * is allowed to create a new user.
-      *
-      * Referenced Websites:
-      *                     - https://crackstation.net/hashing-security.htm
-      *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
-      *
-      * @param createRequest  a [[CreateUserApiRequestADM]] object containing information about the new user to be created.
-      * @param requestingUser a [[UserADM]] object containing information about the requesting user.
-      * @return a future containing the [[UserOperationResponseADM]].
-      */
-    private def createNewUserADM(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-        log.debug("createNewUserADM - createRequest: {}", createRequest)
-
-        /**
-          * The actual task run with an IRI lock.
-          */
-        def createNewUserTask(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
-            // check if required information is supplied
-            _ <- Future(if (createRequest.username.isEmpty) throw BadRequestException("Username cannot be empty"))
-            _ = if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty")
-            _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
-            _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
-            _ = if (createRequest.familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
-
-            usernameTaken: Boolean <- userByUsernameExists(createRequest.username)
-            _ = if (usernameTaken) {
-                throw DuplicateValueException(s"User with the username: '${createRequest.username}' already exists")
-            }
-
-            emailTaken: Boolean <- userByEmailExists(createRequest.email)
-            _ = if (emailTaken) {
-                throw DuplicateValueException(s"User with the email: '${createRequest.email}' already exists")
-            }
-
-            userIri = stringFormatter.makeRandomPersonIri
-
-            encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
-            hashedPassword = encoder.encode(createRequest.password)
-
-            // Create the new user.
-            createNewUserSparqlString = queries.sparql.admin.txt.createNewUser(
-                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-                triplestore = settings.triplestoreType,
-                userIri = userIri,
-                userClassIri = OntologyConstants.KnoraAdmin.User,
-                username = createRequest.username,
-                email = createRequest.email,
-                password = hashedPassword,
-                givenName = createRequest.givenName,
-                familyName = createRequest.familyName,
-                status = createRequest.status,
-                preferredLanguage = createRequest.lang,
-                systemAdmin = createRequest.systemAdmin
-            ).toString
-            // _ = log.debug(s"createNewUser: $createNewUserSparqlString")
-            createNewUserResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
-
-            // try to retrieve newly created user (will also add to cache)
-            maybeNewUserADM: Option[UserADM]
-            <- getSingleUserADM(
-                identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                requestingUser = KnoraSystemInstances.Users.SystemUser,
-                userInformationType = UserInformationTypeADM.FULL,
-                skipCache = true
-            )
-
-            // check to see if we could retrieve the new user
-            newUserADM = maybeNewUserADM.getOrElse(
-                throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug.")
-            )
-
-            // create the user operation response
-            _ = log.debug("createNewUserADM - created new user: {}", newUserADM)
-            userOperationResponseADM = UserOperationResponseADM(newUserADM.ofType(UserInformationTypeADM.RESTRICTED))
-
-        } yield userOperationResponseADM
-
-        for {
-            // run user creation with an global IRI lock
-            taskResult <- IriLocker.runWithIriLock(
-                apiRequestID,
-                USERS_GLOBAL_LOCK_IRI,
-                () => createNewUserTask(createRequest, requestingUser, apiRequestID)
-            )
-        } yield taskResult
-    }
 
     /**
       * Updates an existing user. Only basic user data information (username, email, givenName, familyName, lang)
@@ -791,7 +703,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map {
-                projectIri => (responderManager ? ProjectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+                projectIri => (responderManager ? ProjectGetADM(identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
             }
             maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
             projects: Seq[ProjectADM] = maybeProjects.flatten
@@ -1180,9 +1092,12 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         for {
-            currentUser <- getSingleUserADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL, skipCache = true)
+            maybeCurrentUser <- getSingleUserADM(identifier = UserIdentifierADM(maybeIri = Some(userIri)), requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL, skipCache = true)
+            _ = if (maybeCurrentUser.isEmpty) {
+                throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
+            }
             // we are changing the user, so lets get rid of the cached copy
-            _ = invalidateCachedUserADM(currentUser)
+            _ = invalidateCachedUserADM(maybeCurrentUser)
 
             /* Update the user */
             updateUserSparqlString <- Future(queries.sparql.admin.txt.updateUser(
@@ -1249,6 +1164,95 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.RESTRICTED))
     }
 
+    /**
+      * Creates a new user. Self-registration is allowed, so even the default user, i.e. with no credentials supplied,
+      * is allowed to create a new user.
+      *
+      * Referenced Websites:
+      *                     - https://crackstation.net/hashing-security.htm
+      *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
+      *
+      * @param createRequest  a [[CreateUserApiRequestADM]] object containing information about the new user to be created.
+      * @param requestingUser a [[UserADM]] object containing information about the requesting user.
+      * @return a future containing the [[UserOperationResponseADM]].
+      */
+    private def createNewUserADM(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+
+        log.debug("createNewUserADM - createRequest: {}", createRequest)
+
+        /**
+          * The actual task run with an IRI lock.
+          */
+        def createNewUserTask(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
+            // check if required information is supplied
+            _ <- Future(if (createRequest.username.isEmpty) throw BadRequestException("Username cannot be empty"))
+            _ = if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty")
+            _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
+            _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
+            _ = if (createRequest.familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
+
+            usernameTaken: Boolean <- userByUsernameExists(createRequest.username)
+            _ = if (usernameTaken) {
+                throw DuplicateValueException(s"User with the username: '${createRequest.username}' already exists")
+            }
+
+            emailTaken: Boolean <- userByEmailExists(createRequest.email)
+            _ = if (emailTaken) {
+                throw DuplicateValueException(s"User with the email: '${createRequest.email}' already exists")
+            }
+
+            userIri = stringFormatter.makeRandomPersonIri
+
+            encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
+            hashedPassword = encoder.encode(createRequest.password)
+
+            // Create the new user.
+            createNewUserSparqlString = queries.sparql.admin.txt.createNewUser(
+                adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                triplestore = settings.triplestoreType,
+                userIri = userIri,
+                userClassIri = OntologyConstants.KnoraAdmin.User,
+                username = createRequest.username,
+                email = createRequest.email,
+                password = hashedPassword,
+                givenName = createRequest.givenName,
+                familyName = createRequest.familyName,
+                status = createRequest.status,
+                preferredLanguage = createRequest.lang,
+                systemAdmin = createRequest.systemAdmin
+            ).toString
+            // _ = log.debug(s"createNewUser: $createNewUserSparqlString")
+            createNewUserResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString)).mapTo[SparqlUpdateResponse]
+
+            // try to retrieve newly created user (will also add to cache)
+            maybeNewUserADM: Option[UserADM]
+            <- getSingleUserADM(
+                identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                requestingUser = KnoraSystemInstances.Users.SystemUser,
+                userInformationType = UserInformationTypeADM.FULL,
+                skipCache = true
+            )
+
+            // check to see if we could retrieve the new user
+            newUserADM = maybeNewUserADM.getOrElse(
+                throw UpdateNotPerformedException(s"User $userIri was not created. Please report this as a possible bug.")
+            )
+
+            // create the user operation response
+            _ = log.debug("createNewUserADM - created new user: {}", newUserADM)
+            userOperationResponseADM = UserOperationResponseADM(newUserADM.ofType(UserInformationTypeADM.RESTRICTED))
+
+        } yield userOperationResponseADM
+
+        for {
+            // run user creation with an global IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                USERS_GLOBAL_LOCK_IRI,
+                () => createNewUserTask(createRequest, requestingUser, apiRequestID)
+            )
+        } yield taskResult
+    }
 
     ////////////////////
     // Helper Methods //
@@ -1308,10 +1312,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             log.debug("getUserFromTriplestore - no triplestore hit for: {}", identifier)
             FastFuture.successful(None)
         }
-
-        result = maybeUserADM
-
-    } yield result
+    } yield maybeUserADM
 
 
     /**
@@ -1371,7 +1372,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 // _ = log.debug("statements2UserADM - groups: {}", MessageUtil.toSource(groups))
 
                 maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map {
-                    projectIri => (responderManager ? ProjectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+                    projectIri => (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
                 }
                 maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
                 projects: Seq[ProjectADM] = maybeProjects.flatten

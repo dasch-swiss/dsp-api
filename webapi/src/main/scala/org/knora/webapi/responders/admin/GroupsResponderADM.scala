@@ -24,7 +24,7 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
@@ -84,7 +84,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                     val projectIri: IRI = propsMap.getOrElse(OntologyConstants.KnoraAdmin.BelongsToProject, throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached")).head.asInstanceOf[IriLiteralV2].value
 
                     for {
-                        maybeProjectADM: Option[ProjectADM] <- (responderManager ? ProjectGetADM(maybeIri = Some(projectIri), maybeShortname = None, maybeShortcode = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+                        maybeProjectADM: Option[ProjectADM] <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
                         projectADM: ProjectADM = maybeProjectADM match {
                             case Some(project) => project
                             case None => throw InconsistentTriplestoreDataException(s"Project $projectIri was referenced by $groupIri but was not found in the triplestore.")
@@ -260,7 +260,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                 throw DuplicateValueException(s"Group with the name '${createRequest.name}' already exists")
             }
 
-            maybeProjectADM: Option[ProjectADM] <- (responderManager ? ProjectGetADM(maybeIri = Some(createRequest.project), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            maybeProjectADM: Option[ProjectADM] <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(createRequest.project)), requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
 
             projectADM: ProjectADM = maybeProjectADM match {
                 case Some(p) => p
@@ -473,7 +473,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         if (propsMap.nonEmpty) {
             for {
                 projectIri <- projectIriFuture
-                maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(maybeIri = Some(projectIri), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+                maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
                 project: ProjectADM = maybeProject.getOrElse(throw InconsistentTriplestoreDataException(s"Group $groupIri has no project attached."))
 
                 groupADM: GroupADM = GroupADM(

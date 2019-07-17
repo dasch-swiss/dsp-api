@@ -30,7 +30,7 @@ import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminMembersGetRequestADM, ProjectAdminMembersGetResponseADM, ProjectMembersGetRequestADM, ProjectMembersGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminMembersGetRequestADM, ProjectAdminMembersGetResponseADM, ProjectIdentifierADM, ProjectMembersGetRequestADM, ProjectMembersGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
@@ -498,9 +498,8 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 membershipsAfterUpdate.projects should equal (Seq(imagesProject))
 
                 responderManager ! ProjectMembersGetRequestADM(
-                    maybeIri = Some(imagesProject.id),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(
+                    maybeIri = Some(imagesProject.id)),
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -522,9 +521,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 membershipsAfterUpdate.projects should equal (Seq())
 
                 responderManager ! ProjectMembersGetRequestADM(
-                    maybeIri = Some(imagesProject.id),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
                     requestingUser = rootUser
                 )
                 val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -561,9 +558,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 membershipsAfterUpdate.projects should equal (Seq(imagesProject))
 
                 responderManager ! ProjectAdminMembersGetRequestADM(
-                    maybeIri = Some(imagesProject.id),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
                     requestingUser = rootUser
                 )
                 val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -584,9 +579,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 membershipsAfterUpdate.projects should equal (Seq())
 
                 responderManager ! ProjectAdminMembersGetRequestADM(
-                    maybeIri = Some(imagesProject.id),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
                     requestingUser = rootUser
                 )
                 val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)

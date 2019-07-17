@@ -833,7 +833,7 @@ class UserIdentifierADM private(maybeIri: Option[IRI] = None,
       * Returns the string representation
       */
     override def toString: IRI = {
-        s"UserIdentifierADM(${this.maybeIri}, ${this.maybeEmail}, ${this.maybeUsername})"
+        s"UserIdentifierADM(${this.value})"
     }
 
 }

@@ -158,7 +158,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser <- getUserADM(requestContext)
                     checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
-                } yield ProjectGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
+                } yield ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)), requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -180,7 +180,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser <- getUserADM(requestContext)
                     shortNameDec = stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(s"Invalid project shotname $value"))
 
-                } yield ProjectGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
+                } yield ProjectGetRequestADM(ProjectIdentifierADM(maybeShortname = Some(shortNameDec)), requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -202,7 +202,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser <- getUserADM(requestContext)
                     checkedShortcode = stringFormatter.validateAndEscapeProjectShortcode(value, throw BadRequestException(s"Invalid project shortcode $value"))
 
-                } yield ProjectGetRequestADM(maybeIri = None, maybeShortname = None, maybeShortcode = Some(checkedShortcode), requestingUser = requestingUser)
+                } yield ProjectGetRequestADM(ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)), requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -285,7 +285,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser <- getUserADM(requestContext)
                     checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
-                } yield ProjectMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
+                } yield ProjectMembersGetRequestADM(ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)), requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -308,7 +308,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser <- getUserADM(requestContext)
                     shortNameDec = stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(s"Invalid project shortname $value"))
 
-                } yield ProjectMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
+                } yield ProjectMembersGetRequestADM(ProjectIdentifierADM(maybeShortname = Some(shortNameDec)), requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -332,7 +332,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser <- getUserADM(requestContext)
                     checkedShortcode = stringFormatter.validateAndEscapeProjectShortcode(value, throw BadRequestException(s"Invalid project shortcode $value"))
 
-                } yield ProjectMembersGetRequestADM(maybeIri = None, maybeShortname = None, maybeShortcode = Some(checkedShortcode), requestingUser = requestingUser)
+                } yield ProjectMembersGetRequestADM(ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)), requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -356,7 +356,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser <- getUserADM(requestContext)
                     checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
-                } yield ProjectAdminMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
+                } yield ProjectAdminMembersGetRequestADM(ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)), requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -379,7 +379,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser <- getUserADM(requestContext)
                     checkedShortname = stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(s"Invalid project shortname $value"))
 
-                } yield ProjectAdminMembersGetRequestADM(maybeIri = None, maybeShortname = Some(checkedShortname), maybeShortcode = None, requestingUser = requestingUser)
+                } yield ProjectAdminMembersGetRequestADM(ProjectIdentifierADM(maybeShortname = Some(checkedShortname)), requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -402,7 +402,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser <- getUserADM(requestContext)
                     checkedShortcode = stringFormatter.validateProjectShortcode(value, throw BadRequestException(s"Invalid project shortcode $value"))
 
-                } yield ProjectAdminMembersGetRequestADM(maybeIri = None, maybeShortname = None, maybeShortcode = Some(checkedShortcode), requestingUser = requestingUser)
+                } yield ProjectAdminMembersGetRequestADM(ProjectIdentifierADM(maybeShortcode = Some(checkedShortcode)), requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -425,7 +425,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
 
-                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(iri = Some(value)), requestingUser)
+                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(maybeIri = Some(value)), requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -448,7 +448,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestingUser <- getUserADM(requestContext)
                     shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
 
-                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(shortname = Some(shortNameDec)), requestingUser)
+                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(maybeShortname = Some(shortNameDec)), requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -469,7 +469,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestContext =>
                 val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(shortcode = Some(value)), requestingUser)
+                } yield ProjectRestrictedViewSettingsGetRequestADM(ProjectIdentifierADM(maybeShortcode = Some(value)), requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
