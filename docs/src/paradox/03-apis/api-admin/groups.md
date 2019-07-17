@@ -19,16 +19,34 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Groups Endpoint
 
-  - **Create group**:
+## Endpoint Overview
 
-      - Required permission: SystemAdmin / hasProjectAllAdminPermission
-        / hasProjectAllGroupAdminPermission
-      - Required information: name (unique inside project), project IRI
-      - Optional information: group description
-      - Returns information about the newly created group
-      - TypeScript Docs: groupFormats - CreateGroupApiRequestV1
-      - POST: `/admin/groups`
-      - BODY:
+**Group Operations:**
+
+- `GET: /admin/groups` : return all groups
+- `GET: /admin/groups/<groupIri>` : return single group identified by [IRI]
+- `POST: /admin/groups` : create new group
+- `PUT: /admin/groups/<groupIri>` : update groups's basic information
+- `PUT: /admin/groups/<groupIri>/status` : update group's status
+- `DELETE: /admin/groups/<groupIri>` : delete group (set status to false)
+
+**Member Operations:**
+
+- `GET: /admin/groups/<groupIri>/members` : return all group members
+
+
+## Group Operations
+
+### Create Group
+
+- Required permission: SystemAdmin / hasProjectAllAdminPermission
+/ hasProjectAllGroupAdminPermission
+- Required information: name (unique inside project), project IRI
+- Optional information: group description
+- Returns information about the newly created group
+- TypeScript Docs: groupFormats - CreateGroupApiRequestV1
+- POST: `/admin/groups`
+- BODY:
 
 ```
 {
@@ -40,31 +58,44 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 }
 ```
 
-  - **Update group information**:
+### Update group information
 
-      - Required permission: SystemAdmin / hasProjectAllAdminPermission
-        / hasProjectAllGroupAdminPermission /
-        hasProjectRestrictedGroupAdminPermission (for this group)
-      - Changeable information: name, description, status, selfjoin
-      - TypeScript Docs: groupFormats - ChangeGroupApiRequestV1
-      - PUT: `/admin/groups/<groupIri>`
-      - BODY:
+- Required permission: SystemAdmin / hasProjectAllAdminPermission
+/ hasProjectAllGroupAdminPermission /
+hasProjectRestrictedGroupAdminPermission (for this group)
+- Changeable information: `name`, `description`, `selfjoin`
+- TypeScript Docs: groupFormats - ChangeGroupApiRequestADM
+- PUT: `/admin/groups/<groupIri>`
+- BODY:
 
 ```
 {
   "name": "UpdatedGroupName",
   "description": "UpdatedGroupDescription".
-  "status": true,
   "selfjoin": false
 }
 ```
 
-  - **Delete group (-\update group)**:
+### Change Group Status:
 
-      - Required permission: SystemAdmin / hasProjectAllAdminPermission
-      - Remark: The same as updating a group and changing `status` to
-        `false`. To un-delete, set `status` to `true`.
-      - DELETE: `/admin/groups/<groupIri>`
+- Required permission: SystemAdmin / hasProjectAllAdminPermission
+- Changeable information: `status`
+- Remark: Deleting a group, removes all members from the group.
+- PUT: `/admin/groups/<groupIri>/status`
+- BODY:
+
+```
+{
+  "status": false
+}
+```
+
+### Delete Group:
+
+- Required permission: SystemAdmin / hasProjectAllAdminPermission
+- Remark: The same as changing the groups `status` to
+`false`. To un-delete, set `status` to `true`.
+- DELETE: `/admin/groups/<groupIri>`
 
 Example Group Information stored in admin named graph: :
 
@@ -78,3 +109,10 @@ Example Group Information stored in admin named graph: :
      knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 ```
 
+## Member Operations
+
+### Get Group Members
+
+- Returns all group members
+- Required permission: SystemAdmin / ProjectAdmin
+- GET: `/admin/groups/<groupIri>/members`

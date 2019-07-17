@@ -54,9 +54,10 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         case GroupGetADM(groupIri, requestingUser) => groupGetADM(groupIri, requestingUser)
         case MultipleGroupsGetRequestADM(groupIris, requestingUser) => multipleGroupsGetRequestADM(groupIris, requestingUser)
         case GroupGetRequestADM(groupIri, requestingUser) => groupGetRequestADM(groupIri, requestingUser)
-        case GroupMembersGetRequestADM(groupIri, userProfileV1) => groupMembersGetRequestADM(groupIri, userProfileV1)
-        case GroupCreateRequestADM(newGroupInfo, userProfile, apiRequestID) => createGroupADM(newGroupInfo, userProfile, apiRequestID)
-        case GroupChangeRequestADM(groupIri, changeGroupRequest, userProfileV1, apiRequestID) => changeGroupBasicInformationRequestADM(groupIri, changeGroupRequest, userProfileV1, apiRequestID)
+        case GroupMembersGetRequestADM(groupIri, requestingUser) => groupMembersGetRequestADM(groupIri, requestingUser)
+        case GroupCreateRequestADM(newGroupInfo, requestingUser, apiRequestID) => createGroupADM(newGroupInfo, requestingUser, apiRequestID)
+        case GroupChangeRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID) => changeGroupBasicInformationRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID)
+        case GroupChangeStatusRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID) => changeGroupStatusRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -189,7 +190,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Gets the group members with the given grop IRI and returns the information as a [[GroupMembersGetResponseADM]]
+      * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
+      * Only project and system admins are allowed to access this information.
       *
       * @param groupIri the IRI of the group.
       * @param requestingUser the user initiating the request.
@@ -197,12 +199,21 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       */
     private def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Future[GroupMembersGetResponseADM] = {
 
-        //log.debug("groupMembersByIRIGetRequestV1 - groupIri: {}", groupIri)
+        log.debug("groupMembersGetRequestADM - groupIri: {}", groupIri)
 
         for {
-            groupExists: Boolean <- groupExists(groupIri)
+            maybeGroupADM: Option[GroupADM] <- groupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)
 
-            _ = if (!groupExists) throw NotFoundException(s"Group <$groupIri> not found")
+            _ = maybeGroupADM match {
+                case Some(group) =>
+                    // check if the requesting user is allowed to access the information
+                    if (!requestingUser.permissions.isProjectAdmin(group.project.id) && !requestingUser.permissions.isSystemAdmin) {
+                        // not a project admin and not a system admin
+                        throw ForbiddenException("Project members can only be retrieved by a project or system admin.")
+                    }
+                case None =>
+                    throw NotFoundException(s"Group <$groupIri> not found")
+            }
 
             sparqlQueryString <- Future(queries.sparql.v1.txt.getGroupMembersByIri(
                 triplestore = settings.triplestoreType,
@@ -353,6 +364,61 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                 apiRequestID,
                 groupIri,
                 () => changeGroupTask(groupIri, changeGroupRequest, requestingUser)
+            )
+        } yield taskResult
+
+    }
+
+    /**
+      * Change group's basic information.
+      *
+      * @param groupIri           the IRI of the group we want to change.
+      * @param changeGroupRequest the change request.
+      * @param requestingUser     the user making the request.
+      * @param apiRequestID       the unique request ID.
+      * @return a [[GroupOperationResponseADM]].
+      */
+    private def changeGroupStatusRequestADM(groupIri: IRI, changeGroupRequest: ChangeGroupApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[GroupOperationResponseADM] = {
+
+        /**
+          * The actual change group task run with an IRI lock.
+          */
+        def changeGroupStatusTask(groupIri: IRI, changeGroupRequest: ChangeGroupApiRequestADM, requestingUser: UserADM): Future[GroupOperationResponseADM] = for {
+
+            _ <- Future(
+                // check if necessary information is present
+                if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
+            )
+
+            /* Get the project IRI which also verifies that the group exists. */
+            maybeGroupADM <- groupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)
+            groupADM: GroupADM = maybeGroupADM.getOrElse(throw NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
+
+            /* check if the requesting user is allowed to perform updates */
+            _ = if (!requestingUser.permissions.isProjectAdmin(groupADM.project.id) && !requestingUser.permissions.isSystemAdmin) {
+                // not a project admin and not a system admin
+                throw ForbiddenException("Group's status can only be changed by a project or system admin.")
+            }
+
+            /* create the update request */
+            groupUpdatePayload = GroupUpdatePayloadADM(
+                status = changeGroupRequest.status
+            )
+
+            result: GroupOperationResponseADM <- updateGroupADM(groupIri, groupUpdatePayload, KnoraSystemInstances.Users.SystemUser)
+
+            _ = if (!result.group.status) {
+                // we have deleted the group. now remove members from group.
+            }
+
+        } yield result
+
+        for {
+            // run the change status task with an IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                groupIri,
+                () => changeGroupStatusTask(groupIri, changeGroupRequest, requestingUser)
             )
         } yield taskResult
 
