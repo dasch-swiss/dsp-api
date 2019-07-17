@@ -182,7 +182,7 @@ case class ProjectKeywordsGetRequestADM(projectIri: IRI,
 /**
   * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
   *
-  * @param identifier     the identifier for the project.
+  * @param identifier     the identifier of the project.
   * @param requestingUser the user making the request.
   */
 @ApiMayChange
@@ -191,7 +191,7 @@ case class ProjectRestrictedViewSettingsGetADM(identifier: ProjectIdentifierADM,
 /**
   * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
   *
-  * @param identifier     the identifier for the project.
+  * @param identifier     the identifier of the project.
   * @param requestingUser the user making the request.
   */
 @ApiMayChange
@@ -518,9 +518,9 @@ object ProjectIdentifierType extends Enumeration {
 
     type ProjectIdentifierType
 
-    val IRI = Value(0, "iri")
-    val SHORTCODE = Value(1, "shortcode")
-    val SHORTNAME = Value(2, "shortname")
+    val IRI: Value = Value(0, "iri")
+    val SHORTCODE: Value = Value(1, "shortcode")
+    val SHORTNAME: Value = Value(2, "shortname")
 }
 
 
@@ -528,7 +528,7 @@ object ProjectIdentifierType extends Enumeration {
 /**
   * API MAY CHANGE: Represents the project's restricted view settings.
   *
-  * @param size      the size as defined by IIIF.
+  * @param size     the x size.
   * @param watermark the watermark file.
   */
 @ApiMayChange

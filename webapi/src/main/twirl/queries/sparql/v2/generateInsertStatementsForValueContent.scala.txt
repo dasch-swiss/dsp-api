@@ -114,7 +114,7 @@
 
             case decimalValue: DecimalValueContentV2 => {
 
-                <@newValueIri> knora-base:valueHasDecimal "@decimalValue.valueHasDecimal"^^xsd:valueHasDecimal .
+                <@newValueIri> knora-base:valueHasDecimal "@decimalValue.valueHasDecimal"^^xsd:decimal .
 
             }
 

@@ -34,7 +34,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadata
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{InstrumentationSupport, StringFormatter}
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.concurrent.Future
 
@@ -86,7 +86,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             projectsResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
             // _ = log.debug(s"projectsGetADM - projectsResponse: $projectsResponse")
 
-            statements: List[(SubjectV2, Map[IRI, Seq[LiteralV2]])] = projectsResponse.statements.toList
+            statements: List[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])] = projectsResponse.statements.toList
             // _ = log.debug(s"projectsGetADM - statements: $statements")
 
             projectIris = statements.map {
@@ -96,7 +96,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris, requestingUser)
 
             projects: Seq[ProjectADM] = statements.map {
-                case (projectIriSubject: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                case (projectIriSubject: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
                     val projectOntologies = ontologiesForProjects.getOrElse(projectIriSubject.toString, Seq.empty[IRI])
                     statements2ProjectADM(statements = (projectIriSubject, propsMap), ontologies = projectOntologies)
             }
@@ -385,10 +385,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
             restrictedViewSettings = if (projectResponse.statements.nonEmpty) {
 
-                val (_, propsMap): (SubjectV2, Map[IRI, Seq[LiteralV2]]) = projectResponse.statements.head
+                val (_, propsMap): (SubjectV2, Map[SmartIri, Seq[LiteralV2]]) = projectResponse.statements.head
 
-                val size = propsMap.get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize).map(_.head.asInstanceOf[StringLiteralV2].value)
-                val watermark = propsMap.get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark).map(_.head.asInstanceOf[StringLiteralV2].value)
+                val size = propsMap.get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value)
+                val watermark = propsMap.get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value)
 
                 Some(ProjectRestrictedViewSettingsADM(size, watermark))
             } else {
@@ -743,24 +743,24 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       * @param ontologies the ontologies in the project.
       * @return a [[ProjectADM]] representing information about project.
       */
-    private def statements2ProjectADM(statements: (SubjectV2, Map[IRI, Seq[LiteralV2]]), ontologies: Seq[IRI]): ProjectADM = {
+    private def statements2ProjectADM(statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]), ontologies: Seq[IRI]): ProjectADM = {
 
         // log.debug("statements2ProjectADM - statements: {}", statements)
 
         val projectIri: IRI = statements._1.toString
-        val propsMap: Map[IRI, Seq[LiteralV2]] = statements._2
+        val propsMap: Map[SmartIri, Seq[LiteralV2]] = statements._2
 
         ProjectADM(
             id = projectIri,
-            shortname = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
-            shortcode = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectShortcode, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortcode defined.")).head.asInstanceOf[StringLiteralV2].value,
-            longname = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
-            description = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")).map(_.asInstanceOf[StringLiteralV2]),
-            keywords = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
-            logo = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
+            shortname = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectShortname.toSmartIri, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
+            shortcode = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectShortcode.toSmartIri, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortcode defined.")).head.asInstanceOf[StringLiteralV2].value,
+            longname = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLongname.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value),
+            description = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectDescription.toSmartIri, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")).map(_.asInstanceOf[StringLiteralV2]),
+            keywords = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectKeyword.toSmartIri, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
+            logo = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLogo.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value),
             ontologies = ontologies,
-            status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
-            selfjoin = propsMap.getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value
+            status = propsMap.getOrElse(OntologyConstants.KnoraAdmin.Status.toSmartIri, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no status defined.")).head.asInstanceOf[BooleanLiteralV2].value,
+            selfjoin = propsMap.getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")).head.asInstanceOf[BooleanLiteralV2].value
         )
     }
 

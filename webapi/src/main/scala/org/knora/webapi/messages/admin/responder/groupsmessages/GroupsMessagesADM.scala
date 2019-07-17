@@ -106,7 +106,7 @@ case class GroupsGetRequestADM(requestingUser: UserADM) extends GroupsResponderR
   * Get everything about a single group identified through its IRI. A successful response will be
   * an [[Option[GroupADM] ]], which will be `None` if the group was not found.
   *
-  * @param groupIri   IRI of the group.
+  * @param groupIri       IRI of the group.
   * @param requestingUser the user initiating the request.
   */
 case class GroupGetADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
@@ -115,7 +115,7 @@ case class GroupGetADM(groupIri: IRI, requestingUser: UserADM) extends GroupsRes
   * Get everything about a single group identified through its IRI. The response will be a
   * [[GroupGetResponseADM]], or an error if the group was not found.
   *
-  * @param groupIri   IRI of the group.
+  * @param groupIri       IRI of the group.
   * @param requestingUser the user initiating the request.
   */
 case class GroupGetRequestADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
@@ -124,7 +124,7 @@ case class GroupGetRequestADM(groupIri: IRI, requestingUser: UserADM) extends Gr
   * Get everything about a multiple groups identified by their IRIs. The response will be a
   * [[Set[GroupGetResponseADM] ]], or an error if one or more groups was not found.
   *
-  * @param groupIris the IRIs of the groups being requested.
+  * @param groupIris      the IRIs of the groups being requested.
   * @param requestingUser the user initiating the request.
   */
 case class MultipleGroupsGetRequestADM(groupIris: Set[IRI], requestingUser: UserADM) extends GroupsResponderRequestADM
@@ -132,7 +132,7 @@ case class MultipleGroupsGetRequestADM(groupIris: Set[IRI], requestingUser: User
 /**
   * Returns all members of the group identified by iri.
   *
-  * @param groupIri   IRI of the group.
+  * @param groupIri       IRI of the group.
   * @param requestingUser the user initiating the request.
   */
 case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
@@ -140,32 +140,32 @@ case class GroupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM) ext
 /**
   * Requests the creation of a new group.
   *
-  * @param createRequest the [[CreateGroupApiRequestADM]] information for creating the new group.
+  * @param createRequest  the [[CreateGroupApiRequestADM]] information for creating the new group.
   * @param requestingUser the user initiating the request.
-  * @param apiRequestID  the ID of the API request.
+  * @param apiRequestID   the ID of the API request.
   */
 case class GroupCreateRequestADM(createRequest: CreateGroupApiRequestADM,
                                  requestingUser: UserADM,
-                                    apiRequestID: UUID) extends GroupsResponderRequestADM
+                                 apiRequestID: UUID) extends GroupsResponderRequestADM
 
 /**
   * Request updating of an existing group.
   *
   * @param groupIri           the IRI of the group to be updated.
   * @param changeGroupRequest the data which needs to be update.
-  * @param requestingUser the user initiating the request.
+  * @param requestingUser     the user initiating the request.
   * @param apiRequestID       the ID of the API request.
   */
 case class GroupChangeRequestADM(groupIri: IRI,
-                                    changeGroupRequest: ChangeGroupApiRequestADM,
+                                 changeGroupRequest: ChangeGroupApiRequestADM,
                                  requestingUser: UserADM,
-                                    apiRequestID: UUID) extends GroupsResponderRequestADM
+                                 apiRequestID: UUID) extends GroupsResponderRequestADM
 
 /**
   * Request updating the group's permissions.
   *
   * @param requestingUser the user initiating the request.
-  * @param apiRequestID the ID of the API request.
+  * @param apiRequestID   the ID of the API request.
   */
 case class GroupPermissionUpdateRequestADM(requestingUser: UserADM,
                                            apiRequestID: UUID) extends GroupsResponderRequestADM
@@ -258,10 +258,10 @@ case class GroupADM(id: IRI,
   *
   */
 case class GroupShortADM(id: IRI,
-                    name: String,
-                    description: String,
-                    status: Boolean,
-                    selfjoin: Boolean)
+                         name: String,
+                         description: String,
+                         status: Boolean,
+                         selfjoin: Boolean)
 
 /**
   * Payload used for updating of an existing group.

@@ -23,7 +23,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.store.triplestoremessages.{SubjectV2, _}
 import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
@@ -34,7 +34,7 @@ import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch._
 import org.knora.webapi.responders.v2.search.gravsearch.prequery._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
-import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
+import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, RdfResources, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
@@ -231,7 +231,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 // println(triplestoreSpecificQuery.toSparql)
 
                 for {
-                    searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificQuery.toSparql)).mapTo[SparqlConstructResponse]
+                    searchResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificQuery.toSparql)).mapTo[SparqlExtendedConstructResponse]
 
                     // separate resources and value objects
                     queryResultsSep = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, requestingUser = requestingUser)
@@ -249,7 +249,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                     val expectedValueObjects: Set[IRI] = valueObjectIrisPerResource(mainResIri)
 
                                     // value property assertions for the current resource
-                                    val valuePropAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
+                                    val valuePropAssertions: Map[SmartIri, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
 
                                     // all value objects contained in `valuePropAssertions`
                                     val resAndValueObjIris: MainQueryResultProcessor.ResourceIrisAndValueObjectIris = MainQueryResultProcessor.collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropAssertions)
@@ -532,7 +532,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 // println(triplestoreSpecificSparql)
 
                 for {
-                    mainQueryResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
+                    mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlExtendedConstructResponse]
 
                     // for each main resource, check if all dependent resources and value objects are still present after permission checking
                     // this ensures that the user has sufficient permissions on the whole graph pattern
@@ -703,10 +703,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
                     // _ = println(resourceRequestSparql)
 
-                    resourceRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourceRequestSparql)).mapTo[SparqlConstructResponse]
+                    resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(resourceRequestSparql)).mapTo[SparqlExtendedConstructResponse]
 
                     // separate resources and values
-                    queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = resourcesInProjectGetRequestV2.requestingUser)
+                    queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = resourcesInProjectGetRequestV2.requestingUser)
 
                     // check if there are resources the user does not have sufficient permissions to see
                     forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparated.size) {
@@ -824,20 +824,23 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(searchResourceByLabelSparql)
 
-            searchResourceByLabelResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(searchResourceByLabelSparql)).mapTo[SparqlConstructResponse]
+            searchResourceByLabelResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(searchResourceByLabelSparql)).mapTo[SparqlExtendedConstructResponse]
 
             // collect the IRIs of main resources returned
             mainResourceIris: Set[IRI] = searchResourceByLabelResponse.statements.foldLeft(Set.empty[IRI]) {
-                case (acc: Set[IRI], (subjIri: IRI, assertions: Seq[(IRI, String)])) =>
-                    //statement.pred == OntologyConstants.KnoraBase.IsMainResource && statement.obj.toBoolean
-
+                case (acc: Set[IRI], (subject: SubjectV2, assertions: Map[SmartIri, Seq[LiteralV2]])) =>
                     // check if the assertions represent a main resource and include its IRI if so
-                    val subjectIsMainResource: Boolean = assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.Resource)) && assertions.exists {
-                        case (pred, obj) =>
-                            pred == OntologyConstants.KnoraBase.IsMainResource && obj.toBoolean
+                    val subjectIsMainResource: Boolean = assertions.getOrElse(OntologyConstants.KnoraBase.IsMainResource.toSmartIri, Seq.empty).headOption match {
+                        case Some(BooleanLiteralV2(booleanVal)) => booleanVal
+                        case _ => false
                     }
 
                     if (subjectIsMainResource) {
+                        val subjIri: IRI = subject match {
+                            case IriSubjectV2(value) => value
+                            case other => throw InconsistentTriplestoreDataException(s"Unexpected subject of resource: $other")
+                        }
+
                         acc + subjIri
                     } else {
                         acc
