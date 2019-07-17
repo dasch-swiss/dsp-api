@@ -29,7 +29,7 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -414,9 +414,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
             // check if the given project IRI represents an actual project
             projectInfoMaybe: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
-                maybeIri = Some(projectIri.toString),
-                maybeShortname = None,
-                maybeShortcode = None,
+                ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
                 requestingUser = requestingUser
             )).mapTo[Option[ProjectADM]]
 

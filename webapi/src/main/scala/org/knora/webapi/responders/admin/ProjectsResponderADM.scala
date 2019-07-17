@@ -34,7 +34,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadata
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.{InstrumentationSupport, SmartIri, StringFormatter}
 
 import scala.concurrent.Future
 
