@@ -458,8 +458,6 @@
                            "a lien vers"@fr ,
                            "ha Link verso"@it ;
 
-                rdfs:comment "Represents a direct connection between two resources"@en ;
-
                 :isEditable true ;
 
                 :objectClassConstraint :LinkValue ;
