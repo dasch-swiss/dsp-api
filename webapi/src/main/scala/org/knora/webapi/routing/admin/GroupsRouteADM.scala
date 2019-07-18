@@ -69,6 +69,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     private val MembersResponse = classRef(OntologyConstants.KnoraAdminV2.MembersResponse.toSmartIri)
     private val Group = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri)
 
+    /**
+      * Returns all groups
+      */
     private def getGroups: Route = path(GroupsBasePath) {
         get {
             /* return all groups */
@@ -92,6 +95,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             httpGet(BasePath)
         } returns GroupsResponse
 
+    /**
+      * Creates a group
+      */
     private def createGroup: Route = path(GroupsBasePath) {
         post {
             /* create a new group */
@@ -126,6 +132,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             )
         } returns GroupResponse
 
+    /**
+      * Returns a single group identified by IRI.
+      */
     private def getGroupByIri: Route = path(GroupsBasePath / Segment) { value =>
         get {
             /* returns a single group identified through iri */
@@ -153,6 +162,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             httpGet(arg("iri"))
         } returns GroupResponse
 
+    /**
+      * Update basic group information.
+      */
     private def updateGroup: Route = path(GroupsBasePath / Segment) { value =>
         put {
             /* update a group identified by iri */
@@ -200,6 +212,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         } returns GroupResponse
 
 
+    /**
+      * Update the group's status.
+      */
     private def changeGroupStatus: Route = path(GroupsBasePath / Segment / "status") { value =>
         put {
             /* change the status of a group identified by iri */
@@ -250,6 +265,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         } returns GroupResponse
 
 
+    /**
+      * Deletes a group (sets status to false)
+      */
     private def deleteGroup: Route = path(GroupsBasePath / Segment) { value =>
         delete {
             /* update group status to false */
@@ -285,6 +303,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         } returns GroupResponse
 
 
+    /**
+      * Gets members of single group.
+      */
     private def getGroupMembers: Route = path(GroupsBasePath / Segment / "members") { value =>
         get {
             /* returns all members of the group identified through iri */
@@ -312,6 +333,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             httpGet(str("members") / argMember("group", "id"))
         } returns MembersResponse
 
+    /**
+      * All defined routes need to be combined here.
+      */
     override def knoraApiPath: Route = getGroups ~ createGroup ~ getGroupByIri ~
         updateGroup ~ changeGroupStatus ~ deleteGroup ~ getGroupMembers
 

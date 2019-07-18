@@ -26,7 +26,7 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserGroupMembershipRemoveRequestADM, UserIdentifierADM, UserInformationTypeADM, UserOperationResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
@@ -190,16 +190,15 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     }
 
     /**
-      * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
-      * Only project and system admins are allowed to access this information.
+      * Gets the members with the given group IRI and returns the information as a sequence of [[UserADM]].
       *
       * @param groupIri the IRI of the group.
       * @param requestingUser the user initiating the request.
-      * @return
+      * @return A sequence of [[UserADM]]
       */
-    private def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Future[GroupMembersGetResponseADM] = {
+    private def groupMembersGetADM(groupIri: IRI, requestingUser: UserADM): Future[Seq[UserADM]] = {
 
-        log.debug("groupMembersGetRequestADM - groupIri: {}", groupIri)
+        log.debug("groupMembersGetADM - groupIri: {}", groupIri)
 
         for {
             maybeGroupADM: Option[GroupADM] <- groupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)
@@ -207,7 +206,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             _ = maybeGroupADM match {
                 case Some(group) =>
                     // check if the requesting user is allowed to access the information
-                    if (!requestingUser.permissions.isProjectAdmin(group.project.id) && !requestingUser.permissions.isSystemAdmin) {
+                    if (!requestingUser.permissions.isProjectAdmin(group.project.id) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser) {
                         // not a project admin and not a system admin
                         throw ForbiddenException("Project members can only be retrieved by a project or system admin.")
                     }
@@ -241,7 +240,28 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
             _ = log.debug("groupMembersGetRequestADM - users: {}", users)
 
-        } yield GroupMembersGetResponseADM(members = users)
+        } yield users
+    }
+
+    /**
+      * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
+      * Only project and system admins are allowed to access this information.
+      *
+      * @param groupIri the IRI of the group.
+      * @param requestingUser the user initiating the request.
+      * @return A [[GroupMembersGetResponseADM]]
+      */
+    private def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Future[GroupMembersGetResponseADM] = {
+
+        log.debug("groupMembersGetRequestADM - groupIri: {}", groupIri)
+
+        for {
+            maybeMembersListToReturn <- groupMembersGetADM(groupIri, requestingUser)
+            result = maybeMembersListToReturn match {
+                case members: Seq[UserADM] if members.nonEmpty => GroupMembersGetResponseADM(members = members)
+                case _ => throw NotFoundException(s"No members found.")
+            }
+        } yield result
     }
 
     /**
@@ -405,13 +425,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                 status = changeGroupRequest.status
             )
 
-            result: GroupOperationResponseADM <- updateGroupADM(groupIri, groupUpdatePayload, KnoraSystemInstances.Users.SystemUser)
+            // update group status
+            updateGroupResult: GroupOperationResponseADM <- updateGroupADM(groupIri, groupUpdatePayload, KnoraSystemInstances.Users.SystemUser)
 
-            _ = if (!result.group.status) {
-                // we have deleted the group. now remove members from group.
-            }
+            // remove all members from group if status is false
+            operationResponse <- removeGroupMembersIfNecessary(updateGroupResult.group, apiRequestID)
 
-        } yield result
+        } yield operationResponse
 
         for {
             // run the change status task with an IRI lock
@@ -592,6 +612,36 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
             _ = log.debug("groupByNameAndProjectExists - name: {}, projectIri: {}, result: {}", name, projectIri, result)
         } yield result
+
+    }
+
+    /**
+      * In the case that the group was deactivated (status = false), the
+      * group members need to be removed from the group.
+      *
+      * @param changedGroup     the group with the new status.
+      * @param apiRequestID     the unique request ID.
+      * @return a [[GroupOperationResponseADM]]
+      */
+    private def removeGroupMembersIfNecessary(changedGroup: GroupADM, apiRequestID: UUID): Future[GroupOperationResponseADM] = {
+
+        if (changedGroup.status) {
+            // group active. no need to remove members.
+            log.debug("removeGroupMembersIfNecessary - group active. no need to remove members.")
+            FastFuture.successful(GroupOperationResponseADM(changedGroup))
+        } else {
+            // group deactivated. need to remove members.
+            log.debug("removeGroupMembersIfNecessary - group deactivated. need to remove members.")
+            for {
+                members: Seq[UserADM] <- groupMembersGetADM(changedGroup.id, KnoraSystemInstances.Users.SystemUser)
+
+                seqOfFutures: Seq[Future[UserOperationResponseADM]] = members.map { user: UserADM =>
+                    (responderManager ? UserGroupMembershipRemoveRequestADM(userIri = user.id, groupIri = changedGroup.id, requestingUser = KnoraSystemInstances.Users.SystemUser, apiRequestID = apiRequestID)).mapTo[UserOperationResponseADM]
+                }
+                userOperationResults: Seq[UserOperationResponseADM] <- Future.sequence(seqOfFutures)
+
+            } yield GroupOperationResponseADM(group = changedGroup)
+        }
 
     }
 
