@@ -31,8 +31,9 @@
   maybeStartDate: Option[Instant] = None,
   maybeEndDate: Option[Instant] = None)
 
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT DISTINCT ?versionDate ?author WHERE {
     <@resourceIri> knora-base:isDeleted false ;

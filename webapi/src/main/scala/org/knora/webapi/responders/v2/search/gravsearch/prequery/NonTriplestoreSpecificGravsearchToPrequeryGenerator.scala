@@ -200,8 +200,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryGenerator(typeInspectionResult: 
 
     }
 
-    override def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-        SparqlTransformer.moveIsDeletedToEnd(patterns)
-    }
+    override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
 }
 

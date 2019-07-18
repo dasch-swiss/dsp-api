@@ -53,27 +53,7 @@ object SparqlTransformer {
     }
 
     /**
-      * Optimises `knora-base:isDeleted` by moving it to the end of a block.
-      *
-      * @param patterns the block of patterns to be optimised.
-      * @return the result of the optimisation.
-      */
-    def moveIsDeletedToEnd(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-        val (isDeletedPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
-            case statementPattern: StatementPattern =>
-                statementPattern.pred match {
-                    case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.IsDeleted => true
-                    case _ => false
-                }
-
-            case _ => false
-        }
-
-        otherPatterns ++ isDeletedPatterns
-    }
-
-    /**
-      * Transforms a non triplestore specific SELECT query to a query for GraphDB.
+      * Transforms a non-triplestore-specific SELECT query for GraphDB.
       */
     class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
         override def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
@@ -84,13 +64,11 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveIsDeletedToEnd(patterns)
-        }
+        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
     }
 
     /**
-      * Transforms non triplestore specific SELECT query to a query for a triplestore other than GraphDB (e.g., Fuseki).
+      * Transforms a non-triplestore-specific SELECT for a triplestore that does not have inference enabled (e.g., Fuseki).
       */
     class NoInferenceSelectToSelectTransformer extends SelectToSelectTransformer {
         private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -103,13 +81,13 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
             moveIsDeletedToEnd(patterns)
         }
     }
 
     /**
-      * Transforms non-triplestore-specific query patterns to GraphDB-specific ones.
+      * Transforms a non-triplestore-specific CONSTRUCT query for GraphDB.
       */
     class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
         override def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
@@ -120,13 +98,11 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-            moveIsDeletedToEnd(patterns)
-        }
+        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = patterns
     }
 
     /**
-      * Transforms non-triplestore-specific query patterns for a triplestore that does not have inference enabled.
+      * Transforms a non-triplestore-specific CONSTRUCT query for a triplestore that does not have inference enabled (e.g., Fuseki).
       */
     class NoInferenceConstructToConstructTransformer extends ConstructToConstructTransformer {
         private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -139,7 +115,7 @@ object SparqlTransformer {
 
         override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
-        override def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        override def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
             moveIsDeletedToEnd(patterns)
         }
     }
@@ -177,6 +153,26 @@ object SparqlTransformer {
         } else {
             throw AssertionException(s"Invalid property IRI: $propertyIri")
         }
+    }
+
+    /**
+      * Optimises `knora-base:isDeleted` by moving it to the end of a block.
+      *
+      * @param patterns the block of patterns to be optimised.
+      * @return the result of the optimisation.
+      */
+    private def moveIsDeletedToEnd(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+        val (isDeletedPatterns: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
+            case statementPattern: StatementPattern =>
+                statementPattern.pred match {
+                    case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.IsDeleted => true
+                    case _ => false
+                }
+
+            case _ => false
+        }
+
+        otherPatterns ++ isDeletedPatterns
     }
 
     /**

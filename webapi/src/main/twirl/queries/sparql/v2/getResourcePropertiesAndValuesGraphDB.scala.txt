@@ -283,10 +283,6 @@ CONSTRUCT {
                         ?referredResource knora-base:isDeleted false ;
                             ?referredResourcePred ?referredResourceObj .
                     }
-
-      				FILTER NOT EXISTS {
-                        ?referredResourcePred rdfs:subPropertyOf* knora-base:resourceProperty .
-     				}
                 }
             }
         }

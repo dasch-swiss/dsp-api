@@ -102,12 +102,12 @@ CONSTRUCT {
     ?resource rdf:type ?resourceType .
     ?resourceType rdfs:subClassOf* knora-base:Resource .
 
-    ?resource knora-base:isDeleted false ;
-        knora-base:attachedToProject ?resourceProject ;
+    ?resource knora-base:attachedToProject ?resourceProject ;
         knora-base:attachedToUser ?resourceCreator ;
         knora-base:hasPermissions ?resourcePermissions ;
         knora-base:creationDate ?creationDate ;
-        rdfs:label ?label .
+        rdfs:label ?label ;
+        knora-base:isDeleted false .
 
     @* Is this a version history request? *@
     @maybeVersionDate match {
@@ -264,12 +264,8 @@ CONSTRUCT {
                         rdf:predicate ?resourceLinkProperty ;
                         rdf:object ?referredResource .
 
-                    ?referredResource knora-base:isDeleted false ;
-                        ?referredResourcePred ?referredResourceObj .
-
-      				FILTER NOT EXISTS {
-                        ?referredResourcePred rdfs:subPropertyOf* knora-base:resourceProperty .
-     				}
+                    ?referredResource ?referredResourcePred ?referredResourceObj ;
+                        knora-base:isDeleted false .
                 }
             }
         }

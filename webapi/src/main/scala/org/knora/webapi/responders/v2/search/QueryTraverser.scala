@@ -52,12 +52,12 @@ trait WhereVisitor[Acc] {
   */
 trait WhereTransformer {
     /**
-      * Optimises the position of `knora-base:isDeleted` in a sequence of statement patterns. Does not recurse.
+      * Optimises the order of query patterns. Does not recurse.
       *
       * @param patterns the query patterns to be optimised.
       * @return the optimised query patterns.
       */
-    def optimiseIsDeleted(patterns: Seq[QueryPattern]): Seq[QueryPattern]
+    def optimiseQueryPatternOrder(patterns: Seq[QueryPattern]): Seq[QueryPattern]
 
     /**
       * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
@@ -244,7 +244,7 @@ object QueryTraverser {
             case bindPattern: BindPattern => Seq(bindPattern)
         }
 
-        whereTransformer.optimiseIsDeleted(transformedPatterns)
+        whereTransformer.optimiseQueryPatternOrder(transformedPatterns)
     }
 
     /**
