@@ -72,6 +72,9 @@ A number of core settings is additionally configurable through system environmen
 | app.triplestore.graphdb.password         | KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_PASSWORD         | root                 |
 | app.triplestore.fuseki.port              | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PORT              | 3030                 |
 | app.triplestore.fuseki.repository-name   | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME   | knora-test           |
+| app.use-redis-cache                      | KNORA_WEBAPI_USE_REDIS_CACHE                      | true                 |
+| app.redis.host                           | KNORA_WEBAPI_REDIS_HOST                           | localhost            |
+| app.redis.port                           | KNORA_WEBAPI_REDIS_PORT                           | 6379                 |
 
 ## Selectively Disabling Routes
 
