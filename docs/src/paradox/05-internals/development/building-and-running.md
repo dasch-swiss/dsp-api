@@ -42,6 +42,12 @@ $ cd KNORA_PROJECT_DIRECTORY/webapi/scripts
 $ ./graphdb-se-local-init-knora-test.sh
 ```
 
+Then in another terminal, start the [Redis Server](https://redis.io):
+
+```bash
+$ redis-server
+```
+
 Then go back to the webapi root directory and use SBT to start the API
 server:
 

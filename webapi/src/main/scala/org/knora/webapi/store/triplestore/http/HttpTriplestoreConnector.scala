@@ -48,7 +48,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.FakeTriplestore
+import org.knora.webapi.util.{FakeTriplestore, InstrumentationSupport}
 import org.knora.webapi.util.SparqlResultProtocol._
 import spray.json._
 
@@ -60,7 +60,7 @@ import scala.util.{Failure, Success, Try}
   * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
   * `application.conf`.
   */
-class HttpTriplestoreConnector extends Actor with ActorLogging {
+class HttpTriplestoreConnector extends Actor with ActorLogging with InstrumentationSupport {
 
     // MIME type constants.
     private val mimeTypeApplicationJson = "application/json"
@@ -794,7 +794,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 }
 
                 val took = System.currentTimeMillis() - start
-                log.info(s"[$statusCode] Triplestore query took: ${took}ms")
+                metricsLogger.info(s"[$statusCode] Triplestore query took: ${took}ms")
 
                 responseEntityStr
             } finally {

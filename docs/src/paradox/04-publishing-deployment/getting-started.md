@@ -92,6 +92,7 @@ The following endpoints are available for your local instance: 335114
 | Service | Host:Port | Tag Version      | Image Source | Container Port | Container Id | IsDebug |
 +=========+===========+==================+==============+================+==============+=========+
 | graphdb | :7200     | 8.0.0-7-ga7827e9 | build        | 7200           | 95d29c651090 |         |
+| redis   | :6379     | 5                | defined      | 6379           | 1b47c3d27362 |         |
 | salsah1 | :3335     | 8.0.0-7-ga7827e9 | build        | 3335           | 1795a58a4dd6 |         |
 | sipi    | :1024     | 8.0.0-7-ga7827e9 | build        | 1024           | 8b916936bb38 |         |
 | webapi  | :3333     | 8.0.0-7-ga7827e9 | build        | 3333           | 629588f04066 |         |
