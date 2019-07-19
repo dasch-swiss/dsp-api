@@ -24,7 +24,7 @@ import java.time.Instant
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM, PermissionADM, PermissionType}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
@@ -686,7 +686,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             // Get project info
             projectResponse <- {
                 responderManager ? ProjectGetRequestADM(
-                    maybeIri = Some(resourceInfoResponse.resource_info.get.project_id),
+                    identifier = ProjectIdentifierADM(maybeIri = Some(resourceInfoResponse.resource_info.get.project_id)),
                     requestingUser = changeFileValueRequest.userProfile
                 )
             }.mapTo[ProjectGetResponseADM]

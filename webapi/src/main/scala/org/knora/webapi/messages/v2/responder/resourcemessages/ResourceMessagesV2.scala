@@ -30,7 +30,7 @@ import akka.util.Timeout
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
@@ -615,7 +615,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 
             // Get information about the project that the resource should be created in.
             projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-                maybeIri = Some(projectIri.toString),
+                ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
                 requestingUser = requestingUser
             )).mapTo[ProjectGetResponseADM]
 

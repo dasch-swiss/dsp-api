@@ -26,7 +26,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
@@ -1265,7 +1265,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             // Get information about the project in which the resources will be created.
             projectInfoResponse <- {
                 responderManager ? ProjectGetRequestADM(
-                    maybeIri = Some(projectIri),
+                    identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
                     requestingUser = requestingUser
                 )
             }.mapTo[ProjectGetResponseADM]
@@ -1959,7 +1959,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             // Get project info
             projectResponse <- {
                 responderManager ? ProjectGetRequestADM(
-                    maybeIri = Some(projectIri),
+                    identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
                     requestingUser = userProfile
                 )
             }.mapTo[ProjectGetResponseADM]

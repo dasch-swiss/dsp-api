@@ -1685,7 +1685,24 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
       * @param iri the IRI to be checked.
       */
     def isKnoraProjectIriStr(iri: IRI): Boolean = {
-        isIri(iri) && iri.startsWith("http://" + IriDomain + "/projects/")
+        isIri(iri) && (iri.startsWith("http://" + IriDomain + "/projects/") || isKnoraBuiltInProjectIriStr(iri))
+    }
+
+    /**
+      * Returns `true` if an IRI string looks like a Knora built-in IRI:
+      *  - http://www.knora.org/ontology/knora-admin#SystemProject
+      *  - http://www.knora.org/ontology/knora-admin#SharedOntologiesProject
+      *
+      * @param iri the IRI to be checked.
+      */
+    def isKnoraBuiltInProjectIriStr(iri: IRI): Boolean = {
+
+        val builtInProjects = Seq(
+            OntologyConstants.KnoraAdmin.SystemProject,
+            OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
+        )
+
+        isIri(iri) && builtInProjects.contains(iri)
     }
 
     /**

@@ -36,7 +36,7 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator}
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{GetImageMetadataRequest, GetImageMetadataResponseV2}
 import org.knora.webapi.messages.v1.responder.ontologymessages._
@@ -47,7 +47,7 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.XmlImportNamespaceInfoV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.util.{DateUtilV1, FileUtil, MessageUtil, SmartIri}
+import org.knora.webapi.util.{DateUtilV1, FileUtil, SmartIri}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
 import org.xml.sax.SAXException
@@ -221,7 +221,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
             for {
                 projectShortcode: String <- for {
-                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(projectIri), requestingUser = userADM)).mapTo[ProjectGetResponseADM]
+                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(projectIri)), requestingUser = userADM)).mapTo[ProjectGetResponseADM]
                 } yield projectResponse.project.shortcode
 
                 file <- apiRequest.file match {
@@ -329,7 +329,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
             for {
                 projectShortcode: String <- for {
-                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(projectId), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
+                    projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(projectId)), requestingUser = userProfile)).mapTo[ProjectGetResponseADM]
                 } yield projectResponse.project.shortcode
 
                 resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] = resourceRequest.map {

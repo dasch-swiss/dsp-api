@@ -185,18 +185,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             }
 
             "return 'BadRequest' if nothing would be changed during the update" in {
-
                 an [BadRequestException] should be thrownBy ChangeGroupApiRequestADM(None, None, None, None)
-
-                /*
-                actorUnderTest ! GroupChangeRequestADM(
-                    newGroupIri.get,
-                    ChangeGroupApiRequestADM(None, None, None, None),
-                    SharedAdminTestData.imagesUser01,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException(s"No data sent in API request.")))
-                */
             }
 
         }
@@ -215,6 +204,34 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                     SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.RESTRICTED),
                     SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.RESTRICTED)
                 ).map(_.id)
+            }
+
+            "remove all members when group is deactivated" in {
+                responderManager ! GroupMembersGetRequestADM(
+                    groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+                    requestingUser = SharedTestDataADM.rootUser
+                )
+
+                val membersBeforeStatusChange: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
+                membersBeforeStatusChange.members.size shouldBe 2
+
+                responderManager ! GroupChangeStatusRequestADM(
+                    groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+                    ChangeGroupApiRequestADM(status = Some(false)),
+                    SharedTestDataADM.imagesUser01,
+                    UUID.randomUUID
+                )
+
+                val statusChangeResponse = expectMsgType[GroupOperationResponseADM](timeout)
+
+                statusChangeResponse.group.status shouldBe false
+
+                responderManager ! GroupMembersGetRequestADM(
+                    groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+                    requestingUser = SharedTestDataADM.rootUser
+                )
+
+                expectMsg(Failure(NotFoundException("No members found.")))
             }
 
             "return 'NotFound' when the group IRI is unknown" in {
