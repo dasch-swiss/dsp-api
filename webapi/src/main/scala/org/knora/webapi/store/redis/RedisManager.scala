@@ -341,7 +341,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
             throw EmptyKey("The key under which the value should be written is empty. Aborting writing to redis.")
 
         if (value.isEmpty)
-            throw throw EmptyValue("The string value is empty. Aborting writing to redis.")
+            throw EmptyValue("The string value is empty. Aborting writing to redis.")
 
         val operationFuture: Future[Boolean] = Future {
 
