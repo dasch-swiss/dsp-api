@@ -80,7 +80,8 @@ CONSTRUCT {
         ?resourceValueProperty ?valueObject .
 
     ?valueObject ?valueObjectProperty ?valueObjectValue ;
-        knora-base:valueHasUUID ?currentValueUUID .
+        knora-base:valueHasUUID ?currentValueUUID ;
+        knora-base:hasPermissions ?currentValuePermissions .
 
     @if(maybeStandoffMinStartIndex.nonEmpty) {
         ?valueObject knora-base:valueHasStandoff ?standoffNode .
@@ -185,6 +186,9 @@ CONSTRUCT {
                             (?otherValueObjectCreationDate > ?valueObjectCreationDate)
                         )
                     }
+
+                    @* Use the permissions from the current version. *@
+                    ?currentValue knora-base:hasPermissions ?currentValuePermissions
                 }
 
                 case None => {
@@ -210,6 +214,8 @@ CONSTRUCT {
 
                         case None => {}
                     }
+
+                    ?valueObject knora-base:hasPermissions ?currentValuePermissions .
                 }
             }
 
@@ -226,7 +232,7 @@ CONSTRUCT {
                 ?valueObject a ?valueObjectType ;
                     ?valueObjectProperty ?valueObjectValue .
 
-                FILTER(?valueObjectProperty != knora-base:valueHasStandoff)
+                FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
 
                 @* Exclude knora-base:valueHasString if requested. *@
 
