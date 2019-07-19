@@ -21,11 +21,16 @@ package org.knora.webapi.store
 
 import akka.actor._
 import akka.event.LoggingReceive
-import org.knora.webapi._
+import org.knora.webapi.{ActorMaker, KnoraDispatchers, LiveActorMaker, Settings, UnexpectedMessageException}
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.store.iiif.IIIFManager
+import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
+import org.knora.webapi.util.ActorUtil
+
+import scala.concurrent.ExecutionContext
 
 /**
   * This actor receives messages for different stores, and forwards them to the corresponding store manager.
@@ -37,18 +42,39 @@ class StoreManager extends Actor with ActorLogging {
     this: ActorMaker =>
 
     /**
-      * Starts the TriplestoreManager
+      * The Knora Akka actor system.
+      */
+    protected implicit val system: ActorSystem = context.system
+
+    /**
+      * The Akka actor system's execution context for futures.
+      */
+    protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+
+    /**
+      * The Knora settings.
+      */
+    protected val settings = Settings(system)
+
+    /**
+      * Starts the Triplestore Manager Actor
       */
     protected lazy val triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TriplestoreManagerActorName)
 
     /**
-      * Starts the iiifManager
+      * Starts the IIIF Manager Actor
       */
     protected lazy val iiifManager = makeActor(Props(new IIIFManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), IIIFManagerActorName)
+
+    /**
+      * Instantiates the Redis Manager
+      */
+    protected lazy val redisManager = makeActor(Props(new CacheServiceManager).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), RedisManagerActorName)
 
     def receive = LoggingReceive {
         case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage
         case iiifMessages: IIIFRequest => iiifManager forward iiifMessages
+        case redisMessages: CacheServiceRequest => redisManager forward redisMessages
         case other => sender ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))
     }
 }

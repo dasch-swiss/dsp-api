@@ -44,13 +44,12 @@
 
     <logger name="org.apache.jena.riot" level="ERROR"/>
     <logger name="org.apache.jena.tdb" level="ERROR"/>
-
     <logger name="akka" level="INFO"/>
     <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
-
     <logger name="net.sf.ehcache.config" level="ERROR"/>
+    <logger name="kamon.metric" level="ERROR"/>
 
-    <logger name="spray.can.server.HttpListener" level="ERROR"/>
+    <!-- V1 -->
 
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>

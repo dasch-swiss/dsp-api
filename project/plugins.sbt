@@ -8,6 +8,7 @@ resolvers ++= Seq(
 addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.0")
 addSbtPlugin("com.tapad" % "sbt-docker-compose" % "1.0.34")
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.22")
+addSbtPlugin("io.kamon" % "sbt-aspectj-runner" % "1.1.1")
 
 // docs
 addSbtPlugin("com.lightbend.paradox" % "sbt-paradox" % "0.3.2")

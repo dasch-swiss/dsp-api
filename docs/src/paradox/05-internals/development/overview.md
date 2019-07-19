@@ -120,3 +120,16 @@ $ docker run --name sipi \
              dhlabbasel/sipi \
              /sipi/local/bin/sipi -config /localdir/sipi.knora-test-config.lua
 ```
+
+## Redis Server
+
+The Knora-API server uses Redis for caching.
+
+On macOS you can install Redis through [Homebrew](https://brew.sh):
+
+```bash
+$ brew install redis
+```
+
+If you don't want to use Redis, you can disable caching in `application.conf`
+via the `app.use-redis-cache` key, by setting it to `false`.
