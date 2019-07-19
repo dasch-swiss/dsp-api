@@ -23,6 +23,7 @@ package org.knora.webapi.routing.admin
 import java.util.UUID
 
 import akka.Done
+import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
@@ -202,7 +203,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
     private val getProjectKeywordsFunction: ClientFunction =
-        "getProjectKeywords" description "Gets all the keywords for a project." params(
+        "getProjectKeywords" description "Gets all the keywords for a project." params (
             "projectIri" description "The IRI of the project." paramType UriDatatype
             ) doThis {
             httpGet(str("iri") / arg("projectIri") / str("Keywords"))
@@ -334,7 +335,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
     private val updateProjectFunction: ClientFunction =
-        "updateProject" description "Updates a project." params(
+        "updateProject" description "Updates a project." params (
             "project" description "The project to be updated." paramType Project
             ) doThis {
             httpPut(
@@ -421,7 +422,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns MembersResponse
 
     private val getProjectMembersByIriFunction: ClientFunction =
-        "getProjectMembersByIri" description "Gets the members of a project by IRI." params(
+        "getProjectMembersByIri" description "Gets the members of a project by IRI." params (
             "iri" description "The IRI of the project." paramType UriDatatype
             ) doThis {
             getProjectMembersFunction withArgs(str("iri"), arg("iri") as StringDatatype)
@@ -520,7 +521,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns MembersResponse
 
     private val getProjectAdminMembersByIriFunction: ClientFunction =
-        "getProjectAdminMembersByIri" description "Gets the admin members of a project by IRI." params(
+        "getProjectAdminMembersByIri" description "Gets the admin members of a project by IRI." params (
             "iri" description "The IRI of the project." paramType UriDatatype
             ) doThis {
             getProjectAdminMembersFunction withArgs(str("iri"), arg("iri") as StringDatatype)
@@ -617,7 +618,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns ProjectRestrictedViewSettingsResponse
 
     private val getProjectRestrictedViewSettingByIriFunction: ClientFunction =
-        "getProjectRestrictedViewSettingByIri" description "Gets a project's restricted view settings by IRI." params(
+        "getProjectRestrictedViewSettingByIri" description "Gets a project's restricted view settings by IRI." params (
             "iri" description "The IRI of the project." paramType UriDatatype
             ) doThis {
             getProjectRestrictedViewSettingsFunction withArgs(str("iri"), arg("iri") as StringDatatype)
@@ -647,7 +648,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
     private val getProjectRestrictedViewSettingByShortnameFunction: ClientFunction =
-        "getProjectRestrictedViewSettingByShortname" description "Gets a project's restricted view settings by shortname." params(
+        "getProjectRestrictedViewSettingByShortname" description "Gets a project's restricted view settings by shortname." params (
             "shortname" description "The shortname of the project." paramType StringDatatype
             ) doThis {
             getProjectRestrictedViewSettingsFunction withArgs(str("shortname"), arg("shortname") as StringDatatype)
@@ -675,7 +676,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
     private val getProjectRestrictedViewSettingByShortcodeFunction: ClientFunction =
-        "getProjectRestrictedViewSettingByShortcode" description "Gets a project's restricted view settings by shortcode." params(
+        "getProjectRestrictedViewSettingByShortcode" description "Gets a project's restricted view settings by shortcode." params (
             "shortcode" description "The shortcode of the project." paramType StringDatatype
             ) doThis {
             getProjectRestrictedViewSettingsFunction withArgs(str("shortcode"), arg("shortcode") as StringDatatype)
@@ -686,25 +687,27 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       */
     private def getProjectData: Route = path(ProjectsBasePath / "iri" / Segment / "AllData") { projectIri: IRI =>
         get {
-            requestContext =>
-                val projectIdentifier = ProjectIdentifierADM(iri = Some(projectIri))
+            respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map(("filename", "project-data.trig")))) {
+                requestContext =>
+                    val projectIdentifier = ProjectIdentifierADM(iri = Some(projectIri))
 
-                val httpEntityFuture: Future[HttpEntity.Chunked] = for {
-                    requestingUser <- getUserADM(requestContext)
-                    requestMessage = ProjectDataGetRequestADM(projectIdentifier, requestingUser)
-                    responseMessage <- (responderManager ? requestMessage).mapTo[ProjectDataGetResponseADM]
+                    val httpEntityFuture: Future[HttpEntity.Chunked] = for {
+                        requestingUser <- getUserADM(requestContext)
+                        requestMessage = ProjectDataGetRequestADM(projectIdentifier, requestingUser)
+                        responseMessage <- (responderManager ? requestMessage).mapTo[ProjectDataGetResponseADM]
 
-                    // Stream the output file back to the client, then delete the file.
+                        // Stream the output file back to the client, then delete the file.
 
-                    source: Source[ByteString, Unit] = FileIO.fromPath(responseMessage.projectDataFile.toPath).watchTermination() {
-                        case (_: Future[IOResult], result: Future[Done]) =>
-                            result.onComplete((_: Try[Done]) => responseMessage.projectDataFile.delete)
-                    }
+                        source: Source[ByteString, Unit] = FileIO.fromPath(responseMessage.projectDataFile.toPath).watchTermination() {
+                            case (_: Future[IOResult], result: Future[Done]) =>
+                                result.onComplete((_: Try[Done]) => responseMessage.projectDataFile.delete)
+                        }
 
-                    httpEntity: HttpEntity.Chunked = HttpEntity(ContentTypes.`application/octet-stream`, source)
-                } yield httpEntity
+                        httpEntity = HttpEntity(ContentTypes.`application/octet-stream`, source)
+                    } yield httpEntity
 
-                requestContext.complete(httpEntityFuture)
+                    requestContext.complete(httpEntityFuture)
+            }
         }
     }
 
