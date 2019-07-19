@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import java.io.StringReader
+import java.io.{File, StringReader}
 import java.time.Instant
 
 import akka.event.LoggingAdapter
@@ -127,6 +127,21 @@ case class VariableResultsRow(rowMap: ErrorHandlingMap[String, String]) {
   * @param sparql the SPARQL string.
   */
 case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
+
+/**
+  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
+  * written to the specified file in Trig format. A successful response message will be a [[FileWrittenResponse]].
+  *
+  * @param sparql     the SPARQL string.
+  * @param graphIri   the named graph IRI to be used in the TriG file.
+  * @param outputFile the file to be written.
+  */
+case class SparqlConstructFileRequest(sparql: String, graphIri: IRI, outputFile: File) extends TriplestoreRequest
+
+/**
+  * Indicates that a file was written successfully.
+  */
+case class FileWrittenResponse()
 
 /**
   * A response to a [[SparqlConstructRequest]].
@@ -249,6 +264,15 @@ object SparqlExtendedConstructResponse {
   * @param statements a map of subjects to statements about each subject.
   */
 case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, SparqlExtendedConstructResponse.ConstructPredicateObjects])
+
+/**
+  * Requests a named graph, which will be written to the specified file in Trig format. A successful response
+  * will be a [[FileWrittenResponse]].
+  *
+  * @param graphIri   the IRI of the named graph.
+  * @param outputFile the destination file.
+  */
+case class GraphFileRequest(graphIri: IRI, outputFile: File) extends TriplestoreRequest
 
 /**
   * Represents a SPARQL Update operation to be performed.
