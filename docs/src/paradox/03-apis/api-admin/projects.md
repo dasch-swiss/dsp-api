@@ -27,6 +27,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>` : returns a single project identified either through iri, shortname, or shortcode
 - `PUT: /admin/projects/iri/<identifier>` : update a project identified by iri
 - `DELETE: /admin/projects/iri/<identifier>` : update project status to false
+- `GET: /admin/projects/iri/<identifier>/AllData` : returns a TriG file containing the project's data
 
 **Project Member Operations:**
 - `GET: /admin/projects/[iri | shortname | shortcode]/<identifier>/members` : returns all members part of a project identified through iri, shortname or shortcode
@@ -98,6 +99,14 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
   - DELETE: `/admin/projects/iri/<projectIri>`
   - BODY: empty
 
+### Dump project data:
+
+Returns a [TriG](https://www.w3.org/TR/trig/) file containing the project's
+ontologies, resource data, admin data, and permissions.
+
+  - Required permission: SystemAdmin / ProjectAdmin
+  - Required information: project IRI
+  - `GET: /admin/projects/iri/<identifier>/AllData`
 
 ## Project Member Operations
 

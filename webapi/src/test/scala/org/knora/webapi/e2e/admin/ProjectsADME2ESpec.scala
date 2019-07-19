@@ -19,24 +19,31 @@
 
 package org.knora.webapi.e2e.admin
 
+import java.net.URLEncoder
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.ConfigFactory
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.util.Timeout
+import com.typesafe.config.{Config, ConfigFactory}
+import org.eclipse.rdf4j.model.Model
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedTestDataADM}
+import org.knora.webapi.{E2ESpec, IRI, SharedTestDataADM}
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 
 object ProjectsADME2ESpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -51,10 +58,9 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
     private val rootEmail = SharedTestDataADM.rootUser.email
-    private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+    private val testPass = URLEncoder.encode("test", "utf-8")
     private val projectIri = SharedTestDataADM.imagesProject.id
-    private val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
+    private val projectIriEnc = URLEncoder.encode(projectIri, "utf-8")
     private val projectShortname = SharedTestDataADM.imagesProject.shortname
     private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
 
@@ -250,7 +256,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |}
                 """.stripMargin
 
-                val projectIriEncoded = java.net.URLEncoder.encode(newProjectIri.get, "utf-8")
+                val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
                 val request = Put(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
@@ -269,7 +275,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             "DELETE a project" in {
 
-                val projectIriEncoded = java.net.URLEncoder.encode(newProjectIri.get, "utf-8")
+                val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
                 val request = Delete(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
@@ -396,7 +402,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return all keywords for a single project" in {
-                val incunabulaIriEnc = java.net.URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
+                val incunabulaIriEnc = URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
                 val request = Get(baseApiUrl + s"/admin/projects/iri/$incunabulaIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
@@ -407,7 +413,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return empty list for a project without keywords" in {
-                val anythingIriEnc = java.net.URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
+                val anythingIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
                 val request = Get(baseApiUrl + s"/admin/projects/iri/$anythingIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
@@ -418,11 +424,31 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
             }
 
             "return 'NotFound' when the project IRI is unknown" in {
-                val notexistingIriEnc = java.net.URLEncoder.encode("http://rdfh.ch/projects/notexisting", "utf-8")
+                val notexistingIriEnc = URLEncoder.encode("http://rdfh.ch/projects/notexisting", "utf-8")
                 val request = Get(baseApiUrl + s"/admin/projects/iri/$notexistingIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.NotFound)
+            }
+        }
+
+        "used to dump project data" should {
+            "return a TriG file containing all data from a project" in {
+                val anythingProjectIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
+                val request = Get(baseApiUrl + s"/admin/projects/iri/$anythingProjectIriEnc/AllData") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.OK)
+                val trigStrFuture: Future[String] = Unmarshal(response.entity).to[String]
+                val trigStr: String = Await.result(trigStrFuture, Timeout(5.seconds).duration)
+                val parsedTrig: Model = parseTrig(trigStr)
+                val contextIris: Set[IRI] = parsedTrig.contexts.asScala.map(_.stringValue).toSet
+
+                assert(contextIris == Set(
+                    "http://www.knora.org/ontology/0001/something",
+                    "http://www.knora.org/ontology/0001/anything",
+                    "http://www.knora.org/data/permissions",
+                    "http://www.knora.org/data/admin"
+                ))
             }
         }
     }
