@@ -35,9 +35,8 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
-import org.knora.webapi.util.InstrumentationSupport
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{CacheUtil, SmartIri}
+import org.knora.webapi.util.{InstrumentationSupport, SmartIri}
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 import scala.concurrent.Future
