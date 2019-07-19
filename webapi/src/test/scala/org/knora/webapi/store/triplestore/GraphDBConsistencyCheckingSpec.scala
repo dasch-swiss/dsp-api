@@ -119,15 +119,6 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
                     msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_greater_rdfs_label") should ===(true)
             }
         }
-
-        "not create a LinkValue without permissions" in {
-            storeManager ! SparqlUpdateRequest(linkValueWithoutPermissions)
-
-            expectMsgPF(timeout) {
-                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_less_any_object") should ===(true)
-            }
-        }
     } else {
         s"Not running GraphDBConsistencyCheckingSpec with triplestore type ${settings.triplestoreType}" in {}
     }
@@ -2386,89 +2377,5 @@ object GraphDBConsistencyCheckingSpec {
           |    BIND(NOW() AS ?currentTime)
           |}
         """.stripMargin
-
-
-    private val linkValueWithoutPermissions =
-        """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-          |
-          |INSERT {
-          |    GRAPH ?dataNamedGraph {
-          |        ?resource rdf:type ?resourceClass ;
-          |            knora-base:isDeleted false ;
-          |            knora-base:attachedToUser ?creatorIri ;
-          |            knora-base:attachedToProject ?projectIri ;
-          |            rdfs:label ?label ;
-          |            knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
-          |            knora-base:creationDate ?currentTime .
-          |
-          |
-          |
-          |        # Value 0
-          |        # Property: http://www.knora.org/ontology/0001/anything#hasThing
-          |
-          |            ?resource ?linkProperty0 ?linkTarget0 .
-          |
-          |        ?newLinkValue0 rdf:type knora-base:LinkValue ;
-          |            rdf:subject ?resource ;
-          |            rdf:predicate ?linkProperty0 ;
-          |            rdf:object ?linkTarget0 ;
-          |            knora-base:valueHasString "http://rdfh.ch/0001/a-thing" ;
-          |            knora-base:valueHasRefCount 1 ;
-          |            knora-base:valueHasOrder ?nextOrder0 ;
-          |            knora-base:isDeleted false ;
-          |            knora-base:valueHasUUID "uuid0" ;
-          |            knora-base:valueCreationDate ?currentTime .
-          |
-          |        ?newLinkValue0 knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
-          |        ?resource ?linkValueProperty0 ?newLinkValue0 .
-          |    }
-          |}
-          |
-          |
-          |    USING <http://www.ontotext.com/explicit>
-          |
-          |WHERE {
-          |    BIND(IRI("http://www.knora.org/data/0001/anything") AS ?dataNamedGraph)
-          |    BIND(IRI("http://rdfh.ch/0001/missingValuePermissions") AS ?resource)
-          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#Thing") AS ?resourceClass)
-          |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
-          |    BIND(IRI("http://rdfh.ch/projects/0001") AS ?projectIri)
-          |    BIND(str("Test Thing") AS ?label)
-          |    BIND(NOW() AS ?currentTime)
-          |
-          |    # Value 0
-          |    # Property: http://www.knora.org/ontology/0001/anything#hasOtherThing
-          |
-          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#hasOtherThing") AS ?linkProperty0)
-          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#hasOtherThingValue") AS ?linkValueProperty0)
-          |    BIND(IRI("http://rdfh.ch/0001/missingValuePermissions/values/GjV_4ayjRDebneEQM0zHuw") AS ?newLinkValue0)
-          |    BIND(IRI("http://rdfh.ch/0001/a-thing") AS ?linkTarget0)
-          |
-          |
-          |
-          |    ?linkTarget0 rdf:type ?linkTargetClass0 ;
-          |        knora-base:isDeleted false .
-          |    ?linkTargetClass0 rdfs:subClassOf+ knora-base:Resource .
-          |
-          |
-          |
-          |    ?resourceClass rdfs:subClassOf* ?restriction0 .
-          |    ?restriction0 a owl:Restriction .
-          |    ?restriction0 owl:onProperty ?linkProperty0 .
-          |
-          |
-          |            BIND(0 AS ?nextOrder0)
-          |
-          |
-          |
-          |}
-        """.stripMargin
-
-
 
 }

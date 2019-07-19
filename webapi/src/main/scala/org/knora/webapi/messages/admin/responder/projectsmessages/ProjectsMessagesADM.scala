@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
+import java.io.File
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -108,6 +109,7 @@ case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
 sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
 
 // Requests
+
 /**
   * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
   * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
@@ -199,6 +201,15 @@ case class ProjectRestrictedViewSettingsGetRequestADM(identifier: ProjectIdentif
                                                       requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
+  * Requests all the data in the project. A successful response will be a [[ProjectDataGetResponseADM]].
+  *
+  * @param projectIdentifier the identifier of the project.
+  * @param requestingUser    the user making the request.
+  */
+case class ProjectDataGetRequestADM(projectIdentifier: ProjectIdentifierADM,
+                                    requestingUser: UserADM) extends ProjectsResponderRequestADM
+
+/**
   * Requests the creation of a new project.
   *
   * @param createRequest  the [[CreateProjectApiRequestADM]] information for creation a new project.
@@ -223,6 +234,7 @@ case class ProjectChangeRequestADM(projectIri: IRI,
                                    apiRequestID: UUID) extends ProjectsResponderRequestADM
 
 // Responses
+
 /**
   * Represents the Knora API ADM JSON response to a request for information about all projects.
   *
@@ -298,6 +310,13 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
     def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 }
 
+/**
+  * Represents a project's data in TriG format.
+  *
+  * @param projectDataFile a file containing the project's data in TriG format.
+  */
+case class ProjectDataGetResponseADM(projectDataFile: File)
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -371,15 +390,15 @@ case class ProjectADM(id: IRI,
         that match {
             case otherProj: ProjectADM =>
                 id == otherProj.id &&
-                        shortname == otherProj.shortname &&
-                        shortcode == otherProj.shortcode &&
-                        longname == otherProj.longname &&
-                        description.toSet == otherProj.description.toSet &&
-                        keywords.toSet == otherProj.keywords.toSet &&
-                        logo == otherProj.logo &&
-                        ontologies.toSet == otherProj.ontologies.toSet &&
-                        status == otherProj.status &&
-                        selfjoin == otherProj.selfjoin
+                    shortname == otherProj.shortname &&
+                    shortcode == otherProj.shortcode &&
+                    longname == otherProj.longname &&
+                    description.toSet == otherProj.description.toSet &&
+                    keywords.toSet == otherProj.keywords.toSet &&
+                    logo == otherProj.logo &&
+                    ontologies.toSet == otherProj.ontologies.toSet &&
+                    status == otherProj.status &&
+                    selfjoin == otherProj.selfjoin
 
             case _ => false
         }
@@ -388,16 +407,16 @@ case class ProjectADM(id: IRI,
     override def hashCode(): Int = {
         // Ignore the order of sequences when generating hash codes for this class.
         new HashCodeBuilder(19, 39).
-                append(id).
-                append(shortname).
-                append(shortcode).
-                append(longname).
-                append(description.toSet).
-                append(keywords.toSet).
-                append(logo).
-                append(ontologies.toSet).
-                append(status).
-                append(selfjoin).hashCode()
+            append(id).
+            append(shortname).
+            append(shortcode).
+            append(longname).
+            append(description.toSet).
+            append(keywords.toSet).
+            append(logo).
+            append(ontologies.toSet).
+            append(status).
+            append(selfjoin).hashCode()
     }
 }
 
@@ -430,7 +449,7 @@ object ProjectIdentifierADM {
 
 /**
   * Represents the project's identifier. It can be an IRI, shortcode or shortname.
-  * @param maybeIri the project's IRI.
+  * @param maybeIri       the project's IRI.
   * @param maybeShortname the project's shortname.
   * @param maybeShortcode the project's shortcode
   */
@@ -524,11 +543,10 @@ object ProjectIdentifierType extends Enumeration {
 }
 
 
-
 /**
   * API MAY CHANGE: Represents the project's restricted view settings.
   *
-  * @param size     the x size.
+  * @param size      the restricted view size.
   * @param watermark the watermark file.
   */
 @ApiMayChange

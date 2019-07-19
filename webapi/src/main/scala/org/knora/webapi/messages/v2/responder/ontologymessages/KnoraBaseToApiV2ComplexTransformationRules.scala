@@ -1495,6 +1495,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
     private val ValueCardinalities = Map(
         OntologyConstants.KnoraApiV2Complex.ValueAsString -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2Complex.HasPermissions -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.UserHasPermission -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.ArkUrl -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.VersionArkUrl -> Cardinality.MustHaveOne,
