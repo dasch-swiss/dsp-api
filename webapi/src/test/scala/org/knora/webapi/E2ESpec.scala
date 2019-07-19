@@ -138,6 +138,10 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
         responseToString(response)
     }
 
+    protected def parseTrig(trigStr: String): Model = {
+        Rio.parse(new StringReader(trigStr), "", RDFFormat.TRIG)
+    }
+
     protected def parseTurtle(turtleStr: String): Model = {
         Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE)
     }
