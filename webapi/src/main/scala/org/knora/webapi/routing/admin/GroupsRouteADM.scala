@@ -259,7 +259,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
           "group" description "The group to be updated." paramType Group
           ) doThis {
             httpPut(
-                path = argMember("group", "id"),
+                path = argMember("group", "id") / str("status"),
                 body = Some(arg("group"))
             )
         } returns GroupResponse
@@ -330,7 +330,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         "getGroupMembers" description "Gets the members of a group." params(
             "group" description "The group." paramType Group
             ) doThis {
-            httpGet(str("members") / argMember("group", "id"))
+            httpGet(argMember("group", "id") / str("members"))
         } returns MembersResponse
 
     /**
