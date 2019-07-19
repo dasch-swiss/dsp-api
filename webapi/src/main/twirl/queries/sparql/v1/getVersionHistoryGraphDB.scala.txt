@@ -50,7 +50,9 @@ WHERE {
     BIND(IRI("@currentValueIri") AS ?currentValue)
 
     ?resource knora-base:isDeleted false .
-    ?currentValue knora-base:isDeleted false .
+
+    ?currentValue knora-base:isDeleted false ;
+        knora-base:hasPermissions ?valuePermissions .
 
     ?resource knora-base:hasValue ?currentValue ;
         knora-base:attachedToProject ?project .
@@ -71,6 +73,5 @@ WHERE {
         BIND(true as ?isLinkValue)
     }
 
-    ?value knora-base:attachedToUser ?valueCreator ;
-        knora-base:hasPermissions ?valuePermissions .
+    ?value knora-base:attachedToUser ?valueCreator .
 }
