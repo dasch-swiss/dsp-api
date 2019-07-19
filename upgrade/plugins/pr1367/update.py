@@ -35,7 +35,6 @@ class GraphTransformer(rdftools.GraphTransformer):
         for (s, p, o) in graph:
             if o.__class__.__name__ == "Literal" and o.datatype == xsd_value_has_decimal:
                 new_o = rdflib.Literal(str(o), datatype=XSD.decimal)
-                print("Transforming a decimal literal from {} to {}".format(o, new_o))
                 output_graph.add((s, p, new_o))
             else:
                 output_graph.add((s, p, o))
