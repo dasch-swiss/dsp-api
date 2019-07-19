@@ -319,6 +319,25 @@ Permissions can be specified by adding `knora-api:hasPermissions`. Otherwise, th
 version has the same permissions as the previous one. To change the permissions
 on a value, the user must have **change rights permission** on the value.
 
+To update only the permissions on a value, submit it with the new permissions and with its
+`@id` and `@type` but without any other content, like this:
+
+```jsonld
+{
+  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@type" : "anything:Thing",
+  "anything:hasInteger" : {
+    "@id" : "http://rdfh.ch/0001/a-thing/values/vp96riPIRnmQcbMhgpv_Rg",
+    "@type" : "knora-api:IntValue",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:KnownUser"
+  },
+  "@context" : {
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
 To update a link, the user must have **modify permission** on the containing resource as
 well as on the value.
 
