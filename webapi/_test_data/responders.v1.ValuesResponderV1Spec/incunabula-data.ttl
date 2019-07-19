@@ -38,7 +38,6 @@
 
 <http://rdfh.ch/0803/21abac2162/values/11111111> a knora-base:TextValue;
   knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
-  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser";
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2016-01-20T11:31:24Z"^^xsd:dateTime;
   knora-base:valueHasOrder 0;

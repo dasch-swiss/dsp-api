@@ -61,21 +61,6 @@ object ValuesResponderV1Spec {
     private val imagesUser = SharedTestDataADM.imagesUser01
 
     private val anythingUser = SharedTestDataADM.anythingUser1
-
-    private val versionHistoryWithHiddenVersion = ValueVersionHistoryGetResponseV1(
-        valueVersions = Vector(
-            ValueVersionV1(
-                previousValue = None, // The user doesn't have permission to see the previous value.
-                valueCreationDate = Some("2016-01-22T11:31:24Z"),
-                valueObjectIri = "http://rdfh.ch/0803/21abac2162/values/f76660458201"
-            ),
-            ValueVersionV1(
-                previousValue = None,
-                valueCreationDate = Some("2016-01-20T11:31:24Z"),
-                valueObjectIri = "http://rdfh.ch/0803/21abac2162/values/11111111"
-            )
-        )
-    )
 }
 
 /**
@@ -355,6 +340,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             val utf8str = "Comment 1b"
 
+            val oldIri = commentIri.get
+
             responderManager ! ChangeValueRequestV1(
                 valueIri = commentIri.get,
                 value = TextValueSimpleV1(utf8str = utf8str),
@@ -369,6 +356,35 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // Check that the resource's last modification date got updated.
             val lastModAfterUpdate = getLastModificationDate(zeitglöckleinIri)
             lastModBeforeUpdate != lastModAfterUpdate should ===(true)
+
+            // Check that the permissions and UUID were deleted from the previous version of the value.
+
+            val sparqlQuery =
+                s"""
+                   |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                   |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                   |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                   |
+                   |SELECT ?value ?uuid ?permissions WHERE {
+                   |    BIND(IRI("$oldIri") AS ?value)
+                   |
+                   |    OPTIONAL {
+                   |        ?value knora-base:valueHasUUID ?uuid .
+                   |    }
+                   |
+                   |    OPTIONAL {
+                   |        ?value knora-base:hasPermissions ?permissions .
+                   |    }
+                   |}
+                 """.stripMargin
+
+            storeManager ! SparqlSelectRequest(sparqlQuery)
+
+            expectMsgPF(timeout) {
+                case sparqlSelectResponse: SparqlSelectResponse =>
+                    assert(sparqlSelectResponse.results.bindings.head.rowMap.keySet == Set("value"))
+            }
         }
 
         "not add a new version of a value that's exactly the same as the current version" in {
@@ -603,18 +619,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
             }
         }
-
-        "hide versions the user doesn't have permission to see" in {
-            responderManager ! ValueVersionHistoryGetRequestV1(
-                resourceIri = "http://rdfh.ch/0803/21abac2162",
-                propertyIri = "http://www.knora.org/ontology/0803/incunabula#title",
-                currentValueIri = "http://rdfh.ch/0803/21abac2162/values/f76660458201",
-                userProfile = incunabulaUser
-            )
-
-            expectMsg(timeout, versionHistoryWithHiddenVersion)
-        }
-
 
         "create a color value" in {
 

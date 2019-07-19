@@ -77,7 +77,8 @@ CONSTRUCT {
         ?resourceValueProperty ?valueObject .
 
     ?valueObject ?valueObjectProperty ?valueObjectValue ;
-        knora-base:valueHasUUID ?currentValueUUID .
+        knora-base:valueHasUUID ?currentValueUUID ;
+        knora-base:hasPermissions ?currentValuePermissions .
 
     @if(maybeStandoffMinStartIndex.nonEmpty) {
         ?valueObject knora-base:valueHasStandoff ?standoffNode .
@@ -189,6 +190,9 @@ CONSTRUCT {
                     GRAPH <http://www.ontotext.com/explicit> {
                         ?resource ?resourceValueProperty ?currentValue .
                     }
+
+                    @* Use the permissions from the current version. *@
+                    ?currentValue knora-base:hasPermissions ?currentValuePermissions .
                 }
 
                 case None => {
@@ -221,6 +225,8 @@ CONSTRUCT {
 
                         case None => {}
                     }
+
+                    ?valueObject knora-base:hasPermissions ?currentValuePermissions .
                 }
             }
 
@@ -239,7 +245,7 @@ CONSTRUCT {
                         ?valueObjectProperty ?valueObjectValue .
                 }
 
-                FILTER(?valueObjectProperty != knora-base:valueHasStandoff)
+                FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
 
                 @* Exclude knora-base:valueHasString if requested. *@
 

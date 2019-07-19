@@ -222,6 +222,10 @@ The resource will be returned with the values that it had at the specified
 time. Since Knora only versions values, not resource metadata (e.g.
 `rdfs:label`), the current metadata will be returned.
 
+Each value will be returned with the permissions that are attached to
+the **current** version of the value
+(see @ref:[Permissions](../../02-knora-ontologies/knora-base.md#permissions)).
+
 The returned resource will include the predicate `knora-api:versionDate`,
 containing the timestamp that was submitted, and its `knora-api:versionArkUrl`
 (see @ref:[Resource Permalinks](permalinks.md)) will contain the
@@ -258,6 +262,10 @@ but without any of the resource's other values.
 
 Since Knora only versions values, not resource metadata (e.g.
 `rdfs:label`), the current resource metadata will be returned.
+
+The value will be returned with the permissions that are attached to
+its **current** version
+(see @ref:[Permissions](../../02-knora-ontologies/knora-base.md#permissions)).
 
 ### Get the Version History of a Resource
 
