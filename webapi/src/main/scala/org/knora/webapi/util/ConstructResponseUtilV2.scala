@@ -27,7 +27,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -1180,7 +1180,7 @@ object ConstructResponseUtilV2 {
         }
 
         for {
-            projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceAttachedToProject), requestingUser = requestingUser)).mapTo[ProjectGetResponseADM]
+            projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(ProjectIdentifierADM(maybeIri = Some(resourceAttachedToProject)), requestingUser = requestingUser)).mapTo[ProjectGetResponseADM]
             valueObjects <- ActorUtil.sequenceSeqFuturesInMap(valueObjectFutures)
         } yield ReadResourceV2(
             resourceIri = resourceIri,

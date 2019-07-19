@@ -802,10 +802,24 @@ class UserIdentifierADM private(maybeIri: Option[IRI] = None,
     }
 
     /**
+      * Tries to return the value as email.
+      */
+    def toEmail: IRI = {
+        maybeEmail.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.EMAIL' type."))
+    }
+
+    /**
       * Returns an optional value of the identifier.
       */
     def toEmailOption: Option[String] = {
         maybeEmail
+    }
+
+    /**
+      * Tries to return the value as username.
+      */
+    def toUsername: IRI = {
+        maybeUsername.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.USERNAME' type."))
     }
 
     /**
@@ -819,10 +833,12 @@ class UserIdentifierADM private(maybeIri: Option[IRI] = None,
       * Returns the string representation
       */
     override def toString: IRI = {
-        s"UserIdentifierADM(${this.maybeIri}, ${this.maybeEmail}, ${this.maybeUsername})"
+        s"UserIdentifierADM(${this.value})"
     }
 
 }
+
+
 
 /**
   * Payload used for updating of an existing user.

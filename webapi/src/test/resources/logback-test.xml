@@ -44,15 +44,10 @@
 
     <logger name="org.apache.jena.riot" level="ERROR"/>
     <logger name="org.apache.jena.tdb" level="ERROR"/>
-
     <logger name="akka" level="INFO"/>
     <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
-
     <logger name="net.sf.ehcache.config" level="ERROR"/>
-
-    <logger name="spray.can.server.HttpListener" level="ERROR"/>
-
-    <!-- Production Code Logging -->
+    <logger name="kamon.metric" level="ERROR"/>
 
     <!-- V1 -->
 
@@ -81,10 +76,7 @@
     <logger name="org.knora.webapi.responders.v1.OntologyResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ProjectsResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.SipiResponderV1" level="INFO"/>
-    <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
-    <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
-    <logger name="org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector" level="INFO"/>
-    <logger name="org.knora.webapi.store.triplestore.http.GraphProtocolAccessor" level="INFO"/>
+
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
 
     <!-- V2 -->
@@ -99,6 +91,13 @@
     <logger name="org.knora.webapi.responders.admin.ProjectsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.UsersResponderADM" level="INFO"/>
+
+    <!-- Store -->
+    <logger name="org.knora.webapi.store.StoreManager" level="INFO"/>
+    <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
+    <logger name="org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector" level="INFO"/>
+    <logger name="org.knora.webapi.store.triplestore.http.GraphProtocolAccessor" level="INFO"/>
+    <logger name="org.knora.webapi.store.cacheservice.CacheServiceManager" level="INFO"/>
 
 
     <!-- Spec Logging -->
@@ -123,6 +122,7 @@
     <logger name="org.knora.webapi.http.ServerVersionE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.http.CORSSupportE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="INFO"/>
+    <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.UsersResponderADMSpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.HealthRouteE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.ListsADME2ESpec" level="INFO"/>
@@ -130,8 +130,15 @@
     <logger name="org.knora.webapi.e2e.admin.StoreRouteADME2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="INFO"/>
 
+    <!-- metrics logging (info level turns them on, error level turns them off -->
+    <logger name="M-Main$" level="ERROR"/>
+    <logger name="M-UsersResponderADM" level="ERROR"/>
+    <logger name="M-HttpTriplestoreConnector" level="ERROR"/>
+    <logger name="M-CacheServiceManager" level="ERROR"/>
+    <logger name="M-CacheSerialization" level="ERROR"/>
 
-    <root level="INFO">
+
+    <root level="ERROR">
         <appender-ref ref="stdout"/>
         <!--<appender-ref ref="R"/>-->
     </root>

@@ -20,7 +20,6 @@
 package org.knora.webapi.e2e.admin
 
 import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
@@ -157,12 +156,35 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
                 groupInfo.selfjoin should be (false)
 
             }
+
+            "CHANGE status of a group" in {
+                val params =
+                    s"""
+                       |{
+                       |    "status": true
+                       |}
+                """.stripMargin
+
+                val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
+                val request = Put(baseApiUrl + "/admin/groups/" + groupIriEnc + "/status", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                logger.debug(s"response: {}", response)
+                response.status should be (StatusCodes.OK)
+
+                val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
+
+                groupInfo.name should be ("UpdatedGroupName")
+                groupInfo.description should be ("UpdatedGroupDescription")
+                groupInfo.project should be (SharedTestDataADM.imagesProject)
+                groupInfo.status should be (true)
+                groupInfo.selfjoin should be (false)
+            }
         }
 
         "used to query members" should {
 
             "return all members of a group" in {
-                val request = Get(baseApiUrl + s"/admin/groups/members/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
+                val request = Get(baseApiUrl + s"/admin/groups/$groupIriEnc/members") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 assert(response.status === StatusCodes.OK)
