@@ -69,7 +69,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         case ProjectRestrictedViewSettingsGetRequestADM(identifier, requestingUser) => projectRestrictedViewSettingsGetRequestADM(identifier, requestingUser)
         case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) => projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
         case ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID) => changeBasicInformationRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID)
-        case ProjectDataGetRequestADM(projectIdentifier, requestingUser) => projectDataGetADM(projectIdentifier, requestingUser)
+        case ProjectDataGetRequestADM(projectIdentifier, requestingUser) => projectDataGetRequestADM(projectIdentifier, requestingUser)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -380,7 +380,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         } yield ProjectKeywordsGetResponseADM(keywords = keywords)
     }
 
-    private def projectDataGetADM(projectIdentifier: ProjectIdentifierADM, requestingUser: UserADM): Future[ProjectDataGetResponseADM] = {
+    private def projectDataGetRequestADM(projectIdentifier: ProjectIdentifierADM, requestingUser: UserADM): Future[ProjectDataGetResponseADM] = {
         /**
           * Represents a named graph to be saved to a TriG file.
           *
