@@ -17,54 +17,54 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.store.redismessages
+package org.knora.webapi.messages.store.cacheservicemessages
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
 
-sealed trait RedisRequest
+sealed trait CacheServiceRequest
 
 /**
   * Message equesting to write project to cache.
   */
-case class RedisPutProjectADM(value: ProjectADM) extends RedisRequest
+case class CacheServicePutProjectADM(value: ProjectADM) extends CacheServiceRequest
 
 /**
   * Message requesting to retrieve project from cache.
   */
-case class RedisGetProjectADM(identifier: ProjectIdentifierADM) extends RedisRequest
+case class CacheServiceGetProjectADM(identifier: ProjectIdentifierADM) extends CacheServiceRequest
 
 /**
   * Message requesting to write user to cache.
   */
-case class RedisPutUserADM(value: UserADM) extends RedisRequest
+case class CacheServicePutUserADM(value: UserADM) extends CacheServiceRequest
 
 /**
   * Message requesting to retrieve user from cache.
   */
-case class RedisGetUserADM(identifier: UserIdentifierADM) extends RedisRequest
+case class CacheServiceGetUserADM(identifier: UserIdentifierADM) extends CacheServiceRequest
 
 /**
   * Message requesting to store a simple string under the supplied key.
   */
-case class RedisPutString(key: String, value: String) extends RedisRequest
+case class CacheServicePutString(key: String, value: String) extends CacheServiceRequest
 
 /**
   * Message requesting to retrieve simple string stored under the key.
   */
-case class RedisGetString(key: Option[String]) extends RedisRequest
+case class CacheServiceGetString(key: Option[String]) extends CacheServiceRequest
 
 /**
   * Message requesting to remove anything stored under the keys.
   */
-case class RedisRemoveValues(keys: Set[String]) extends RedisRequest
+case class CacheServiceRemoveValues(keys: Set[String]) extends CacheServiceRequest
 
 /**
   * Message requesting to completely empty the cache (wipe everything).
   */
-case class RedisFlushDB(requestingUser: UserADM) extends RedisRequest
+case class CacheServiceFlushDB(requestingUser: UserADM) extends CacheServiceRequest
 
 /**
   * Message acknowledging the flush.
   */
-case class RedisFlushDBACK()
+case class CacheServiceFlushDBACK()

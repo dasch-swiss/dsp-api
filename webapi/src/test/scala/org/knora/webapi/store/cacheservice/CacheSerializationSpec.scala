@@ -17,14 +17,14 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.store.redis
+package org.knora.webapi.store.cacheservice
 
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
-object RedisSerializationSpec {
+object CacheSerializationSpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -33,25 +33,25 @@ object RedisSerializationSpec {
 }
 
 /**
-  * This spec is used to test [[org.knora.webapi.store.redis.RedisSerialization]].
+  * This spec is used to test [[org.knora.webapi.store.cacheservice.CacheSerialization]].
   */
-class RedisSerializationSpec extends CoreSpec(RedisSerializationSpec.config) {
+class CacheSerializationSpec extends CoreSpec(CacheSerializationSpec.config) {
 
     "serialize and deserialize" should {
 
         "work with the UserADM case class" in {
             val user = SharedTestDataADM.imagesUser01
             for {
-                serialized <- RedisSerialization.serialize(user)
-                deserialized: Option[UserADM] <- RedisSerialization.deserialize[UserADM](serialized)
+                serialized <- CacheSerialization.serialize(user)
+                deserialized: Option[UserADM] <- CacheSerialization.deserialize[UserADM](serialized)
             } yield deserialized shouldBe Some(user)
         }
 
         "work with the ProjectADM case class" in {
             val project = SharedTestDataADM.imagesProject
             for {
-                serialized <- RedisSerialization.serialize(project)
-                deserialized: Option[ProjectADM] <- RedisSerialization.deserialize[ProjectADM](serialized)
+                serialized <- CacheSerialization.serialize(project)
+                deserialized: Option[ProjectADM] <- CacheSerialization.deserialize[ProjectADM](serialized)
             } yield deserialized shouldBe Some(project)
         }
 

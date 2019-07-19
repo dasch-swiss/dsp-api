@@ -26,7 +26,7 @@ import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.app.{APPLICATION_STATE_ACTOR_NAME, ApplicationStateActor}
-import org.knora.webapi.messages.store.redismessages.RedisFlushDB
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME, ResponderData}
@@ -112,7 +112,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
         Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
-        Await.result(storeManager ? RedisFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
+        Await.result(storeManager ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
     }
 
     def memusage(): Unit = {

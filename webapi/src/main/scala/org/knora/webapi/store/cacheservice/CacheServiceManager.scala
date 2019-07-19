@@ -17,7 +17,7 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.store.redis
+package org.knora.webapi.store.cacheservice
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
 import akka.http.scaladsl.util.FastFuture
@@ -25,7 +25,7 @@ import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM, ProjectIdentifierType}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM, UserIdentifierType}
-import org.knora.webapi.messages.store.redismessages._
+import org.knora.webapi.messages.store.cacheservicemessages._
 import org.knora.webapi.util.{ActorUtil, InstrumentationSupport}
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
@@ -35,7 +35,7 @@ case class EmptyKey(message: String) extends RedisException(message)
 case class EmptyValue(message: String) extends RedisException(message)
 case class UnsupportedValueType(message: String) extends RedisException(message)
 
-class RedisManager extends Actor with ActorLogging with LazyLogging with InstrumentationSupport {
+class CacheServiceManager extends Actor with ActorLogging with LazyLogging with InstrumentationSupport {
 
     /**
       * The Knora Akka actor system.
@@ -68,14 +68,14 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
     }
 
     def receive = {
-        case RedisPutUserADM(value) => ActorUtil.future2Message(sender(), redisPutUserADM(value), log)
-        case RedisGetUserADM(identifier) => ActorUtil.future2Message(sender(), redisGetUserADM(identifier), log)
-        case RedisPutProjectADM(value) => ActorUtil.future2Message(sender(), redisPutProjectADM(value), log)
-        case RedisGetProjectADM(identifier) => ActorUtil.future2Message(sender(), redisGetProjectADM(identifier), log)
-        case RedisPutString(key, value) => ActorUtil.future2Message(sender(), writeStringValue(key, value), log)
-        case RedisGetString(key) => ActorUtil.future2Message(sender(), getStringValue(key), log)
-        case RedisRemoveValues(keys) => ActorUtil.future2Message(sender(), removeValues(keys), log)
-        case RedisFlushDB(requestingUser) => ActorUtil.future2Message(sender(), flushDB(requestingUser), log)
+        case CacheServicePutUserADM(value) => ActorUtil.future2Message(sender(), redisPutUserADM(value), log)
+        case CacheServiceGetUserADM(identifier) => ActorUtil.future2Message(sender(), redisGetUserADM(identifier), log)
+        case CacheServicePutProjectADM(value) => ActorUtil.future2Message(sender(), redisPutProjectADM(value), log)
+        case CacheServiceGetProjectADM(identifier) => ActorUtil.future2Message(sender(), redisGetProjectADM(identifier), log)
+        case CacheServicePutString(key, value) => ActorUtil.future2Message(sender(), writeStringValue(key, value), log)
+        case CacheServiceGetString(key) => ActorUtil.future2Message(sender(), getStringValue(key), log)
+        case CacheServiceRemoveValues(keys) => ActorUtil.future2Message(sender(), removeValues(keys), log)
+        case CacheServiceFlushDB(requestingUser) => ActorUtil.future2Message(sender(), flushDB(requestingUser), log)
         case other =>  sender ! Status.Failure(UnexpectedMessageException(s"RedisManager received an unexpected message: $other"))
     }
 
@@ -92,7 +92,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
     private def redisPutUserADM(value: UserADM): Future[Boolean] = tracedFuture("redis-write-user") {
 
         val resultFuture = for {
-            bytes: Array[Byte] <- RedisSerialization.serialize(value)
+            bytes: Array[Byte] <- CacheSerialization.serialize(value)
             result: Boolean <- writeBytesValue(value.id, bytes)
             // additionally store the IRI under the username and email key
             _ = writeStringValue(value.username, value.id)
@@ -123,7 +123,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
                 for {
                     maybeBytes: Option[Array[Byte]] <- getBytesValue(identifier.toIriOption)
                     maybeUser: Option[UserADM] <- maybeBytes match {
-                        case Some(bytes) => RedisSerialization.deserialize[UserADM](bytes)
+                        case Some(bytes) => CacheSerialization.deserialize[UserADM](bytes)
                         case None => FastFuture.successful(None)
                     }
                 } yield maybeUser
@@ -133,7 +133,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
                     maybeIriKey: Option[String] <- getStringValue(identifier.toUsernameOption)
                     maybeBytes: Option[Array[Byte]] <- getBytesValue(maybeIriKey)
                     maybeUser: Option[UserADM] <- maybeBytes match {
-                        case Some(bytes) => RedisSerialization.deserialize[UserADM](bytes)
+                        case Some(bytes) => CacheSerialization.deserialize[UserADM](bytes)
                         case None => FastFuture.successful(None)
                     }
                 } yield maybeUser
@@ -143,7 +143,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
                     maybeIriKey: Option[String] <- getStringValue(identifier.toEmailOption)
                     maybeBytes: Option[Array[Byte]] <- getBytesValue(maybeIriKey)
                     maybeUser: Option[UserADM] <- maybeBytes match {
-                        case Some(bytes) => RedisSerialization.deserialize[UserADM](bytes)
+                        case Some(bytes) => CacheSerialization.deserialize[UserADM](bytes)
                         case None => FastFuture.successful(None)
                     }
                 } yield maybeUser
@@ -172,7 +172,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
     private def redisPutProjectADM(value: ProjectADM): Future[Boolean] = tracedFuture("redis-write-project") {
 
         val resultFuture = for {
-            bytes: Array[Byte] <- RedisSerialization.serialize(value)
+            bytes: Array[Byte] <- CacheSerialization.serialize(value)
             result: Boolean <- writeBytesValue(value.id, bytes)
             _ = writeStringValue(value.shortcode, value.id)
             _ = writeStringValue(value.shortname, value.id)
@@ -201,7 +201,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
                 for {
                     maybeBytes <- getBytesValue(identifier.toIriOption)
                     maybeProject <- maybeBytes match {
-                        case Some(bytes) => RedisSerialization.deserialize[ProjectADM](bytes)
+                        case Some(bytes) => CacheSerialization.deserialize[ProjectADM](bytes)
                         case None => FastFuture.successful(None)
                     }
                 } yield maybeProject
@@ -210,7 +210,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
                     maybeIriKey <- getStringValue(identifier.toShortcodeOption)
                     maybeBytes <- getBytesValue(maybeIriKey)
                     maybeProject: Option[ProjectADM] <- maybeBytes match {
-                        case Some(bytes) => RedisSerialization.deserialize[ProjectADM](bytes)
+                        case Some(bytes) => CacheSerialization.deserialize[ProjectADM](bytes)
                         case None => FastFuture.successful(None)
                     }
                 } yield maybeProject
@@ -219,7 +219,7 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
                     maybeIriKey <- getStringValue(identifier.toShortnameOption)
                     maybeBytes <- getBytesValue(maybeIriKey)
                     maybeProject: Option[ProjectADM] <- maybeBytes match {
-                        case Some(bytes) => RedisSerialization.deserialize[ProjectADM](bytes)
+                        case Some(bytes) => CacheSerialization.deserialize[ProjectADM](bytes)
                         case None => FastFuture.successful(None)
                     }
                 } yield maybeProject
@@ -398,18 +398,18 @@ class RedisManager extends Actor with ActorLogging with LazyLogging with Instrum
     /**
       * Flushes (removes) all stored content from the Redis store.
       */
-    private def flushDB(requestingUser: UserADM): Future[RedisFlushDBACK] = tracedFuture("redis-flush-db") {
+    private def flushDB(requestingUser: UserADM): Future[CacheServiceFlushDBACK] = tracedFuture("redis-flush-db") {
 
         if (!requestingUser.isSystemUser) {
             throw ForbiddenException("Only the system user is allowed to perform this operation.")
         }
 
-        val operationFuture: Future[RedisFlushDBACK] = Future {
+        val operationFuture: Future[CacheServiceFlushDBACK] = Future {
 
             val conn: Jedis = pool.getResource
             try {
                 conn.flushDB()
-                RedisFlushDBACK()
+                CacheServiceFlushDBACK()
             } finally {
                 conn.close()
             }

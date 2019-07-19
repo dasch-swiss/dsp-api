@@ -56,12 +56,12 @@
     <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
 
-    <!-- metrics logging -->
+    <!-- metrics logging (info level turns them on, error level turns them off -->
     <logger name="M-Main$" level="INFO"/>
     <logger name="M-UsersResponderADM" level="INFO"/>
     <logger name="M-HttpTriplestoreConnector" level="INFO"/>
-    <logger name="M-RedisManager" level="INFO"/>
-    <logger name="M-RedisSerialization" level="INFO"/>
+    <logger name="M-CacheServiceManager" level="INFO"/>
+    <logger name="M-CacheSerialization" level="INFO"/>
 
     <!-- for logging during tests, please see/use logback-test.xml under test/resources -->
 

@@ -30,7 +30,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{Permission
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadADM, _}
-import org.knora.webapi.messages.store.redismessages.{RedisGetUserADM, RedisPutUserADM, RedisRemoveValues}
+import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetUserADM, CacheServicePutUserADM, CacheServiceRemoveValues}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
@@ -1246,7 +1246,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * If user is not found in cache but in triplestore, then user is written to cache.
       */
     private def getUserFromCacheOrTriplestore(identifier: UserIdentifierADM): Future[Option[UserADM]] = {
-        if (settings.useRedisCache) {
+        if (settings.cacheServiceEnabled) {
             // caching enabled
             getUserFromCache(identifier)
               .flatMap {
@@ -1475,7 +1475,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * Tries to retrieve a [[UserADM]] from the cache.
       */
     private def getUserFromCache(identifier: UserIdentifierADM): Future[Option[UserADM]] = {
-        val result = (storeManager ? RedisGetUserADM(identifier)).mapTo[Option[UserADM]]
+        val result = (storeManager ? CacheServiceGetUserADM(identifier)).mapTo[Option[UserADM]]
         result.map {
             case Some(user) =>
                 log.debug("getUserFromCache - cache hit for: {}", identifier)
@@ -1494,7 +1494,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
       */
     private def writeUserADMToCache(user: UserADM): Future[Boolean] = {
-        val result = (storeManager ? RedisPutUserADM(user)).mapTo[Boolean]
+        val result = (storeManager ? CacheServicePutUserADM(user)).mapTo[Boolean]
         result.map { res =>
             log.debug("writeUserADMToCache - result: {}", result)
             res
@@ -1505,11 +1505,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * Removes the user from cache.
       */
     private def invalidateCachedUserADM(maybeUser: Option[UserADM]): Future[Boolean] = {
-        if(settings.useRedisCache) {
+        if(settings.cacheServiceEnabled) {
             val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
             // only send to Redis if keys are not empty
             if (keys.nonEmpty) {
-                val result = (storeManager ? RedisRemoveValues(keys)).mapTo[Boolean]
+                val result = (storeManager ? CacheServiceRemoveValues(keys)).mapTo[Boolean]
                 result.map { res =>
                     log.debug("invalidateCachedUserADM - result: {}", res)
                     res

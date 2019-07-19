@@ -132,9 +132,7 @@ class SettingsImpl(config: Config) extends Extension {
                 cacheConfigMap("time-to-idle-seconds").asInstanceOf[Int])
     }.toVector
 
-    val useRedisCache: Boolean = config.getBoolean("app.use-redis-cache")
-    val redisHost: String = config.getString("app.redis.host")
-    val redisPort: Int = config.getInt("app.redis.port")
+
 
     val defaultTimeout: FiniteDuration = getFiniteDuration("app.default-timeout", config)
 
@@ -214,6 +212,11 @@ class SettingsImpl(config: Config) extends Extension {
     val allowReloadOverHTTP: Boolean = config.getBoolean("app.allow-reload-over-http")
 
     val bcryptPasswordStrength: Int = config.getInt("app.bcrypt-password-strength")
+
+    // Cache Service
+    val cacheServiceEnabled: Boolean = config.getBoolean("app.cache-service.enabled")
+    val redisHost: String = config.getString("app.cache-service.redis.host")
+    val redisPort: Int = config.getInt("app.cache-service.redis.port")
 
     private def getFiniteDuration(path: String, underlying: Config): FiniteDuration = Duration(underlying.getString(path)) match {
         case x: FiniteDuration ⇒ x

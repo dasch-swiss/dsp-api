@@ -17,7 +17,7 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.store.redis
+package org.knora.webapi.store.cacheservice
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
 import com.twitter.chill.MeatLocker
@@ -28,7 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class EmptyByteArray(message: String) extends RedisException(message)
 
-object RedisSerialization extends InstrumentationSupport {
+object CacheSerialization extends InstrumentationSupport {
 
 
     /**

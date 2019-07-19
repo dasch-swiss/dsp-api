@@ -17,16 +17,16 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.store.redis
+package org.knora.webapi.store.cacheservice
 
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
-import org.knora.webapi.messages.store.redismessages.{RedisGetProjectADM, RedisGetUserADM, RedisPutProjectADM, RedisPutUserADM}
+import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetProjectADM, CacheServiceGetUserADM, CacheServicePutProjectADM, CacheServicePutUserADM}
 import org.knora.webapi.util.StringFormatter
 
-object RedisManagerSpec {
+object CacheServiceManagerSpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -35,9 +35,9 @@ object RedisManagerSpec {
 }
 
 /**
-  * This spec is used to test [[org.knora.webapi.store.redis.RedisSerialization]].
+  * This spec is used to test [[org.knora.webapi.store.cacheservice.CacheSerialization]].
   */
-class RedisManagerSpec extends CoreSpec(RedisManagerSpec.config) {
+class CacheServiceManagerSpec extends CoreSpec(CacheServiceManagerSpec.config) {
 
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -47,42 +47,42 @@ class RedisManagerSpec extends CoreSpec(RedisManagerSpec.config) {
     "The RedisManager" should {
 
         "successfully store a user" in {
-            storeManager ! RedisPutUserADM(user)
+            storeManager ! CacheServicePutUserADM(user)
             expectMsg(true)
         }
 
         "successfully retrieve a user by IRI" in {
-            storeManager ! RedisGetUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
+            storeManager ! CacheServiceGetUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
             expectMsg(Some(user))
         }
 
         "successfully retrieve a user by USERNAME" in {
-            storeManager ! RedisGetUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
+            storeManager ! CacheServiceGetUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
             expectMsg(Some(user))
         }
 
         "successfully retrieve a user by EMAIL" in {
-            storeManager ! RedisGetUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
+            storeManager ! CacheServiceGetUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
             expectMsg(Some(user))
         }
 
         "successfully store a project" in {
-            storeManager ! RedisPutProjectADM(project)
+            storeManager ! CacheServicePutProjectADM(project)
             expectMsg(true)
         }
 
         "successfully retrieve a project by IRI" in {
-            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
+            storeManager ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
             expectMsg(Some(project))
         }
 
         "successfully retrieve a project by SHORTNAME" in {
-            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
+            storeManager ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
             expectMsg(Some(project))
         }
 
         "successfully retrieve a project by SHORTCODE" in {
-            storeManager ! RedisGetProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
+            storeManager ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
             expectMsg(Some(project))
         }
     }

@@ -97,7 +97,7 @@
     <logger name="org.knora.webapi.store.triplestore" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector" level="INFO"/>
     <logger name="org.knora.webapi.store.triplestore.http.GraphProtocolAccessor" level="INFO"/>
-    <logger name="org.knora.webapi.store.redis.RedisManager" level="INFO"/>
+    <logger name="org.knora.webapi.store.cacheservice.CacheServiceManager" level="INFO"/>
 
 
     <!-- Spec Logging -->
@@ -130,12 +130,12 @@
     <logger name="org.knora.webapi.e2e.admin.StoreRouteADME2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="INFO"/>
 
-    <!-- metrics logging -->
+    <!-- metrics logging (info level turns them on, error level turns them off -->
     <logger name="M-Main$" level="ERROR"/>
     <logger name="M-UsersResponderADM" level="ERROR"/>
     <logger name="M-HttpTriplestoreConnector" level="ERROR"/>
-    <logger name="M-RedisManager" level="ERROR"/>
-    <logger name="M-RedisSerialization" level="ERROR"/>
+    <logger name="M-CacheServiceManager" level="ERROR"/>
+    <logger name="M-CacheSerialization" level="ERROR"/>
 
 
     <root level="ERROR">

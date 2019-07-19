@@ -27,7 +27,7 @@ import org.knora.webapi._
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}
-import org.knora.webapi.messages.store.redismessages.{RedisGetProjectADM, RedisPutProjectADM, RedisRemoveValues}
+import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetProjectADM, CacheServicePutProjectADM, CacheServiceRemoveValues}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadataGetByProjectRequestV2, ReadOntologyMetadataV2}
@@ -674,7 +674,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       * If project is not found in cache but in triplestore, then project is written to cache.
       */
     private def getProjectFromCacheOrTriplestore(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = {
-        if (settings.useRedisCache) {
+        if (settings.cacheServiceEnabled) {
             // caching enabled
             getProjectFromCache(identifier)
               .flatMap {
@@ -840,7 +840,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       * Tries to retrieve a [[ProjectADM]] from the cache.
       */
     private def getProjectFromCache(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = {
-        val result = (storeManager ? RedisGetProjectADM(identifier)).mapTo[Option[ProjectADM]]
+        val result = (storeManager ? CacheServiceGetProjectADM(identifier)).mapTo[Option[ProjectADM]]
         result.map {
             case Some(project) =>
                 log.debug("getProjectFromCache - cache hit for: {}", identifier)
@@ -858,7 +858,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       * @return true if writing was successful.
       */
     private def writeProjectADMToCache(project: ProjectADM): Future[Boolean] = {
-        val result = (storeManager ? RedisPutProjectADM(project)).mapTo[Boolean]
+        val result = (storeManager ? CacheServicePutProjectADM(project)).mapTo[Boolean]
         result.map { res =>
             log.debug("writeProjectADMToCache - result: {}", result)
             res
@@ -869,11 +869,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       * Removes the project from cache.
       */
     private def invalidateCachedProjectADM(maybeProject: Option[ProjectADM]): Future[Boolean] = {
-        if (settings.useRedisCache) {
+        if (settings.cacheServiceEnabled) {
             val keys: Set[String] = Seq(maybeProject.map(_.id), maybeProject.map(_.shortname), maybeProject.map(_.shortcode)).flatten.toSet
             // only send to Redis if keys are not empty
             if (keys.nonEmpty) {
-                val result = (storeManager ? RedisRemoveValues(keys)).mapTo[Boolean]
+                val result = (storeManager ? CacheServiceRemoveValues(keys)).mapTo[Boolean]
                 result.map { res =>
                     log.debug("invalidateCachedProjectADM - result: {}", res)
                     res
