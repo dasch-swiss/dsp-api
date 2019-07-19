@@ -46,5 +46,10 @@ package object store {
     val SipiConnectorActorName: String = "sipiConnector"
 
 
+    /* Redis */
+    val RedisManagerActorName: String = "redisManager"
+    val RedisManagerActorPath: String = StoreManagerActorPath + "/" + RedisManagerActorName
+
+
 
 }

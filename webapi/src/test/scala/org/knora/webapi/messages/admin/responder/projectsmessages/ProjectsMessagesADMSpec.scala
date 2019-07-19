@@ -16,14 +16,25 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
-import org.knora.webapi._
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi.{SharedTestDataADM, _}
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.scalatest.{Matchers, WordSpecLike}
+import org.knora.webapi.util.StringFormatter
+
+object ProjectsMessagesADMSpec {
+    val config = ConfigFactory.parseString(
+        """
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
 
 /**
   * This spec is used to test subclasses of the [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]] class.
   */
-class ProjectsMessagesADMSpec extends WordSpecLike with Matchers {
+class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
+
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     private val id = SharedTestDataADM.rootUser.id
     private val email = SharedTestDataADM.rootUser.email
@@ -90,6 +101,20 @@ class ProjectsMessagesADMSpec extends WordSpecLike with Matchers {
                     selfjoin = false
                 )
             )
+        }
+    }
+
+    "The ProjectIdentifierADM class" should {
+        "return without throwing when the project IRI is valid" in {
+            ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.incunabulaProject.id)).value shouldBe SharedTestDataADM.incunabulaProject.id
+            ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.defaultSharedOntologiesProject.id)).value shouldBe SharedTestDataADM.defaultSharedOntologiesProject.id
+            ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.systemProject.id)).value shouldBe SharedTestDataADM.systemProject.id
+        }
+
+        "return a 'BadRequestException' when the project IRI is invalid" in {
+            assertThrows[BadRequestException] {
+                ProjectIdentifierADM(maybeIri = Some("http://not-valid.org"))
+            }
         }
     }
 }
