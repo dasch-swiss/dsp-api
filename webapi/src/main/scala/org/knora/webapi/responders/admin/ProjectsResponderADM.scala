@@ -687,9 +687,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                 log.debug("getProjectFromCacheOrTriplestore - not found in cache and in triplestore")
                                 FastFuture.successful(None)
                             case Some(project) =>
-                                // found a user in the triplestore. need to write to cache.
+                                // found a project in the triplestore. need to write to cache.
                                 log.debug("getProjectFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache.")
-                                // writing user to cache and afterwards returning the user found in the triplestore
+                                // writing project to cache and afterwards returning the project found in the triplestore
                                 writeProjectADMToCache(project).map(res => Some(project))
                         }
                   case Some(user) =>
