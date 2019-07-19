@@ -80,6 +80,9 @@ DELETE {
         @* Delete the UUID from the current version of the value, because the new version will store it. *@
         ?currentValue knora-base:valueHasUUID ?currentValueUUID .
 
+        @* Delete the permissions from the current version of the value, because the new version will store them. *@
+        ?currentValue knora-base:hasPermissions ?currentValuePermissions .
+
         @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
             @* Delete direct links for resource references that no longer exist. *@
             @if(linkUpdate.deleteDirectLink) {
@@ -92,6 +95,9 @@ DELETE {
 
                 @* Delete the UUID from the current version of the link value, because the new version will store it. *@
                 ?linkValue@linkValueIndex knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
+
+                @* Delete the permissions from the current version of the link value, because the new version will store them. *@
+                ?linkValue@linkValueIndex knora-base:hasPermissions ?linkValuePermissions@linkValueIndex .
             }
         }
     }
@@ -368,7 +374,8 @@ WHERE {
     @* Don't add a new version of a deleted value. *@
 
     ?currentValue knora-base:isDeleted false ;
-        knora-base:valueHasUUID ?currentValueUUID .
+        knora-base:valueHasUUID ?currentValueUUID ;
+        knora-base:hasPermissions ?currentValuePermissions .
 
     @*
 
@@ -417,7 +424,8 @@ WHERE {
                 rdf:object <@linkUpdate.linkTargetIri> ;
                 knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
                 knora-base:isDeleted false ;
-                knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
+                knora-base:valueHasUUID ?linkValueUUID@linkValueIndex ;
+                knora-base:hasPermissions ?linkValuePermissions@linkValueIndex .
         } else {
             @* Make sure there is no such knora-base:LinkValue. *@
             MINUS {

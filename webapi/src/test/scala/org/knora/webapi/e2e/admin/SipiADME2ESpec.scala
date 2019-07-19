@@ -121,13 +121,11 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
             val request = Get(baseApiUrl + s"/admin/files/0001/QxFMm5wlRlatStw9ft3iZA.jp2?email=$normalUserEmailEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
 
-            // println(response.toString)
-
             assert(response.status == StatusCodes.OK)
 
             val fr: SipiFileInfoGetResponseADM = Await.result(Unmarshal(response.entity).to[SipiFileInfoGetResponseADM], 1.seconds)
 
-            (fr.permissionCode === 2) should be (true)
+            (fr.permissionCode === 1) should be (true)
 
         }
     }

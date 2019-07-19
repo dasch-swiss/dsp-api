@@ -50,7 +50,16 @@ WHERE {
 
     {
         ?fileValue ?objPred ?objObj .
-        FILTER(?objPred != knora-base:attachedToProject)
+        FILTER(?objPred != knora-base:attachedToProject && ?objPred != knora-base:hasPermissions)
+    }
+    UNION
+    {
+        @* Return the permissions of the current version of the value. *@
+
+        ?currentFileValue knora-base:hasPermissions ?currentFileValuePermissions .
+
+        BIND(knora-base:hasPermissions AS ?objPred)
+        BIND(?currentFileValuePermissions AS ?objObj)
     }
     UNION
     {
