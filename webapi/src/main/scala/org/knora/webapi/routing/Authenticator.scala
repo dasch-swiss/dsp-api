@@ -690,7 +690,7 @@ object Authenticator {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Tries to get a [[UserADM]] from the cache or from the triple store matching the identifier.
+      * Tries to get a [[UserADM]].
       *
       * @param identifier       the IRI, email, or username of the user to be queried
       * @param system           the current akka actor system
@@ -714,7 +714,6 @@ object Authenticator {
         } yield user
 
         userADMFuture
-
     }
 }
 

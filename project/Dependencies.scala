@@ -87,16 +87,27 @@ object Dependencies {
         val scalaLogging           = "com.typesafe.scala-logging"              %% "scala-logging"            % "3.8.0"
         val logbackClassic         = "ch.qos.logback"                           % "logback-classic"          % "1.2.3"
 
+        // Metrics
+        val kamonCore              = "io.kamon"                                %% "kamon-core"               % "2.0.0-RC1"
+        val kamonScalaFuture       = "io.kamon"                                %% "kamon-scala-future"       % "2.0.0-RC1"
+        // val kamonAkkaHttpd         = "io.kamon"                                %% "kamon-akka-http"          % "2.0.0-RC3"
+        val kamonPrometheus        = "io.kamon"                                %% "kamon-prometheus"         % "2.0.0-RC1"
+        val kamonLogback           = "io.kamon"                                %% "kamon-logback"            % "2.0.0-RC1"
+        val aspectJWeaver          = "org.aspectj"                              % "aspectjweaver"            % "1.9.4"
+
         // input validation
         val commonsValidator       = "commons-validator"                        % "commons-validator"        % "1.6" exclude("commons-logging", "commons-logging")
 
         // authentication
         val bcprov                 = "org.bouncycastle"                         % "bcprov-jdk15on"           % "1.59"
         val springSecurityCore     = "org.springframework.security"             % "spring-security-core"     % "5.1.5.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
-        val jwtSprayJson           = "com.pauldijou"                            %% "jwt-spray-json"          % "0.19.0"
+        val jwtSprayJson           = "com.pauldijou"                           %% "jwt-spray-json"           % "0.19.0"
 
         // caching
         val ehcache                = "net.sf.ehcache"                           % "ehcache"                  % "2.10.3"
+        val jedis                  = "redis.clients"                            % "jedis"                    % "3.1.0-m4"
+        // serialization
+        val chill                  = "com.twitter"                             %% "chill"                    % "0.9.3"
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
@@ -111,7 +122,7 @@ object Dependencies {
 
         // other
         val rdf4jRuntime           = "org.eclipse.rdf4j"                        % "rdf4j-runtime"            % "2.3.2"
-        val scallop                = "org.rogach"                              %% "scallop"                  % "2.0.5"
+        val scallop                = "org.rogach"                              %% "scallop"                  % "3.2.0"
         val gwtServlet             = "com.google.gwt"                           % "gwt-servlet"              % "2.8.0"
         val saxonHE                = "net.sf.saxon"                             % "Saxon-HE"                 % "9.9.0-2"
 
@@ -190,6 +201,7 @@ object Dependencies {
         WebapiTest.akkaStreamTestkit.value,
         WebapiTest.akkaTestkit.value,
         bcprov,
+        chill,
         commonsBeanUtil,
         commonsIo,
         commonsText,
@@ -205,9 +217,14 @@ object Dependencies {
         jodd,
         jodaTime,
         jodaConvert,
+        jedis,
         jenaLibs.value,
         jenaText.value,
         jwtSprayJson,
+        kamonCore,
+        kamonLogback,
+        kamonPrometheus,
+        kamonScalaFuture,
         logbackClassic,
         rdf4jRuntime,
         saxonHE,

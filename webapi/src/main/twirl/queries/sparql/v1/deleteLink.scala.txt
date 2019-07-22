@@ -66,6 +66,9 @@ DELETE {
 
             @* Delete the UUID from the current version of the link value, because the new version will store it. *@
             ?currentLinkValue knora-base:valueHasUUID ?currentLinkUUID .
+
+            @* Delete the permissions from the current version of the link value, because the new version will store them. *@
+            ?currentLinkValueForCurrentLink knora-base:hasPermissions ?currentLinkPermissions .
         } else {
             @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be true in this SPARQL template"); ()}
         }
@@ -148,7 +151,8 @@ WHERE {
             rdf:object ?linkTarget ;
             knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
             knora-base:isDeleted false ;
-            knora-base:valueHasUUID ?currentLinkUUID .
+            knora-base:valueHasUUID ?currentLinkUUID ;
+            knora-base:hasPermissions ?currentLinkPermissions .
     } else {
         @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be true in this SPARQL template"); ()}
     }

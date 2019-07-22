@@ -19,7 +19,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # The Knora Base Ontology
 
-@@toc { depth=2 }
+@@toc { depth=3 }
 
 ## Overview
 
@@ -1256,10 +1256,15 @@ created automatically for resource references in standoff markup (see
 
 ### Permissions
 
-An object can grant the following permissions, which are stored in a
-compact format in a single string. This string is the object of the
+Each resource or value can grant certain permissions to specified
+user groups. These permissions are represented as the object of the
 predicate `kb:hasPermissions`, which is required on every `kb:Resource`
-and `kb:Value`.
+and on the current version of every `kb:Value`. The permissions
+attached to the current version of a value also apply to previous
+versions of the value. Value versions other than the current one
+do not have this predicate.
+
+The following permissions can be granted:
 
 1.  **Restricted view permission (RV)** Allows a restricted view of the
     object, e.g. a view of an image with a watermark.

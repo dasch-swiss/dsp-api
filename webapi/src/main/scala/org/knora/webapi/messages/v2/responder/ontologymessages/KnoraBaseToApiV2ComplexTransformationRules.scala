@@ -27,6 +27,7 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
   * Rules for converting `knora-base` (or an ontology based on it) into `knora-api` in the [[ApiV2Complex]] schema.
+  * See also [[OntologyConstants.CorrespondingIris]].
   */
 object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformationRules {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -1494,6 +1495,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
     private val ValueCardinalities = Map(
         OntologyConstants.KnoraApiV2Complex.ValueAsString -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2Complex.HasPermissions -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.UserHasPermission -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.ArkUrl -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.VersionArkUrl -> Cardinality.MustHaveOne,
@@ -1559,6 +1561,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
     /**
       * Properties to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
+      * See also [[OntologyConstants.CorrespondingIris]].
       */
     override val internalPropertiesToRemove: Set[SmartIri] = Set(
         OntologyConstants.Rdf.Subject,
@@ -1677,6 +1680,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
     /**
       * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2Complex]] schema, to obtain `knora-api`.
+      * See also [[OntologyConstants.CorrespondingIris]].
       */
     override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Result,

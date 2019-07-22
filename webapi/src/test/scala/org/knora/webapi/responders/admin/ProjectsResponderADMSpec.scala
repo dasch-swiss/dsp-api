@@ -26,7 +26,7 @@ package org.knora.webapi.responders.admin
 import java.util.UUID
 
 import akka.actor.Status.Failure
-import akka.testkit.{ImplicitSender, TestActorRef}
+import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
@@ -73,27 +73,21 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
                 /* Incunabula project */
                 responderManager ! ProjectGetRequestADM(
-                    maybeIri = Some(SharedTestDataADM.incunabulaProject.id),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.incunabulaProject.id)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
 
                 /* Images project */
                 responderManager ! ProjectGetRequestADM(
-                    maybeIri = Some(SharedTestDataADM.imagesProject.id),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProject.id)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(ProjectGetResponseADM(SharedTestDataADM.imagesProject))
 
                 /* 'SystemProject' */
                 responderManager ! ProjectGetRequestADM(
-                    maybeIri = Some(SharedTestDataADM.systemProject.id),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.systemProject.id)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(ProjectGetResponseADM(SharedTestDataADM.systemProject))
@@ -102,9 +96,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return information about a project identified by shortname" in {
                 responderManager ! ProjectGetRequestADM(
-                    maybeIri = None,
-                    maybeShortname = Some(SharedTestDataADM.incunabulaProject.shortname),
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeShortname = Some(SharedTestDataADM.incunabulaProject.shortname)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
@@ -113,9 +105,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             "return 'NotFoundException' when the project IRI is unknown" in {
 
                 responderManager ! ProjectGetRequestADM(
-                    maybeIri = Some("http://rdfh.ch/projects/notexisting"),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeIri = Some("http://rdfh.ch/projects/notexisting")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found")))
@@ -124,9 +114,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFoundException' when the project shortname is unknown " in {
                 responderManager ! ProjectGetRequestADM(
-                    maybeIri = None,
-                    maybeShortname = Some("wrongshortname"),
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeShortname = Some("wrongshortname")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found")))
@@ -134,12 +122,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFoundException' when the project shortcode is unknown " in {
                 responderManager ! ProjectGetRequestADM(
-                    maybeIri = None,
-                    maybeShortname = None,
-                    maybeShortcode = Some("wrongshortcode"),
+                    ProjectIdentifierADM(maybeShortcode = Some("9999")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
-                expectMsg(Failure(NotFoundException(s"Project 'wrongshortcode' not found")))
+                expectMsg(Failure(NotFoundException(s"Project '9999' not found")))
             }
         }
 
@@ -149,7 +135,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return restricted view settings using project IRI" in {
                 responderManager ! ProjectRestrictedViewSettingsGetADM(
-                    identifier = ProjectIdentifierADM(iri = Some(SharedTestDataADM.imagesProject.id)),
+                    identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProject.id)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Some(expectedResult))
@@ -157,7 +143,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return restricted view settings using project SHORTNAME" in {
                 responderManager ! ProjectRestrictedViewSettingsGetADM(
-                    identifier = ProjectIdentifierADM(shortname = Some(SharedTestDataADM.imagesProject.shortname)),
+                    identifier = ProjectIdentifierADM(maybeShortname = Some(SharedTestDataADM.imagesProject.shortname)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Some(expectedResult))
@@ -165,7 +151,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return restricted view settings using project SHORTCODE" in {
                 responderManager ! ProjectRestrictedViewSettingsGetADM(
-                    identifier = ProjectIdentifierADM(shortcode = Some(SharedTestDataADM.imagesProject.shortcode)),
+                    identifier = ProjectIdentifierADM(maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Some(expectedResult))
@@ -173,7 +159,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFoundException' when the project IRI is unknown" in {
                 responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
-                    identifier = ProjectIdentifierADM(iri = Some("http://rdfh.ch/projects/notexisting")),
+                    identifier = ProjectIdentifierADM(maybeIri = Some("http://rdfh.ch/projects/notexisting")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
@@ -181,7 +167,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFoundException' when the project SHORTCODE is unknown" in {
                 responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
-                    identifier = ProjectIdentifierADM(shortcode = Some("9999")),
+                    identifier = ProjectIdentifierADM(maybeShortcode = Some("9999")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
@@ -189,7 +175,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFoundException' when the project SHORTNAME is unknown" in {
                 responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
-                    identifier = ProjectIdentifierADM(shortname = Some("wrongshortname")),
+                    identifier = ProjectIdentifierADM(maybeShortname = Some("wrongshortname")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
@@ -409,9 +395,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return all members of a project identified by IRI" in {
                 responderManager ! ProjectMembersGetRequestADM(
-                    maybeIri = Some(SharedTestDataADM.imagesProject.id),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProject.id)),
                     SharedTestDataADM.rootUser
                 )
                 val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -429,9 +413,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return all members of a project identified by shortname" in {
                 responderManager ! ProjectMembersGetRequestADM(
-                    maybeIri = None,
-                    maybeShortname = Some(SharedTestDataADM.imagesProject.shortname),
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeShortname = Some(SharedTestDataADM.imagesProject.shortname)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -449,9 +431,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return all members of a project identified by shortcode" in {
                 responderManager ! ProjectMembersGetRequestADM(
-                    maybeIri = None,
-                    maybeShortname = None,
-                    maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode),
+                    ProjectIdentifierADM(maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -469,9 +449,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFound' when the project IRI is unknown (project membership)" in {
                 responderManager ! ProjectMembersGetRequestADM(
-                    maybeIri = Some("http://rdfh.ch/projects/notexisting"),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeIri = Some("http://rdfh.ch/projects/notexisting")),
                     SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
@@ -479,9 +457,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFound' when the project shortname is unknown (project membership)" in {
                 responderManager ! ProjectMembersGetRequestADM(
-                    maybeIri = None,
-                    maybeShortname = Some("wrongshortname"),
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeShortname = Some("wrongshortname")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
@@ -489,19 +465,15 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFound' when the project shortcode is unknown (project membership)" in {
                 responderManager ! ProjectMembersGetRequestADM(
-                    maybeIri = None,
-                    maybeShortname = None,
-                    maybeShortcode = Some("wrongshortcode"),
+                    ProjectIdentifierADM(maybeShortcode = Some("9999")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
-                expectMsg(Failure(NotFoundException(s"Project 'wrongshortcode' not found.")))
+                expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
             }
 
             "return all project admin members of a project identified by IRI" in {
                 responderManager ! ProjectAdminMembersGetRequestADM(
-                    maybeIri = Some(SharedTestDataADM.imagesProject.id),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProject.id)),
                     SharedTestDataADM.rootUser
                 )
                 val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -517,9 +489,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return all project admin members of a project identified by shortname" in {
                 responderManager ! ProjectAdminMembersGetRequestADM(
-                    maybeIri = None,
-                    maybeShortname = Some(SharedTestDataADM.imagesProject.shortname),
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeShortname = Some(SharedTestDataADM.imagesProject.shortname)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -535,9 +505,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return all project admin members of a project identified by shortcode" in {
                 responderManager ! ProjectAdminMembersGetRequestADM(
-                    maybeIri = None,
-                    maybeShortname = None,
-                    maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode),
+                    ProjectIdentifierADM(maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode)),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -553,9 +521,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
                 responderManager ! ProjectAdminMembersGetRequestADM(
-                    maybeIri = Some("http://rdfh.ch/projects/notexisting"),
-                    maybeShortname = None,
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeIri = Some("http://rdfh.ch/projects/notexisting")),
                     SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
@@ -563,9 +529,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFound' when the project shortname is unknown (project admin membership)" in {
                 responderManager ! ProjectAdminMembersGetRequestADM(
-                    maybeIri = None,
-                    maybeShortname = Some("wrongshortname"),
-                    maybeShortcode = None,
+                    ProjectIdentifierADM(maybeShortname = Some("wrongshortname")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
                 expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
@@ -573,12 +537,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
             "return 'NotFound' when the project shortcode is unknown (project admin membership)" in {
                 responderManager ! ProjectAdminMembersGetRequestADM(
-                    maybeIri = None,
-                    maybeShortname = None,
-                    maybeShortcode = Some("wrongshortcode"),
+                    ProjectIdentifierADM(maybeShortcode = Some("9999")),
                     requestingUser = SharedTestDataADM.rootUser
                 )
-                expectMsg(Failure(NotFoundException(s"Project 'wrongshortcode' not found.")))
+                expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
             }
         }
 

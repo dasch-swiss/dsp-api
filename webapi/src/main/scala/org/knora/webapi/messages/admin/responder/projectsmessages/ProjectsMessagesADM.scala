@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
+import java.io.File
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -108,6 +109,7 @@ case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
 sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
 
 // Requests
+
 /**
   * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
   * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
@@ -128,95 +130,40 @@ case class ProjectsGetADM(requestingUser: UserADM) extends ProjectsResponderRequ
   * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
   * of [[ProjectGetResponseADM]]. External use.
   *
-  * @param maybeIri       the IRI of the project.
-  * @param maybeShortname the project's short name.
-  * @param maybeShortcode the project's shortcode.
+  * @param identifier     the IRI, email, or username of the project.
   * @param requestingUser the user making the request.
   */
-case class ProjectGetRequestADM(maybeIri: Option[IRI] = None,
-                                maybeShortname: Option[String] = None,
-                                maybeShortcode: Option[String] = None,
-                                requestingUser: UserADM) extends ProjectsResponderRequestADM {
-    val parametersCount: Int = List(
-        maybeIri,
-        maybeShortname,
-        maybeShortcode
-    ).flatten.size
-
-    // only one is allowed
-    if (parametersCount == 0 || parametersCount > 1) throw BadRequestException("Need to provide either project IRI, shortname, or shortcode.")
-}
+case class ProjectGetRequestADM(identifier: ProjectIdentifierADM,
+                                requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
   * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
   * of [[ProjectADM]]. Internal use only.
   *
-  * @param maybeIri       the IRI of the project.
-  * @param maybeShortname the project's short name.
-  * @param maybeShortcode the project's shortcode.
+  * @param identifier     the IRI, email, or username of the project.
   * @param requestingUser the user making the request.
   */
-case class ProjectGetADM(maybeIri: Option[IRI],
-                         maybeShortname: Option[String],
-                         maybeShortcode: Option[String],
-                         requestingUser: UserADM) extends ProjectsResponderRequestADM {
-
-    val parametersCount: Int = List(
-        maybeIri,
-        maybeShortname,
-        maybeShortcode
-    ).flatten.size
-
-    // Only one is allowed
-    if (parametersCount == 0 || parametersCount > 1) throw BadRequestException("Need to provide either project IRI, shortname, or shortcode.")
-}
+case class ProjectGetADM(identifier: ProjectIdentifierADM,
+                         requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
   * Returns all users belonging to a project identified either through its IRI, shortname or shortcode.
   *
-  * @param maybeIri       the IRI of the project.
-  * @param maybeShortname the project's short name.
-  * @param maybeShortcode the project's shortcode.
+  * @param identifier     the IRI, email, or username of the project.
   * @param requestingUser the user making the request.
   */
-case class ProjectMembersGetRequestADM(maybeIri: Option[IRI],
-                                       maybeShortname: Option[String],
-                                       maybeShortcode: Option[String],
-                                       requestingUser: UserADM) extends ProjectsResponderRequestADM {
-
-    val parametersCount: Int = List(
-        maybeIri,
-        maybeShortname,
-        maybeShortcode
-    ).flatten.size
-
-    // Only one is allowed
-    if (parametersCount == 0 || parametersCount > 1) throw BadRequestException("Need to provide either project IRI, shortname, or shortcode.")
-}
+case class ProjectMembersGetRequestADM(identifier: ProjectIdentifierADM,
+                                       requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 
 /**
   * Returns all admin users of a project identified either through its IRI, shortname or shortcode.
   *
-  * @param maybeIri       the IRI of the project.
-  * @param maybeShortname the project's short name.
-  * @param maybeShortcode the project's shortcode.
+  * @param identifier     the IRI, email, or username of the project.
   * @param requestingUser the user making the request.
   */
-case class ProjectAdminMembersGetRequestADM(maybeIri: Option[IRI],
-                                            maybeShortname: Option[String],
-                                            maybeShortcode: Option[String],
-                                            requestingUser: UserADM) extends ProjectsResponderRequestADM {
-
-    val parametersCount: Int = List(
-        maybeIri,
-        maybeShortname,
-        maybeShortcode
-    ).flatten.size
-
-    // Only one is allowed
-    if (parametersCount == 0 || parametersCount > 1) throw BadRequestException("Need to provide either project IRI, shortname, or shortcode.")
-}
+case class ProjectAdminMembersGetRequestADM(identifier: ProjectIdentifierADM,
+                                            requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
   * Returns all unique keywords for all projects.
@@ -234,11 +181,10 @@ case class ProjectsKeywordsGetRequestADM(requestingUser: UserADM) extends Projec
 case class ProjectKeywordsGetRequestADM(projectIri: IRI,
                                         requestingUser: UserADM) extends ProjectsResponderRequestADM
 
-
 /**
   * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
   *
-  * @param projectIri     the IRI of the project.
+  * @param identifier     the identifier of the project.
   * @param requestingUser the user making the request.
   */
 @ApiMayChange
@@ -247,12 +193,21 @@ case class ProjectRestrictedViewSettingsGetADM(identifier: ProjectIdentifierADM,
 /**
   * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
   *
-  * @param projectIri     the IRI of the project.
+  * @param identifier     the identifier of the project.
   * @param requestingUser the user making the request.
   */
 @ApiMayChange
 case class ProjectRestrictedViewSettingsGetRequestADM(identifier: ProjectIdentifierADM,
                                                       requestingUser: UserADM) extends ProjectsResponderRequestADM
+
+/**
+  * Requests all the data in the project. A successful response will be a [[ProjectDataGetResponseADM]].
+  *
+  * @param projectIdentifier the identifier of the project.
+  * @param requestingUser    the user making the request.
+  */
+case class ProjectDataGetRequestADM(projectIdentifier: ProjectIdentifierADM,
+                                    requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
   * Requests the creation of a new project.
@@ -279,6 +234,7 @@ case class ProjectChangeRequestADM(projectIri: IRI,
                                    apiRequestID: UUID) extends ProjectsResponderRequestADM
 
 // Responses
+
 /**
   * Represents the Knora API ADM JSON response to a request for information about all projects.
   *
@@ -354,6 +310,13 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
     def toJsValue: JsValue = projectOperationResponseADMFormat.write(this)
 }
 
+/**
+  * Represents a project's data in TriG format.
+  *
+  * @param projectDataFile a file containing the project's data in TriG format.
+  */
+case class ProjectDataGetResponseADM(projectDataFile: File)
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -427,15 +390,15 @@ case class ProjectADM(id: IRI,
         that match {
             case otherProj: ProjectADM =>
                 id == otherProj.id &&
-                        shortname == otherProj.shortname &&
-                        shortcode == otherProj.shortcode &&
-                        longname == otherProj.longname &&
-                        description.toSet == otherProj.description.toSet &&
-                        keywords.toSet == otherProj.keywords.toSet &&
-                        logo == otherProj.logo &&
-                        ontologies.toSet == otherProj.ontologies.toSet &&
-                        status == otherProj.status &&
-                        selfjoin == otherProj.selfjoin
+                    shortname == otherProj.shortname &&
+                    shortcode == otherProj.shortcode &&
+                    longname == otherProj.longname &&
+                    description.toSet == otherProj.description.toSet &&
+                    keywords.toSet == otherProj.keywords.toSet &&
+                    logo == otherProj.logo &&
+                    ontologies.toSet == otherProj.ontologies.toSet &&
+                    status == otherProj.status &&
+                    selfjoin == otherProj.selfjoin
 
             case _ => false
         }
@@ -444,16 +407,16 @@ case class ProjectADM(id: IRI,
     override def hashCode(): Int = {
         // Ignore the order of sequences when generating hash codes for this class.
         new HashCodeBuilder(19, 39).
-                append(id).
-                append(shortname).
-                append(shortcode).
-                append(longname).
-                append(description.toSet).
-                append(keywords.toSet).
-                append(logo).
-                append(ontologies.toSet).
-                append(status).
-                append(selfjoin).hashCode()
+            append(id).
+            append(shortname).
+            append(shortcode).
+            append(longname).
+            append(description.toSet).
+            append(keywords.toSet).
+            append(logo).
+            append(ontologies.toSet).
+            append(status).
+            append(selfjoin).hashCode()
     }
 }
 
@@ -462,14 +425,14 @@ case class ProjectADM(id: IRI,
   * validated and escaped.
   */
 object ProjectIdentifierADM {
-    def apply(iri: Option[IRI] = None,
-              shortname: Option[String] = None,
-              shortcode: Option[String] = None)(implicit sf: StringFormatter): ProjectIdentifierADM = {
+    def apply(maybeIri: Option[IRI] = None,
+              maybeShortname: Option[String] = None,
+              maybeShortcode: Option[String] = None)(implicit sf: StringFormatter): ProjectIdentifierADM = {
 
         val parametersCount: Int = List(
-            iri,
-            shortname,
-            shortcode
+            maybeIri,
+            maybeShortname,
+            maybeShortcode
         ).flatten.size
 
         // something needs to be set
@@ -478,32 +441,34 @@ object ProjectIdentifierADM {
         if (parametersCount > 1) throw BadRequestException("Only one option allowed for project identifier.")
 
         new ProjectIdentifierADM(
-            iri = sf.validateAndEscapeOptionalProjectIri(iri, throw BadRequestException(s"Invalid user project $iri")),
-            shortname = sf.validateAndEscapeOptionalProjectShortname(shortname, throw BadRequestException(s"Invalid user project shortname $shortname")),
-            shortcode = sf.validateAndEscapeOptionalProjectShortcode(shortcode, throw BadRequestException(s"Invalid user project shortcode $shortcode")))
+            maybeIri = sf.validateAndEscapeOptionalProjectIri(maybeIri, throw BadRequestException(s"Invalid user project $maybeIri")),
+            maybeShortname = sf.validateAndEscapeOptionalProjectShortname(maybeShortname, throw BadRequestException(s"Invalid user project shortname $maybeShortname")),
+            maybeShortcode = sf.validateAndEscapeOptionalProjectShortcode(maybeShortcode, throw BadRequestException(s"Invalid user project shortcode $maybeShortcode")))
     }
 }
 
 /**
   * Represents the project's identifier. It can be an IRI, shortcode or shortname.
-  * @param value the user's identifier.
+  * @param maybeIri       the project's IRI.
+  * @param maybeShortname the project's shortname.
+  * @param maybeShortcode the project's shortcode
   */
-class ProjectIdentifierADM private (iri: Option[IRI] = None,
-                                    shortname: Option[String] = None,
-                                    shortcode: Option[String] = None) {
+class ProjectIdentifierADM private (maybeIri: Option[IRI] = None,
+                                    maybeShortname: Option[String] = None,
+                                    maybeShortcode: Option[String] = None) {
 
     // squash and return value.
     val value: String = List(
-        iri,
-        shortname,
-        shortcode
+        maybeIri,
+        maybeShortname,
+        maybeShortcode
     ).flatten.head
 
     def hasType: ProjectIdentifierType.Value = {
 
-        if (iri.isDefined) {
+        if (maybeIri.isDefined) {
             ProjectIdentifierType.IRI
-        } else if (shortcode.isDefined) {
+        } else if (maybeShortcode.isDefined) {
             ProjectIdentifierType.SHORTCODE
         } else {
             ProjectIdentifierType.SHORTNAME
@@ -514,29 +479,51 @@ class ProjectIdentifierADM private (iri: Option[IRI] = None,
       * Tries to return the value as an IRI.
       */
     def toIri: IRI = {
-        iri.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.IRI' type."))
+        maybeIri.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.IRI' type."))
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toIriOption: Option[IRI] = {
-        iri
+        maybeIri
+    }
+
+    /**
+      * Tries to return the value as an SHORTNAME.
+      */
+    def toShortname: String = {
+        maybeShortname.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTNAME' type."))
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toShortnameOption: Option[String] = {
-        shortname
+        maybeShortname
+    }
+
+    /**
+      * Tries to return the value as an SHORTCODE.
+      */
+    def toShortcode: String = {
+        maybeShortcode.getOrElse(throw DataConversionException(s"Identifier $value is not of the required 'ProjectIdentifierType.SHORTCODE' type."))
     }
 
     /**
       * Returns an optional value of the identifier.
       */
     def toShortcodeOption: Option[String] = {
-        shortcode
+        maybeShortcode
     }
+
+    /**
+      * Returns the string representation
+      */
+    override def toString: IRI = {
+        s"ProjectIdentifierADM(${this.value})"
+    }
+
 }
 
 
@@ -550,18 +537,16 @@ object ProjectIdentifierType extends Enumeration {
 
     type ProjectIdentifierType
 
-    val IRI = Value(0, "iri")
-    val SHORTCODE = Value(1, "shortcode")
-    val SHORTNAME = Value(2, "shortname")
+    val IRI: Value = Value(0, "iri")
+    val SHORTCODE: Value = Value(1, "shortcode")
+    val SHORTNAME: Value = Value(2, "shortname")
 }
-
 
 
 /**
   * API MAY CHANGE: Represents the project's restricted view settings.
   *
-  * @param size     the x size.
-  * @param sizeY the y size.
+  * @param size      the restricted view size.
   * @param watermark the watermark file.
   */
 @ApiMayChange

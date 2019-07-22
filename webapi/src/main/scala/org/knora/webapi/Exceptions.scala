@@ -228,6 +228,33 @@ case class UpdateNotPerformedException(message: String = "A requested update was
   */
 case class UnsupportedValueException(message: String = "An unsupported value was given. Please report this as a possible bug.") extends InternalServerException(message)
 
+
+/**
+  * Indicates an internal server error in standoff-related processing.
+  *
+  * @param message a description of the error.
+  * @param cause   the original exception representing the cause of the error, if any.
+  */
+case class StandoffInternalException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
+
+object StandoffInternalException {
+    def apply(message: String, e: Throwable, log: LoggingAdapter): StandoffInternalException =
+        StandoffInternalException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+}
+
+/**
+  * Indicates that something happened that should be impossible.
+  *
+  * @param message a description of the error.
+  * @param cause   the original exception representing the cause of the error, if any.
+  */
+case class AssertionException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
+
+object AssertionException {
+    def apply(message: String, e: Throwable, log: LoggingAdapter): AssertionException =
+        AssertionException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+}
+
 /**
   * An abstract class for exceptions indicating that something went wrong with the triplestore.
   *
@@ -276,33 +303,6 @@ object TriplestoreInternalException {
 }
 
 /**
-  * Indicates an internal server error in standoff-related processing.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
-case class StandoffInternalException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
-
-object StandoffInternalException {
-    def apply(message: String, e: Throwable, log: LoggingAdapter): StandoffInternalException =
-        StandoffInternalException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
-}
-
-/**
-  * Indicates that something happened that should be impossible.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
-case class AssertionException(message: String, cause: Option[Throwable] = None) extends InternalServerException(message, cause)
-
-object AssertionException {
-    def apply(message: String, e: Throwable, log: LoggingAdapter): AssertionException =
-        AssertionException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
-}
-
-
-/**
   * Indicates that the triplestore returned an error message, or a response that could not be parsed.
   *
   * @param message a description of the error.
@@ -341,6 +341,13 @@ object InvalidApiJsonException {
 }
 
 /**
+  * Indicates that the during caching with Redis something went wrong.
+  *
+  * @param message a description of the error.
+  */
+abstract class RedisException(message: String) extends InternalServerException(message)
+
+/**
   * Indicates that an application lock could not be acquired.
   *
   * @param message a description of the error.
@@ -372,6 +379,13 @@ case class ApplicationCacheException(message: String) extends InternalServerExce
   * @param message a description of the error.
   */
 case class SparqlGenerationException(message: String) extends InternalServerException(message)
+
+/**
+  * Indicates that an error occurred during the generation of client API code.
+  *
+  * @param message a description of the error.
+  */
+case class ClientApiGenerationException(message: String) extends InternalServerException(message)
 
 /**
   * A generic [[InternalServerException]] for wrapping any non-serializable exception in a serializable form.

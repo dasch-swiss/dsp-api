@@ -29,7 +29,7 @@
  * @param currentValueIri the IRI of the current version of the value.
  * @param newValueIri the IRI of the new version of the value.
  * @param maybeComment the new comment on the value.
- * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
+ * @param currentTime a timestamp that will be attached to the value.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
@@ -53,6 +53,12 @@ DELETE {
 
         @* Delete the resource's last modification date so we can update it. *@
         ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
+
+        @* Delete the UUID from the current version of the value, because the new version will store it. *@
+        ?currentValue knora-base:valueHasUUID ?currentValueUUID .
+
+        @* Delete the permissions from the current version of the value, because the new version will store them. *@
+        ?currentValue knora-base:hasPermissions ?currentValuePermissions .
     }
 } INSERT {
     GRAPH ?dataNamedGraph {
@@ -98,7 +104,9 @@ WHERE {
     ?resource ?property ?currentValue .
 
     ?currentValue ?valuePred ?valueObj ;
-        knora-base:isDeleted false .
+        knora-base:isDeleted false ;
+        knora-base:valueHasUUID ?currentValueUUID ;
+        knora-base:hasPermissions ?currentValuePermissions .
 
     FILTER(!(?valuePred = knora-base:previousValue || ?valuePred = knora-base:valueCreationDate || ?valuePred = knora-base:valueHasComment))
 

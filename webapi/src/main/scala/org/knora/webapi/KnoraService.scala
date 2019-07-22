@@ -25,13 +25,13 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.typesafe.scalalogging.{LazyLogging, Logger}
+import com.typesafe.scalalogging.Logger
+import kamon.Kamon
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.responders._
-import org.knora.webapi.routing.AroundDirectives.logDuration
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
@@ -89,7 +89,7 @@ trait LiveCore extends Core {
   * along with the three main supervisor actors is started. All further actors are started and supervised by those
   * three actors.
   */
-trait KnoraService {
+trait KnoraService extends AroundDirectives {
     this: Core =>
 
     // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.
@@ -141,6 +141,7 @@ trait KnoraService {
             CORS(
                   new HealthRoute(routeData).knoraApiPath ~
                   new RejectingRoute(routeData).knoraApiPath ~
+                  new ClientApiRoute(routeData).knoraApiPath ~
                   new ResourcesRouteV1(routeData).knoraApiPath ~
                   new ValuesRouteV1(routeData).knoraApiPath ~
                   new StandoffRouteV1(routeData).knoraApiPath ~
@@ -183,8 +184,10 @@ trait KnoraService {
         bindingFuture onComplete {
             case Success(_) => {
 
-                // start monitoring reporters
-                startReporters()
+                if (settings.prometheusEndpoint) {
+                    // Load Kamon monitoring
+                    Kamon.loadModules()
+                }
 
                 // Kick of startup procedure.
                 applicationStateActor ! InitStartUp(skipLoadingOfOntologies)
@@ -202,34 +205,16 @@ trait KnoraService {
       */
     def stopService(): Unit = {
         logger.info("KnoraService - Shutting down.")
+
+        if (settings.prometheusEndpoint) {
+            // Stop Kamon monitoring
+            Kamon.stopModules()
+        }
+
         Http().shutdownAllConnectionPools()
         CacheUtil.removeAllCaches()
-        // Kamon.stopAllReporters()
+
         system.terminate()
         Await.result(system.whenTerminated, 30 seconds)
-    }
-
-    /**
-      * Start the different reporters if defined. Reporters are the connection points between kamon (the collector) and
-      * the application which we will use to look at the collected data.
-      */
-    private def startReporters(): Unit = {
-
-        /*
-        val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
-        if (prometheusReporter) {
-            Kamon.addReporter(new PrometheusReporter()) // metrics
-        }
-
-        val zipkinReporter = Await.result(applicationStateActor ? GetZipkinReporterState(), 1.second).asInstanceOf[Boolean]
-        if (zipkinReporter) {
-            Kamon.addReporter(new ZipkinReporter()) // tracing
-        }
-
-        val jaegerReporter = Await.result(applicationStateActor ? GetJaegerReporterState(), 1.second).asInstanceOf[Boolean]
-        if (jaegerReporter) {
-            Kamon.addReporter(new JaegerReporter()) // tracing
-        }
-        */
     }
 }
