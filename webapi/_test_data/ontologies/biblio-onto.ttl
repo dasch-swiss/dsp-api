@@ -1337,6 +1337,95 @@
                     salsah-gui:guiElement salsah-gui:SimpleText ;
 
                     rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
+### biblio:isPublishedIn
+
+:isPublishedIn rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Der Brief ist publiziert in"@de ,
+                         "Letter is published in"@en ;
+
+              rdfs:comment """Der Brief ist publiziert in"""@de ,
+                         """Letter is published in"""@en ;
+
+              knora-base:subjectClassConstraint :letter ;
+
+              knora-base:objectClassConstraint :EditedBook ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### biblio:isPublishedInValue
+
+:isPublishedInValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   knora-base:subjectClassConstraint :letter ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                   rdfs:label "Der Brief ist publiziert in"@de ,
+                              "Letter is published in"@en ;
+
+                   rdfs:comment """Der Brief ist publiziert"""@de ,
+                              """Letter is published"""@en .
+
+### ###########################################
+### biblio:publishedLetterHasSeqnum
+
+:publishedLetterHasSeqnum rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Sequence Number in Edition"@en ;
+
+                    rdfs:comment """Represents sequence number of letter in Edition."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :letter ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
+### biblio:publishedLetterStartPage
+
+:publishedLetterStartPage rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Start Page in Edition"@en ;
+
+                    rdfs:comment """Represents start page of letter in Edition."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :letter ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
+### biblio:publishedLetterEndPage
+
+:publishedLetterEndPage rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "End Page in Edition"@en ;
+
+                    rdfs:comment """Represents end-page of letter in Edition."""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :letter ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+
 #################################################################
 #
 #    Classes
@@ -2291,3 +2380,55 @@
                                "Varia Posthuma Article"@en ;
 
                     rdfs:comment "A resource representing a Varia Posthuma article "@en .
+
+
+### ###########################################
+### biblio:letter
+
+:letter rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:Resource ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :isPublishedIn ;
+                            owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :isPublishedInValue ;
+                            owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :publishedLetterHasSeqnum ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :publishedLetterStartPage ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :publishedLetterEndPage ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty beol:beolIDs ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                        ] ;
+
+        knora-base:resourceIcon "letter.png" ;
+
+        rdfs:label "Publizierte Brief"@de ,
+                   "Published Letter"@en ;
+
+        rdfs:comment "A resource representing a published letter"@en .
+
