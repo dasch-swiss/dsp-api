@@ -21,8 +21,9 @@ package org.knora.webapi.messages.store.cacheservicemessages
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
+import org.knora.webapi.messages.store.StoreRequest
 
-sealed trait CacheServiceRequest
+sealed trait CacheServiceRequest extends StoreRequest
 
 /**
   * Message equesting to write project to cache.

@@ -20,6 +20,7 @@
 package org.knora.webapi.util
 
 import akka.pattern.{AskTimeoutException, ask}
+import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages.{ActorReady, ActorReadyAck, AppState, GetAppState}
@@ -41,7 +42,8 @@ trait StartupUtils extends LazyLogging {
     def applicationStateActorReady(): Unit = {
 
         try {
-            Await.result(applicationStateActor ? ActorReady(), 1.second).asInstanceOf[ActorReadyAck]
+            implicit val timeout: Timeout = Timeout(1.second)
+            Await.result(appActor ? ActorReady(), timeout.duration).asInstanceOf[ActorReadyAck]
             logger.info("KnoraService - applicationStateActorReady")
         } catch {
             case e: AskTimeoutException => {
@@ -57,7 +59,8 @@ trait StartupUtils extends LazyLogging {
       */
     def applicationStateRunning(): Unit = {
 
-        val state: AppState = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
+        implicit val timeout: Timeout = Timeout(1.second)
+        val state: AppState = Await.result(appActor ? GetAppState(), timeout.duration).asInstanceOf[AppState]
 
         if (state != AppState.Running) {
             // not in running state

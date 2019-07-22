@@ -50,7 +50,7 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
         "return 'ServiceUnavailable' for state 'Stopped'" in {
 
-            applicationStateActor ! SetAppState(AppState.Stopped)
+            appActor ! SetAppState(AppState.Stopped)
 
             val request = Get(baseApiUrl + s"/health")
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -61,7 +61,7 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
         }
 
         "return 'ServiceUnavailable' for state 'MaintenanceMode'" in {
-            applicationStateActor ! SetAppState(AppState.MaintenanceMode)
+            appActor ! SetAppState(AppState.MaintenanceMode)
 
             val request = Get(baseApiUrl + s"/health")
             val response: HttpResponse = singleAwaitingRequest(request)

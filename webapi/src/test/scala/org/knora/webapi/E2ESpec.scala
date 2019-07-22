@@ -22,7 +22,6 @@ package org.knora.webapi
 import java.io.{File, StringReader}
 
 import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
@@ -31,7 +30,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
-import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
+import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{FileUtil, StartupUtils, StringFormatter}
@@ -47,34 +46,28 @@ object E2ESpec {
 }
 
 /**
-  * This class can be used in End-to-End testing. It starts the Knora server and
-  * provides access to settings and logging.
+  * This class can be used in End-to-End testing. It starts the Knora-API server
+  * and provides access to settings and logging.
   */
 class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
 
-    /* needed by the core trait */
-    implicit lazy val system: ActorSystem = _system
-
-    implicit lazy val settings: SettingsImpl = Settings(system)
-
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
-
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-
-    StringFormatter.initForTest()
-
+    /* constructors */
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
-
     def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
-
     def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
-
     def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
 
+    /* needed by the core trait */
+    implicit lazy val system: ActorSystem = _system
+    implicit lazy val settings: SettingsImpl = Settings(system)
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
+
+    /* Needs to be initialized before any responders */
+    StringFormatter.initForTest()
+
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
-
     implicit protected val postfix: postfixOps = scala.language.postfixOps
-
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll: Unit = {
@@ -83,10 +76,10 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
         applicationStateActorReady()
 
         // set allow reload over http
-        applicationStateActor ! SetAllowReloadOverHTTPState(true)
+        appActor ! SetAllowReloadOverHTTPState(true)
 
         // start the knora service without loading of the ontologies
-        startService(skipLoadingOfOntologies = true)
+        appActor ! AppStart(skipLoadingOfOntologies = true)
 
         // waits until knora is up and running
         applicationStateRunning()
@@ -100,7 +93,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
 
     override def afterAll: Unit = {
         /* Stop the server when everything else has finished */
-        stopService()
+        appActor ! AppStop()
     }
 
     protected def checkIfKnoraIsRunning(): Unit = {

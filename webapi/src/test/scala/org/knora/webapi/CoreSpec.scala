@@ -21,16 +21,15 @@ package org.knora.webapi
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
-import akka.pattern._
+import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.app.{APPLICATION_STATE_ACTOR_NAME, ApplicationStateActor}
+import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME, ResponderData}
-import org.knora.webapi.store.{MockableStoreManager, StoreManagerActorName}
+import org.knora.webapi.responders.ResponderData
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
@@ -73,15 +72,11 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     val settings: SettingsImpl = Settings(system)
     val log = akka.event.Logging(system, this.getClass)
 
-    lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
-    lazy val mockStoreConnectors: Map[String, ActorRef] = Map.empty[String, ActorRef]
+    val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+    val responderManager: ActorRef = appActor
+    val storeManager: ActorRef = appActor
 
-
-    val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
-    val storeManager: ActorRef = system.actorOf(Props(new MockableStoreManager(mockStoreConnectors) with LiveActorMaker), name = StoreManagerActorName)
-    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders, applicationStateActor, storeManager)), name = RESPONDER_MANAGER_ACTOR_NAME)
-
-    val responderData: ResponderData = ResponderData(system, applicationStateActor, responderManager, storeManager)
+    val responderData: ResponderData = ResponderData(system, appActor)
 
     final override def beforeAll() {
         CacheUtil.createCaches(settings.caches)
@@ -110,9 +105,9 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
-        Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
-        Await.result(storeManager ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
+        Await.result(appActor ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
+        Await.result(appActor ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
+        Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
     }
 
     def memusage(): Unit = {

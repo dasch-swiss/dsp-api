@@ -24,6 +24,7 @@ import java.io.File
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.FileValueV1
 import spray.json._
@@ -34,7 +35,7 @@ import spray.json._
 /**
   * An abstract trait for messages that can be sent to the [[org.knora.webapi.store.iiif.IIIFManager]]
   */
-sealed trait IIIFRequest
+sealed trait IIIFRequest extends StoreRequest
 
 /**
   * An abstract trait for messages that can be sent to [[org.knora.webapi.store.iiif.SipiConnector]].

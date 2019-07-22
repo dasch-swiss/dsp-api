@@ -30,6 +30,7 @@ import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle.TurtleParser
 import org.knora.webapi._
+import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.triplestoremessages.RepositoryStatus.RepositoryStatus
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{ErrorHandlingMap, SmartIri, StringFormatter}
@@ -42,7 +43,7 @@ import scala.util.{Failure, Success, Try}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
-sealed trait TriplestoreRequest
+sealed trait TriplestoreRequest extends StoreRequest
 
 /**
   * Simple message for initial actor functionality.
