@@ -19,6 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.ApacheLuceneSupport.CombineSearchTerms
 
 @*
  * Performs a simple full-text search. The number of rows returned per matching resource is equal to the
@@ -35,7 +36,7 @@
  * @param restypeIriOption if given, searches only for resources of this class and its subclasses.
  *@
 @(triplestore: String,
-  searchTerms: Seq[String],
+  searchTerms: CombineSearchTerms,
   preferredLanguage: String,
   fallbackLanguage: String,
   projectIriOption: Option[IRI],

@@ -19,6 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.ApacheLuceneSupport.CombineSearchTerms
 
 @*
  * Performs a simple full-text search using standard SPARQL (except for the interface to Lucene, which is
@@ -37,7 +38,7 @@
  * @param restypeIriOption if given, searches only for resources of this class and its subclasses.
  *@
 @(triplestore: String,
-  searchTerms: Seq[String],
+  searchTerms: CombineSearchTerms,
   preferredLanguage: String,
   fallbackLanguage: String,
   projectIriOption: Option[IRI],
@@ -67,21 +68,10 @@ WHERE {
     BIND(STR("@preferredLanguage") AS ?preferredLanguage)
     BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
 
-    @*
-
-    Lucene Search Syntax: Combine single terms with Boolean operator AND.
-    By default, Lucene would make an OR.
-
-    Loop over the search terms and prepend an AND when processing the second or any latter search term:
-
-    '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}'
-
-    *@
-
     @triplestore match {
         case "embedded-jena-tdb" | "fuseki" => {
 
-            ?matchingSubject <http://jena.apache.org/text#query> '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}' .
+            ?matchingSubject <http://jena.apache.org/text#query> 'searchTerms.combineSearchTermsWithLogicalAnd' .
 
         }
 

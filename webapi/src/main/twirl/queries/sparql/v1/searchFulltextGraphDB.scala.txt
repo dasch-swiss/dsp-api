@@ -19,6 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.ApacheLuceneSupport.CombineSearchTerms
 
 @*
  * Performs a simple full-text search using GraphDB. The number of rows returned per matching resource is equal to the
@@ -37,7 +38,7 @@
  * @param projectIriOption if filtering by project is desired, the IRI of the project to search.
  * @param restypeIriOption if given, searches only for resources of this class and its subclasses.
  *@
-@(searchTerms: Seq[String],
+@(searchTerms: CombineSearchTerms,
   preferredLanguage: String,
   fallbackLanguage: String,
   projectIriOption: Option[IRI],
@@ -67,19 +68,8 @@ WHERE {
     BIND(STR("@preferredLanguage") AS ?preferredLanguage)
     BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
 
-    @*
-
-    Lucene Search Syntax: Combine single terms with Boolean operator AND.
-    By default, Lucene would make an OR.
-
-    Loop over the search terms and prepend an AND when processing the second or any latter search term:
-
-    '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}'
-
-    *@
-
     ?matchingSubject ?matchingProperty ?literal .
-    ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@for((searchTerm, index) <- searchTerms.zipWithIndex) {@if(index > 0){ AND }@searchTerm}' .
+    ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'searchTerms.combineSearchTermsWithLogicalAnd' .
     ?matchingSubject knora-base:isDeleted false .
 
     # ?matchingSubject could be a resource (whose rdfs:label matched) or a value object
