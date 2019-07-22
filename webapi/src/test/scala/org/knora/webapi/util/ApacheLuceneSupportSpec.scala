@@ -30,7 +30,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
             val searchString = "Reise Land"
             val searchExpression: String = ApacheLuceneSupport.CombineSearchTerms(searchString).combineSearchTermsWithLogicalAnd
 
-            assert(searchExpression == "Reise OR Land")
+            assert(searchExpression == "Reise AND Land")
         }
 
     }
