@@ -21,7 +21,7 @@ package org.knora.webapi.responders.v2.search.gravsearch.prequery
 
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
-import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.CombineSearchTerms
+import org.knora.webapi.util.ApacheLuceneSupport.CombineSearchTerms
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.responders.v2.search.gravsearch.types._
