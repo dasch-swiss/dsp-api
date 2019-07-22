@@ -69,7 +69,7 @@ WHERE {
     BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
 
     ?matchingSubject ?matchingProperty ?literal .
-    ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'searchTerms.combineSearchTermsWithLogicalAnd' .
+    ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms.combineSearchTermsWithLogicalAnd' .
     ?matchingSubject knora-base:isDeleted false .
 
     # ?matchingSubject could be a resource (whose rdfs:label matched) or a value object

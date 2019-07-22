@@ -71,7 +71,7 @@ WHERE {
     @triplestore match {
         case "embedded-jena-tdb" | "fuseki" => {
 
-            ?matchingSubject <http://jena.apache.org/text#query> 'searchTerms.combineSearchTermsWithLogicalAnd' .
+            ?matchingSubject <http://jena.apache.org/text#query> '@searchTerms.combineSearchTermsWithLogicalAnd' .
 
         }
 
