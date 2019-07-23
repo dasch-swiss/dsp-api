@@ -146,6 +146,56 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "perform a search by label for incunabula:book that contain 'Das Narrenschiff'" in {
+
+            responderManager ! SearchResourceByLabelRequestV2(
+                searchValue = "Das Narrenschiff",
+                offset = 0,
+                limitToProject = None,
+                limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
+                targetSchema = ApiV2Complex,
+                requestingUser = SharedTestDataADM.anonymousUser
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
+            }
+
+        }
+
+        "perform a count search query by label for incunabula:book that contain 'Narrenschiff'" in {
+
+            responderManager ! SearchResourceByLabelCountRequestV2(
+                searchValue = "Narrenschiff",
+                limitToProject = None,
+                limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
+                requestingUser = SharedTestDataADM.anonymousUser
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
+            }
+
+        }
+
+        "perform a a count search query by label for incunabula:book that contain 'Das Narrenschiff'" in {
+
+            responderManager ! SearchResourceByLabelCountRequestV2(
+                searchValue = "Das Narrenschiff",
+                limitToProject = None,
+                limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
+                requestingUser = SharedTestDataADM.anonymousUser
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
+            }
+
+        }
+
         "search by project and resource class" in {
             responderManager ! SearchResourcesByProjectAndClassRequestV2(
                 projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
