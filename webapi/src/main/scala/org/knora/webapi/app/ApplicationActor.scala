@@ -331,10 +331,18 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
       */
     private def printWelcomeMsg(): Unit = {
 
-        var msg = ""
+        var msg =
+            """
+              | _   __                              ___  ______ _____
+              || | / /                             / _ \ | ___ \_   _|
+              || |/ / _ __   ___  _ __ __ _ ______/ /_\ \| |_/ / | |
+              ||    \| '_ \ / _ \| '__/ _` |______|  _  ||  __/  | |
+              || |\  \ | | | (_) | | | (_| |      | | | || |    _| |_
+              |\_| \_/_| |_|\___/|_|  \__,_|      \_| |_/\_|    \___/
+            """.stripMargin
+
 
         msg += "\n"
-        msg += "================================================================\n"
         msg += s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}\n"
         msg += "----------------------------------------------------------------\n"
 
@@ -363,6 +371,6 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
 
         msg += "================================================================\n"
 
-        log.info(msg)
+        println(msg)
     }
 }
