@@ -25,7 +25,7 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
-import org.knora.webapi.{Core, KnoraDispatchers, KnoraService}
+import org.knora.webapi.{Core, KnoraDispatchers, KnoraLiveService}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -35,7 +35,7 @@ import scala.concurrent.{Await, Future}
   * after the KnoraService is ready.
   */
 trait StartupUtils extends LazyLogging {
-    this: Core with KnoraService =>
+    this: Core with KnoraLiveService =>
 
     /**
       * Returns only when the application state is 'Running'.

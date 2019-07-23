@@ -45,7 +45,7 @@ object ITKnoraLiveSpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
+class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraLiveService with StartupUtils with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
 
     /* constructors */
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig)))
@@ -53,7 +53,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     def this(name: String) = this(ActorSystem(name, ITKnoraLiveSpec.defaultConfig))
     def this() = this(ActorSystem("IntegrationTests", ITKnoraLiveSpec.defaultConfig))
 
-    /* needed by the core trait */
+    /* needed by the core trait (represents the KnoraTestCore trait)*/
     implicit lazy val system: ActorSystem = _system
     implicit lazy val settings: SettingsImpl = Settings(system)
     implicit val materializer: ActorMaterializer = ActorMaterializer()

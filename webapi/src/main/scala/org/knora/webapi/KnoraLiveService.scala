@@ -65,13 +65,13 @@ trait LiveCore extends Core {
     /**
       * Provides the default global execution context
       */
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 }
 
 /**
   * Starts the main application actor
   */
-trait KnoraService {
+trait KnoraLiveService {
     this: Core =>
 
     // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.
