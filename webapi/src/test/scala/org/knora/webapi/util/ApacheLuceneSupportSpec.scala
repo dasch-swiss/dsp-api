@@ -33,5 +33,60 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
             assert(searchExpression == "Reise AND Land")
         }
 
+        "combine space separated words with a logical AND and add a wildcard to the last word (non exact sequence)" in {
+
+            val searchString = "Reise ins Heilige Lan"
+            val searchExpression = ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithoutExactSequence
+
+            assert(searchExpression == "Reise AND ins AND Heilige AND Lan*")
+
+        }
+
+        "add a wildcard to the word if the search string only contains one word (non exact sequence)" in {
+
+            val searchString = "Reis"
+            val searchExpression = ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithoutExactSequence
+
+            assert(searchExpression == "Reis*")
+
+        }
+
+        "combine all space separated words to a phrase but the last one and add a wildcard to it (exact sequence)" in {
+
+            val searchString = "Reise ins Heilige Lan"
+            val searchExpression = ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithExactSequence
+
+            assert(searchExpression == """"Reise ins Heilige" AND Lan*""")
+
+        }
+
+        "add a wildcard to the word if the search string only contains one word (exact sequence)" in {
+
+            val searchString = "Reis"
+            val searchExpression = ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithExactSequence
+
+            assert(searchExpression == "Reis*")
+
+        }
+
+        "create a regex FILTER expression for an exact match" in {
+
+            val searchString = "Reise ins Heilige Lan"
+            val searchExpression = ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateRegexFilterStatementForExactSequenceMatch("firstProp")
+
+            assert(searchExpression == "FILTER regex(?firstProp, 'Reise ins Heilige Lan*', 'i')")
+
+        }
+
+        "not create a regex FILTER expression for an exact match when only one word is provided" in {
+
+            val searchString = "Reise"
+            val searchExpression = ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateRegexFilterStatementForExactSequenceMatch("firstProp")
+
+            assert(searchExpression == "")
+
+        }
+
+
     }
 }
