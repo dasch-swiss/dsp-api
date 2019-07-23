@@ -33,6 +33,14 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
             assert(searchExpression == "Reise AND Land")
         }
 
+        "combine space separated words with a logical AND (2)" in {
+
+            val searchString = "Reise ins Land"
+            val searchExpression: String = ApacheLuceneSupport.CombineSearchTerms(searchString).combineSearchTermsWithLogicalAnd
+
+            assert(searchExpression == "Reise AND ins AND Land")
+        }
+
         "combine space separated words with a logical AND and add a wildcard to the last word (non exact sequence)" in {
 
             val searchString = "Reise ins Heilige Lan"
