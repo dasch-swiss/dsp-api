@@ -62,9 +62,9 @@ object ApacheLuceneSupport {
             // Finds all the strings that contain all of the terms in any order and the last term with the wildcard at the end.
 
             if (terms.nonEmpty) {
-                s"'${this.terms.mkString(s" $logicalAnd ")} $logicalAnd $lastTerm$wildcard'"
+                s"${this.terms.mkString(s" $logicalAnd ")} $logicalAnd $lastTerm$wildcard"
             } else {
-                s"'$lastTerm$wildcard'"
+                s"$lastTerm$wildcard"
             }
         }
 
@@ -84,9 +84,9 @@ object ApacheLuceneSupport {
             // Example: "Reise ins" "Heili" -> "Reise ins" AND Heili*
 
             if (terms.nonEmpty) {
-                s"""'"${this.terms.mkString(" ")}" $logicalAnd $lastTerm$wildcard'"""
+                s""""${this.terms.mkString(" ")}" $logicalAnd $lastTerm$wildcard"""
             } else {
-                s"'$lastTerm$wildcard'"
+                s"$lastTerm$wildcard"
             }
         }
 
