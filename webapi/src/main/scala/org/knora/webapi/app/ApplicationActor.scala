@@ -1,6 +1,7 @@
 package org.knora.webapi.app
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Timers}
+import akka.actor.SupervisorStrategy._
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props, Timers}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -29,9 +30,6 @@ import org.knora.webapi.util.CacheUtil
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
-
-case class Start()
-case class Stop()
 
 trait Managers {
     val responderManager: ActorRef
@@ -97,6 +95,21 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
       */
     private val routeData = KnoraRouteData(system, self)
 
+
+    /**
+      * This actor acts as the supervisor for its child actors.
+      * Here we can override the default supervisor strategy.
+      */
+    override val supervisorStrategy: OneForOneStrategy =
+        OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1.minute) {
+            case _: ArithmeticException      => Resume
+            case _: NullPointerException     => Restart
+            case _: IllegalArgumentException => Stop
+            case e: InconsistentTriplestoreDataException =>
+                log.info(s"Received a 'InconsistentTriplestoreDataException' will shutdown now: Cause: {}", e.message)
+                Stop
+            case _: Exception                => Escalate
+        }
 
     private var appState: AppState = AppState.Stopped
     private var allowReloadOverHTTPState = false
@@ -222,10 +235,7 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
         case other => throw UnexpectedMessageException(s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
     }
 
-    override def postStop(): Unit = {
-        super.postStop()
-        log.debug("ApplicationManager - postStop called")
-    }
+
 
     /**
       * All routes composed together and CORS activated.
@@ -298,7 +308,13 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
       * Stops Knora-API.
       */
     def appStop(): Unit = {
-        log.info("KnoraService - Shutting down.")
+        log.info("ApplicationActor - initiating shutdown ...")
+        context.stop(self)
+    }
+
+    override def postStop(): Unit = {
+        super.postStop()
+        log.info("ApplicationActor - shutdown in progress, initiating post stop cleanup. Bye!")
 
         if (settings.prometheusEndpoint) {
             // Stop Kamon monitoring

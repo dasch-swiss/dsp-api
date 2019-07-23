@@ -63,7 +63,7 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
 
     // close the redis client pool
     override def postStop(): Unit = {
-        logger.info("postStop - shutting down jedis pool")
+        logger.info("CacheServiceManager - shutdown in progress, initiating post stop cleanup.")
         pool.close()
     }
 

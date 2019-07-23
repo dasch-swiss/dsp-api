@@ -57,7 +57,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     implicit lazy val system: ActorSystem = _system
     implicit lazy val settings: SettingsImpl = Settings(system)
     implicit val materializer: ActorMaterializer = ActorMaterializer()
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     /* Needs to be initialized before any responders */
     StringFormatter.initForTest()
@@ -70,9 +70,6 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll: Unit = {
-
-        // waits until the application state actor is ready
-        applicationStateActorReady()
 
         // set allow reload over http
         appActor ! SetAllowReloadOverHTTPState(true)

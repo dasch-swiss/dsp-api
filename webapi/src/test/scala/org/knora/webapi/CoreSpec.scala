@@ -22,10 +22,12 @@ package org.knora.webapi
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.pattern.ask
+import akka.stream.ActorMaterializer
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
+import org.knora.webapi.messages.app.appmessages.AppStop
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
@@ -61,15 +63,23 @@ object CoreSpec {
 
 abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with WordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
 
+    /* constructors - individual tests can override the configuration by giving their own */
+    def this(name: String, config: Config) = this(ActorSystem(name, ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig))))
+    def this(config: Config) = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig))))
+    def this(name: String) = this(ActorSystem(name, ConfigFactory.load()))
+    def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load()))
+
+    /* needed by the core trait */
+    implicit lazy val settings: SettingsImpl = Settings(system)
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+
     // can be overridden in individual spec
     lazy val rdfDataObjects = Seq.empty[RdfDataObject]
-
-    implicit val executionContext: ExecutionContext = system.dispatcher
 
     // needs to be initialized early on
     StringFormatter.initForTest()
 
-    val settings: SettingsImpl = Settings(system)
     val log = akka.event.Logging(system, this.getClass)
 
     val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
@@ -85,23 +95,11 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     }
 
     final override def afterAll() {
-        Http().shutdownAllConnectionPools()
-        system.terminate()
-        atTermination()
-        CacheUtil.removeAllCaches()
+        appActor ! AppStop()
         // memusage()
     }
 
-    protected def atTermination() {}
 
-    /* individual tests can override the configuration by giving their own */
-    def this(name: String, config: Config) = this(ActorSystem(name, ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig))))
-
-    def this(config: Config) = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig))))
-
-    def this(name: String) = this(ActorSystem(name, ConfigFactory.load()))
-
-    def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load()))
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
