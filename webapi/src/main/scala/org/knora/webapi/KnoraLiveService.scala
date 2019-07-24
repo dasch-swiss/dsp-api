@@ -77,8 +77,10 @@ trait KnoraLiveService {
     // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.
     StringFormatter.init(settings)
 
+    // #supervisor
     /**
-      * The actor used at startup, transitioning between states, and storing the application application wide variables in a thread safe manner.
+      * The main application supervisor actor which used at startup, transitioning between states, and storing the application application wide variables in a thread safe manner.
       */
     protected val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
+    // #supervisor
 }

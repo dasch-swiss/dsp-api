@@ -39,9 +39,9 @@ trait Managers {
 trait LiveManagers extends Managers {
     this: Actor =>
 
-    // #supervisors
+    // #store-responder
     /**
-      * The supervisor actor that forwards messages to actors that deal with persistent storage.
+      * The actor that forwards messages to actors that deal with persistent storage.
       */
     lazy val storeManager: ActorRef = context.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = StoreManagerActorName)
 
@@ -49,14 +49,16 @@ trait LiveManagers extends Managers {
       * The supervisor actor that forwards messages to responder actors to handle API requests.
       */
     lazy val responderManager: ActorRef = context.actorOf(Props(new ResponderManager(self, storeManager) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
-    // #supervisors
+    // #store-responder
 }
 
 /**
-  * This is the first actor in the application. It accepts messages for starting
-  * and stopping the Knora-API This is where the three main supervisor actors are
-  * started. Further, this actor holds the current state of the application and
-  * is responsible for coordination of the startup and shutdown sequence.
+  * This is the first actor in the application. All other actors are children
+  * of this actor and thus it takes also the role of the supervisor actor.
+  * It accepts messages for starting and stopping the Knora-API, holds the
+  * current state of the application, and is responsible for coordination of
+  * the startup and shutdown sequence. Further, it forwards any messages meant
+  * for responders or the store to the respective actor.
   */
 class ApplicationActor extends Actor with AroundDirectives with Timers with ActorLogging {
     this: Managers =>
@@ -118,7 +120,7 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
 
     def receive: PartialFunction[Any, Unit] = {
 
-        /* Entry point for startup */
+        /* Entry point for startup sequence */
         case InitStartUp(skipLoadingOfOntologies) => {
             log.info("Startup initiated, please wait ...")
 
@@ -276,7 +278,7 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
         }
     }
 
-    // #startService
+    // #start-api-server
     /**
       * Starts the Knora-API server.
       */
@@ -301,7 +303,7 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
             }
         }
     }
-    // #startService
+    // #start-api-server
 
     /**
       * Stops Knora-API.
