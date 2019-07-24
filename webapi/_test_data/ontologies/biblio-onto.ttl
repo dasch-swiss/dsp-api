@@ -1375,13 +1375,13 @@
                               """Letter is published"""@en .
 
 ### ###########################################
-### biblio:publishedLetterHasSeqnum
+### biblio:publishedLetterNumber
 
-:publishedLetterHasSeqnum rdf:type owl:ObjectProperty ;
+:publishedLetterNumber rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "Sequence Number in Edition"@en ;
+                    rdfs:label "Letter Number in the Edition"@en ;
 
-                    rdfs:comment """Represents sequence number of letter in Edition."""@en ;
+                    rdfs:comment """Represents letternumber of letter in Edition."""@en ;
 
                     knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -2402,7 +2402,7 @@
                         ] ,
                         [
                             rdf:type owl:Restriction ;
-                            owl:onProperty :publishedLetterHasSeqnum ;
+                            owl:onProperty :publishedLetterNumber ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                         ] ,
