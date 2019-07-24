@@ -234,7 +234,7 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
 
         case other => throw UnexpectedMessageException(s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
     }
-    
+
 
     /**
       * All routes composed together and CORS activated.
