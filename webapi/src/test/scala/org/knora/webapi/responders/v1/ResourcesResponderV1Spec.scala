@@ -33,11 +33,9 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.store.SipiConnectorActorName
-import org.knora.webapi.store.iiif.MockSipiConnector
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import spray.json.JsValue
-import org.knora.webapi.util.IriConversions._
 
 import scala.concurrent.duration._
 
@@ -629,7 +627,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     )
 
     /* we need to run our app with the mocked sipi actor */
-    override val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
+    override lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 60.seconds

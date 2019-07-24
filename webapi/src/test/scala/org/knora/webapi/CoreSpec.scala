@@ -82,7 +82,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
 
     val log = akka.event.Logging(system, this.getClass)
 
-    val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+    lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
     val responderManager: ActorRef = appActor
     val storeManager: ActorRef = appActor
 

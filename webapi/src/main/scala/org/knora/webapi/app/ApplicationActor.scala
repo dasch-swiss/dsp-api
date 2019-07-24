@@ -120,7 +120,7 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
 
         /* Entry point for startup */
         case InitStartUp(skipLoadingOfOntologies) => {
-            log.info("InitStartUp ... please wait.")
+            log.info("Startup initiated, please wait ...")
 
             if (appState == AppState.Stopped) {
                 skipOntologies = skipLoadingOfOntologies
@@ -133,7 +133,7 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
 
             appState = value
 
-            log.info("appStateChanged - to state: {}", value)
+            log.debug("appStateChanged - to state: {}", value)
 
             value match {
                 case AppState.Stopped => // do nothing
@@ -147,7 +147,7 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
                 case AppState.LoadingOntologies if skipOntologies => self ! SetAppState(AppState.OntologiesReady) // skipping loading of ontologies
                 case AppState.LoadingOntologies if !skipOntologies => self ! LoadOntologies() // load ontologies
                 case AppState.OntologiesReady => self ! SetAppState(AppState.Running)
-                case AppState.Running => printWelcomeMsg()
+                case AppState.Running => printBanner()
                 case AppState.MaintenanceMode => // do nothing
                 case other => throw UnsupportedValueException(s"The value: $other is not supported.")
             }
@@ -234,8 +234,7 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
 
         case other => throw UnexpectedMessageException(s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
     }
-
-
+    
 
     /**
       * All routes composed together and CORS activated.
@@ -329,7 +328,7 @@ class ApplicationActor extends Actor with AroundDirectives with Timers with Acto
     /**
       * Prints the welcome message
       */
-    private def printWelcomeMsg(): Unit = {
+    private def printBanner(): Unit = {
 
         var msg =
             """

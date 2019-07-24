@@ -34,7 +34,6 @@ import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
-import org.knora.webapi.store.SipiConnectorActorName
 import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
@@ -60,7 +59,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val anythingUser2 = SharedTestDataADM.anythingUser2
 
     /* we need to run our app with the mocked sipi actor */
-    override val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
+    override lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
