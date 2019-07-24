@@ -19,6 +19,8 @@
 
 package org.knora.webapi.util
 
+import scala.util.matching.Regex
+
 /**
   * Provides some functionality to pre-process a given search string so it supports the Apache Lucene Query Parser syntax.
   */
@@ -161,10 +163,13 @@ object ApacheLuceneSupport {
 
         def apply(searchString: String): CombineSearchTerms = {
 
-            // split search string by a space
-            val searchTerms = searchString.split(space)
+            // separate phrases (delimited by quotes) and terms (delimited by space)
+            // https://stackoverflow.com/questions/43665641/in-scala-how-can-i-split-a-string-on-whitespaces-accounting-for-an-embedded-quot
+            val regex = new Regex("([^\\s]*\".*?\"[^\\s]*)|([^\\s]+)")
+            val matches = regex.findAllMatchIn(searchString).toList
+            val searchTerms = matches.map { _.subgroups.flatMap(Option(_)).fold("")(_ ++ _) }
 
-            new CombineSearchTerms(terms = searchTerms.toSeq)
+            new CombineSearchTerms(terms = searchTerms)
 
         }
 
