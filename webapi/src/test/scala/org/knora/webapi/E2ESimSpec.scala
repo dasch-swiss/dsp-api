@@ -19,7 +19,7 @@
 
 package org.knora.webapi
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
@@ -28,6 +28,7 @@ import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import io.gatling.core.scenario.Simulation
+import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.StringFormatter
@@ -53,7 +54,7 @@ object E2ESimSpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core with KnoraLiveService with TriplestoreJsonProtocol with RequestBuilding with LazyLogging {
+abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core with TriplestoreJsonProtocol with RequestBuilding with LazyLogging {
 
     /* constructors */
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESimSpec.defaultConfig)))
@@ -67,13 +68,17 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
 
+    // can be overridden in individual spec
+    lazy val rdfDataObjects = Seq.empty[RdfDataObject]
+
     /* Needs to be initialized before any responders */
     StringFormatter.initForTest()
 
-    protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+    val log = akka.event.Logging(system, this.getClass)
 
-    // needs to be overridden in subclass
-    val rdfDataObjects: Seq[RdfDataObject]
+    lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+
+    protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
     before {
         /* Set the startup flags and start the Knora Server */
@@ -81,7 +86,7 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
 
         appActor ! SetAllowReloadOverHTTPState(true)
 
-        appActor ! AppStart(false)
+        appActor ! AppStart(skipLoadingOfOntologies = true, requiresSipi = false)
 
         loadTestData(rdfDataObjects)
 

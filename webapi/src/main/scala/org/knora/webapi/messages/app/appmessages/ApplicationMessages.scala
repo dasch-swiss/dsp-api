@@ -7,7 +7,7 @@ sealed trait ApplicationRequest
 /**
   * Start Application
   */
-case class AppStart(skipLoadingOfOntologies: Boolean) extends ApplicationRequest
+case class AppStart(skipLoadingOfOntologies: Boolean, requiresSipi: Boolean) extends ApplicationRequest
 
 /**
   * Stop Application
@@ -99,7 +99,7 @@ case class GetAppState() extends ApplicationRequest
   *
   * @param withOntologies a boolean value denoting if loading of ontologies should be skipped or not.
   */
-case class InitStartUp(withOntologies: Boolean = false) extends ApplicationRequest
+case class InitStartUp(withOntologies: Boolean = false, requiresIIIFService: Boolean = true) extends ApplicationRequest
 
 /**
   * Acknowledgment message for [[InitStartUp]].
@@ -131,7 +131,13 @@ case class LoadOntologies() extends ApplicationRequest
   */
 object AppState extends Enumeration {
     type AppState = Value
-    val Stopped, StartingUp, WaitingForRepository, RepositoryReady, CreatingCaches, CachesReady,
-    UpdatingSearchIndex, SearchIndexReady, LoadingOntologies, OntologiesReady, MaintenanceMode, Running = Value
+    val Stopped, StartingUp,
+    WaitingForRepository, RepositoryReady,
+    CreatingCaches, CachesReady,
+    UpdatingSearchIndex, SearchIndexReady,
+    LoadingOntologies, OntologiesReady,
+    WaitingForIIIFService, IIIFServiceReady,
+    WaitingForCacheService, CacheServiceReady,
+    MaintenanceMode, Running = Value
 }
 

@@ -384,3 +384,19 @@ case class SipiGetTextFileRequest(fileUrl: String,
   */
 case class SipiGetTextFileResponse(content: String)
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// IIIF Request ADM
+
+sealed trait IIIFRequestADM extends IIIFRequest
+
+/**
+  * Queries IIIF Service status.
+  */
+case class IIIFServiceGetStatus() extends IIIFRequestADM
+
+/**
+  * Represents a response for [[IIIFServiceGetStatus]].
+  */
+case class IIIFServiceStatusOK()
+

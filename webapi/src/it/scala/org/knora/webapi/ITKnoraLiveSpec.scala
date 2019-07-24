@@ -19,13 +19,14 @@
 
 package org.knora.webapi
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
+import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
@@ -45,7 +46,7 @@ object ITKnoraLiveSpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraLiveService with StartupUtils with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
+class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol with LazyLogging {
 
     /* constructors */
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig)))
@@ -59,15 +60,18 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraLiveService w
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
+    // can be overridden in individual spec
+    lazy val rdfDataObjects = Seq.empty[RdfDataObject]
+
     /* Needs to be initialized before any responders */
     StringFormatter.initForTest()
 
+    val log = akka.event.Logging(system, this.getClass)
+
+    lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
     protected val baseSipiUrl: String = settings.internalSipiBaseUrl
-
-    implicit protected val postfix: postfixOps = scala.language.postfixOps
-
-    lazy val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll: Unit = {
 
@@ -75,13 +79,10 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraLiveService w
         appActor ! SetAllowReloadOverHTTPState(true)
 
         // start knora without loading ontologies
-        appActor ! AppStart(skipLoadingOfOntologies = true)
+        appActor ! AppStart(skipLoadingOfOntologies = true, requiresSipi = true)
 
         // waits until knora is up and running
         applicationStateRunning()
-
-        // check knora
-        checkIfKnoraIsRunning()
 
         // check sipi
         checkIfSipiIsRunning()

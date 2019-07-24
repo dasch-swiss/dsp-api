@@ -69,3 +69,14 @@ case class CacheServiceFlushDB(requestingUser: UserADM) extends CacheServiceRequ
   * Message acknowledging the flush.
   */
 case class CacheServiceFlushDBACK()
+
+
+/**
+  * Queries Cache Service status.
+  */
+case class CacheServiceGetStatus() extends CacheServiceRequest
+
+/**
+  * Represents a response for [[CacheServiceGetStatus]].
+  */
+case class CacheServiceStatusOK()

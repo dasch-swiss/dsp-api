@@ -22,6 +22,7 @@ package org.knora.webapi.store.iiif
 import java.io.File
 
 import akka.actor.{Actor, ActorLogging, ActorSystem}
+import akka.http.scaladsl.util.FastFuture
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -77,6 +78,7 @@ class MockSipiConnector extends Actor with ActorLogging {
         case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
         case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)
         case deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2 => try2Message(sender(), deleteTemporaryFileV2(deleteTemporaryFileRequestV2), log)
+        case IIIFServiceGetStatus() => future2Message(sender(), FastFuture.successful(IIIFServiceStatusOK()), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 

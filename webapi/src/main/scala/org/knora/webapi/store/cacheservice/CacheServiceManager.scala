@@ -29,6 +29,8 @@ import org.knora.webapi.messages.store.cacheservicemessages._
 import org.knora.webapi.util.{ActorUtil, InstrumentationSupport}
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
+import org.knora.webapi.util.ActorUtil.future2Message
+
 import scala.concurrent.{ExecutionContext, Future}
 
 case class EmptyKey(message: String) extends RedisException(message)
@@ -68,14 +70,15 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     }
 
     def receive = {
-        case CacheServicePutUserADM(value) => ActorUtil.future2Message(sender(), redisPutUserADM(value), log)
-        case CacheServiceGetUserADM(identifier) => ActorUtil.future2Message(sender(), redisGetUserADM(identifier), log)
-        case CacheServicePutProjectADM(value) => ActorUtil.future2Message(sender(), redisPutProjectADM(value), log)
-        case CacheServiceGetProjectADM(identifier) => ActorUtil.future2Message(sender(), redisGetProjectADM(identifier), log)
-        case CacheServicePutString(key, value) => ActorUtil.future2Message(sender(), writeStringValue(key, value), log)
-        case CacheServiceGetString(key) => ActorUtil.future2Message(sender(), getStringValue(key), log)
-        case CacheServiceRemoveValues(keys) => ActorUtil.future2Message(sender(), removeValues(keys), log)
-        case CacheServiceFlushDB(requestingUser) => ActorUtil.future2Message(sender(), flushDB(requestingUser), log)
+        case CacheServicePutUserADM(value) => future2Message(sender(), redisPutUserADM(value), log)
+        case CacheServiceGetUserADM(identifier) => future2Message(sender(), redisGetUserADM(identifier), log)
+        case CacheServicePutProjectADM(value) => future2Message(sender(), redisPutProjectADM(value), log)
+        case CacheServiceGetProjectADM(identifier) => future2Message(sender(), redisGetProjectADM(identifier), log)
+        case CacheServicePutString(key, value) => future2Message(sender(), writeStringValue(key, value), log)
+        case CacheServiceGetString(key) => future2Message(sender(), getStringValue(key), log)
+        case CacheServiceRemoveValues(keys) => future2Message(sender(), removeValues(keys), log)
+        case CacheServiceFlushDB(requestingUser) => future2Message(sender(), flushDB(requestingUser), log)
+        case CacheServiceGetStatus() => future2Message(sender(), ping(), log)
         case other =>  sender ! Status.Failure(UnexpectedMessageException(s"RedisManager received an unexpected message: $other"))
     }
 
@@ -419,6 +422,31 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
             case e: Exception =>
                 // Log any errors.
                 logger.warn("Flushing DB failed", e.getMessage)
+                throw e
+        }
+
+        recoverableOperationFuture
+    }
+
+    /**
+      * Pings the Redis store to see if it is available.
+      */
+    private def ping(): Future[CacheServiceStatusOK] = {
+        val operationFuture: Future[CacheServiceStatusOK] = Future {
+
+            val conn: Jedis = pool.getResource
+            try {
+                conn.ping("test")
+                CacheServiceStatusOK()
+            } finally {
+                conn.close()
+            }
+        }
+
+        val recoverableOperationFuture = operationFuture.recover {
+            case e: Exception =>
+                // Log any errors.
+                logger.warn("Ping DB failed", e.getMessage)
                 throw e
         }
 

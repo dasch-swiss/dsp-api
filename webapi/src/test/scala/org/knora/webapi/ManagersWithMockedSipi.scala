@@ -31,9 +31,9 @@ import org.knora.webapi.store.iiif.MockSipiConnector
 trait ManagersWithMockedSipi extends Managers {
     this: Actor =>
 
-    val mockStoreConnectors: Map[String, ActorRef] = Map(SipiConnectorActorName -> context.actorOf(Props(new MockSipiConnector)))
-    val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
+    lazy val mockStoreConnectors: Map[String, ActorRef] = Map(SipiConnectorActorName -> context.actorOf(Props(new MockSipiConnector)))
+    lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
-    val storeManager: ActorRef = context.actorOf(Props(new MockableStoreManager(mockStoreConnectors) with LiveActorMaker), name = StoreManagerActorName)
-    val responderManager: ActorRef = context.actorOf(Props(new MockableResponderManager(mockResponders, self, storeManager)), name = RESPONDER_MANAGER_ACTOR_NAME)
+    lazy val storeManager: ActorRef = context.actorOf(Props(new MockableStoreManager(mockStoreConnectors) with LiveActorMaker), name = StoreManagerActorName)
+    lazy val responderManager: ActorRef = context.actorOf(Props(new MockableResponderManager(mockResponders, self, storeManager)), name = RESPONDER_MANAGER_ACTOR_NAME)
 }

@@ -26,11 +26,11 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 /**
-  * Starts Knora by bringing everything into scope by using the cake pattern. The [[LiveCore]] trait provides
-  * an actor system, which is used by methods defined in the [[KnoraLiveService]] trait, which itself provides
-  * three methods: ''checkActorSystem'', ''startService'', and ''stopService''.
+  * Starts Knora by bringing everything into scope by using the cake pattern.
+  * The [[LiveCore]] trait provides an actor system and the main application
+  * actor.
   */
-object Main extends App with LiveCore with KnoraLiveService {
+object Main extends App with LiveCore {
 
     val arglist = args.toList
 
@@ -63,7 +63,7 @@ object Main extends App with LiveCore with KnoraLiveService {
     } else {
         /* Start the HTTP layer, allowing access */
         /* Don't skip loading of ontologies */
-        appActor ! AppStart(skipLoadingOfOntologies=false)
+        appActor ! AppStart(skipLoadingOfOntologies=false, requiresSipi = true)
 
         /**
           * Adds shutting down of our actor system to the shutdown hook.
