@@ -86,7 +86,7 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
 
         appActor ! SetAllowReloadOverHTTPState(true)
 
-        appActor ! AppStart(skipLoadingOfOntologies = true, requiresSipi = false)
+        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = false)
 
         loadTestData(rdfDataObjects)
 

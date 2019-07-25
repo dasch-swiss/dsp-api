@@ -63,7 +63,7 @@ object Main extends App with LiveCore {
     } else {
         /* Start the HTTP layer, allowing access */
         /* Don't skip loading of ontologies */
-        appActor ! AppStart(skipLoadingOfOntologies=false, requiresSipi = true)
+        appActor ! AppStart(skipLoadingOfOntologies=false, requiresIIIFService = true)
 
         /**
           * Adds shutting down of our actor system to the shutdown hook.

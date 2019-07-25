@@ -7,7 +7,7 @@ sealed trait ApplicationRequest
 /**
   * Start Application
   */
-case class AppStart(skipLoadingOfOntologies: Boolean, requiresSipi: Boolean) extends ApplicationRequest
+case class AppStart(skipLoadingOfOntologies: Boolean, requiresIIIFService: Boolean) extends ApplicationRequest
 
 /**
   * Stop Application
