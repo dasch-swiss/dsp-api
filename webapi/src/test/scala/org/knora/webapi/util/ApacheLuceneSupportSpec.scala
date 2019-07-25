@@ -50,6 +50,33 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
 
         }
 
+        "combine two phrases and one term with a logical AND" in {
+
+            val searchString = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula"
+            val searchExpression: String = ApacheLuceneSupport.CombineSearchTerms(searchString).combineSearchTermsWithLogicalAnd
+
+            assert(searchExpression == "\"Leonhard Euler\" AND \"Daniel Bernoulli\" AND formula")
+
+        }
+
+        "combine two phrases and two terms with a logical AND" in {
+
+            val searchString = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula geometria"
+            val searchExpression: String = ApacheLuceneSupport.CombineSearchTerms(searchString).combineSearchTermsWithLogicalAnd
+
+            assert(searchExpression == "\"Leonhard Euler\" AND \"Daniel Bernoulli\" AND formula AND geometria")
+
+        }
+
+        "handle one phrase correctly" in {
+
+            val searchString = "\"Leonhard Euler\""
+            val searchExpression: String = ApacheLuceneSupport.CombineSearchTerms(searchString).combineSearchTermsWithLogicalAnd
+
+            assert(searchExpression == "\"Leonhard Euler\"")
+
+        }
+
         "combine space separated words with a logical AND and add a wildcard to the last word (non exact sequence)" in {
 
             val searchString = "Reise ins Heilige Lan"
