@@ -33,6 +33,9 @@ object ApacheLuceneSupport {
     // separates single terms
     private val space = " "
 
+    // https://stackoverflow.com/questions/43665641/in-scala-how-can-i-split-a-string-on-whitespaces-accounting-for-an-embedded-quot
+    val separateTermsAndPhrasesRegex = new Regex("([^\\s]*\".*?\"[^\\s]*)|([^\\s]+)")
+
     /**
       * Searches for a resource by its rdfs:label as the user is typing.
       *
@@ -46,7 +49,7 @@ object ApacheLuceneSupport {
         // Example: searchString "Reise ins Heili" results in: '"Reise ins" AND Heili*' that matches "Reise ins Heilige Land".
         // This is necessary because wildcards cannot be used inside a phrase. And we need phrases because we cannot just search for a combination of single terms as their order matters.
         //
-        // Use Lucene Query Parser Syntax: https://lucene.apache.org/core/3_6_2/queryparsersyntax.html
+        // Use Lucene Query Parser Syntax: https://lucene.apache.org/core/7_7_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html
         //
 
 
@@ -118,7 +121,7 @@ object ApacheLuceneSupport {
       */
     object MatchStringWhileTyping {
 
-        def apply(searchString: String) = {
+        def apply(searchString: String): MatchStringWhileTyping = {
 
             // split search string by a space
             val searchStringSegments: Seq[String] = searchString.split(space).toList
@@ -165,8 +168,7 @@ object ApacheLuceneSupport {
 
             // separate phrases (delimited by quotes) and terms (delimited by space)
             // https://stackoverflow.com/questions/43665641/in-scala-how-can-i-split-a-string-on-whitespaces-accounting-for-an-embedded-quot
-            val regex = new Regex("([^\\s]*\".*?\"[^\\s]*)|([^\\s]+)")
-            val matches = regex.findAllMatchIn(searchString).toList
+            val matches = separateTermsAndPhrasesRegex.findAllMatchIn(searchString).toList
             val searchTerms = matches.map { _.subgroups.flatMap(Option(_)).fold("")(_ ++ _) }
 
             new CombineSearchTerms(terms = searchTerms)
