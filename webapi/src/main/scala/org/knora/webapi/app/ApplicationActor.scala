@@ -16,7 +16,7 @@ import org.knora.webapi.messages.admin.responder.KnoraRequestADM
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
-import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetStatus, CacheServiceStatusOK}
+import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetStatus, CacheServiceStatusNOK, CacheServiceStatusOK}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.KnoraRequestV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
@@ -28,7 +28,7 @@ import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.store.{StoreManager, StoreManagerActorName}
 import org.knora.webapi.util.CacheUtil
-import org.knora.webapi.messages.store.sipimessages.{IIIFServiceGetStatus, IIIFServiceStatusOK}
+import org.knora.webapi.messages.store.sipimessages.{IIIFServiceGetStatus, IIIFServiceStatusNOK, IIIFServiceStatusOK}
 import redis.clients.jedis.exceptions.JedisConnectionException
 
 import scala.concurrent.duration._
@@ -77,7 +77,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
     private val log = akka.event.Logging(context.system, this.getClass)
 
-    log.debug("entered the ApplicationManager constructor")
+    logger.debug("entered the ApplicationManager constructor")
 
     implicit val system: ActorSystem = context.system
 
@@ -122,14 +122,14 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             case _: NullPointerException     => Restart
             case _: IllegalArgumentException => Stop
             case e: InconsistentTriplestoreDataException =>
-                log.info(s"Received a 'InconsistentTriplestoreDataException', will shutdown now. Cause: {}", e.message)
+                logger.info(s"Received a 'InconsistentTriplestoreDataException', will shutdown now. Cause: {}", e.message)
                 Stop
             case e: SipiException =>
-                log.warning(s"Received a 'SipiException', will continue. Cause: {}", e.message)
+                logger.warn(s"Received a 'SipiException', will continue. Cause: {}", e.message)
                 Resume
-            case e: JedisConnectionException =>
-                log.info(s"Received a 'JedisConnectionException', will shutdown now. Please make sure that the Redis-Server is running.")
-                Stop
+            case _: JedisConnectionException =>
+                logger.warn(s"Received a 'JedisConnectionException', will continue. Probably the Redis-Server is not running.")
+                Resume
             case _: Exception                => Escalate
         }
 
@@ -138,6 +138,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
     private var printConfigState = false
     private var skipOntologies = true
     private var withIIIFService = true
+    private val withCacheService = settings.cacheServiceEnabled
 
     def receive: PartialFunction[Any, Unit] = {
 
@@ -148,6 +149,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             if (appState == AppState.Stopped) {
                 skipOntologies = skipLoadingOfOntologies
                 withIIIFService = requiresIIIFService
+
                 self ! SetAppState(AppState.StartingUp)
             }
         }
@@ -166,7 +168,8 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
                     self ! SetAppState(AppState.WaitingForRepository)
                     
                 case AppState.WaitingForRepository =>
-                    self ! CheckRepository() // check DB
+                    // check DB
+                    self ! CheckRepository()
 
                 case AppState.RepositoryReady =>
                     self ! SetAppState(AppState.CreatingCaches)
@@ -196,7 +199,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
                 case AppState.WaitingForIIIFService if withIIIFService =>
                     // check if sipi is running
-                    self ! IIIFServiceGetStatus()
+                    self ! CheckIIIFService
 
                 case AppState.WaitingForIIIFService if !withIIIFService =>
                     // skip sipi check
@@ -205,8 +208,11 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
                 case AppState.IIIFServiceReady =>
                     self ! SetAppState(AppState.WaitingForCacheService)
 
-                case AppState.WaitingForCacheService =>
-                    self ! CacheServiceGetStatus()
+                case AppState.WaitingForCacheService if withCacheService =>
+                    self ! CheckCacheService
+
+                case AppState.WaitingForCacheService if !withCacheService =>
+                    self ! SetAppState(AppState.CacheServiceReady)
 
                 case AppState.CacheServiceReady =>
                     self ! SetAppState(AppState.Running)
@@ -290,11 +296,25 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
         case SuccessResponseV2(_) =>
             self ! SetAppState(AppState.OntologiesReady)
 
-        case IIIFServiceStatusOK() =>
+        case CheckIIIFService =>
+            self ! IIIFServiceGetStatus
+
+        case IIIFServiceStatusOK =>
             self ! SetAppState(AppState.IIIFServiceReady)
 
-        case CacheServiceStatusOK() =>
+        case IIIFServiceStatusNOK if withIIIFService =>
+            logger.warn("Sipi not running. Please start Sipi.")
+            timers.startSingleTimer("CheckIIIFService", CheckIIIFService, 5.seconds)
+
+        case CheckCacheService =>
+            self ! CacheServiceGetStatus
+
+        case CacheServiceStatusOK =>
             self ! SetAppState(AppState.CacheServiceReady)
+
+        case CacheServiceStatusNOK =>
+            logger.warn("Redis-Server not running. Please start the Redis-Server.")
+            timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
 
         case AppStart(withOntologies, requiresSipi) => appStart(withOntologies, requiresSipi)
         case AppStop() => appStop()
@@ -370,7 +390,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
                 }
 
                 // Kick of startup procedure.
-                self ! InitStartUp(skipLoadingOfOntologies)
+                self ! InitStartUp(skipLoadingOfOntologies, requiresSipi)
             }
             case Failure(ex) => {
                 logger.error(

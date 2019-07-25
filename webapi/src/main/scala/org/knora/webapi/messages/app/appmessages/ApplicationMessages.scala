@@ -99,7 +99,7 @@ case class GetAppState() extends ApplicationRequest
   *
   * @param withOntologies a boolean value denoting if loading of ontologies should be skipped or not.
   */
-case class InitStartUp(withOntologies: Boolean = false, requiresIIIFService: Boolean = true) extends ApplicationRequest
+case class InitStartUp(withOntologies: Boolean, requiresIIIFService: Boolean) extends ApplicationRequest
 
 /**
   * Acknowledgment message for [[InitStartUp]].
@@ -125,6 +125,16 @@ case class UpdateSearchIndex() extends ApplicationRequest
   * Message for initiating loading of ontologies. Used only inside the actor itself.
   */
 case class LoadOntologies() extends ApplicationRequest
+
+/**
+  * Message for initiating IIIF Service checking. Used only inside the actor itself.
+  */
+case object CheckIIIFService extends ApplicationRequest
+
+/**
+  * Message for initiating Cache Service checking. Used only inside the actor itself.
+  */
+case object CheckCacheService extends ApplicationRequest
 
 /**
   * Application States at Startup

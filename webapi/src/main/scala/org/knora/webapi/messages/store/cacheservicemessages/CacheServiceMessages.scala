@@ -70,13 +70,22 @@ case class CacheServiceFlushDB(requestingUser: UserADM) extends CacheServiceRequ
   */
 case class CacheServiceFlushDBACK()
 
-
 /**
   * Queries Cache Service status.
   */
-case class CacheServiceGetStatus() extends CacheServiceRequest
+case object CacheServiceGetStatus extends CacheServiceRequest
 
 /**
   * Represents a response for [[CacheServiceGetStatus]].
   */
-case class CacheServiceStatusOK()
+sealed trait CacheServiceStatusResponse
+
+/**
+  * Represents a positive response for [[CacheServiceGetStatus]].
+  */
+case object CacheServiceStatusOK extends CacheServiceStatusResponse
+
+/**
+  * Represents a negative response for [[CacheServiceGetStatus]].
+  */
+case object CacheServiceStatusNOK extends CacheServiceStatusResponse

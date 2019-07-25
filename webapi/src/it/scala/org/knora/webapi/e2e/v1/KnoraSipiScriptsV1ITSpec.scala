@@ -45,7 +45,7 @@ object KnoraSipiScriptsV1ITSpec {
   */
 class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.config) with TriplestoreJsonProtocol {
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass)
+    implicit override val log = akka.event.Logging(system, this.getClass)
 
     private val username = "root@example.com"
     private val password = "test"

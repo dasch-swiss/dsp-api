@@ -26,10 +26,9 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM, ProjectIdentifierType}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM, UserIdentifierType}
 import org.knora.webapi.messages.store.cacheservicemessages._
-import org.knora.webapi.util.{ActorUtil, InstrumentationSupport}
-import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
-
 import org.knora.webapi.util.ActorUtil.future2Message
+import org.knora.webapi.util.InstrumentationSupport
+import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -78,7 +77,7 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
         case CacheServiceGetString(key) => future2Message(sender(), getStringValue(key), log)
         case CacheServiceRemoveValues(keys) => future2Message(sender(), removeValues(keys), log)
         case CacheServiceFlushDB(requestingUser) => future2Message(sender(), flushDB(requestingUser), log)
-        case CacheServiceGetStatus() => future2Message(sender(), ping(), log)
+        case CacheServiceGetStatus => future2Message(sender(), ping(), log)
         case other =>  sender ! Status.Failure(UnexpectedMessageException(s"RedisManager received an unexpected message: $other"))
     }
 
@@ -431,13 +430,13 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
     /**
       * Pings the Redis store to see if it is available.
       */
-    private def ping(): Future[CacheServiceStatusOK] = {
-        val operationFuture: Future[CacheServiceStatusOK] = Future {
+    private def ping(): Future[CacheServiceStatusResponse] = {
+        val operationFuture: Future[CacheServiceStatusResponse] = Future {
 
             val conn: Jedis = pool.getResource
             try {
                 conn.ping("test")
-                CacheServiceStatusOK()
+                CacheServiceStatusOK
             } finally {
                 conn.close()
             }
@@ -445,9 +444,7 @@ class CacheServiceManager extends Actor with ActorLogging with LazyLogging with 
 
         val recoverableOperationFuture = operationFuture.recover {
             case e: Exception =>
-                // Log any errors.
-                logger.warn("Ping DB failed", e.getMessage)
-                throw e
+                CacheServiceStatusNOK
         }
 
         recoverableOperationFuture

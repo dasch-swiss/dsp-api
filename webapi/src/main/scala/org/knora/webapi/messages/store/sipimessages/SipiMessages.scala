@@ -393,10 +393,20 @@ sealed trait IIIFRequestADM extends IIIFRequest
 /**
   * Queries IIIF Service status.
   */
-case class IIIFServiceGetStatus() extends IIIFRequestADM
+case object IIIFServiceGetStatus extends IIIFRequestADM
 
 /**
   * Represents a response for [[IIIFServiceGetStatus]].
   */
-case class IIIFServiceStatusOK()
+sealed trait IIIFServiceStatusResponse
+
+/**
+  * Represents a positive response for [[IIIFServiceGetStatus]].
+  */
+case object IIIFServiceStatusOK extends IIIFServiceStatusResponse
+
+/**
+  * Represents a negative response for [[IIIFServiceGetStatus]].
+  */
+case object IIIFServiceStatusNOK extends IIIFServiceStatusResponse
 

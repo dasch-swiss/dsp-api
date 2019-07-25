@@ -75,9 +75,10 @@ trait LiveCore extends Core {
 
     // #supervisor
     /**
-      * The main application supervisor actor which used at startup,
-      * transitioning between states, and storing the application application
-      * wide variables in a thread safe manner.
+      * The main application supervisor actor which is at the top of the actor
+      * hierarchy. All other actors are instantiated as child actors. Further,
+      * this actor is responsible for the execution of the startup and shutdown
+      * sequences.
       */
     lazy val appActor: ActorRef = system.actorOf(
         Props(new ApplicationActor with LiveManagers)
