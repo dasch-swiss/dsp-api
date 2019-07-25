@@ -54,7 +54,7 @@ class ValuesV2R2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     /* we need to run our app with the mocked sipi actor */
-    override val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
+    override lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 

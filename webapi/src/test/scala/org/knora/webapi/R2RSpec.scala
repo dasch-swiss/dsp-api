@@ -55,7 +55,7 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
-    protected val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
+    protected lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     val responderManager: ActorRef = appActor
     val storeManager: ActorRef = appActor
