@@ -74,7 +74,7 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
               */
 
             logger.debug("==>>")
-			applicationStateActor ! SetAllowReloadOverHTTPState(true)
+			appActor ! SetAllowReloadOverHTTPState(true)
             logger.debug("==>>")
             val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
             val response = singleAwaitingRequest(request, 300.seconds)
@@ -84,7 +84,7 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
 
 
         "fail with resetting if startup flag is not set" in {
-            applicationStateActor ! SetAllowReloadOverHTTPState(false)
+            appActor ! SetAllowReloadOverHTTPState(false)
             val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
             val response = singleAwaitingRequest(request, 300.seconds)
             // log.debug("==>> " + response.toString)

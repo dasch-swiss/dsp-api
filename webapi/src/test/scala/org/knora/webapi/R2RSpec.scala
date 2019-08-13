@@ -21,21 +21,19 @@ package org.knora.webapi
 
 import java.io.{File, StringReader}
 
+import akka.pattern.ask
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
-import org.knora.webapi.app.{APPLICATION_STATE_ACTOR_NAME, ApplicationStateActor}
+import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.store.{MockableStoreManager, StoreManagerActorName}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{CacheUtil, FileUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
@@ -57,14 +55,12 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
-    lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
-    lazy val mockStoreConnectors: Map[String, ActorRef] = Map.empty[String, ActorRef]
+    protected lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
-    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
-    protected val storeManager: ActorRef = system.actorOf(Props(new MockableStoreManager(mockStoreConnectors) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = StoreManagerActorName)
-    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders, applicationStateActor, storeManager)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
+    val responderManager: ActorRef = appActor
+    val storeManager: ActorRef = appActor
 
-    val routeData: KnoraRouteData = KnoraRouteData(system, applicationStateActor, responderManager, storeManager)
+    val routeData: KnoraRouteData = KnoraRouteData(system, appActor)
 
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
@@ -93,8 +89,8 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
-        Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 30 seconds)
+        Await.result(appActor ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
+        Await.result(appActor ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 30 seconds)
     }
 
     /**

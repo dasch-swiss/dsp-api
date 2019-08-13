@@ -77,6 +77,13 @@
     <logger name="org.knora.webapi.e2e.v1.KnoraSipiIntegrationV1ITSpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.v1.KnoraSipiScriptsV1ITSpec" level="INFO"/>
 
+    <!-- metrics logging (info level turns them on, error level turns them off -->
+    <logger name="M-Main$" level="ERROR"/>
+    <logger name="M-UsersResponderADM" level="ERROR"/>
+    <logger name="M-HttpTriplestoreConnector" level="ERROR"/>
+    <logger name="M-CacheServiceManager" level="ERROR"/>
+    <logger name="M-CacheSerialization" level="ERROR"/>
+
 
     <root level="INFO">
         <appender-ref ref="stdout"/>
