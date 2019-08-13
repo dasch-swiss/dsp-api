@@ -19,6 +19,8 @@
 
 package org.knora.webapi
 
+import org.knora.webapi.app.APPLICATION_MANAGER_ACTOR_NAME
+
 /**
   * Contains constants used inside the 'org.knora.rapier.store' package.
   * These can be used from other packages by importing 'org.knora.rapier.store._'
@@ -26,7 +28,7 @@ package org.knora.webapi
 package object store {
 
     val StoreManagerActorName: String = "storeManager"
-    val StoreManagerActorPath: String = "/user/" + StoreManagerActorName
+    val StoreManagerActorPath: String = "/user/" + APPLICATION_MANAGER_ACTOR_NAME + StoreManagerActorName
 
     /* Triplestores */
 
