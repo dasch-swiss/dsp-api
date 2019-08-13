@@ -22,7 +22,7 @@ package org.knora.webapi.util.clientapi
 import org.knora.webapi.CoreSpec
 
 class SourceCodeFilePathSpec extends CoreSpec() {
-    "The SourceCodeFilePathSpec class" should {
+    "The SourceCodeFilePath class" should {
         "walk one directory up, then one directory down" in {
             val sourcePath = SourceCodeFilePath(
                 directoryPath = Seq("foo", "bar", "baz"),
