@@ -36,7 +36,7 @@ case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, file
      *
      * @param thisPath the path of the importing file.
      * @param thatPath the path of the imported file.
-     * @return
+     * @return the diverging parts of the two paths.
      */
     @tailrec
     private def stripDirsUntilDifferent(thisPath: Seq[String], thatPath: Seq[String]): (Seq[String], Seq[String]) = {
