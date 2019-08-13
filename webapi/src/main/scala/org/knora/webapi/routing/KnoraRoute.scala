@@ -32,11 +32,9 @@ import scala.concurrent.ExecutionContext
   * Data needed to be passed to each route.
   *
   * @param system the actor system.
-  * @param applicationStateActor the application state actor ActorRef.
-  * @param responderManager the responder manager ActorRef.
-  * @param storeManager the store manager ActorRef.
+  * @param appActor the main application actor ActorRef.
   */
-case class KnoraRouteData(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef)
+case class KnoraRouteData(system: ActorSystem, appActor: ActorRef)
 
 
 /**
@@ -45,14 +43,14 @@ case class KnoraRouteData(system: ActorSystem, applicationStateActor: ActorRef, 
 abstract class KnoraRoute(routeData: KnoraRouteData) {
 
     implicit protected val system: ActorSystem = routeData.system
-    implicit protected val responderManager: ActorRef = routeData.responderManager
+    implicit protected val responderManager: ActorRef = routeData.appActor
     implicit protected val settings: SettingsImpl = Settings(system)
     implicit protected val timeout: Timeout = settings.defaultTimeout
     implicit protected val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    protected val applicationStateActor: ActorRef = routeData.applicationStateActor
-    protected val storeManager: ActorRef = routeData.storeManager
+    protected val applicationStateActor: ActorRef = routeData.appActor
+    protected val storeManager: ActorRef = routeData.appActor
     protected val log = akka.event.Logging(system, this.getClass)
 
     /**

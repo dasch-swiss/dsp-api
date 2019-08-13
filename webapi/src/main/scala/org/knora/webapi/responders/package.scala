@@ -19,13 +19,15 @@
 
 package org.knora.webapi
 
+import org.knora.webapi.app.APPLICATION_MANAGER_ACTOR_NAME
+
 /**
   * Contains constants representing the Akka names and paths of the responder actors.
   */
 package object responders {
 
     val RESPONDER_MANAGER_ACTOR_NAME: String = "responderManager"
-    val RESPONDER_MANAGER_ACTOR_PATH: String = "/user/" + RESPONDER_MANAGER_ACTOR_NAME
+    val RESPONDER_MANAGER_ACTOR_PATH: String = "/user/" + APPLICATION_MANAGER_ACTOR_NAME + RESPONDER_MANAGER_ACTOR_NAME
 
     val RESOURCES_V1_ACTOR_NAME: String = "resourcesV1"
     val RESOURCES_V1_ACTOR_PATH: String = RESPONDER_MANAGER_ACTOR_PATH + "/" + RESOURCES_V1_ACTOR_NAME

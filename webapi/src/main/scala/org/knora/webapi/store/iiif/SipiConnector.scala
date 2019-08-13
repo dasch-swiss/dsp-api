@@ -72,6 +72,7 @@ class SipiConnector extends Actor with ActorLogging {
         case moveTemporaryFileToPermanentStorageRequest: MoveTemporaryFileToPermanentStorageRequest => try2Message(sender(), moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequest), log)
         case deleteTemporaryFileRequest: DeleteTemporaryFileRequest => try2Message(sender(), deleteTemporaryFile(deleteTemporaryFileRequest), log)
         case SipiGetTextFileRequest(fileUrl, requestingUser) => try2Message(sender(), sipiGetXsltTransformationRequest(fileUrl, requestingUser), log)
+        case IIIFServiceGetStatus => try2Message(sender(), iiifGetStatus(), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -168,6 +169,20 @@ class SipiConnector extends Actor with ActorLogging {
         for {
             responseStr <- doSipiRequest(request)
         } yield SipiGetTextFileResponse(responseStr)
+    }
+
+    /**
+      * Tries to access the IIIF Service.
+      */
+    private def iiifGetStatus(): Try[IIIFServiceStatusResponse] = {
+        val request = new HttpGet(settings.internalSipiBaseUrl + "/server/test.html")
+
+        val result: Try[String] = doSipiRequest(request)
+        if (result.isSuccess) {
+            Try(IIIFServiceStatusOK)
+        } else {
+            Try(IIIFServiceStatusNOK)
+        }
     }
 
     /**

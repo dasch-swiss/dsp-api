@@ -40,7 +40,7 @@ object KnoraSipiScriptsV1ITSpec {
   */
 class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.config) with TriplestoreJsonProtocol {
 
-    implicit override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
+    implicit override val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     "Calling Knora Sipi Scripts" should {
 
