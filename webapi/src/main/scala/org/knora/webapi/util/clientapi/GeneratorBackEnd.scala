@@ -19,32 +19,87 @@
 
 package org.knora.webapi.util.clientapi
 
-/**
-  * Represents a client API as input to the generator back end.
-  *
-  * @param apiDef          the API definition.
-  * @param clientClassDefs the class definitions used in the API.
-  */
-case class ClientApiBackendInput(apiDef: ClientApi, clientClassDefs: Set[ClientClassDefinition])
+import scala.annotation.tailrec
 
 /**
-  * Represents a file containing generated client API source code.
-  *
-  * @param filePath the filename in which the source code should be saved.
-  * @param text     the source code.
-  */
+ * Represents a client API as input to the generator back end.
+ *
+ * @param apiDef          the API definition.
+ * @param clientClassDefs the class definitions used in the API.
+ */
+case class ClientApiBackendInput(apiDef: ClientApi, clientClassDefs: Set[ClientClassDefinition])
+
+case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, fileExtension: String) {
+    /**
+     * Given two paths that are both relative to the root directory of the source tree, strips leading
+     * directories until the paths diverge.
+     *
+     * @param thisPath the path of the importing file.
+     * @param thatPath the path of the imported file.
+     * @return
+     */
+    @tailrec
+    private def stripDirsUntilDifferent(thisPath: Seq[String], thatPath: Seq[String]): (Seq[String], Seq[String]) = {
+        if (thisPath.isEmpty || thatPath.isEmpty) {
+            (thisPath, thatPath)
+        } else if (thisPath.head == thatPath.head) {
+            stripDirsUntilDifferent(thisPath.tail, thatPath.tail)
+        } else {
+            (thisPath, thatPath)
+        }
+    }
+
+    /**
+     * Given the [[SourceCodeFilePath]] of a file to be imported, returns that path relative to this
+     * [[SourceCodeFilePath]].
+     *
+     * @param thatSourceCodeFilePath the path of the file to be imported.
+     * @param includeFileExtension   if true, include the imported file's extension in the result.
+     * @return a relative file path for importing `thatSourceCodeFilePath` in the file represented by this
+     *         [[SourceCodeFilePath]].
+     */
+    def makeImportPath(thatSourceCodeFilePath: SourceCodeFilePath, includeFileExtension: Boolean = true): String = {
+        // Find the first common parent directory.
+        val (thisPathFromCommonParent, thatPathFromCommonParent) = stripDirsUntilDifferent(directoryPath, thatSourceCodeFilePath.directoryPath)
+
+        // Make a relative path for walking up the directory tree to the first common parent directory,
+        // then down to the target directory.
+        val dirPath = (thisPathFromCommonParent.map(_ => "..") ++ thatPathFromCommonParent).mkString("/")
+
+        // Add the filename.
+        val importPathWithoutExtension = if (dirPath.isEmpty) {
+            thatSourceCodeFilePath.filename
+        } else {
+            dirPath + "/" + thatSourceCodeFilePath.filename
+        }
+
+        // Add the file extension if requested.
+        if (includeFileExtension) {
+            importPathWithoutExtension + "." + thatSourceCodeFilePath.fileExtension
+        } else {
+            importPathWithoutExtension
+        }
+    }
+}
+
+/**
+ * Represents a file containing generated client API source code.
+ *
+ * @param filePath the filename in which the source code should be saved.
+ * @param text     the source code.
+ */
 case class ClientSourceCodeFileContent(filePath: String, text: String)
 
 /**
-  * A trait for client API code generator back ends. A back end is responsible for producing client API library
-  * source code in a particular programming language.
-  */
+ * A trait for client API code generator back ends. A back end is responsible for producing client API library
+ * source code in a particular programming language.
+ */
 trait GeneratorBackEnd {
     /**
-      * Generates client API source code.
-      *
-      * @param apis the APIs from which source code is to be generated.
-      * @return the generated source code.
-      */
+     * Generates client API source code.
+     *
+     * @param apis the APIs from which source code is to be generated.
+     * @return the generated source code.
+     */
     def generateClientSourceCode(apis: Set[ClientApiBackendInput]): Set[ClientSourceCodeFileContent]
 }
