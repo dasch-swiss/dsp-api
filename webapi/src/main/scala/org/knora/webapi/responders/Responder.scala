@@ -45,18 +45,15 @@ object Responder {
         val unexpectedMessageException = UnexpectedMessageException(s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}")
         FastFuture.failed(unexpectedMessageException)
     }
-
 }
 
 /**
   * Data needed to be passed to each responder.
   *
   * @param system the actor system.
-  * @param applicationStateActor the application state actor ActorRef.
-  * @param responderManager the responder manager ActorRef.
-  * @param storeManager the store manager ActorRef.
+  * @param appActor the main application actor ActorRef.
   */
-case class ResponderData(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef)
+case class ResponderData(system: ActorSystem, appActor: ActorRef)
 
 /**
   * An abstract class providing values that are commonly used in Knora responders.
@@ -79,19 +76,21 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     protected val settings: SettingsImpl = Settings(system)
 
     /**
-      * The reference to the responder manager.
+      * The reference to the main application actor which will forward messages
+      * for the responder manager to the responder manager.
       */
-    protected val responderManager: ActorRef = responderData.responderManager
+    protected val responderManager: ActorRef = responderData.appActor
 
     /**
-      * The reference to the store manager.
+      * The reference to the main application actor which will forward messages
+      * for the store manager to the store manager.
       */
-    protected val storeManager: ActorRef = responderData.storeManager
+    protected val storeManager: ActorRef = responderData.appActor
 
     /**
-      * The reference to the application state actor
+      * The reference to the main application actor
       */
-    protected val applicationStateActor: ActorRef = responderData.applicationStateActor
+    protected val appActor: ActorRef = responderData.appActor
 
     /**
       * A string formatter.

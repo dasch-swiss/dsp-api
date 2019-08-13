@@ -110,10 +110,21 @@ API v2, but API v2 does not depend on API v1.
 
 ## Actor Supervision and Creation
 
-At system start, the supervisor actors are created in
-`KnoraService.scala`:
+At system start, the main application supervisor actor is created in
+`KnoraLiveService.scala`:
 
-@@snip [KnoraService.scala]($src$/org/knora/webapi/KnoraService.scala) { #supervisors }
+@@snip [KnoraLiveService.scala]($src$/org/knora/webapi/KnoraLiveService.scala) { #supervisor }
+
+and through mixin also the store and responder manager actors:
+
+@@snip [ApplicationActor.scala]($src$/org/knora/webapi/app/ApplicationActor.scala) { #store-responder }
+
+The `ApplicationActor` is the first actor in the application. All other actors
+are children of this actor and thus it takes also the role of the supervisor
+actor. It accepts messages for starting and stopping the Knora-API, holds the
+current state of the application, and is responsible for coordination of
+the startup and shutdown sequence. Further, it forwards any messages meant
+for responders or the store to the respective actor.
 
 In most cases, there is only one instance of each supervised actor; such
 actors do their work asynchronously in futures, so there would be no
@@ -122,9 +133,10 @@ because they do their work synchronously; this allows concurrency to be controll
 by setting the size of each pool. These pools are configured in `application.conf`
 under `akka.actor.deployment`.
 
-`KnoraService` also starts the HTTP service after which the startup sequence is initiated:
+The `ApplicationActor` also starts the HTTP service as part of the startup
+sequence:
 
-@@snip [KnoraService.scala]($src$/org/knora/webapi/KnoraService.scala) { #startService }
+@@snip [ApplicationActor.scala]($src$/org/knora/webapi/app/ApplicationActor.scala) { #start-api-server }
 
 ## Coordinated Application Startup
 
@@ -141,9 +153,11 @@ To coordinate necessary startup tasks, the application goes through a few states
   - MaintenanceMode: During backup or other maintenance tasks, so that access to the API is closed
   - Running: Running state. All APIs are open.
 
-The startup sequence coordination is done by the `org.knora.webapi.app.ApplicationStateActor`. During
-the `WaitingForRepository` state, if the repository is not configured or available, the system will
-indefinitely retry to access it. This allows for prolonged startup times of the repository.
+During the `WaitingForRepository` state, if the repository is not configured or
+available, the system will indefinitely retry to access it. This allows for
+prolonged startup times of the repository. Also, if checking the repository
+returns an error, e.g., because the repository data needs to be migrated first,
+the application will shutdown.
 
 ## Concurrency
 

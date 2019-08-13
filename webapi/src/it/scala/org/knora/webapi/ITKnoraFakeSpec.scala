@@ -22,19 +22,21 @@ package org.knora.webapi
 import java.io.File
 import java.nio.file.{Files, Paths}
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
 import org.knora.webapi.util.StringFormatter
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.json.{JsObject, _}
 
 import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
 
 
@@ -46,26 +48,24 @@ object ITKnoraFakeSpec {
   * This class can be used in End-to-End testing. It starts a Fake Knora server and
   * provides access to settings and logging.
   */
-class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
+class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeCore with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
-    /* needed by the core trait */
-    implicit lazy val settings: SettingsImpl = Settings(system)
-
-    StringFormatter.initForTest()
-
-    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraFakeSpec.defaultConfig)))
-
-    def this(config: Config) = this(ActorSystem("IntegrationTests", config.withFallback(ITKnoraFakeSpec.defaultConfig)))
-
-    def this(name: String) = this(ActorSystem(name, ITKnoraFakeSpec.defaultConfig))
-
-    def this() = this(ActorSystem("IntegrationTests", ITKnoraFakeSpec.defaultConfig))
+    /* constructors */
+    def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    def this(config: Config) = this(ActorSystem("IntegrationTests", config.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    def this(name: String) = this(ActorSystem(name, ITKnoraLiveSpec.defaultConfig))
+    def this() = this(ActorSystem("IntegrationTests", ITKnoraLiveSpec.defaultConfig))
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
+    implicit lazy val settings: SettingsImpl = Settings(system)
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    /* needed by the core trait */
-    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "ITSpec")
+    /* Needs to be initialized before any responders */
+    StringFormatter.initForTest()
+
+    val log = akka.event.Logging(system, this.getClass)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
     protected val baseSipiUrl: String = settings.internalSipiBaseUrl

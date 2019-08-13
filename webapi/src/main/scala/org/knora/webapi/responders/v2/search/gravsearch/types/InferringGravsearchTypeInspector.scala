@@ -41,7 +41,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
     import InferringGravsearchTypeInspector._
 
-    private val responderManager = responderData.responderManager
+    private val responderManager = responderData.appActor
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

@@ -19,11 +19,13 @@
 
 package org.knora.webapi.util
 
-import akka.pattern.{AskTimeoutException, ask}
+import akka.dispatch.MessageDispatcher
+import akka.pattern.ask
+import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
-import org.knora.webapi.messages.app.appmessages.{ActorReady, ActorReadyAck, AppState, GetAppState}
-import org.knora.webapi.{Core, KnoraService}
+import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
+import org.knora.webapi.{Core, KnoraDispatchers}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -33,31 +35,15 @@ import scala.concurrent.{Await, Future}
   * after the KnoraService is ready.
   */
 trait StartupUtils extends LazyLogging {
-    this: Core with KnoraService =>
-
-    /**
-      * Returns only when the application state actor is ready.
-      */
-    def applicationStateActorReady(): Unit = {
-
-        try {
-            Await.result(applicationStateActor ? ActorReady(), 1.second).asInstanceOf[ActorReadyAck]
-            logger.info("KnoraService - applicationStateActorReady")
-        } catch {
-            case e: AskTimeoutException => {
-                // if we are here, then the ask timed out, so we need to try again until the actor is ready
-                Await.result(blockingFuture(), 1.second)
-                applicationStateActorReady()
-            }
-        }
-    }
+    this: Core =>
 
     /**
       * Returns only when the application state is 'Running'.
       */
     def applicationStateRunning(): Unit = {
 
-        val state: AppState = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
+        implicit val timeout: Timeout = Timeout(5.second)
+        val state: AppState = Await.result(appActor ? GetAppState(), timeout.duration).asInstanceOf[AppState]
 
         if (state != AppState.Running) {
             // not in running state
@@ -67,13 +53,14 @@ trait StartupUtils extends LazyLogging {
         }
     }
 
-
     /**
       * A blocking future running on the blocking dispatcher.
       */
     private def blockingFuture(): Future[Unit] = {
 
         val delay: Long = 3.second.toMillis
+
+        implicit val ctx: MessageDispatcher = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
         Future {
             // uses the good "blocking dispatcher" that we configured,

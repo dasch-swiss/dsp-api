@@ -19,29 +19,22 @@
 
 package org.knora.webapi
 
+import akka.actor.{ActorRef, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
 /**
   * A fake Knora service that Sipi can use to get file permissions.
   */
-trait KnoraFakeService {
-
+trait KnoraFakeCore {
     this: Core =>
 
-    // Initialise StringFormatter with the system settings.
-    StringFormatter.initForTest()
-
-
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
-
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
+    // need to create an actor to conform to Core but never send AppStart()
+    override val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)

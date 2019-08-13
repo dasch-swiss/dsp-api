@@ -24,11 +24,10 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
+import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.responders.v2.search.SparqlQueryConstants
 import org.knora.webapi.routing.v2.{SearchRouteV2, ValuesRouteV2}
-import org.knora.webapi.store.SipiConnectorActorName
-import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
@@ -54,7 +53,8 @@ class ValuesV2R2RSpec extends R2RSpec {
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    override lazy val mockStoreConnectors: Map[String, ActorRef] = Map(SipiConnectorActorName -> system.actorOf(Props(new MockSipiConnector), SipiConnectorActorName))
+    /* we need to run our app with the mocked sipi actor */
+    override lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
 
     private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 
