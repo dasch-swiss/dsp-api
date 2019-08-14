@@ -42,6 +42,13 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
                                     variableName: String,
                                     urlPath: String,
                                     fileContent: SourceCodeFileContent) {
+        /**
+         * Converts this [[EndpointInfo]] to an [[ImportInfo]] so the endpoint can be imported in another class.
+         *
+         * @param importedIn           the path of the class in which the endpoint is to be imported.
+         * @param includeFileExtension if `true`, include the file extension in the import.
+         * @return an [[ImportInfo]] referring to this endpoint.
+         */
         def toImportInfo(importedIn: SourceCodeFilePath, includeFileExtension: Boolean = true): ImportInfo = {
             val importPath: String = importedIn.makeImportPath(thatSourceCodeFilePath = fileContent.filePath, includeFileExtension = includeFileExtension)
 
@@ -76,14 +83,14 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         // Generate file paths for class definitions.
         val clientClassCodePaths: Map[String, SourceCodeFilePath] = api.clientClassDefs.map {
             clientClassDef =>
-                val filePath = makeClassFilePath(apiName = api.apiDef.name, className = clientClassDef.className)
+                val filePath = makeClassFilePath(apiDef = api.apiDef, className = clientClassDef.className)
                 clientClassDef.className -> filePath
         }.toMap
 
         // Generate file paths for interface definitions.
         val clientInterfaceCodePaths: Map[String, SourceCodeFilePath] = api.clientClassDefs.map {
             clientClassDef =>
-                val filePath = makeInterfaceFilePath(apiName = api.apiDef.name, className = clientClassDef.className)
+                val filePath = makeInterfaceFilePath(apiDef = api.apiDef, className = clientClassDef.className)
                 clientClassDef.className -> filePath
         }.toMap
 
@@ -135,7 +142,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
 
         val importInfos: Set[ImportInfo] = apiDefs.map {
             apiDef =>
-                val mainEndpointFilePath: SourceCodeFilePath = makeMainEndpointFilePath(apiDef.name)
+                val mainEndpointFilePath: SourceCodeFilePath = makeMainEndpointFilePath(apiDef)
 
                 ImportInfo(
                     className = apiDef.name,
@@ -171,7 +178,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     private def generateMainEndpointSourceCode(apiDef: ClientApi,
                                                endpointInfos: Seq[EndpointInfo]): SourceCodeFileContent = {
         // Generate the main endpoint's file path.
-        val mainEndpointFilePath: SourceCodeFilePath = makeMainEndpointFilePath(apiDef.name)
+        val mainEndpointFilePath: SourceCodeFilePath = makeMainEndpointFilePath(apiDef)
 
         // Generate the main endpoint's source code.
         val text: String = clientapi.typescript.txt.generateTypeScriptMainEndpoint(
@@ -197,7 +204,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
                                      clientClassDefs: Set[ClientClassDefinition],
                                      clientClassCodePaths: Map[String, SourceCodeFilePath]): EndpointInfo = {
         // Generate the endpoint's file path.
-        val endpointFilePath: SourceCodeFilePath = makeEndpointFilePath(apiName = apiDef.name, endpoint = endpoint)
+        val endpointFilePath: SourceCodeFilePath = makeEndpointFilePath(apiDef = apiDef, endpoint = endpoint)
 
         // Determine which classes need to be imported by the endpoint.
         val classDefsImported: Set[ClientClassDefinition] = clientClassDefs.filter {
@@ -304,14 +311,14 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     /**
      * Generates the file path of an API's main endpoint.
      *
-     * @param apiName the name of the API.
+     * @param apiDef the API definition.
      * @return the file path of the API's main endpoint.
      */
-    private def makeMainEndpointFilePath(apiName: String): SourceCodeFilePath = {
-        val apiLocalName = stringFormatter.camelCaseToSeparatedLowerCase(apiName)
+    private def makeMainEndpointFilePath(apiDef: ClientApi): SourceCodeFilePath = {
+        val apiLocalName = stringFormatter.camelCaseToSeparatedLowerCase(apiDef.name)
 
         SourceCodeFilePath(
-            directoryPath = Seq("api", apiLocalName),
+            directoryPath = Seq("api", apiDef.directoryName),
             filename = s"$apiLocalName-endpoint",
             fileExtension = "ts"
         )
@@ -320,16 +327,15 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     /**
      * Generates the file path of an endpoint.
      *
-     * @param apiName  the name of the API.
+     * @param apiDef   the API definition.
      * @param endpoint the definition of the endpoint.
      * @return the file path of the endpoint.
      */
-    private def makeEndpointFilePath(apiName: String, endpoint: ClientEndpoint): SourceCodeFilePath = {
-        val apiLocalName = stringFormatter.camelCaseToSeparatedLowerCase(apiName)
+    private def makeEndpointFilePath(apiDef: ClientApi, endpoint: ClientEndpoint): SourceCodeFilePath = {
         val endpointLocalName = stringFormatter.camelCaseToSeparatedLowerCase(endpoint.name)
 
         SourceCodeFilePath(
-            directoryPath = Seq("api", apiLocalName, endpointLocalName),
+            directoryPath = Seq("api", apiDef.directoryName, endpoint.directoryName),
             filename = endpointLocalName,
             fileExtension = "ts"
         )
@@ -338,16 +344,15 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     /**
      * Generates the file path of a class.
      *
-     * @param apiName   the name of the API.
+     * @param apiDef    the API definition.
      * @param className the name of the class.
      * @return the file path of the generated class.
      */
-    private def makeClassFilePath(apiName: String, className: String): SourceCodeFilePath = {
-        val apiLocalName = stringFormatter.camelCaseToSeparatedLowerCase(apiName)
+    private def makeClassFilePath(apiDef: ClientApi, className: String): SourceCodeFilePath = {
         val classLocalName = stringFormatter.camelCaseToSeparatedLowerCase(className)
 
         SourceCodeFilePath(
-            directoryPath = Seq("models", apiLocalName),
+            directoryPath = Seq("models", apiDef.directoryName),
             filename = classLocalName,
             fileExtension = "ts"
         )
@@ -356,16 +361,15 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     /**
      * Generates the file path of an interface.
      *
-     * @param apiName   the name of the API.
+     * @param apiDef    the API definition.
      * @param className the name of the interface.
      * @return the file path of the generated interface.
      */
-    private def makeInterfaceFilePath(apiName: String, className: String): SourceCodeFilePath = {
-        val apiLocalName = stringFormatter.camelCaseToSeparatedLowerCase(apiName)
+    private def makeInterfaceFilePath(apiDef: ClientApi, className: String): SourceCodeFilePath = {
         val classLocalName = stringFormatter.camelCaseToSeparatedLowerCase(className)
 
         SourceCodeFilePath(
-            directoryPath = Seq("interfaces", "models", apiLocalName),
+            directoryPath = Seq("interfaces", "models", apiDef.directoryName),
             filename = s"i-$classLocalName",
             fileExtension = "ts"
         )

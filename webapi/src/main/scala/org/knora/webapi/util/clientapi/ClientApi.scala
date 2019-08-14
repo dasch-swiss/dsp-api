@@ -33,6 +33,11 @@ trait ClientApi {
     val name: String
 
     /**
+     * The name of a directory in which the API code can be generated.
+     */
+    val directoryName: String
+
+    /**
       * The URL path of the API.
       */
     val urlPath: String
@@ -61,6 +66,11 @@ trait ClientEndpoint {
       * The machine-readable name of the endpoint.
       */
     val name: String
+
+    /**
+     * The name of a directory in which the endpoint code can be generated.
+     */
+    val directoryName: String
 
     /**
       * The URL path of the endpoint, relative to its API path.

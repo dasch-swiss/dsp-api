@@ -38,8 +38,8 @@ object GroupsRouteADM {
 }
 
 /**
-  * Provides a spray-routing function for API routes that deal with groups.
-  */
+ * Provides a spray-routing function for API routes that deal with groups.
+ */
 
 @Api(value = "groups", produces = "application/json")
 @Path("/admin/groups")
@@ -48,18 +48,23 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     import GroupsRouteADM.GroupsBasePath
 
     /**
-      * The name of this [[ClientEndpoint]].
-      */
+     * The name of this [[ClientEndpoint]].
+     */
     override val name: String = "GroupsEndpoint"
 
     /**
-      * The URL path of this [[ClientEndpoint]].
-      */
+     * The directory name to be used for this endpoint's code.
+     */
+    override val directoryName: String = "groups"
+
+    /**
+     * The URL path of this [[ClientEndpoint]].
+     */
     override val urlPath: String = "/groups"
 
     /**
-      * A description of this [[ClientEndpoint]].
-      */
+     * A description of this [[ClientEndpoint]].
+     */
     override val description: String = "An endpoint for working with Knora groups."
 
     // Classes used in client function definitions.
@@ -70,8 +75,8 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     private val Group = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri)
 
     /**
-      * Returns all groups
-      */
+     * Returns all groups
+     */
     private def getGroups: Route = path(GroupsBasePath) {
         get {
             /* return all groups */
@@ -96,8 +101,8 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         } returns GroupsResponse
 
     /**
-      * Creates a group
-      */
+     * Creates a group
+     */
     private def createGroup: Route = path(GroupsBasePath) {
         post {
             /* create a new group */
@@ -133,8 +138,8 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         } returns GroupResponse
 
     /**
-      * Returns a single group identified by IRI.
-      */
+     * Returns a single group identified by IRI.
+     */
     private def getGroupByIri: Route = path(GroupsBasePath / Segment) { value =>
         get {
             /* returns a single group identified through iri */
@@ -156,15 +161,15 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     }
 
     private val getGroupByIriFunction: ClientFunction =
-        "getGroupByIri" description "Gets a group by IRI." params(
+        "getGroupByIri" description "Gets a group by IRI." params (
             "iri" description "The IRI of the group." paramType UriDatatype
-        ) doThis {
+            ) doThis {
             httpGet(arg("iri"))
         } returns GroupResponse
 
     /**
-      * Update basic group information.
-      */
+     * Update basic group information.
+     */
     private def updateGroup: Route = path(GroupsBasePath / Segment) { value =>
         put {
             /* update a group identified by iri */
@@ -173,9 +178,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                     val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
                     /**
-                      * The api request is already checked at time of creation.
-                      * See case class.
-                      */
+                     * The api request is already checked at time of creation.
+                     * See case class.
+                     */
 
                     if (apiRequest.status.nonEmpty) {
                         throw BadRequestException("The status property is not allowed to be set for this route. Please use the change status route.")
@@ -202,9 +207,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     }
 
     private val updateGroupFunction: ClientFunction =
-        "updateGroup" description "Updates a group." params(
+        "updateGroup" description "Updates a group." params (
             "group" description "The group to be updated." paramType Group
-        ) doThis {
+            ) doThis {
             httpPut(
                 path = argMember("group", "id"),
                 body = Some(arg("group"))
@@ -213,8 +218,8 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
 
     /**
-      * Update the group's status.
-      */
+     * Update the group's status.
+     */
     private def changeGroupStatus: Route = path(GroupsBasePath / Segment / "status") { value =>
         put {
             /* change the status of a group identified by iri */
@@ -223,12 +228,12 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                     val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
                     /**
-                      * The api request is already checked at time of creation.
-                      * See case class. Depending on the data sent, we are either
-                      * doing a general update or status change. Since we are in
-                      * the status change route, we are only interested in the
-                      * value of the status property
-                      */
+                     * The api request is already checked at time of creation.
+                     * See case class. Depending on the data sent, we are either
+                     * doing a general update or status change. Since we are in
+                     * the status change route, we are only interested in the
+                     * value of the status property
+                     */
 
                     if (apiRequest.status.isEmpty) {
                         throw BadRequestException("The status property is not allowed to be empty.")
@@ -236,7 +241,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
                     val requestMessage = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield GroupChangeStatusRequestADM (
+                    } yield GroupChangeStatusRequestADM(
                         groupIri = checkedGroupIri,
                         changeGroupRequest = apiRequest,
                         requestingUser = requestingUser,
@@ -255,9 +260,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     }
 
     private val changeGroupStatusFunction: ClientFunction =
-        "updateGroupStatus" description "Updates the status of a group." params(
-          "group" description "The group to be updated." paramType Group
-          ) doThis {
+        "updateGroupStatus" description "Updates the status of a group." params (
+            "group" description "The group to be updated." paramType Group
+            ) doThis {
             httpPut(
                 path = argMember("group", "id") / str("status"),
                 body = Some(arg("group"))
@@ -266,8 +271,8 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
 
     /**
-      * Deletes a group (sets status to false)
-      */
+     * Deletes a group (sets status to false)
+     */
     private def deleteGroup: Route = path(GroupsBasePath / Segment) { value =>
         delete {
             /* update group status to false */
@@ -304,8 +309,8 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
 
     /**
-      * Gets members of single group.
-      */
+     * Gets members of single group.
+     */
     private def getGroupMembers: Route = path(GroupsBasePath / Segment / "members") { value =>
         get {
             /* returns all members of the group identified through iri */
@@ -327,21 +332,21 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     }
 
     private val getGroupMembersFunction: ClientFunction =
-        "getGroupMembers" description "Gets the members of a group." params(
+        "getGroupMembers" description "Gets the members of a group." params (
             "group" description "The group." paramType Group
             ) doThis {
             httpGet(argMember("group", "id") / str("members"))
         } returns MembersResponse
 
     /**
-      * All defined routes need to be combined here.
-      */
+     * All defined routes need to be combined here.
+     */
     override def knoraApiPath: Route = getGroups ~ createGroup ~ getGroupByIri ~
         updateGroup ~ changeGroupStatus ~ deleteGroup ~ getGroupMembers
 
     /**
-      * The functions defined by this [[ClientEndpoint]].
-      */
+     * The functions defined by this [[ClientEndpoint]].
+     */
     override val functions: Seq[ClientFunction] = Seq(
         getGroupsFunction,
         createGroupFunction,

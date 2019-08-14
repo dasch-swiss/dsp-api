@@ -42,8 +42,8 @@ object UsersRouteADM {
 }
 
 /**
-  * Provides a akka-http-routing function for API routes that deal with users.
-  */
+ * Provides an akka-http-routing function for API routes that deal with users.
+ */
 
 @Api(value = "users", produces = "application/json")
 @Path("/admin/users")
@@ -52,18 +52,23 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     import UsersRouteADM.UsersBasePath
 
     /**
-      * The name of this [[ClientEndpoint]].
-      */
+     * The name of this [[ClientEndpoint]].
+     */
     override val name: String = "UsersEndpoint"
 
     /**
-      * The URL path of this [[ClientEndpoint]].
-      */
+     * The directory name to be used for this endpoint's code.
+     */
+    override val directoryName: String = "users"
+
+    /**
+     * The URL path of this [[ClientEndpoint]].
+     */
     override val urlPath: String = "/users"
 
     /**
-      * A description of this [[ClientEndpoint]].
-      */
+     * A description of this [[ClientEndpoint]].
+     */
     override val description: String = "An endpoint for working with Knora users."
 
     // Classes used in client function definitions.
@@ -161,8 +166,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // #createUserFunction
 
     /**
-      * return a single user identified by iri
-      */
+     * return a single user identified by iri
+     */
     private def getUserByIri: Route = path(UsersBasePath / "iri" / Segment) { value =>
         get {
             requestContext =>
@@ -200,8 +205,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // #getUserByIriFunction
 
     /**
-      * return a single user identified by email
-      */
+     * return a single user identified by email
+     */
     private def getUserByEmail: Route = path(UsersBasePath / "email" / Segment) { value =>
         get {
             requestContext =>
@@ -227,8 +232,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * return a single user identified by username
-      */
+     * return a single user identified by username
+     */
     private def getUserByUsername: Route = path(UsersBasePath / "username" / Segment) { value =>
         get {
             requestContext =>
@@ -254,8 +259,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * API MAY CHANGE: Change existing user's basic information.
-      */
+     * API MAY CHANGE: Change existing user's basic information.
+     */
     @ApiMayChange
     private def changeUserBasicInformation: Route = path(UsersBasePath / "iri" / Segment / "BasicUserInformation") { value =>
         put {
@@ -309,8 +314,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // #updateUserBasicInformationFunction
 
     /**
-      * API MAY CHANGE: Change user's password.
-      */
+     * API MAY CHANGE: Change user's password.
+     */
     @ApiMayChange
     private def changeUserPassword: Route = path(UsersBasePath / "iri" / Segment / "Password") { value =>
         put {
@@ -361,8 +366,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * API MAY CHANGE: Change user's status.
-      */
+     * API MAY CHANGE: Change user's status.
+     */
     @ApiMayChange
     private def changeUserStatus: Route = path(UsersBasePath / "iri" / Segment / "Status") { value =>
         put {
@@ -408,8 +413,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * API MAY CHANGE: delete a user identified by iri (change status to false).
-      */
+     * API MAY CHANGE: delete a user identified by iri (change status to false).
+     */
     @ApiMayChange
     private def deleteUser: Route = path(UsersBasePath / "iri" / Segment) { value =>
         delete {
@@ -451,8 +456,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * API MAY CHANGE: Change user's SystemAdmin membership.
-      */
+     * API MAY CHANGE: Change user's SystemAdmin membership.
+     */
     @ApiMayChange
     private def changeUserSytemAdminMembership: Route = path(UsersBasePath / "iri" / Segment / "SystemAdmin") { value =>
         put {
@@ -488,7 +493,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private val updateUserSystemAdminMembershipFunction: ClientFunction =
-        "updateUserSystemAdminMembership" description "Updates a user's SystemAdmin membership." params(
+        "updateUserSystemAdminMembership" description "Updates a user's SystemAdmin membership." params (
             "user" description "The user to be updated." paramType User
             ) doThis {
             httpPut(
@@ -498,8 +503,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * API MAY CHANGE: get user's project memberships
-      */
+     * API MAY CHANGE: get user's project memberships
+     */
     @ApiMayChange
     private def getUsersProjectMemberships: Route = path(UsersBasePath / "iri" / Segment / "project-memberships") { userIri =>
         get {
@@ -532,8 +537,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns ProjectsResponse
 
     /**
-      * API MAY CHANGE: add user to project
-      */
+     * API MAY CHANGE: add user to project
+     */
     @ApiMayChange
     private def addUserToProjectMembership: Route = path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
         post {
@@ -571,8 +576,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * API MAY CHANGE: remove user from project (and all groups belonging to this project)
-      */
+     * API MAY CHANGE: remove user from project (and all groups belonging to this project)
+     */
     @ApiMayChange
     private def removeUserFromProjectMembership: Route = path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
 
@@ -611,8 +616,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * API MAY CHANGE: get user's project admin memberships
-      */
+     * API MAY CHANGE: get user's project admin memberships
+     */
     @ApiMayChange
     private def getUsersProjectAdminMemberships: Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
         get {
@@ -645,8 +650,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns ProjectsResponse
 
     /**
-      * API MAY CHANGE: add user to project admin
-      */
+     * API MAY CHANGE: add user to project admin
+     */
     @ApiMayChange
     private def addUserToProjectAdminMembership: Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
         post {
@@ -685,8 +690,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * API MAY CHANGE: remove user from project admin membership
-      */
+     * API MAY CHANGE: remove user from project admin membership
+     */
     @ApiMayChange
     private def removeUserFromProjectAdminMembership: Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
         delete {
@@ -724,8 +729,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * API MAY CHANGE: get user's group memberships
-      */
+     * API MAY CHANGE: get user's group memberships
+     */
     @ApiMayChange
     private def getUsersGroupMemberships: Route = path(UsersBasePath / "iri" / Segment / "group-memberships") { userIri =>
         get {
@@ -760,8 +765,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // #getUserGroupMembershipsFunction
 
     /**
-      * API MAY CHANGE: add user to group
-      */
+     * API MAY CHANGE: add user to group
+     */
     @ApiMayChange
     private def addUserToGroupMembership: Route = path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
         post {
@@ -799,8 +804,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * API MAY CHANGE: remove user from group
-      */
+     * API MAY CHANGE: remove user from group
+     */
     @ApiMayChange
     private def removeUserFromGroupMembership: Route = path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
         delete {
@@ -838,8 +843,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
 
     /**
-      * The functions defined by this [[ClientEndpoint]].
-      */
+     * The functions defined by this [[ClientEndpoint]].
+     */
     override val functions: Seq[ClientFunction] = Seq(
         getUsersFunction,
         getUserFunction,

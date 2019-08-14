@@ -41,18 +41,23 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     import PermissionsRouteADM.PermissionsBasePath
 
     /**
-      * The name of this [[ClientEndpoint]].
-      */
+     * The name of this [[ClientEndpoint]].
+     */
     override val name: String = "PermissionsEndpoint"
 
     /**
-      * The URL path of of this [[ClientEndpoint]].
-      */
+     * The directory name to be used for this endpoint's code.
+     */
+    override val directoryName: String = "permissions"
+
+    /**
+     * The URL path of of this [[ClientEndpoint]].
+     */
     override val urlPath: String = "/permissions"
 
     /**
-      * A description of this [[ClientEndpoint]].
-      */
+     * A description of this [[ClientEndpoint]].
+     */
     override val description: String = "An endpoint for working with Knora permissions."
 
     // Classes used in client function definitions.
@@ -99,8 +104,8 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     // #getAdministrativePermissionFunction
 
     /**
-      * The functions defined by this [[ClientEndpoint]].
-      */
+     * The functions defined by this [[ClientEndpoint]].
+     */
     override val functions: Seq[ClientFunction] = Seq(
         getAdministrativePermissionFunction
     )

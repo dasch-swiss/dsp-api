@@ -24,12 +24,12 @@ import org.knora.webapi.util.clientapi._
 
 
 /**
-  * Represents the structure of generated client library code for the admin API.
-  */
+ * Represents the structure of generated client library code for the admin API.
+ */
 class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     /**
-      * The endpoints in this [[ClientApi]].
-      */
+     * The endpoints in this [[ClientApi]].
+     */
     override val endpoints: Seq[ClientEndpoint] = Seq(
         new UsersRouteADM(routeData),
         new GroupsRouteADM(routeData),
@@ -38,17 +38,22 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     )
 
     /**
-      * The name of this [[ClientApi]].
-      */
+     * The name of this [[ClientApi]].
+     */
     override val name: String = "AdminApi"
 
     /**
-      * The URL path of this [[ClientApi]].
-      */
+     * The directory name to be used for this API's code.
+     */
+    override val directoryName: String = "admin"
+
+    /**
+     * The URL path of this [[ClientApi]].
+     */
     override val urlPath: String = "/admin"
 
     /**
-      * A description of this [[ClientApi]].
-      */
+     * A description of this [[ClientApi]].
+     */
     override val description: String = "A client API for administering Knora."
 }

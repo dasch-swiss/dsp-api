@@ -29,6 +29,14 @@ import scala.annotation.tailrec
  */
 case class ClientApiBackendInput(apiDef: ClientApi, clientClassDefs: Set[ClientClassDefinition])
 
+/**
+ * Represents the filesystem path of a file containing generated source code.
+ *
+ * @param directoryPath the path of the directory containing the file,
+ *                      relative to the root directory of the source tree.
+ * @param filename      the filename, without the file extension.
+ * @param fileExtension the file extension.
+ */
 case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, fileExtension: String) {
     /**
      * Given two paths that are both relative to the root directory of the source tree, strips leading

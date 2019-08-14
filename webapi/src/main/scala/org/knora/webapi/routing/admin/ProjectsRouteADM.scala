@@ -55,18 +55,23 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     import ProjectsRouteADM.ProjectsBasePath
 
     /**
-      * The name of this [[ClientEndpoint]].
-      */
+     * The name of this [[ClientEndpoint]].
+     */
     override val name: String = "ProjectsEndpoint"
 
     /**
-      * The URL path of this [[ClientEndpoint]].
-      */
+     * The directory name to be used for this endpoint's code.
+     */
+    override val directoryName: String = "projects"
+
+    /**
+     * The URL path of this [[ClientEndpoint]].
+     */
     override val urlPath: String = "/projects"
 
     /**
-      * A description of this [[ClientEndpoint]].
-      */
+     * A description of this [[ClientEndpoint]].
+     */
     override val description: String = "An endpoint for working with Knora projects."
 
     // Classes used in client function definitions.
@@ -210,8 +215,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns KeywordsResponse
 
     /**
-      * returns a single project identified through iri
-      */
+     * returns a single project identified through iri
+     */
     private def getProjectByIri: Route = path(ProjectsBasePath / "iri" / Segment) { value =>
         get {
             requestContext =>
@@ -247,8 +252,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns ProjectResponse
 
     /**
-      * returns a single project identified through shortname.
-      */
+     * returns a single project identified through shortname.
+     */
     private def getProjectByShortname: Route = path(ProjectsBasePath / "shortname" / Segment) { value =>
         get {
             requestContext =>
@@ -276,8 +281,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns ProjectResponse
 
     /**
-      * returns a single project identified through shortcode.
-      */
+     * returns a single project identified through shortcode.
+     */
     private def getProjectByShortcode: Route = path(ProjectsBasePath / "shortcode" / Segment) { value =>
         get {
             requestContext =>
@@ -305,8 +310,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns ProjectResponse
 
     /**
-      * update a project identified by iri
-      */
+     * update a project identified by iri
+     */
     private def changeProject: Route = path(ProjectsBasePath / "iri" / Segment) { value =>
         put {
             entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
@@ -354,8 +359,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns ProjectResponse
 
     /**
-      * API MAY CHANGE: update project status to false
-      */
+     * API MAY CHANGE: update project status to false
+     */
     @ApiMayChange
     private def deleteProject: Route = path(ProjectsBasePath / "iri" / Segment) { value =>
         delete {
@@ -391,8 +396,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns ProjectResponse
 
     /**
-      * API MAY CHANGE: returns all members part of a project identified through iri
-      */
+     * API MAY CHANGE: returns all members part of a project identified through iri
+     */
     @ApiMayChange
     private def getProjectMembersByIri: Route = path(ProjectsBasePath / "iri" / Segment / "members") { value =>
         get {
@@ -430,8 +435,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns MembersResponse
 
     /**
-      * API MAY CHANGE: returns all members part of a project identified through shortname
-      */
+     * API MAY CHANGE: returns all members part of a project identified through shortname
+     */
     @ApiMayChange
     private def getProjectMembersByShortname: Route = path(ProjectsBasePath / "shortname" / Segment / "members") { value =>
         get {
@@ -460,8 +465,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns MembersResponse
 
     /**
-      * API MAY CHANGE: returns all members part of a project identified through shortcode
-      */
+     * API MAY CHANGE: returns all members part of a project identified through shortcode
+     */
     @ApiMayChange
     private def getProjectMembersByShortcode: Route = path(ProjectsBasePath / "shortcode" / Segment / "members") { value =>
         get {
@@ -491,8 +496,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns MembersResponse
 
     /**
-      * API MAY CHANGE: returns all admin members part of a project identified through iri
-      */
+     * API MAY CHANGE: returns all admin members part of a project identified through iri
+     */
     @ApiMayChange
     private def getProjectAdminMembersByIri: Route = path(ProjectsBasePath / "iri" / Segment / "admin-members") { value =>
         get {
@@ -529,8 +534,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns MembersResponse
 
     /**
-      * API MAY CHANGE: returns all admin members part of a project identified through shortname
-      */
+     * API MAY CHANGE: returns all admin members part of a project identified through shortname
+     */
     @ApiMayChange
     private def getProjectAdminMembersByShortname: Route = path(ProjectsBasePath / "shortname" / Segment / "admin-members") { value =>
         get {
@@ -559,8 +564,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns MembersResponse
 
     /**
-      * API MAY CHANGE: returns all admin members part of a project identified through shortcode
-      */
+     * API MAY CHANGE: returns all admin members part of a project identified through shortcode
+     */
     @ApiMayChange
     private def getProjectAdminMembersByShortcode: Route = path(ProjectsBasePath / "shortcode" / Segment / "admin-members") { value =>
         get {
@@ -589,8 +594,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns MembersResponse
 
     /**
-      * Returns the project's restricted view settings identified through IRI.
-      */
+     * Returns the project's restricted view settings identified through IRI.
+     */
     @ApiMayChange
     private def getProjectRestrictedViewSettingsByIri: Route = path(ProjectsBasePath / "iri" / Segment / "RestrictedViewSettings") { value: String =>
         get {
@@ -626,8 +631,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns ProjectRestrictedViewSettingsResponse
 
     /**
-      * Returns the project's restricted view settings identified through shortname.
-      */
+     * Returns the project's restricted view settings identified through shortname.
+     */
     @ApiMayChange
     private def getProjectRestrictedViewSettingsByShortname: Route = path(ProjectsBasePath / "shortname" / Segment / "RestrictedViewSettings") { value: String =>
         get {
@@ -656,8 +661,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns ProjectRestrictedViewSettingsResponse
 
     /**
-      * Returns the project's restricted view settings identified through shortcode.
-      */
+     * Returns the project's restricted view settings identified through shortcode.
+     */
     @ApiMayChange
     private def getProjectRestrictedViewSettingsByShortcode: Route = path(ProjectsBasePath / "shortcode" / Segment / "RestrictedViewSettings") { value: String =>
         get {
@@ -684,8 +689,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         } returns ProjectRestrictedViewSettingsResponse
 
     /**
-      * Returns all ontologies, data, and configuration belonging to a project.
-      */
+     * Returns all ontologies, data, and configuration belonging to a project.
+     */
     private def getProjectData: Route = path(ProjectsBasePath / "iri" / Segment / "AllData") { projectIri: IRI =>
         get {
             respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map(("filename", "project-data.trig")))) {
@@ -713,8 +718,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
     /**
-      * The functions defined by this [[ClientEndpoint]].
-      */
+     * The functions defined by this [[ClientEndpoint]].
+     */
     override val functions: Seq[ClientFunction] = Seq(
         getProjectsFunction,
         createProjectFunction,
