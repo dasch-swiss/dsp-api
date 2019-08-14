@@ -54,7 +54,7 @@ case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, file
      * [[SourceCodeFilePath]].
      *
      * @param thatSourceCodeFilePath the path of the file to be imported.
-     * @param includeFileExtension   if true, include the imported file's extension in the result.
+     * @param includeFileExtension   if `true`, include the imported file's extension in the result.
      * @return a relative file path for importing `thatSourceCodeFilePath` in the file represented by this
      *         [[SourceCodeFilePath]].
      */
@@ -64,20 +64,27 @@ case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, file
 
         // Make a relative path for walking up the directory tree to the first common parent directory,
         // then down to the target directory.
-        val dirPath = (thisPathFromCommonParent.map(_ => "..") ++ thatPathFromCommonParent).mkString("/")
+        val importDirectoryPath: Seq[String] = thisPathFromCommonParent.map(_ => "..") ++ thatPathFromCommonParent
 
-        // Add the filename.
-        val importPathWithoutExtension = if (dirPath.isEmpty) {
-            thatSourceCodeFilePath.filename
+        val importFileExtension = if (includeFileExtension) {
+            thatSourceCodeFilePath.fileExtension
         } else {
-            dirPath + "/" + thatSourceCodeFilePath.filename
+            ""
         }
 
-        // Add the file extension if requested.
-        if (includeFileExtension) {
-            importPathWithoutExtension + "." + thatSourceCodeFilePath.fileExtension
+        thatSourceCodeFilePath.copy(
+            directoryPath = importDirectoryPath,
+            fileExtension = importFileExtension
+        ).toString
+    }
+
+    override def toString: String = {
+        val filePathWithoutExtension: String = (directoryPath :+ filename).mkString("/")
+
+        if (fileExtension.isEmpty) {
+            filePathWithoutExtension
         } else {
-            importPathWithoutExtension
+            filePathWithoutExtension + "." + fileExtension
         }
     }
 }
@@ -88,7 +95,7 @@ case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, file
  * @param filePath the filename in which the source code should be saved.
  * @param text     the source code.
  */
-case class ClientSourceCodeFileContent(filePath: String, text: String)
+case class SourceCodeFileContent(filePath: SourceCodeFilePath, text: String)
 
 /**
  * A trait for client API code generator back ends. A back end is responsible for producing client API library
@@ -101,5 +108,5 @@ trait GeneratorBackEnd {
      * @param apis the APIs from which source code is to be generated.
      * @return the generated source code.
      */
-    def generateClientSourceCode(apis: Set[ClientApiBackendInput]): Set[ClientSourceCodeFileContent]
+    def generateClientSourceCode(apis: Set[ClientApiBackendInput]): Set[SourceCodeFileContent]
 }

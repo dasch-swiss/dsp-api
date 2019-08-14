@@ -23,7 +23,7 @@ The following route returns a Zip file containing generated client API
 code for the specified target:
 
 ```
-HTTP GET to http://host/v2/clientapi/TARGET
+HTTP GET to http://host/clientapi/TARGET
 ```
 
 Currently the only supported `TARGET` is `typescript`. For documentation

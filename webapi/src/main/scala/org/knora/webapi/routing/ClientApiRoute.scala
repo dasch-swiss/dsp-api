@@ -70,7 +70,7 @@ class ClientApiRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                             backEndInputs = backEndInputSeq.toSet
 
                             // Generate source code.
-                            sourceCode: Set[ClientSourceCodeFileContent] = generatorBackEnd.generateClientSourceCode(backEndInputs)
+                            sourceCode: Set[SourceCodeFileContent] = generatorBackEnd.generateClientSourceCode(backEndInputs)
 
                             // Generate a Zip file from the source code.
                             zipFileBytes = generateZipFile(sourceCode)
@@ -91,10 +91,10 @@ class ClientApiRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
       * @param sourceCode the generated source code.
       * @return a byte array representing the ZIP file.
       */
-    private def generateZipFile(sourceCode: Set[ClientSourceCodeFileContent]): Array[Byte] = {
+    private def generateZipFile(sourceCode: Set[SourceCodeFileContent]): Array[Byte] = {
         val zipFileContents: Map[String, Array[Byte]] = sourceCode.map {
-            fileContent: ClientSourceCodeFileContent =>
-                fileContent.filePath -> fileContent.text.getBytes(StandardCharsets.UTF_8)
+            fileContent: SourceCodeFileContent =>
+                fileContent.filePath.toString -> fileContent.text.getBytes(StandardCharsets.UTF_8)
         }.toMap
 
         FileUtil.createZipFileBytes(zipFileContents)
