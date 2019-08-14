@@ -25,22 +25,20 @@
 @(name: String,
   description: String,
   importedClasses: Seq[ImportInfo],
-  functions: Seq[ClientFunction])
-
-import { Observable } from "rxjs";
+  functions: Seq[ClientFunction])import { Observable } from "rxjs";
 import { catchError, map } from "rxjs/operators";
 
 import { ApiResponseData } from "../../../models/api-response-data";
 import { ApiResponseError } from "../../../models/api-response-error";
 import { Endpoint } from "../../endpoint";
-@for(classInfo <- importedClasses) {
-import { @classInfo.className } from "@classInfo.importPath";}
+
+@for(classInfo <- importedClasses) {import { @classInfo.className } from "@classInfo.importPath";
+}
 
 /**
  * @description
  */
 export class @name extends Endpoint {
-
     @for(function <- functions) {
     /**
      * @function.description@if(function.params.nonEmpty) {
@@ -61,9 +59,7 @@ export class @name extends Endpoint {
     }}
     }
     }
-}
-
-@makeObjectType(objectType: ClientObjectType) = @{
+}@makeObjectType(objectType: ClientObjectType) = @{
     objectType match {
         case StringDatatype => "string"
         case BooleanDatatype => "boolean"
@@ -75,27 +71,21 @@ export class @name extends Endpoint {
         case classRef: ClassRef => classRef.className
         case other => throw ClientApiGenerationException(s"Type $other not yet supported")
     }
-}
-
-@makeHttpMethod(httpMethod: ClientHttpMethod) = @{
+}@makeHttpMethod(httpMethod: ClientHttpMethod) = @{
     httpMethod match {
         case GET => "httpGet"
         case POST => "httpPost"
         case PUT => "httpPut"
         case DELETE => "httpDelete"
     }
-}
-
-@makeValue(value: Value) = @{
+}@makeValue(value: Value) = @{
     value match {
         case stringLiteral: StringLiteralValue => "\"" + stringLiteral + "\""
         case booleanLiteral: BooleanLiteralValue => "\"" + booleanLiteral + "\""
         case integerLiteral: IntegerLiteralValue => integerLiteral.toString
         case arg: ArgValue => arg.name + arg.memberVariableName.map(varName => "." + varName).getOrElse("")
     }
-}
-
-@makeUrl(urlElementsAsValues: Seq[Value]) = @{
+}@makeUrl(urlElementsAsValues: Seq[Value]) = @{
     if (urlElementsAsValues.isEmpty) {
         "\"\""
     } else {
@@ -107,9 +97,7 @@ export class @name extends Endpoint {
                 }
         }.mkString(" + ")
     }
-}
-
-@makeHttpRequestBody(maybeRequestBody: Option[HttpRequestBody]) = @{
+}@makeHttpRequestBody(maybeRequestBody: Option[HttpRequestBody]) = @{
     maybeRequestBody match {
         case Some(requestBody) =>
             val requestBodyContent = requestBody match {

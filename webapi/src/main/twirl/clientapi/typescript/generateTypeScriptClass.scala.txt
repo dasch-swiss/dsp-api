@@ -25,15 +25,11 @@
 
 @(classDef: ClientClassDefinition,
   interfacePathInClass: String,
-  importedClasses: Seq[ImportInfo])
-
-import { Any, JsonObject, JsonProperty } from "json2typescript";
+  importedClasses: Seq[ImportInfo])import { Any, JsonObject, JsonProperty } from "json2typescript";
 
 import { I@{classDef.className} } from "@interfacePathInClass";
-@for(classInfo <- importedClasses) {
-import { @classInfo.className } from "@classInfo.importPath";}
-
-@classDef.classDescription match {
+@for(classInfo <- importedClasses) {import { @classInfo.className } from "@classInfo.importPath";
+}@classDef.classDescription match {
     case Some(classDescStr) => {
 /**
  * @classDescStr
@@ -52,11 +48,9 @@ export class @{classDef.className} implements I@{classDef.className} {
     case None => {}
     }
     @@JsonProperty("@{property.propertyName}", @wrapInArrayForCardinality(typeScriptType.capitalize, property.cardinality))
-    public @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
+    @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
 }}
-}
-
-@makeTypeScriptType(objectType: ClientObjectType) = @{
+}@makeTypeScriptType(objectType: ClientObjectType) = @{
     objectType match {
         case StringDatatype => "string"
         case BooleanDatatype => "boolean"
@@ -67,9 +61,7 @@ export class @{classDef.className} implements I@{classDef.className} {
         case classRef: ClassRef => classRef.className
         case other => throw ClientApiGenerationException(s"Type $other not yet supported")
     }
-}
-
-@makeDefaultValue(objectType: ClientObjectType, cardinality: Cardinality) = @{
+}@makeDefaultValue(objectType: ClientObjectType, cardinality: Cardinality) = @{
     if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
         "[]"
     } else {
@@ -84,25 +76,19 @@ export class @{classDef.className} implements I@{classDef.className} {
            case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
         }
     }
-}
-
-@wrapInArrayForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
+}@wrapInArrayForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
     if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
         s"[$typeScriptType]"
     } else {
         typeScriptType
     }
-}
-
-@handleOption(cardinality: Cardinality) = @{
+}@handleOption(cardinality: Cardinality) = @{
     if (cardinality == MayHaveOne) {
         "?"
     } else {
         ""
     }
-}
-
-@addForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
+}@addForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
     if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
         s"$typeScriptType[]"
     } else {

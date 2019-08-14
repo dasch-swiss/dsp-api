@@ -24,12 +24,8 @@
 @import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 
 @(classDef: ClientClassDefinition,
-  importedInterfaces: Seq[ImportInfo])
-
-@for(classInfo <- importedInterfaces) {
-import { I@classInfo.className } from "@classInfo.importPath";}
-
-@classDef.classDescription match {
+  importedInterfaces: Seq[ImportInfo])@for(classInfo <- importedInterfaces) {import { I@classInfo.className } from "@classInfo.importPath";
+}@classDef.classDescription match {
     case Some(classDescStr) => {
 /**
  * @classDescStr
@@ -48,9 +44,7 @@ export interface I@{classDef.className} {
     }
     @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(makeTypeScriptType(property.objectType), property.cardinality);
 }
-}
-
-@makeTypeScriptType(objectType: ClientObjectType) = @{
+}@makeTypeScriptType(objectType: ClientObjectType) = @{
     objectType match {
         case StringDatatype => "string"
         case BooleanDatatype => "boolean"
@@ -61,17 +55,13 @@ export interface I@{classDef.className} {
         case classRef: ClassRef => "I" + classRef.className
         case other => throw ClientApiGenerationException(s"Type $other not yet supported")
     }
-}
-
-@handleOption(cardinality: Cardinality) = @{
+}@handleOption(cardinality: Cardinality) = @{
     if (cardinality == MayHaveOne) {
         "?"
     } else {
         ""
     }
-}
-
-@addForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
+}@addForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
     if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
         s"$typeScriptType[]"
     } else {
