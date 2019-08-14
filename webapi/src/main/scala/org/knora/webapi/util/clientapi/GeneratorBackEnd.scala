@@ -39,25 +39,6 @@ case class ClientApiBackendInput(apiDef: ClientApi, clientClassDefs: Set[ClientC
  */
 case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, fileExtension: String) {
     /**
-     * Given two paths that are both relative to the root directory of the source tree, strips leading
-     * directories until the paths diverge.
-     *
-     * @param thisPath the path of the importing file.
-     * @param thatPath the path of the imported file.
-     * @return the diverging parts of the two paths.
-     */
-    @tailrec
-    private def stripDirsUntilDifferent(thisPath: Seq[String], thatPath: Seq[String]): (Seq[String], Seq[String]) = {
-        if (thisPath.isEmpty || thatPath.isEmpty) {
-            (thisPath, thatPath)
-        } else if (thisPath.head == thatPath.head) {
-            stripDirsUntilDifferent(thisPath.tail, thatPath.tail)
-        } else {
-            (thisPath, thatPath)
-        }
-    }
-
-    /**
      * Given the [[SourceCodeFilePath]] of a file to be imported, returns that path relative to this
      * [[SourceCodeFilePath]].
      *
@@ -68,7 +49,10 @@ case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, file
      */
     def makeImportPath(thatSourceCodeFilePath: SourceCodeFilePath, includeFileExtension: Boolean = true): String = {
         // Find the first common parent directory.
-        val (thisPathFromCommonParent, thatPathFromCommonParent) = stripDirsUntilDifferent(directoryPath, thatSourceCodeFilePath.directoryPath)
+        val (thisPathFromCommonParent, thatPathFromCommonParent) = SourceCodeFilePath.stripDirsUntilDifferent(
+            directoryPath,
+            thatSourceCodeFilePath.directoryPath
+        )
 
         // Make a relative path for walking up the directory tree to the first common parent directory,
         // then down to the target directory.
@@ -93,6 +77,25 @@ case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, file
             filePathWithoutExtension
         } else {
             filePathWithoutExtension + "." + fileExtension
+        }
+    }
+}
+
+object SourceCodeFilePath {
+    /**
+     * Given two paths that are both relative to the root directory of the source tree, strips leading
+     * directories until the paths diverge or at least one of them terminates.
+     *
+     * @param thisPath the path of the importing file.
+     * @param thatPath the path of the imported file.
+     * @return the diverging parts of the two paths.
+     */
+    @tailrec
+    private def stripDirsUntilDifferent(thisPath: Seq[String], thatPath: Seq[String]): (Seq[String], Seq[String]) = {
+        if (thisPath.isEmpty || thatPath.isEmpty || thisPath.head != thatPath.head) {
+            (thisPath, thatPath)
+        } else {
+            stripDirsUntilDifferent(thisPath.tail, thatPath.tail)
         }
     }
 }
