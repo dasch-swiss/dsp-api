@@ -45,7 +45,7 @@ import { @classInfo.className } from "@classInfo.importPath";}
 export class @{classDef.className} implements I@{classDef.className} {
 @for(property <- classDef.properties) {
 @defining(makeTypeScriptType(property.objectType)) { typeScriptType => @property.propertyDescription match {
-    case Some(propDescStr) => {  /**
+    case Some(propDescStr) => {   /**
      * @propDescStr
      */}
 

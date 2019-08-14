@@ -40,7 +40,7 @@ import { I@classInfo.className } from "@classInfo.importPath";}
 export interface I@{classDef.className} {
 @for(property <- classDef.properties) {
 @property.propertyDescription match {
-    case Some(propDescStr) => {   /**
+    case Some(propDescStr) => {    /**
      * @propDescStr
      */}
 
