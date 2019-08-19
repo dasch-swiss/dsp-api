@@ -68,7 +68,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
      * @param apis the APIs from which source code is to be generated.
      * @return the generated source code.
      */
-    def generateClientSourceCode(apis: Set[ClientApiBackendInput]): Set[SourceCodeFileContent] = {
+    override def generateClientSourceCode(apis: Set[ClientApiBackendInput]): Set[SourceCodeFileContent] = {
         val knoraApiConnectionSourceCode = generateKnoraApiConnectionSourceCode(apis.map(_.apiDef))
         apis.flatMap(api => generateApiSourceCode(api)) + knoraApiConnectionSourceCode
     }
