@@ -42,6 +42,33 @@ $(function() {
 		{
             //debugger;
 			propedit = $('<div>').addClass('propedit');
+
+			// get the ark id
+			arkdiv = $('<div>');
+			propedit.append(arkdiv);
+			SALSAH.ApiGet('resourcesv2', resource.resdata.res_id, {resinfo: true, reqtype: 'context'}, function(datav2) {
+				if (datav2['@id']) {
+					var now = new Date();
+					var nowstr = now.getFullYear().toString() + (now.getMonth() + 1).toString() + now.getDate().toString();
+
+					arkdiv.append(
+								$('<em>')
+									.addClass('propedit label')
+									.append('Presistent ID (')
+									.append(
+										$('<a>').attr({href: 'https://en.wikipedia.org/wiki/Archival_Resource_Key'}).append('ARK'))
+									.append('): ')
+							.append($('<img>').attr({src: SITE_URL + '/app/icons/16x16/clippy.png', title: 'Copy to clipboard'}).on('click', function() {
+								$(this).next('.clipit').select();
+								document.execCommand('copy');
+							})
+							.dragndrop('makeDraggable', 'HANDLE_ID', {handle_id: datav2['@id'] + '.' + nowstr}))
+							.append($('<input>')
+								.attr({type:'text', readOnly: true, size: '64'})
+								.addClass('clipit').val('http://ark.dasch.swiss/' + datav2['@id'] + '.' + nowstr)));
+				}
+			});
+
 			propedit.append(
 				$('<img>')
 					.attr({src: resource.resinfo.restype_iconsrc ? resource.resinfo.restype_iconsrc : defaultresicon, title: 'DRAG TO DESTINATION'})
