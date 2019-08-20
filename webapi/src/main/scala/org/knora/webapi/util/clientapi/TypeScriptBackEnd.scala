@@ -87,24 +87,10 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
                 clientClassDef.className -> filePath
         }.toMap
 
-        // Generate file paths for interface definitions.
-        val clientInterfaceCodePaths: Map[String, SourceCodeFilePath] = api.clientClassDefs.map {
-            clientClassDef =>
-                val filePath = makeInterfaceFilePath(apiDef = api.apiDef, className = clientClassDef.className)
-                clientClassDef.className -> filePath
-        }.toMap
-
         // Generate source code for class definitions.
         val classSourceCode: Set[SourceCodeFileContent] = generateClassSourceCode(
             clientClassDefs = api.clientClassDefs,
-            clientClassCodePaths = clientClassCodePaths,
-            clientInterfaceCodePaths = clientInterfaceCodePaths
-        )
-
-        // Generate source code for interfaces.
-        val interfaceSourceCode: Set[SourceCodeFileContent] = generateInterfaceSourceCode(
-            clientClassDefs = api.clientClassDefs,
-            clientInterfaceCodePaths = clientInterfaceCodePaths
+            clientClassCodePaths = clientClassCodePaths
         )
 
         // Generate source code for endpoints.
@@ -124,7 +110,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
             endpointInfos = endpointInfos
         )
 
-        classSourceCode ++ interfaceSourceCode ++ endpointInfos.map(_.fileContent) + mainEndpointSourceCode
+        classSourceCode ++ endpointInfos.map(_.fileContent) + mainEndpointSourceCode
     }
 
     /**
@@ -245,16 +231,13 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
      *
      * @param clientClassDefs          the definitions of the classes for which source code is to be generated.
      * @param clientClassCodePaths     the file paths to be used for the generated classes.
-     * @param clientInterfaceCodePaths the file paths used for generated interfaces.
      * @return the generated source code.
      */
     private def generateClassSourceCode(clientClassDefs: Set[ClientClassDefinition],
-                                        clientClassCodePaths: Map[String, SourceCodeFilePath],
-                                        clientInterfaceCodePaths: Map[String, SourceCodeFilePath]): Set[SourceCodeFileContent] = {
+                                        clientClassCodePaths: Map[String, SourceCodeFilePath]): Set[SourceCodeFileContent] = {
         clientClassDefs.map {
             clientClassDef =>
                 val classFilePath: SourceCodeFilePath = clientClassCodePaths(clientClassDef.className)
-                val interfaceImportPath: String = classFilePath.makeImportPath(clientInterfaceCodePaths(clientClassDef.className), includeFileExtension = false)
 
                 val importedClasses: Vector[ImportInfo] = clientClassDef.classObjectTypesUsed.toVector.sortBy(_.classIri).map {
                     classRef =>
@@ -268,43 +251,10 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
 
                 val classText: String = clientapi.typescript.txt.generateTypeScriptClass(
                     classDef = clientClassDef,
-                    interfacePathInClass = interfaceImportPath,
                     importedClasses = importedClasses
                 ).toString()
 
                 SourceCodeFileContent(filePath = classFilePath, text = classText)
-        }
-    }
-
-    /**
-     * Generates source code for interfaces.
-     *
-     * @param clientClassDefs          the definitions of the classes for which interfaces are to be generated.
-     * @param clientInterfaceCodePaths the file paths to be used for generated interfaces.
-     * @return the generated source code.
-     */
-    private def generateInterfaceSourceCode(clientClassDefs: Set[ClientClassDefinition],
-                                            clientInterfaceCodePaths: Map[String, SourceCodeFilePath]): Set[SourceCodeFileContent] = {
-        clientClassDefs.map {
-            clientClassDef =>
-                val interfaceFilePath: SourceCodeFilePath = clientInterfaceCodePaths(clientClassDef.className)
-
-                val importedInterfaces: Vector[ImportInfo] = clientClassDef.classObjectTypesUsed.toVector.sortBy(_.classIri).map {
-                    classRef =>
-                        val interfaceImportPath = interfaceFilePath.makeImportPath(clientInterfaceCodePaths(classRef.className), includeFileExtension = false)
-
-                        ImportInfo(
-                            className = classRef.className,
-                            importPath = interfaceImportPath
-                        )
-                }
-
-                val interfaceText: String = clientapi.typescript.txt.generateTypeScriptInterface(
-                    classDef = clientClassDef,
-                    importedInterfaces = importedInterfaces
-                ).toString()
-
-                SourceCodeFileContent(filePath = interfaceFilePath, text = interfaceText)
         }
     }
 

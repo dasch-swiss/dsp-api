@@ -24,10 +24,8 @@
 @import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 
 @(classDef: ClientClassDefinition,
-  interfacePathInClass: String,
   importedClasses: Seq[ImportInfo])import { Any, JsonObject, JsonProperty } from "json2typescript";
 
-import { I@{classDef.className} } from "@interfacePathInClass";
 @for(classInfo <- importedClasses) {import { @classInfo.className } from "@classInfo.importPath";
 }@classDef.classDescription match {
     case Some(classDescStr) => {
@@ -38,7 +36,7 @@ import { I@{classDef.className} } from "@interfacePathInClass";
     case None => {}
 }
 @@JsonObject("@{classDef.className}")
-export class @{classDef.className} implements I@{classDef.className} {
+export class @{classDef.className} {
 @for(property <- classDef.properties) {
 @defining(makeTypeScriptType(property.objectType)) { typeScriptType => @property.propertyDescription match {
     case Some(propDescStr) => {   /**
@@ -47,7 +45,7 @@ export class @{classDef.className} implements I@{classDef.className} {
 
     case None => {}
     }
-    @@JsonProperty("@{property.propertyName}", @wrapInArrayForCardinality(typeScriptType.capitalize, property.cardinality))
+    @@JsonProperty("@{property.propertyName}", @wrapInArrayForCardinality(typeScriptType.capitalize, property.cardinality)@if(property.cardinality == MayHaveOne) {, true})
     @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
 }}
 }@makeTypeScriptType(objectType: ClientObjectType) = @{
