@@ -28,6 +28,11 @@ import org.knora.webapi.util.clientapi._
  */
 class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     /**
+      * The serialisation format used by this [[ClientApi]].
+      */
+    override val serialisationFormat: ApiSerialisationFormat = Json
+
+    /**
      * The endpoints in this [[ClientApi]].
      */
     override val endpoints: Seq[ClientEndpoint] = Seq(

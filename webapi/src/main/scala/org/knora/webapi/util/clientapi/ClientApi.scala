@@ -22,11 +22,30 @@ package org.knora.webapi.util.clientapi
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Cardinality
 import org.knora.webapi.util.SmartIri
 
+/**
+  * A trait for enumerated values representing API serialisation formats.
+  */
+trait ApiSerialisationFormat
+
+/**
+  * Indicates that an API uses plain JSON as its serialisation format.
+  */
+case object Json extends ApiSerialisationFormat
+
+/**
+  * Indicates that an API uses JSON-LD as its serialisation format.
+  */
+case object JsonLD extends ApiSerialisationFormat
 
 /**
   * Represents a client API.
   */
 trait ClientApi {
+    /**
+      * The serialisation format used by the API.
+      */
+    val serialisationFormat: ApiSerialisationFormat
+
     /**
       * The machine-readable name of the API.
       */
