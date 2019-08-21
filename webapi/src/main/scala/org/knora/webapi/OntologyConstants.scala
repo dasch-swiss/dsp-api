@@ -1134,7 +1134,6 @@ object OntologyConstants {
             KnoraAdmin.ProjectDescription -> KnoraAdminV2.Description,
             KnoraAdmin.ProjectKeyword -> KnoraAdminV2.Keywords,
             KnoraAdmin.ProjectLogo -> KnoraAdminV2.Logo,
-            KnoraAdmin.HasSelfJoinEnabled -> KnoraAdminV2.SelfJoin,
             KnoraAdmin.UserGroup -> KnoraAdminV2.GroupClass,
             KnoraAdmin.GroupDescription -> KnoraAdminV2.Description,
             KnoraAdmin.BelongsToProject -> KnoraAdminV2.ProjectProperty
@@ -1185,7 +1184,6 @@ object OntologyConstants {
             KnoraAdminV2.Shortcode -> KnoraAdmin.ProjectShortcode,
             KnoraAdminV2.Keywords -> KnoraAdmin.ProjectKeyword,
             KnoraAdminV2.Logo -> KnoraAdmin.ProjectLogo,
-            KnoraAdminV2.SelfJoin -> KnoraAdmin.HasSelfJoinEnabled,
             KnoraAdminV2.GroupClass -> KnoraAdmin.UserGroup,
             KnoraAdminV2.ProjectProperty -> KnoraAdmin.BelongsToProject
         )

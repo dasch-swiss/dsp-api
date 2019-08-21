@@ -921,7 +921,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         OntologyConstants.KnoraAdmin.ForResourceClass,
         OntologyConstants.KnoraAdmin.ForProperty,
         OntologyConstants.KnoraAdmin.GroupName,
-        OntologyConstants.KnoraAdmin.IsInGroup
+        OntologyConstants.KnoraAdmin.IsInGroup,
+        OntologyConstants.KnoraAdmin.HasSelfJoinEnabled
     ).map(_.toSmartIri)
 
     /**
@@ -950,7 +951,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       */
     private val GroupCardinalities = Map(
         OntologyConstants.KnoraAdminV2.ID -> Cardinality.MayHaveOne,
-        OntologyConstants.KnoraAdminV2.Name -> Cardinality.MustHaveOne
+        OntologyConstants.KnoraAdminV2.Name -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraAdminV2.SelfJoin -> Cardinality.MustHaveOne
     )
 
     /**
@@ -959,7 +961,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
     private val ProjectCardinalities = Map(
         OntologyConstants.KnoraAdminV2.ID -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraAdminV2.Members -> Cardinality.MayHaveMany,
-        OntologyConstants.KnoraAdminV2.Ontologies -> Cardinality.MayHaveMany
+        OntologyConstants.KnoraAdminV2.Ontologies -> Cardinality.MayHaveMany,
+        OntologyConstants.KnoraAdminV2.SelfJoin -> Cardinality.MustHaveOne
     )
 
     /**
