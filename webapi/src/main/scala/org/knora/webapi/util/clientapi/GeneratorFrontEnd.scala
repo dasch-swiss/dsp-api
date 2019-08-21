@@ -233,13 +233,11 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
             case (classIri: SmartIri, classDef: ClientClassDefinition) =>
                 val readOnlyPropertyIris: Set[SmartIri] = clientApi.classesWithReadOnlyProperties(classDef.classIri)
 
-                // In a Read* class, every property should have another Read* class (if available) as its
-                // object type, and only read-only properties should be included.
-                val propsForReadClass: Vector[ClientPropertyDefinition] = useReadProperties(
-                    properties = classDef.properties,
-                    classIrisNeedingReadClasses = classIrisNeedingReadClasses,
-                    readClassIris = readClassIris
-                ).filter(propDef => readOnlyPropertyIris.contains(propDef.propertyIri))
+                // In a Read* class, only read-only properties should be included. To avoid circular dependencies,
+                // the read-only properties should point to base classes, not to other Read* classes.
+                val propsForReadClass: Vector[ClientPropertyDefinition] = classDef.properties.filter {
+                    propDef => readOnlyPropertyIris.contains(propDef.propertyIri)
+                }
 
                 val readClassIri = readClassIris(classIri)
 
