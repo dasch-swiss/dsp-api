@@ -770,6 +770,27 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val ProjectIri: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.ProjectIri,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.CreateGroupRequest),
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "project iri"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The IRI of a project."
+                )
+            )
+        )
+    )
+
     private val ProjectRestrictedViewSettings = makeClass(
         classIri = OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettings,
         predicates = Seq(
@@ -862,6 +883,31 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val CreateGroupRequest = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.CreateGroupRequest,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "create group"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A request to create a group."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.Name -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraAdminV2.Description -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.Status -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraAdminV2.ProjectIri -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraAdminV2.SelfJoin -> Cardinality.MustHaveOne
+        )
+    )
+
     /**
       * Properties to remove from the ontology before converting it to the target schema.
       * See also [[OntologyConstants.CorrespondingIris]].
@@ -942,6 +988,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         ProjectResponse,
         GroupsResponse,
         GroupResponse,
+        CreateGroupRequest,
         AdministrativePermissionsResponse,
         AdministrativePermissionResponse,
         AdministrativePermissionClass,
@@ -983,7 +1030,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         KeywordsProperty,
         Settings,
         Size,
-        Watermark
+        Watermark,
+        ProjectIri
     ).map {
         propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
     }.toMap

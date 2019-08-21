@@ -73,6 +73,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     private val GroupResponse = classRef(OntologyConstants.KnoraAdminV2.GroupResponse.toSmartIri)
     private val MembersResponse = classRef(OntologyConstants.KnoraAdminV2.MembersResponse.toSmartIri)
     private val Group = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri)
+    private val CreateGroupRequest = classRef(OntologyConstants.KnoraAdminV2.CreateGroupRequest.toSmartIri)
 
     /**
      * Returns all groups
@@ -129,7 +130,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
     private val createGroupFunction: ClientFunction =
         "createGroup" description "Creates a group." params (
-            "group" description "The group to be created." paramType Group
+            "group" description "The group to be created." paramType CreateGroupRequest
             ) doThis {
             httpPost(
                 path = BasePath,
@@ -208,10 +209,11 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
     private val updateGroupFunction: ClientFunction =
         "updateGroup" description "Updates a group." params (
+            "iri" description "The IRI of the group." paramType UriDatatype,
             "group" description "The group to be updated." paramType Group
             ) doThis {
             httpPut(
-                path = argMember("group", "id"),
+                path = arg("iri"),
                 body = Some(arg("group"))
             )
         } returns GroupResponse
@@ -261,10 +263,11 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
     private val changeGroupStatusFunction: ClientFunction =
         "updateGroupStatus" description "Updates the status of a group." params (
+            "iri" description "The IRI of the group." paramType UriDatatype,
             "group" description "The group to be updated." paramType Group
             ) doThis {
             httpPut(
-                path = argMember("group", "id") / str("status"),
+                path = arg("iri") / str("status"),
                 body = Some(arg("group"))
             )
         } returns GroupResponse
@@ -300,10 +303,10 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
     private val deleteGroupFunction: ClientFunction =
         "deleteGroup" description "Deletes a group. This method does not actually delete a group, but sets the status to false." params (
-            "group" description "The group to be deleted." paramType Group
+            "iri" description "The IRI of the group." paramType UriDatatype
             ) doThis {
             httpDelete(
-                path = argMember("group", "id")
+                path = arg("iri")
             )
         } returns GroupResponse
 
@@ -333,9 +336,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
     private val getGroupMembersFunction: ClientFunction =
         "getGroupMembers" description "Gets the members of a group." params (
-            "group" description "The group." paramType Group
+            "iri" description "The IRI of the group." paramType UriDatatype
             ) doThis {
-            httpGet(argMember("group", "id") / str("members"))
+            httpGet(arg("iri") / str("members"))
         } returns MembersResponse
 
     /**

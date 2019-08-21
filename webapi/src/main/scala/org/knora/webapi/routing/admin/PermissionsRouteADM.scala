@@ -62,8 +62,6 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
 
     // Classes used in client function definitions.
 
-    private val Project = classRef(OntologyConstants.KnoraAdminV2.ProjectClass.toSmartIri)
-    private val Group = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri)
     private val AdministrativePermissionResponse = classRef(OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse.toSmartIri)
 
     override def knoraApiPath: Route = getAdministrativePermission
@@ -92,12 +90,12 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     // #getAdministrativePermissionFunction
     private val getAdministrativePermissionFunction: ClientFunction =
         "getAdministrativePermission" description "Gets the administrative permissions for a project and group." params(
-            "project" description "The project." paramType Project,
-            "group" description "The group." paramType Group,
+            "projectIri" description "The project IRI." paramType UriDatatype,
+            "groupIri" description "The group IRI." paramType UriDatatype,
             "permissionType" description "The permission type." paramOptionType StringDatatype
         ) doThis {
             httpGet(
-                path = argMember("project", "id") / argMember("group", "id"),
+                path = arg("projectIri") / arg("groupIri"),
                 params = Seq("permissionType" -> arg("permissionType"))
             )
         } returns AdministrativePermissionResponse

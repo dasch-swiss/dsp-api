@@ -19,7 +19,10 @@
 
 package org.knora.webapi.routing.admin
 
+import org.knora.webapi.OntologyConstants
 import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.clientapi._
 
 
@@ -27,6 +30,8 @@ import org.knora.webapi.util.clientapi._
  * Represents the structure of generated client library code for the admin API.
  */
 class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     /**
       * The serialisation format used by this [[ClientApi]].
       */
@@ -61,4 +66,59 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
      * A description of this [[ClientApi]].
      */
     override val description: String = "A client API for administering Knora."
+
+    /**
+      * A map of class IRIs to their read-only properties.
+      */
+    override val classesWithReadOnlyProperties: Map[SmartIri, Set[SmartIri]] = Map(
+        OntologyConstants.KnoraAdminV2.UserClass -> Set(
+            OntologyConstants.KnoraAdminV2.ID,
+            OntologyConstants.KnoraAdminV2.Token,
+            OntologyConstants.KnoraAdminV2.SessionID,
+            OntologyConstants.KnoraAdminV2.Groups,
+            OntologyConstants.KnoraAdminV2.Projects
+        ),
+        OntologyConstants.KnoraAdminV2.GroupClass ->  Set(
+            OntologyConstants.KnoraAdminV2.ID,
+            OntologyConstants.KnoraAdminV2.ProjectProperty
+        ),
+        OntologyConstants.KnoraAdminV2.ProjectClass ->  Set(
+            OntologyConstants.KnoraAdminV2.ID,
+            OntologyConstants.KnoraAdminV2.Members,
+            OntologyConstants.KnoraAdminV2.Ontologies
+        ),
+        OntologyConstants.KnoraAdminV2.AdministrativePermissionClass -> Set(
+            OntologyConstants.KnoraAdminV2.Iri
+        )
+    ).map {
+        case (classIri, propertyIris) =>
+            classIri.toSmartIri -> propertyIris.map(_.toSmartIri)
+    }
+
+    /**
+      * A set of IRIs of classes that represent API responses.
+      */
+    override val responseClasses: Set[SmartIri] = Set(
+        OntologyConstants.KnoraAdminV2.UserResponse,
+        OntologyConstants.KnoraAdminV2.UsersResponse,
+        OntologyConstants.KnoraAdminV2.GroupResponse,
+        OntologyConstants.KnoraAdminV2.GroupsResponse,
+        OntologyConstants.KnoraAdminV2.ProjectResponse,
+        OntologyConstants.KnoraAdminV2.ProjectsResponse,
+        OntologyConstants.KnoraAdminV2.MembersResponse,
+        OntologyConstants.KnoraAdminV2.KeywordsResponse,
+        OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse,
+        OntologyConstants.KnoraAdminV2.AdministrativePermissionsResponse,
+        OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettingsResponse,
+    ).map(_.toSmartIri)
+
+    /**
+      * A map of property IRIs to non-standard names that those properties must have.
+      */
+    override val propertyNames: Map[SmartIri, String] = Map(
+        OntologyConstants.KnoraAdminV2.ProjectIri -> "project"
+    ).map {
+        case (propertyIri, propertyName) =>
+            propertyIri.toSmartIri -> propertyName
+    }
 }

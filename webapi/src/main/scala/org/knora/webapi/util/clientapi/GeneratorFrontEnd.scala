@@ -161,14 +161,132 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                         )
                     } yield recursionResults
             }
-        } yield allDefs.clientDefs.values.toSet
+        } yield transformClientClassDefs(
+            clientApi = clientApi,
+            clientDefs = allDefs.clientDefs
+        )
+    }
+
+    /**
+      * Transforms client class definitions by adding `Read*` classes, transforming the properties of their base
+      * classes, and transforming the properties of response classes.
+      *
+      * @param clientApi  the client API definition.
+      * @param clientDefs the client class definitions used by the API.
+      * @return the transformed class definitions.
+      */
+    private def transformClientClassDefs(clientApi: ClientApi, clientDefs: Map[SmartIri, ClientClassDefinition]): Set[ClientClassDefinition] = {
+        /**
+          * Changes properties to point to `Read*` classes if possible.
+          *
+          * @param properties                  the properties to transform.
+          * @param classIrisNeedingReadClasses The IRIs of classes that need Read* classes.
+          * @param readClassIris               A map of the IRIs of classes that need Read* classes, to the IRIs of their Read* classes.
+          * @return the transformed properties.
+          */
+        def useReadProperties(properties: Vector[ClientPropertyDefinition],
+                              classIrisNeedingReadClasses: Set[SmartIri],
+                              readClassIris: Map[SmartIri, SmartIri]): Vector[ClientPropertyDefinition] = {
+            properties.map {
+                propDef: ClientPropertyDefinition =>
+                    propDef.objectType match {
+                        case classRef: ClassRef =>
+                            if (classIrisNeedingReadClasses.contains(classRef.classIri)) {
+                                val classRefReadClassIri: SmartIri = readClassIris(classRef.classIri)
+
+                                propDef.copy(
+                                    objectType = ClassRef(className = classRefReadClassIri.getEntityName, classIri = classRefReadClassIri)
+                                )
+                            } else {
+                                propDef
+                            }
+
+                        case _ => propDef
+                    }
+            }
+        }
+
+        val classesWithRenamedProps: Map[SmartIri, ClientClassDefinition] = clientDefs.map {
+            case (classIri: SmartIri, classDef: ClientClassDefinition) =>
+                val transformedProps = classDef.properties.map {
+                    propDef =>
+                        clientApi.propertyNames.get(propDef.propertyIri) match {
+                            case Some(propertyName) => propDef.copy(propertyName = propertyName)
+                            case None => propDef
+                        }
+                }
+
+                classIri -> classDef.copy(properties = transformedProps)
+        }
+
+        // The IRIs of classes that need Read* classes.
+        val classIrisNeedingReadClasses: Set[SmartIri] = clientApi.classesWithReadOnlyProperties.keySet
+
+        // A map of the IRIs of classes that need Read* classes, to the IRIs of their Read* classes.
+        val readClassIris: Map[SmartIri, SmartIri] = classIrisNeedingReadClasses.map {
+            classIri => classIri -> classIri.getOntologyFromEntity.makeEntityIri(s"Read${classIri.getEntityName}")
+        }.toMap
+
+        val classesNeedingReadClasses: Map[SmartIri, ClientClassDefinition] = classesWithRenamedProps.filterKeys(classIrisNeedingReadClasses)
+
+        val readClassesAndTransformedBaseClasses: Map[SmartIri, ClientClassDefinition] = classesNeedingReadClasses.flatMap {
+            case (classIri: SmartIri, classDef: ClientClassDefinition) =>
+                val readOnlyPropertyIris: Set[SmartIri] = clientApi.classesWithReadOnlyProperties(classDef.classIri)
+
+                // In a Read* class, every property should have another Read* class (if available) as its
+                // object type, and only read-only properties should be included.
+                val propsForReadClass: Vector[ClientPropertyDefinition] = useReadProperties(
+                    properties = classDef.properties,
+                    classIrisNeedingReadClasses = classIrisNeedingReadClasses,
+                    readClassIris = readClassIris
+                ).filter(propDef => readOnlyPropertyIris.contains(propDef.propertyIri))
+
+                val readClassIri = readClassIris(classIri)
+
+                val readClassDef: ClientClassDefinition = classDef.copy(
+                    className = readClassIri.getEntityName,
+                    classIri = readClassIri,
+                    properties = propsForReadClass,
+                    subClassOf = Some(classDef.classIri)
+                )
+
+                // Remove the read-only properties from the transformed base class.
+
+                val baseClassDef: ClientClassDefinition = classDef.copy(
+                    properties = classDef.properties.filterNot(propDef => readOnlyPropertyIris.contains(propDef.propertyIri))
+                )
+
+                Map(
+                    baseClassDef.classIri -> baseClassDef,
+                    readClassDef.classIri -> readClassDef
+                )
+        }
+
+        // In a response class, every property should have another Read* class (if available) as its object type.
+
+        val responseClasses: Map[SmartIri, ClientClassDefinition] = classesWithRenamedProps.filterKeys(clientApi.responseClasses)
+
+        val transformedResponseClasses: Map[SmartIri, ClientClassDefinition] = responseClasses.map {
+            case (classIri: SmartIri, classDef: ClientClassDefinition) =>
+                val transformedProps = useReadProperties(
+                    properties = classDef.properties,
+                    classIrisNeedingReadClasses = classIrisNeedingReadClasses,
+                    readClassIris = readClassIris
+                )
+
+                classIri -> classDef.copy(
+                    properties = transformedProps
+                )
+        }
+
+        (clientDefs ++ readClassesAndTransformedBaseClasses ++ transformedResponseClasses).values.toSet
     }
 
     /**
       * Gets an ontology from Knora.
       *
       * @param ontologyIri the IRI of the ontology.
-      * @param ontologies the ontologies collected so far.
+      * @param ontologies  the ontologies collected so far.
       * @return `ontologies` plus the requested ontology.
       */
     private def getOntology(ontologyIri: SmartIri, ontologies: Map[SmartIri, InputOntologyV2]): Future[Map[SmartIri, InputOntologyV2]] = {

@@ -209,9 +209,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
     private val getProjectKeywordsFunction: ClientFunction =
         "getProjectKeywords" description "Gets all the keywords for a project." params (
-            "projectIri" description "The IRI of the project." paramType UriDatatype
+            "iri" description "The IRI of the project." paramType UriDatatype
             ) doThis {
-            httpGet(str("iri") / arg("projectIri") / str("Keywords"))
+            httpGet(str("iri") / arg("iri") / str("Keywords"))
         } returns KeywordsResponse
 
     /**
@@ -342,19 +342,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
     private val updateProjectFunction: ClientFunction =
         "updateProject" description "Updates a project." params (
+            "iri" description "The project IRI." paramType UriDatatype,
             "project" description "The project to be updated." paramType Project
             ) doThis {
             httpPut(
-                path = str("iri") / argMember("project", "id"),
-                body = Some(json(
-                    "shortname" -> argMember("project", "shortname"),
-                    "longname" -> argMember("project", "longname"),
-                    "description" -> argMember("project", "description"),
-                    "keywords" -> argMember("project", "keywords"),
-                    "logo" -> argMember("project", "logo"),
-                    "status" -> argMember("project", "status"),
-                    "selfjoin" -> argMember("project", "selfjoin")
-                ))
+                path = str("iri") / arg("iri"),
+                body = Some(arg("project"))
             )
         } returns ProjectResponse
 
@@ -388,10 +381,10 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
     private val deleteProjectFunction: ClientFunction =
         "deleteProject" description "Deletes a project. This method does not actually delete a project, but sets the status to false." params (
-            "project" description "The project to be deleted." paramType Project
+            "iri" description "The project IRI." paramType UriDatatype
             ) doThis {
             httpDelete(
-                path = str("iri") / argMember("project", "id")
+                path = str("iri") / arg("iri")
             )
         } returns ProjectResponse
 

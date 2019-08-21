@@ -72,6 +72,25 @@ trait ClientApi {
     val endpoints: Seq[ClientEndpoint]
 
     /**
+      * A map of class IRIs to their read-only properties. Each class in this collection will
+      * be separated into a base class without the read-only properties, and a subclass with the
+      * read-only properties.
+      */
+    val classesWithReadOnlyProperties: Map[SmartIri, Set[SmartIri]]
+
+    /**
+      * A set of IRIs of classes that represent API responses and whose contents are therefore
+      * always read-only.
+      */
+    val responseClasses: Set[SmartIri]
+
+    /**
+      * A map of property IRIs to non-standard names that those properties must have.
+      * Needed only if two different properties should have the same name in different classes.
+      */
+    val propertyNames: Map[SmartIri, String]
+
+    /**
       * The IRIs of the classes used by this API.
       */
     lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet
@@ -528,11 +547,13 @@ case class JsonRequestBody(jsonObject: Seq[(String, Value)]) extends HttpRequest
   * @param classDescription a description of the class.
   * @param classIri         the IRI of the class in the Knora API.
   * @param properties       definitions of the properties used in the class.
+  * @param subClassOf       the IRI of the class's base class (used only in generated subclasses).
   */
 case class ClientClassDefinition(className: String,
                                  classDescription: Option[String],
                                  classIri: SmartIri,
-                                 properties: Vector[ClientPropertyDefinition]) {
+                                 properties: Vector[ClientPropertyDefinition],
+                                 subClassOf: Option[SmartIri] = None) {
     /**
       * The classes used by this class.
       */

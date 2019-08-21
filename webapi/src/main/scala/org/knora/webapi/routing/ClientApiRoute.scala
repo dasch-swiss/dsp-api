@@ -52,6 +52,8 @@ class ClientApiRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                             case _ => throw ClientApiGenerationException(s"Unknown target: $target")
                         }
 
+                        val params: Map[String, String] = requestContext.request.uri.query().toMap
+
                         val httpResponseFuture: Future[HttpResponse] = for {
                             requestingUser <- getUserADM(requestContext)
 
@@ -70,7 +72,10 @@ class ClientApiRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                             backEndInputs = backEndInputSeq.toSet
 
                             // Generate source code.
-                            sourceCode: Set[SourceCodeFileContent] = generatorBackEnd.generateClientSourceCode(backEndInputs)
+                            sourceCode: Set[SourceCodeFileContent] = generatorBackEnd.generateClientSourceCode(
+                                apis = backEndInputs,
+                                params = params
+                            )
 
                             // Generate a Zip file from the source code.
                             zipFileBytes = generateZipFile(sourceCode)

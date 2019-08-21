@@ -22,31 +22,31 @@ package org.knora.webapi.util.clientapi
 import scala.annotation.tailrec
 
 /**
- * Represents a client API as input to the generator back end.
- *
- * @param apiDef          the API definition.
- * @param clientClassDefs the class definitions used in the API.
- */
+  * Represents a client API as input to the generator back end.
+  *
+  * @param apiDef          the API definition.
+  * @param clientClassDefs the class definitions used in the API.
+  */
 case class ClientApiBackendInput(apiDef: ClientApi, clientClassDefs: Set[ClientClassDefinition])
 
 /**
- * Represents the filesystem path of a file containing generated source code.
- *
- * @param directoryPath the path of the directory containing the file,
- *                      relative to the root directory of the source tree.
- * @param filename      the filename, without the file extension.
- * @param fileExtension the file extension.
- */
+  * Represents the filesystem path of a file containing generated source code.
+  *
+  * @param directoryPath the path of the directory containing the file,
+  *                      relative to the root directory of the source tree.
+  * @param filename      the filename, without the file extension.
+  * @param fileExtension the file extension.
+  */
 case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, fileExtension: String) {
     /**
-     * Given the [[SourceCodeFilePath]] of a file to be imported, returns that path relative to this
-     * [[SourceCodeFilePath]].
-     *
-     * @param thatSourceCodeFilePath the path of the file to be imported.
-     * @param includeFileExtension   if `true`, include the imported file's extension in the result.
-     * @return a relative file path for importing `thatSourceCodeFilePath` in the file represented by this
-     *         [[SourceCodeFilePath]].
-     */
+      * Given the [[SourceCodeFilePath]] of a file to be imported, returns that path relative to this
+      * [[SourceCodeFilePath]].
+      *
+      * @param thatSourceCodeFilePath the path of the file to be imported.
+      * @param includeFileExtension   if `true`, include the imported file's extension in the result.
+      * @return a relative file path for importing `thatSourceCodeFilePath` in the file represented by this
+      *         [[SourceCodeFilePath]].
+      */
     def makeImportPath(thatSourceCodeFilePath: SourceCodeFilePath, includeFileExtension: Boolean = true): String = {
         // Find the first common parent directory.
         val (thisPathFromCommonParent, thatPathFromCommonParent) = SourceCodeFilePath.stripDirsUntilDifferent(
@@ -71,7 +71,12 @@ case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, file
     }
 
     override def toString: String = {
-        val filePathWithoutExtension: String = (directoryPath :+ filename).mkString("/")
+        val directoryPathWithCurrentDir = directoryPath.headOption match {
+            case Some("..") => directoryPath
+            case _ => "." +: directoryPath
+        }
+
+        val filePathWithoutExtension: String = (directoryPathWithCurrentDir :+ filename).mkString("/")
 
         if (fileExtension.isEmpty) {
             filePathWithoutExtension
@@ -83,13 +88,13 @@ case class SourceCodeFilePath(directoryPath: Seq[String], filename: String, file
 
 object SourceCodeFilePath {
     /**
-     * Given two paths that are both relative to the root directory of the source tree, strips leading
-     * directories until the paths diverge or at least one of them terminates.
-     *
-     * @param thisPath the path of the importing file.
-     * @param thatPath the path of the imported file.
-     * @return the diverging parts of the two paths.
-     */
+      * Given two paths that are both relative to the root directory of the source tree, strips leading
+      * directories until the paths diverge or at least one of them terminates.
+      *
+      * @param thisPath the path of the importing file.
+      * @param thatPath the path of the imported file.
+      * @return the diverging parts of the two paths.
+      */
     @tailrec
     private def stripDirsUntilDifferent(thisPath: Seq[String], thatPath: Seq[String]): (Seq[String], Seq[String]) = {
         if (thisPath.isEmpty || thatPath.isEmpty || thisPath.head != thatPath.head) {
@@ -101,23 +106,24 @@ object SourceCodeFilePath {
 }
 
 /**
- * Represents a file containing generated client API source code.
- *
- * @param filePath the filename in which the source code should be saved.
- * @param text     the source code.
- */
+  * Represents a file containing generated client API source code.
+  *
+  * @param filePath the filename in which the source code should be saved.
+  * @param text     the source code.
+  */
 case class SourceCodeFileContent(filePath: SourceCodeFilePath, text: String)
 
 /**
- * A trait for client API code generator back ends. A back end is responsible for producing client API library
- * source code in a particular programming language.
- */
+  * A trait for client API code generator back ends. A back end is responsible for producing client API library
+  * source code in a particular programming language.
+  */
 trait GeneratorBackEnd {
     /**
-     * Generates client API source code.
-     *
-     * @param apis the APIs from which source code is to be generated.
-     * @return the generated source code.
-     */
-    def generateClientSourceCode(apis: Set[ClientApiBackendInput]): Set[SourceCodeFileContent]
+      * Generates client API source code.
+      *
+      * @param apis   the APIs from which source code is to be generated.
+      * @param params parameters to configure source code generation.
+      * @return the generated source code.
+      */
+    def generateClientSourceCode(apis: Set[ClientApiBackendInput], params: Map[String, String]): Set[SourceCodeFileContent]
 }

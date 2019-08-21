@@ -578,7 +578,11 @@
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :belongsToProject ;
                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                           ];
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :hasSelfJoinEnabled ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] ;
 
            rdfs:comment "A group of Knora users."@en .
 

@@ -19,14 +19,20 @@
 
 package org.knora.webapi.util.clientapi
 
-import org.knora.webapi.util.StringFormatter
+import java.io.File
+import java.nio.file.{Path, Paths}
+
+import org.knora.webapi.ClientApiGenerationException
 import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
+import org.knora.webapi.util.{FileUtil, SmartIri, StringFormatter}
 
 /**
  * Generates client API source code in TypeScript.
  */
 class TypeScriptBackEnd extends GeneratorBackEnd {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    private val mockCodeDir: Path = Paths.get("_test_data/typescript-client-mock-src").toAbsolutePath
 
     /**
      * Represents information about an endpoint and its source code.
@@ -68,9 +74,70 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
      * @param apis the APIs from which source code is to be generated.
      * @return the generated source code.
      */
-    override def generateClientSourceCode(apis: Set[ClientApiBackendInput]): Set[SourceCodeFileContent] = {
-        val knoraApiConnectionSourceCode = generateKnoraApiConnectionSourceCode(apis.map(_.apiDef))
-        apis.flatMap(api => generateApiSourceCode(api)) + knoraApiConnectionSourceCode
+    override def generateClientSourceCode(apis: Set[ClientApiBackendInput], params: Map[String, String]): Set[SourceCodeFileContent] = {
+        /**
+          * Returns the files containing mock knora-api-js-lib code, used for testing the generated code.
+          *
+          * @param startDir the directory to look for mock code in.
+          * @param fileContentAcc the mock code collected so far.
+          * @return the collected mock code.
+          */
+        def getMockFiles(startDir: File, fileContentAcc: Set[SourceCodeFileContent]): Set[SourceCodeFileContent] = {
+            if (!startDir.exists) {
+                throw ClientApiGenerationException(s"Directory $startDir does not exist")
+            }
+
+            if (!startDir.isDirectory) {
+                throw ClientApiGenerationException(s"Path $startDir does not represent a directory")
+            }
+
+            val relativeStartPath: Seq[String] = mockCodeDir.relativize(startDir.toPath.toAbsolutePath).toString.split('/').toSeq.filterNot(_.isEmpty)
+            val fileList: Seq[File] = startDir.listFiles.toSeq.filterNot(_.getName.startsWith("."))
+            val files: Seq[File] = fileList.filterNot(_.isDirectory)
+            val subdirectories: Seq[File] = fileList.filter(_.isDirectory)
+
+            val fileContentInThisDir: Set[SourceCodeFileContent] = files.map {
+                file: File =>
+                    val filenameAndExtension: Array[String] = file.getName.split('.')
+                    val filename = filenameAndExtension(0)
+
+                    val fileExtension = if (filenameAndExtension.length == 2) {
+                        filenameAndExtension(1)
+                    } else {
+                        ""
+                    }
+
+                    val sourceCodeFilePath = SourceCodeFilePath(
+                        directoryPath = relativeStartPath,
+                        filename = filename,
+                        fileExtension = fileExtension
+                    )
+
+                    val text = FileUtil.readTextFile(file)
+
+                    SourceCodeFileContent(
+                        filePath = sourceCodeFilePath,
+                        text = text
+                    )
+            }.toSet
+
+            val accForRecursion = fileContentAcc ++ fileContentInThisDir
+
+            subdirectories.foldLeft(accForRecursion) {
+                case (acc, subdirectory) =>
+                    getMockFiles(startDir = subdirectory, fileContentAcc = acc)
+            }
+        }
+
+        val knoraApiConnectionSourceCode: SourceCodeFileContent = generateKnoraApiConnectionSourceCode(apis.map(_.apiDef))
+
+        val mockCode: Set[SourceCodeFileContent] = if (params.contains("mock")) {
+            getMockFiles(startDir = mockCodeDir.toFile, fileContentAcc = Set.empty)
+        } else {
+            Set.empty
+        }
+
+        apis.flatMap(api => generateApiSourceCode(api)) ++ mockCode + knoraApiConnectionSourceCode
     }
 
     /**
@@ -239,7 +306,13 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
             clientClassDef =>
                 val classFilePath: SourceCodeFilePath = clientClassCodePaths(clientClassDef.className)
 
-                val importedClasses: Vector[ImportInfo] = clientClassDef.classObjectTypesUsed.toVector.sortBy(_.classIri).map {
+                val subClassOf: Option[ClassRef] = clientClassDef.subClassOf.map {
+                    subClassOfIri: SmartIri => ClassRef(className = subClassOfIri.getEntityName.capitalize, classIri = subClassOfIri)
+                }
+
+                val importsWithBaseClass: Set[ClassRef] = clientClassDef.classObjectTypesUsed ++ subClassOf
+
+                val importInfos: Vector[ImportInfo] = importsWithBaseClass.toVector.sortBy(_.classIri).map {
                     classRef =>
                         val classImportPath: String = classFilePath.makeImportPath(clientClassCodePaths(classRef.className), includeFileExtension = false)
 
@@ -251,7 +324,8 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
 
                 val classText: String = clientapi.typescript.txt.generateTypeScriptClass(
                     classDef = clientClassDef,
-                    importedClasses = importedClasses
+                    subClassOf = subClassOf,
+                    importedClasses = importInfos
                 ).toString()
 
                 SourceCodeFileContent(filePath = classFilePath, text = classText)

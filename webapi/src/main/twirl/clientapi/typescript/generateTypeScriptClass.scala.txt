@@ -24,6 +24,7 @@
 @import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 
 @(classDef: ClientClassDefinition,
+  subClassOf: Option[ClassRef],
   importedClasses: Seq[ImportInfo])import { Any, JsonObject, JsonProperty } from "json2typescript";
 
 @for(classInfo <- importedClasses) {import { @classInfo.className } from "@classInfo.importPath";
@@ -36,7 +37,12 @@
     case None => {}
 }
 @@JsonObject("@{classDef.className}")
-export class @{classDef.className} {
+export class @{classDef.className}@{
+    subClassOf match {
+       case Some(subClassDef) => " extends " + subClassDef.className
+       case None => ""
+    }
+} {
 @for(property <- classDef.properties) {
 @defining(makeTypeScriptType(property.objectType)) { typeScriptType => @property.propertyDescription match {
     case Some(propDescStr) => {   /**
