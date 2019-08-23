@@ -85,6 +85,11 @@ trait ClientApi {
     val responseClasses: Set[SmartIri]
 
     /**
+     * A set of property IRIs that are used for the unique IDs of objects.
+     */
+    val idProperties: Set[SmartIri]
+
+    /**
       * A map of property IRIs to non-standard names that those properties must have.
       * Needed only if two different properties should have the same name in different classes.
       */
@@ -93,7 +98,7 @@ trait ClientApi {
     /**
       * The IRIs of the classes used by this API.
       */
-    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet ++ classesWithReadOnlyProperties.keySet
+    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet
 }
 
 /**
@@ -199,7 +204,7 @@ object EndpointFunctionDSL {
       * @param classIri the IRI of the class.
       * @return a [[ClassRef]] that can be used for referring to the class.
       */
-    def classRef(classIri: SmartIri) = ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
+    def classRef(classIri: SmartIri): ClassRef = ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
 
     /**
       * Constructs a [[StringLiteralValue]].
@@ -636,7 +641,63 @@ case class EnumDatatype(values: Set[String]) extends ClientDatatype
   * @param className the name of the class.
   * @param classIri  the IRI of the class.
   */
-case class ClassRef(className: String, classIri: SmartIri) extends ClientObjectType
+case class ClassRef(className: String, classIri: SmartIri) extends ClientObjectType {
+    /**
+     * Converts this [[ClassRef]] to one that represents a `Stored*` derived class.
+     */
+    def toStoredClassRef: ClassRef = {
+        val storedClassName = ClassRef.makeStoredClassName(className)
+        val storedClassIri = classIri.getOntologyFromEntity.makeEntityIri(storedClassName)
+        ClassRef(className = storedClassName, classIri = storedClassIri)
+    }
+
+    /**
+     * Converts this [[ClassRef]] to one that represents a `Read*` derived class.
+     */
+    def toReadClassRef: ClassRef = {
+        val readClassName = ClassRef.makeReadClassName(className)
+        val readClassIri = classIri.getOntologyFromEntity.makeEntityIri(readClassName)
+        ClassRef(className = readClassName, classIri = readClassIri)
+    }
+}
+
+object ClassRef {
+    def isStoredClassName(className: String): Boolean = {
+        className.startsWith("Stored")
+    }
+
+    def isReadClassName(className: String): Boolean = {
+        className.startsWith("Read")
+    }
+
+    def isGeneratedDerivedClassName(className: String): Boolean = {
+        isStoredClassName(className) || isReadClassName(className)
+    }
+
+    def toBaseClassName(className: String): String = {
+        if (isStoredClassName(className)) {
+            className.stripPrefix("Stored")
+        } else if (isReadClassName(className)) {
+            className.stripPrefix("Read")
+        } else {
+            className
+        }
+    }
+
+    /**
+     * Converts a base class name to a `Stored*` derived class name.
+     */
+    def makeStoredClassName(className: String): String = {
+        s"Stored$className"
+    }
+
+    /**
+     * Converts a base class name to a `Read*` derived class name.
+     */
+    def makeReadClassName(className: String): String = {
+        s"Read$className"
+    }
+}
 
 /**
   * A trait for Knora value types.

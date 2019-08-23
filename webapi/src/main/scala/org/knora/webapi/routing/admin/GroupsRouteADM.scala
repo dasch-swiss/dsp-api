@@ -72,7 +72,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     private val GroupsResponse = classRef(OntologyConstants.KnoraAdminV2.GroupsResponse.toSmartIri)
     private val GroupResponse = classRef(OntologyConstants.KnoraAdminV2.GroupResponse.toSmartIri)
     private val MembersResponse = classRef(OntologyConstants.KnoraAdminV2.MembersResponse.toSmartIri)
-    private val Group = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri)
+    private val StoredGroup = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri).toStoredClassRef
     private val CreateGroupRequest = classRef(OntologyConstants.KnoraAdminV2.CreateGroupRequest.toSmartIri)
 
     /**
@@ -209,11 +209,10 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
     private val updateGroupFunction: ClientFunction =
         "updateGroup" description "Updates a group." params (
-            "iri" description "The IRI of the group." paramType UriDatatype,
-            "group" description "The group to be updated." paramType Group
+            "group" description "The group to be updated." paramType StoredGroup
             ) doThis {
             httpPut(
-                path = arg("iri"),
+                path = argMember("group", "id"),
                 body = Some(arg("group"))
             )
         } returns GroupResponse
@@ -263,11 +262,10 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
     private val changeGroupStatusFunction: ClientFunction =
         "updateGroupStatus" description "Updates the status of a group." params (
-            "iri" description "The IRI of the group." paramType UriDatatype,
-            "group" description "The group to be updated." paramType Group
+            "group" description "The group to be updated." paramType StoredGroup
             ) doThis {
             httpPut(
-                path = arg("iri") / str("status"),
+                path = argMember("group", "id") / str("status"),
                 body = Some(arg("group"))
             )
         } returns GroupResponse

@@ -77,6 +77,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     // Classes used in client function definitions.
 
     private val Project = classRef(OntologyConstants.KnoraAdminV2.ProjectClass.toSmartIri)
+    private val StoredProject = Project.toStoredClassRef
     private val ProjectsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectsResponse.toSmartIri)
     private val ProjectResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectResponse.toSmartIri)
     private val KeywordsResponse = classRef(OntologyConstants.KnoraAdminV2.KeywordsResponse.toSmartIri)
@@ -342,11 +343,10 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
     private val updateProjectFunction: ClientFunction =
         "updateProject" description "Updates a project." params (
-            "iri" description "The project IRI." paramType UriDatatype,
-            "project" description "The project to be updated." paramType Project
+            "project" description "The project to be updated." paramType StoredProject
             ) doThis {
             httpPut(
-                path = str("iri") / arg("iri"),
+                path = str("iri") / argMember("project", "id"),
                 body = Some(arg("project"))
             )
         } returns ProjectResponse

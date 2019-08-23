@@ -72,23 +72,17 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
       */
     override val classesWithReadOnlyProperties: Map[SmartIri, Set[SmartIri]] = Map(
         OntologyConstants.KnoraAdminV2.UserClass -> Set(
-            OntologyConstants.KnoraAdminV2.ID,
             OntologyConstants.KnoraAdminV2.Token,
             OntologyConstants.KnoraAdminV2.SessionID,
             OntologyConstants.KnoraAdminV2.Groups,
             OntologyConstants.KnoraAdminV2.Projects
         ),
         OntologyConstants.KnoraAdminV2.GroupClass ->  Set(
-            OntologyConstants.KnoraAdminV2.ID,
             OntologyConstants.KnoraAdminV2.ProjectProperty
         ),
         OntologyConstants.KnoraAdminV2.ProjectClass ->  Set(
-            OntologyConstants.KnoraAdminV2.ID,
             OntologyConstants.KnoraAdminV2.Members,
             OntologyConstants.KnoraAdminV2.Ontologies
-        ),
-        OntologyConstants.KnoraAdminV2.AdministrativePermissionClass -> Set(
-            OntologyConstants.KnoraAdminV2.Iri
         )
     ).map {
         case (classIri, propertyIris) =>
@@ -110,6 +104,14 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
         OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse,
         OntologyConstants.KnoraAdminV2.AdministrativePermissionsResponse,
         OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettingsResponse,
+    ).map(_.toSmartIri)
+
+    /**
+     * A set of property IRIs that are used for the unique IDs of objects.
+     */
+    val idProperties: Set[SmartIri] = Set(
+        OntologyConstants.KnoraAdminV2.ID,
+        OntologyConstants.KnoraAdminV2.Iri
     ).map(_.toSmartIri)
 
     /**

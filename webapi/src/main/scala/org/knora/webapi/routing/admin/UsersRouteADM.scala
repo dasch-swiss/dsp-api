@@ -78,6 +78,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val ProjectsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectsResponse.toSmartIri)
     private val GroupsResponse = classRef(OntologyConstants.KnoraAdminV2.GroupsResponse.toSmartIri)
     private val User = classRef(OntologyConstants.KnoraAdminV2.UserClass.toSmartIri)
+    private val StoredUser = User.toStoredClassRef
     private val Group = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri)
     private val Project = classRef(OntologyConstants.KnoraAdminV2.ProjectClass.toSmartIri)
 
@@ -297,11 +298,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // #updateUserBasicInformationFunction
     private val updateUserBasicInformationFunction: ClientFunction =
         "updateUserBasicInformation" description "Updates an existing user's basic information." params (
-            "iri" description "The IRI of the user." paramType UriDatatype,
-            "user" description "The user to be updated." paramType User
+            "user" description "The user to be updated." paramType StoredUser
             ) doThis {
             httpPut(
-                path = str("iri") / arg("iri") / str("BasicUserInformation"),
+                path = str("iri") / argMember("user", "id") / str("BasicUserInformation"),
                 body = Some(arg("user"))
             )
         } returns UserResponse
@@ -489,11 +489,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     private val updateUserSystemAdminMembershipFunction: ClientFunction =
         "updateUserSystemAdminMembership" description "Updates a user's SystemAdmin membership." params (
-            "iri" description "The IRI of the user." paramType UriDatatype,
-            "user" description "The user to be updated." paramType User
+            "user" description "The user to be updated." paramType StoredUser
             ) doThis {
             httpPut(
-                path = str("iri") / arg("iri") / str("SystemAdmin"),
+                path = str("iri") / argMember("user", "id") / str("SystemAdmin"),
                 body = Some(json("systemAdmin" -> argMember("user", "systemAdmin")))
             )
         } returns UserResponse
