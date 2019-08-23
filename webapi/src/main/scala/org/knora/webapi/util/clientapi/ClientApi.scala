@@ -93,7 +93,7 @@ trait ClientApi {
     /**
       * The IRIs of the classes used by this API.
       */
-    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet
+    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet ++ classesWithReadOnlyProperties.keySet
 }
 
 /**
