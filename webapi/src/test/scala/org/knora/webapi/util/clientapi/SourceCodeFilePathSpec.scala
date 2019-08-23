@@ -69,7 +69,7 @@ class SourceCodeFilePathSpec extends CoreSpec() {
                 fileExtension = "js"
             )
 
-            assert(sourcePath.makeImportPath(targetPath) == "baz/test2.js")
+            assert(sourcePath.makeImportPath(targetPath) == "./baz/test2.js")
         }
 
         "walk up only" in {
@@ -101,7 +101,7 @@ class SourceCodeFilePathSpec extends CoreSpec() {
                 fileExtension = "js"
             )
 
-            assert(sourcePath.makeImportPath(targetPath) == "test2.js")
+            assert(sourcePath.makeImportPath(targetPath) == "./test2.js")
         }
     }
 }

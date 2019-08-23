@@ -921,8 +921,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         OntologyConstants.KnoraAdmin.ForResourceClass,
         OntologyConstants.KnoraAdmin.ForProperty,
         OntologyConstants.KnoraAdmin.GroupName,
-        OntologyConstants.KnoraAdmin.IsInGroup,
-        OntologyConstants.KnoraAdmin.HasSelfJoinEnabled
+        OntologyConstants.KnoraAdmin.IsInGroup
     ).map(_.toSmartIri)
 
     /**

@@ -1136,7 +1136,8 @@ object OntologyConstants {
             KnoraAdmin.ProjectLogo -> KnoraAdminV2.Logo,
             KnoraAdmin.UserGroup -> KnoraAdminV2.GroupClass,
             KnoraAdmin.GroupDescription -> KnoraAdminV2.Description,
-            KnoraAdmin.BelongsToProject -> KnoraAdminV2.ProjectProperty
+            KnoraAdmin.BelongsToProject -> KnoraAdminV2.ProjectProperty,
+            KnoraAdmin.HasSelfJoinEnabled -> KnoraAdminV2.SelfJoin
         ),
         (ApiV2Simple, InternalSchema) -> Map(
             // Not all types in ApiV2Simple can be converted here to types in KnoraBase. For example,
@@ -1185,7 +1186,8 @@ object OntologyConstants {
             KnoraAdminV2.Keywords -> KnoraAdmin.ProjectKeyword,
             KnoraAdminV2.Logo -> KnoraAdmin.ProjectLogo,
             KnoraAdminV2.GroupClass -> KnoraAdmin.UserGroup,
-            KnoraAdminV2.ProjectProperty -> KnoraAdmin.BelongsToProject
+            KnoraAdminV2.ProjectProperty -> KnoraAdmin.BelongsToProject,
+            KnoraAdminV2.SelfJoin -> KnoraAdmin.HasSelfJoinEnabled
         )
     )
 
