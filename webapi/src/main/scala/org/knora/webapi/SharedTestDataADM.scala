@@ -563,4 +563,28 @@ object SharedTestDataADM {
         s"""{
            |    "status": true
            |}""".stripMargin
+
+    val createProjectRequest: String =
+        s"""{
+           |    "shortname": "newproject",
+           |    "shortcode": "1111",
+           |    "longname": "project longname",
+           |    "description": [{"value": "project description", "language": "en"}],
+           |    "keywords": ["keywords"],
+           |    "logo": "/fu/bar/baz.jpg",
+           |    "status": true,
+           |    "selfjoin": false
+           |}""".stripMargin
+
+    val updateProjectRequest: String =
+        s"""{
+           |    "shortname": "newproject",
+           |    "longname": "updated project longname",
+           |    "description": [{"value": "updated project description", "language": "en"}],
+           |    "keywords": ["updated", "keywords"],
+           |    "logo": "/fu/bar/baz-updated.jpg",
+           |    "status": true,
+           |    "selfjoin": true
+           |}""".stripMargin
+
 }
