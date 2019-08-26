@@ -47,7 +47,7 @@ $(function() {
 			arkdiv = $('<div>');
 			propedit.append(arkdiv);
 			SALSAH.ApiGet('resourcesv2', resource.resdata.res_id, {resinfo: true, reqtype: 'context'}, function(datav2) {
-				if (datav2['@id']) {
+				if (datav2['knora-api:arkUrl'] && datav2['knora-api:arkUrl']['@value']) {
 					var now = new Date();
 					var nowstr = now.getFullYear().toString() + (now.getMonth() + 1).toString() + now.getDate().toString();
 
@@ -58,14 +58,14 @@ $(function() {
 									.append(
 										$('<a>').attr({href: 'https://en.wikipedia.org/wiki/Archival_Resource_Key'}).append('ARK'))
 									.append('): ')
-							.append($('<img>').attr({src: SITE_URL + '/app/icons/16x16/clippy.png', title: 'Copy to clipboard'}).on('click', function() {
+							.append($('<img>').attr({src: SITE_URL + '/app/icons/16x16/attachment.png', title: 'Copy to clipboard'}).on('click', function() {
 								$(this).next('.clipit').select();
 								document.execCommand('copy');
 							})
-							.dragndrop('makeDraggable', 'HANDLE_ID', {handle_id: datav2['@id'] + '.' + nowstr}))
+							.dragndrop('makeDraggable', 'HANDLE_ID', {handle_id: datav2['knora-api:arkUrl']['@value'] + '.' + nowstr}))
 							.append($('<input>')
 								.attr({type:'text', readOnly: true, size: '64'})
-								.addClass('clipit').val('http://ark.dasch.swiss/' + datav2['@id'] + '.' + nowstr)));
+								.addClass('clipit').val(datav2['knora-api:arkUrl']['@value'] + '.' + nowstr)));
 				}
 			});
 
