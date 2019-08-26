@@ -77,8 +77,12 @@ class ClientApiRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                                 params = params
                             )
 
+                            // Generate test data.
+                            testDataPerApi: Seq[Set[SourceCodeFileContent]] <- Future.sequence(apiDefs.map(_.getTestData(testDataDirectoryPath = Seq("test-data"))))
+                            sourceCodeWithTestData: Set[SourceCodeFileContent] = sourceCode ++ testDataPerApi.flatten
+
                             // Generate a Zip file from the source code.
-                            zipFileBytes = generateZipFile(sourceCode)
+                            zipFileBytes = generateZipFile(sourceCodeWithTestData)
                         } yield HttpResponse(
                             status = StatusCodes.OK,
                             entity = HttpEntity(bytes = zipFileBytes)

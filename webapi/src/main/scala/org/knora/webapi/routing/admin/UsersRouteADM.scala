@@ -21,8 +21,11 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.util.FastFuture
+import akka.stream.ActorMaterializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.annotation.ApiMayChange
@@ -34,7 +37,7 @@ import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
 import org.knora.webapi.util.clientapi._
 import org.knora.webapi.{BadRequestException, KnoraSystemInstances, OntologyConstants}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 
 object UsersRouteADM {
@@ -862,4 +865,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         updateUserSystemAdminMembershipFunction,
         deleteUserFunction
     )
+
+    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+        FastFuture.successful(Set.empty)
+    }
 }

@@ -103,6 +103,34 @@ object SourceCodeFilePath {
             stripDirsUntilDifferent(thisPath.tail, thatPath.tail)
         }
     }
+
+    /**
+     * A convenience method that makes a path for a JSON file in the current directory.
+     *
+     * @param filename the filename.
+     * @return the file path.
+     */
+    def makeJsonPath(filename: String): SourceCodeFilePath = {
+        SourceCodeFilePath(
+            directoryPath = Seq.empty,
+            filename = filename,
+            fileExtension = "json"
+        )
+    }
+
+    /**
+     * A convenience method that makes a path for a JSON-LD file in the current directory.
+     *
+     * @param filename the filename.
+     * @return the file path.
+     */
+    def makeJsonLDPath(filename: String): SourceCodeFilePath = {
+        SourceCodeFilePath(
+            directoryPath = Seq.empty,
+            filename = filename,
+            fileExtension = "jsonld"
+        )
+    }
 }
 
 /**

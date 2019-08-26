@@ -23,12 +23,14 @@ package org.knora.webapi.routing.admin
 import java.util.UUID
 
 import akka.Done
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import akka.stream.IOResult
+import akka.stream.{ActorMaterializer, IOResult}
 import akka.stream.scaladsl.{FileIO, Source}
 import akka.util.ByteString
 import io.swagger.annotations._
@@ -41,7 +43,7 @@ import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
 import org.knora.webapi.util.clientapi._
 import org.knora.webapi.{BadRequestException, IRI, OntologyConstants}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 object ProjectsRouteADM {
@@ -737,4 +739,8 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         getProjectRestrictedViewSettingByShortnameFunction,
         getProjectRestrictedViewSettingByShortcodeFunction
     )
+
+    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+        FastFuture.successful(Set.empty)
+    }
 }

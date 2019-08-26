@@ -38,6 +38,8 @@ object SharedTestDataADM {
 
     val SYSTEM_PROJECT_IRI: IRI = OntologyConstants.KnoraAdmin.SystemProject // built-in project
 
+    val testPass: String = java.net.URLEncoder.encode("test", "utf-8")
+
     /* represents the user profile of 'root' as found in admin-data.ttl */
     def rootUser = UserADM(
         id = "http://rdfh.ch/users/root",
@@ -538,4 +540,27 @@ object SharedTestDataADM {
         selfjoin = false
     )
 
+    /** **********************************/
+    /** Test requests                   **/
+    /** **********************************/
+
+    val createGroupRequest: String =
+        s"""{
+           |    "name": "NewGroup",
+           |    "description": "NewGroupDescription",
+           |    "project": "$IMAGES_PROJECT_IRI",
+           |    "status": true,
+           |    "selfjoin": false
+           |}""".stripMargin
+
+    val updateGroupRequest: String =
+        s"""{
+           |    "name": "UpdatedGroupName",
+           |    "description": "UpdatedGroupDescription"
+           |}""".stripMargin
+
+    val changeGroupStatusRequest: String =
+        s"""{
+           |    "status": true
+           |}""".stripMargin
 }

@@ -21,8 +21,13 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
+import akka.actor.ActorSystem
+import akka.http.scaladsl.client.RequestBuilding._
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.util.FastFuture
+import akka.stream.ActorMaterializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.groupsmessages._
@@ -30,11 +35,14 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
 import org.knora.webapi.util.clientapi._
-import org.knora.webapi.{BadRequestException, OntologyConstants}
+import org.knora.webapi.{BadRequestException, OntologyConstants, SharedTestDataADM}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 
 object GroupsRouteADM {
     val GroupsBasePath = PathMatcher("admin" / "groups")
+    val GroupsBasePathString: String = "/admin/groups"
 }
 
 /**
@@ -45,7 +53,7 @@ object GroupsRouteADM {
 @Path("/admin/groups")
 class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with GroupsADMJsonProtocol with ClientEndpoint {
 
-    import GroupsRouteADM.GroupsBasePath
+    import GroupsRouteADM._
 
     /**
      * The name of this [[ClientEndpoint]].
@@ -101,6 +109,15 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             httpGet(BasePath)
         } returns GroupsResponse
 
+    private def getGroupsTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(baseApiUrl + GroupsBasePathString) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-groups"),
+            text = responseStr
+        )
+    }
+
     /**
      * Creates a group
      */
@@ -137,6 +154,15 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
                 body = Some(arg("group"))
             )
         } returns GroupResponse
+
+    private def makeCreateGroupRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("create-group"),
+                text = SharedTestDataADM.createGroupRequest
+            )
+        )
+    }
 
     /**
      * Returns a single group identified by IRI.
@@ -357,4 +383,20 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         deleteGroupFunction,
         getGroupMembersFunction
     )
+
+    /**
+     * Returns test data for this endpoint.
+     *
+     * @return a set of test data files to be used for testing this endpoint.
+     */
+    override def getTestData(implicit executionContext: ExecutionContext,
+                             actorSystem: ActorSystem,
+                             materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+        Future.sequence {
+            Set(
+                getGroupsTestResponse,
+                makeCreateGroupRequest
+            )
+        }
+    }
 }
