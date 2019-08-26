@@ -19,14 +19,18 @@
 
 package org.knora.webapi.routing.admin
 
+import java.net.URLEncoder
+
 import akka.actor.ActorSystem
+import akka.http.scaladsl.client.RequestBuilding.{Get, addCredentials}
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
-import org.knora.webapi.OntologyConstants
+import org.knora.webapi.{OntologyConstants, SharedTestDataADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import org.knora.webapi.util.IriConversions._
@@ -37,13 +41,14 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object PermissionsRouteADM {
     val PermissionsBasePath = PathMatcher("admin" / "permissions")
+    val PermissionsBasePathString: String = "/admin/permissions"
 }
 
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
 class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
 
-    import PermissionsRouteADM.PermissionsBasePath
+    import PermissionsRouteADM._
 
     /**
      * The name of this [[ClientEndpoint]].
@@ -68,6 +73,9 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     // Classes used in client function definitions.
 
     private val AdministrativePermissionResponse = classRef(OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse.toSmartIri)
+
+    private val projectIri: String = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
+    private val groupIri: String = URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
 
     override def knoraApiPath: Route = getAdministrativePermission
 
@@ -94,7 +102,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
 
     // #getAdministrativePermissionFunction
     private val getAdministrativePermissionFunction: ClientFunction =
-        "getAdministrativePermission" description "Gets the administrative permissions for a project and group." params(
+        "getAdministrativePermission" description "Gets the administrative permission for a project and group." params(
             "projectIri" description "The project IRI." paramType UriDatatype,
             "groupIri" description "The group IRI." paramType UriDatatype,
             "permissionType" description "The permission type." paramOptionType StringDatatype
@@ -106,6 +114,15 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         } returns AdministrativePermissionResponse
     // #getAdministrativePermissionFunction
 
+    private def getAdministrativePermissionTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$PermissionsBasePathString/$projectIri/$groupIri"))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-administrative-permission-response"),
+            text = responseStr
+        )
+    }
+
     /**
      * The functions defined by this [[ClientEndpoint]].
      */
@@ -113,7 +130,16 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         getAdministrativePermissionFunction
     )
 
+    /**
+     * Returns test data for this endpoint.
+     *
+     * @return a set of test data files to be used for testing this endpoint.
+     */
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
-        FastFuture.successful(Set.empty)
+        Future.sequence {
+            Set(
+                getAdministrativePermissionTestResponse
+            )
+        }
     }
 }
