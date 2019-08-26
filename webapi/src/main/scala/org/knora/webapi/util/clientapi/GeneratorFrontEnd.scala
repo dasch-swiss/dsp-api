@@ -39,7 +39,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
     implicit protected val system: ActorSystem = routeData.system
-    implicit protected val responderManager: ActorRef = routeData.responderManager
+    implicit protected val responderManager: ActorRef = routeData.appActor
     implicit protected val settings: SettingsImpl = Settings(system)
     implicit protected val timeout: Timeout = settings.defaultTimeout
     implicit protected val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)

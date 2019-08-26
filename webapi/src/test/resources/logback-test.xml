@@ -49,12 +49,14 @@
     <logger name="net.sf.ehcache.config" level="ERROR"/>
     <logger name="kamon.metric" level="ERROR"/>
 
-    <!-- V1 -->
+    <!-- App -->
+    <logger name="org.knora.webapi.app.ApplicationActor" level="INFO"/>
 
+    <!-- V1 -->
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
     <logger name="org.knora.webapi.KnoraExceptionHandler" level="INFO"/>
-    <logger name="org.knora.webapi.app.ApplicationStateActor" level="INFO"/>
+    <logger name="org.knora.webapi.app.ApplicationActor" level="INFO"/>
     <logger name="org.knora.webapi.util.cache" level="INFO"/>
     <logger name="org.knora.webapi.util.PermissionUtilADM" level="INFO"/>
     <logger name="org.knora.webapi.util.TransformData" level="INFO"/>
@@ -80,7 +82,6 @@
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
 
     <!-- V2 -->
-
     <logger name="org.knora.webapi.responders.v2.search.gravsearch" level="INFO"/>
 
     <!-- Admin -->
@@ -99,10 +100,11 @@
     <logger name="org.knora.webapi.store.triplestore.http.GraphProtocolAccessor" level="INFO"/>
     <logger name="org.knora.webapi.store.cacheservice.CacheServiceManager" level="INFO"/>
 
-
     <!-- Spec Logging -->
+    <logger name="org.knora.webapi.CoreSpec" level="INFO"/>
+    <logger name="org.knora.webapi.E2ESpec" level="INFO"/>
 
-    <logger name="org.knora.webapi.E2ESpec" level="DEBUG"/>
+    <!-- E2E -->
     <logger name="org.knora.webapi.e2e.InstanceCheckerSpec" level="INFO"/>
 
     <!-- V1 -->
@@ -136,7 +138,6 @@
     <logger name="M-HttpTriplestoreConnector" level="ERROR"/>
     <logger name="M-CacheServiceManager" level="ERROR"/>
     <logger name="M-CacheSerialization" level="ERROR"/>
-
 
     <root level="ERROR">
         <appender-ref ref="stdout"/>
