@@ -156,8 +156,8 @@ The read-only properties and ID properties are specified in each `ClientApi`.
 The generated code depends on handwritten library code to work, but stubs can
 be provided to test for compile errors in the generated code.
 
-The directory `webapi/typescript-client-mock-src` in the Knora source tree
-contains test stubs for the TypeScript client library.
+The directory `webapi/_test_data/typescript-client-mock-src` in the Knora source
+tree contains test stubs for the TypeScript client library.
 
 ### Test Requests and Responses
 
