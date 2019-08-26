@@ -298,7 +298,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    // #updateUserBasicInformationFunction
     private val updateUserBasicInformationFunction: ClientFunction =
         "updateUserBasicInformation" description "Updates an existing user's basic information." params (
             "user" description "The user to be updated." paramType StoredUser
@@ -308,7 +307,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 body = Some(arg("user"))
             )
         } returns UserResponse
-    // #updateUserBasicInformationFunction
 
     /**
      * API MAY CHANGE: Change user's password.
@@ -347,6 +345,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    // #updateUserPasswordFunction
     private val updateUserPasswordFunction: ClientFunction =
         "updateUserPassword" description "Updates a user's password." params(
             "iri" description "The IRI of the user to be updated." paramType UriDatatype,
@@ -361,6 +360,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 ))
             )
         } returns UserResponse
+    // #updateUserPasswordFunction
 
     /**
      * API MAY CHANGE: Change user's status.

@@ -97,7 +97,7 @@ In this case, the request body is the `user` argument that was passed to the fun
 
 The request body can also be a constructed JSON object:
 
-@@snip [UsersRouteADM.scala]($src$/org/knora/webapi/routing/admin/UsersRouteADM.scala) { #updateUserBasicInformationFunction }
+@@snip [UsersRouteADM.scala]($src$/org/knora/webapi/routing/admin/UsersRouteADM.scala) { #updateUserPasswordFunction }
 
 ### Function Calls
 
@@ -109,3 +109,57 @@ function, like this:
 
 If an argument of the calling function needs to be converted to another type
 for the function call, use the `as` keyword as shown above.
+
+## Generated Classes
+
+Many objects have a unique ID, which is present when the object is read or
+updated, but not when it is created.
+
+API classes can also have read-only properties. For example, in the admin API,
+the `User` class has a `projects` property, whose objects are instances of
+`Project`. Similarly, the `Projects` class has a `members` property, whose
+objects are instances of `User`. However, when users and projects are created or
+updated, these properties are not used.
+
+In TypeScript, it is necessary to avoid circular imports. If the TypeScript
+definition of `User` imports the definition of `Project`, the definition of
+`Project` cannot import the definition of `User`.
+
+The structure of the generated classes is intended to deal with these issues.
+Taking `User` and `Project` as an example:
+
+- The `User` class does not contain an ID or any read-only properties.
+
+- A `StoredUser` class is generated as a subclass of `User`. It provides
+  the user's ID, and can be submitted in update operations.
+
+- A `ReadUser` class is generated as a subclass of `StoredUser`. It provides
+  the read-only properties.
+  
+In `ReadUser`, the `projects` property is a collection of `StoredProject`
+objects. Since `StoredProject` does not have any read-only properties, it
+does not have a property referring to users. This prevents circular imports.
+
+This design works because in the Knora API, a circular reference always involves
+a read-only property. For example, the `projects` property of `User` is
+read-only, as is the `members` property of `Project`. In the case of a resource,
+the property pointing from a resource to a link value is not read-only (you can
+submit a resource with an embedded link value), but the property pointing from a
+link value to an embedded resource is read-only.
+
+The read-only properties and ID properties are specified in each `ClientApi`.
+
+## Testing
+
+### Library Test Stubs
+
+The generated code depends on handwritten library code to work, but stubs can
+be provided to test for compile errors in the generated code.
+
+The directory `webapi/typescript-client-mock-src` in the Knora source tree
+contains test stubs for the TypeScript client library.
+
+### Test Requests and Responses
+
+The generated code includes a directory `test-data`, containing sample requests
+and responses, which can be used to test the generated code without Knora.
