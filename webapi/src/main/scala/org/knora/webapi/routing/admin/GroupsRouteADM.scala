@@ -83,6 +83,9 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     private val StoredGroup = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri).toStoredClassRef
     private val CreateGroupRequest = classRef(OntologyConstants.KnoraAdminV2.CreateGroupRequest.toSmartIri)
 
+    private val groupIri = SharedTestDataADM.imagesReviewerGroup.id
+    private val groupIriEnc = java.net.URLEncoder.encode(groupIri, "utf-8")
+
     /**
      * Returns all groups
      */
@@ -113,7 +116,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         for {
             responseStr <- doTestDataRequest(Get(baseApiUrl + GroupsBasePathString) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, SharedTestDataADM.testPass)))
         } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-groups"),
+            filePath = SourceCodeFilePath.makeJsonPath("get-groups-response"),
             text = responseStr
         )
     }
@@ -155,10 +158,10 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             )
         } returns GroupResponse
 
-    private def makeCreateGroupRequest: Future[SourceCodeFileContent] = {
+    private def createGroupTestRequest: Future[SourceCodeFileContent] = {
         FastFuture.successful(
             SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("create-group"),
+                filePath = SourceCodeFilePath.makeJsonPath("create-group-request"),
                 text = SharedTestDataADM.createGroupRequest
             )
         )
@@ -193,6 +196,15 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             ) doThis {
             httpGet(arg("iri"))
         } returns GroupResponse
+
+    private def getGroupByIriTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$GroupsBasePathString/$groupIriEnc") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-group-response"),
+            text = responseStr
+        )
+    }
 
     /**
      * Update basic group information.
@@ -243,6 +255,14 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             )
         } returns GroupResponse
 
+    private def updateGroupTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-group-request"),
+                text = SharedTestDataADM.updateGroupRequest
+            )
+        )
+    }
 
     /**
      * Update the group's status.
@@ -296,6 +316,14 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             )
         } returns GroupResponse
 
+    private def changeGroupStatusTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("change-group-status-request"),
+                text = SharedTestDataADM.changeGroupStatusRequest
+            )
+        )
+    }
 
     /**
      * Deletes a group (sets status to false)
@@ -365,6 +393,15 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
             httpGet(arg("iri") / str("members"))
         } returns MembersResponse
 
+    private def getGroupMembersTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$GroupsBasePathString/$groupIriEnc/members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-group-members-response"),
+            text = responseStr
+        )
+    }
+
     /**
      * All defined routes need to be combined here.
      */
@@ -395,7 +432,11 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         Future.sequence {
             Set(
                 getGroupsTestResponse,
-                makeCreateGroupRequest
+                createGroupTestRequest,
+                getGroupByIriTestResponse,
+                updateGroupTestRequest,
+                changeGroupStatusTestRequest,
+                getGroupMembersTestResponse
             )
         }
     }
