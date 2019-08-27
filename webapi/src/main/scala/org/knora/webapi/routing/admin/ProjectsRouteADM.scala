@@ -828,6 +828,11 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         getProjectRestrictedViewSettingByShortcodeFunction
     )
 
+    /**
+     * Returns test data for this endpoint.
+     *
+     * @return a set of test data files to be used for testing this endpoint.
+     */
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
         Future.sequence {
             Set(

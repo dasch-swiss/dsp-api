@@ -19,9 +19,12 @@
 
 package org.knora.webapi.routing.admin
 
+import java.net.URLEncoder
 import java.util.UUID
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.client.RequestBuilding._
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
@@ -35,13 +38,14 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
 import org.knora.webapi.util.clientapi._
-import org.knora.webapi.{BadRequestException, KnoraSystemInstances, OntologyConstants}
+import org.knora.webapi.{BadRequestException, KnoraSystemInstances, OntologyConstants, SharedTestDataADM}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
 object UsersRouteADM {
     val UsersBasePath = PathMatcher("admin" / "users")
+    val UsersBasePathString: String = "/admin/users"
 }
 
 /**
@@ -52,7 +56,7 @@ object UsersRouteADM {
 @Path("/admin/users")
 class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
 
-    import UsersRouteADM.UsersBasePath
+    import UsersRouteADM._
 
     /**
      * The name of this [[ClientEndpoint]].
@@ -82,8 +86,9 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val GroupsResponse = classRef(OntologyConstants.KnoraAdminV2.GroupsResponse.toSmartIri)
     private val User = classRef(OntologyConstants.KnoraAdminV2.UserClass.toSmartIri)
     private val StoredUser = User.toStoredClassRef
-    private val Group = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri)
-    private val Project = classRef(OntologyConstants.KnoraAdminV2.ProjectClass.toSmartIri)
+
+    private val anythingUser1IriEnc = URLEncoder.encode(SharedTestDataADM.anythingUser1.id, "UTF-8")
+    private val multiUserIriEnc = URLEncoder.encode(SharedTestDataADM.multiuserUser.id, "UTF-8")
 
     /* concatenate paths in the CORRECT order and return */
     override def knoraApiPath: Route =
@@ -123,6 +128,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             httpGet(BasePath)
         } returns UsersResponse
 
+
+    private def getUsersTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(baseApiUrl + UsersBasePathString) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-users-response"),
+            text = responseStr
+        )
+    }
 
     @ApiOperation(value = "Add new user", nickname = "addUser", httpMethod = "POST", response = classOf[UserOperationResponseADM])
     @ApiImplicitParams(Array(
@@ -168,6 +182,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
     // #createUserFunction
 
+    private def createUserTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("create-user-request"),
+                text = SharedTestDataADM.createUserRequest
+            )
+        )
+    }
+
     /**
      * return a single user identified by iri
      */
@@ -197,6 +220,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             httpGet(arg("property") / arg("value"))
         } returns UserResponse
     // #getUserFunction
+
+    private def getUserTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$UsersBasePathString/iri/$anythingUser1IriEnc") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-user-response"),
+            text = responseStr
+        )
+    }
 
     // #getUserByIriFunction
     private val getUserByIriFunction: ClientFunction =
@@ -308,6 +340,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
         } returns UserResponse
 
+    private def updateUserTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-user-request"),
+                text = SharedTestDataADM.updateUserRequest
+            )
+        )
+    }
+
     /**
      * API MAY CHANGE: Change user's password.
      */
@@ -362,6 +403,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns UserResponse
     // #updateUserPasswordFunction
 
+    private def updateUserPasswordTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-user-password-request"),
+                text = SharedTestDataADM.changeUserPasswordRequest
+            )
+        )
+    }
+
     /**
      * API MAY CHANGE: Change user's status.
      */
@@ -409,6 +459,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 body = Some(json("status" -> arg("status")))
             )
         } returns UserResponse
+
+    private def updateUserStatusTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-user-status-request"),
+                text = SharedTestDataADM.changeUserStatusRequest
+            )
+        )
+    }
 
     /**
      * API MAY CHANGE: delete a user identified by iri (change status to false).
@@ -500,6 +559,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
         } returns UserResponse
 
+    private def updateUserSystemAdminMembershipTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-user-system-admin-membership-request"),
+                text = SharedTestDataADM.changeUserSystemAdminMembershipRequest
+            )
+        )
+    }
+
     /**
      * API MAY CHANGE: get user's project memberships
      */
@@ -533,6 +601,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             ) doThis {
             httpGet(path = str("iri") / arg("iri") / str("project-memberships"))
         } returns ProjectsResponse
+
+    private def getUserProjectMembershipsResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$UsersBasePathString/iri/$multiUserIriEnc/project-memberships") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-user-project-memberships-response"),
+            text = responseStr
+        )
+    }
 
     /**
      * API MAY CHANGE: add user to project
@@ -866,7 +943,23 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         deleteUserFunction
     )
 
+    /**
+     * Returns test data for this endpoint.
+     *
+     * @return a set of test data files to be used for testing this endpoint.
+     */
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
-        FastFuture.successful(Set.empty)
+        Future.sequence {
+            Set(
+                getUsersTestResponse,
+                createUserTestRequest,
+                getUserTestResponse,
+                updateUserTestRequest,
+                updateUserPasswordTestRequest,
+                updateUserStatusTestRequest,
+                updateUserSystemAdminMembershipTestRequest,
+                getUserProjectMembershipsResponse
+            )
+        }
     }
 }

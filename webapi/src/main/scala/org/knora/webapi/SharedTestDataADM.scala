@@ -587,4 +587,40 @@ object SharedTestDataADM {
            |    "selfjoin": true
            |}""".stripMargin
 
+    val createUserRequest: String =
+        s"""{
+           |    "username": "donald.duck",
+           |    "email": "donald.duck@example.org",
+           |    "givenName": "Donald",
+           |    "familyName": "Duck",
+           |    "password": "test",
+           |    "status": true,
+           |    "lang": "en",
+           |    "systemAdmin": false
+           |}""".stripMargin
+
+    val updateUserRequest: String =
+        s"""{
+           |    "username": "donald.big.duck",
+           |    "email": "donald.big.duck@example.org",
+           |    "givenName": "Big Donald",
+           |    "familyName": "Duckmann",
+           |    "lang": "de"
+           |}""".stripMargin
+
+    val changeUserPasswordRequest: String =
+        s"""{
+           |    "requesterPassword": "test",
+           |    "newPassword": "test123456"
+           |}""".stripMargin
+
+    val changeUserStatusRequest: String =
+        s"""{
+           |    "status": false
+           |}""".stripMargin
+
+    val changeUserSystemAdminMembershipRequest: String =
+        s"""{
+           |    "systemAdmin": true
+           |}""".stripMargin
 }
