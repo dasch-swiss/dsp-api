@@ -195,7 +195,7 @@ trait ClientEndpoint {
                                                           materializer: ActorMaterializer): Future[String] = {
         for {
             response <- Http().singleRequest(request)
-            responseStr <- response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            responseStr <- response.entity.toStrict(10240.millis).map(_.data.decodeString("UTF-8"))
         } yield responseStr
     }
 
