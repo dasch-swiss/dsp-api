@@ -25,15 +25,19 @@ import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Dispo
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.routing.admin.AdminClientApi
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.clientapi._
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class ClientApiRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
     private val TYPESCRIPT: String = "typescript"
+
+    override implicit val timeout: Timeout = 20111.millis
 
     private val apiDefs = Seq(
         new AdminClientApi(routeData)
