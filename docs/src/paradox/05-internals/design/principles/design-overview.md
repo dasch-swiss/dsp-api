@@ -111,9 +111,9 @@ API v2, but API v2 does not depend on API v1.
 ## Actor Supervision and Creation
 
 At system start, the main application supervisor actor is created in
-`KnoraLiveService.scala`:
+`LiveCore.scala`:
 
-@@snip [KnoraLiveService.scala]($src$/org/knora/webapi/KnoraLiveService.scala) { #supervisor }
+@@snip [KnoraLiveService.scala]($src$/org/knora/webapi/LiveCore.scala) { #supervisor }
 
 and through mixin also the store and responder manager actors:
 
