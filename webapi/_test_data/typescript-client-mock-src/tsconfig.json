@@ -1,5 +1,24 @@
 {
   "compilerOptions": {
-    "experimentalDecorators": true
-  }
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "module": "commonjs",
+    "removeComments": false,
+    "target": "es5",
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "outDir": "build"
+  },
+  "exclude": [
+    "build",
+    "node_modules"
+  ]
 }

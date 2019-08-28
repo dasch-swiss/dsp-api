@@ -256,9 +256,11 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
 
         val generatedSubclassesAndTransformedBaseClasses: Map[SmartIri, ClientClassDefinition] = classesNeedingStoredClasses.flatMap {
             case (classIri: SmartIri, classDef: ClientClassDefinition) =>
-                // A Stored* class contains only the ID property from the base class.
-                val propsForStoredClass: Vector[ClientPropertyDefinition] = classDef.properties.filter {
-                    propDef => clientApi.idProperties.contains(propDef.propertyIri)
+                // A Stored* class contains only the ID property from the base class. The ID property's cardinality
+                // in the Stored* class is MustHaveOne.
+                val propsForStoredClass: Vector[ClientPropertyDefinition] = classDef.properties.collect {
+                    case propDef if clientApi.idProperties.contains(propDef.propertyIri) =>
+                        propDef.copy(cardinality = Cardinality.MustHaveOne)
                 }
 
                 if (propsForStoredClass.length > 1) {
