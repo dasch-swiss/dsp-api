@@ -1191,17 +1191,17 @@ case class IntervalValueV1(timeval1: BigDecimal, timeval2: BigDecimal) extends U
 /**
  * Represents a timestamp value.
  *
- * @param timestamp an `xsd:dateTimeStamp`.
+ * @param timeStamp an `xsd:dateTimeStamp`.
  */
-case class TimeValueV1(timestamp: Instant) extends UpdateValueV1 with ApiValueV1 {
+case class TimeValueV1(timeStamp: Instant) extends UpdateValueV1 with ApiValueV1 {
 
     def valueTypeIri: IRI = OntologyConstants.KnoraBase.TimeValue
 
     def toJsValue: JsValue = JsObject(
-        "timestamp" -> JsString(timestamp.toString)
+        "timestamp" -> JsString(timeStamp.toString)
     )
 
-    override def toString: String = s"$timestamp"
+    override def toString: String = s"$timeStamp"
 
     /**
      * Checks if a new interval value would duplicate an existing interval value.

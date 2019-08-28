@@ -65,6 +65,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             case OntologyConstants.KnoraBase.GeonameValue => makeGeonameValue(valueProps, responderManager, userProfile)
             case OntologyConstants.KnoraBase.ListValue => makeListValue(valueProps, responderManager, userProfile)
             case OntologyConstants.KnoraBase.IntervalValue => makeIntervalValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.TimeValue => makeTimeValue(valueProps, responderManager, userProfile)
             case OntologyConstants.KnoraBase.StillImageFileValue => makeStillImageValue(valueProps, projectShortcode, responderManager, userProfile)
             case OntologyConstants.KnoraBase.TextFileValue => makeTextFileValue(valueProps, projectShortcode, responderManager, userProfile)
             case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
@@ -542,7 +543,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         val timeStampStr = predicates(OntologyConstants.KnoraBase.ValueHasTimeStamp).literals.head
 
         Future(TimeValueV1(
-            timestamp = stringFormatter.xsdDateTimeStampToInstant(timeStampStr, throw InconsistentTriplestoreDataException(s"Can't parse timestamp: $timeStampStr"))
+            timeStamp = stringFormatter.xsdDateTimeStampToInstant(timeStampStr, throw InconsistentTriplestoreDataException(s"Can't parse timestamp: $timeStampStr"))
         ))
     }
 

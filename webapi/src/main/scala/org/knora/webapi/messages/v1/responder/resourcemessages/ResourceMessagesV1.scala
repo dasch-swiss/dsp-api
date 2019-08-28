@@ -90,6 +90,7 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
                                  geom_value: Option[String] = None,
                                  hlist_value: Option[IRI] = None,
                                  interval_value: Option[Seq[BigDecimal]] = None,
+                                 time_value: Option[String] = None,
                                  geoname_value: Option[String] = None,
                                  comment: Option[String] = None) {
 
@@ -107,6 +108,7 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
         geom_value,
         hlist_value,
         interval_value,
+        time_value,
         geoname_value).flatten.size > 1) {
         throw BadRequestException(s"Different value types were submitted for the same property")
     }
@@ -128,6 +130,7 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
         else if (geom_value.nonEmpty) OntologyConstants.KnoraBase.GeomValue
         else if (hlist_value.nonEmpty) OntologyConstants.KnoraBase.ListValue
         else if (interval_value.nonEmpty) OntologyConstants.KnoraBase.IntervalValue
+        else if (time_value.nonEmpty) OntologyConstants.KnoraBase.TimeValue
         else if (geoname_value.nonEmpty) OntologyConstants.KnoraBase.GeonameValue
         else throw BadRequestException("No value specified")
     }
