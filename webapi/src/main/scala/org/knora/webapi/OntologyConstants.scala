@@ -652,6 +652,7 @@ object OntologyConstants {
         val Checkbox: IRI = SalsahGuiPrefixExpansion + "Checkbox"
         val Richtext: IRI = SalsahGuiPrefixExpansion + "Richtext"
         val Interval: IRI = SalsahGuiPrefixExpansion + "Interval"
+        val TimeStamp: IRI = SalsahGuiPrefixExpansion + "TimeStamp"
         val Geonames: IRI = SalsahGuiPrefixExpansion + "Geonames"
         val Fileupload: IRI = SalsahGuiPrefixExpansion + "Fileupload"
 

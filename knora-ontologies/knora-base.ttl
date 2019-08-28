@@ -1998,8 +1998,8 @@
 
 :TimeValue rdf:type owl:Class ;
 
-               rdfs:subClassOf :TimeBase ,
-                               :IntervalBase ;
+               rdfs:subClassOf :Value ,
+                               :TimeBase ;
 
                rdfs:comment "Represents a timestamp"@en .
 

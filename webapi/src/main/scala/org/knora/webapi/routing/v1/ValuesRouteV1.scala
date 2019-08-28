@@ -20,15 +20,16 @@
 package org.knora.webapi.routing.v1
 
 import java.io.File
+import java.time.Instant
 import java.util.UUID
 
-import akka.pattern._
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.http.scaladsl.util.FastFuture
+import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
 import org.knora.webapi._
@@ -172,7 +173,11 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
                         if (timeVals.length != 2) throw BadRequestException("parameters for interval_value invalid")
 
-                        Future(IntervalValueV1(timeVals(0), timeVals(1)), apiRequest.comment)
+                        Future(IntervalValueV1(timeVals.head, timeVals(1)), apiRequest.comment)
+
+                    case OntologyConstants.KnoraBase.TimeValue =>
+                        val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(apiRequest.time_value.get, throw BadRequestException(s"Invalid timestamp: ${apiRequest.time_value.get}"))
+                        Future(TimeValueV1(timeStamp), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.GeonameValue =>
                         Future(GeonameValueV1(apiRequest.geom_value.get), apiRequest.comment)
@@ -274,7 +279,11 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
                         if (timeVals.length != 2) throw BadRequestException("parameters for interval_value invalid")
 
-                        Future(IntervalValueV1(timeVals(0), timeVals(1)), apiRequest.comment)
+                        Future(IntervalValueV1(timeVals.head, timeVals(1)), apiRequest.comment)
+
+                    case OntologyConstants.KnoraBase.TimeValue =>
+                        val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(apiRequest.time_value.get, throw BadRequestException(s"Invalid timestamp: ${apiRequest.time_value.get}"))
+                        Future(TimeValueV1(timeStamp), apiRequest.comment)
 
                     case OntologyConstants.KnoraBase.GeonameValue =>
                         Future(GeonameValueV1(apiRequest.geom_value.get), apiRequest.comment)
@@ -409,7 +418,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         val requestMessageFuture = for {
                             userADM <- getUserADM(requestContext)
                             request <- apiRequest match {
-                                case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) => FastFuture.successful(makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = Some(comment), userADM = userADM))
+                                case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) => FastFuture.successful(makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = Some(comment), userADM = userADM))
                                 case _ => makeAddValueVersionRequestMessage(valueIriStr = valueIriStr, apiRequest = apiRequest, userADM = userADM)
                             }
                         } yield request

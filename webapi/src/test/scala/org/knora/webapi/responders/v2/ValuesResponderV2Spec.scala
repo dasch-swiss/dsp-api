@@ -80,6 +80,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val lobComment1Iri = new MutableTestIri
     private val lobComment2Iri = new MutableTestIri
     private val decimalValueIri = new MutableTestIri
+    private val timeValueIri = new MutableTestIri
     private val dateValueIri = new MutableTestIri
     private val booleanValueIri = new MutableTestIri
     private val geometryValueIri = new MutableTestIri
@@ -800,6 +801,49 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "create a time value" in {
+            // Add the value.
+
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
+            val valueHasTimeStamp = Instant.parse("2019-08-28T15:59:12.725007Z")
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            responderManager ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = TimeValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasTimeStamp = valueHasTimeStamp
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => timeValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = timeValueIri.get,
+                requestingUser = anythingUser1
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: TimeValueContentV2 => savedValue.valueHasTimeStamp should ===(valueHasTimeStamp)
+                case _ => throw AssertionException(s"Expected time value, got $valueFromTriplestore")
             }
         }
 
@@ -2595,6 +2639,73 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueContent = DecimalValueContentV2(
                         ontologySchema = ApiV2Complex,
                         valueHasDecimal = valueHasDecimal
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "update a time value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
+            val valueHasTimeStamp = Instant.parse("2019-08-28T16:01:46.952237Z")
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = timeValueIri.get,
+                    valueContent = TimeValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasTimeStamp = valueHasTimeStamp
+                    )
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => timeValueIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = timeValueIri.get,
+                requestingUser = anythingUser1
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: TimeValueContentV2 => savedValue.valueHasTimeStamp should ===(valueHasTimeStamp)
+                case _ => throw AssertionException(s"Expected time value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update a time value without changing it" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
+            val valueHasTimeStamp = Instant.parse("2019-08-28T16:01:46.952237Z")
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = timeValueIri.get,
+                    valueContent = TimeValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        valueHasTimeStamp = valueHasTimeStamp
                     )
                 ),
                 requestingUser = anythingUser1,

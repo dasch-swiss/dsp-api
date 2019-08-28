@@ -770,6 +770,7 @@ object SalsahGuiConversions {
         OntologyConstants.SalsahGui.Checkbox -> "checkbox",
         OntologyConstants.SalsahGui.Richtext -> "richtext",
         OntologyConstants.SalsahGui.Interval -> "interval",
+        OntologyConstants.SalsahGui.TimeStamp -> "timestamp",
         OntologyConstants.SalsahGui.Geonames -> "geoname",
         OntologyConstants.SalsahGui.Fileupload -> "fileupload"
     )
@@ -1144,7 +1145,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         }
     }
 
-    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat14(CreateResourceValueV1)
+    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat15(CreateResourceValueV1)
     implicit val createResourceApiRequestV1Format: RootJsonFormat[CreateResourceApiRequestV1] = jsonFormat5(CreateResourceApiRequestV1)
     implicit val ChangeResourceLabelApiRequestV1Format: RootJsonFormat[ChangeResourceLabelApiRequestV1] = jsonFormat1(ChangeResourceLabelApiRequestV1)
     implicit val resourceInfoResponseV1Format: RootJsonFormat[ResourceInfoResponseV1] = jsonFormat2(ResourceInfoResponseV1)

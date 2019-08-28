@@ -181,7 +181,7 @@
 
             }
 
-            case timeValue: TimeValueV2 => {
+            case timeValue: TimeValueContentV2 => {
 
                 <@newValueIri> knora-base:valueHasTimeStamp "@timeValue.valueHasTimeStamp"^^xsd:dateTime  .
 

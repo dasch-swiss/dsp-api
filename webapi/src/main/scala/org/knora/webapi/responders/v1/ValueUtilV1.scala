@@ -305,19 +305,19 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                     calendar = Some(Map(LiteralValueType.StringValue -> julianDayCountValue.calendar))
                 )
 
-            case textValue: TextValueV1 => basicObjectResponse
+            case _: TextValueV1 => basicObjectResponse
 
-            case linkValue: LinkV1 => basicObjectResponse
+            case _: LinkV1 => basicObjectResponse
 
-            case stillImageFileValue: StillImageFileValueV1 => basicObjectResponse // TODO: implement this.
+            case _: StillImageFileValueV1 => basicObjectResponse // TODO: implement this.
 
-            case textFileValue: TextFileValueV1 => basicObjectResponse
+            case _: TextFileValueV1 => basicObjectResponse
 
-            case hlistValue: HierarchicalListValueV1 => basicObjectResponse
+            case _: HierarchicalListValueV1 => basicObjectResponse
 
-            case colorValue: ColorValueV1 => basicObjectResponse
+            case _: ColorValueV1 => basicObjectResponse
 
-            case geomValue: GeomValueV1 => basicObjectResponse
+            case _: GeomValueV1 => basicObjectResponse
 
             case intervalValue: IntervalValueV1 =>
                 basicObjectResponse.copy(
@@ -325,11 +325,13 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                     timeval2 = Some(Map(LiteralValueType.DecimalValue -> intervalValue.timeval2))
                 )
 
-            case geonameValue: GeonameValueV1 => basicObjectResponse
+            case _: TimeValueV1 => basicObjectResponse
 
-            case booleanValue: BooleanValueV1 => basicObjectResponse
+            case _: GeonameValueV1 => basicObjectResponse
 
-            case uriValue: UriValueV1 => basicObjectResponse
+            case _: BooleanValueV1 => basicObjectResponse
+
+            case _: UriValueV1 => basicObjectResponse
 
             case other => throw new Exception(s"Resource creation response format not implemented for value type ${other.valueTypeIri}") // TODO: implement remaining types.
         }
