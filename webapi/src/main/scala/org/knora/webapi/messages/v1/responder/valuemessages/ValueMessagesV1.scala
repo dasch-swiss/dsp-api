@@ -65,6 +65,7 @@ case class CreateValueApiRequestV1(res_id: IRI,
                                    geom_value: Option[String] = None,
                                    hlist_value: Option[IRI] = None,
                                    interval_value: Option[Seq[BigDecimal]] = None,
+                                   time_value: Option[String] = None,
                                    geoname_value: Option[String] = None,
                                    comment: Option[String] = None) {
 
@@ -81,6 +82,7 @@ case class CreateValueApiRequestV1(res_id: IRI,
         geom_value,
         hlist_value,
         interval_value,
+        time_value,
         geoname_value).flatten.size > 1) {
         throw BadRequestException(s"Different value types were submitted for property $prop")
     }
@@ -102,6 +104,7 @@ case class CreateValueApiRequestV1(res_id: IRI,
         else if (geom_value.nonEmpty) OntologyConstants.KnoraBase.GeomValue
         else if (hlist_value.nonEmpty) OntologyConstants.KnoraBase.ListValue
         else if (interval_value.nonEmpty) OntologyConstants.KnoraBase.IntervalValue
+        else if (time_value.nonEmpty) OntologyConstants.KnoraBase.TimeValue
         else if (geoname_value.nonEmpty) OntologyConstants.KnoraBase.GeonameValue
         else throw BadRequestException("No value specified")
     }
@@ -169,6 +172,7 @@ case class ChangeValueApiRequestV1(richtext_value: Option[CreateRichtextV1] = No
                                    geom_value: Option[String] = None,
                                    hlist_value: Option[IRI] = None,
                                    interval_value: Option[Seq[BigDecimal]] = None,
+                                   time_value: Option[String] = None,
                                    geoname_value: Option[String] = None,
                                    comment: Option[String] = None) {
 
@@ -191,6 +195,7 @@ case class ChangeValueApiRequestV1(richtext_value: Option[CreateRichtextV1] = No
         else if (geom_value.nonEmpty) OntologyConstants.KnoraBase.GeomValue
         else if (hlist_value.nonEmpty) OntologyConstants.KnoraBase.ListValue
         else if (interval_value.nonEmpty) OntologyConstants.KnoraBase.IntervalValue
+        else if (time_value.nonEmpty) OntologyConstants.KnoraBase.TimeValue
         else if (geoname_value.nonEmpty) OntologyConstants.KnoraBase.GeonameValue
         else throw BadRequestException("No value specified")
     }
@@ -490,7 +495,7 @@ case class ChangeFileValueRequestV1(resourceIri: IRI, file: SipiConversionReques
   * @param locations the updated file value(s).
   */
 case class ChangeFileValueResponseV1(locations: Vector[LocationV1]) extends KnoraResponseV1 {
-    def toJsValue: JsValue = ApiValueV1JsonProtocol.changeFileValueresponseV1Format.write(this)
+    def toJsValue: JsValue = ApiValueV1JsonProtocol.changeFileValueResponseV1Format.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1181,7 +1186,48 @@ case class IntervalValueV1(timeval1: BigDecimal, timeval2: BigDecimal) extends U
             case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
         }
     }
+}
 
+/**
+ * Represents a timestamp value.
+ *
+ * @param timestamp an `xsd:dateTimeStamp`.
+ */
+case class TimeValueV1(timestamp: Instant) extends UpdateValueV1 with ApiValueV1 {
+
+    def valueTypeIri: IRI = OntologyConstants.KnoraBase.TimeValue
+
+    def toJsValue: JsValue = JsObject(
+        "timestamp" -> JsString(timestamp.toString)
+    )
+
+    override def toString: String = s"$timestamp"
+
+    /**
+     * Checks if a new interval value would duplicate an existing interval value.
+     *
+     * @param other another [[ValueV1]].
+     * @return `true` if `other` is a duplicate of `this`.
+     */
+    override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+        other match {
+            case timeValueV1: TimeValueV1 => timeValueV1 == this
+            case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+        }
+    }
+
+    /**
+     * Checks if a new version of this interval value would be redundant given the current version of the value.
+     *
+     * @param currentVersion the current version of the value.
+     * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+     */
+    override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+        currentVersion match {
+            case timeValueV1: TimeValueV1 => timeValueV1 == this
+            case other => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+        }
+    }
 }
 
 /**
@@ -1609,11 +1655,11 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
     implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat1(ValueVersionHistoryGetResponseV1)
     implicit val createRichtextV1Format: RootJsonFormat[CreateRichtextV1] = jsonFormat4(CreateRichtextV1)
-    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat15(CreateValueApiRequestV1)
+    implicit val createValueApiRequestV1Format: RootJsonFormat[CreateValueApiRequestV1] = jsonFormat16(CreateValueApiRequestV1)
     implicit val createValueResponseV1Format: RootJsonFormat[CreateValueResponseV1] = jsonFormat4(CreateValueResponseV1)
-    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat13(ChangeValueApiRequestV1)
+    implicit val changeValueApiRequestV1Format: RootJsonFormat[ChangeValueApiRequestV1] = jsonFormat14(ChangeValueApiRequestV1)
     implicit val changeValueResponseV1Format: RootJsonFormat[ChangeValueResponseV1] = jsonFormat4(ChangeValueResponseV1)
     implicit val deleteValueResponseV1Format: RootJsonFormat[DeleteValueResponseV1] = jsonFormat1(DeleteValueResponseV1)
     implicit val changeFileValueApiRequestV1Format: RootJsonFormat[ChangeFileValueApiRequestV1] = jsonFormat1(ChangeFileValueApiRequestV1)
-    implicit val changeFileValueresponseV1Format: RootJsonFormat[ChangeFileValueResponseV1] = jsonFormat1(ChangeFileValueResponseV1)
+    implicit val changeFileValueResponseV1Format: RootJsonFormat[ChangeFileValueResponseV1] = jsonFormat1(ChangeFileValueResponseV1)
 }

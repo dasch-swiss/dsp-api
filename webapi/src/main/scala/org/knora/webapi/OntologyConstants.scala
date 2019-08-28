@@ -220,6 +220,7 @@ object OntologyConstants {
         val ValueHasListNode: IRI = KnoraBasePrefixExpansion + "valueHasListNode"
         val ValueHasIntervalStart: IRI = KnoraBasePrefixExpansion + "valueHasIntervalStart"
         val ValueHasIntervalEnd: IRI = KnoraBasePrefixExpansion + "valueHasIntervalEnd"
+        val ValueHasTimeStamp: IRI = KnoraBasePrefixExpansion + "valueHasTimeStamp"
         val ValueHasOrder: IRI = KnoraBasePrefixExpansion + "valueHasOrder"
         val ValueHasRefCount: IRI = KnoraBasePrefixExpansion + "valueHasRefCount"
         val ValueHasComment: IRI = KnoraBasePrefixExpansion + "valueHasComment"
@@ -257,6 +258,7 @@ object OntologyConstants {
         val IntBase: IRI = KnoraBasePrefixExpansion + "IntBase"
         val DecimalBase: IRI = KnoraBasePrefixExpansion + "DecimalBase"
         val IntervalBase: IRI = KnoraBasePrefixExpansion + "IntervalBase"
+        val TimeBase: IRI = KnoraBasePrefixExpansion + "TimeBase"
         val ColorBase: IRI = KnoraBasePrefixExpansion + "ColorBase"
 
         val TextValue: IRI = KnoraBasePrefixExpansion + "TextValue"
@@ -269,6 +271,7 @@ object OntologyConstants {
         val GeomValue: IRI = KnoraBasePrefixExpansion + "GeomValue"
         val ListValue: IRI = KnoraBasePrefixExpansion + "ListValue"
         val IntervalValue: IRI = KnoraBasePrefixExpansion + "IntervalValue"
+        val TimeValue: IRI = KnoraBasePrefixExpansion + "TimeValue"
         val LinkValue: IRI = KnoraBasePrefixExpansion + "LinkValue"
         val GeonameValue: IRI = KnoraBasePrefixExpansion + "GeonameValue"
         val FileValue: IRI = KnoraBasePrefixExpansion + "FileValue"
@@ -300,6 +303,7 @@ object OntologyConstants {
             GeomValue,
             ListValue,
             IntervalValue,
+            TimeValue,
             LinkValue,
             GeonameValue,
             FileValue,
@@ -827,6 +831,7 @@ object OntologyConstants {
         val DateValue: IRI = KnoraApiV2PrefixExpansion + "DateValue"
         val GeomValue: IRI = KnoraApiV2PrefixExpansion + "GeomValue"
         val IntervalValue: IRI = KnoraApiV2PrefixExpansion + "IntervalValue"
+        val TimeValue: IRI = KnoraApiV2PrefixExpansion + "TimeValue"
         val LinkValue: IRI = KnoraApiV2PrefixExpansion + "LinkValue"
         val ListValue: IRI = KnoraApiV2PrefixExpansion + "ListValue"
         val UriValue: IRI = KnoraApiV2PrefixExpansion + "UriValue"
@@ -859,6 +864,7 @@ object OntologyConstants {
             DateValue,
             GeomValue,
             IntervalValue,
+            TimeValue,
             LinkValue,
             ListValue,
             UriValue,
@@ -945,6 +951,8 @@ object OntologyConstants {
 
         val IntervalValueHasStart: IRI = KnoraApiV2PrefixExpansion + "intervalValueHasStart"
         val IntervalValueHasEnd: IRI = KnoraApiV2PrefixExpansion + "intervalValueHasEnd"
+
+        val TimeValueAsTimeStamp: IRI = KnoraApiV2PrefixExpansion + "timeValueAsTimeStamp"
 
         val BooleanValueAsBoolean: IRI = KnoraApiV2PrefixExpansion + "booleanValueAsBoolean"
 
@@ -1084,6 +1092,7 @@ object OntologyConstants {
             KnoraBase.BooleanValue -> Xsd.Boolean,
             KnoraBase.UriValue -> Xsd.Uri,
             KnoraBase.DecimalValue -> Xsd.Decimal,
+            KnoraBase.TimeValue -> Xsd.DateTimeStamp,
             KnoraBase.DateValue -> KnoraApiV2Simple.Date,
             KnoraBase.ColorValue -> KnoraApiV2Simple.Color,
             KnoraBase.GeomValue -> KnoraApiV2Simple.Geom,
@@ -1116,6 +1125,7 @@ object OntologyConstants {
             KnoraBase.ValueHasBoolean -> KnoraApiV2Complex.BooleanValueAsBoolean,
             KnoraBase.ValueHasIntervalStart -> KnoraApiV2Complex.IntervalValueHasStart,
             KnoraBase.ValueHasIntervalEnd -> KnoraApiV2Complex.IntervalValueHasEnd,
+            KnoraBase.ValueHasTimeStamp -> KnoraApiV2Complex.TimeValueAsTimeStamp,
             KnoraBase.ValueHasLanguage -> KnoraApiV2Complex.TextValueHasLanguage,
             KnoraBase.ValueHasListNode -> KnoraApiV2Complex.ListValueAsListNode,
             KnoraBase.ValueHasGeonameCode -> KnoraApiV2Complex.GeonameValueAsGeonameCode,
@@ -1167,6 +1177,7 @@ object OntologyConstants {
             KnoraApiV2Complex.BooleanValueAsBoolean -> KnoraBase.ValueHasBoolean,
             KnoraApiV2Complex.IntervalValueHasStart -> KnoraBase.ValueHasIntervalStart,
             KnoraApiV2Complex.IntervalValueHasEnd -> KnoraBase.ValueHasIntervalEnd,
+            KnoraApiV2Complex.TimeValueAsTimeStamp -> KnoraBase.ValueHasTimeStamp,
             KnoraApiV2Complex.ValueAsString -> KnoraBase.ValueHasString,
             KnoraApiV2Complex.TextValueHasLanguage -> KnoraBase.ValueHasLanguage,
             KnoraApiV2Complex.ListValueAsListNode -> KnoraBase.ValueHasListNode,

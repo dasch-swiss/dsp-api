@@ -520,7 +520,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * Converts a [[ValueProps]] into an [[IntervalValueV1]].
       *
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[IntervalValueV1]].
+      * @return an [[IntervalValueV1]].
       */
     private def makeIntervalValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
@@ -528,6 +528,21 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         Future(IntervalValueV1(
             timeval1 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalStart).literals.head),
             timeval2 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalEnd).literals.head)
+        ))
+    }
+
+    /**
+     * Converts a [[ValueProps]] into a [[TimeValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[TimeValueV1]].
+     */
+    private def makeTimeValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+        val predicates = valueProps.literalData
+        val timeStampStr = predicates(OntologyConstants.KnoraBase.ValueHasTimeStamp).literals.head
+
+        Future(TimeValueV1(
+            timestamp = stringFormatter.xsdDateTimeStampToInstant(timeStampStr, throw InconsistentTriplestoreDataException(s"Can't parse timestamp: $timeStampStr"))
         ))
     }
 
