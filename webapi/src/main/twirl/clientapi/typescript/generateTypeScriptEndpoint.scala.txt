@@ -92,7 +92,7 @@ export class @name extends Endpoint {
         urlElementsAsValues.map {
             value: Value =>
                 value match {
-                    case arg: ArgValue => "encodeURI(" + makeValue(arg) + ")"
+                    case arg: ArgValue => "encodeURIComponent(" + makeValue(arg) + ")"
                     case _ => makeValue(value)
                 }
         }.mkString(" + ")

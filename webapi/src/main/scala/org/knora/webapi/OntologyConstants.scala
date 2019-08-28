@@ -599,6 +599,9 @@ object OntologyConstants {
         val KeywordsProperty: IRI = KnoraAdminPrefixExpansion + "keywords"
         val KeywordsResponse: IRI = KnoraAdminPrefixExpansion + "KeywordsResponse"
         val CreateGroupRequest: IRI = KnoraAdminPrefixExpansion + "CreateGroupRequest"
+        val StringLiteral: IRI = KnoraAdminPrefixExpansion + "StringLiteral"
+        val Value: IRI = KnoraAdminPrefixExpansion + "value"
+        val Language: IRI = KnoraAdminPrefixExpansion + "language"
     }
 
     object Standoff {
