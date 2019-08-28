@@ -52,7 +52,7 @@ export class @{classDef.className}@{
     case None => {}
     }
     @@JsonProperty("@{property.propertyName}", @wrapInArrayForCardinality(typeScriptType.capitalize, property.cardinality)@if(property.cardinality == MayHaveOne) {, true})
-    @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
+    @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(property.objectType, typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
 }}
 }@makeTypeScriptType(objectType: ClientObjectType) = @{
     objectType match {
@@ -76,7 +76,14 @@ export class @{classDef.className}@{
            case DecimalDatatype => "0"
            case UriDatatype => "\"\""
            case DateTimeStampDatatype => "\"\""
-           case classRef: ClassRef => "null"
+
+           case classRef: ClassRef =>
+               if (cardinality == MayHaveOne) {
+                   "undefined"
+               } else {
+                   "null"
+               }
+
            case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
         }
     }
@@ -92,9 +99,14 @@ export class @{classDef.className}@{
     } else {
         ""
     }
-}@addForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
+}@addForCardinality(objectType: ClientObjectType, typeScriptType: String, cardinality: Cardinality) = @{
     if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
         s"$typeScriptType[]"
+    } else if (cardinality == MustHaveOne) {
+        objectType match {
+            case classRef: ClassRef => s"$typeScriptType | null"
+            case _ => typeScriptType
+        }
     } else {
         typeScriptType
     }
