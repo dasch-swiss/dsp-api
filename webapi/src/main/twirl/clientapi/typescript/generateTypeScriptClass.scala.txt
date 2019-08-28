@@ -66,26 +66,22 @@ export class @{classDef.className}@{
         case other => throw ClientApiGenerationException(s"Type $other not yet supported")
     }
 }@makeDefaultValue(objectType: ClientObjectType, cardinality: Cardinality) = @{
-    if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
-        "[]"
-    } else {
-        objectType match {
-           case StringDatatype => "\"\""
-           case BooleanDatatype => "false"
-           case IntegerDatatype => "0"
-           case DecimalDatatype => "0"
-           case UriDatatype => "\"\""
-           case DateTimeStampDatatype => "\"\""
+    cardinality match {
+        case MayHaveMany | MustHaveSome => "[]"
 
-           case classRef: ClassRef =>
-               if (cardinality == MayHaveOne) {
-                   "undefined"
-               } else {
-                   "null"
-               }
+        case MayHaveOne => "undefined"
 
-           case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
-        }
+        case MustHaveOne =>
+            objectType match {
+                case StringDatatype => "\"\""
+                case BooleanDatatype => "false"
+                case IntegerDatatype => "0"
+                case DecimalDatatype => "0"
+                case UriDatatype => "\"\""
+                case DateTimeStampDatatype => "\"\""
+                case classRef: ClassRef => s"new ${classRef.className}()"
+                case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
+            }
     }
 }@wrapInArrayForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
     if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
@@ -102,11 +98,6 @@ export class @{classDef.className}@{
 }@addForCardinality(objectType: ClientObjectType, typeScriptType: String, cardinality: Cardinality) = @{
     if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
         s"$typeScriptType[]"
-    } else if (cardinality == MustHaveOne) {
-        objectType match {
-            case classRef: ClassRef => s"$typeScriptType | null"
-            case _ => typeScriptType
-        }
     } else {
         typeScriptType
     }

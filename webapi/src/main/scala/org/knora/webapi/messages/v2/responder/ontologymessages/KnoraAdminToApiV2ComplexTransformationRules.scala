@@ -939,6 +939,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       */
     private val UserCardinalities = Map(
         OntologyConstants.KnoraAdminV2.ID -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraAdminV2.Password -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraAdminV2.Token -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraAdminV2.SessionID -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraAdminV2.SystemAdmin -> Cardinality.MayHaveOne,

@@ -563,6 +563,7 @@ object OntologyConstants {
         val ProjectClass: IRI = KnoraAdminPrefixExpansion + "Project"
         val ID: IRI = KnoraAdminPrefixExpansion + "id"
         val Token: IRI = KnoraAdminPrefixExpansion + "token"
+        val Password: IRI = KnoraAdminPrefixExpansion + "password"
         val SessionID: IRI = KnoraAdminPrefixExpansion + "sessionId"
         val Shortname: IRI = KnoraAdminPrefixExpansion + "shortname"
         val Longname: IRI = KnoraAdminPrefixExpansion + "longname"
