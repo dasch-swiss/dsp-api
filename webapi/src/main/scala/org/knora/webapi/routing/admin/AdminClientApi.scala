@@ -118,7 +118,9 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
       * A map of property IRIs to non-standard names that those properties must have.
       */
     override val propertyNames: Map[SmartIri, String] = Map(
-        OntologyConstants.KnoraAdminV2.ProjectIri -> "project"
+        OntologyConstants.KnoraAdminV2.ProjectIri -> "project",
+        OntologyConstants.KnoraAdminV2.ProjectDescription -> "description",
+        OntologyConstants.KnoraAdminV2.GroupDescription -> "description"
     ).map {
         case (propertyIri, propertyName) =>
             propertyIri.toSmartIri -> propertyName

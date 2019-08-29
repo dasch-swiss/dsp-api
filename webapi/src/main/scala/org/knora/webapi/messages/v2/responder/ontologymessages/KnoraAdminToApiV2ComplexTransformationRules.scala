@@ -166,8 +166,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
-    private val Description: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraAdminV2.Description,
+    private val ProjectDescription: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.ProjectDescription,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
         objectType = Some(OntologyConstants.KnoraAdminV2.StringLiteral),
         predicates = Seq(
@@ -180,7 +180,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "A description of the enclosing object."
+                    LanguageCodes.EN -> "A description of a project."
                 )
             )
         )
@@ -901,7 +901,6 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         ),
         directCardinalities = Map(
             OntologyConstants.KnoraAdminV2.Name -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraAdminV2.Description -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraAdminV2.Status -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraAdminV2.ProjectIri -> Cardinality.MustHaveOne,
             OntologyConstants.KnoraAdminV2.SelfJoin -> Cardinality.MustHaveOne
@@ -1080,7 +1079,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         Token,
         SessionID,
         Ontologies,
-        Description,
+        ProjectDescription,
         AdministrativePermissionProperty,
         AdministrativePermissions,
         ForGroup,

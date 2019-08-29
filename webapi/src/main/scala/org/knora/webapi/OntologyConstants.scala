@@ -568,7 +568,8 @@ object OntologyConstants {
         val Shortname: IRI = KnoraAdminPrefixExpansion + "shortname"
         val Longname: IRI = KnoraAdminPrefixExpansion + "longname"
         val Shortcode: IRI = KnoraAdminPrefixExpansion + "shortcode"
-        val Description: IRI = KnoraAdminPrefixExpansion + "description"
+        val ProjectDescription: IRI = KnoraAdminPrefixExpansion + "projectDescription"
+        val GroupDescription: IRI = KnoraAdminPrefixExpansion + "groupDescription"
         val Status: IRI = KnoraAdminPrefixExpansion + "status"
         val Keywords: IRI = KnoraAdminPrefixExpansion + "keywords"
         val Logo: IRI = KnoraAdminPrefixExpansion + "logo"
@@ -1135,11 +1136,9 @@ object OntologyConstants {
             KnoraAdmin.ProjectShortname -> KnoraAdminV2.Shortname,
             KnoraAdmin.ProjectLongname -> KnoraAdminV2.Longname,
             KnoraAdmin.ProjectShortcode -> KnoraAdminV2.Shortcode,
-            KnoraAdmin.ProjectDescription -> KnoraAdminV2.Description,
             KnoraAdmin.ProjectKeyword -> KnoraAdminV2.Keywords,
             KnoraAdmin.ProjectLogo -> KnoraAdminV2.Logo,
             KnoraAdmin.UserGroup -> KnoraAdminV2.GroupClass,
-            KnoraAdmin.GroupDescription -> KnoraAdminV2.Description,
             KnoraAdmin.BelongsToProject -> KnoraAdminV2.ProjectProperty,
             KnoraAdmin.HasSelfJoinEnabled -> KnoraAdminV2.SelfJoin
         ),
