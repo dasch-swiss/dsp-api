@@ -58,7 +58,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
     private val rootEmail = SharedTestDataADM.rootUser.email
-    private val testPass = URLEncoder.encode("test", "utf-8")
+    private val testPass = SharedTestDataADM.testPass
     private val projectIri = SharedTestDataADM.imagesProject.id
     private val projectIriEnc = URLEncoder.encode(projectIri, "utf-8")
     private val projectShortname = SharedTestDataADM.imagesProject.shortname
@@ -120,22 +120,7 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             "CREATE a new project and return the project info if the supplied shortname is unique" in {
 
-                val params =
-                    s"""
-                       |{
-                       |    "shortname": "newproject",
-                       |    "shortcode": "1111",
-                       |    "longname": "project longname",
-                       |    "description": [{"value": "project description", "language": "en"}],
-                       |    "keywords": ["keywords"],
-                       |    "logo": "/fu/bar/baz.jpg",
-                       |    "status": true,
-                       |    "selfjoin": false
-                       |}
-                """.stripMargin
-
-
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createProjectRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 logger.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
@@ -243,21 +228,8 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
             "UPDATE a project" in {
 
-                val params =
-                    s"""
-                       |{
-                       |    "shortname": "newproject",
-                       |    "longname": "updated project longname",
-                       |    "description": [{"value": "updated project description", "language": "en"}],
-                       |    "keywords": ["updated", "keywords"],
-                       |    "logo": "/fu/bar/baz-updated.jpg",
-                       |    "status": true,
-                       |    "selfjoin": true
-                       |}
-                """.stripMargin
-
                 val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
-                val request = Put(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val request = Put(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.updateProjectRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)

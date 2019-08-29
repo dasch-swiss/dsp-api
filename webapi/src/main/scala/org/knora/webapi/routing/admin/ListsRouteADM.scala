@@ -32,8 +32,8 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import scala.concurrent.Future
 
 /**
-  * Provides a spray-routing function for API routes that deal with lists.
-  */
+ * Provides a spray-routing function for API routes that deal with lists.
+ */
 
 @Api(value = "lists", produces = "application/json")
 @Path("/admin/lists")
@@ -135,8 +135,8 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /**
-      * update list
-      */
+     * update list
+     */
     def putList: Route = path("admin" / "lists" / Segment) { iri =>
         put {
             /* update existing list node (either root or child) */
@@ -174,8 +174,8 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /**
-      * create a new child node
-      */
+     * create a new child node
+     */
     def postListChildNode: Route = path("admin" / "lists" / Segment) { iri =>
         post {
             /* add node to existing list node. the existing list node can be either the root or a child */
@@ -214,7 +214,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putList ~ postListChildNode ~ deleteListNode ~ {
 
-        path("admin" / "lists" / "infos" / Segment) {iri =>
+        path("admin" / "lists" / "infos" / Segment) { iri =>
             get {
                 /* return information about a list (without children) */
                 requestContext =>
@@ -232,20 +232,40 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         log
                     )
             } ~
-            put {
-                /* update list info */
-                entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
+                put {
+                    /* update list info */
+                    entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
+                        requestContext =>
+                            val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+
+                            val requestMessage: Future[ListInfoChangeRequestADM] = for {
+                                requestingUser <- getUserADM(requestContext)
+                            } yield ListInfoChangeRequestADM(
+                                listIri = listIri,
+                                changeListRequest = apiRequest,
+                                requestingUser = requestingUser,
+                                apiRequestID = UUID.randomUUID()
+                            )
+
+                            RouteUtilADM.runJsonRoute(
+                                requestMessage,
+                                requestContext,
+                                settings,
+                                responderManager,
+                                log
+                            )
+                    }
+                }
+        } ~
+            path("admin" / "lists" / "nodes" / Segment) { iri =>
+                get {
+                    /* return information about a single node (without children) */
                     requestContext =>
                         val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                        val requestMessage: Future[ListInfoChangeRequestADM] = for {
+                        val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
                             requestingUser <- getUserADM(requestContext)
-                        } yield ListInfoChangeRequestADM(
-                            listIri = listIri,
-                            changeListRequest = apiRequest,
-                            requestingUser = requestingUser,
-                            apiRequestID = UUID.randomUUID()
-                        )
+                        } yield ListNodeInfoGetRequestADM(listIri, requestingUser)
 
                         RouteUtilADM.runJsonRoute(
                             requestMessage,
@@ -254,37 +274,17 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             responderManager,
                             log
                         )
-                }
+                } ~
+                    put {
+                        /* update list node */
+                        throw NotImplementedException("Method not implemented.")
+                        ???
+                    } ~
+                    delete {
+                        /* delete list node */
+                        throw NotImplementedException("Method not implemented.")
+                        ???
+                    }
             }
-        } ~
-        path("admin" / "lists" / "nodes" / Segment) {iri =>
-            get {
-                /* return information about a single node (without children) */
-                requestContext =>
-                    val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
-                    val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield ListNodeInfoGetRequestADM(listIri, requestingUser)
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            } ~
-            put {
-                /* update list node */
-                throw NotImplementedException("Method not implemented.")
-                ???
-            } ~
-            delete {
-                /* delete list node */
-                throw NotImplementedException("Method not implemented.")
-                ???
-            }
-        }
     }
 }

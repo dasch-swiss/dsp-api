@@ -70,9 +70,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
     private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
 
-    /* needed for dealing with files in the request */
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
-
     def knoraApiPath: Route = {
 
         def makeResourceRequestMessage(resIri: String,
