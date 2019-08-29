@@ -41,8 +41,6 @@ import scala.concurrent.duration._
   */
 class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
-
     def knoraApiPath: Route = {
 
         path("v2" / "standoff" / Segment / Segment / Segment) { (resourceIriStr: String, valueIriStr: String, offsetStr: String) =>

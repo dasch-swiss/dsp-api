@@ -38,6 +38,8 @@ object SharedTestDataADM {
 
     val SYSTEM_PROJECT_IRI: IRI = OntologyConstants.KnoraAdmin.SystemProject // built-in project
 
+    val testPass: String = java.net.URLEncoder.encode("test", "utf-8")
+
     /* represents the user profile of 'root' as found in admin-data.ttl */
     def rootUser = UserADM(
         id = "http://rdfh.ch/users/root",
@@ -538,4 +540,87 @@ object SharedTestDataADM {
         selfjoin = false
     )
 
+    /** **********************************/
+    /** Test requests                   **/
+    /** **********************************/
+
+    val createGroupRequest: String =
+        s"""{
+           |    "name": "NewGroup",
+           |    "description": "NewGroupDescription",
+           |    "project": "$IMAGES_PROJECT_IRI",
+           |    "status": true,
+           |    "selfjoin": false
+           |}""".stripMargin
+
+    val updateGroupRequest: String =
+        s"""{
+           |    "name": "UpdatedGroupName",
+           |    "description": "UpdatedGroupDescription"
+           |}""".stripMargin
+
+    val changeGroupStatusRequest: String =
+        s"""{
+           |    "status": true
+           |}""".stripMargin
+
+    val createProjectRequest: String =
+        s"""{
+           |    "shortname": "newproject",
+           |    "shortcode": "1111",
+           |    "longname": "project longname",
+           |    "description": [{"value": "project description", "language": "en"}],
+           |    "keywords": ["keywords"],
+           |    "logo": "/fu/bar/baz.jpg",
+           |    "status": true,
+           |    "selfjoin": false
+           |}""".stripMargin
+
+    val updateProjectRequest: String =
+        s"""{
+           |    "shortname": "newproject",
+           |    "longname": "updated project longname",
+           |    "description": [{"value": "updated project description", "language": "en"}],
+           |    "keywords": ["updated", "keywords"],
+           |    "logo": "/fu/bar/baz-updated.jpg",
+           |    "status": true,
+           |    "selfjoin": true
+           |}""".stripMargin
+
+    val createUserRequest: String =
+        s"""{
+           |    "username": "donald.duck",
+           |    "email": "donald.duck@example.org",
+           |    "givenName": "Donald",
+           |    "familyName": "Duck",
+           |    "password": "test",
+           |    "status": true,
+           |    "lang": "en",
+           |    "systemAdmin": false
+           |}""".stripMargin
+
+    val updateUserRequest: String =
+        s"""{
+           |    "username": "donald.big.duck",
+           |    "email": "donald.big.duck@example.org",
+           |    "givenName": "Big Donald",
+           |    "familyName": "Duckmann",
+           |    "lang": "de"
+           |}""".stripMargin
+
+    val changeUserPasswordRequest: String =
+        s"""{
+           |    "requesterPassword": "test",
+           |    "newPassword": "test123456"
+           |}""".stripMargin
+
+    val changeUserStatusRequest: String =
+        s"""{
+           |    "status": false
+           |}""".stripMargin
+
+    val changeUserSystemAdminMembershipRequest: String =
+        s"""{
+           |    "systemAdmin": true
+           |}""".stripMargin
 }

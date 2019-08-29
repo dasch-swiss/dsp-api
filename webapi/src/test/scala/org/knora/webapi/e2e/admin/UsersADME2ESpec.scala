@@ -222,21 +222,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
             "create the user if the supplied email is unique " in {
 
-                val params =
-                    s"""
-                   |{
-                   |    "username": "donald.duck",
-                   |    "email": "donald.duck@example.org",
-                   |    "givenName": "Donald",
-                   |    "familyName": "Duck",
-                   |    "password": "test",
-                   |    "status": true,
-                   |    "lang": "en",
-                   |    "systemAdmin": false
-                   |}
-                """.stripMargin
-
-                val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, params))
+                val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createUserRequest))
                 val response: HttpResponse = singleAwaitingRequest(request)
 
                 // log.debug(s"response: ${response.toString}")
@@ -282,19 +268,8 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
             "update the user's basic information" in {
 
-                val params =
-                    s"""
-                    {
-                        "username": "donald.big.duck",
-                        "email": "donald.big.duck@example.org",
-                        "givenName": "Big Donald",
-                        "familyName": "Duckmann",
-                        "lang": "de"
-                    }
-                    """.stripMargin
-
                 val userIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
-                val request = Put(baseApiUrl + s"/admin/users/iri/$userIriEncoded/BasicUserInformation", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val request = Put(baseApiUrl + s"/admin/users/iri/$userIriEncoded/BasicUserInformation", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.updateUserRequest)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -309,16 +284,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
             "update the user's password (by himself)" in {
 
-                val params01 =
-                    s"""
-                    {
-                        "requesterPassword": "test",
-                        "newPassword": "test123456"
-                    }
-                    """.stripMargin
-
-
-                val request1 = Put(baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(BasicHttpCredentials(normalUserCreds.email, "test")) // requester's password
+                val request1 = Put(baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.changeUserPasswordRequest)) ~> addCredentials(BasicHttpCredentials(normalUserCreds.email, "test")) // requester's password
                 val response1: HttpResponse = singleAwaitingRequest(request1)
                 logger.debug(s"response: ${response1.toString}")
                 response1.status should be(StatusCodes.OK)
@@ -354,16 +320,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
             "delete the user by making him inactive" in {
 
                 val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
-
-                val params =
-                    s"""
-                    {
-                        "status": false
-                    }
-                    """.stripMargin
-
-
-                val request = Put(baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/Status", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val request = Put(baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/Status", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.changeUserStatusRequest)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -374,16 +331,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
             "update the user's system admin membership status" in {
                 val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
-
-                val params =
-                    s"""
-                    {
-                        "systemAdmin": true
-                    }
-                    """.stripMargin
-
-
-                val request = Put(baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/SystemAdmin" , HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val request = Put(baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/SystemAdmin" , HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.changeUserSystemAdminMembershipRequest)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
