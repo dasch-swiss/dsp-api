@@ -26,13 +26,13 @@ import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetReq
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
 /**
-  * Provides a routing function for the API that Sipi connects to.
-  */
+ * Provides a routing function for the API that Sipi connects to.
+ */
 class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
     /**
-      * A routing function for the API that Sipi connects to.
-      */
+     * A routing function for the API that Sipi connects to.
+     */
     def knoraApiPath: Route = {
 
         path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
