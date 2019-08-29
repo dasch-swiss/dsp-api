@@ -43,9 +43,6 @@ import scala.concurrent.Future
   */
 class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    /* needed for dealing with files in the request */
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
-
     def knoraApiPath: Route = {
 
         def makeVersionHistoryRequestMessage(iris: Seq[IRI], userADM: UserADM): ValueVersionHistoryGetRequestV1 = {
