@@ -112,7 +112,7 @@ For details, see @ref:[Archival Resource Key (ARK) Identifiers](../../05-interna
 
 ### ARK URLs for Projects
 
-The format of a Knora resource ARK URL is as follows:
+The format of a Knora project ARK URL is as follows:
 
 ```
 http://HOST/ark:/NAAN/VERSION/PROJECT
