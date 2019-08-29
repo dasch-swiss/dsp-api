@@ -2426,6 +2426,16 @@
                         rdfs:comment "Represents an interval in a TextValue"@en .
 
 
+###  http://www.knora.org/ontology/knora-base#StandoffTimeTag
+
+:StandoffTimeTag rdf:type owl:Class ;
+
+                        rdfs:subClassOf :StandoffDataTypeTag,
+                                        :TimeBase ;
+
+                        rdfs:comment "Represents a timestamp in a TextValue"@en .
+
+
 ###  http://www.knora.org/ontology/knora-base#StandoffBooleanTag
 
 :StandoffBooleanTag rdf:type owl:Class ;

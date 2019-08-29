@@ -377,6 +377,7 @@ object OntologyConstants {
         val StandoffIntegerTag: IRI = KnoraBasePrefixExpansion + "StandoffIntegerTag"
         val StandoffDecimalTag: IRI = KnoraBasePrefixExpansion + "StandoffDecimalTag"
         val StandoffIntervalTag: IRI = KnoraBasePrefixExpansion + "StandoffIntervalTag"
+        val StandoffTimeTag: IRI = KnoraBasePrefixExpansion + "StandoffTimeTag"
         val StandoffBooleanTag: IRI = KnoraBasePrefixExpansion + "StandoffBooleanTag"
         val StandoffLinkTag: IRI = KnoraBasePrefixExpansion + "StandoffLinkTag"
         val StandoffUriTag: IRI = KnoraBasePrefixExpansion + "StandoffUriTag"

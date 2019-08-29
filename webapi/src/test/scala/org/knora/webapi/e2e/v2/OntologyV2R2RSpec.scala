@@ -497,6 +497,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri,
                 "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#versionDate".toSmartIri,
