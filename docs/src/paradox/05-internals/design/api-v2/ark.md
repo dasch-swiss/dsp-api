@@ -84,9 +84,15 @@ The `RESOURCE_UUID` and `VALUE_UUID` are processed as follows:
 2. Any `-` characters in the resulting string are replaced with `=`, because
    `base64url` encoding uses `-`, which is a reserved character in ARK URLs.
 
-For example, given the Knora resource IRI `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`,
-and using the DaSCH's ARK resolver hostname and NAAN, the corresponding
-ARK URL without a timestamp is:
+For example, given a project with ID `0001`, and using the DaSCH's ARK resolver
+hostname and NAAN, the ARK URL for the project itself is:
+
+```
+http://ark.dasch.swiss/ark:/72163/1/0001
+```
+
+Given the Knora resource IRI `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`,
+the corresponding ARK URL without a timestamp is:
 
 ```
 http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY

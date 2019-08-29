@@ -110,6 +110,23 @@ A Knora ARK URL is intended to be resolved by the [Knora ARK resolver](https://g
 
 For details, see @ref:[Archival Resource Key (ARK) Identifiers](../../05-internals/design/api-v2/ark.md).
 
+### ARK URLs for Projects
+
+The format of a Knora resource ARK URL is as follows:
+
+```
+http://HOST/ark:/NAAN/VERSION/PROJECT
+```
+
+For example, given a project with ID `0001`, and using the DaSCH's ARK resolver
+hostname and NAAN, the ARK URL for the project itself is:
+
+```
+http://ark.dasch.swiss/ark:/72163/1/0001
+```
+
+This could redirect to a page describing the project.
+
 ### ARK URLs for Resources
 
 The format of a Knora resource ARK URL is as follows:
