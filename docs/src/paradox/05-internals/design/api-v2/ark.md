@@ -25,7 +25,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 Knora must produce an ARK URL for each resource and each value. The ARK identifiers used
 by Knora must respect
-[the draft ARK specification](https://tools.ietf.org/html/draft-kunze-ark-18).
+[the draft ARK specification](https://tools.ietf.org/html/draft-kunze-ark-22).
 The format of Knora’s ARK URLs must be able to change over
 time, while ensuring that previously generated ARK URLs still work.
 
@@ -66,8 +66,8 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[/VALUE_UUID][.TIMESTAMP]
   Example: `20180528T155203897Z`.
 
 Following the ARK ID spec, `/`
-[represents object hierarchy](https://tools.ietf.org/html/draft-kunze-ark-18#section-2.5.1)
-and `.` [represents an object variant](https://tools.ietf.org/html/draft-kunze-ark-18#section-2.5.2).
+[represents object hierarchy](https://tools.ietf.org/html/draft-kunze-ark-22#section-2.5.1)
+and `.` [represents an object variant](https://tools.ietf.org/html/draft-kunze-ark-22#section-2.5.2).
 A value is thus contained in a resource, which is contained in its project,
 which is contained in a repository (represented by the URL version number).
 A timestamp is a type of variant.
