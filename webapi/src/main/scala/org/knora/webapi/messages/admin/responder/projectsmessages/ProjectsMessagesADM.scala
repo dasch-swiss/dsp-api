@@ -298,7 +298,7 @@ case class ProjectKeywordsGetResponseADM(keywords: Seq[String]) extends KnoraRes
   */
 @ApiMayChange
 case class ProjectRestrictedViewSettingsGetResponseADM(settings: ProjectRestrictedViewSettingsADM) extends KnoraResponseADM with ProjectsADMJsonProtocol {
-    def toJsValue: JsValue = projectRestricedViewGetResponseADMFormat.write(this)
+    def toJsValue: JsValue = projectRestrictedViewGetResponseADMFormat.write(this)
 }
 
 /**
@@ -593,7 +593,7 @@ trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
     implicit val changeProjectApiRequestADMFormat: RootJsonFormat[ChangeProjectApiRequestADM] = rootFormat(lazyFormat(jsonFormat(ChangeProjectApiRequestADM, "shortname", "longname", "description", "keywords", "logo", "status", "selfjoin")))
     implicit val projectsKeywordsGetResponseADMFormat: RootJsonFormat[ProjectsKeywordsGetResponseADM] = jsonFormat(ProjectsKeywordsGetResponseADM, "keywords")
     implicit val projectKeywordsGetResponseADMFormat: RootJsonFormat[ProjectKeywordsGetResponseADM] = jsonFormat(ProjectKeywordsGetResponseADM, "keywords")
-    implicit val projectRestricedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsGetResponseADM] = jsonFormat(ProjectRestrictedViewSettingsGetResponseADM, "settings")
+    implicit val projectRestrictedViewGetResponseADMFormat: RootJsonFormat[ProjectRestrictedViewSettingsGetResponseADM] = jsonFormat(ProjectRestrictedViewSettingsGetResponseADM, "settings")
 
     implicit val projectOperationResponseADMFormat: RootJsonFormat[ProjectOperationResponseADM] = rootFormat(lazyFormat(jsonFormat(ProjectOperationResponseADM, "project")))
 

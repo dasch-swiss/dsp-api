@@ -22,25 +22,20 @@
 @import org.knora.webapi.util.clientapi._
 @import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
 
-@(apis: Seq[ImportInfo])
+@(apis: Seq[ImportInfo])import { KnoraApiConfig } from "./knora-api-config";
 
-import { KnoraApiConfig } from "./knora-api-config";
-
-@for(api <- apis) {
-import { @api.className } from "@api.importPath";}
-
+@for(api <- apis) {import { @api.className } from "@api.importPath";
+}
 /**
  * Offers methods for JavaScript developers to interact with the Knora API.
  */
 export class KnoraApiConnection {
-
     @for(api <- apis) {
     /**
      * @api.description.get
      */
     readonly @api.variableName: @api.className;
     }
-
     /**
      * Constructor.
      * Sets up all endpoints for the Knora API.

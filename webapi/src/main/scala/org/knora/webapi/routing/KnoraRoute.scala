@@ -21,6 +21,7 @@ package org.knora.webapi.routing
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Route
+import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{KnoraDispatchers, Settings, SettingsImpl}
@@ -47,11 +48,13 @@ abstract class KnoraRoute(routeData: KnoraRouteData) {
     implicit protected val settings: SettingsImpl = Settings(system)
     implicit protected val timeout: Timeout = settings.defaultTimeout
     implicit protected val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+    implicit protected val materializer: ActorMaterializer = ActorMaterializer()
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     protected val applicationStateActor: ActorRef = routeData.appActor
     protected val storeManager: ActorRef = routeData.appActor
     protected val log = akka.event.Logging(system, this.getClass)
+    protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
     /**
       * Returns the route. Needs to be implemented in each subclass.

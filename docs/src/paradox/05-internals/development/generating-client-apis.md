@@ -23,9 +23,18 @@ The following route returns a Zip file containing generated client API
 code for the specified target:
 
 ```
-HTTP GET to http://host/v2/clientapi/TARGET
+HTTP GET to http://host/clientapi/TARGET
 ```
 
 Currently the only supported `TARGET` is `typescript`. For documentation
 on defining client APIs, see
 @ref:[Client API Code Generation Framework](../design/client-api/index.md).
+
+To check whether the generated TypeScript code compiles, without actually
+integrating it into `knora-api-js-lib`, use:
+
+```
+HTTP GET to http://host/clientapi/typescript?mock=true
+```
+
+This adds mock TypeScript library dependencies.
