@@ -27,7 +27,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.{E2ESpec, SharedTestDataADM}
 
 import scala.concurrent.duration._
 
@@ -48,16 +48,11 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
 
     private val rootEmail = SharedTestDataADM.rootUser.email
-    private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     private val imagesUser01Email = SharedTestDataADM.imagesUser01.email
-    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+    private val testPass = SharedTestDataADM.testPass
 
     private val groupIri = SharedTestDataADM.imagesReviewerGroup.id
     private val groupIriEnc = java.net.URLEncoder.encode(groupIri, "utf-8")
-    private val groupName = SharedTestDataADM.imagesReviewerGroup.name
-    private val groupNameEnc = java.net.URLEncoder.encode(groupName, "utf-8")
-    private val projectIri = SharedTestDataADM.imagesReviewerGroup.project.id
-    private val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
 
     "The Groups Route ('admin/groups')" when {
         "used to query for group information" should {
@@ -83,19 +78,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
             "CREATE a new group" in {
 
-                val params =
-                    s"""
-                       |{
-                       |    "name": "NewGroup",
-                       |    "description": "NewGroupDescription",
-                       |    "project": "${SharedTestDataV1.IMAGES_PROJECT_IRI}",
-                       |    "status": true,
-                       |    "selfjoin": false
-                       |}
-                """.stripMargin
-
-
-                val request = Post(baseApiUrl + "/admin/groups", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
+                val request = Post(baseApiUrl + "/admin/groups", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createGroupRequest)) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
@@ -115,16 +98,8 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
             "UPDATE a group" in {
 
-                val params =
-                    s"""
-                       |{
-                       |    "name": "UpdatedGroupName",
-                       |    "description": "UpdatedGroupDescription"
-                       |}
-                """.stripMargin
-
                 val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
-                val request = Put(baseApiUrl + "/admin/groups/" + groupIriEnc, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
+                val request = Put(baseApiUrl + "/admin/groups/" + groupIriEnc, HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.updateGroupRequest)) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 logger.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
@@ -158,15 +133,8 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
             }
 
             "CHANGE status of a group" in {
-                val params =
-                    s"""
-                       |{
-                       |    "status": true
-                       |}
-                """.stripMargin
-
                 val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
-                val request = Put(baseApiUrl + "/admin/groups/" + groupIriEnc + "/status", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
+                val request = Put(baseApiUrl + "/admin/groups/" + groupIriEnc + "/status", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.changeGroupStatusRequest)) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
                 val response: HttpResponse = singleAwaitingRequest(request)
                 logger.debug(s"response: {}", response)
                 response.status should be (StatusCodes.OK)
