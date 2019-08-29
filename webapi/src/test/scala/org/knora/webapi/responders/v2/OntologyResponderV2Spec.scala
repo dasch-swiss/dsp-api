@@ -2090,6 +2090,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri"
