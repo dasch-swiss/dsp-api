@@ -147,9 +147,6 @@ def do_upload_request(graphdb_info, turtle_files, trig_file_path):
             prefix = match.group(1) + "-" + match.group(2)
             namespaces[prefix] = "http://www.knora.org/{}/{}/".format(match.group(1), match.group(2))
 
-    for prefix, namespace in namespaces.items():
-        print("prefix {}: {}".format(prefix, namespace))
-
     dataset = rdflib.Dataset()
 
     for turtle_file in turtle_files:
