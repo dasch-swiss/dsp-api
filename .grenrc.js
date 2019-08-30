@@ -1,5 +1,5 @@
 module.exports = {
-    "dataSource": "issues",
+    "dataSource": "milestones",
     "prefix": "",
     "groupBy": {
         "Breaking Changes": ["breaking/data", "breaking/api"],
