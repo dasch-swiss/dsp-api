@@ -30,6 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v2.ResourcesRouteV2
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.jsonld.JsonLDUtil
 import org.knora.webapi.util.{FileUtil, JavaUtil}
 
@@ -38,6 +39,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * End-to-end specification for the handling of JSONLD documents.
   */
+@E2ETest
 class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =
