@@ -205,6 +205,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
+                  |  FILTER NOT EXISTS {
+                  |      ?thing anything:hasTimeStamp ?timeStamp .
+                  |  }
+                  |
                   |   OPTIONAL {
                   |
                   |    ?thing anything:hasDate ?date .
@@ -241,6 +245,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
+                  |
+                  |  FILTER NOT EXISTS {
+                  |      ?thing anything:hasTimeStamp ?timeStamp .
+                  |  }
                   |
                   |   OPTIONAL {
                   |
@@ -1707,6 +1715,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?thing a anything:Thing .
                   |     ?thing a knora-api:Resource .
                   |
+                  |     FILTER NOT EXISTS {
+                  |         ?thing anything:hasTimeStamp ?timeStamp .
+                  |     }
+                  |
                   |     OPTIONAL {
                   |
                   |         ?thing anything:hasBoolean ?boolean .
@@ -1749,6 +1761,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?thing a anything:Thing .
                   |     ?thing a knora-api:Resource .
+                  |
+                  |     FILTER NOT EXISTS {
+                  |         ?thing anything:hasTimeStamp ?timeStamp .
+                  |     }
                   |
                   |     OPTIONAL {
                   |
@@ -4422,6 +4438,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?thing a anything:Thing .
                   |     ?thing a knora-api:Resource .
                   |
+                  |     FILTER NOT EXISTS {
+                  |         ?thing anything:hasTimeStamp ?timeStamp .
+                  |     }
+                  |
                   |     OPTIONAL {
                   |
                   |         ?thing anything:hasBoolean ?boolean .
@@ -5313,6 +5333,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
+                  |  FILTER NOT EXISTS {
+                  |      ?thing anything:hasTimeStamp ?timeStamp .
+                  |  }
+                  |
                   |   OPTIONAL {
                   |
                   |    ?thing anything:hasDate ?date .
@@ -5348,6 +5372,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
+                  |  FILTER NOT EXISTS {
+                  |      ?thing anything:hasTimeStamp ?timeStamp .
+                  |  }
+                  |
                   |   OPTIONAL {
                   |
                   |    ?thing anything:hasDate ?date .
@@ -5382,6 +5410,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?thing a anything:Thing .
                   |     ?thing a knora-api:Resource .
+                  |
+                  |     FILTER NOT EXISTS {
+                  |         ?thing anything:hasTimeStamp ?timeStamp .
+                  |     }
                   |
                   |     OPTIONAL {
                   |        ?thing anything:hasDecimal ?decimal .
@@ -6511,6 +6543,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |} WHERE {
                   |
                   |     ?thing a anything:Thing .
+                  |
+                  |     FILTER NOT EXISTS {
+                  |         ?thing anything:hasTimeStamp ?timeStamp .
+                  |     }
                   |
                   |     OPTIONAL {
                   |
@@ -7887,6 +7923,30 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 // Compare it to the original XML.
                 val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
                 xmlDiff.hasDifferences should be(false)
+            }
+        }
+
+        "search for an anything:Thing with a time value (using the simple schema)" in {
+            val gravsearchQuery =
+                s"""
+                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                   |
+                   |CONSTRUCT {
+                   |    ?thing knora-api:isMainResource true .
+                   |    ?thing anything:hasTimeStamp ?timeStamp .
+                   |} WHERE {
+                   |    ?thing a anything:Thing .
+                   |    ?thing anything:hasTimeStamp ?timeStamp .
+                   |    FILTER(?timeStamp > "2019-08-30T10:45:26.365863Z"^^xsd:dateTimeStamp)
+                   |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(searchResponseStr, new File("src/test/resources/test-data/searchR2RV2/ThingWithTimeStamp.jsonld"), writeTestDataFiles)
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = searchResponseStr)
             }
         }
     }
