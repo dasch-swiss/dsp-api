@@ -110,6 +110,28 @@ A Knora ARK URL is intended to be resolved by the [Knora ARK resolver](https://g
 
 For details, see @ref:[Archival Resource Key (ARK) Identifiers](../../05-internals/design/api-v2/ark.md).
 
+### ARK URLs for Projects
+
+The format of a Knora project ARK URL is as follows:
+
+```
+http://HOST/ark:/NAAN/VERSION/PROJECT
+```
+
+`NAAN` is a
+[Name Assigning Authority Number](https://tools.ietf.org/html/draft-kunze-ark-22#section-2.3),
+`VERSION` is the version number of the Knora ARK URL format (currently always 1),
+and `PROJECT` is the project's @ref:[short-code](knora-iris.md#project-short-codes).
+
+For example, given a project with ID `0001`, and using the DaSCH's ARK resolver
+hostname and NAAN, the ARK URL for the project itself is:
+
+```
+http://ark.dasch.swiss/ark:/72163/1/0001
+```
+
+This could redirect to a page describing the project.
+
 ### ARK URLs for Resources
 
 The format of a Knora resource ARK URL is as follows:
@@ -117,6 +139,12 @@ The format of a Knora resource ARK URL is as follows:
 ```
 http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
 ```
+
+`NAAN` is a
+[Name Assigning Authority Number](https://tools.ietf.org/html/draft-kunze-ark-22#section-2.3),
+`VERSION` is the version number of the Knora ARK URL format (currently always 1),
+`PROJECT` is the project's @ref:[short-code](knora-iris.md#project-short-codes),
+and `RESOURCE_UUID` is the resource's @ref:[UUID](knora-iris.md#iris-for-data).
 
 For example, given the Knora resource IRI `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`,
 and using the DaSCH's ARK resolver hostname and NAAN, the corresponding
@@ -142,6 +170,13 @@ The format of a Knora value ARK URL is as follows:
 ```
 http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID/VALUE_UUID[.TIMESTAMP]
 ```
+
+`NAAN` is a
+[Name Assigning Authority Number](https://tools.ietf.org/html/draft-kunze-ark-22#section-2.3),
+`VERSION` is the version number of the Knora ARK URL format (currently always 1),
+`PROJECT` is the project's @ref:[short-code](knora-iris.md#project-short-codes),
+`RESOURCE_UUID` is the resource's @ref:[UUID](knora-iris.md#iris-for-data), and `VALUE_UUID`
+is the value's `knora-api:valueHasUUID`.
 
 For example, given a value with `knora-api:valueHasUUID "4OOf3qJUTnCDXlPNnygSzQ"` in the resource
 `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`, and using the DaSCH's ARK resolver
