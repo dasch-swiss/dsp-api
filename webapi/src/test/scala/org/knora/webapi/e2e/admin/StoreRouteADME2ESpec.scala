@@ -26,6 +26,7 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.testing.tags.E2ETest
 import spray.json._
 
 import scala.concurrent.duration._
@@ -43,6 +44,7 @@ object StoreRouteADME2ESpec {
   *
   * This spec tests the 'v1/store' route.
   */
+@E2ETest
 class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with TriplestoreJsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(120.seconds)
