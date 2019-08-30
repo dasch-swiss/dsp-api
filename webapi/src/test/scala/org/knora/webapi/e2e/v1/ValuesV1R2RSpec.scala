@@ -29,12 +29,14 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.routing.v1.ValuesRouteV1
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import spray.json._
 
 /**
   * Tests the values route.
   */
+@E2ETest
 class ValuesV1R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =
