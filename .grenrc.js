@@ -1,12 +1,14 @@
 module.exports = {
-    "dataSource": "commits",
+    "dataSource": "issues",
     "prefix": "",
-    "includeMessages": "all",
-    "changelogFilename": "CHANGELOG.md",
     "groupBy": {
-        "Enhancements:": ["feat"],
-        "Bug Fixes:": ["fix"],
-        "Documentation:": ["docs"],
+        "Breaking Changes": ["breaking"],
+        "Enhancements:": ["enhancement"],
+        "Bug Fixes:": ["bug"],
+        "Documentation:": ["documentation"],
         "Other": ["chore", "refactor"]
+    },
+    "template": {
+        "issue": "- [{{text}}]({{url}}) {{name}}"
     }
 };
