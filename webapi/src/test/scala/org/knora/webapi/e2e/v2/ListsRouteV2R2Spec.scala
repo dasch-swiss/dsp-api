@@ -30,6 +30,7 @@ import org.eclipse.rdf4j.model.Model
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v2.ListsRouteV2
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.FileUtil
 import spray.json.{JsValue, JsonParser}
 
@@ -39,6 +40,7 @@ import scala.concurrent.ExecutionContextExecutor
   * End-to-end test specification for the lists endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
+@E2ETest
 class ListsRouteV2R2Spec extends R2RSpec {
 
     override def testConfigSource: String =
