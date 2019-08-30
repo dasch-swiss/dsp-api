@@ -85,7 +85,7 @@ jobs:
         # hit graphdb with a request "waking-it-up"
         - curl http://localhost:7200/rest/repositories
         # start the built-in webapi server tests
-        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest webapi/coverageReport
+        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
         # upload code coverage report
         # - sbt codacyCoverage
     # e2e tests
@@ -102,7 +102,7 @@ jobs:
         # hit graphdb with a request "waking-it-up"
         - curl http://localhost:7200/rest/repositories
         # start the built-in webapi server tests
-        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest webapi/coverageReport
+        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
         # upload code coverage report
         # - sbt codacyCoverage
     # integration tests
