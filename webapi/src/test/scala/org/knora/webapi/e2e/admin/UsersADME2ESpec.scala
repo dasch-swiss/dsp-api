@@ -32,6 +32,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProto
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 
 import scala.concurrent.duration._
@@ -48,6 +49,7 @@ object UsersADME2ESpec {
 /**
   * End-to-End (E2E) test specification for testing users endpoint.
   */
+@E2ETest
 class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJsonProtocol with GroupsADMJsonProtocol with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
