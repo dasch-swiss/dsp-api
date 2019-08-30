@@ -71,7 +71,7 @@ jobs:
         # - sbt knora-graphdb-free/docker:publish
         # - sbt knora-upgrade/docker:publish
         # - sbt knora-assets/docker:publish
-    # unit and e2e tests
+    # unit tests
     - stage: test
       script:
         # prepare needed graphdb-se files
@@ -85,7 +85,24 @@ jobs:
         # hit graphdb with a request "waking-it-up"
         - curl http://localhost:7200/rest/repositories
         # start the built-in webapi server tests
-        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/test webapi/coverageReport
+        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest webapi/coverageReport
+        # upload code coverage report
+        # - sbt codacyCoverage
+    # e2e tests
+    - stage: test
+      script:
+        # prepare needed graphdb-se files
+        - mkdir -p $TRAVIS_BUILD_DIR/graphdb
+        - cp $TRAVIS_BUILD_DIR/travis/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
+        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
+        # start and initialize graphdb-se
+        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.license.file=/graphdb/graphdb.license
+        - sleep 15
+        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
+        # hit graphdb with a request "waking-it-up"
+        - curl http://localhost:7200/rest/repositories
+        # start the built-in webapi server tests
+        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest webapi/coverageReport
         # upload code coverage report
         # - sbt codacyCoverage
     # integration tests

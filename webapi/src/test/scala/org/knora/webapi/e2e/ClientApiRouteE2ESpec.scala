@@ -31,6 +31,7 @@ import org.knora.webapi.util.FileUtil
 import scala.concurrent.duration._
 import sys.process._
 import org.apache.commons.io.FileUtils
+import org.knora.webapi.testing.tags.E2ETest
 
 object ClientApiRouteE2ESpec {
     val config: Config = ConfigFactory.parseString(
@@ -40,6 +41,7 @@ object ClientApiRouteE2ESpec {
         """.stripMargin)
 }
 
+@E2ETest
 class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
