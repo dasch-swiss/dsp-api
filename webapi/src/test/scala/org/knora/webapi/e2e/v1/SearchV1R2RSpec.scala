@@ -132,7 +132,6 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
                 checkNumberOfHits(responseAs[String], 15)
 
             }
@@ -148,7 +147,6 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
                 checkNumberOfHits(responseAs[String], 4)
 
             }
@@ -164,7 +162,6 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query below)
                 checkNumberOfHits(responseAs[String], 1)
 
             }
@@ -269,6 +266,21 @@ class SearchV1R2RSpec extends R2RSpec {
             val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001"
 
             Get("/v1/search/?searchtype=extended" + props_two_lists_one + props_two_lists_two + filter) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkNumberOfHits(responseAs[String], 1)
+
+            }
+
+        }
+
+        "perform an extended search for an anything:Thing with a timestamp" in {
+
+            val props = "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23hasTimeStamp&compop=GT&searchval=2019-08-30T10%3A45%3A26.365863Z"
+            val filter = "&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23Thing"
+
+            Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
