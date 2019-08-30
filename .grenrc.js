@@ -1,8 +1,17 @@
 module.exports = {
-    "dataSource": "issues",
+    "dataSource": "milestones",
     "prefix": "",
+    "ignoreIssuesWith": [
+        "duplicate",
+        "wontfix",
+        "invalid",
+        "help wanted",
+        "question",
+        "testing",
+        "test"
+    ],
     "groupBy": {
-        "Breaking Changes": ["breaking"],
+        "Breaking Changes": ["breaking/data", "breaking/api"],
         "Enhancements:": ["enhancement"],
         "Bug Fixes:": ["bug"],
         "Documentation:": ["documentation"],
