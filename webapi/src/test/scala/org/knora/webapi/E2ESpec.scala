@@ -19,10 +19,11 @@
 
 package org.knora.webapi
 
-import java.io.{File, StringReader}
+import java.io.{ByteArrayInputStream, File, StringReader}
+import java.nio.file.{Files, Path}
+import java.util.zip.{ZipEntry, ZipFile, ZipInputStream}
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
@@ -31,13 +32,16 @@ import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
-import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
+import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor, LiveManagers}
+import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{FileUtil, StartupUtils, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
+import resource.managed
 import spray.json._
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
@@ -47,22 +51,12 @@ object E2ESpec {
 }
 
 /**
-  * This class can be used in End-to-End testing. It starts the Knora server and
-  * provides access to settings and logging.
-  */
-class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
+ * This class can be used in End-to-End testing. It starts the Knora-API server
+ * and provides access to settings and logging.
+ */
+class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
 
-    /* needed by the core trait */
-    implicit lazy val system: ActorSystem = _system
-
-    implicit lazy val settings: SettingsImpl = Settings(system)
-
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
-
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-
-    StringFormatter.initForTest()
-
+    /* constructors */
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
 
     def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
@@ -71,28 +65,35 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
 
     def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
 
+    /* needed by the core trait */
+
+    implicit lazy val system: ActorSystem = _system
+    implicit lazy val settings: SettingsImpl = Settings(system)
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+
+    // can be overridden in individual spec
+    lazy val rdfDataObjects = Seq.empty[RdfDataObject]
+
+    /* Needs to be initialized before any responders */
+    StringFormatter.initForTest()
+
+    val log = akka.event.Logging(system, this.getClass)
+
+    lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
-
-    implicit protected val postfix: postfixOps = scala.language.postfixOps
-
-    lazy val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll: Unit = {
 
-        // waits until the application state actor is ready
-        applicationStateActorReady()
-
         // set allow reload over http
-        applicationStateActor ! SetAllowReloadOverHTTPState(true)
+        appActor ! SetAllowReloadOverHTTPState(true)
 
         // start the knora service without loading of the ontologies
-        startService(skipLoadingOfOntologies = true)
+        appActor ! AppStart(skipLoadingOfOntologies = true, requiresIIIFService = false)
 
         // waits until knora is up and running
         applicationStateRunning()
-
-        // check if knora is running
-        checkIfKnoraIsRunning()
 
         // loadTestData
         loadTestData(rdfDataObjects)
@@ -100,14 +101,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
 
     override def afterAll: Unit = {
         /* Stop the server when everything else has finished */
-        stopService()
-    }
-
-    protected def checkIfKnoraIsRunning(): Unit = {
-        val request = Get(baseApiUrl + "/health")
-        val response = singleAwaitingRequest(request)
-        assert(response.status == StatusCodes.OK, s"Knora is probably not running: ${response.status}")
-        if (response.status.isSuccess()) logger.info("Knora is running.")
+        appActor ! AppStop()
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
@@ -150,14 +144,51 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
         Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML)
     }
 
+    protected def getResponseEntityBytes(httpResponse: HttpResponse): Array[Byte] = {
+        val responseBodyFuture: Future[Array[Byte]] = httpResponse.entity.toStrict(5.seconds).map(_.data.toArray)
+        Await.result(responseBodyFuture, 5.seconds)
+    }
+
+    protected def getZipContents(responseBytes: Array[Byte]): Set[String] = {
+        val zippedFilenames = collection.mutable.Set.empty[String]
+
+        for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
+            var zipEntry: ZipEntry = null
+
+            while ( {
+                zipEntry = zipInputStream.getNextEntry
+                zipEntry != null
+            }) {
+                zippedFilenames.add(zipEntry.getName)
+            }
+        }
+
+        zippedFilenames.toSet
+    }
+
+    def unzip(zipFilePath: Path, outputPath: Path): Unit = {
+        val zipFile = new ZipFile(zipFilePath.toFile)
+
+        for (entry <- zipFile.entries.asScala) {
+            val entryPath = outputPath.resolve(entry.getName)
+
+            if (entry.isDirectory) {
+                Files.createDirectories(entryPath)
+            } else {
+                Files.createDirectories(entryPath.getParent)
+                Files.copy(zipFile.getInputStream(entry), entryPath)
+            }
+        }
+    }
+
     /**
-      * Reads or writes a test data file.
-      *
-      * @param responseAsString the API response received from Knora.
-      * @param file             the file in which the expected API response is stored.
-      * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-      * @return the expected response.
-      */
+     * Reads or writes a test data file.
+     *
+     * @param responseAsString the API response received from Knora.
+     * @param file             the file in which the expected API response is stored.
+     * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
+     * @return the expected response.
+     */
     protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
         if (writeFile) {
             FileUtil.writeTextFile(file, responseAsString)

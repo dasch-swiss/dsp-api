@@ -31,6 +31,7 @@ import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v2.StandoffRouteV2
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.FileUtil
 
 import scala.concurrent.ExecutionContextExecutor
@@ -40,6 +41,7 @@ import scala.concurrent.ExecutionContextExecutor
   * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
+@E2ETest
 class StandoffRouteV2R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =

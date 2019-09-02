@@ -71,7 +71,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * The responder data.
       */
-    private val responderData = ResponderData(system, applicationStateActor, context.self, storeManager)
+    private val responderData = ResponderData(system, applicationStateActor)
 
     // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
     // override one or more of the protected val members below representing responder classes. To construct a default

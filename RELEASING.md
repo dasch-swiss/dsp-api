@@ -41,6 +41,6 @@ Then:
 ```bash
 # Navigate to your project directory
 cd ~/Path/to/repo
-# Run the task (see below)
-gren release --override
+# Run the task
+gren release --override --milestone-match="xxxx-xx"
 ```

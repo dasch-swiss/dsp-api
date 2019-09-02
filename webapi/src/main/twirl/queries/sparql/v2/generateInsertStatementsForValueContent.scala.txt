@@ -176,8 +176,8 @@
 
             case intervalValue: IntervalValueContentV2 => {
 
-                <@newValueIri> knora-base:valueHasIntervalStart @intervalValue.valueHasIntervalStart ;
-                                     knora-base:valueHasIntervalEnd @intervalValue.valueHasIntervalEnd .
+                <@newValueIri> knora-base:valueHasIntervalStart "@intervalValue.valueHasIntervalStart"^^xsd:decimal ;
+                                     knora-base:valueHasIntervalEnd "@intervalValue.valueHasIntervalEnd"^^xsd:decimal .
 
             }
 
