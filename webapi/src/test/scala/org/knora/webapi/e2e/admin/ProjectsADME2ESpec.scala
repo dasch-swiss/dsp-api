@@ -34,6 +34,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, IRI, SharedTestDataADM}
 
@@ -53,6 +54,7 @@ object ProjectsADME2ESpec {
 /**
   * End-to-End (E2E) test specification for testing groups endpoint.
   */
+@E2ETest
 class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with SessionJsonProtocol with ProjectsADMJsonProtocol with TriplestoreJsonProtocol {
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
