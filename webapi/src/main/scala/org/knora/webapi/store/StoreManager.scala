@@ -21,14 +21,13 @@ package org.knora.webapi.store
 
 import akka.actor._
 import akka.event.LoggingReceive
-import org.knora.webapi.{ActorMaker, KnoraDispatchers, LiveActorMaker, Settings, UnexpectedMessageException}
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
-import org.knora.webapi.store.iiif.IIIFManager
 import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.iiif.IIIFManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
-import org.knora.webapi.util.ActorUtil
+import org.knora.webapi._
 
 import scala.concurrent.ExecutionContext
 

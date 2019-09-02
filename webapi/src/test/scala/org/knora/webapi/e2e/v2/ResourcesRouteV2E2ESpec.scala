@@ -33,6 +33,7 @@ import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util._
@@ -45,6 +46,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Tests the API v2 resources route.
   */
+@E2ETest
 class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -300,6 +302,22 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             instanceChecker.check(
                 instanceResponse = responseAsString,
                 expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+        }
+
+        "perform a full resource request for a resource with values of different types" in {
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw", "UTF-8")}")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/Testding.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+
+            // Check that the resource corresponds to the ontology.
+            instanceChecker.check(
+                instanceResponse = responseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 knoraRouteGet = doGetRequest
             )
         }

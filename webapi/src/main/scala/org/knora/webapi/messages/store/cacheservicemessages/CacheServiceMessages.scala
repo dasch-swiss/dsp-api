@@ -21,8 +21,9 @@ package org.knora.webapi.messages.store.cacheservicemessages
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
+import org.knora.webapi.messages.store.StoreRequest
 
-sealed trait CacheServiceRequest
+sealed trait CacheServiceRequest extends StoreRequest
 
 /**
   * Message equesting to write project to cache.
@@ -68,3 +69,23 @@ case class CacheServiceFlushDB(requestingUser: UserADM) extends CacheServiceRequ
   * Message acknowledging the flush.
   */
 case class CacheServiceFlushDBACK()
+
+/**
+  * Queries Cache Service status.
+  */
+case object CacheServiceGetStatus extends CacheServiceRequest
+
+/**
+  * Represents a response for [[CacheServiceGetStatus]].
+  */
+sealed trait CacheServiceStatusResponse
+
+/**
+  * Represents a positive response for [[CacheServiceGetStatus]].
+  */
+case object CacheServiceStatusOK extends CacheServiceStatusResponse
+
+/**
+  * Represents a negative response for [[CacheServiceGetStatus]].
+  */
+case object CacheServiceStatusNOK extends CacheServiceStatusResponse

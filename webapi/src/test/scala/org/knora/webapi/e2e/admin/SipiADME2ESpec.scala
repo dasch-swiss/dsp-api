@@ -30,6 +30,7 @@ import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRespo
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.{E2ESpec, SharedTestDataV1}
 
 import scala.concurrent.Await
@@ -49,6 +50,7 @@ object SipiADME2ESpec {
   *
   * This spec tests the 'admin/files'.
   */
+@E2ETest
 class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)

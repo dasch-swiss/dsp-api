@@ -34,5 +34,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Gravsearch Design](gravsearch.md)
 - [Standoff Markup](standoff.md)
 - [Archival Resource Key (ARK) Identifiers](ark.md)
+- [SPARQL Query Design](query-design.md)
 
 @@@

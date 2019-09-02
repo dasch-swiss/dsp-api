@@ -62,7 +62,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
         log.debug(s"resetTriplestoreContent - called")
 
         for {
-            value: Boolean <- (applicationStateActor ? GetAllowReloadOverHTTPState()).mapTo[Boolean]
+            value: Boolean <- (appActor ? GetAllowReloadOverHTTPState()).mapTo[Boolean]
             _ = if (!value) {
                 throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
             }

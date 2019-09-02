@@ -200,8 +200,8 @@
   knora-base:valueHasUUID "RbDKPKHWTC-0lkRKae-E6A"^^xsd:string;
   knora-base:isDeleted false;
   knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime;
-  knora-base:valueHasIntervalEnd 216000;
-  knora-base:valueHasIntervalStart 0;
+  knora-base:valueHasIntervalEnd "216000"^^xsd:decimal;
+  knora-base:valueHasIntervalStart "0"^^xsd:decimal;
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "0 - 216000";
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
