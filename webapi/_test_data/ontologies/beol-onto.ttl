@@ -2159,6 +2159,12 @@
             owl:onProperty :manuscriptEntryOfValue ;
             owl:cardinality "1"^^xsd:nonNegativeInteger ;
             salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+        ] ,
+        [
+            rdf:type owl:Restriction ;
+            owl:onProperty :hasSubject ;
+            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+            salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
         ] ;
 
         rdfs:label "Eintrag in einem Manuskript"@de ,
