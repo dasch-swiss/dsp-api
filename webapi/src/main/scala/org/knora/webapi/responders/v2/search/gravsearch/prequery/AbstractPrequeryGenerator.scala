@@ -230,9 +230,13 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       */
     private def generateStatementsForLinkValue(linkSource: Entity, linkPred: Entity, linkTarget: Entity): Seq[StatementPattern] = {
         // Generate a variable name representing the link value
-        val linkValueObjVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
-            base = linkTarget,
-            propertyIri = OntologyConstants.KnoraBase.LinkValue
+        val linkValueObjVar: QueryVariable = createUniqueVariableFromStatement(
+            baseStatement = StatementPattern(
+                subj = linkSource,
+                pred = linkPred,
+                obj = linkTarget
+            ),
+            suffix = "LinkValue"
         )
 
         // add variable to collection representing value objects
