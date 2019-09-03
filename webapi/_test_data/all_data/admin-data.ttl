@@ -445,7 +445,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-admin:projectShortname "dokubib"^^xsd:string ;
   knora-admin:projectShortcode "0804"^^xsd:string ;
   knora-admin:projectLongname "Dokubib"^^xsd:string ;
-  knora-admin:projectDescription "Dokubib"^^@de ;
+  knora-admin:projectDescription "Dokubib"@de ;
   knora-admin:status "false"^^xsd:boolean ;
   knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
