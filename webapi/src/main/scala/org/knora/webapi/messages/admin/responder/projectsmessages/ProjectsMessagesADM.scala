@@ -27,7 +27,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.annotation.{ApiMayChange, ServerUnique}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
-import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralWithLanguageV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.responders.admin.ProjectsResponderADM
 import org.knora.webapi.util.StringFormatter
@@ -52,7 +52,7 @@ import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 case class CreateProjectApiRequestADM(shortname: String,
                                       shortcode: String,
                                       longname: Option[String],
-                                      description: Seq[StringLiteralV2],
+                                      description: Seq[StringLiteralWithLanguageV2],
                                       keywords: Seq[String],
                                       logo: Option[String],
                                       status: Boolean,
@@ -77,7 +77,7 @@ case class CreateProjectApiRequestADM(shortname: String,
   */
 case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
                                       longname: Option[String] = None,
-                                      description: Option[Seq[StringLiteralV2]] = None,
+                                      description: Option[Seq[StringLiteralWithLanguageV2]] = None,
                                       keywords: Option[Seq[String]] = None,
                                       logo: Option[String] = None,
                                       status: Option[Boolean] = None,
@@ -339,7 +339,7 @@ case class ProjectADM(id: IRI,
                       @ServerUnique shortname: String,
                       @ServerUnique shortcode: String,
                       longname: Option[String],
-                      description: Seq[StringLiteralV2],
+                      description: Seq[StringLiteralWithLanguageV2],
                       keywords: Seq[String],
                       logo: Option[String],
                       ontologies: Seq[IRI],
@@ -565,7 +565,7 @@ case class ProjectRestrictedViewSettingsADM(size: Option[String] = None, waterma
   */
 case class ProjectUpdatePayloadADM(shortname: Option[String] = None,
                                    longname: Option[String] = None,
-                                   description: Option[Seq[StringLiteralV2]] = None,
+                                   description: Option[Seq[StringLiteralWithLanguageV2]] = None,
                                    keywords: Option[Seq[String]] = None,
                                    logo: Option[String] = None,
                                    status: Option[Boolean] = None,

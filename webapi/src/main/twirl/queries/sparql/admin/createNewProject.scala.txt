@@ -18,7 +18,7 @@
  *@
 
 @import org.knora.webapi.IRI
-@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralWithLanguageV2
 
 @*
  * Creates a new project.
@@ -45,7 +45,7 @@
   shortname: String,
   shortcode: String,
   maybeLongname: Option[String],
-  maybeDescriptions: Option[Seq[StringLiteralV2]],
+  maybeDescriptions: Option[Seq[StringLiteralWithLanguageV2]],
   maybeKeywords: Option[Seq[String]],
   maybeLogo: Option[String],
   status: Boolean,
@@ -72,11 +72,7 @@ INSERT {
 
             @if(maybeDescriptions.nonEmpty) {
                 @for(description <- maybeDescriptions.get) {
-                    @if(description.language.nonEmpty) {
-                        knora-admin:projectDescription """@description.value"""@@@{description.language.get} ;
-                    } else {
-                        knora-admin:projectDescription """@description.value"""^^xsd:string ;
-                    }
+                    knora-admin:projectDescription """@description.value"""@@@{description.language} ;
                 }
             }
 

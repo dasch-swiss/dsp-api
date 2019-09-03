@@ -549,6 +549,25 @@ case class StringLiteralV2(value: String, language: Option[String] = None) exten
     override def toString: String = value
 
     def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
+
+    def requireLanguage(errorFun: => Nothing): StringLiteralWithLanguageV2 = {
+        language match {
+            case Some(definedLanguage) => StringLiteralWithLanguageV2(value = value, language = definedLanguage)
+            case None => errorFun
+        }
+    }
+}
+
+/**
+  * Represents a string literal with a required language tag.
+  *
+  * @param value    the string value.
+  * @param language the language tag.
+  */
+case class StringLiteralWithLanguageV2(value: String, language: String) extends Ordered[StringLiteralWithLanguageV2] {
+    override def toString: String = value
+
+    def compare(that: StringLiteralWithLanguageV2): Int = this.value.compareTo(that.value)
 }
 
 /**
@@ -660,7 +679,7 @@ case class DateTimeLiteralV2(value: Instant) extends LiteralV2 {
   */
 trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
-    implicit object LiteralV2Format extends JsonFormat[StringLiteralV2] {
+    implicit object StringLiteralV2Format extends JsonFormat[StringLiteralV2] {
         /**
           * Converts a [[StringLiteralV2]] to a [[JsValue]].
           *
@@ -707,6 +726,44 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
             }
             case JsString(value) => StringLiteralV2(value, None)
             case _ => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
+        }
+    }
+
+    implicit object StringLiteralWithLanguageV2Format extends JsonFormat[StringLiteralWithLanguageV2] {
+        /**
+          * Converts a [[StringLiteralWithLanguageV2]] to a [[JsValue]].
+          *
+          * @param string a [[StringLiteralWithLanguageV2]].
+          * @return a [[JsValue]].
+          */
+        def write(string: StringLiteralWithLanguageV2): JsValue = {
+            JsObject(
+                Map(
+                    "value" -> string.value.toJson,
+                    "language" -> string.language.toJson
+                )
+            )
+        }
+
+        /**
+          * Converts a [[JsValue]] to a [[StringLiteralWithLanguageV2]].
+          *
+          * @param json a [[JsValue]].
+          * @return a [[StringLiteralV2]].
+          */
+        def read(json: JsValue): StringLiteralWithLanguageV2 = {
+            json match {
+                case stringWithLang: JsObject => stringWithLang.getFields("value", "language") match {
+                    case Seq(JsString(value), JsString(language)) => StringLiteralWithLanguageV2(
+                        value = value,
+                        language = language
+                    )
+
+                    case _ => throw DeserializationException("JSON object with 'value' and 'language' fields expected.")
+                }
+
+                case _ => throw DeserializationException("JSON object with 'value' and 'language' expected. ")
+            }
         }
     }
 

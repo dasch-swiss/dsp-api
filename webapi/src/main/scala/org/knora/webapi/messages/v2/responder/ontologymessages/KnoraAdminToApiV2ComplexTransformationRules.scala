@@ -961,13 +961,13 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "A string with an optional language tag."
+                    LanguageCodes.EN -> "A string with a language tag."
                 )
             )
         ),
         directCardinalities = Map(
             OntologyConstants.KnoraAdminV2.Value -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraAdminV2.Language -> Cardinality.MayHaveOne
+            OntologyConstants.KnoraAdminV2.Language -> Cardinality.MustHaveOne
         )
     )
 

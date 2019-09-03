@@ -17,9 +17,9 @@
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.{SharedTestDataADM, _}
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralWithLanguageV2
 import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.{SharedTestDataADM, _}
 
 object ProjectsMessagesADMSpec {
     val config = ConfigFactory.parseString(
@@ -57,7 +57,7 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
                     shortname = "newproject5",
                     shortcode = "1114",
                     longname = Some("project longname"),
-                    description = Seq.empty[StringLiteralV2],
+                    description = Seq.empty[StringLiteralWithLanguageV2],
                     keywords = Seq("keywords"),
                     logo = Some("/fu/bar/baz.jpg"),
                     status = true,
@@ -93,7 +93,7 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
                     shortcode = "1111",
                     shortname = "shortname",
                     longname = None,
-                    description = Seq.empty[StringLiteralV2],
+                    description = Seq.empty[StringLiteralWithLanguageV2],
                     keywords = Seq.empty[String],
                     logo = None,
                     ontologies = Seq.empty[IRI],

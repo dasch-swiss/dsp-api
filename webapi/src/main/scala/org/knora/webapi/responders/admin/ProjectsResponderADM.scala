@@ -921,7 +921,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             shortname = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectShortname.toSmartIri, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
             shortcode = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectShortcode.toSmartIri, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortcode defined.")).head.asInstanceOf[StringLiteralV2].value,
             longname = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLongname.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value),
-            description = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectDescription.toSmartIri, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")).map(_.asInstanceOf[StringLiteralV2]),
+            description = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectDescription.toSmartIri, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")).map(_.asInstanceOf[StringLiteralV2].requireLanguage(throw InconsistentTriplestoreDataException((s"The description of project $projectIri has no language tag")))),
             keywords = propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectKeyword.toSmartIri, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
             logo = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLogo.toSmartIri).map(_.head.asInstanceOf[StringLiteralV2].value),
             ontologies = ontologies,

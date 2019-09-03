@@ -193,7 +193,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "newproject",
                         shortcode = "111c", // lower case
                         longname = Some("project longname"),
-                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        description = Seq(StringLiteralWithLanguageV2(value = "project description", language = "en")),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -219,7 +219,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "newproject2",
                         shortcode = "1112",
                         longname = Some("project longname"),
-                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        description = Seq(StringLiteralWithLanguageV2(value = "project description", language = "en")),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -244,7 +244,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "newproject",
                         shortcode = "111C",
                         longname = Some("project longname"),
-                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        description = Seq(StringLiteralWithLanguageV2(value = "project description", language = "en")),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -262,7 +262,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "newproject3",
                         shortcode = "111C",
                         longname = Some("project longname"),
-                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        description = Seq(StringLiteralWithLanguageV2(value = "project description", language = "en")),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -281,7 +281,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "",
                         shortcode = "1114",
                         longname = Some("project longname"),
-                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        description = Seq(StringLiteralWithLanguageV2(value = "project description", language = "en")),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -300,7 +300,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                         shortname = "newproject4",
                         shortcode = "",
                         longname = Some("project longname"),
-                        description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+                        description = Seq(StringLiteralWithLanguageV2(value = "project description", language = "en")),
                         keywords = Seq("keywords"),
                         logo = Some("/fu/bar/baz.jpg"),
                         status = true,
@@ -318,7 +318,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     changeProjectRequest = ChangeProjectApiRequestADM(
                         shortname = None,
                         longname = Some("updated project longname"),
-                        description = Some(Seq(StringLiteralV2(value = """updated project description with "quotes" and <html tags>""", language = Some("en")))),
+                        description = Some(Seq(StringLiteralWithLanguageV2(value = """updated project description with "quotes" and <html tags>""", language = "en"))),
                         keywords = Some(Seq("updated", "keywords")),
                         logo = Some("/fu/bar/baz-updated.jpg"),
                         status = Some(false),
@@ -331,7 +331,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 received.project.shortname should be("newproject")
                 received.project.shortcode should be("111C")
                 received.project.longname should be (Some("updated project longname"))
-                received.project.description should be (Seq(StringLiteralV2(value = """updated project description with "quotes" and <html tags>""", language = Some("en"))))
+                received.project.description should be (Seq(StringLiteralWithLanguageV2(value = """updated project description with "quotes" and <html tags>""", language = "en")))
                 received.project.keywords.sorted should be (Seq("updated", "keywords").sorted)
                 received.project.logo should be (Some("/fu/bar/baz-updated.jpg"))
                 received.project.status should be (false)
