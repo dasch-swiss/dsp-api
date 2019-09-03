@@ -428,6 +428,17 @@ regardless of the calendar in which they were entered. Properties:
 
 :   The precision of the end of the period.
 
+##### TimeValue
+
+A Knora time value represents a precise moment in time in the Gregorian
+calendar. Since nanosecond precision can be included, it is suitable
+for use as a timestamp. Properties:
+
+`valueHasTimeStamp` (1)
+
+:   An `xsd:dateTimeStamp`, stored as an `xsd:dateTime` (because SPARQL
+    does not support `xsd:dateTimeStamp`).
+
 ##### IntValue
 
 Represents an integer. Property:
