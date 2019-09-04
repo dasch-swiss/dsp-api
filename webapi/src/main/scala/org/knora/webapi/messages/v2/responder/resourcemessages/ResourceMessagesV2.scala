@@ -742,6 +742,7 @@ case class DeleteResourceRequestV2(resourceIri: IRI,
                                    resourceClassIri: SmartIri,
                                    maybeDeleteComment: Option[String] = None,
                                    maybeLastModificationDate: Option[Instant] = None,
+                                   erase: Boolean = false,
                                    requestingUser: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV2
 
