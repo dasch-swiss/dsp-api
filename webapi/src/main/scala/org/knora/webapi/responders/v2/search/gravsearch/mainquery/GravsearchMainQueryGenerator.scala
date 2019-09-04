@@ -133,7 +133,10 @@ object GravsearchMainQueryGenerator {
                         // linking prop: get value object var and information which values are requested for dependent resource
 
                         // link value object variable
-                        val valObjVar = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(statementPattern.obj, OntologyConstants.KnoraBase.LinkValue)
+                        val valObjVar = SparqlTransformer.createUniqueVariableFromStatement(
+                            baseStatement = statementPattern,
+                            suffix = "LinkValue"
+                        )
 
                         // return link value object variable and value objects requested for the dependent resource
                         Set(QueryVariable(valObjVar.variableName + variableConcatSuffix))

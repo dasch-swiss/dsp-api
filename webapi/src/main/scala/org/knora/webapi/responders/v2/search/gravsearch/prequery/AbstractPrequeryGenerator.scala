@@ -136,17 +136,6 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     protected val standoffMarkedUpVariables = mutable.Set.empty[QueryVariable]
 
     /**
-      * Create a unique variable from a whole statement.
-      *
-      * @param baseStatement the statement to be used to create the variable base name.
-      * @param suffix        the suffix to be appended to the base name.
-      * @return a unique variable.
-      */
-    protected def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
-        QueryVariable(SparqlTransformer.escapeEntityForVariable(baseStatement.subj) + "__" + SparqlTransformer.escapeEntityForVariable(baseStatement.pred) + "__" + SparqlTransformer.escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
-    }
-
-    /**
       * Checks if a statement represents the knora-base:isMainResource statement and returns the query variable representing the main resource if so.
       *
       * @param statementPattern the statement pattern to be checked.
@@ -230,7 +219,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       */
     private def generateStatementsForLinkValue(linkSource: Entity, linkPred: Entity, linkTarget: Entity): Seq[StatementPattern] = {
         // Generate a variable name representing the link value
-        val linkValueObjVar: QueryVariable = createUniqueVariableFromStatement(
+        val linkValueObjVar: QueryVariable = SparqlTransformer.createUniqueVariableFromStatement(
             baseStatement = StatementPattern(
                 subj = linkSource,
                 pred = linkPred,
@@ -304,7 +293,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             val listNode: Entity = statementPattern.obj
 
             // variable representing the list node to match for
-            val listNodeVar: QueryVariable = createUniqueVariableFromStatement(
+            val listNodeVar: QueryVariable = SparqlTransformer.createUniqueVariableFromStatement(
                 baseStatement = statementPattern,
                 suffix = "listNodeVar"
             )
