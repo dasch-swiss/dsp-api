@@ -32,6 +32,7 @@ import org.knora.webapi.util.{FileUtil, SmartIri, StringFormatter}
 class TypeScriptBackEnd extends GeneratorBackEnd {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+    // The directory where TypeScript compilation stubs are located.
     private val mockCodeDir: Path = Paths.get("_test_data/typescript-client-mock-src").toAbsolutePath
 
     /**
