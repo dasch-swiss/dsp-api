@@ -343,7 +343,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
 
         SourceCodeFilePath(
             directoryPath = Seq("api", apiDef.directoryName),
-            filename = s"$apiLocalName-endpoint",
+            filename = s"$apiLocalName",
             fileExtension = "ts"
         )
     }
@@ -378,23 +378,6 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         SourceCodeFilePath(
             directoryPath = Seq("models", apiDef.directoryName),
             filename = classLocalName,
-            fileExtension = "ts"
-        )
-    }
-
-    /**
-     * Generates the file path of an interface.
-     *
-     * @param apiDef    the API definition.
-     * @param className the name of the interface.
-     * @return the file path of the generated interface.
-     */
-    private def makeInterfaceFilePath(apiDef: ClientApi, className: String): SourceCodeFilePath = {
-        val classLocalName: String = stringFormatter.camelCaseToSeparatedLowerCase(className)
-
-        SourceCodeFilePath(
-            directoryPath = Seq("interfaces", "models", apiDef.directoryName),
-            filename = s"i-$classLocalName",
             fileExtension = "ts"
         )
     }
