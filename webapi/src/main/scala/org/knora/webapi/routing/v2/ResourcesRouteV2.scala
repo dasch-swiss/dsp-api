@@ -442,9 +442,9 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestContext => {
                         val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                        val requestMessageFuture: Future[DeleteResourceRequestV2] = for {
+                        val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
-                            requestMessage: DeleteResourceRequestV2 <- DeleteResourceRequestV2.fromJsonLD(
+                            requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
                                 requestDoc,
                                 apiRequestID = UUID.randomUUID,
                                 requestingUser = requestingUser,
@@ -473,9 +473,9 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestContext => {
                         val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                        val requestMessageFuture: Future[DeleteResourceRequestV2] = for {
+                        val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
-                            requestMessage: DeleteResourceRequestV2 <- DeleteResourceRequestV2.fromJsonLD(
+                            requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
                                 requestDoc,
                                 apiRequestID = UUID.randomUUID,
                                 requestingUser = requestingUser,

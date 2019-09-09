@@ -45,26 +45,26 @@ import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
-  */
+ * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
+ */
 sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
     /**
-      * The user that made the request.
-      */
+     * The user that made the request.
+     */
     def requestingUser: UserADM
 }
 
 /**
-  * Requests a description of a resource. A successful response will be a [[ReadResourcesSequenceV2]].
-  *
-  * @param resourceIris   the IRIs of the resources to be queried.
-  * @param propertyIri    if defined, requests only the values of the specified explicit property.
-  * @param valueUuid      if defined, requests only the value with the specified UUID.
-  * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
-  * @param targetSchema   the target API schema.
-  * @param schemaOptions  the schema options submitted with the request.
-  * @param requestingUser the user making the request.
-  */
+ * Requests a description of a resource. A successful response will be a [[ReadResourcesSequenceV2]].
+ *
+ * @param resourceIris   the IRIs of the resources to be queried.
+ * @param propertyIri    if defined, requests only the values of the specified explicit property.
+ * @param valueUuid      if defined, requests only the value with the specified UUID.
+ * @param versionDate    if defined, requests the state of the resources at the specified time in the past.
+ * @param targetSchema   the target API schema.
+ * @param schemaOptions  the schema options submitted with the request.
+ * @param requestingUser the user making the request.
+ */
 case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  propertyIri: Option[SmartIri] = None,
                                  valueUuid: Option[UUID] = None,
@@ -74,42 +74,42 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
-  * Requests a preview of one or more resources. A successful response will be a [[ReadResourcesSequenceV2]].
-  *
-  * @param resourceIris   the IRIs of the resources to obtain a preview for.
-  * @param targetSchema   the schema of the response.
-  * @param requestingUser the user making the request.
-  */
+ * Requests a preview of one or more resources. A successful response will be a [[ReadResourcesSequenceV2]].
+ *
+ * @param resourceIris   the IRIs of the resources to obtain a preview for.
+ * @param targetSchema   the schema of the response.
+ * @param requestingUser the user making the request.
+ */
 case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI], targetSchema: ApiV2Schema, requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
-  * Requests the version history of the values of a resource.
-  *
-  * @param resourceIri    the IRI of the resource.
-  * @param startDate      the start of the time period to return, inclusive.
-  * @param endDate        the end of the time period to return, exclusive.
-  * @param requestingUser the user making the request.
-  */
+ * Requests the version history of the values of a resource.
+ *
+ * @param resourceIri    the IRI of the resource.
+ * @param startDate      the start of the time period to return, inclusive.
+ * @param endDate        the end of the time period to return, exclusive.
+ * @param requestingUser the user making the request.
+ */
 case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI, startDate: Option[Instant], endDate: Option[Instant], requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
-  * Represents an item in the version history of a resource.
-  *
-  * @param versionDate the date when the modification occurred.
-  * @param author      the IRI of the user that made the modification.
-  */
+ * Represents an item in the version history of a resource.
+ *
+ * @param versionDate the date when the modification occurred.
+ * @param author      the IRI of the user that made the modification.
+ */
 case class ResourceHistoryEntry(versionDate: Instant, author: IRI)
 
 /**
-  * Represents the version history of the values of a resource.
-  */
+ * Represents the version history of the values of a resource.
+ */
 case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) extends KnoraResponseV2 {
     /**
-      * Converts the response to a data structure that can be used to generate JSON-LD.
-      *
-      * @param targetSchema the Knora API schema to be used in the JSON-LD document.
-      * @return a [[JsonLDDocument]] representing the response.
-      */
+     * Converts the response to a data structure that can be used to generate JSON-LD.
+     *
+     * @param targetSchema the Knora API schema to be used in the JSON-LD document.
+     * @return a [[JsonLDDocument]] representing the response.
+     */
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -152,23 +152,23 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
 }
 
 /**
-  * Requests a resource as TEI/XML. A successful response will be a [[ResourceTEIGetResponseV2]].
-  *
-  * @param resourceIri           the IRI of the resource to be returned in TEI/XML.
-  * @param textProperty          the property representing the text (to be converted to the body of a TEI document).
-  * @param mappingIri            the IRI of the mapping to be used to convert from standoff to TEI/XML, if any. Otherwise the standard mapping is assumed.
-  * @param gravsearchTemplateIri the gravsearch template to query the metadata for the TEI header, if provided.
-  * @param headerXSLTIri         the IRI of the XSL transformation to convert the resource's metadata to the TEI header.
-  * @param requestingUser        the user making the request.
-  */
+ * Requests a resource as TEI/XML. A successful response will be a [[ResourceTEIGetResponseV2]].
+ *
+ * @param resourceIri           the IRI of the resource to be returned in TEI/XML.
+ * @param textProperty          the property representing the text (to be converted to the body of a TEI document).
+ * @param mappingIri            the IRI of the mapping to be used to convert from standoff to TEI/XML, if any. Otherwise the standard mapping is assumed.
+ * @param gravsearchTemplateIri the gravsearch template to query the metadata for the TEI header, if provided.
+ * @param headerXSLTIri         the IRI of the XSL transformation to convert the resource's metadata to the TEI header.
+ * @param requestingUser        the user making the request.
+ */
 case class ResourceTEIGetRequestV2(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], headerXSLTIri: Option[IRI], requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
-  * Represents a Knora resource as TEI/XML.
-  *
-  * @param header the header of the TEI document, if given.
-  * @param body   the body of the TEI document.
-  */
+ * Represents a Knora resource as TEI/XML.
+ *
+ * @param header the header of the TEI document, if given.
+ * @param body   the body of the TEI document.
+ */
 case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
 
     def toXML: String =
@@ -182,12 +182,12 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
 }
 
 /**
-  * Represents information that is going to be contained in the header of a TEI/XML document.
-  *
-  * @param headerInfo the resource representing the header information.
-  * @param headerXSLT XSLT to be applied to the resource's metadata in RDF/XML.
-  *
-  */
+ * Represents information that is going to be contained in the header of a TEI/XML document.
+ *
+ * @param headerInfo the resource representing the header information.
+ * @param headerXSLT XSLT to be applied to the resource's metadata in RDF/XML.
+ *
+ */
 case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], settings: SettingsImpl) {
 
     def toXML: String = {
@@ -235,12 +235,12 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
 }
 
 /**
-  * Represents the actual text that is going to be converted to the body of a TEI document.
-  *
-  * @param bodyInfo   the content of the text value that will be converted to TEI.
-  * @param teiMapping the mapping from standoff to TEI/XML.
-  * @param bodyXSLT   the XSLT transformation that completes the generation of TEI/XML.
-  */
+ * Represents the actual text that is going to be converted to the body of a TEI document.
+ *
+ * @param bodyInfo   the content of the text value that will be converted to TEI.
+ * @param teiMapping the mapping from standoff to TEI/XML.
+ * @param bodyXSLT   the XSLT transformation that completes the generation of TEI/XML.
+ */
 case class TEIBody(bodyInfo: TextValueContentV2, teiMapping: MappingXMLtoStandoff, bodyXSLT: String) {
 
     def toXML: String = {
@@ -255,42 +255,42 @@ case class TEIBody(bodyInfo: TextValueContentV2, teiMapping: MappingXMLtoStandof
 }
 
 /**
-  * Represents a Knora resource. Any implementation of `ResourceV2` is API operation specific.
-  */
+ * Represents a Knora resource. Any implementation of `ResourceV2` is API operation specific.
+ */
 sealed trait ResourceV2 {
     /**
-      * The IRI of the resource class.
-      */
+     * The IRI of the resource class.
+     */
     def resourceClassIri: SmartIri
 
     /**
-      * The resource's `rdfs:label`.
-      */
+     * The resource's `rdfs:label`.
+     */
     def label: String
 
     /**
-      * A map of property IRIs to [[IOValueV2]] objects.
-      */
+     * A map of property IRIs to [[IOValueV2]] objects.
+     */
     def values: Map[SmartIri, Seq[IOValueV2]]
 }
 
 /**
-  * Represents a Knora resource when being read back from the triplestore.
-  *
-  * @param resourceIri          the IRI of the resource.
-  * @param label                the resource's label.
-  * @param resourceClassIri     the class the resource belongs to.
-  * @param attachedToUser       the user that created the resource.
-  * @param projectADM           the project that the resource belongs to.
-  * @param permissions          the permissions that the resource grants to user groups.
-  * @param userPermission       the permission the the requesting user has on the resource.
-  * @param values               a map of property IRIs to values.
-  * @param creationDate         the date when this resource was created.
-  * @param lastModificationDate the date when this resource was last modified.
-  * @param versionDate          if this is a past version of the resource, the date of the version.
-  * @param deletionInfo         if this resource has been marked as deleted, provides the date when it was
-  *                             deleted and the reason why it was deleted.
-  */
+ * Represents a Knora resource when being read back from the triplestore.
+ *
+ * @param resourceIri          the IRI of the resource.
+ * @param label                the resource's label.
+ * @param resourceClassIri     the class the resource belongs to.
+ * @param attachedToUser       the user that created the resource.
+ * @param projectADM           the project that the resource belongs to.
+ * @param permissions          the permissions that the resource grants to user groups.
+ * @param userPermission       the permission the the requesting user has on the resource.
+ * @param values               a map of property IRIs to values.
+ * @param creationDate         the date when this resource was created.
+ * @param lastModificationDate the date when this resource was last modified.
+ * @param versionDate          if this is a past version of the resource, the date of the version.
+ * @param deletionInfo         if this resource has been marked as deleted, provides the date when it was
+ *                             deleted and the reason why it was deleted.
+ */
 case class ReadResourceV2(resourceIri: IRI,
                           label: String,
                           resourceClassIri: SmartIri,
@@ -439,24 +439,24 @@ case class ReadResourceV2(resourceIri: IRI,
 }
 
 /**
-  * The value of a Knora property sent to Knora to be created in a new resource.
-  *
-  * @param valueContent the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
-  * @param permissions  the permissions to be given to the new value. If not provided, these will be taken from defaults.
-  */
+ * The value of a Knora property sent to Knora to be created in a new resource.
+ *
+ * @param valueContent the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+ * @param permissions  the permissions to be given to the new value. If not provided, these will be taken from defaults.
+ */
 case class CreateValueInNewResourceV2(valueContent: ValueContentV2,
                                       permissions: Option[String] = None) extends IOValueV2
 
 /**
-  * Represents a Knora resource to be created.
-  *
-  * @param resourceIri      the IRI that should be given to the resource.
-  * @param resourceClassIri the class the resource belongs to.
-  * @param label            the resource's label.
-  * @param values           the resource's values.
-  * @param projectADM       the project that the resource should belong to.
-  * @param permissions      the permissions to be given to the new resource. If not provided, these will be taken from defaults.
-  */
+ * Represents a Knora resource to be created.
+ *
+ * @param resourceIri      the IRI that should be given to the resource.
+ * @param resourceClassIri the class the resource belongs to.
+ * @param label            the resource's label.
+ * @param values           the resource's values.
+ * @param projectADM       the project that the resource should belong to.
+ * @param permissions      the permissions to be given to the new resource. If not provided, these will be taken from defaults.
+ */
 case class CreateResourceV2(resourceIri: IRI,
                             resourceClassIri: SmartIri,
                             label: String,
@@ -467,11 +467,11 @@ case class CreateResourceV2(resourceIri: IRI,
     lazy val flatValues: Iterable[CreateValueInNewResourceV2] = values.values.flatten
 
     /**
-      * Converts this [[CreateResourceV2]] to the specified ontology schema.
-      *
-      * @param targetSchema the target ontology schema.
-      * @return a copy of this [[CreateResourceV2]] in the specified ontology schema.
-      */
+     * Converts this [[CreateResourceV2]] to the specified ontology schema.
+     *
+     * @param targetSchema the target ontology schema.
+     * @return a copy of this [[CreateResourceV2]] in the specified ontology schema.
+     */
     def toOntologySchema(targetSchema: OntologySchema): CreateResourceV2 = {
         copy(
             resourceClassIri = resourceClassIri.toOntologySchema(targetSchema),
@@ -489,30 +489,30 @@ case class CreateResourceV2(resourceIri: IRI,
 }
 
 /**
-  * Represents a request to create a resource.
-  *
-  * @param createResource the resource to be created.
-  * @param requestingUser the user making the request.
-  * @param apiRequestID   the API request ID.
-  */
+ * Represents a request to create a resource.
+ *
+ * @param createResource the resource to be created.
+ * @param requestingUser the user making the request.
+ * @param apiRequestID   the API request ID.
+ */
 case class CreateResourceRequestV2(createResource: CreateResourceV2,
                                    requestingUser: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV2
 
 object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResourceRequestV2] {
     /**
-      * Converts JSON-LD input to a [[CreateResourceRequestV2]].
-      *
-      * @param jsonLDDocument   the JSON-LD input.
-      * @param apiRequestID     the UUID of the API request.
-      * @param requestingUser   the user making the request.
-      * @param responderManager a reference to the responder manager.
-      * @param storeManager     a reference to the store manager.
-      * @param log              a logging adapter.
-      * @param timeout          a timeout for `ask` messages.
-      * @param executionContext an execution context for futures.
-      * @return a case class instance representing the input.
-      */
+     * Converts JSON-LD input to a [[CreateResourceRequestV2]].
+     *
+     * @param jsonLDDocument   the JSON-LD input.
+     * @param apiRequestID     the UUID of the API request.
+     * @param requestingUser   the user making the request.
+     * @param responderManager a reference to the responder manager.
+     * @param storeManager     a reference to the store manager.
+     * @param log              a logging adapter.
+     * @param timeout          a timeout for `ask` messages.
+     * @param executionContext an execution context for futures.
+     * @return a case class instance representing the input.
+     */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
@@ -638,15 +638,15 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 }
 
 /**
-  * Represents a request to update a resource's metadata.
-  *
-  * @param resourceIri               the IRI of the resource.
-  * @param resourceClassIri          the IRI of the resource class.
-  * @param maybeLastModificationDate the resource's last modification date, if any.
-  * @param maybeLabel                the resource's new `rdfs:label`, if any.
-  * @param maybePermissions          the resource's new permissions, if any.
-  * @param maybeNewModificationDate  the resource's new last modification date, if any.
-  */
+ * Represents a request to update a resource's metadata.
+ *
+ * @param resourceIri               the IRI of the resource.
+ * @param resourceClassIri          the IRI of the resource class.
+ * @param maybeLastModificationDate the resource's last modification date, if any.
+ * @param maybeLabel                the resource's new `rdfs:label`, if any.
+ * @param maybePermissions          the resource's new permissions, if any.
+ * @param maybeNewModificationDate  the resource's new last modification date, if any.
+ */
 case class UpdateResourceMetadataRequestV2(resourceIri: IRI,
                                            resourceClassIri: SmartIri,
                                            maybeLastModificationDate: Option[Instant] = None,
@@ -658,19 +658,19 @@ case class UpdateResourceMetadataRequestV2(resourceIri: IRI,
 
 object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateResourceMetadataRequestV2] {
     /**
-      * Converts JSON-LD input into an instance of [[UpdateResourceMetadataRequestV2]].
-      *
-      * @param jsonLDDocument   the JSON-LD input.
-      * @param apiRequestID     the UUID of the API request.
-      * @param requestingUser   the user making the request.
-      * @param responderManager a reference to the responder manager.
-      * @param storeManager     a reference to the store manager.
-      * @param settings         the application settings.
-      * @param log              a logging adapter.
-      * @param timeout          a timeout for `ask` messages.
-      * @param executionContext an execution context for futures.
-      * @return a case class instance representing the input.
-      */
+     * Converts JSON-LD input into an instance of [[UpdateResourceMetadataRequestV2]].
+     *
+     * @param jsonLDDocument   the JSON-LD input.
+     * @param apiRequestID     the UUID of the API request.
+     * @param requestingUser   the user making the request.
+     * @param responderManager a reference to the responder manager.
+     * @param storeManager     a reference to the store manager.
+     * @param settings         the application settings.
+     * @param log              a logging adapter.
+     * @param timeout          a timeout for `ask` messages.
+     * @param executionContext an execution context for futures.
+     * @return a case class instance representing the input.
+     */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
@@ -731,43 +731,44 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
 }
 
 /**
-  * Represents a request to mark a resource as deleted.
-  *
-  * @param resourceIri               the IRI of the resource.
-  * @param resourceClassIri          the IRI of the resource class.
-  * @param maybeDeleteComment        a comment explaining why the resource is being marked as deleted.
-  * @param maybeLastModificationDate the resource's last modification date, if any.
-  */
-case class DeleteResourceRequestV2(resourceIri: IRI,
-                                   resourceClassIri: SmartIri,
-                                   maybeDeleteComment: Option[String] = None,
-                                   maybeLastModificationDate: Option[Instant] = None,
-                                   erase: Boolean = false,
-                                   requestingUser: UserADM,
-                                   apiRequestID: UUID) extends ResourcesResponderRequestV2
+ * Represents a request to mark a resource as deleted or to erase it from the triplestore.
+ *
+ * @param resourceIri               the IRI of the resource.
+ * @param resourceClassIri          the IRI of the resource class.
+ * @param maybeDeleteComment        a comment explaining why the resource is being marked as deleted.
+ * @param maybeLastModificationDate the resource's last modification date, if any.
+ * @param erase                     if `true`, the resource will be erased from the triplestore, otherwise it will be marked as deleted.
+ */
+case class DeleteOrEraseResourceRequestV2(resourceIri: IRI,
+                                          resourceClassIri: SmartIri,
+                                          maybeDeleteComment: Option[String] = None,
+                                          maybeLastModificationDate: Option[Instant] = None,
+                                          erase: Boolean = false,
+                                          requestingUser: UserADM,
+                                          apiRequestID: UUID) extends ResourcesResponderRequestV2
 
-object DeleteResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteResourceRequestV2] {
+object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteOrEraseResourceRequestV2] {
     /**
-      * Converts JSON-LD input into an instance of [[DeleteResourceRequestV2]].
-      *
-      * @param jsonLDDocument   the JSON-LD input.
-      * @param apiRequestID     the UUID of the API request.
-      * @param requestingUser   the user making the request.
-      * @param responderManager a reference to the responder manager.
-      * @param storeManager     a reference to the store manager.
-      * @param settings         the application settings.
-      * @param log              a logging adapter.
-      * @param timeout          a timeout for `ask` messages.
-      * @param executionContext an execution context for futures.
-      * @return a case class instance representing the input.
-      */
+     * Converts JSON-LD input into an instance of [[DeleteOrEraseResourceRequestV2]].
+     *
+     * @param jsonLDDocument   the JSON-LD input.
+     * @param apiRequestID     the UUID of the API request.
+     * @param requestingUser   the user making the request.
+     * @param responderManager a reference to the responder manager.
+     * @param storeManager     a reference to the store manager.
+     * @param settings         the application settings.
+     * @param log              a logging adapter.
+     * @param timeout          a timeout for `ask` messages.
+     * @param executionContext an execution context for futures.
+     * @return a case class instance representing the input.
+     */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorRef,
                             storeManager: ActorRef,
                             settings: SettingsImpl,
-                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteResourceRequestV2] = {
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteOrEraseResourceRequestV2] = {
         Future {
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
@@ -777,7 +778,7 @@ object DeleteResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteResource
         }
     }
 
-    def fromJsonLDSync(jsonLDDocument: JsonLDDocument, requestingUser: UserADM, apiRequestID: UUID): DeleteResourceRequestV2 = {
+    def fromJsonLDSync(jsonLDDocument: JsonLDDocument, requestingUser: UserADM, apiRequestID: UUID): DeleteOrEraseResourceRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val resourceIri: SmartIri = jsonLDDocument.getIDAsKnoraDataIri
@@ -796,7 +797,7 @@ object DeleteResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteResource
 
         val maybeDeleteComment: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DeleteComment, stringFormatter.toSparqlEncodedString)
 
-        DeleteResourceRequestV2(
+        DeleteOrEraseResourceRequestV2(
             resourceIri = resourceIri.toString,
             resourceClassIri = resourceClassIri,
             maybeDeleteComment = maybeDeleteComment,
@@ -808,11 +809,11 @@ object DeleteResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteResource
 }
 
 /**
-  * Represents a sequence of resources read back from Knora.
-  *
-  * @param numberOfResources the amount of resources returned.
-  * @param resources         a sequence of resources.
-  */
+ * Represents a sequence of resources read back from Knora.
+ *
+ * @param numberOfResources the amount of resources returned.
+ * @param resources         a sequence of resources.
+ */
 case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] with UpdateResultInProject {
 
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourcesSequenceV2 = {
@@ -885,15 +886,16 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
             schemaOptions = schemaOptions
         )
     }
+
     // #toJsonLDDocument
 
     /**
-      * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource. If the resource
-      * is not present, or if it's `ForbiddenResource`, throws an exception.
-      *
-      * @param requestedResourceIri the IRI of the expected resource.
-      * @return the resource.
-      */
+     * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource. If the resource
+     * is not present, or if it's `ForbiddenResource`, throws an exception.
+     *
+     * @param requestedResourceIri the IRI of the expected resource.
+     * @return the resource.
+     */
     def toResource(requestedResourceIri: IRI): ReadResourceV2 = {
         if (numberOfResources == 0) {
             throw AssertionException(s"Expected one resource, <$requestedResourceIri>, but no resources were returned")
@@ -913,11 +915,11 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
     }
 
     /**
-      * Considers this [[ReadResourcesSequenceV2]] to be the result of an update operation in a single project
-      * (since Knora never updates resources in more than one project at a time), and returns information about that
-      * project. Throws [[AssertionException]] if this [[ReadResourcesSequenceV2]] is empty or refers to more than one
-      * project.
-      */
+     * Considers this [[ReadResourcesSequenceV2]] to be the result of an update operation in a single project
+     * (since Knora never updates resources in more than one project at a time), and returns information about that
+     * project. Throws [[AssertionException]] if this [[ReadResourcesSequenceV2]] is empty or refers to more than one
+     * project.
+     */
     override def projectADM: ProjectADM = {
         if (resources.isEmpty) {
             throw AssertionException("ReadResourcesSequenceV2 is empty")
@@ -934,16 +936,16 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 }
 
 /**
-  * Requests a graph of resources that are reachable via links to or from a given resource. A successful response
-  * will be a [[GraphDataGetResponseV2]].
-  *
-  * @param resourceIri     the IRI of the initial resource.
-  * @param depth           the maximum depth of the graph, counting from the initial resource.
-  * @param inbound         `true` to query inbound links.
-  * @param outbound        `true` to query outbound links.
-  * @param excludeProperty the IRI of a link property to exclude from the results.
-  * @param requestingUser  the user making the request.
-  */
+ * Requests a graph of resources that are reachable via links to or from a given resource. A successful response
+ * will be a [[GraphDataGetResponseV2]].
+ *
+ * @param resourceIri     the IRI of the initial resource.
+ * @param depth           the maximum depth of the graph, counting from the initial resource.
+ * @param inbound         `true` to query inbound links.
+ * @param outbound        `true` to query outbound links.
+ * @param excludeProperty the IRI of a link property to exclude from the results.
+ * @param requestingUser  the user making the request.
+ */
 case class GraphDataGetRequestV2(resourceIri: IRI,
                                  depth: Int,
                                  inbound: Boolean,
@@ -956,12 +958,12 @@ case class GraphDataGetRequestV2(resourceIri: IRI,
 }
 
 /**
-  * Represents a node (i.e. a resource) in a resource graph.
-  *
-  * @param resourceIri      the IRI of the resource.
-  * @param resourceLabel    the label of the resource.
-  * @param resourceClassIri the IRI of the resource's OWL class.
-  */
+ * Represents a node (i.e. a resource) in a resource graph.
+ *
+ * @param resourceIri      the IRI of the resource.
+ * @param resourceLabel    the label of the resource.
+ * @param resourceClassIri the IRI of the resource's OWL class.
+ */
 case class GraphNodeV2(resourceIri: IRI, resourceClassIri: SmartIri, resourceLabel: String) extends KnoraReadV2[GraphNodeV2] {
     override def toOntologySchema(targetSchema: ApiV2Schema): GraphNodeV2 = {
         copy(resourceClassIri = resourceClassIri.toOntologySchema(targetSchema))
@@ -969,12 +971,12 @@ case class GraphNodeV2(resourceIri: IRI, resourceClassIri: SmartIri, resourceLab
 }
 
 /**
-  * Represents an edge (i.e. a link) in a resource graph.
-  *
-  * @param source      the resource that is the source of the link.
-  * @param propertyIri the link property that links the source to the target.
-  * @param target      the resource that is the target of the link.
-  */
+ * Represents an edge (i.e. a link) in a resource graph.
+ *
+ * @param source      the resource that is the source of the link.
+ * @param propertyIri the link property that links the source to the target.
+ * @param target      the resource that is the target of the link.
+ */
 case class GraphEdgeV2(source: IRI, propertyIri: SmartIri, target: IRI) extends KnoraReadV2[GraphEdgeV2] {
     override def toOntologySchema(targetSchema: ApiV2Schema): GraphEdgeV2 = {
         copy(propertyIri = propertyIri.toOntologySchema(targetSchema))
@@ -982,11 +984,11 @@ case class GraphEdgeV2(source: IRI, propertyIri: SmartIri, target: IRI) extends 
 }
 
 /**
-  * Represents a graph of resources.
-  *
-  * @param nodes the nodes in the graph.
-  * @param edges the edges in the graph.
-  */
+ * Represents a graph of resources.
+ *
+ * @param nodes the nodes in the graph.
+ * @param edges the edges in the graph.
+ */
 case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV2], ontologySchema: OntologySchema) extends KnoraResponseV2 with KnoraReadV2[GraphDataGetResponseV2] {
     private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

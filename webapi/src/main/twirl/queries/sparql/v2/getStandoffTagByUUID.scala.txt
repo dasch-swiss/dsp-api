@@ -17,22 +17,19 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi.util.SmartIri
+@import org.knora.webapi.util.StringFormatter
+@import java.util.UUID
 
 @*
- * Checks whether an entity is used (i.e. is the object of any statements).
+ * Gets the IRIs of a standoff tag identified by UUID.
  *
  * @param triplestore the name of the triplestore being used.
- * @param entityIri the IRI of the entity.
- * @param ignoreKnoraConstraints if true, knora-base:subjectClassConstraint and knora-base:objectClassConstraint will be ignored.
- * This is necessary when modifying the cardinalities of a class.
- * @param ignoreRdfObject if true, rdf:object will be ignored. This is necessary when checking for references
- * to a resource that has been erased.
+ * @param uuid the standoff tag's UUID.
+ * @param stringFormatter a [[StringFormatter]].
  *@
 @(triplestore: String,
-  entityIri: SmartIri,
-  ignoreKnoraConstraints: Boolean = false,
-  ignoreRdfObject: Boolean = false)
+  uuid: UUID,
+  stringFormatter: StringFormatter)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -40,22 +37,11 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-SELECT DISTINCT ?isUsed
+SELECT DISTINCT ?standoffTag
 @* Ensure that inference is not used in this query. *@
 @if(triplestore.startsWith("graphdb")) {
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@entityIri") AS ?entity)
-    BIND(true AS ?isUsed)
-
-    ?s ?p ?entity .
-
-    @if(ignoreKnoraConstraints) {
-        FILTER(!(?p = knora-base:subjectClassConstraint || ?p = knora-base:objectClassConstraint))
-    }
-
-    @if(ignoreRdfObject) {
-        FILTER(?p != rdf:object)
-    }
+    ?standoffTag knora-base:standoffTagHasUUID "@{stringFormatter.base64EncodeUuid(uuid)}" .
 }

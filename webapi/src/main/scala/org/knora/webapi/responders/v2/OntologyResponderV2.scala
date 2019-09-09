@@ -3385,31 +3385,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     /**
-      * Checks whether an entity is used in the triplestore.
-      *
-      * @param entityIri              the IRI of the entity.
-      * @param errorFun               a function that throws an exception. It will be called if the entity is used.
-      * @param ignoreKnoraConstraints if true, ignores the use of the entity in Knora subject or object constraints.
-      */
-    private def isEntityUsed(entityIri: SmartIri, errorFun: => Nothing, ignoreKnoraConstraints: Boolean = false): Future[Unit] = {
-        // #sparql-select
-        for {
-            isEntityUsedSparql <- Future(queries.sparql.v2.txt.isEntityUsed(
-                triplestore = settings.triplestoreType,
-                entityIri = entityIri,
-                ignoreKnoraConstraints = ignoreKnoraConstraints
-            ).toString())
-
-            isEntityUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql)).mapTo[SparqlSelectResponse]
-            // #sparql-select
-
-            _ = if (isEntityUsedResponse.results.bindings.nonEmpty) {
-                errorFun
-            }
-        } yield ()
-    }
-
-    /**
       * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,
       * are valid, and checks that the user has permission to update the ontology.
       *

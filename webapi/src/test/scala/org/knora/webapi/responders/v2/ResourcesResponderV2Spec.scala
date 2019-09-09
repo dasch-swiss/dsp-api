@@ -27,7 +27,7 @@ import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SparqlSelectRequest, SparqlSelectResponse}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -54,6 +54,12 @@ object ResourcesResponderV2Spec {
 
     private val aThingIri = "http://rdfh.ch/0001/a-thing"
     private var aThingLastModificationDate = Instant.now
+
+    private val resourceIriToErase = new MutableTestIri
+    private val firstValueIriToErase = new MutableTestIri
+    private val secondValueIriToErase = new MutableTestIri
+    private val standoffTagIrisToErase = collection.mutable.Set.empty[IRI]
+    private var resourceToEraseLastModificationDate = Instant.now
 }
 
 class GraphTestData {
@@ -378,8 +384,8 @@ class GraphTestData {
 }
 
 /**
-  * Tests [[ResourcesResponderV2]].
-  */
+ * Tests [[ResourcesResponderV2]].
+ */
 class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     import ResourcesResponderV2Spec._
@@ -401,6 +407,35 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     )
 
     private val sampleStandoff: Vector[StandoffTagV2] = Vector(
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
+            startPosition = 0,
+            endPosition = 26,
+            uuid = UUID.randomUUID(),
+            originalXMLID = None,
+            startIndex = 0
+        ),
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
+            startPosition = 0,
+            endPosition = 12,
+            uuid = UUID.randomUUID(),
+            originalXMLID = None,
+            startIndex = 1,
+            startParentIndex = Some(0)
+        ),
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
+            startPosition = 0,
+            endPosition = 7,
+            uuid = UUID.randomUUID(),
+            originalXMLID = None,
+            startIndex = 2,
+            startParentIndex = Some(1)
+        )
+    )
+
+    private val sampleStandoffForErasingResource: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
             standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
             startPosition = 0,
@@ -488,6 +523,23 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         assert(outputValue.permissions == expectedPermissions)
                         assert(inputValue.valueContent.wouldDuplicateCurrentVersion(outputValue.valueContent))
                 }
+        }
+    }
+
+    private def getStandoffTagByUUID(uuid: UUID): Set[IRI] = {
+        val sparqlQuery = queries.sparql.v2.txt.getStandoffTagByUUID(
+            triplestore = settings.triplestoreType,
+            uuid = uuid,
+            stringFormatter = stringFormatter
+        ).toString()
+
+        storeManager ! SparqlSelectRequest(sparqlQuery)
+
+        expectMsgPF(timeout) {
+            case sparqlSelectResponse: SparqlSelectResponse =>
+                sparqlSelectResponse.results.bindings.map {
+                    row => row.rowMap("standoffTag")
+                }.toSet
         }
     }
 
@@ -1706,7 +1758,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "mark a resource as deleted" in {
-            val deleteRequest = DeleteResourceRequestV2(
+            val deleteRequest = DeleteOrEraseResourceRequestV2(
                 resourceIri = aThingIri,
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 maybeDeleteComment = Some("This resource is too boring."),
@@ -1894,6 +1946,229 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgClass(classOf[ReadResourcesSequenceV2])
+        }
+
+        "create a resource with version history so we can test erasing it" in {
+            // Create the resource.
+
+            val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            resourceIriToErase.set(resourceIri)
+            val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
+            val standoffTagUUIDsToErase = collection.mutable.Set.empty[UUID]
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                propertyIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2Complex,
+                            maybeValueHasString = Some("this is text with standoff"),
+                            standoff = sampleStandoffForErasingResource,
+                            mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                            mapping = standardMapping
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = resourceClassIri,
+                label = "test thing",
+                values = inputValues,
+                projectADM = SharedTestDataADM.anythingProject
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[ReadResourcesSequenceV2](timeout)
+            val outputResource: ReadResourceV2 = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
+            val firstTextValue: ReadTextValueV2 = outputResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
+            firstValueIriToErase.set(firstTextValue.valueIri)
+
+            for (standoffTag <- firstTextValue.valueContent.standoff) {
+                standoffTagUUIDsToErase.add(standoffTag.uuid)
+            }
+
+            // Update the value.
+
+            responderManager ! UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = resourceClassIri,
+                    propertyIri = propertyIri,
+                    valueIri = firstValueIriToErase.get,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        maybeValueHasString = Some("this is some other text with standoff"),
+                        standoff = Vector(sampleStandoffForErasingResource.head),
+                        mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                        mapping = standardMapping
+                    )
+                ),
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    secondValueIriToErase.set(updateValueResponse.valueIri)
+            }
+
+            val updatedResource = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
+            val secondTextValue: ReadTextValueV2 = updatedResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
+            secondValueIriToErase.set(secondTextValue.valueIri)
+
+            for (standoffTag <- firstTextValue.valueContent.standoff) {
+                standoffTagUUIDsToErase.add(standoffTag.uuid)
+            }
+
+            assert(standoffTagUUIDsToErase.size == 3)
+            resourceToEraseLastModificationDate = updatedResource.lastModificationDate.get
+
+            // Get the IRIs of the standoff tags.
+
+            for (uuid <- standoffTagUUIDsToErase) {
+                val standoffTagIris: Set[IRI] = getStandoffTagByUUID(uuid)
+                standoffTagIrisToErase ++= standoffTagIris
+            }
+
+            assert(standoffTagIrisToErase.size == 4)
+        }
+
+        "not erase a resource if the user is not a system/project admin" in {
+            val eraseRequest = DeleteOrEraseResourceRequestV2(
+                resourceIri = resourceIriToErase.get,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeDeleteComment = Some("This resource is too boring."),
+                maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
+                erase = true,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! eraseRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    // println(msg.cause)
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "not erase a resource if another resource has a link to it" in {
+            // Create a resource with a link to the resource that is to be deleted.
+
+            val resourceWithLinkIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+            val linkValuePropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                linkValuePropertyIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = LinkValueContentV2(
+                            ontologySchema = ApiV2Complex,
+                            referredResourceIri = resourceIriToErase.get
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceWithLinkIri,
+                resourceClassIri = resourceClassIri,
+                label = "thing with link",
+                values = inputValues,
+                projectADM = SharedTestDataADM.anythingProject
+            )
+
+            responderManager ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[ReadResourcesSequenceV2](timeout)
+            val outputResource: ReadResourceV2 = getResource(resourceIri = resourceWithLinkIri, requestingUser = anythingUserProfile)
+            val linkValue: ReadLinkValueV2 = outputResource.values(linkValuePropertyIri).head.asInstanceOf[ReadLinkValueV2]
+
+            // Try to erase the first resource.
+
+            val eraseRequest = DeleteOrEraseResourceRequestV2(
+                resourceIri = resourceIriToErase.get,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeDeleteComment = Some("This resource is too boring."),
+                maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
+                erase = true,
+                requestingUser = SharedTestDataADM.anythingAdminUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! eraseRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    // println(msg.cause)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+
+            // Delete the link.
+
+            responderManager ! DeleteValueRequestV2(
+                resourceIri = resourceWithLinkIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                propertyIri = linkValuePropertyIri,
+                valueIri = linkValue.valueIri,
+                valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[SuccessResponseV2](timeout)
+        }
+
+        "erase a resource" in {
+            // Erase the resource.
+
+            val eraseRequest = DeleteOrEraseResourceRequestV2(
+                resourceIri = resourceIriToErase.get,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeDeleteComment = Some("This resource is too boring."),
+                maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
+                erase = true,
+                requestingUser = SharedTestDataADM.anythingAdminUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! eraseRequest
+            expectMsgType[SuccessResponseV2](timeout)
+
+            // Check that all parts of the resource were erased.
+
+            val erasedIrisToCheck: Set[SmartIri] = (
+                standoffTagIrisToErase.toSet +
+                    resourceIriToErase.get +
+                    firstValueIriToErase.get +
+                    secondValueIriToErase.get
+                ).map(_.toSmartIri)
+
+            for (erasedIriToCheck <- erasedIrisToCheck) {
+                val sparqlQuery = queries.sparql.v2.txt.checkEntityExists(
+                    triplestore = settings.triplestoreType,
+                    entityIri = erasedIriToCheck
+                ).toString()
+
+                storeManager ! SparqlSelectRequest(sparqlQuery)
+
+                expectMsgPF(timeout) {
+                    case entityExistsResponse: SparqlSelectResponse =>
+                        assert(entityExistsResponse.results.bindings.isEmpty, s"Entity $erasedIriToCheck should have been erased, but was not")
+                }
+            }
         }
     }
 }
