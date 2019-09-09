@@ -50,7 +50,7 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     /**
      * The name of this [[ClientApi]].
      */
-    override val name: String = "AdminApi"
+    override val name: String = "AdminEndpoint"
 
     /**
      * The directory name to be used for this API's code.
