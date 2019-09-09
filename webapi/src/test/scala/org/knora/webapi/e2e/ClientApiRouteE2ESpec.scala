@@ -60,7 +60,7 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
                 "./knora-api-config.ts",
                 "./knora-api-connection.ts",
                 "./api/endpoint.ts",
-                "./api/admin/admin-api-endpoint.ts",
+                "./api/admin/admin-endpoint.ts",
                 "./api/admin/users/users-endpoint.ts",
                 "./models/admin/user.ts"
             )

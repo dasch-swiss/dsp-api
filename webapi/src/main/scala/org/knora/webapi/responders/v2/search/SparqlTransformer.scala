@@ -156,6 +156,27 @@ object SparqlTransformer {
     }
 
     /**
+     * Create a unique variable from a whole statement.
+     *
+     * @param baseStatement the statement to be used to create the variable base name.
+     * @param suffix        the suffix to be appended to the base name.
+     * @return a unique variable.
+     */
+    def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
+        QueryVariable(SparqlTransformer.escapeEntityForVariable(baseStatement.subj) + "__" + SparqlTransformer.escapeEntityForVariable(baseStatement.pred) + "__" + SparqlTransformer.escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
+    }
+
+    /**
+     * Create a unique variable name from a whole statement for a link value.
+     *
+     * @param baseStatement the statement to be used to create the variable base name.
+     * @return a unique variable for a link value.
+     */
+    def createUniqueVariableFromStatementForLinkValue(baseStatement: StatementPattern): QueryVariable = {
+        createUniqueVariableFromStatement(baseStatement, "LinkValue")
+    }
+
+    /**
       * Optimises `knora-base:isDeleted` by moving it to the end of a block.
       *
       * @param patterns the block of patterns to be optimised.
