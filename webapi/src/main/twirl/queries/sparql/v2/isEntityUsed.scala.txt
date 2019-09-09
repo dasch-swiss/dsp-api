@@ -26,13 +26,13 @@
  * @param entityIri the IRI of the entity.
  * @param ignoreKnoraConstraints if true, knora-base:subjectClassConstraint and knora-base:objectClassConstraint will be ignored.
  * This is necessary when modifying the cardinalities of a class.
- * @param ignoreRdfObject if true, rdf:object will be ignored. This is necessary when checking for references
- * to a resource that has been erased.
+ * @param ignoreRdfSubjectAndObject if true, rdf:subject and rdf:object will be ignored. This is necessary when checking
+ * for references to a resource that is to be erased.
  *@
 @(triplestore: String,
   entityIri: SmartIri,
   ignoreKnoraConstraints: Boolean = false,
-  ignoreRdfObject: Boolean = false)
+  ignoreRdfSubjectAndObject: Boolean = false)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -55,7 +55,7 @@ WHERE {
         FILTER(!(?p = knora-base:subjectClassConstraint || ?p = knora-base:objectClassConstraint))
     }
 
-    @if(ignoreRdfObject) {
-        FILTER(?p != rdf:object)
+    @if(ignoreRdfSubjectAndObject) {
+        FILTER(!(?p = rdf:subject || ?p = rdf:object))
     }
 }

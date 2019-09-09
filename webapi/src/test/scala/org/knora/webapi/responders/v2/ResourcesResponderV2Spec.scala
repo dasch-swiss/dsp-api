@@ -2044,7 +2044,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val eraseRequest = DeleteOrEraseResourceRequestV2(
                 resourceIri = resourceIriToErase.get,
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-                maybeDeleteComment = Some("This resource is too boring."),
                 maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
                 erase = true,
                 requestingUser = anythingUserProfile,
@@ -2101,7 +2100,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val eraseRequest = DeleteOrEraseResourceRequestV2(
                 resourceIri = resourceIriToErase.get,
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-                maybeDeleteComment = Some("This resource is too boring."),
                 maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
                 erase = true,
                 requestingUser = SharedTestDataADM.anythingAdminUser,
@@ -2137,7 +2135,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val eraseRequest = DeleteOrEraseResourceRequestV2(
                 resourceIri = resourceIriToErase.get,
                 resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-                maybeDeleteComment = Some("This resource is too boring."),
                 maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
                 erase = true,
                 requestingUser = SharedTestDataADM.anythingAdminUser,

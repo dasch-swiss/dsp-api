@@ -112,22 +112,22 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     /**
      * Checks whether an entity is used in the triplestore.
      *
-     * @param entityIri              the IRI of the entity.
-     * @param errorFun               a function that throws an exception. It will be called if the entity is used.
-     * @param ignoreKnoraConstraints if `true`, ignores the use of the entity in Knora subject or object constraints.
-     * @param ignoreRdfObject        if `true`, ignores the use of the entity in `rdf:object`.
+     * @param entityIri                 the IRI of the entity.
+     * @param errorFun                  a function that throws an exception. It will be called if the entity is used.
+     * @param ignoreKnoraConstraints    if `true`, ignores the use of the entity in Knora subject or object constraints.
+     * @param ignoreRdfSubjectAndObject if `true`, ignores the use of the entity in `rdf:subject` and `rdf:object`.
      */
     protected def isEntityUsed(entityIri: SmartIri,
                                errorFun: => Nothing,
                                ignoreKnoraConstraints: Boolean = false,
-                               ignoreRdfObject: Boolean = false): Future[Unit] = {
+                               ignoreRdfSubjectAndObject: Boolean = false): Future[Unit] = {
         // #sparql-select
         for {
             isEntityUsedSparql <- Future(queries.sparql.v2.txt.isEntityUsed(
                 triplestore = settings.triplestoreType,
                 entityIri = entityIri,
                 ignoreKnoraConstraints = ignoreKnoraConstraints,
-                ignoreRdfObject = ignoreRdfObject
+                ignoreRdfSubjectAndObject = ignoreRdfSubjectAndObject
             ).toString())
 
             isEntityUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql)).mapTo[SparqlSelectResponse]

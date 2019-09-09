@@ -306,7 +306,9 @@ To do so, use this route:
 HTTP POST to http://host/v2/resources/erase
 ```
 
-The request body is the same as for @ref:[Deleting a Resource](#deleting-a-resource).
+The request body is the same as for @ref:[Deleting a Resource](#deleting-a-resource),
+except that `knora-api:deleteComment` is not relevant and will be ignored.
+
 To do this, a user must be a system administrator or an administrator of the
 project containing the resource. The user's permissions on the resource are
 not otherwise checked.

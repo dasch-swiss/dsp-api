@@ -495,15 +495,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     throw EditConflictException(s"Resource <${resource.resourceIri}> has been modified since you last read it")
                 }
 
-                // Check that the resource is not referred to by any other resources. We allow the resource to be the
-                // object of rdf:object, in case there is a deleted link value that refers to it.
+                // Check that the resource is not referred to by any other resources. We ignore rdf:subject (so we
+                // can erase the resource's own links) and rdf:object (in case there is a deleted link value that
+                // refers to it).
 
                 resourceSmartIri = eraseResourceV2.resourceIri.toSmartIri
 
                 _ <- isEntityUsed(
                     entityIri = resourceSmartIri,
                     errorFun = throw BadRequestException(s"Resource ${eraseResourceV2.resourceIri} cannot be erased, because it is referred to by another resource"),
-                    ignoreRdfObject = true
+                    ignoreRdfSubjectAndObject = true
                 )
 
                 // Generate SPARQL for erasing the resource.
