@@ -2166,6 +2166,22 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         assert(entityExistsResponse.results.bindings.isEmpty, s"Entity $erasedIriToCheck should have been erased, but was not")
                 }
             }
+
+            // Check that the deleted link value that pointed to the resource has also been erased.
+
+            val isEntityUsedSparql: String = queries.sparql.v2.txt.isEntityUsed(
+                triplestore = settings.triplestoreType,
+                entityIri = resourceIriToErase.get.toSmartIri,
+                ignoreKnoraConstraints = true,
+                ignoreRdfSubjectAndObject = false
+            ).toString()
+
+            storeManager ! SparqlSelectRequest(isEntityUsedSparql)
+
+            expectMsgPF(timeout) {
+                case entityUsedResponse: SparqlSelectResponse =>
+                    assert(entityUsedResponse.results.bindings.isEmpty, s"Link value was not erased")
+            }
         }
     }
 }

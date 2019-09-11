@@ -38,6 +38,8 @@ DELETE {
     <@resourceIri> ?resourcePred ?resourceObj .
     ?value ?valuePred ?valueObj .
     ?standoff ?standoffPred ?standoffObj .
+    ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
+    ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
 } WHERE {
     @* Make sure the resource is really a resource. *@
     <@resourceIri> a knora-base:Resource .
@@ -66,14 +68,21 @@ DELETE {
 
         GRAPH <http://www.ontotext.com/explicit> {
             <@resourceIri> ?valueProp ?currentTextValue .
-        }
-
-        ?currentTextValue a knora-base:TextValue .
-
-        GRAPH <http://www.ontotext.com/explicit> {
-            ?currentTextValue knora-base:previousValue* ?textValue .
+            ?currentTextValue a knora-base:TextValue ;
+                knora-base:previousValue* ?textValue .
             ?textValue knora-base:valueHasStandoff ?standoff .
             ?standoff ?standoffPred ?standoffObj .
+        }
+    } UNION {
+        @* Collect all statements about marked-as-deleted link values that point to the resource. *@
+
+        GRAPH <http://www.ontotext.com/explicit> {
+            ?otherResourceCurrentLinkValue rdf:object <@resourceIri> ;
+                knora-base:isDeleted true ;
+                a knora-base:LinkValue ;
+                knora-base:previousValue* ?otherResourceLinkValue .
+            ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
+            ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
         }
     }
 }

@@ -497,7 +497,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Check that the resource is not referred to by any other resources. We ignore rdf:subject (so we
                 // can erase the resource's own links) and rdf:object (in case there is a deleted link value that
-                // refers to it).
+                // refers to it). Any such deleted link values will be erased along with the resource.
 
                 resourceSmartIri = eraseResourceV2.resourceIri.toSmartIri
 
@@ -535,7 +535,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         }
 
         for {
-            // Do the pre-update checks and the update while holding an update lock on the resource.
             // Do the pre-update checks and the update while holding an update lock on the resource.
             taskResult <- IriLocker.runWithIriLock(
                 eraseResourceV2.apiRequestID,

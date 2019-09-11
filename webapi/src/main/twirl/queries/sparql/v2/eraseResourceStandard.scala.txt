@@ -33,6 +33,8 @@ DELETE {
     <@resourceIri> ?resourcePred ?resourceObj .
     ?value ?valuePred ?valueObj .
     ?standoff ?standoffPred ?standoffObj .
+    ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
+    ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
 } WHERE {
     @* Make sure the resource is really a resource. *@
 
@@ -55,10 +57,18 @@ DELETE {
         @* Collect all statements whose subject is a standoff tag attached to a value of the resource. *@
 
         <@resourceIri> ?valueProp ?currentTextValue .
-        ?currentTextValue a ?currentTextValueClass .
-        ?currentTextValueClass rdfs:subClassOf* knora-base:TextValue .
-        ?currentTextValue knora-base:previousValue* ?textValue .
+        ?currentTextValue a knora-base:TextValue ;
+            ?currentTextValue knora-base:previousValue* ?textValue .
         ?textValue knora-base:valueHasStandoff ?standoff .
         ?standoff ?standoffPred ?standoffObj .
+    } UNION {
+        @* Collect all statements about marked-as-deleted link values that point to the resource. *@
+
+        ?otherResourceCurrentLinkValue rdf:object <@resourceIri> ;
+            a knora-base:LinkValue ;
+            knora-base:isDeleted true ;
+            knora-base:previousValue* ?otherResourceLinkValue .
+        ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
+        ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
     }
 }
