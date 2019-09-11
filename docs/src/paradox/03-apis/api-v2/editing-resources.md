@@ -313,7 +313,12 @@ To do this, a user must be a system administrator or an administrator of the
 project containing the resource. The user's permissions on the resource are
 not otherwise checked.
 
-A resource cannot be erased if any other resource has a link to it.
+A resource cannot be erased if any other resource has a link to it. Any such
+links must first be changed or marked as deleted
+(see @ref:[Updating a Value](editing-values.md#updating-a-value) and
+@ref:[Deleting a Value](editing-values.md#deleting-a-value)). Then,
+when the resource is erased, the deleted link values that referred to
+it will also be erased.
 
 This operation cannot be undone (except by restoring the repository from a
 backup), so use it with care.

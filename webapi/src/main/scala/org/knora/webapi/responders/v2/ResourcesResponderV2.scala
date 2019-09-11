@@ -497,7 +497,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                 // Check that the resource is not referred to by any other resources. We ignore rdf:subject (so we
                 // can erase the resource's own links) and rdf:object (in case there is a deleted link value that
-                // refers to it). Any such deleted link values will be erased along with the resource.
+                // refers to it). Any such deleted link values will be erased along with the resource. If there
+                // is a non-deleted link to the resource, the direct link (rather than the link value) will case
+                // isEntityUsed() to throw an exception.
 
                 resourceSmartIri = eraseResourceV2.resourceIri.toSmartIri
 
