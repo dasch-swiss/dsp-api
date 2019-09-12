@@ -294,3 +294,31 @@ resource, explaining why it has been marked as deleted.
 
 The response is a JSON-LD document containing the predicate `knora-api:result`
 with a confirmation message.
+
+## Erasing a Resource from the Triplestore
+
+Normally, resources are not actually removed from the triplestore; they are
+only marked as deleted (see @ref:[Deleting a Resource](#deleting-a-resource)).
+However, sometimes it is necessary to erase a resource from the triplestore.
+To do so, use this route:
+
+```
+HTTP POST to http://host/v2/resources/erase
+```
+
+The request body is the same as for @ref:[Deleting a Resource](#deleting-a-resource),
+except that `knora-api:deleteComment` is not relevant and will be ignored.
+
+To do this, a user must be a system administrator or an administrator of the
+project containing the resource. The user's permissions on the resource are
+not otherwise checked.
+
+A resource cannot be erased if any other resource has a link to it. Any such
+links must first be changed or marked as deleted
+(see @ref:[Updating a Value](editing-values.md#updating-a-value) and
+@ref:[Deleting a Value](editing-values.md#deleting-a-value)). Then,
+when the resource is erased, the deleted link values that referred to
+it will also be erased.
+
+This operation cannot be undone (except by restoring the repository from a
+backup), so use it with care.
