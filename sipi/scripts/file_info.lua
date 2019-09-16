@@ -69,7 +69,7 @@ local document_extensions = {
 function make_image_file_info()
     return {
         media_type = IMAGE,
-        extension = ".jp2"
+        extension = "jp2"
     }
 end
 

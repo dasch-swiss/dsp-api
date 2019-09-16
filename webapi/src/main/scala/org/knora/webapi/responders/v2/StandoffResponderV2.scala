@@ -181,7 +181,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 throw BadRequestException(s"$xslTransformationIri does not have a file value referring to an XSL transformation")
             }
 
-            xsltUrl: String = s"${settings.internalSipiFileServerGetUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}"
+            xsltUrl: String = s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}"
 
         } yield xsltUrl
 

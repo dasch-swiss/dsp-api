@@ -391,7 +391,6 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             assert(sipiResponse.status == StatusCodes.NotFound)
         }
 
-        /*
         "create a resource with a PDF file" in {
             // Upload the file to Sipi.
             val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
@@ -436,13 +435,12 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // Get the new file value from the resource.
             val savedValue: JsonLDObject = getValueFromResource(
                 resource = resource,
-                propertyIriInResult = OntologyConstants.KnoraAPIV2Complex.HasStillImageFileValue.toSmartIri,
+                propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
                 expectedValueIri = stillImageFileValueIri.get
             )
 
             val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
             assert(savedDocument.internalFilename == uploadedFile.internalFilename)
         }
-        */
     }
 }

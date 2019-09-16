@@ -60,9 +60,6 @@ class SettingsSpec extends CoreSpec("SettingsActorTestSystem", SettingsSpec.conf
 
             settings.externalSipiIIIFGetUrl should be ("http://0.0.0.0:1024")
 
-            settings.internalSipiFileServerGetUrl should be ("http://0.0.0.0:1024/server")
-            settings.externalSipiFileServerGetUrl should be ("http://0.0.0.0:1024/server")
-
             settings.internalSipiImageConversionUrlV1 should be ("http://0.0.0.0:1024")
         }
     }

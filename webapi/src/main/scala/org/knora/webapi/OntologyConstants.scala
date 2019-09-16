@@ -248,6 +248,7 @@ object OntologyConstants {
         val OriginalMimeType: IRI = KnoraBasePrefixExpansion + "originalMimeType"
         val DimX: IRI = KnoraBasePrefixExpansion + "dimX"
         val DimY: IRI = KnoraBasePrefixExpansion + "dimY"
+        val PageCount: IRI = KnoraBasePrefixExpansion + "pageCount"
         val Fps: IRI = KnoraBasePrefixExpansion + "fps"
 
         val ValueBase: IRI = KnoraBasePrefixExpansion + "ValueBase"
@@ -383,12 +384,6 @@ object OntologyConstants {
 
         val CreationDate: IRI = KnoraBasePrefixExpansion + "creationDate"
         val ValueCreationDate: IRI = KnoraBasePrefixExpansion + "valueCreationDate"
-
-        val Map: IRI = KnoraBasePrefixExpansion + "Map"
-        val MapEntry: IRI = KnoraBasePrefixExpansion + "MapEntry"
-        val MapEntryKey: IRI = KnoraBasePrefixExpansion + "mapEntryKey"
-        val MapEntryValue: IRI = KnoraBasePrefixExpansion + "mapEntryValue"
-        val IsInMap: IRI = KnoraBasePrefixExpansion + "isInMap"
 
         val LastModificationDate: IRI = KnoraBasePrefixExpansion + "lastModificationDate"
 
@@ -944,6 +939,8 @@ object OntologyConstants {
         val StillImageFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
         val StillImageFileValueHasIIIFBaseUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
 
+        val DocumentValueHasPageCount: IRI = KnoraApiV2PrefixExpansion + "documentValueHasPageCount"
+
         val MovingImageFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimX"
         val MovingImageFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimY"
         val MovingImageFileValueHasFps: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasFps"
@@ -1129,6 +1126,7 @@ object OntologyConstants {
             KnoraBase.ValueHasGeonameCode -> KnoraApiV2Complex.GeonameValueAsGeonameCode,
             KnoraBase.ValueHasColor -> KnoraApiV2Complex.ColorValueAsColor,
             KnoraBase.ValueHasStandoff -> KnoraApiV2Complex.TextValueHasStandoff,
+            KnoraBase.PageCount -> KnoraApiV2Complex.DocumentValueHasPageCount,
             KnoraAdmin.PreferredLanguage -> KnoraAdminV2.Lang,
             KnoraAdmin.IsInProject -> KnoraAdminV2.Projects,
             KnoraAdmin.IsInSystemAdminGroup -> KnoraAdminV2.SystemAdmin,
@@ -1179,6 +1177,7 @@ object OntologyConstants {
             KnoraApiV2Complex.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
             KnoraApiV2Complex.ColorValueAsColor -> KnoraBase.ValueHasColor,
             KnoraApiV2Complex.TextValueHasStandoff -> KnoraBase.ValueHasStandoff,
+            KnoraApiV2Complex.DocumentValueHasPageCount -> KnoraBase.PageCount,
             KnoraAdminV2.Lang -> KnoraAdmin.PreferredLanguage,
             KnoraAdminV2.Projects -> KnoraAdmin.IsInProject,
             KnoraAdminV2.SystemAdmin -> KnoraAdmin.IsInSystemAdminGroup,

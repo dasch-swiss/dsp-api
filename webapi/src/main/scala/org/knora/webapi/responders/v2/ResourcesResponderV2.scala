@@ -1305,7 +1305,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 throw BadRequestException(s"$gravsearchTemplateIri does not have a file value referring to an XSL transformation")
             }
 
-            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}"
+            gravSearchUrl: String = s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}"
 
         } yield gravSearchUrl
 

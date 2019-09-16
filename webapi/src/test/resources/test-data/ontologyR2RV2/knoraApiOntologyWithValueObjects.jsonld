@@ -1273,6 +1273,12 @@
       }
     }, {
       "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:documentValueHasPageCount"
+      }
+    }, {
+      "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
@@ -5486,6 +5492,18 @@
       "@id" : "knora-admin:User"
     },
     "rdfs:comment" : "Indicates who deleted a resource or value"
+  }, {
+    "@id" : "knora-api:documentValueHasPageCount",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:integer"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:FileValue"
+    },
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
+    }
   }, {
     "@id" : "knora-api:error",
     "@type" : "owl:DatatypeProperty",

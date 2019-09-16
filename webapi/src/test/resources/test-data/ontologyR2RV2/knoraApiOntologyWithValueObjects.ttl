@@ -1229,6 +1229,9 @@ knora-api:DocumentFileValue a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty knora-api:deletedBy
     ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:documentValueHasPageCount
+    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:fileValueAsUrl
@@ -1269,6 +1272,11 @@ knora-api:DocumentFileValue a owl:Class;
       owl:cardinality 1;
       owl:onProperty knora-api:versionArkUrl
     ] .
+
+knora-api:documentValueHasPageCount a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:FileValue;
+  rdfs:subPropertyOf knora-api:valueHas .
 
 knora-api:DocumentRepresentation a owl:Class;
   knora-api:isResourceClass true;
