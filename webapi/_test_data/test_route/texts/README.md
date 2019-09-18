@@ -27,7 +27,6 @@ Please read the official documentation about Standoff Standard Mapping.
 Step to update standard mapping:
 
 1. Update `mappingForStandardHTML.xml`
-
 2. . create the `update-standard-mapping.json`
 
 ```json
