@@ -38,6 +38,7 @@
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/wl8QpeAmSrukY1KEdEqN6Q> , 
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/9f0iFk1JTu-gsMHtyUZqcg> , 
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ODwo82ZLRsiWBVXvipRk1w> , 
+								 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/RKhuK-_tRR60DfQEuH-r1Q> ,
                                  
                                  #### additional elements
                                  
@@ -159,6 +160,21 @@
 	a knora-base:MappingStandoffDataTypeClass ;
     knora-base:mappingHasStandoffClass knora-base:StandoffLinkTag ;
 	knora-base:mappingHasXMLAttributename "href"^^xsd:string .
+
+<http://rdfh.ch/standoff/mappings/StandardMapping/elements/RKhuK-_tRR60DfQEuH-r1Q> 
+    a knora-base:MappingElement ;
+	knora-base:mappingHasStandoffClass knora-base:StandoffInternalReferenceTag ;
+	knora-base:mappingHasXMLClass "internal-link" ;
+	knora-base:mappingHasXMLNamespace "noNamespace" ;
+    knora-base:mappingElementRequiresSeparator false ;
+	knora-base:mappingHasXMLTagname "a" ;
+	knora-base:mappingHasStandoffDataTypeClass <http://rdfh.ch/standoff/mappings/StandardMapping/elements/Yf-leJ6PRK2dc79yoaZwCQ> .
+
+<http://rdfh.ch/standoff/mappings/StandardMapping/elements/Yf-leJ6PRK2dc79yoaZwCQ> 
+    a knora-base:MappingStandoffDataTypeClass ;
+	knora-base:mappingHasStandoffClass knora-base:StandoffInternalReferenceTag ;
+	knora-base:mappingHasXMLAttributename "href" .
+
 
 ###################### additional elements
 
