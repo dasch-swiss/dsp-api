@@ -374,6 +374,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>
                   |   This text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
+                  |   And this <strong id="link_id">strong value</strong> is linked by this <a class="internal-link" href="#link_id">link</a>
                   |</text>
                 """.stripMargin
 
@@ -417,6 +418,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
             val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
             savedTextValueAsXml.contains("salsah-link") should ===(true)
+            savedTextValueAsXml.contains("internal-link") should ===(true)
         }
 
         "create a text value with standoff containing a URL" in {
