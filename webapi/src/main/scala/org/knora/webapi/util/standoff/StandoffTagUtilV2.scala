@@ -57,18 +57,18 @@ object StandoffTagUtilV2 {
     /**
       * Tries to find a data type attribute in the XML attributes of a given standoff node. Throws an appropriate error if information is inconsistent or missing.
       *
-      * @param XMLtoStandoffMapping the mapping from XML to standoff classes and properties for the given standoff node.
+      * @param xmlToStandoffMapping the mapping from XML to standoff classes and properties for the given standoff node.
       * @param dataType             the expected data type of the given standoff node.
       * @param standoffNodeFromXML  the given standoff node.
       * @return the value of the attribute.
       */
-    private def getDataTypeAttribute(XMLtoStandoffMapping: XMLTagToStandoffClass, dataType: StandoffDataTypeClasses.Value, standoffNodeFromXML: StandoffTag): String = {
+    private def getDataTypeAttribute(xmlToStandoffMapping: XMLTagToStandoffClass, dataType: StandoffDataTypeClasses.Value, standoffNodeFromXML: StandoffTag): String = {
 
-        if (XMLtoStandoffMapping.dataType.isEmpty || XMLtoStandoffMapping.dataType.get.standoffDataTypeClass != dataType) {
-            throw BadRequestException(s"no or wrong data type definition provided in mapping for standoff class ${XMLtoStandoffMapping.standoffClassIri}")
+        if (xmlToStandoffMapping.dataType.isEmpty || xmlToStandoffMapping.dataType.get.standoffDataTypeClass != dataType) {
+            throw BadRequestException(s"no or wrong data type definition provided in mapping for standoff class ${xmlToStandoffMapping.standoffClassIri}")
         }
 
-        val attrName = XMLtoStandoffMapping.dataType.get.dataTypeXMLAttribute
+        val attrName = xmlToStandoffMapping.dataType.get.dataTypeXMLAttribute
 
         val attrStringOption: Option[StandoffTagAttribute] = standoffNodeFromXML.attributes.find(attr => attr.key == attrName)
 
@@ -298,7 +298,7 @@ object StandoffTagUtilV2 {
 
         // get the id of an XML target element from an internal reference
         // assumes that an internal references starts with a "#"
-        def getTargetIDFromInternalReference(internalReference: String) = {
+        def getTargetIDFromInternalReference(internalReference: String): String = {
             // make sure that the internal reference starts with a '#'
             if (internalReference.charAt(0) != internalLinkMarker) throw BadRequestException(s"invalid internal reference (should start with a $internalLinkMarker): '$internalReference'")
 
@@ -900,7 +900,7 @@ object StandoffTagUtilV2 {
 
                         val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.internalReferenceProperties.contains(attr.standoffPropertyIri.toString))
 
-                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = internalRefTarget, xmlNamespace = None)
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = StandoffTagUtilV2.internalLinkMarker + internalRefTarget, xmlNamespace = None)
 
                     case Some(StandoffDataTypeClasses.StandoffColorTag) =>
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute

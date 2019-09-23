@@ -34,6 +34,8 @@ import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
+import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.diff.Diff
 
 @E2ETest
 class ValuesRouteV2E2ESpec extends E2ESpec {
@@ -417,8 +419,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             )
 
             val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
-            savedTextValueAsXml.contains("salsah-link") should ===(true)
-            savedTextValueAsXml.contains("internal-link") should ===(true)
+
+            // Compare the original XML with the regenerated XML.
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(textValueAsXml)).withTest(Input.fromString(savedTextValueAsXml)).build()
+            xmlDiff.hasDifferences should be(false)
         }
 
         "create a text value with standoff containing a URL" in {
