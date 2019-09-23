@@ -783,7 +783,7 @@ object StandoffTagUtilV2 {
                                     val originalId: String = standoffAssertions(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
 
                                     // recreate the original id reference
-                                    StandoffTagStringAttributeV2(standoffPropertyIri = propSmartIri, value = StandoffTagUtilV2.internalLinkMarker + originalId)
+                                    StandoffTagInternalReferenceAttributeV2(standoffPropertyIri = propSmartIri, value = originalId)
                                 } else {
                                     // it refers to a knora resource
                                     StandoffTagIriAttributeV2(standoffPropertyIri = propSmartIri, value = value)
