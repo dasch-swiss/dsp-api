@@ -154,6 +154,11 @@ object ApacheLuceneSupport {
             queryString
         }
 
+        /**
+          * Returns the terms contained in a Lucene query string.
+          *
+          * @return the terms contained in a Lucene query.
+          */
         def getSingleTerms: Seq[String] = {
             queryString.split(space).toSeq
         }

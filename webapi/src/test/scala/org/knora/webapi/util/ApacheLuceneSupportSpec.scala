@@ -25,46 +25,55 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
 
     "The ApacheLuceneSupport class" should {
 
-        "combine space separated words with a logical AND" in {
+        "leave a Lucene query unchanged" in {
 
             val searchString = "Reise Land"
             val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
-            assert(searchExpression == "Reise AND Land")
+            assert(searchExpression == "Reise Land")
         }
 
-        "combine space separated words with a logical AND (2)" in {
+        "leave a Lucene query unchanged (2)" in {
 
             val searchString = "Reise ins Land"
             val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
-            assert(searchExpression == "Reise AND ins AND Land")
+            assert(searchExpression == "Reise ins Land")
         }
 
-        "combine phrases and terms with a logical AND" in {
+        "leave a Lucene query containing phrases and terms unchanged" in {
 
             val searchString = "\"Leonhard Euler\" Bernoulli"
             val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
-            assert(searchExpression == "\"Leonhard Euler\" AND Bernoulli")
+            assert(searchExpression == "\"Leonhard Euler\" Bernoulli")
 
         }
 
-        "combine two phrases and one term with a logical AND" in {
+        "leave a Lucene query containing two phrases and one term unchanged" in {
 
             val searchString = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula"
             val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
-            assert(searchExpression == "\"Leonhard Euler\" AND \"Daniel Bernoulli\" AND formula")
+            assert(searchExpression == "\"Leonhard Euler\" \"Daniel Bernoulli\" formula")
 
         }
 
-        "combine two phrases and two terms with a logical AND" in {
+        "leave a Lucene query containing two phrases and two terms unchanged" in {
 
             val searchString = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula geometria"
             val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
-            assert(searchExpression == "\"Leonhard Euler\" AND \"Daniel Bernoulli\" AND formula AND geometria")
+            assert(searchExpression == "\"Leonhard Euler\" \"Daniel Bernoulli\" formula geometria")
+
+        }
+
+        "get terms contained in  a Lucene query" in {
+
+            val searchString = "Reise Land"
+            val singleTerms: Seq[String] = ApacheLuceneSupport.LuceneQueryString(searchString).getSingleTerms
+
+            assert(singleTerms.size === 2)
 
         }
 
