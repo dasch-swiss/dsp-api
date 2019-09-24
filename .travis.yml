@@ -133,6 +133,7 @@ jobs:
     # testing docs generation
     - stage: test
       script:
+        - mkdir $TRAVIS_BUILD_DIR/docs/target/jekyll
         - docker run --rm -v $TRAVIS_BUILD_DIR:/knora daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
     # Salsah browser tests
     #- stage: test
