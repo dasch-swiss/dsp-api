@@ -8,7 +8,7 @@
 
 <http://0.0.0.0:3333/ontology/0001/anything/v2> a owl:Ontology;
   knora-api:attachedToProject <http://rdfh.ch/projects/0001>;
-  knora-api:lastModificationDate "2017-12-19T15:23:42.166Z";
+  knora-api:lastModificationDate "2017-12-19T15:23:42.166Z"^^xsd:dateTimeStamp;
   rdfs:label "The anything ontology" .
 
 anything:BlueThing a owl:Class;
