@@ -133,26 +133,7 @@ jobs:
     # testing docs generation
     - stage: test
       script:
-        # install the necessary packages
-        - sudo apt-get install -y graphviz software-properties-common
-        - sudo apt-add-repository -y ppa:rael-gc/rvm
-        - sudo apt-get update
-        - sudo apt-get --allow-unauthenticated install rvm
-        - rvm reload
-        - rvm install ruby 2.5.1
-        - rvm use 2.5.1 --default
-        - ruby -v
-        # install bundler
-        - gem install bundler
-        # install jekyll
-        # - gem install jekyll -v 3.8.1
-        # install typedoc
-        - npm i npm@latest -g
-        - npm install --global typedoc
-        # install jekyll dependencies
-        - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
-        # compile and build all docs (paradox, typescript, jekyll)
-        - cd $TRAVIS_BUILD_DIR/ && sbt docs/makeSite
+        - docker run --rm -v $TRAVIS_BUILD_DIR:/knora daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
     # Salsah browser tests
     #- stage: test
     #  script:
