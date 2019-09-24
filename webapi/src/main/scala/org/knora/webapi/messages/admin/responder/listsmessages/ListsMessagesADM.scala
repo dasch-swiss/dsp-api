@@ -69,14 +69,16 @@ case class CreateListApiRequestADM(projectIri: IRI,
 }
 
 /**
-  * Represents an API request payload that asks the Knora API server to create a new child list node which will be
-  * attached to the list node identified by the supplied listNodeIri, where the list node to which a child list node
-  * is added can be either a root list node or a child list node. At least one label needs to be supplied. If other
-  * child nodes exist, the newly created list node will be appended to the end.
+  * Represents an API request payload that asks the Knora API server to create
+  * a new child list node which will be attached to the list node identified by
+  * the supplied listNodeIri, where the list node to which a child list node
+  * is added can be either a root list node or a child list node. At least one
+  * label needs to be supplied. If other child nodes exist, the newly created
+  * list node will be appended to the end.
   *
-  * @param parentNodeIri
-  * @param labels
-  * @param comments
+  * @param parentNodeIri the IRI of the parent node.
+  * @param labels the labels.
+  * @param comments the comments.
   */
 case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
                                         projectIri: IRI,
@@ -115,7 +117,8 @@ case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
 }
 
 /**
-  * Represents an API request payload that asks the Knora API server to update an existing list's basic information.
+  * Represents an API request payload that asks the Knora API server to update
+  * an existing list's basic information.
   *
   * @param listIri    the IRI of the list to change.
   * @param projectIri the IRI of the project the list belongs to.
@@ -123,6 +126,45 @@ case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
   * @param comments   the comments.
   */
 case class ChangeListInfoApiRequestADM(listIri: IRI,
+                                       projectIri: IRI,
+                                       labels: Seq[StringLiteralV2],
+                                       comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    if (listIri.isEmpty) {
+        throw BadRequestException(LIST_IRI_MISSING_ERROR)
+    }
+
+    if (!stringFormatter.isKnoraListIriStr(listIri)) {
+        throw BadRequestException(LIST_IRI_INVALID_ERROR)
+    }
+
+    if (projectIri.isEmpty) {
+        throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+    }
+
+    if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+    }
+
+    if (labels.isEmpty && comments.isEmpty) {
+        throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR)
+    }
+
+    def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
+}
+
+/**
+  * Represents an API request payload that asks the Knora API server to update
+  * an existing list's basic information.
+  *
+  * @param nodeIri    the IRI of the list node to change.
+  * @param projectIri the IRI of the project the list belongs to.
+  * @param labels     the labels.
+  * @param comments   the comments.
+  */
+case class ChangeListNodeApiRequestADM(nodeIri: IRI,
                                        projectIri: IRI,
                                        labels: Seq[StringLiteralV2],
                                        comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
