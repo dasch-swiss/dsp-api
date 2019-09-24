@@ -42,7 +42,7 @@ object ApacheLuceneSupport {
       * @param terms    the terms to search for.
       * @param lastTerm the last term the user is entering at the moment.
       */
-    case class MatchStringWhileTyping(terms: Seq[String], lastTerm: String) {
+    case class MatchStringWhileTyping(private val terms: Seq[String], lastTerm: String) {
 
         //
         // Search logic for Lucene: combine a phrase enclosed by double quotes (exact match) with a single search term with a wildcard at the end (matches the beginning of the given term).
@@ -143,7 +143,7 @@ object ApacheLuceneSupport {
       *
       * @param queryString given search terms.
       */
-    case class LuceneQueryString(queryString: String) {
+    case class LuceneQueryString(private val queryString: String) {
 
         /**
           * Returns the query string.
