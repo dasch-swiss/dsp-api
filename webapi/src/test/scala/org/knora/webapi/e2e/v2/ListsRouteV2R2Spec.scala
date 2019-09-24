@@ -80,6 +80,34 @@ class ListsRouteV2R2Spec extends R2RSpec {
             }
         }
 
+        "perform a request for the anything treelist list in JSON-LD" in {
+
+            Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "UTF-8")}") ~> listsPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/listsR2RV2/treelist.jsonld")))
+
+                val responseJson: JsValue = JsonParser(responseAs[String])
+                assert(responseJson == expectedAnswerJSONLD)
+
+            }
+        }
+
+        "perform a request for the anything othertreelist list in JSON-LD" in {
+
+            Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/0001/otherTreeList", "UTF-8")}") ~> listsPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/listsR2RV2/othertreelist.jsonld")))
+
+                val responseJson: JsValue = JsonParser(responseAs[String])
+                assert(responseJson == expectedAnswerJSONLD)
+
+            }
+        }
+
         "perform a request for a list in Turtle" in {
 
             Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> listsPath ~> check {
@@ -115,6 +143,20 @@ class ListsRouteV2R2Spec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val expectedAnswerJSONLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/listsR2RV2/imagesListNode.jsonld")))
+
+                val responseJson: JsValue = JsonParser(responseAs[String])
+                assert(responseJson == expectedAnswerJSONLD)
+
+            }
+        }
+
+        "perform a request for a treelist node in JSON-LD" in {
+
+            Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/0001/treeList01", "UTF-8")}") ~> listsPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/listsR2RV2/treelistnode.jsonld")))
 
                 val responseJson: JsValue = JsonParser(responseAs[String])
                 assert(responseJson == expectedAnswerJSONLD)
