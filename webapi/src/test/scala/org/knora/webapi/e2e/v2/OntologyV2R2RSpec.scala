@@ -119,6 +119,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val incunabulaWithValueObjectsBookSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
     private val boxOntologyWithValueObjectsSegment = URLEncoder.encode("http://api.knora.org/ontology/shared/example-box/v2", "UTF-8")
     private val minimalOntologyWithValueObjects = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/minimal/v2", "UTF-8")
+    private val anythingOntologyWithValueObjects = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2", "UTF-8")
 
     // The URLs and expected response files for each HTTP GET test.
     private val httpGetTests = Seq(
@@ -140,7 +141,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         HttpGetTest(s"/v2/ontologies/properties/$incunabulaWithValueObjectsPubDateSegment", "incunabulaWithValueObjectsPubDate"),
         HttpGetTest(s"/v2/ontologies/classes/$incunabulaWithValueObjectsPageSegment/$incunabulaWithValueObjectsBookSegment", "incunabulaPageAndBookWithValueObjects"),
         HttpGetTest(s"/v2/ontologies/allentities/$boxOntologyWithValueObjectsSegment", "boxOntologyWithValueObjects"),
-        HttpGetTest(s"/v2/ontologies/allentities/$minimalOntologyWithValueObjects", "minimalOntologyWithValueObjects")
+        HttpGetTest(s"/v2/ontologies/allentities/$minimalOntologyWithValueObjects", "minimalOntologyWithValueObjects"),
+        HttpGetTest(s"/v2/ontologies/allentities/$anythingOntologyWithValueObjects", "anythingOntologyWithValueObjects")
     )
 
     // The media types that will be used in HTTP Accept headers in HTTP GET tests.
