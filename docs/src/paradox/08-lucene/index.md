@@ -27,5 +27,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 @@@
 
-Lucene full-text indexing software.
+The Lucene full-text index provided by the triplestore is used to perform full-text searches in Knora. 
+The exact behavior can be different depending on the triplestore, e.g., GraphDB or Fuseki.
 
