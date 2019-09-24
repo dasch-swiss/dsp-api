@@ -425,6 +425,482 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             xmlDiff.hasDifferences should be(false)
         }
 
+        "create a very long text value with standoff and linked tags" in {
+            val resourceIri: IRI = aThingIri
+
+            val textValueAsXml: String =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<text>
+                  |   <p>This <a class="internal-link" href="#link_id">ref</a> is a link to an out of page tag.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>This <strong id="link_id">strong value</strong> is linked by an out of page anchor link at the top.</p>
+                  |</text>
+                """.stripMargin
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
+
+            val jsonLDEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasText" : {
+                   |    "@type" : "knora-api:TextValue",
+                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
+                   |    "knora-api:textValueHasMapping" : {
+                   |      "@id": "$standardMappingIri"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            thingTextValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = thingTextValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+
+            // Compare the original XML with the regenerated XML.
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(textValueAsXml)).withTest(Input.fromString(savedTextValueAsXml)).build()
+            xmlDiff.hasDifferences should be(false)
+        }
+
         "create a text value with standoff containing a URL" in {
             val resourceIri: IRI = aThingIri
 
