@@ -19,7 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.util.ApacheLuceneSupport.CombineSearchTerms
+@import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 @*
  * Performs a simple full-text search using standard SPARQL (except for the interface to Lucene, which is
@@ -38,7 +38,7 @@
  * @param restypeIriOption if given, searches only for resources of this class and its subclasses.
  *@
 @(triplestore: String,
-  searchTerms: CombineSearchTerms,
+  searchTerms: LuceneQueryString,
   preferredLanguage: String,
   fallbackLanguage: String,
   projectIriOption: Option[IRI],
@@ -71,7 +71,7 @@ WHERE {
     @triplestore match {
         case "embedded-jena-tdb" | "fuseki" => {
 
-            ?matchingSubject <http://jena.apache.org/text#query> '@searchTerms.combineSearchTermsWithLogicalAnd' .
+            ?matchingSubject <http://jena.apache.org/text#query> '@searchTerms.getQueryString' .
 
         }
 

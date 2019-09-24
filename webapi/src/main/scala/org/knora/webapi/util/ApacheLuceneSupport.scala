@@ -141,41 +141,22 @@ object ApacheLuceneSupport {
     /**
       * Handles Boolean logic for given search terms.
       *
-      * @param terms given search terms.
+      * @param queryString given search terms.
       */
-    case class CombineSearchTerms(terms: Seq[String]) {
+    case class LuceneQueryString(queryString: String) {
 
         /**
-          * Combines given search terms with a logical AND.
-          * Lucene's default behaviour is a logical OR.
+          * Returns the query string.
           *
-          * @return a string combining the given search terms with a logical AND.
+          * @return query string.
           */
-        def combineSearchTermsWithLogicalAnd: String = {
+        def getQueryString: String = {
+            queryString
+        }
 
-            terms.mkString(s" $logicalAnd ")
-
+        def getSingleTerms: Seq[String] = {
+            queryString.split(space).toSeq
         }
 
     }
-
-    /**
-      * Companion object providing constructor.
-      */
-    object CombineSearchTerms {
-
-        def apply(searchString: String): CombineSearchTerms = {
-
-            // separate phrases (delimited by quotes) and terms (delimited by space)
-            // https://stackoverflow.com/questions/43665641/in-scala-how-can-i-split-a-string-on-whitespaces-accounting-for-an-embedded-quot
-            val matches = separateTermsAndPhrasesRegex.findAllMatchIn(searchString).toList
-            val searchTerms = matches.map { _.subgroups.flatMap(Option(_)).fold("")(_ ++ _) }
-
-            new CombineSearchTerms(terms = searchTerms)
-
-        }
-
-
-    }
-
 }

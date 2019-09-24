@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.twirl.SearchCriterion
-import org.knora.webapi.util.ApacheLuceneSupport.CombineSearchTerms
+import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{DateUtilV1, PermissionUtilADM}
 
@@ -148,7 +148,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
             // Get the search results with paging.
             searchSparql <- Future(queries.sparql.v1.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
-                searchTerms = CombineSearchTerms(searchGetRequest.searchValue),
+                searchTerms = LuceneQueryString(searchGetRequest.searchValue),
                 preferredLanguage = searchGetRequest.userProfile.lang,
                 fallbackLanguage = settings.fallbackLanguage,
                 projectIriOption = searchGetRequest.filterByProject,

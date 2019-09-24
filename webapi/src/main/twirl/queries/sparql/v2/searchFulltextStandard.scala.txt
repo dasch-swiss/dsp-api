@@ -19,7 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.util.ApacheLuceneSupport.CombineSearchTerms
+@import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 @*
  * Performs a simple full-text search using standard SPARQL (except for the interface to Lucene, which is
@@ -41,7 +41,7 @@
  * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
 @(triplestore: String,
-  searchTerms: CombineSearchTerms,
+  searchTerms: LuceneQueryString,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
   limitToStandoffClass: Option[IRI],

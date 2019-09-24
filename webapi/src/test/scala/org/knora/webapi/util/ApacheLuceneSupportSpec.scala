@@ -28,7 +28,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
         "combine space separated words with a logical AND" in {
 
             val searchString = "Reise Land"
-            val searchExpression: String = ApacheLuceneSupport.CombineSearchTerms(searchString).combineSearchTermsWithLogicalAnd
+            val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
             assert(searchExpression == "Reise AND Land")
         }
@@ -36,7 +36,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
         "combine space separated words with a logical AND (2)" in {
 
             val searchString = "Reise ins Land"
-            val searchExpression: String = ApacheLuceneSupport.CombineSearchTerms(searchString).combineSearchTermsWithLogicalAnd
+            val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
             assert(searchExpression == "Reise AND ins AND Land")
         }
@@ -44,7 +44,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
         "combine phrases and terms with a logical AND" in {
 
             val searchString = "\"Leonhard Euler\" Bernoulli"
-            val searchExpression: String = ApacheLuceneSupport.CombineSearchTerms(searchString).combineSearchTermsWithLogicalAnd
+            val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
             assert(searchExpression == "\"Leonhard Euler\" AND Bernoulli")
 
@@ -53,7 +53,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
         "combine two phrases and one term with a logical AND" in {
 
             val searchString = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula"
-            val searchExpression: String = ApacheLuceneSupport.CombineSearchTerms(searchString).combineSearchTermsWithLogicalAnd
+            val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
             assert(searchExpression == "\"Leonhard Euler\" AND \"Daniel Bernoulli\" AND formula")
 
@@ -62,7 +62,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
         "combine two phrases and two terms with a logical AND" in {
 
             val searchString = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula geometria"
-            val searchExpression: String = ApacheLuceneSupport.CombineSearchTerms(searchString).combineSearchTermsWithLogicalAnd
+            val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
             assert(searchExpression == "\"Leonhard Euler\" AND \"Daniel Bernoulli\" AND formula AND geometria")
 
@@ -71,7 +71,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
         "handle one phrase correctly" in {
 
             val searchString = "\"Leonhard Euler\""
-            val searchExpression: String = ApacheLuceneSupport.CombineSearchTerms(searchString).combineSearchTermsWithLogicalAnd
+            val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
             assert(searchExpression == "\"Leonhard Euler\"")
 
