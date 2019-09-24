@@ -1153,7 +1153,6 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
         val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
 
-        // combine search terms with a logical AND (Lucene syntax)
         val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
 
         TransformedFilterPattern(
