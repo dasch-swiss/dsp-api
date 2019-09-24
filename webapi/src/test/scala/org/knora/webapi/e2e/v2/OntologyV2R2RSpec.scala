@@ -8,10 +8,12 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import org.eclipse.rdf4j.model.Model
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
 import org.knora.webapi.routing.v2.OntologiesRouteV2
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
@@ -36,6 +38,7 @@ object OntologyV2R2RSpec {
 /**
   * End-to-end test specification for API v2 ontology routes.
   */
+@E2ETest
 class OntologyV2R2RSpec extends R2RSpec {
 
     import OntologyV2R2RSpec._
@@ -59,7 +62,8 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val writeGetTestResponses = false
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box")
+        RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
+        RdfDataObject(path = "_test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
     )
 
     /**
@@ -71,7 +75,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       *                     This is useful if two tests share the same file.
       */
     private case class HttpGetTest(urlPath: String, fileBasename: String, disableWrite: Boolean = false) {
-        private def makeFile(mediaType: MediaType.NonBinary): File = {
+        def makeFile(mediaType: MediaType.NonBinary): File = {
             val fileSuffix = mediaType.fileExtensions.head
             new File(s"src/test/resources/test-data/ontologyR2RV2/$fileBasename.$fileSuffix")
         }
@@ -114,6 +118,8 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val incunabulaWithValueObjectsPageSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#page", "UTF-8")
     private val incunabulaWithValueObjectsBookSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
     private val boxOntologyWithValueObjectsSegment = URLEncoder.encode("http://api.knora.org/ontology/shared/example-box/v2", "UTF-8")
+    private val minimalOntologyWithValueObjects = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/minimal/v2", "UTF-8")
+    private val anythingOntologyWithValueObjects = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2", "UTF-8")
 
     // The URLs and expected response files for each HTTP GET test.
     private val httpGetTests = Seq(
@@ -134,7 +140,9 @@ class OntologyV2R2RSpec extends R2RSpec {
         HttpGetTest(s"/v2/ontologies/properties/$incunabulaSimplePubdateSegment", "incunabulaSimplePubDate"),
         HttpGetTest(s"/v2/ontologies/properties/$incunabulaWithValueObjectsPubDateSegment", "incunabulaWithValueObjectsPubDate"),
         HttpGetTest(s"/v2/ontologies/classes/$incunabulaWithValueObjectsPageSegment/$incunabulaWithValueObjectsBookSegment", "incunabulaPageAndBookWithValueObjects"),
-        HttpGetTest(s"/v2/ontologies/allentities/$boxOntologyWithValueObjectsSegment", "boxOntologyWithValueObjects")
+        HttpGetTest(s"/v2/ontologies/allentities/$boxOntologyWithValueObjectsSegment", "boxOntologyWithValueObjects"),
+        HttpGetTest(s"/v2/ontologies/allentities/$minimalOntologyWithValueObjects", "minimalOntologyWithValueObjects"),
+        HttpGetTest(s"/v2/ontologies/allentities/$anythingOntologyWithValueObjects", "anythingOntologyWithValueObjects")
     )
 
     // The media types that will be used in HTTP Accept headers in HTTP GET tests.
@@ -171,22 +179,42 @@ class OntologyV2R2RSpec extends R2RSpec {
                 for (mediaType <- mediaTypesForGetTests) {
 
                     Get(httpGetTest.urlPath).addHeader(Accept(mediaType)) ~> ontologiesPath ~> check {
+                        val responseStr: String = responseAs[String]
 
                         // Are we writing expected response files?
                         if (writeGetTestResponses) {
-                            // Yes.
-                            httpGetTest.writeFile(responseAs[String], mediaType)
+                            // Yes. But only write RDF/XML files if they're semantically different from the ones that we already
+                            // have, to avoid writing new files into Git that differ only in their blank node IDs.
+
+                            mediaType match {
+                                case RdfMediaTypes.`application/rdf+xml` =>
+                                    val existingFile: File = httpGetTest.makeFile(mediaType)
+
+                                    if (existingFile.exists()) {
+                                        val parsedResponse: Model = parseRdfXml(responseStr)
+                                        val parsedExistingFile: Model = parseRdfXml(httpGetTest.readFile(mediaType))
+
+                                        if (parsedResponse != parsedExistingFile) {
+                                            httpGetTest.writeFile(responseStr, mediaType)
+                                        }
+                                    } else {
+                                        httpGetTest.writeFile(responseStr, mediaType)
+                                    }
+
+                                case _ =>
+                                    httpGetTest.writeFile(responseStr, mediaType)
+                            }
                         } else {
                             // No. Compare the received response with the expected response.
                             mediaType match {
                                 case RdfMediaTypes.`application/ld+json` =>
-                                    assert(JsonParser(responseAs[String]) == JsonParser(httpGetTest.readFile(mediaType)))
+                                    assert(JsonParser(responseStr) == JsonParser(httpGetTest.readFile(mediaType)))
 
                                 case RdfMediaTypes.`text/turtle` =>
-                                    assert(parseTurtle(responseAs[String]) == parseTurtle(httpGetTest.readFile(mediaType)))
+                                    assert(parseTurtle(responseStr) == parseTurtle(httpGetTest.readFile(mediaType)))
 
-                                case RdfMediaTypes.`application/rdf+xml` => ()
-                                    assert(parseRdfXml(responseAs[String]) == parseRdfXml(httpGetTest.readFile(mediaType)))
+                                case RdfMediaTypes.`application/rdf+xml` =>
+                                    assert(parseRdfXml(responseStr) == parseRdfXml(httpGetTest.readFile(mediaType)))
 
                                 case _ => throw AssertionException(s"Unsupported media type for test: $mediaType")
                             }

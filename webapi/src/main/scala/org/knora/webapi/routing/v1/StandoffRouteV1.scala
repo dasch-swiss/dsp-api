@@ -41,9 +41,6 @@ import scala.concurrent.duration._
   */
 class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    /* needed for dealing with files in the request */
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
-
     def knoraApiPath: Route = {
 
         path("v1" / "mapping") {

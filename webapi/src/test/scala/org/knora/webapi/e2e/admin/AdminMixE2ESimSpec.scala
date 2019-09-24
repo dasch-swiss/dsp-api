@@ -23,6 +23,7 @@ import io.gatling.core.Predef.{forAll, global, rampUsers, scenario, _}
 import io.gatling.http.Predef.{http, status}
 import org.knora.webapi.E2ESimSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.testing.tags.E2ETest
 
 import scala.concurrent.duration._
 
@@ -31,6 +32,7 @@ import scala.concurrent.duration._
   *
   * This simulation scenario accesses the users, groups, and projects endpoint.
   */
+@E2ETest
 class AdminMixE2ESimSpec extends E2ESimSpec {
 
     override lazy val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
