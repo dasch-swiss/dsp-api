@@ -855,8 +855,7 @@ object StandoffTagUtilV2 {
     private def convertStandoffAttributeTags(mapping: Map[IRI, XMLAttrItem], attributes: Seq[StandoffTagAttributeV2]): Seq[StandoffTagAttribute] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        // Filter out knora-base:targetHasOriginalXMLID, because it is a virtual property generated in CONSTRUCT queries.
-        attributes.filterNot(_.standoffPropertyIri == OntologyConstants.KnoraBase.TargetHasOriginalXMLID.toSmartIri).map {
+        attributes.map {
             attr =>
                 val attrItem: XMLAttrItem = mapping.getOrElse(attr.standoffPropertyIri.toString, throw NotFoundException(s"property IRI ${attr.standoffPropertyIri} could not be found in mapping"))
 
@@ -1068,11 +1067,7 @@ object StandoffTagUtilV2 {
                     tag =>
                         tag.copy(
                             uuid = fixedUuid,
-                            attributes = tag.attributes.sortBy(_.standoffPropertyIri).filterNot {
-                                attribute =>
-                                    // knora-base:targetHasOriginalXMLID is a virtual attribute, generated in CONSTRUCT results.
-                                    attribute.standoffPropertyIri.toOntologySchema(InternalSchema).toString == OntologyConstants.KnoraBase.TargetHasOriginalXMLID
-                            }
+                            attributes = tag.attributes.sortBy(_.standoffPropertyIri)
                         )
                 }
 

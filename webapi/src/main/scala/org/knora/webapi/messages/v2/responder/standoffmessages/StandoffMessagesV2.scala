@@ -598,11 +598,7 @@ case class StandoffTagV2(standoffTagClassIri: SmartIri,
 
         copy(
             standoffTagClassIri = standoffTagClassIri.toOntologySchema(targetSchema),
-            attributes = attributes.filterNot {
-                attribute =>
-                    // Filter out knora-base:targetHasOriginalXMLID, which is used internally but not in the API.
-                    attribute.standoffPropertyIri.toString == OntologyConstants.KnoraBase.TargetHasOriginalXMLID
-            }.map(_.toOntologySchema(targetSchema))
+            attributes = attributes.map(_.toOntologySchema(targetSchema))
         )
     }
 
