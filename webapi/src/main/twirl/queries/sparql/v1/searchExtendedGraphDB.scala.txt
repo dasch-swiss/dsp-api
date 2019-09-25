@@ -105,12 +105,6 @@ WHERE {
 
             case SearchComparisonOperatorV1.MATCH => {
 
-                @*
-
-                    TODO: Handle single search terms correctly: combine them with an AND
-
-                *@
-
                 ?valueObject@index knora-base:valueHasString ?literal@index .
                 ?literal@index <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchCriterion.searchValue' .
 

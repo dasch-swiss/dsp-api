@@ -19,6 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 
 @*
  * Performs a search for resources matching the given criteria, using GraphDB.
@@ -38,8 +39,7 @@
  * @param limitOfResults limits number of resources to be returned.
  * @param separator the separator to be used when concatenating the value strings.
  *@
-@(phrase: Option[String],
-  lastTerm: String,
+@(searchPhrase: MatchStringWhileTyping,
   restypeIriOption: Option[IRI],
   numberOfProps: Int,
   limitOfResults: Int,
@@ -56,22 +56,9 @@ SELECT DISTINCT ?resourceIri ?resourceClass ?firstProp ?attachedToUser ?attached
 }
 WHERE {
 
-    @*
-
-    Use Lucene Query Parser Syntax: https://lucene.apache.org/core/3_6_2/queryparsersyntax.html
-
-    Combine the phrase (to be enclosed by double quotes) with the last term with a wildcard at the end.
-    This finds allthe strings that contain the exact phrase and the term with the wildcard.
-    Example: "Reise ins" "Heili" -> "Reise ins" AND Heili*
-
-    Apply filter statement containing a regex to make sure that lastTerm directly follows the phrase
-    (only necessary if we have several terms to search for).
-
-    *@
-
     ?resourceIri rdfs:label ?firstProp .
-    ?firstProp <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@if(phrase.nonEmpty){"@phrase" AND }@lastTerm*' .
-    @if(phrase.nonEmpty){FILTER regex(?firstProp, "@phrase @lastTerm*", "i") .}
+    ?firstProp <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchPhrase.generateLiteralForLuceneIndexWithExactSequence' .
+    @searchPhrase.generateRegexFilterStatementForExactSequenceMatch("firstProp")
 
     ?resourceIri knora-base:isDeleted false .
 
