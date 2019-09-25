@@ -780,8 +780,15 @@ object StandoffTagUtilV2 {
                                     // it refers to a standoff node, recreate the original id
 
                                     // value points to another standoff node
-                                    // get this standoff node and access its original id
-                                    val originalId: String = standoffTagAssertions.getOrElse(OntologyConstants.KnoraBase.TargetHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
+
+                                    // If a v2 SPARQL template was used, the XML ID is in this standoff tag.
+                                    val originalId: String = standoffTagAssertions.get(OntologyConstants.KnoraBase.TargetHasOriginalXMLID) match {
+                                        case Some(targetXmlID) => targetXmlID
+
+                                        case None =>
+                                            // If a v1 SPARQL template was used, we have to get the target node and to get its XML ID.
+                                            standoffAssertions(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
+                                    }
 
                                     // recreate the original id reference
                                     StandoffTagInternalReferenceAttributeV2(standoffPropertyIri = propSmartIri, value = originalId)
