@@ -301,7 +301,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 2 results when we do a simple search for the words 'Zeitglöcklein' and 'Lebens' in the Incunabula test data" in {
             // http://0.0.0.0:3333/v1/search/Zeitglöcklein%20Lebens?searchtype=fulltext
             responderManager ! FulltextSearchGetRequestV1(
-                searchValue = "Zeitglöcklein Lebens",
+                searchValue = "Zeitglöcklein AND Lebens",
                 userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25
@@ -315,7 +315,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 0 results when we do a simple search for the words 'Zeitglöcklein' for the type incunabula:page in the Incunabula test data" in {
             // http://0.0.0.0:3333/v1/search/Zeitglöcklein%20Lebens?searchtype=fulltext&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
             responderManager ! FulltextSearchGetRequestV1(
-                searchValue = "Zeitglöcklein Lebens",
+                searchValue = "Zeitglöcklein AND Lebens",
                 userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25,
@@ -348,7 +348,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return 2 results when we do a simple search for the words 'Berthold and Bruder' in the Incunabula test data" in {
             // http://0.0.0.0:3333/v1/search/Berthold%20Bruder?searchtype=fulltext
             responderManager ! FulltextSearchGetRequestV1(
-                searchValue = "Berthold Bruder",
+                searchValue = "Berthold AND Bruder",
                 userProfile = incunabulaUser,
                 startAt = 0,
                 showNRows = 25
@@ -774,7 +774,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // as well as both values, the search result should include the resource and show that both values matched.
 
             responderManager ! FulltextSearchGetRequestV1(
-                searchValue = "die Dinge",
+                searchValue = "die AND Dinge",
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = anythingUser1,
                 startAt = 0,
@@ -788,7 +788,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // Another user in the same project, anythingUser2, should get the resource as a search result, but should not see the values.
 
             responderManager ! FulltextSearchGetRequestV1(
-                searchValue = "die Dinge",
+                searchValue = "die AND Dinge",
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = anythingUser2,
                 startAt = 0,
@@ -802,7 +802,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // User anythingUser2 should also get the resource as a search result by searching for something that matches the resource's label, but not the values.
 
             responderManager ! FulltextSearchGetRequestV1(
-                searchValue = "für jemanden",
+                searchValue = "für AND jemanden",
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = anythingUser2,
                 startAt = 0,
@@ -817,7 +817,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // value that matched, but not the value that didn't match.
 
             responderManager ! FulltextSearchGetRequestV1(
-                searchValue = "alles für mich",
+                searchValue = "alles AND für AND mich",
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = anythingUser1,
                 startAt = 0,
@@ -831,7 +831,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // If user anythingUser2 searches for something that matches one of the values, but doesn't match the resource's label, no results should be returned.
 
             responderManager ! FulltextSearchGetRequestV1(
-                searchValue = "alles für mich",
+                searchValue = "alles AND für AND mich",
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = anythingUser2,
                 startAt = 0,
@@ -845,7 +845,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             // A user in another project shouldn't get any results for any of those queries.
 
             responderManager ! FulltextSearchGetRequestV1(
-                searchValue = "die Dinge",
+                searchValue = "die AND Dinge",
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = incunabulaUser,
                 startAt = 0,
@@ -857,7 +857,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
             responderManager ! FulltextSearchGetRequestV1(
-                searchValue = "für jemanden",
+                searchValue = "für AND jemanden",
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = incunabulaUser,
                 startAt = 0,
@@ -869,7 +869,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
             }
 
             responderManager ! FulltextSearchGetRequestV1(
-                searchValue = "alles für mich",
+                searchValue = "alles AND für AND mich",
                 filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
                 userProfile = incunabulaUser,
                 startAt = 0,

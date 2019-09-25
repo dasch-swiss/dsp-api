@@ -442,9 +442,9 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     requestContext => {
                         val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                        val requestMessageFuture: Future[DeleteResourceRequestV2] = for {
+                        val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
-                            requestMessage: DeleteResourceRequestV2 <- DeleteResourceRequestV2.fromJsonLD(
+                            requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
                                 requestDoc,
                                 apiRequestID = UUID.randomUUID,
                                 requestingUser = requestingUser,
@@ -454,6 +454,37 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                 log = log
                             )
                         } yield requestMessage
+
+                        RouteUtilV2.runRdfRouteWithFuture(
+                            requestMessageF = requestMessageFuture,
+                            requestContext = requestContext,
+                            settings = settings,
+                            responderManager = responderManager,
+                            log = log,
+                            targetSchema = ApiV2Complex,
+                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                        )
+                    }
+                }
+            }
+        } ~ path ("v2" / "resources" / "erase") {
+            post {
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessageFuture: Future[DeleteOrEraseResourceRequestV2] = for {
+                            requestingUser <- getUserADM(requestContext)
+                            requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
+                                requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                storeManager = storeManager,
+                                settings = settings,
+                                log = log
+                            )
+                        } yield requestMessage.copy(erase = true)
 
                         RouteUtilV2.runRdfRouteWithFuture(
                             requestMessageF = requestMessageFuture,

@@ -20,7 +20,7 @@
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
 @import org.knora.webapi.GravsearchException
-@import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.CombineSearchTerms
+@import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 @*
  * Performs a simple full-text search using GraphDB.
@@ -41,7 +41,7 @@
  * @param offset offset for paging (starts with 0)
  * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
-@(searchTerms: CombineSearchTerms,
+@(searchTerms: LuceneQueryString,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
   limitToStandoffClass: Option[IRI],
@@ -67,7 +67,7 @@ WHERE {
                 ?matchingSubject ?matchingProperty ?literal .
             }
 
-            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms.combineSearchTermsWithLogicalAnd' .
+            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms.getQueryString' .
 
             @* standoff search *@
             @if(limitToStandoffClass.nonEmpty) {
@@ -88,7 +88,8 @@ WHERE {
                 BIND(SUBSTR(?literal, ?start+1, ?end - ?start) AS ?markedup)
 
                 @* Loop over search terms and make sure they are all contained in the specified standoff markup *@
-                @for(term <- searchTerms.terms) {
+                @for(term <- searchTerms.getSingleTerms) {
+                    @* TODO: Ignore Lucene operators *@
                     FILTER REGEX(?markedup, '@term', "i")
                 }
 

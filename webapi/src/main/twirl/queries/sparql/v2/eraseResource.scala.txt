@@ -17,31 +17,25 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
-@import org.knora.webapi.IRI
-@import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
+@import java.time.Instant
+@import org.knora.webapi._
 
-@*
- * Performs a search for resources by their label.
+@**
+ * Erases a resource from the triplestore.
  *
  * @param triplestore the name of the triplestore being used.
- * @param searchTerm search terms.
- * @param limitToProject limit search to the given project.
- * @param limitToResourceClass limit search to given resource class.
- * @param limit maximum amount of resources to be returned.
- * @param offset offset to be used for paging.
- * @param countQuery indicates whether it is a count query or the actual resources should be returned.
+ * @param resourceIri the IRI of the resource to be marked as deleted.
  *@
 @(triplestore: String,
-  searchTerm: MatchStringWhileTyping,
-  limitToProject: Option[IRI],
-  limitToResourceClass: Option[IRI],
-  limit: Int,
-  offset: Int,
-  countQuery: Boolean)
+  resourceIri: IRI)
 
-  @*
-
-    TODO: To be implemented
-
-  *@
+@if(triplestore.startsWith("graphdb")) {
+    @{
+        queries.sparql.v2.txt.eraseResourceGraphDB(resourceIri = resourceIri)
+     }
+} else {
+    @{
+        queries.sparql.v2.txt.eraseResourceStandard(triplestore: String,
+                                                    resourceIri = resourceIri)
+     }
+}
