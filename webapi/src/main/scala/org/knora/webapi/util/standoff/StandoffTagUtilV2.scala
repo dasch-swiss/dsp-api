@@ -767,20 +767,21 @@ object StandoffTagUtilV2 {
                     val attributes: Seq[StandoffTagAttributeV2] = (standoffTagAssertions -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
                         case (propIri: IRI, value) =>
                             val propSmartIri = propIri.toSmartIri
-                            val propPredicates: Map[SmartIri, PredicateInfoV2] = standoffEntities.standoffPropertyInfoMap(propIri.toSmartIri).entityInfoContent.predicates
+                            val propDef: ReadPropertyInfoV2 = standoffEntities.standoffPropertyInfoMap(propSmartIri)
+                            val propPredicates: Map[SmartIri, PredicateInfoV2] = propDef.entityInfoContent.predicates
 
                             // check if the given property has an object type constraint (linking property) or an object data type constraint
-                            if (propPredicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri).isDefined) {
+                            if (propPredicates.contains(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri)) {
 
                                 // it is a linking property
                                 // check if it refers to a resource or a standoff node
 
-                                if (standoffEntities.standoffPropertyInfoMap(propIri.toSmartIri).isStandoffInternalReferenceProperty) {
+                                if (propDef.isStandoffInternalReferenceProperty) {
                                     // it refers to a standoff node, recreate the original id
 
                                     // value points to another standoff node
                                     // get this standoff node and access its original id
-                                    val originalId: String = standoffAssertions(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
+                                    val originalId: String = standoffTagAssertions.getOrElse(OntologyConstants.KnoraBase.TargetHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
 
                                     // recreate the original id reference
                                     StandoffTagInternalReferenceAttributeV2(standoffPropertyIri = propSmartIri, value = originalId)
@@ -845,9 +846,11 @@ object StandoffTagUtilV2 {
       * @return a sequence of [[StandoffTagAttribute]].
       */
     private def convertStandoffAttributeTags(mapping: Map[IRI, XMLAttrItem], attributes: Seq[StandoffTagAttributeV2]): Seq[StandoffTagAttribute] = {
-        attributes.map {
-            attr =>
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+        // Filter out knora-base:targetHasOriginalXMLID, because it is a virtual property generated in CONSTRUCT queries.
+        attributes.filterNot(_.standoffPropertyIri == OntologyConstants.KnoraBase.TargetHasOriginalXMLID.toSmartIri).map {
+            attr =>
                 val attrItem: XMLAttrItem = mapping.getOrElse(attr.standoffPropertyIri.toString, throw NotFoundException(s"property IRI ${attr.standoffPropertyIri} could not be found in mapping"))
 
                 StandoffTagAttribute(
@@ -1058,7 +1061,11 @@ object StandoffTagUtilV2 {
                     tag =>
                         tag.copy(
                             uuid = fixedUuid,
-                            attributes = tag.attributes.sortBy(_.standoffPropertyIri)
+                            attributes = tag.attributes.sortBy(_.standoffPropertyIri).filterNot {
+                                attribute =>
+                                    // knora-base:targetHasOriginalXMLID is a virtual attribute, generated in CONSTRUCT results.
+                                    attribute.standoffPropertyIri.toOntologySchema(InternalSchema).toString == OntologyConstants.KnoraBase.TargetHasOriginalXMLID
+                            }
                         )
                 }
 
