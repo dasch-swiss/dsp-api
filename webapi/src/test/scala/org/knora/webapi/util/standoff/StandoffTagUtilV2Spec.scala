@@ -299,10 +299,6 @@ class StandoffTagUtilV2Spec extends CoreSpec {
             endPosition = 247,
             startParentIndex = Some(2),
             attributes = Vector(
-                StandoffTagStringAttributeV2(
-                    standoffPropertyIri = "http://www.knora.org/ontology/knora-base#targetHasOriginalXMLID".toSmartIri,
-                    value = "first"
-                ),
                 StandoffTagInternalReferenceAttributeV2(
                     standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference".toSmartIri,
                     value = "first"

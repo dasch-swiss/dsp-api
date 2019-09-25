@@ -796,7 +796,7 @@ object StandoffTagUtilV2 {
                                     // it refers to a knora resource
                                     StandoffTagIriAttributeV2(standoffPropertyIri = propSmartIri, value = value)
                                 }
-                            } else if (propPredicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri).isDefined) {
+                            } else if (propPredicates.contains(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri)) {
 
                                 // it is a data type property (literal)
                                 val propDataType: PredicateInfoV2 = propPredicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri)
