@@ -39,6 +39,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
+import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 
@@ -1103,32 +1104,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     private def getResourceSearchResponseV1(searchString: String, resourceTypeIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserADM): Future[ResourceSearchResponseV1] = {
         val userProfileV1 = userProfile.asUserProfileV1
 
-        //
-        // Search logic for Lucene: combine a phrase enclosed by double quotes (exact match) with a single search term with a wildcard at the end (matches the beginning of the given term).
-        // Example: searchString "Reise ins Heili" results in: '"Reise ins" AND Heili*' that matches "Reise ins Heilige Land".
-        // This is necessary because wildcards cannot be used inside a phrase. And we need phrases because we cannot just search for a combination of single terms as their order matters.
-        //
-
-        // split search string by a space
-        val searchStringSpaceSeparated: Array[String] = searchString.split(" ")
-
-        // take all the elements except the last one and make a String again (separated by space).
-        // if the String would be empty, return a None (occurs when the the Array contains nly one element).
-        val phrase: Option[String] = searchStringSpaceSeparated.dropRight(1).mkString(" ") match {
-            case "" => None
-            case (searchPhrase: String) => Some(searchPhrase)
-        }
-
-        // get the las element of the Array
-        val lastTerm = searchStringSpaceSeparated.last
-
+        val searchPhrase = MatchStringWhileTyping(searchString)
 
         for {
 
             searchResourcesSparql <- Future(queries.sparql.v1.txt.getResourceSearchResult(
                 triplestore = settings.triplestoreType,
-                phrase = phrase,
-                lastTerm = lastTerm,
+                searchPhrase = searchPhrase,
                 restypeIriOption = resourceTypeIri,
                 numberOfProps = numberOfProps,
                 limitOfResults = limitOfResults,

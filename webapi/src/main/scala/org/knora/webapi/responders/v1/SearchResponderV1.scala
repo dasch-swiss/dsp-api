@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.twirl.SearchCriterion
+import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{DateUtilV1, PermissionUtilADM}
 
@@ -149,7 +150,6 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
         val limit = checkLimit(searchGetRequest.showNRows)
 
-        val searchTerms = searchGetRequest.searchValue.split(" ")
         // TODO: handle case in which the user submits strings enclosed by double quotes
         // the double quotes are escaped with a backslash during input validation in route
 
@@ -157,7 +157,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
             // Get the search results with paging.
             searchSparql <- Future(queries.sparql.v1.txt.searchFulltext(
                 triplestore = settings.triplestoreType,
-                searchTerms = searchTerms,
+                searchTerms = LuceneQueryString(searchGetRequest.searchValue),
                 preferredLanguage = searchGetRequest.userProfile.lang,
                 fallbackLanguage = settings.fallbackLanguage,
                 projectIriOption = searchGetRequest.filterByProject,
