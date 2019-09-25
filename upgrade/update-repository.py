@@ -30,7 +30,7 @@ import re
 from updatelib import rdftools
 
 
-# A list of built-in Knora ontologies.
+# A list of built-in Knora ontologies and data files.
 knora_ontologies = [
     {
         "filename": "knora-admin.ttl",
@@ -47,6 +47,10 @@ knora_ontologies = [
     {
         "filename": "standoff-onto.ttl",
         "context": "http://www.knora.org/ontology/standoff"
+    },
+    {
+        "filename": "standoff-data.ttl",
+        "context": "http://www.knora.org/data/standoff"
     }
 ]
 
