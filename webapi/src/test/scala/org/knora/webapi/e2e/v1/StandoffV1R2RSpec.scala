@@ -37,8 +37,7 @@ import org.xmlunit.diff.Diff
 import spray.json._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
-import scala.io.{Codec, Source}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 
 
@@ -49,7 +48,7 @@ import scala.io.{Codec, Source}
 @E2ETest
 class StandoffV1R2RSpec extends R2RSpec {
 
-    override def testConfigSource =
+    override def testConfigSource: String =
         """
          # akka.loglevel = "DEBUG"
          # akka.stdout-loglevel = "DEBUG"
@@ -63,9 +62,9 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     private val password = "test"
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
-    implicit val ec = system.dispatcher
+    implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
@@ -77,6 +76,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     private val firstTextValueIri = new MutableTestIri
     private val secondTextValueIri = new MutableTestIri
     private val thirdTextValueIri = new MutableTestIri
+    private val fourthTextValueIri = new MutableTestIri
 
     object ResponseUtils {
 
@@ -89,7 +89,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                     resBodyAsString.parseJson.asJsObject.fields.get(memberName) match {
                         case Some(JsString(entitiyId)) => entitiyId
                         case None => throw InvalidApiJsonException(s"The response does not contain a field called '$memberName'")
-                        case other => throw InvalidApiJsonException(s"The response does not contain a field '$memberName' of type JsString, but ${other}")
+                        case other => throw InvalidApiJsonException(s"The response does not contain a field '$memberName' of type JsString, but $other")
                     }
             }
 
@@ -102,7 +102,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     object RequestParams {
 
-        val paramsCreateLetterMappingFromXML =
+        val paramsCreateLetterMappingFromXML: String =
             s"""
                |{
                |  "project_id": "$ANYTHING_PROJECT_IRI",
@@ -119,7 +119,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         val pathToLetter3XML = "_test_data/test_route/texts/letter3.xml"
 
-        val paramsCreateHTMLMappingFromXML =
+        val paramsCreateHTMLMappingFromXML: String =
             s"""
                |{
                |  "project_id": "$ANYTHING_PROJECT_IRI",
@@ -130,6 +130,8 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         // Standard HTML is the html code that can be translated into Standoff markup with the OntologyConstants.KnoraBase.StandardMapping
         val pathToStandardHTML = "_test_data/test_route/texts/StandardHTML.xml"
+
+        val pathToStandardHTMLInternalLink = "_test_data/test_route/texts/StandardHTML-internal-link.xml"
 
         val pathToHTMLMapping = "_test_data/test_route/texts/mappingForHTML.xml"
 
@@ -699,12 +701,13 @@ class StandoffV1R2RSpec extends R2RSpec {
         "read the XML TextValue back to XML and compare it to the XML that was originally sent" in {
 
             val xmlFile = new File(RequestParams.pathToLetterXML)
+            val xmlStr = FileUtil.readTextFile(xmlFile)
 
             Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
                 assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
-                val xml = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+                val xml: String = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
                     case Some(value: JsObject) => value.fields.get("xml") match {
                         case Some(JsString(xml: String)) => xml
                         case _ => throw new InvalidApiJsonException("member 'xml' not given")
@@ -713,7 +716,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                 }
 
                 // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(xml)).build()
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlStr)).withTest(Input.fromString(xml)).build()
 
                 xmlDiff.hasDifferences should be(false)
 
@@ -724,13 +727,14 @@ class StandoffV1R2RSpec extends R2RSpec {
         "change a text value from XML representing a letter" in {
 
             val xmlFileToSend = new File(RequestParams.pathToLetter2XML)
+            val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
 
             val newValueParams =
                 s"""
                     {
                       "project_id": "http://rdfh.ch/projects/0001",
                       "richtext_value": {
-                            "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
+                            "xml": ${JsString(xmlStrToSend)},
                             "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/LetterMapping"
                       }
                     }
@@ -750,6 +754,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         "read the changed TextValue back to XML and compare it to the XML that was originally sent" in {
 
             val xmlFile = new File(RequestParams.pathToLetter2XML)
+            val xmlStr = FileUtil.readTextFile(xmlFile)
 
             Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
@@ -765,7 +770,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
 
                 // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(xml)).build()
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlStr)).withTest(Input.fromString(xml)).build()
 
                 xmlDiff.hasDifferences should be(false)
 
@@ -776,6 +781,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         "create a TextValue from complex XML representing a letter" in {
 
             val xmlFileToSend = new File(RequestParams.pathToLetter3XML)
+            val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
 
             val newValueParams =
                 s"""
@@ -784,7 +790,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
-                        "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
+                        "xml": ${JsString(xmlStrToSend)},
                         "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/LetterMapping"
                   }
                 }
@@ -806,6 +812,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         "read the complex TextValue back to XML and compare it to the XML that was originally sent" in {
 
             val xmlFile = new File(RequestParams.pathToLetter3XML)
+            val xmlStr = FileUtil.readTextFile(xmlFile)
 
             Get("/v1/values/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
@@ -821,7 +828,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
 
                 // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(xmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(xml)).build()
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlStr)).withTest(Input.fromString(xml)).build()
 
                 xmlDiff.hasDifferences should be(false)
 
@@ -863,6 +870,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         "create a TextValue from StandardXML representing HTML (in strict XML notation)" in {
 
             val xmlFileToSend = new File(RequestParams.pathToStandardHTML)
+            val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
 
             val newValueParams =
                 s"""
@@ -871,7 +879,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
-                        "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
+                        "xml": ${JsString(xmlStrToSend)},
                         "mapping_id": "${OntologyConstants.KnoraBase.StandardMapping}"
                   }
                 }
@@ -892,6 +900,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         "read the TextValue back to XML and compare it to the (Standard) HTML that was originally sent" in {
 
             val htmlFile = new File(RequestParams.pathToStandardHTML)
+            val htmlStr = FileUtil.readTextFile(htmlFile)
 
             Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
@@ -906,7 +915,63 @@ class StandoffV1R2RSpec extends R2RSpec {
                 }
 
                 // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(htmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(xml)).build()
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(htmlStr)).withTest(Input.fromString(xml)).build()
+
+                xmlDiff.hasDifferences should be(false)
+
+            }
+
+        }
+
+        "create a TextValue from StandardXML representing HTML with internal anchor link" in {
+
+            val xmlFileToSend = new File(RequestParams.pathToStandardHTMLInternalLink)
+            val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
+
+            val newValueParams =
+                s"""
+                {
+                  "project_id": "http://rdfh.ch/projects/0001",
+                  "res_id": "http://rdfh.ch/0001/a-thing",
+                  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
+                  "richtext_value": {
+                        "xml": ${JsString(xmlStrToSend)},
+                        "mapping_id": "${OntologyConstants.KnoraBase.StandardMapping}"
+                  }
+                }
+                """
+
+            // create standoff from XML
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+
+                fourthTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
+
+
+            }
+
+        }
+
+        "read the TextValue back to XML and compare it to the (Standard) HTML with internal anchor link that was originally sent" in {
+
+            val htmlFile = new File(RequestParams.pathToStandardHTMLInternalLink)
+            val htmlStr = FileUtil.readTextFile(htmlFile)
+
+            Get("/v1/values/" + URLEncoder.encode(fourthTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
+
+                val xml = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+                    case Some(value: JsObject) => value.fields.get("xml") match {
+                        case Some(JsString(xml: String)) => xml
+                        case _ => throw new InvalidApiJsonException("member 'xml' not given")
+                    }
+                    case _ => throw new InvalidApiJsonException("member 'value' not given")
+                }
+
+                // Compare the original XML with the regenerated XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(htmlStr)).withTest(Input.fromString(xml)).build()
 
                 xmlDiff.hasDifferences should be(false)
 
@@ -917,6 +982,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         "create a TextValue from XML representing HTML (in strict XML notation)" in {
 
             val xmlFileToSend = new File(RequestParams.pathToHTML)
+            val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
 
             val newValueParams =
                 s"""
@@ -925,7 +991,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                   "res_id": "http://rdfh.ch/0001/a-thing",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
-                        "xml": ${JsString(Source.fromFile(xmlFileToSend).mkString)},
+                        "xml": ${JsString(xmlStrToSend)},
                         "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/HTMLMapping"
                   }
                 }
@@ -945,6 +1011,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         "read the TextValue back to XML and compare it to the HTML that was originally sent" in {
 
             val htmlFile = new File(RequestParams.pathToHTML)
+            val htmlStr = FileUtil.readTextFile(htmlFile)
 
             Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
@@ -959,7 +1026,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                 }
 
                 // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(Source.fromFile(htmlFile)(Codec.UTF8).mkString)).withTest(Input.fromString(xml)).build()
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(htmlStr)).withTest(Input.fromString(xml)).build()
 
                 xmlDiff.hasDifferences should be(false)
 

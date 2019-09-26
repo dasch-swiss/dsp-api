@@ -1573,6 +1573,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         OntologyConstants.KnoraBase.ObjectClassConstraint,
         OntologyConstants.KnoraBase.SubjectClassConstraint,
         OntologyConstants.KnoraBase.StandoffParentClassConstraint,
+        OntologyConstants.KnoraBase.TargetHasOriginalXMLID,
         OntologyConstants.KnoraBase.ValueHasStandoff,
         OntologyConstants.KnoraBase.ValueHasLanguage,
         OntologyConstants.KnoraBase.ValueHasMapping,
