@@ -137,6 +137,11 @@ anything:BlueThing a owl:Class;
       owl:onProperty anything:hasThingPictureValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      salsah-gui:guiOrder 13;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasTimeStamp
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       salsah-gui:guiOrder 15;
       owl:minCardinality 0;
       owl:onProperty anything:isPartOfOtherThing
@@ -322,6 +327,10 @@ anything:Thing a owl:Class;
       owl:minCardinality 0;
       owl:onProperty anything:hasThingPictureValue
     ], [ a owl:Restriction;
+      salsah-gui:guiOrder 13;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasTimeStamp
+    ], [ a owl:Restriction;
       salsah-gui:guiOrder 15;
       owl:minCardinality 0;
       owl:onProperty anything:isPartOfOtherThing
@@ -473,6 +482,15 @@ anything:hasThingPictureValue a owl:ObjectProperty;
   salsah-gui:guiElement salsah-gui:Searchbox;
   rdfs:label "Picture of a thing";
   rdfs:subPropertyOf knora-api:hasRepresentationValue .
+
+anything:hasTimeStamp a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:TimeValue;
+  knora-api:subjectType anything:Thing;
+  salsah-gui:guiElement salsah-gui:TimeStamp;
+  rdfs:label "Timestamp";
+  rdfs:subPropertyOf knora-api:hasValue .
 
 anything:isPartOfOtherThing a owl:ObjectProperty;
   knora-api:isEditable true;
@@ -630,6 +648,14 @@ anything:ThingPicture a owl:Class;
   rdfs:label "Picture of a thing";
   rdfs:subClassOf knora-api:StillImageRepresentation, [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deletedBy
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
@@ -695,14 +721,6 @@ anything:ThingPicture a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:deleteComment
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:deleteDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:deletedBy
     ] .
 
 anything:hasPictureTitle a owl:ObjectProperty;
@@ -1054,6 +1072,11 @@ anything:ThingWithSeqnum a owl:Class;
       salsah-gui:guiOrder 13;
       owl:minCardinality 0;
       owl:onProperty anything:hasThingPictureValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      salsah-gui:guiOrder 13;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasTimeStamp
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       salsah-gui:guiOrder 15;
