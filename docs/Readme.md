@@ -2,8 +2,9 @@
 
 ## 1 Paradox Documentation
 
-This folder contains the sources to the Knora documentation website published under
-[http://docs.knora.org](http://docs.knora.org). The `src` folder contains the following documentation sources:
+This folder contains the sources to the Knora documentation website published
+under [http://docs.knora.org](http://docs.knora.org). The `src` folder contains
+the following documentation sources:
 
  - `src/jekyll`: The Knora Documentation Overview Website
  - `src/paradox`: The Paradox-Mardown-based Knora general documentation
@@ -11,13 +12,16 @@ This folder contains the sources to the Knora documentation website published un
  - `src/api-v2`: The Knora JSON-LD API V2 Request and Response Format documentation.
  - `src/api-admin`: The Knora JSON Admin API Request and Response format Swagger-based documentation.
 
-All the different documentations are build by invoking the following command:
+All the different documentations are build by invoking the following command
+(use one of the two):
 
 ```
 $ sbt docs/makeSite
+$ docker run --rm -it -v $PWD:/knora -v $HOME/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
 ```
 
-The generated documentation can be found under `target/site/`. To open it locally, load `target/site/paradox/index.html`.
+The generated documentation can be found under `target/site/`. To open it
+locally, load `target/site/paradox/index.html`.
 
 ## 2 Previewing the Documentation Site
 
@@ -33,16 +37,19 @@ which launches a static web server, or:
 $ sbt docs/previewAuto
 ```
 
-which launches a dynamic server updating its content at each modification in your source files. Both launch the server
-on port `4000` and attempt to connect your browser to `http://localhost:4000/`.
+which launches a dynamic server updating its content at each modification in
+your source files. Both launch the server on port `4000` and attempt to connect
+your browser to `http://localhost:4000/`.
 
 ## 3 Publishing
 
-To publish the documentation, you need to be on the `develop` branch inside the `docs` folder and then execute the following
-command:
+To publish the documentation, you need to be on the `develop` branch inside the
+`docs` folder and then execute the following command (use one of the two; if
+using docker, then change email address of git user):
 
 ```
 $ sbt docs/ghpagesPushSite
+$ docker run --rm -it -v $PWD:/knora -v $HOME/.ivy2:/root/.ivy2 -v $HOME/.ssh:/root/.ssh sbt-paradox /bin/sh -c "cd /knora && git config --global user.email '400790+subotic@users.noreply.github.com' && sbt docs/ghpagesPushSite"
 ```
 
 This command will build all documentation and publish it to the `gh-pages` branch.

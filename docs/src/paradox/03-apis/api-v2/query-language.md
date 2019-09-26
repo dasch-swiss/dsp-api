@@ -358,6 +358,10 @@ text value, and is implemented using a full-text search index if available.
 The first argument must be a variable of type `xsd:string`, and the second
 argument is a string containing the words to be matched, separated by spaces.
 The words to be matched are separated by spaces in a string literal.
+The function supports the 
+@ref:[Lucene Query Parser syntax](../../08-lucene/index.md).
+Note that Lucene's default operator is a logical OR when submitting several search terms.
+
 For example, to search for titles that contain the words 'Zeitglöcklein' and
 'Lebens' in the simple schema:
 

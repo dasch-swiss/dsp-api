@@ -933,6 +933,18 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                         ),
                                         separatorRequired = false
                                     ),
+                                    "internal-link" -> XMLTag(
+                                        name = "a",
+                                        mapping = XMLTagToStandoffClass(
+                                            standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag",
+                                            attributesToProps = Map(),
+                                            dataType = Some(XMLStandoffDataTypeClass(
+                                                standoffDataTypeClass = StandoffDataTypeClasses.StandoffInternalReferenceTag,
+                                                dataTypeXMLAttribute = "href"
+                                            ))
+                                        ),
+                                        separatorRequired = false
+                                    ),
                                     "noClass" -> XMLTag(
                                         name = "a",
                                         mapping = XMLTagToStandoffClass(
@@ -1252,6 +1264,18 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                             attributesToProps = Map(),
                                             dataType = Some(XMLStandoffDataTypeClass(
                                                 standoffDataTypeClass = StandoffDataTypeClasses.StandoffLinkTag,
+                                                dataTypeXMLAttribute = "href"
+                                            ))
+                                        ),
+                                        separatorRequired = false
+                                    ),
+                                    "internal-link" -> XMLTag(
+                                        name = "a",
+                                        mapping = XMLTagToStandoffClass(
+                                            standoffClassIri = "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag",
+                                            attributesToProps = Map(),
+                                            dataType = Some(XMLStandoffDataTypeClass(
+                                                standoffDataTypeClass = StandoffDataTypeClasses.StandoffInternalReferenceTag,
                                                 dataTypeXMLAttribute = "href"
                                             ))
                                         ),

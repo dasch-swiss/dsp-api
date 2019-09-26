@@ -19,7 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.MatchStringWhileTyping
+@import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 
 @*
  * Select subquery for a search for resources by their label.
@@ -60,7 +60,7 @@ WHERE {
             ?resource rdfs:label ?label .
         }
 
-    ?label <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> @searchTerm.generateLiteralForLuceneIndexWithoutExactSequence .
+    ?label <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerm.generateLiteralForLuceneIndexWithoutExactSequence' .
 }
 @if(!countQuery) {
 ORDER BY ?resource @* Needed for paging: order needs to be deterministic *@
