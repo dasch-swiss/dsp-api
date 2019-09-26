@@ -415,6 +415,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
         OntologyConstants.KnoraBase.StandoffTagHasEndParent,
         OntologyConstants.KnoraBase.StandoffTagHasUUID,
         OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID,
+        OntologyConstants.KnoraBase.TargetHasOriginalXMLID,
         OntologyConstants.KnoraBase.IsRootNode,
         OntologyConstants.KnoraBase.HasRootNode,
         OntologyConstants.KnoraBase.HasSubListNode,

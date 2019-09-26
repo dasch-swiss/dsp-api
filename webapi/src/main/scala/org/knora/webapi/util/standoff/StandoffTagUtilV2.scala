@@ -58,18 +58,18 @@ object StandoffTagUtilV2 {
     /**
       * Tries to find a data type attribute in the XML attributes of a given standoff node. Throws an appropriate error if information is inconsistent or missing.
       *
-      * @param XMLtoStandoffMapping the mapping from XML to standoff classes and properties for the given standoff node.
+      * @param xmlToStandoffMapping the mapping from XML to standoff classes and properties for the given standoff node.
       * @param dataType             the expected data type of the given standoff node.
       * @param standoffNodeFromXML  the given standoff node.
       * @return the value of the attribute.
       */
-    private def getDataTypeAttribute(XMLtoStandoffMapping: XMLTagToStandoffClass, dataType: StandoffDataTypeClasses.Value, standoffNodeFromXML: StandoffTag): String = {
+    private def getDataTypeAttribute(xmlToStandoffMapping: XMLTagToStandoffClass, dataType: StandoffDataTypeClasses.Value, standoffNodeFromXML: StandoffTag): String = {
 
-        if (XMLtoStandoffMapping.dataType.isEmpty || XMLtoStandoffMapping.dataType.get.standoffDataTypeClass != dataType) {
-            throw BadRequestException(s"no or wrong data type definition provided in mapping for standoff class ${XMLtoStandoffMapping.standoffClassIri}")
+        if (xmlToStandoffMapping.dataType.isEmpty || xmlToStandoffMapping.dataType.get.standoffDataTypeClass != dataType) {
+            throw BadRequestException(s"no or wrong data type definition provided in mapping for standoff class ${xmlToStandoffMapping.standoffClassIri}")
         }
 
-        val attrName = XMLtoStandoffMapping.dataType.get.dataTypeXMLAttribute
+        val attrName = xmlToStandoffMapping.dataType.get.dataTypeXMLAttribute
 
         val attrStringOption: Option[StandoffTagAttribute] = standoffNodeFromXML.attributes.find(attr => attr.key == attrName)
 
@@ -302,7 +302,7 @@ object StandoffTagUtilV2 {
 
         // get the id of an XML target element from an internal reference
         // assumes that an internal references starts with a "#"
-        def getTargetIDFromInternalReference(internalReference: String) = {
+        def getTargetIDFromInternalReference(internalReference: String): String = {
             // make sure that the internal reference starts with a '#'
             if (internalReference.charAt(0) != internalLinkMarker) throw BadRequestException(s"invalid internal reference (should start with a $internalLinkMarker): '$internalReference'")
 
@@ -795,28 +795,36 @@ object StandoffTagUtilV2 {
                     val attributes: Seq[StandoffTagAttributeV2] = (standoffTagAssertions -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
                         case (propIri: IRI, value) =>
                             val propSmartIri = propIri.toSmartIri
-                            val propPredicates: Map[SmartIri, PredicateInfoV2] = standoffEntities.standoffPropertyInfoMap(propIri.toSmartIri).entityInfoContent.predicates
+                            val propDef: ReadPropertyInfoV2 = standoffEntities.standoffPropertyInfoMap(propSmartIri)
+                            val propPredicates: Map[SmartIri, PredicateInfoV2] = propDef.entityInfoContent.predicates
 
                             // check if the given property has an object type constraint (linking property) or an object data type constraint
-                            if (propPredicates.get(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri).isDefined) {
+                            if (propPredicates.contains(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri)) {
 
                                 // it is a linking property
                                 // check if it refers to a resource or a standoff node
 
-                                if (standoffEntities.standoffPropertyInfoMap(propIri.toSmartIri).isStandoffInternalReferenceProperty) {
+                                if (propDef.isStandoffInternalReferenceProperty) {
                                     // it refers to a standoff node, recreate the original id
 
                                     // value points to another standoff node
-                                    // get this standoff node and access its original id
-                                    val originalId: String = standoffAssertions(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
+
+                                    // If a v2 SPARQL template was used, the XML ID is in this standoff tag.
+                                    val originalId: String = standoffTagAssertions.get(OntologyConstants.KnoraBase.TargetHasOriginalXMLID) match {
+                                        case Some(targetXmlID) => targetXmlID
+
+                                        case None =>
+                                            // If a v1 SPARQL template was used, we have to get the target node and to get its XML ID.
+                                            standoffAssertions(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
+                                    }
 
                                     // recreate the original id reference
-                                    StandoffTagStringAttributeV2(standoffPropertyIri = propSmartIri, value = StandoffTagUtilV2.internalLinkMarker + originalId)
+                                    StandoffTagInternalReferenceAttributeV2(standoffPropertyIri = propSmartIri, value = originalId)
                                 } else {
                                     // it refers to a knora resource
                                     StandoffTagIriAttributeV2(standoffPropertyIri = propSmartIri, value = value)
                                 }
-                            } else if (propPredicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri).isDefined) {
+                            } else if (propPredicates.contains(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri)) {
 
                                 // it is a data type property (literal)
                                 val propDataType: PredicateInfoV2 = propPredicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri)
@@ -877,9 +885,10 @@ object StandoffTagUtilV2 {
       * @return a sequence of [[StandoffTagAttribute]].
       */
     private def convertStandoffAttributeTags(mapping: Map[IRI, XMLAttrItem], attributes: Seq[StandoffTagAttributeV2]): Seq[StandoffTagAttribute] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         attributes.map {
             attr =>
-
                 val attrItem: XMLAttrItem = mapping.getOrElse(attr.standoffPropertyIri.toString, throw NotFoundException(s"property IRI ${attr.standoffPropertyIri} could not be found in mapping"))
 
                 StandoffTagAttribute(
@@ -932,7 +941,7 @@ object StandoffTagUtilV2 {
 
                         val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.internalReferenceProperties.contains(attr.standoffPropertyIri.toString))
 
-                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = internalRefTarget, xmlNamespace = None)
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = StandoffTagUtilV2.internalLinkMarker + internalRefTarget, xmlNamespace = None)
 
                     case Some(StandoffDataTypeClasses.StandoffColorTag) =>
                         val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute

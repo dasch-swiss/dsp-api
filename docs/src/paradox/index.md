@@ -31,6 +31,7 @@ Knora Documentation
 * [Knora Internals](05-internals/index.md)
 * [Salsah](06-salsah/index.md)
 * [Sipi](07-sipi/index.md)
+* [Lucene](08-lucene/index.md)
 * [Frequently Asked Questions](faq.md)
 * [Release Notes](00-release-notes/index.md)
 

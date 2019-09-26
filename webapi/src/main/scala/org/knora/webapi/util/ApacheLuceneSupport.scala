@@ -17,7 +17,9 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2.search
+package org.knora.webapi.util
+
+import scala.util.matching.Regex
 
 /**
   * Provides some functionality to pre-process a given search string so it supports the Apache Lucene Query Parser syntax.
@@ -31,20 +33,23 @@ object ApacheLuceneSupport {
     // separates single terms
     private val space = " "
 
+    // https://stackoverflow.com/questions/43665641/in-scala-how-can-i-split-a-string-on-whitespaces-accounting-for-an-embedded-quot
+    val separateTermsAndPhrasesRegex = new Regex("([^\\s]*\".*?\"[^\\s]*)|([^\\s]+)")
+
     /**
       * Searches for a resource by its rdfs:label as the user is typing.
       *
       * @param terms    the terms to search for.
       * @param lastTerm the last term the user is entering at the moment.
       */
-    case class MatchStringWhileTyping(terms: Seq[String], lastTerm: String) {
+    case class MatchStringWhileTyping(private val terms: Seq[String], lastTerm: String) {
 
         //
         // Search logic for Lucene: combine a phrase enclosed by double quotes (exact match) with a single search term with a wildcard at the end (matches the beginning of the given term).
         // Example: searchString "Reise ins Heili" results in: '"Reise ins" AND Heili*' that matches "Reise ins Heilige Land".
         // This is necessary because wildcards cannot be used inside a phrase. And we need phrases because we cannot just search for a combination of single terms as their order matters.
         //
-        // Use Lucene Query Parser Syntax: https://lucene.apache.org/core/3_6_2/queryparsersyntax.html
+        // Use Lucene Query Parser Syntax: https://lucene.apache.org/core/7_7_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html
         //
 
 
@@ -62,9 +67,9 @@ object ApacheLuceneSupport {
             // Finds all the strings that contain all of the terms in any order and the last term with the wildcard at the end.
 
             if (terms.nonEmpty) {
-                s"'${this.terms.mkString(s" $logicalAnd ")} $logicalAnd $lastTerm$wildcard'"
+                s"${this.terms.mkString(s" $logicalAnd ")} $logicalAnd $lastTerm$wildcard"
             } else {
-                s"'$lastTerm$wildcard'"
+                s"$lastTerm$wildcard"
             }
         }
 
@@ -84,9 +89,9 @@ object ApacheLuceneSupport {
             // Example: "Reise ins" "Heili" -> "Reise ins" AND Heili*
 
             if (terms.nonEmpty) {
-                s"""'"${this.terms.mkString(" ")}" $logicalAnd $lastTerm$wildcard'"""
+                s""""${this.terms.mkString(" ")}" $logicalAnd $lastTerm$wildcard"""
             } else {
-                s"'$lastTerm$wildcard'"
+                s"$lastTerm$wildcard"
             }
         }
 
@@ -116,7 +121,7 @@ object ApacheLuceneSupport {
       */
     object MatchStringWhileTyping {
 
-        def apply(searchString: String) = {
+        def apply(searchString: String): MatchStringWhileTyping = {
 
             // split search string by a space
             val searchStringSegments: Seq[String] = searchString.split(space).toList
@@ -136,39 +141,27 @@ object ApacheLuceneSupport {
     /**
       * Handles Boolean logic for given search terms.
       *
-      * @param terms given search terms.
+      * @param queryString given search terms.
       */
-    case class CombineSearchTerms(terms: Seq[String]) {
+    case class LuceneQueryString(private val queryString: String) {
 
         /**
-          * Combines given search terms with a logical AND.
-          * Lucene's default behaviour is a logical OR.
+          * Returns the query string.
           *
-          * @return a string combining the given search terms with a logical AND.
+          * @return query string.
           */
-        def combineSearchTermsWithLogicalAnd: String = {
+        def getQueryString: String = {
+            queryString
+        }
 
-            terms.mkString(s" $logicalAnd ")
-
+        /**
+          * Returns the terms contained in a Lucene query string.
+          *
+          * @return the terms contained in a Lucene query.
+          */
+        def getSingleTerms: Seq[String] = {
+            queryString.split(space).toSeq
         }
 
     }
-
-    /**
-      * Companion object providing constructor.
-      */
-    object CombineSearchTerms {
-
-        def apply(searchString: String): CombineSearchTerms = {
-
-            // split search string by a space
-            val searchTerms = searchString.split(space)
-
-            new CombineSearchTerms(terms = searchTerms.toSeq)
-
-        }
-
-
-    }
-
 }
