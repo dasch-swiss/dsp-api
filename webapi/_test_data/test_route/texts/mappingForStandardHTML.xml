@@ -137,6 +137,23 @@
         </standoffClass>
     </mappingElement>
 
+    <!-- a tag with class "internal-link" -> internal anchor link (#fragment) -->
+    <mappingElement>
+        <tag>
+            <name>a</name>
+            <class>internal-link</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag</type>
+                <attributeName>href</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
+
     <!-- addition of html standard -->
 
     <mappingElement>

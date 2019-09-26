@@ -19,8 +19,8 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.GravsearchException
-@import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.CombineSearchTerms
+@import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
+
 
 @*
  * Performs a simple full-text search using standard SPARQL (except for the interface to Lucene, which is
@@ -42,7 +42,7 @@
  * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
 @(triplestore: String,
-  searchTerms: CombineSearchTerms,
+  searchTerms: LuceneQueryString,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
   limitToStandoffClass: Option[IRI],
@@ -55,7 +55,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 @if(!countQuery) {
-SELECT DISTINCT ?resource (GROUP_CONCAT(?valueObject; separator="@separator.getOrElse(throw GravsearchException("Separator expected for non count query, but none given"))") AS ?valueObjectConcat)
+SELECT DISTINCT ?resource (GROUP_CONCAT(?valueObject; separator="@separator.getOrElse(throw SparqlGenerationException("Separator expected for non count query, but none given"))") AS ?valueObjectConcat)
 } else {
     SELECT (count(distinct ?resource) as ?count)
 }
@@ -64,7 +64,7 @@ WHERE {
     {
         SELECT DISTINCT ?matchingSubject WHERE {
 
-            ?matchingSubject <http://jena.apache.org/text#query> '@searchTerms.combineSearchTermsWithLogicalAnd' .
+            ?matchingSubject <http://jena.apache.org/text#query> '@searchTerms.getQueryString' .
 
             @* standoff search *@
             @if(limitToStandoffClass.nonEmpty) {
@@ -83,7 +83,8 @@ WHERE {
                 BIND(SUBSTR(?literal, ?start+1, ?end - ?start) AS ?markedup)
 
                 @* Loop over search terms and make sure they are all contained in the specified standoff markup *@
-                @for(term <- searchTerms.terms) {
+                @for(term <- searchTerms.getSingleTerms) {
+                    @* TODO: Ignore Lucene operators *@
                     FILTER REGEX(?markedup, '@term', "i")
                 }
 

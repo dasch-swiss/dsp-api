@@ -1933,7 +1933,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein Lebens")
+                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -4590,7 +4590,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?propVal0 .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein Lebens")
+                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -6687,7 +6687,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?title knora-api:valueAsString ?titleStr .
                   |
-                  |        FILTER knora-api:match(?titleStr, "Zeitglöcklein Lebens")
+                  |        FILTER knora-api:match(?titleStr, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin

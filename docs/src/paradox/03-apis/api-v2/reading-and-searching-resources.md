@@ -440,7 +440,10 @@ character:
 With each character added to the last term, the selection gets more
 specific. The first term should at least contain four characters. To
 make this kind of "search as you type" possible, a wildcard character is
-automatically added to the last search term.
+automatically added to the last search term. 
+Search by label automatically adds Lucene operators, 
+search strings are expected not to contain any characters with a special meaning in 
+@ref:[Lucene Query Parser syntax](../../08-lucene/index.md).
 
 ```
 HTTP GET to http://host/v2/searchbylabel/searchValue[limitToResourceClass=resourceClassIRI]
@@ -470,9 +473,12 @@ The response to a count query request is an object with one predicate,
 ### Full-text Search
 
 Knora offers a full-text search that searches through all textual
-representations of values and `rdfs:label` of resources. You can
-separate search terms by a white space character and they will be
-combined using the Boolean `AND` operator. Please note that the search
+representations of values and `rdfs:label` of resources. 
+Full-text search supports the 
+@ref:[Lucene Query Parser syntax](../../08-lucene/index.md).
+Note that Lucene's default operator is a logical OR when submitting several search terms.
+
+Please note that the search
 terms have to be URL-encoded.
 
 ```
