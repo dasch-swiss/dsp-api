@@ -762,8 +762,15 @@ object JsonLDUtil {
       * @return a JSON-LD object containing `@value` and `@type` predicates.
       */
     def datatypeValueToJsonLDObject(value: String, datatype: SmartIri): JsonLDObject = {
+        // Normalise the formatting of decimal values to ensure consistency in tests.
+        val strValue: String = if (datatype.toString == OntologyConstants.Xsd.Decimal) {
+            BigDecimal(value).underlying.stripTrailingZeros.toPlainString
+        } else {
+            value
+        }
+
         JsonLDObject(Map(
-            JsonLDConstants.VALUE -> JsonLDString(value),
+            JsonLDConstants.VALUE -> JsonLDString(strValue),
             JsonLDConstants.TYPE -> JsonLDString(datatype.toString)
         ))
     }
