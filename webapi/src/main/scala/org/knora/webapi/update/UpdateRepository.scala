@@ -45,7 +45,7 @@ object UpdateRepository extends App {
       */
     val pluginsForVersions: Seq[PluginForKnoraBaseVersion] = Seq(
         PluginForKnoraBaseVersion(versionNumber = 1, plugin = new UpdatePluginPR1307, prBasedVersionString = Some("PR 1307")),
-        PluginForKnoraBaseVersion(versionNumber = 2, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1322")), // TODO
+        PluginForKnoraBaseVersion(versionNumber = 2, plugin = new UpdatePluginPR1322, prBasedVersionString = Some("PR 1322")),
         PluginForKnoraBaseVersion(versionNumber = 3, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1367")), // TODO
         PluginForKnoraBaseVersion(versionNumber = 4, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1372")), // TODO
         PluginForKnoraBaseVersion(versionNumber = 5, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1440")),
@@ -197,7 +197,7 @@ object UpdateRepository extends App {
         }
 
         // Write the output file.
-        println("Writing output file...")
+        println(s"Writing output file (${model.size} statements)...")
         val fileWriter = new FileWriter(outputFile)
         val bufferedWriter = new BufferedWriter(fileWriter)
         Rio.write(model, fileWriter, RDFFormat.TRIG)
