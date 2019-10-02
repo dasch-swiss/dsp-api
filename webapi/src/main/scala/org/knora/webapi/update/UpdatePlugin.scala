@@ -21,6 +21,14 @@ package org.knora.webapi.update
 
 import org.eclipse.rdf4j.model.Model
 
+/**
+  * A trait for plugins that update a repository.
+  */
 trait UpdatePlugin {
+    /**
+      * Transforms a repository.
+      *
+      * @param model a [[Model]] containing the repository data.
+      */
     def transform(model: Model): Unit
 }
