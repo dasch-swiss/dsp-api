@@ -171,7 +171,7 @@ object UpdateRepository extends App {
         for (builtInNamedGraph <- builtInNamedGraphs) {
             println(s"<${builtInNamedGraph.iri}>...")
             val context = valueFactory.createIRI(builtInNamedGraph.iri)
-            model.removeAll(model.filter(null, null, null, context))
+            model.remove(null, null, null, context)
 
             val namedGraphTurtleFile = new File(s"../knora-ontologies/${builtInNamedGraph.filename}")
             val namedGraphModel: Model = readFileIntoModel(namedGraphTurtleFile, RDFFormat.TURTLE)
