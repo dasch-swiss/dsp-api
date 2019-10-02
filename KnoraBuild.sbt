@@ -283,7 +283,7 @@ lazy val knoraSipi = knoraModule("knora-sipi")
       Docker / dockerExposedPorts ++= Seq(1024),
       Docker / dockerCommands := Seq(
           // FIXME: Someday find out how to reference here Dependencies.Versions.sipiImage
-          Cmd("FROM", "dhlabbasel/sipi:v1.4.3"),
+          Cmd("FROM", "dhlabbasel/sipi:v2.0.1"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
           Cmd("ADD", "opt/docker/scripts", "/sipi/scripts"),
       )
