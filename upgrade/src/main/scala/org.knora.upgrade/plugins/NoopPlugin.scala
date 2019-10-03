@@ -17,16 +17,14 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
-package org.knora.webapi.update.plugins
+package org.knora.upgrade.plugins
 
 import org.eclipse.rdf4j.model.Model
-import org.knora.webapi.update.UpdatePlugin
+import org.knora.upgrade.UpgradePlugin
 
 /**
   * An update plugin that does nothing. Used for updates in which only the built-in named graphs have changed.
   */
-class NoopPlugin extends UpdatePlugin {
+class NoopPlugin extends UpgradePlugin {
     override def transform(model: Model): Unit = {}
 }
-*/

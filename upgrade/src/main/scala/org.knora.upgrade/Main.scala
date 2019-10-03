@@ -1,5 +1,4 @@
 /*
-/*
  * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
@@ -18,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.update
+package org.knora.upgrade
 
 import java.io._
 
@@ -27,7 +26,7 @@ import org.eclipse.rdf4j.model.util.Models
 import org.eclipse.rdf4j.model.{Model, Statement}
 import org.eclipse.rdf4j.rio.helpers.StatementCollector
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
-import org.knora.webapi.update.plugins._
+import org.knora.upgrade.plugins._
 import org.knora.webapi.util.JavaUtil._
 import org.knora.webapi.{InconsistentTriplestoreDataException, OntologyConstants}
 import org.rogach.scallop._
@@ -38,7 +37,7 @@ import scala.collection.JavaConverters._
 /**
   * Updates a dump of a Knora repository to accommodate changes in Knora.
   */
-object UpdateRepository extends App {
+object Main extends App {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -87,7 +86,7 @@ object UpdateRepository extends App {
       * @param plugin               the plugin.
       * @param prBasedVersionString the plugin's PR-based version string (not used for new plugins).
       */
-    case class PluginForKnoraBaseVersion(versionNumber: Int, plugin: UpdatePlugin, prBasedVersionString: Option[String] = None) {
+    case class PluginForKnoraBaseVersion(versionNumber: Int, plugin: UpgradePlugin, prBasedVersionString: Option[String] = None) {
         lazy val versionString: String = {
             prBasedVersionString match {
                 case Some(str) => str
@@ -242,4 +241,3 @@ object UpdateRepository extends App {
         verify()
     }
 }
-*/

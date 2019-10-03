@@ -200,6 +200,7 @@ object Dependencies {
         akkaStream.value,
         WebapiTest.akkaStreamTestkit.value,
         WebapiTest.akkaTestkit.value,
+        apacheHttpClient,
         bcprov,
         chill,
         commonsBeanUtil,
@@ -211,6 +212,7 @@ object Dependencies {
         WebapiTest.gatlingHighcharts,
         WebapiTest.gatlingTestFramework,
         gwtServlet,
+        icu4j,
         jacksonScala,
         jaxbApi,
         jsonldJava,
@@ -237,10 +239,13 @@ object Dependencies {
         springSecurityCore,
         swaggerAkkaHttp,
         typesafeConfig,
-        xmlunitCore,
-        icu4j,
-        apacheHttpClient
+        xmlunitCore
     )
 
+    val upgradeLibraryDependencies = l ++= Seq[sbt.ModuleID](
+        rdf4jRuntime,
+        SalsahTest.scalaTest,
+        scallop
+    )
 
 }

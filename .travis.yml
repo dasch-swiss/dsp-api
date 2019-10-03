@@ -69,6 +69,7 @@ jobs:
         # - sbt knora-sipi/docker:publish
         # - sbt knora-graphdb-se/docker:publish
         # - sbt knora-graphdb-free/docker:publish
+        # - sbt upgrade/docker:publish
         # - sbt knora-assets/docker:publish
     # unit tests
     - stage: test
@@ -123,12 +124,17 @@ jobs:
         # - sbt codacyCoverage
         # print out Sipi logs
         - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose logs
+    # upgrade tests
+    - stage: test
+      script:
+        - cd $TRAVIS_BUILD_DIR/ && sbt update/test
     # testing docs generation
     - stage: test
       script:
         - mkdir -p $TRAVIS_BUILD_DIR/docs/target
         - chmod 777 $TRAVIS_BUILD_DIR/docs/target
         - docker run --rm -v $TRAVIS_BUILD_DIR:/knora daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
+
     # Salsah browser tests
     #- stage: test
     #  script:
@@ -160,6 +166,7 @@ jobs:
         - sbt knora-sipi/docker:publishLocal
         - sbt knora-graphdb-se/docker:publishLocal
         - sbt knora-graphdb-free/docker:publishLocal
+        - sbt upgrade/docker:publishLocal
         - sbt knora-assets/docker:publishLocal
     - stage: publish
       script:
@@ -167,9 +174,9 @@ jobs:
         # when on 'develop' then $TRAVIS_BRANCH = develop
         # when on 'tag' then $TRAVIS_BRANCH = tag, e.g., v1.2.0
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
-        # webapi
+        # knora-api
         - sbt webapi/docker:publish
-        # salsah1
+        # knora-salsah1
         - sbt salsah1/docker:publish
         # knora-sipi
         - sbt knora-sipi/docker:publish
@@ -177,6 +184,8 @@ jobs:
         - sbt knora-graphdb-se/docker:publish
         # knora-graphdb-free
         - sbt knora-graphdb-free/docker:publish
+        # knora-upgrade
+        - sbt upgrade/docker:publish
         # knora-assets
         - sbt knora-assets/docker:publish
 

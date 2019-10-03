@@ -1,5 +1,4 @@
 /*
-/*
  * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
@@ -18,13 +17,13 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.update.plugins
+package org.knora.upgrade.plugins
 
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.util.Models
 import org.eclipse.rdf4j.model.vocabulary.RDF
 import org.eclipse.rdf4j.model.{IRI, Model, Statement, Value}
-import org.knora.webapi.update.UpdatePlugin
+import org.knora.upgrade.UpgradePlugin
 import org.knora.webapi.util.JavaUtil._
 import org.knora.webapi.{InconsistentTriplestoreDataException, OntologyConstants}
 
@@ -33,7 +32,7 @@ import scala.collection.JavaConverters._
 /**
   * Transforms a repository for Knora PR 1307.
   */
-class UpdatePluginPR1307 extends UpdatePlugin {
+class UpdatePluginPR1307 extends UpgradePlugin {
     private val valueFactory = SimpleValueFactory.getInstance
 
     // RDF4J IRI objects representing the IRIs used in this transformation.
@@ -196,4 +195,3 @@ class UpdatePluginPR1307 extends UpdatePlugin {
         }
     }
 }
-*/
