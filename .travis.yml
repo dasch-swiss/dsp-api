@@ -69,7 +69,6 @@ jobs:
         # - sbt knora-sipi/docker:publish
         # - sbt knora-graphdb-se/docker:publish
         # - sbt knora-graphdb-free/docker:publish
-        # - sbt knora-upgrade/docker:publish
         # - sbt knora-assets/docker:publish
     # unit tests
     - stage: test
@@ -124,12 +123,6 @@ jobs:
         # - sbt codacyCoverage
         # print out Sipi logs
         - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose logs
-    # upgrade tests
-    - stage: test
-      script:
-        # run tests
-        - pyenv shell 3.7.1
-        - cd $TRAVIS_BUILD_DIR/upgrade && pip3 install -r requirements.txt && ./test.sh
     # testing docs generation
     - stage: test
       script:
@@ -167,7 +160,6 @@ jobs:
         - sbt knora-sipi/docker:publishLocal
         - sbt knora-graphdb-se/docker:publishLocal
         - sbt knora-graphdb-free/docker:publishLocal
-        - sbt knora-upgrade/docker:publishLocal
         - sbt knora-assets/docker:publishLocal
     - stage: publish
       script:
@@ -185,8 +177,6 @@ jobs:
         - sbt knora-graphdb-se/docker:publish
         # knora-graphdb-free
         - sbt knora-graphdb-free/docker:publish
-        # knora-upgrade
-        - sbt knora-upgrade/docker:publish
         # knora-assets
         - sbt knora-assets/docker:publish
 
