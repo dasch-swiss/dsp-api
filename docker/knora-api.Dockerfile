@@ -9,7 +9,7 @@ RUN \
     wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && \
     unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip
 
-ADD webapi/target/universal/stage /webapi
+ADD stage /webapi
 
 WORKDIR /webapi
 

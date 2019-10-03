@@ -9,8 +9,8 @@ version: '3'
 
 services:
 
-  graphdb:
-    image: ${KNORA_GRAPHDB_SE_IMAGE}
+  db:
+    image: ${KNORA_GRAPHDB_SE_IMAGE_NAME}
     ports:
       - "7200:7200"
     volumes:
@@ -24,7 +24,7 @@ services:
     command: ["/graphdb/bin/graphdb"]
 
   sipi:
-    image: ${KNORA_SIPI_IMAGE}
+    image: ${KNORA_SIPI_IMAGE_NAME}
     ports:
       - "1024:1024"
     volumes:
@@ -51,7 +51,7 @@ services:
       - knora-net
 
   api:
-    image: ${KNORA_API_IMAGE}
+    image: ${KNORA_API_IMAGE_NAME}
     ports:
       - "3333:3333"
       - "10001:10001"
@@ -62,8 +62,8 @@ services:
     environment:
       - KNORA_AKKA_LOGLEVEL=DEBUG
       - KNORA_AKKA_STDOUT_LOGLEVEL=DEBUG
-      - KNORA_WEBAPI_TRIPLESTORE_HOST=graphdb
-      - KNORA_WEBAPI_TRIPLESTORE_DBTYPE=${KNORA_GDB_TYPE}
+      - KNORA_WEBAPI_TRIPLESTORE_HOST=db
+      - KNORA_WEBAPI_TRIPLESTORE_DBTYPE=graphdb-se
       - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
       - KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_REPOSITORY_NAME=knora-test
       - KNORA_WEBAPI_CACHE_SERVICE_ENABLED=true
@@ -72,7 +72,7 @@ services:
       - KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP=true
 
   salsah1:
-    image: ${KNORA_SALSAH1_IMAGE}
+    image: ${KNORA_SALSAH1_IMAGE_NAME}
     ports:
       - "3335:3335"
     networks:
