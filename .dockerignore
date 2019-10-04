@@ -1,6 +1,6 @@
 !knora-ontologies
 !webapi
-webapi/target
+.docker
 .git
 .gitignore
 .idea
@@ -10,8 +10,3 @@ project
 salsah
 target
 triplestores
-knora-graphdb-free
-knora-graphdb-se
-knora-sipi
-knora-assets
-knora-upgrade

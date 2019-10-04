@@ -8,6 +8,7 @@
 /info.aduna.logging.dir_IS_UNDEFINED/
 .cache
 .classpath
+.docker
 .ensime
 .ensime_cache
 native
