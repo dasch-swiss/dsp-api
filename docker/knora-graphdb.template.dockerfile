@@ -1,4 +1,4 @@
-FROM ontotext/graphdb:@GRAPHDB_SE_VERSION@-se
+FROM @GRAPHDB_IMAGE@
 
 ADD stage/scripts/KnoraRules.pie /graphdb/KnoraRules.pie
 

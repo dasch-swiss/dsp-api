@@ -11,6 +11,7 @@
 .docker
 .ensime
 .ensime_cache
+.env
 native
 **/.DS_Store
 docs/env

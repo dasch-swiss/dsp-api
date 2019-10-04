@@ -1,12 +1,10 @@
 !knora-ontologies
 !webapi
-.docker
 .git
 .gitignore
 .idea
 docs
 private
 project
-salsah
 target
 triplestores
