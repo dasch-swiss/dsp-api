@@ -32,7 +32,7 @@ import scala.collection.JavaConverters._
 /**
   * Transforms a repository for Knora PR 1307.
   */
-class UpdatePluginPR1307 extends UpgradePlugin {
+class UpgradePluginPR1307 extends UpgradePlugin {
     private val valueFactory = SimpleValueFactory.getInstance
 
     // RDF4J IRI objects representing the IRIs used in this transformation.
