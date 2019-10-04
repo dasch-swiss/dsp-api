@@ -57,3 +57,22 @@ Each plugin should have a unit test that extends `UpgradePluginSpec`. A typical
 test loads a TriG file containing test data into a `Model`, runs the plugin,
 makes an RDF4J `SailRepository` containing the transformed `Model`, and uses
 SPARQL to check the result.
+
+## Design Rationale
+
+We tried and rejected other designs:
+
+- Running SPARQL updates in the triplestore: too slow, and no way to report
+  progress during the update.
+  
+- Downloading the repository and transforming it in Python using
+  [rdflib](https://rdflib.readthedocs.io/en/stable/): too slow.
+  
+- Downloading the repository and transforming it in C++ using
+  [Redland](http://librdf.org): also too slow.
+
+The Scala implementation is the fastest by far.
+
+The whole repository is uploaded in a single transaction because
+GraphDB's consistency checker can enforce dependencies between named
+graphs.
