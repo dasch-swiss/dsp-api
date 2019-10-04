@@ -28,13 +28,13 @@ import org.knora.webapi.util.JavaUtil._
 class UpgradePluginPR1367Spec extends UpgradePluginSpec {
     private val valueFactory = SimpleValueFactory.getInstance
 
-    "Update plugin PR1367" should {
+    "Upgrade plugin PR1367" should {
         "fix the datatypes of decimal literals" in {
             // Parse the input file.
             val model: Model = trigFileToModel("src/test/resources/test-data/pr1367.trig")
 
             // Use the plugin to transform the input.
-            val plugin = new UpdatePluginPR1367
+            val plugin = new UpgradePluginPR1367
             plugin.transform(model)
 
             // Check that the decimal datatype was fixed.

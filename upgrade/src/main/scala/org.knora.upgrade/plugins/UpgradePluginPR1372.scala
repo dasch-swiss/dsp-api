@@ -23,39 +23,37 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory
 import org.eclipse.rdf4j.model.{IRI, Model, Resource}
 import org.knora.webapi.OntologyConstants
 import org.knora.upgrade.UpgradePlugin
-import org.knora.webapi.util.StringFormatter
 
 import scala.collection.JavaConverters._
 
 /**
-  * Transforms a repository for Knora PR 1322.
+  * Transforms a repository for Knora PR 1372.
   */
-class UpdatePluginPR1322 extends UpgradePlugin {
+class UpgradePluginPR1372 extends UpgradePlugin {
     private val valueFactory = SimpleValueFactory.getInstance
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
     // RDF4J IRI objects representing the IRIs used in this transformation.
-    private val ValueHasUUIDIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.ValueHasUUID)
     private val ValueCreationDateIri : IRI= valueFactory.createIRI(OntologyConstants.KnoraBase.ValueCreationDate)
     private val PreviousValueIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.PreviousValue)
+    private val HasPermissionsIri: IRI = valueFactory.createIRI(OntologyConstants.KnoraBase.HasPermissions)
 
     override def transform(model: Model): Unit = {
-        // Add a random UUID to each current value version.
-        for (valueIri: IRI <- collectCurrentValueIris(model)) {
-            model.add(
+        // Remove knora-base:hasPermissions from all past value versions.
+        for (valueIri: IRI <- collectPastValueIris(model)) {
+            model.remove(
                 valueIri,
-                ValueHasUUIDIri,
-                valueFactory.createLiteral(stringFormatter.makeRandomBase64EncodedUuid)
+                HasPermissionsIri,
+                null
             )
         }
     }
 
     /**
-      * Collects the IRIs of all values that are current value versions.
+      * Collects the IRIs of all values that are past value versions.
       */
-    private def collectCurrentValueIris(model: Model): Set[IRI] = {
+    private def collectPastValueIris(model: Model): Set[IRI] = {
         model.filter(null, ValueCreationDateIri, null).subjects.asScala.toSet.filter {
-            resource: Resource => model.filter(null, PreviousValueIri, resource).asScala.toSet.isEmpty
+            resource: Resource => model.filter(null, PreviousValueIri, resource).asScala.toSet.nonEmpty
         }.map {
             resource: Resource => valueFactory.createIRI(resource.stringValue)
         }

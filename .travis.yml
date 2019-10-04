@@ -127,7 +127,7 @@ jobs:
     # upgrade tests
     - stage: test
       script:
-        - cd $TRAVIS_BUILD_DIR/ && sbt update/test
+        - cd $TRAVIS_BUILD_DIR/ && sbt upgrade/test
     # testing docs generation
     - stage: test
       script:

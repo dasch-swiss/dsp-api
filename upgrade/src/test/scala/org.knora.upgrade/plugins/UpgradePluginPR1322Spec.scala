@@ -24,13 +24,13 @@ import org.eclipse.rdf4j.repository.sail.SailRepository
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody}
 
 class UpgradePluginPR1322Spec extends UpgradePluginSpec {
-    "Update plugin PR1322" should {
+    "Upgrade plugin PR1322" should {
         "add UUIDs to values" in {
             // Parse the input file.
             val model: Model = trigFileToModel("src/test/resources/test-data/pr1322.trig")
 
             // Use the plugin to transform the input.
-            val plugin = new UpdatePluginPR1322
+            val plugin = new UpgradePluginPR1322
             plugin.transform(model)
 
             // Make an in-memory repository containing the transformed model.

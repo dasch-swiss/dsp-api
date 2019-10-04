@@ -24,13 +24,13 @@ import org.eclipse.rdf4j.repository.sail.SailRepository
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody}
 
 class UpgradePluginPR1307Spec extends UpgradePluginSpec {
-    "Update plugin PR1307" should {
+    "Upgrade plugin PR1307" should {
         "update text values with standoff" in {
             // Parse the input file.
             val model: Model = trigFileToModel("src/test/resources/test-data/pr1307.trig")
 
             // Use the plugin to transform the input.
-            val plugin = new UpdatePluginPR1307
+            val plugin = new UpgradePluginPR1307
             plugin.transform(model)
 
             // Make an in-memory repository containing the transformed model.

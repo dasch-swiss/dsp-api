@@ -24,13 +24,13 @@ import org.eclipse.rdf4j.repository.sail.SailRepository
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody}
 
 class UpgradePluginPR1372Spec extends UpgradePluginSpec {
-    "Update plugin PR1372" should {
+    "Upgrade plugin PR1372" should {
         "remove permissions from past versions of values" in {
             // Parse the input file.
             val model: Model = trigFileToModel("src/test/resources/test-data/pr1372.trig")
 
             // Use the plugin to transform the input.
-            val plugin = new UpdatePluginPR1372
+            val plugin = new UpgradePluginPR1372
             plugin.transform(model)
 
             // Make an in-memory repository containing the transformed model.

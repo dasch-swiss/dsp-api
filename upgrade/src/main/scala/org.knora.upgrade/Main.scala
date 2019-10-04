@@ -44,10 +44,10 @@ object Main extends App {
       * A list of all plugins in chronological order.
       */
     val pluginsForVersions: Seq[PluginForKnoraBaseVersion] = Seq(
-        PluginForKnoraBaseVersion(versionNumber = 1, plugin = new UpdatePluginPR1307, prBasedVersionString = Some("PR 1307")),
-        PluginForKnoraBaseVersion(versionNumber = 2, plugin = new UpdatePluginPR1322, prBasedVersionString = Some("PR 1322")),
-        PluginForKnoraBaseVersion(versionNumber = 3, plugin = new UpdatePluginPR1367, prBasedVersionString = Some("PR 1367")),
-        PluginForKnoraBaseVersion(versionNumber = 4, plugin = new UpdatePluginPR1372, prBasedVersionString = Some("PR 1372")),
+        PluginForKnoraBaseVersion(versionNumber = 1, plugin = new UpgradePluginPR1307, prBasedVersionString = Some("PR 1307")),
+        PluginForKnoraBaseVersion(versionNumber = 2, plugin = new UpgradePluginPR1322, prBasedVersionString = Some("PR 1322")),
+        PluginForKnoraBaseVersion(versionNumber = 3, plugin = new UpgradePluginPR1367, prBasedVersionString = Some("PR 1367")),
+        PluginForKnoraBaseVersion(versionNumber = 4, plugin = new UpgradePluginPR1372, prBasedVersionString = Some("PR 1372")),
         PluginForKnoraBaseVersion(versionNumber = 5, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1440"))
     )
 

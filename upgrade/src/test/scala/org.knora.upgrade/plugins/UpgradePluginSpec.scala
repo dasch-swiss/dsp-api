@@ -36,7 +36,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 
 /**
-  * Provides helper methods for specs that test update plugins.
+  * Provides helper methods for specs that test upgrade plugins.
   */
 abstract class UpgradePluginSpec extends WordSpecLike with Matchers {
     /**
