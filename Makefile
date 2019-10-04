@@ -1,25 +1,20 @@
 include vars.mk
 
-all: build-docs build-images ## builds the docs and all Docker images
-
 #################################
 # Documentation targets
 #################################
 
 .PHONY: publish-docs
 publish-docs: ## build and publish docs
-	docker run --rm -it -v $PWD:/knora -v $HOME/.ivy2:/root/.ivy2 -v $HOME/.ssh:/root/.ssh sbt-paradox /bin/sh -c "cd /knora && git config --global user.email $(GIT_EMAIL) && sbt docs/ghpagesPushSite"
+	docker run --rm -it -v $(PWD):/knora -v $(HOME)/.ivy2:/root/.ivy2 -v $(HOME)/.ssh:/root/.ssh sbt-paradox /bin/sh -c "cd /knora && git config --global user.email $(GIT_EMAIL) && sbt docs/ghpagesPushSite"
 
 .PHONY: build-docs
 build-docs: ## build the docs
-	docker run --rm -it -v $PWD:/knora -v $HOME/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
+	docker run --rm -it -v $(PWD):/knora -v $(HOME)/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
 
 #################################
 # Docker targets
 #################################
-
-.PHONE: build-docker-images
-build-docker-images: build-knora-api-image  ## build all Docker images locally
 
 # knora-api
 .PHONY: build-knora-api-image
@@ -161,4 +156,4 @@ info: ## print out all variables
 help: ## this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
-.DEFAULT: all
+.DEFAULT_GOAL := help
