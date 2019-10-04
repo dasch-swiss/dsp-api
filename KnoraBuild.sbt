@@ -331,7 +331,7 @@ lazy val knoraAssets = knoraModule("knora-assets")
 //////////////////////////////////////
 
 lazy val knoraUpgradeCommonSettings = Seq(
-    name := "knora-upgrade"
+    name := "upgrade"
 )
 
 lazy val knoraUpgrade = knoraModule("upgrade")
