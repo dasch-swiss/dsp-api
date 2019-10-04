@@ -120,13 +120,10 @@ object Main extends App {
     val inputFile = new File(conf.input())
     val outputFile = new File(conf.output())
 
-    val updateStartTime = System.currentTimeMillis()
-
     // Parse the input file.
-    val parseStartTime = System.currentTimeMillis()
+    println("Reading input file...")
     val model = readFileIntoModel(inputFile, RDFFormat.TRIG)
-    val parseEndTime = System.currentTimeMillis()
-    println(s"Parsed ${model.size} statements in ${parseEndTime - parseStartTime} ms")
+    println(s"Read ${model.size} statements.")
 
     // Get the repository's version string, if any.
     val maybeRepositoryVersionString: Option[String] = Models.getPropertyLiteral(
@@ -156,11 +153,11 @@ object Main extends App {
                 pluginsForVersions
         }
 
-        println(s"Needed updates: ${pluginsForNeededUpdates.map(_.versionString).mkString(", ")}")
+        println(s"Needed transformations: ${pluginsForNeededUpdates.map(_.versionString).mkString(", ")}")
 
         // Run the update plugins.
         for (pluginForNeededUpdate <- pluginsForNeededUpdates) {
-            println(s"Running update for ${pluginForNeededUpdate.versionString}...")
+            println(s"Running transformation for ${pluginForNeededUpdate.versionString}...")
             pluginForNeededUpdate.plugin.transform(model)
         }
 
@@ -169,7 +166,6 @@ object Main extends App {
         println("Updating built-in named graphs...")
 
         for (builtInNamedGraph <- builtInNamedGraphs) {
-            println(s"<${builtInNamedGraph.iri}>...")
             val context = valueFactory.createIRI(builtInNamedGraph.iri)
             model.remove(null, null, null, context)
 
@@ -203,9 +199,6 @@ object Main extends App {
         Rio.write(model, fileWriter, RDFFormat.TRIG)
         bufferedWriter.close()
         fileWriter.close()
-
-        val updateEndTime = System.currentTimeMillis
-        println(s"Update completed in ${updateEndTime - updateStartTime} ms.")
     }
 
     /**

@@ -28,16 +28,26 @@ you are upgrading from.
 
 ## Upgrading from Knora 7.0.0 or Later
 
-You will need to dump your repository to a file, run Knora's upgrade program
-to produce a transformed file, then load the transformed file back into the repository.
-The upgrade program automatically determines which changes the repository needs.
+### Automatic Upgrade
 
-### 1. Dump the Repository to a TriG File
+The automatic upgrade procedure dumps your repository to a file, determines which transformations
+are needed, transforms the file, then loads the transformed file back into the repository.
+To perform an automatic upgrade, open a shell in the directory `upgrade/graphdb-se` and run the script
+`./auto-upgrade.sh`. You must be in that directory when you run the script. For information on its
+command line options, run it without arguments, or see the `README.md` in that directory for details.
+
+### Manual Upgrade
+
+If you need more control over the process (e.g. you want to use
+GraphDB's [LoadRDF](http://graphdb.ontotext.com/documentation/free/loading-data-using-the-loadrdf-tool.html)
+tool to upload the transformed file), follow the steps below.
+
+#### 1. Dump the Repository to a TriG File
 
 You can use the `dump-repository.sh` script in `upgrade/graphdb-se`. See
 the `README.md` there for instructions.
 
-### 2. Transform the TriG File
+#### 2. Transform the TriG File
 
 In the `knora-api` directory of the version of Knora you are upgrading to, run:
 
@@ -51,18 +61,19 @@ step 1.
 For `OUTPUT_FILE`, use the absolute path of the transformed TriG file to
 be created.
 
+The program automatically determines which transformations are needed.
 If the repository is already up to date, the program will say so, and no
 output file will be written. In this case, there is nothing more to do.
 Otherwise, proceed to step 3.
 
-### 3. Empty the Repository
+#### 3. Empty the Repository
 
 The transformed TriG file must be loaded into an empty repository.
 To empty the repository, you can use the `empty-repository.sh` script in
 `upgrade/graphdb-se`. See the `README.md` there for instructions.
 Make sure you have backed up the repository first.
 
-### 4. Load the Transformed TriG File into the Repository
+#### 4. Load the Transformed TriG File into the Repository
 
 You can use the `upload-repository.sh` script in `upgrade/graphdb-se`. See
 the `README.md` there for instructions.
