@@ -1,0 +1,349 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix standoff: <http://www.knora.org/ontology/standoff#> .
+@base <http://www.knora.org/ontology/0802/HS#> .
+
+@prefix : <http://www.knora.org/ontology/0802/HS#> .
+
+<http://www.knora.org/ontology/0802/HS> rdf:type owl:Ontology ;
+    rdfs:label "The hitory of science ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0802> .
+
+##########################################################
+#
+# PROPERTIES
+#
+##########################################################
+### ###########################################
+### HS:hasGivenName
+
+:hasGivenName rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Vorname"@de ,
+                        "Given name"@en ,
+                        "prénom"@fr ,
+                        "nome di battesimo"@it ;
+
+              rdfs:comment """Represents a Given name."""@en ;
+
+              knora-base:objectClassConstraint knora-base:TextValue ;
+
+              salsah-gui:guiElement salsah-gui:SimpleText ;
+
+              rdfs:subPropertyOf knora-base:hasValue, foaf:givenName .
+
+
+### ###########################################
+### HS:hasFamilyName
+
+:hasFamilyName rdf:type owl:ObjectProperty ;
+
+               rdfs:label "Nachname"@de ,
+                        "Family name"@en ,
+                        "nom de famille"@fr ,
+                        "nome di famiglia"@it ;
+
+               rdfs:comment """Represents a family name."""@en ;
+
+               knora-base:objectClassConstraint knora-base:TextValue ;
+
+               salsah-gui:guiElement salsah-gui:SimpleText ;
+
+               rdfs:subPropertyOf knora-base:hasValue, foaf:familyName .
+### ###########################################
+### HS:personHasTitle
+
+:personHasTitle rdf:type owl:ObjectProperty ;
+
+                rdfs:label "Titel"@de ,
+                         "Title"@en ;
+
+                rdfs:comment """Represents title of person."""@en ;
+
+                knora-base:objectClassConstraint knora-base:TextValue ;
+
+                salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### HS:hasAlternativeName
+
+:hasAlternativeName rdf:type owl:ObjectProperty ;
+
+               rdfs:label "Alternative-Name"@de ,
+                        "Alternative name"@en ;
+
+               rdfs:comment """Represents alternative name."""@en ;
+
+               knora-base:objectClassConstraint knora-base:TextValue ;
+
+               salsah-gui:guiElement salsah-gui:SimpleText ;
+
+               rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasIAFIdentifier
+
+:hasIAFIdentifier rdf:type owl:ObjectProperty ;
+
+                  rdfs:label "Gemeinsame Normdatei (GND)"@de ,
+                             "Integrated Authority File"@en ;
+
+                  rdfs:comment """Repräsentiert eine GND-Nummer."""@de,
+                               """Represents an IAF identifier."""@en ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                  rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasBirthDate
+
+:hasBirthDate rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Geburtsdatum"@de ,
+                         "Date of birth"@en ;
+
+              rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
+                           """Represents a date of birth."""@en ;
+
+              knora-base:objectClassConstraint knora-base:DateValue ;
+
+              salsah-gui:guiElement salsah-gui:Date ;
+
+              rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasDeathDate
+
+:hasDeathDate rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Sterbedatum"@de ,
+                         "Date of death"@en ;
+
+              rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
+                           """Represents a date of death."""@en ;
+
+              knora-base:objectClassConstraint knora-base:DateValue ;
+
+              salsah-gui:guiElement salsah-gui:Date ;
+
+              rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasFloruitDate
+
+:hasFloruitDate rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Floruit-Dataum"@de ,
+                         "Floruit Date"@en ;
+
+              rdfs:comment """Repräsentiert ein Floruit-Dataum."""@de,
+                           """Represents a floruit date."""@en ;
+
+              knora-base:objectClassConstraint knora-base:DateValue ;
+
+              salsah-gui:guiElement salsah-gui:Date ;
+
+              rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasMarriageDate
+
+:hasMarriageDate rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Hochzeitdataum"@de ,
+                         "Marriage Date"@en ;
+
+              rdfs:comment """Repräsentiert ein Hochzeitdatum."""@de,
+                           """Represents a marriage date."""@en ;
+
+              knora-base:objectClassConstraint knora-base:DateValue ;
+
+              salsah-gui:guiElement salsah-gui:Date ;
+
+              rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasBirthPlace
+
+:hasBirthPlace rdf:type owl:ObjectProperty ;
+
+               rdfs:label "Geburtsort"@de ,
+                         "Place of birth"@en ;
+
+               rdfs:comment """Represents a place of birth."""@en ;
+
+               knora-base:objectClassConstraint knora-base:TextValue ;
+
+               salsah-gui:guiElement salsah-gui:SimpleText ;
+
+               rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasDeathPlace
+
+:hasDeathPlace rdf:type owl:ObjectProperty ;
+
+               rdfs:label "Todesort"@de ,
+                         "Place of death"@en ;
+
+               rdfs:comment """Represents a place of death."""@en ;
+
+               knora-base:objectClassConstraint knora-base:TextValue ;
+
+               salsah-gui:guiElement salsah-gui:SimpleText ;
+
+               rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
+### beol:hasFloruitPlace
+
+:hasFloruitPlace rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Floruit-Ort"@de ,
+                        "Place of Floruit"@en ;
+
+              rdfs:comment """Represents a place a person is seen."""@en ;
+
+              knora-base:objectClassConstraint knora-base:TextValue ;
+
+              salsah-gui:guiElement salsah-gui:SimpleText ;
+
+              rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### beol:hasMarriagePlace
+
+:hasMarriagePlace rdf:type owl:ObjectProperty ;
+
+              rdfs:label "Trauugsort"@de ,
+                        "Place of Marriage"@en ;
+
+              rdfs:comment """Represents a place a person is married in."""@en ;
+
+              knora-base:objectClassConstraint knora-base:TextValue ;
+
+              salsah-gui:guiElement salsah-gui:SimpleText ;
+
+              rdfs:subPropertyOf knora-base:hasValue .
+
+##########################################################
+#
+# RESOURCES
+#
+##########################################################
+
+
+### ###########################################
+### HS:person
+
+:person rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:Resource, foaf:Person ,
+
+    				[
+    				    rdf:type owl:Restriction ;
+                        owl:onProperty :hasFamilyName ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasGivenName ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :personHasTitle ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasAlternativeName ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasIAFIdentifier ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasBirthDate ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasDeathDate ;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasFloruitDate;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "8"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasMarriageDate;
+                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "9"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasBirthPlace ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "10"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasDeathPlace ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasFloruitPlace ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasMarriagePlace ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "13"^^xsd:nonNegativeInteger
+                    ] ;
+
+    knora-base:resourceIcon "person.png" ;
+
+    rdfs:label "Person"@de ,
+             "Personne"@fr ,
+             "Person"@en ;
+
+    rdfs:comment "A resource representing a person"@en .
