@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.ResponderData
-import org.knora.webapi.responders.v2.search.ApacheLuceneSupport._
+import org.knora.webapi.util.ApacheLuceneSupport._
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch._
 import org.knora.webapi.responders.v2.search.gravsearch.prequery._
@@ -100,7 +100,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       */
     private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
 
-        val searchTerms: CombineSearchTerms = CombineSearchTerms(searchValue)
+        val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
         for {
             countSparql <- Future(queries.sparql.v2.txt.searchFulltext(
@@ -153,7 +153,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
         val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
 
-        val searchTerms: CombineSearchTerms = CombineSearchTerms(searchValue)
+        val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
         for {
             searchSparql <- Future(queries.sparql.v2.txt.searchFulltext(

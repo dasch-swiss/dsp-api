@@ -1933,7 +1933,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein Lebens")
+                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -4590,7 +4590,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes incunabula:title ?propVal0 .
                   |
-                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein Lebens")
+                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -6687,7 +6687,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?title knora-api:valueAsString ?titleStr .
                   |
-                  |        FILTER knora-api:match(?titleStr, "Zeitglöcklein Lebens")
+                  |        FILTER knora-api:match(?titleStr, "Zeitglöcklein AND Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -7890,6 +7890,123 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(hamletXml)).withTest(Input.fromString(xmlFromResponse)).build()
                 xmlDiff.hasDifferences should be(false)
             }
+        }
+
+        "find a resource with two different incoming links" in {
+            // Create the target resource.
+
+            val targetResource: String =
+                """{
+                  |  "@type" : "anything:BlueThing",
+                  |  "knora-api:attachedToProject" : {
+                  |    "@id" : "http://rdfh.ch/projects/0001"
+                  |  },
+                  |  "rdfs:label" : "blue thing with incoming links",
+                  |  "@context" : {
+                  |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                  |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                  |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                  |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                  |  }
+                  |}""".stripMargin
+
+            val targetResourceIri: IRI = Post(s"/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, targetResource)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcePath ~> check {
+                val createTargetResourceResponseStr = responseAs[String]
+                assert(response.status == StatusCodes.OK, createTargetResourceResponseStr)
+                val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+                responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            }
+
+            assert(targetResourceIri.toSmartIri.isKnoraDataIri)
+
+            val sourceResource1: String =
+                s"""{
+                   |  "@type" : "anything:BlueThing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |    "anything:hasBlueThingValue" : {
+                   |    "@type" : "knora-api:LinkValue",
+                   |        "knora-api:linkValueHasTargetIri" : {
+                   |        "@id" : "$targetResourceIri"
+                   |    }
+                   |  },
+                   |  "rdfs:label" : "blue thing with link to other blue thing",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val sourceResource1Iri: IRI = Post(s"/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, sourceResource1)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcePath ~> check {
+                val createSourceResource1ResponseStr = responseAs[String]
+                assert(response.status == StatusCodes.OK, createSourceResource1ResponseStr)
+                val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+                responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            }
+
+            assert(sourceResource1Iri.toSmartIri.isKnoraDataIri)
+
+            val sourceResource2: String =
+                s"""{
+                   |  "@type" : "anything:Thing",
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |    "anything:hasOtherThingValue" : {
+                   |    "@type" : "knora-api:LinkValue",
+                   |        "knora-api:linkValueHasTargetIri" : {
+                   |        "@id" : "$targetResourceIri"
+                   |    }
+                   |  },
+                   |  "rdfs:label" : "thing with link to blue thing",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val sourceResource2Iri: IRI = Post(s"/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, sourceResource2)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcePath ~> check {
+                val createSourceResource2ResponseStr = responseAs[String]
+                assert(response.status == StatusCodes.OK, createSourceResource2ResponseStr)
+                val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+                responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            }
+
+            assert(sourceResource2Iri.toSmartIri.isKnoraDataIri)
+
+            val gravsearchQuery =
+                s"""
+                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                   |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                   |
+                   |CONSTRUCT {
+                   |    ?targetThing knora-api:isMainResource true .
+                   |    ?firstIncoming anything:hasBlueThing ?targetThing .
+                   |    ?secondIncoming anything:hasOtherThing ?targetThing .
+                   |} WHERE {
+                   |    ?targetThing a anything:BlueThing .
+                   |    ?firstIncoming anything:hasBlueThing ?targetThing .
+                   |    ?secondIncoming anything:hasOtherThing ?targetThing .
+                   |}
+                """.stripMargin
+
+            val searchResultIri: IRI = Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+                val searchResponseStr = responseAs[String]
+                assert(status == StatusCodes.OK, searchResponseStr)
+                val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+                responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            }
+
+            assert(searchResultIri == targetResourceIri)
         }
     }
 }

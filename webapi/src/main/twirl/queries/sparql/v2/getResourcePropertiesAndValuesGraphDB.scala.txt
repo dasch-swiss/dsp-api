@@ -81,8 +81,9 @@ CONSTRUCT {
         knora-base:hasPermissions ?currentValuePermissions .
 
     @if(maybeStandoffMinStartIndex.nonEmpty) {
-        ?valueObject knora-base:valueHasStandoff ?standoffNode .
-        ?standoffNode ?standoffProperty ?standoffValue .
+        ?valueObject knora-base:valueHasStandoff ?standoffTag .
+        ?standoffTag ?standoffProperty ?standoffValue ;
+            knora-base:targetHasOriginalXMLID ?targetOriginalXMLID .
     }
 
     @if(queryAllNonStandoff) {
@@ -269,9 +270,16 @@ CONSTRUCT {
 
                     UNION {
                         GRAPH <http://www.ontotext.com/explicit> {
-                            ?valueObject knora-base:valueHasStandoff ?standoffNode .
-                            ?standoffNode ?standoffProperty ?standoffValue ;
+                            ?valueObject knora-base:valueHasStandoff ?standoffTag .
+                            ?standoffTag ?standoffProperty ?standoffValue ;
                                 knora-base:standoffTagHasStartIndex ?startIndex .
+                        }
+
+                        OPTIONAL {
+                            GRAPH <http://www.ontotext.com/explicit> {
+                                ?standoffTag knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+                                ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
+                            }
                         }
 
                         FILTER(?startIndex >= @standoffMinStartIndex && ?startIndex <= @{maybeStandoffMaxStartIndex.get})

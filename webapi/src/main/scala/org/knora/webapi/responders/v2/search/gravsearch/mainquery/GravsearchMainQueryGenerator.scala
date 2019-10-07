@@ -70,6 +70,12 @@ object GravsearchMainQueryGenerator {
         // SPARQL variable representing the start index of a standoff node.
         val standoffStartIndexVar: QueryVariable = QueryVariable("startIndex")
 
+        // SPARQL variable representing the standoff tag that is the target of an internal reference.
+        val targetStandoffTagVar: QueryVariable = QueryVariable("targetStandoffTag")
+
+        // SPARQL variable representing the original XML ID in a standoff tag that is the target of an internal reference.
+        val targetOriginalXMLIDVar: QueryVariable = QueryVariable("targetOriginalXMLID")
+
         // SPARQL variable representing a list node pointed to by a (list) value object
         val listNode: QueryVariable = QueryVariable("listNode")
 
@@ -133,7 +139,9 @@ object GravsearchMainQueryGenerator {
                         // linking prop: get value object var and information which values are requested for dependent resource
 
                         // link value object variable
-                        val valObjVar = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(statementPattern.obj, OntologyConstants.KnoraBase.LinkValue)
+                        val valObjVar = SparqlTransformer.createUniqueVariableFromStatementForLinkValue(
+                            baseStatement = statementPattern
+                        )
 
                         // return link value object variable and value objects requested for the dependent resource
                         Set(QueryVariable(valObjVar.variableName + variableConcatSuffix))
@@ -229,6 +237,12 @@ object GravsearchMainQueryGenerator {
                     StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
                     StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
                     StatementPattern.makeExplicit(subj = standoffNodeVar, pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartIndex.toSmartIri), obj = standoffStartIndexVar),
+                    OptionalPattern(
+                        Seq(
+                            StatementPattern.makeExplicit(subj = standoffNodeVar, pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasInternalReference.toSmartIri), obj = targetStandoffTagVar),
+                            StatementPattern.makeExplicit(subj = targetStandoffTagVar, pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID.toSmartIri), obj = targetOriginalXMLIDVar)
+                        )
+                    ),
                     FilterPattern(
                         AndExpression(
                             leftArg = CompareExpression(
@@ -252,7 +266,8 @@ object GravsearchMainQueryGenerator {
             val constructPatternsForStandoff: Seq[StatementPattern] = if (queryStandoff) {
                 Seq(
                     StatementPattern(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri), obj = standoffNodeVar),
-                    StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar)
+                    StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
+                    StatementPattern(subj = standoffNodeVar, pred = IriRef(OntologyConstants.KnoraBase.TargetHasOriginalXMLID.toSmartIri), obj = targetOriginalXMLIDVar)
                 )
             } else {
                 Seq.empty[StatementPattern]

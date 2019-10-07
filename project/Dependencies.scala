@@ -121,7 +121,7 @@ object Dependencies {
         val xmlunitCore            = "org.xmlunit"                              % "xmlunit-core"             % "2.1.1"
 
         // other
-        val rdf4jRuntime           = "org.eclipse.rdf4j"                        % "rdf4j-runtime"            % "2.3.2"
+        val rdf4jRuntime           = "org.eclipse.rdf4j"                        % "rdf4j-runtime"            % "3.0.0"
         val scallop                = "org.rogach"                              %% "scallop"                  % "3.2.0"
         val gwtServlet             = "com.google.gwt"                           % "gwt-servlet"              % "2.8.0"
         val saxonHE                = "net.sf.saxon"                             % "Saxon-HE"                 % "9.9.0-2"

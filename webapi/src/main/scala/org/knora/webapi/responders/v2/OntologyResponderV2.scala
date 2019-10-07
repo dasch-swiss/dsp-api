@@ -76,7 +76,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                          superClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                          subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
                                          guiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
-                                         propertiesUsedInStandoffCardinalities: Set[SmartIri])
+                                         standoffProperties: Set[SmartIri])
 
     /**
       * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
@@ -358,6 +358,26 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 }
         }.toSet
 
+        // A set of the IRIs of all properties whose subject class constraint is a standoff class.
+        val propertiesWithStandoffTagSubjects: Set[SmartIri] = readPropertyInfos.flatMap {
+            case (propertyIri, readPropertyInfo) =>
+                readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri) match {
+                    case Some(subjectClassConstraint: SmartIri) =>
+                        readClassInfos.get(subjectClassConstraint) match {
+                            case Some(subjectReadClassInfo: ReadClassInfoV2) =>
+                                if (subjectReadClassInfo.isStandoffClass) {
+                                    Some(propertyIri)
+                                } else {
+                                    None
+                                }
+
+                            case None => None
+                        }
+
+                    case None => None
+                }
+        }.toSet
+
         // Construct the ontology cache data.
         val ontologyCacheData: OntologyCacheData = OntologyCacheData(
             ontologies = new ErrorHandlingMap[SmartIri, ReadOntologyV2](readOntologies, { key => s"Ontology not found: $key" }),
@@ -365,7 +385,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             superClassOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSuperClassOfRelations, { key => s"Class not found: $key" }),
             subPropertyOfRelations = new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubPropertyOfRelations, { key => s"Property not found: $key" }),
             guiAttributeDefinitions = new ErrorHandlingMap[SmartIri, Set[SalsahGuiAttributeDefinition]](allGuiAttributeDefinitions, { key => s"salsah-gui:Guielement not found: $key" }),
-            propertiesUsedInStandoffCardinalities = propertiesUsedInStandoffCardinalities
+            standoffProperties = propertiesUsedInStandoffCardinalities ++ propertiesWithStandoffTagSubjects
         )
 
         // Check property subject and object class constraints.
@@ -1275,7 +1295,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             propertyDefsAvailable: Map[SmartIri, ReadPropertyInfoV2] = propertyOntologies.flatMap {
                 ontology =>
                     ontology.properties.filter {
-                        case (propertyIri, _) => standoffPropertyIris.contains(propertyIri) && cacheData.propertiesUsedInStandoffCardinalities.contains(propertyIri)
+                        case (propertyIri, _) => standoffPropertyIris.contains(propertyIri) && cacheData.standoffProperties.contains(propertyIri)
                     }
             }.toMap
 
@@ -1327,7 +1347,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             cacheData <- getCacheData
         } yield StandoffAllPropertyEntitiesGetResponseV2(
             standoffAllPropertiesEntityInfoMap = cacheData.ontologies.values.flatMap {
-                ontology => ontology.properties.filterKeys(cacheData.propertiesUsedInStandoffCardinalities)
+                ontology => ontology.properties.filterKeys(cacheData.standoffProperties)
             }.toMap
         )
     }
@@ -1403,7 +1423,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             standoffClassIris = ontology.classes.filter {
                 case (_, classDef) => classDef.isStandoffClass
             }.keySet,
-            standoffPropertyIris = ontology.properties.keySet.filter(cacheData.propertiesUsedInStandoffCardinalities)
+            standoffPropertyIris = ontology.properties.keySet.filter(cacheData.standoffProperties)
         )
     }
 
@@ -3382,31 +3402,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 )
             )
         } yield taskResult
-    }
-
-    /**
-      * Checks whether an entity is used in the triplestore.
-      *
-      * @param entityIri              the IRI of the entity.
-      * @param errorFun               a function that throws an exception. It will be called if the entity is used.
-      * @param ignoreKnoraConstraints if true, ignores the use of the entity in Knora subject or object constraints.
-      */
-    private def isEntityUsed(entityIri: SmartIri, errorFun: => Nothing, ignoreKnoraConstraints: Boolean = false): Future[Unit] = {
-        // #sparql-select
-        for {
-            isEntityUsedSparql <- Future(queries.sparql.v2.txt.isEntityUsed(
-                triplestore = settings.triplestoreType,
-                entityIri = entityIri,
-                ignoreKnoraConstraints = ignoreKnoraConstraints
-            ).toString())
-
-            isEntityUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql)).mapTo[SparqlSelectResponse]
-            // #sparql-select
-
-            _ = if (isEntityUsedResponse.results.bindings.nonEmpty) {
-                errorFun
-            }
-        } yield ()
     }
 
     /**
