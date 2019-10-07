@@ -16,10 +16,13 @@ docs-build: ## build the docs
 # Docker targets
 #################################
 
+.PHONY: build-all-scala
+build-all-scala: ## build all scala projects
+	sbt webapi/universal:stage knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage knora-upgrade/universal:stage knora-assets/universal:stage
+
 ## knora-api
 .PHONY: build-knora-api-image
-build-knora-api-image: ## build and publish knora-api docker image locally
-	sbt "webapi/universal:stage"
+build-knora-api-image: build-all-scala ## build and publish knora-api docker image locally
 	docker build -t $(KNORA_API_IMAGE) -f docker/knora-api.dockerfile  webapi/target/universal
 
 .PHONY: publish-knora-api
@@ -28,8 +31,7 @@ publish-knora-api-image: build-knora-api-image ## publish knora-api image to Doc
 
 ## knora-graphdb-se
 .PHONY: build-knora-graphdb-se-image
-build-knora-graphdb-se-image: ## build and publish knora-graphdb-se docker image locally
-	sbt "knora-graphdb-se/universal:stage"
+build-knora-graphdb-se-image: build-all-scala ## build and publish knora-graphdb-se docker image locally
 	@mkdir -p .docker
 	@sed -e "s/@GRAPHDB_IMAGE@/ontotext\/graphdb\:$(GRAPHDB_SE_VERSION)-se/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb.dockerfile
 	docker build -t $(KNORA_GRAPHDB_SE_IMAGE) -f .docker/knora-graphdb.dockerfile  knora-graphdb-se/target/universal
@@ -40,8 +42,7 @@ publish-knora-graphdb-se-image: build-knora-graphdb-se-image ## publish knora-gr
 
 ## knora-graphdb-free
 .PHONY: build-knora-graphdb-free-image
-build-knora-graphdb-free-image: ## build and publish knora-graphdb-free docker image locally
-	sbt "knora-graphdb-free/universal:stage"
+build-knora-graphdb-free-image: build-all-scala ## build and publish knora-graphdb-free docker image locally
 	@mkdir -p .docker
 	@sed -e "s/@GRAPHDB_IMAGE@/dhlabbasel\/graphdb\:$(GRAPHDB_FREE_VERSION)-free/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb.dockerfile
 	docker build -t $(KNORA_GRAPHDB_FREE_IMAGE) -f .docker/knora-graphdb.dockerfile  knora-graphdb-se/target/universal
@@ -52,8 +53,7 @@ publish-knora-graphdb-free-image: build-knora-graphdb-free-image ## publish knor
 
 ## knora-sipi
 .PHONY: build-knora-sipi-image
-build-knora-sipi-image: ## build and publish knora-sipi docker image locally
-	sbt "knora-sipi/universal:stage"
+build-knora-sipi-image: build-all-scala ## build and publish knora-sipi docker image locally
 	@mkdir -p .docker
 	@sed -e "s/@SIPI_VERSION@/$(SIPI_VERSION)/" docker/knora-sipi.template.dockerfile > .docker/knora-sipi.dockerfile
 	docker build -t $(KNORA_SIPI_IMAGE) -f .docker/knora-sipi.dockerfile  knora-sipi/target/universal
@@ -64,8 +64,7 @@ publish-knora-sipi-image: build-knora-sipi-image ## publish knora-sipi image to 
 
 ## knora-salsah1
 .PHONY: build-knora-salsah1-image
-build-knora-salsah1-image: ## build and publish knora-salsah1 docker image locally
-	sbt "salsah1/universal:stage"
+build-knora-salsah1-image: build-all-scala ## build and publish knora-salsah1 docker image locally
 	docker build -t $(KNORA_SALSAH1_IMAGE) -f docker/knora-salsah1.dockerfile  salsah1/target/universal
 
 .PHONY: publish-knora-salsah1-image
@@ -74,8 +73,7 @@ publish-knora-salsah1-image: build-knora-salsah1-image ## publish knora-salsah1 
 
 ## knora-upgrade
 .PHONY: build-knora-upgrade-image
-build-knora-upgrade-image: ## build and publish knora-upgrade docker image locally
-	sbt "knora-upgrade/universal:stage"
+build-knora-upgrade-image: build-all-scala ## build and publish knora-upgrade docker image locally
 	docker build -t $(KNORA_UPGRADE_IMAGE) -f docker/knora-upgrade.dockerfile  knora-upgrade/target/universal
 
 .PHONY: publish-knora-upgrade
@@ -84,8 +82,7 @@ publish-knora-upgrade: build-knora-upgrade-image ## publish knora-upgrade image 
 
 ## knora-assets
 .PHONY: build-knora-assets-image
-build-knora-assets-image: ## build and publish knora-assets docker image locally
-	sbt "knora-assets/universal:stage"
+build-knora-assets-image: build-all-scala ## build and publish knora-assets docker image locally
 	docker build -t $(KNORA_ASSETS_IMAGE) -f docker/knora-assets.dockerfile  knora-assets/target/universal
 
 .PHONY: publish-knora-assets-image
@@ -180,11 +177,11 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 
 .PHONY: it-tests
 it-tests: ## runs the integration tests
-	sbt "webapi/it:test"
+	sbt webapi/it:test
 
 .PHONY: it-tests-with-coverage
-it-tests: ## runs the integration tests
-	sbt "webapi/clean coverage webapi/it:test webapi/coverageReport"
+it-tests-with-coverage: ## runs the integration tests
+	sbt coverage webapi/it:test webapi/coverageReport
 
 .PHONY: init-knora-test
 init-knora-test: ## initializes the knora-test repository
