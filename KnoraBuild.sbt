@@ -340,6 +340,8 @@ lazy val knoraUpgrade = knoraModule("upgrade")
   .settings(
       knoraUpgradeCommonSettings,
       Dependencies.upgradeLibraryDependencies,
+      // add '../knora-ontologies' folder to the classpath
+      Compile / unmanagedClasspath += baseDirectory.value / "../knora-ontologies"
   )
   .settings(
       scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
@@ -354,9 +356,13 @@ lazy val knoraUpgrade = knoraModule("upgrade")
       Test / testOptions += Tests.Argument("-oDF")
   )
   .settings(
+      Universal / mappings ++= {
+          // copy the different folders
+          directory("upgrade/graphdb-se") ++
+            directory("knora-ontologies")
+      },
       // add dockerCommands used to create the image
       // docker:stage, docker:publishLocal, docker:publish, docker:clean
-
       dockerRepository := Some("dhlabbasel"),
       maintainer := "400790+subotic@users.noreply.github.com",
       Docker / dockerCommands := Seq(
@@ -364,7 +370,7 @@ lazy val knoraUpgrade = knoraModule("upgrade")
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
           Cmd("ADD", "opt/docker", "/upgrade"),
           Cmd("WORKDIR", "/upgrade"),
-          ExecCmd("ENTRYPOINT", "bin/upgrade"),
+          ExecCmd("ENTRYPOINT", "graphdb-se/auto-upgrade.sh"),
       )
   )
 
