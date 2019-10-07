@@ -27,22 +27,24 @@ import org.eclipse.rdf4j.model.{Model, Statement}
 import org.eclipse.rdf4j.rio.helpers.StatementCollector
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
 import org.knora.upgrade.plugins._
+import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.JavaUtil._
 import org.knora.webapi.{InconsistentTriplestoreDataException, OntologyConstants}
 import org.rogach.scallop._
 
 import scala.collection.JavaConverters._
+import scala.io.{BufferedSource, Codec, Source}
 
 
 /**
-  * Updates a dump of a Knora repository to accommodate changes in Knora.
-  */
+ * Updates a dump of a Knora repository to accommodate changes in Knora.
+ */
 object Main extends App {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * A list of all plugins in chronological order.
-      */
+     * A list of all plugins in chronological order.
+     */
     val pluginsForVersions: Seq[PluginForKnoraBaseVersion] = Seq(
         PluginForKnoraBaseVersion(versionNumber = 1, plugin = new UpgradePluginPR1307, prBasedVersionString = Some("PR 1307")),
         PluginForKnoraBaseVersion(versionNumber = 2, plugin = new UpgradePluginPR1322, prBasedVersionString = Some("PR 1322")),
@@ -52,8 +54,8 @@ object Main extends App {
     )
 
     /**
-      * The built-in named graphs that are always updated when there is a new version of knora-base.
-      */
+     * The built-in named graphs that are always updated when there is a new version of knora-base.
+     */
     val builtInNamedGraphs: Set[BuiltInNamedGraph] = Set(
         BuiltInNamedGraph(
             filename = "knora-admin.ttl",
@@ -80,12 +82,12 @@ object Main extends App {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Represents an update plugin with its knora-base version number and version string.
-      *
-      * @param versionNumber        the knora-base version number that the plugin's transformation produces.
-      * @param plugin               the plugin.
-      * @param prBasedVersionString the plugin's PR-based version string (not used for new plugins).
-      */
+     * Represents an update plugin with its knora-base version number and version string.
+     *
+     * @param versionNumber        the knora-base version number that the plugin's transformation produces.
+     * @param plugin               the plugin.
+     * @param prBasedVersionString the plugin's PR-based version string (not used for new plugins).
+     */
     case class PluginForKnoraBaseVersion(versionNumber: Int, plugin: UpgradePlugin, prBasedVersionString: Option[String] = None) {
         lazy val versionString: String = {
             prBasedVersionString match {
@@ -96,21 +98,21 @@ object Main extends App {
     }
 
     /**
-      * Represents a Knora built-in named graph.
-      *
-      * @param filename the filename containing the named graph.
-      * @param iri      the IRI of the named graph.
-      */
+     * Represents a Knora built-in named graph.
+     *
+     * @param filename the filename containing the named graph.
+     * @param iri      the IRI of the named graph.
+     */
     case class BuiltInNamedGraph(filename: String, iri: String)
 
     /**
-      * Constructs RDF4J values.
-      */
+     * Constructs RDF4J values.
+     */
     val valueFactory = SimpleValueFactory.getInstance
 
     /**
-      * A map of version strings to plugins.
-      */
+     * A map of version strings to plugins.
+     */
     val pluginsForVersionsMap: Map[String, PluginForKnoraBaseVersion] = pluginsForVersions.map {
         knoraBaseVersion => knoraBaseVersion.versionString -> knoraBaseVersion
     }.toMap
@@ -169,8 +171,7 @@ object Main extends App {
             val context = valueFactory.createIRI(builtInNamedGraph.iri)
             model.remove(null, null, null, context)
 
-            val namedGraphTurtleFile = new File(s"../knora-ontologies/${builtInNamedGraph.filename}")
-            val namedGraphModel: Model = readFileIntoModel(namedGraphTurtleFile, RDFFormat.TURTLE)
+            val namedGraphModel: Model = readResourceIntoModel(builtInNamedGraph.filename, RDFFormat.TURTLE)
 
             // Set the context on each statement.
             for (statement: Statement <- namedGraphModel.asScala.toSet) {
@@ -202,25 +203,44 @@ object Main extends App {
     }
 
     /**
-      * Reads an RDF file into a [[Model]].
-      *
-      * @param file   the file.
-      * @param format the file format.
-      * @return a [[Model]] representing the contents of the file.
-      */
+     * Reads an RDF file into a [[Model]].
+     *
+     * @param file   the file.
+     * @param format the file format.
+     * @return a [[Model]] representing the contents of the file.
+     */
     def readFileIntoModel(file: File, format: RDFFormat): Model = {
-        val trigParser: RDFParser = Rio.createParser(format)
         val fileReader = new FileReader(file)
         val bufferedReader = new BufferedReader(fileReader)
         val model = new LinkedHashModel()
+        val trigParser: RDFParser = Rio.createParser(format)
         trigParser.setRDFHandler(new StatementCollector(model))
         trigParser.parse(bufferedReader, "")
+        fileReader.close()
+        bufferedReader.close()
         model
     }
 
     /**
-      * Parses command-line arguments.
-      */
+     * Reads a file from the CLASSPATH into a [[Model]].
+     *
+     * @param filename the filename.
+     * @param format   the file format.
+     * @return a [[Model]] representing the contents of the file.
+     */
+    def readResourceIntoModel(filename: String, format: RDFFormat): Model = {
+        val fileContent: String = FileUtil.readTextResource(filename)
+        val stringReader = new StringReader(fileContent)
+        val model = new LinkedHashModel()
+        val trigParser: RDFParser = Rio.createParser(format)
+        trigParser.setRDFHandler(new StatementCollector(model))
+        trigParser.parse(stringReader, "")
+        model
+    }
+
+    /**
+     * Parses command-line arguments.
+     */
     class TransformDataConf(arguments: Seq[String]) extends ScallopConf(arguments) {
         banner(
             s"""
@@ -233,4 +253,5 @@ object Main extends App {
         val output: ScallopOption[String] = trailArg[String](required = true, descr = "Output TriG file")
         verify()
     }
+
 }

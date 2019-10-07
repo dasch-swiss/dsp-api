@@ -20,6 +20,10 @@ Make sure you have backed up the repository before you do this.
 - `-p`: the GraphDB password. If not supplied, you will be prompted for it.
 - `-h`: the GraphDB host and port. Defaults to `localhost:7200`.
 
+If the environment variable `KNORA_UPGRADE_DOCKER` is set, this script runs the
+upgrade program using the executable `/upgrade/bin/upgrade`. Otherwise, it runs
+the program using SBT.
+
 ## Scripts for Manual Upgrades
 
 These scripts are useful if you want more control over the upgrade process.
