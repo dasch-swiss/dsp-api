@@ -650,6 +650,116 @@
 
                     salsah-gui:guiElement salsah-gui:Searchbox .
 
+### ###########################################
+### beol:hasBrother
+
+:hasBrother rdf:type owl:ObjectProperty ;
+
+                      rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                      rdfs:label "hat Bruder"@de ,
+                                 "has brother"@en ;
+
+                      rdfs:comment """Repräsentiert eine Geschwestern Beziehung"""@de ;
+
+                      knora-base:subjectClassConstraint :person ;
+
+                      knora-base:objectClassConstraint :person ;
+
+                      salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:hasBrotherValue
+
+:hasBrotherValue rdf:type owl:ObjectProperty ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                    knora-base:subjectClassConstraint :person ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:label "hat Bruder"@de ,
+                               "has brother"@en ;
+
+                    rdfs:comment """Repräsentiert eine Geschwestern Beziehung"""@de ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### beol:hasUncle
+
+:hasUncle rdf:type owl:ObjectProperty ;
+
+                      rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                      rdfs:label "hat Onkel"@de ,
+                                 "has uncle"@en ;
+
+                      rdfs:comment """Repräsentiert eine Onkel-Neffe Beziehung"""@de ;
+
+                      knora-base:subjectClassConstraint :person ;
+
+                      knora-base:objectClassConstraint :person ;
+
+                      salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:hasUncleValue
+
+:hasUncleValue rdf:type owl:ObjectProperty ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                    knora-base:subjectClassConstraint :person ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:label "hat Onkel"@de ,
+                               "has uncle"@en ;
+
+                    rdfs:comment """Repräsentiert eine Onkel-Neffe Beziehung"""@de ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### beol:hasNephew
+
+:hasNephew rdf:type owl:ObjectProperty ;
+
+                      rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                      rdfs:label "hat Neffe"@de ,
+                                 "has nephew"@en ;
+
+                      rdfs:comment """Repräsentiert eine Onkel-Neffe Beziehung"""@de ;
+
+                      knora-base:subjectClassConstraint :person ;
+
+                      knora-base:objectClassConstraint :person ;
+
+                      salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:hasNephewValue
+
+:hasNephewValue rdf:type owl:ObjectProperty ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                    knora-base:subjectClassConstraint :person ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:label "hat Neffe"@de ,
+                               "has nephew"@en ;
+
+                    rdfs:comment """Repräsentiert eine Onkel-Neffe Beziehung"""@de ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox .
 
 ### ###########################################
 ### beol:hasSection
@@ -2372,7 +2482,43 @@
                         owl:onProperty :mentionedIn ;
                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                         salsah-gui:guiOrder "18"^^xsd:nonNegativeInteger
-                    ] ;
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasBrotherValue ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "19"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasBrother ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "20"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasNephewValue ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "21"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasNephew ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "22"^^xsd:nonNegativeInteger
+                    ],
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasUncleValue ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "23"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasUncle ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "23"^^xsd:nonNegativeInteger
+                    ];
 
     knora-base:resourceIcon "person.png" ;
 

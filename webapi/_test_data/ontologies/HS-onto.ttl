@@ -92,7 +92,7 @@
 
 
 ### ###########################################
-### beol:hasIAFIdentifier
+### HS:hasIAFIdentifier
 
 :hasIAFIdentifier rdf:type owl:ObjectProperty ;
 
@@ -110,7 +110,7 @@
 
 
 ### ###########################################
-### beol:hasBirthDate
+### HS:hasBirthDate
 
 :hasBirthDate rdf:type owl:ObjectProperty ;
 
@@ -128,7 +128,7 @@
 
 
 ### ###########################################
-### beol:hasDeathDate
+### HS:hasDeathDate
 
 :hasDeathDate rdf:type owl:ObjectProperty ;
 
@@ -146,7 +146,7 @@
 
 
 ### ###########################################
-### beol:hasFloruitDate
+### HS:hasFloruitDate
 
 :hasFloruitDate rdf:type owl:ObjectProperty ;
 
@@ -164,7 +164,7 @@
 
 
 ### ###########################################
-### beol:hasMarriageDate
+### HS:hasMarriageDate
 
 :hasMarriageDate rdf:type owl:ObjectProperty ;
 
@@ -182,7 +182,7 @@
 
 
 ### ###########################################
-### beol:hasBirthPlace
+### HS:hasBirthPlace
 
 :hasBirthPlace rdf:type owl:ObjectProperty ;
 
@@ -199,7 +199,7 @@
 
 
 ### ###########################################
-### beol:hasDeathPlace
+### HS:hasDeathPlace
 
 :hasDeathPlace rdf:type owl:ObjectProperty ;
 
@@ -215,7 +215,7 @@
                rdfs:subPropertyOf knora-base:hasValue .
 
 ### ###########################################
-### beol:hasFloruitPlace
+### HS:hasFloruitPlace
 
 :hasFloruitPlace rdf:type owl:ObjectProperty ;
 
@@ -232,7 +232,7 @@
 
 
 ### ###########################################
-### beol:hasMarriagePlace
+### HS:hasMarriagePlace
 
 :hasMarriagePlace rdf:type owl:ObjectProperty ;
 
@@ -246,6 +246,118 @@
               salsah-gui:guiElement salsah-gui:SimpleText ;
 
               rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### HS:hasDisciple
+
+:hasDisciple rdf:type owl:ObjectProperty ;
+
+                      rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                      rdfs:label "hat Schüler"@de ,
+                                 "has disciple"@en ;
+
+                      rdfs:comment """Represents a Master-Disciple relation"""@en ;
+
+                      knora-base:subjectClassConstraint :person ;
+
+                      knora-base:objectClassConstraint :person ;
+
+                      salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### HS:hasDiscipleValue
+
+:hasDiscipleValue rdf:type owl:ObjectProperty ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                    knora-base:subjectClassConstraint :person ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:label "hat Schüler"@de ,
+                               "has disciple"@en ;
+
+                    rdfs:comment """Represents a Master-Disciple relation"""@en ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### HS:hasPupil
+
+:hasPupil rdf:type owl:ObjectProperty ;
+
+                      rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                      rdfs:label "hat Schüler"@de ,
+                                 "has pupil"@en ;
+
+                      rdfs:comment """Represents a Teacher-Pupil relation"""@en ;
+
+                      knora-base:subjectClassConstraint :person ;
+
+                      knora-base:objectClassConstraint :person ;
+
+                      salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### HS:hasPupilValue
+
+:hasPupilValue rdf:type owl:ObjectProperty ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                    knora-base:subjectClassConstraint :person ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:label "hat Schüler"@de ,
+                               "has pupil"@en ;
+
+                    rdfs:comment """Represents a Teacher-Pupil relation"""@en ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### HS:hasMaster
+
+:hasMaster rdf:type owl:ObjectProperty ;
+
+                      rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                      rdfs:label "hat Lehrer"@de ,
+                                 "has master"@en ;
+
+                      rdfs:comment """Represents a Master-Disciple relation"""@en ;
+
+                      knora-base:subjectClassConstraint :person ;
+
+                      knora-base:objectClassConstraint :person ;
+
+                      salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### HS:hasMasterValue
+
+:hasMasterValue rdf:type owl:ObjectProperty ;
+
+                    rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                    knora-base:subjectClassConstraint :person ;
+
+                    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                    rdfs:label "hat Lehrer"@de ,
+                               "has master"@en ;
+
+                    rdfs:comment """Represents a Master-Disciple relation"""@en ;
+
+                    salsah-gui:guiElement salsah-gui:Searchbox .
 
 ##########################################################
 #
@@ -338,6 +450,42 @@
                         owl:onProperty :hasMarriagePlace ;
                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                         salsah-gui:guiOrder "13"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasDiscipleValue ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "14"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasDisciple ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "15"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasPupilValue ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "16"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasPupil ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "17"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasMasterValue ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "18"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasMaster ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "19"^^xsd:nonNegativeInteger
                     ] ;
 
     knora-base:resourceIcon "person.png" ;
