@@ -1,6 +1,7 @@
 SIPI_VERSION := 2.0.1
 GRAPHDB_SE_VERSION := 8.5.0
 GRAPHDB_FREE_VERSION := 8.10.0
+GRAPHDB_HEAP_SIZE := 4GB
 
 REPO_PREFIX := daschswiss
 KNORA_API_REPO := knora-api
@@ -57,4 +58,10 @@ endif
 
 ifeq ($(KNORA_GDB_HOME),)
   KNORA_GDB_HOME := unknown
+endif
+
+ifeq ($(GDB_HEAP_SIZE),)
+  KNORA_GDB_HEAP_SIZE := $(GRAPHDB_HEAP_SIZE)
+else
+  KNORA_GDB_HEAP_SIZE := $(GDB_HEAP_SIZE)
 endif

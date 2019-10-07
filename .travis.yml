@@ -108,22 +108,19 @@ jobs:
     # integration tests
     - stage: test
       script:
-        # prepare needed graphdb-se files
-        - mkdir -p $TRAVIS_BUILD_DIR/graphdb
-        - cp $TRAVIS_BUILD_DIR/travis/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
-        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
-        # start and initialize graphdb-se
-        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.license.file=/graphdb/graphdb.license
-        - sleep 15
-        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
-        # start the sipi container (with production config)
-        - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose up -d sipi-it
+        # set license
+        - export KNORA_GDB_LICENSE=$TRAVIS_BUILD_DIR/travis/graphdb.license
+        # start the knora-stack
+        - make stack-up
+        - sleep 5
+        # initialize GraphDB
+        - make init-knora-test-unit
+        # restart stack
+        - make stack-restart
         # start the integration tests
-        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/it:test webapi/coverageReport
-        # upload code coverage report
-        # - sbt codacyCoverage
+        - make it-tests-with-coverage
         # print out Sipi logs
-        - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose logs
+        - make stack-logs-sipi-no-follow
     # upgrade tests
     - stage: test
       script:

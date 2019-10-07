@@ -121,38 +121,46 @@ ifeq ($(KNORA_GDB_HOME), "unknown")
 else
 	@echo KNORA_GDB_HOME_DIR=${KNORA_GDB_HOME} >> .env
 endif
+	@echo KNORA_GDB_HEAP_SIZE=$(KNORA_GDB_HEAP_SIZE) >> .env
 	@echo KNORA_SIPI_IMAGE=$(KNORA_SIPI_IMAGE) >> .env
 	@echo KNORA_API_IMAGE=$(KNORA_API_IMAGE) >> .env
 	@echo KNORA_SALSAH1_IMAGE=$(KNORA_SALSAH1_IMAGE) >> .env
 
 ## knora stack
 .PHONY: stack-up
-stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, redis, api, salsah1. Needs Docker CLI experimental features turned on.
-	# docker-compose -f docker/knora.docker-compose.yml config
+stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, redis, api, salsah1.
 	docker-compose -f docker/knora.docker-compose.yml up -d
 
+.PHONY: stack-restart
+stack-restart: stack-up ## re-starts the knora-stack: graphdb, sipi, redis, api, salsah1.
+	docker-compose -f docker/knora.docker-compose.yml restart
+
 .PHONY: stack-logs
-stack-logs: ## prints out the logs of the running knora-stack. Needs Docker CLI experimental features turned on.
+stack-logs: ## prints out and follows the logs of the running knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml logs -f
 
 .PHONY: stack-logs-db
-stack-logs-db: ## prints out the logs of the 'db' container running in knora-stack. Needs Docker CLI experimental features turned on.
+stack-logs-db: ## prints out and follows the logs of the 'db' container running in knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml logs -f db
 
 .PHONY: stack-logs-sipi
-stack-logs-sipi: ## prints out the logs of the 'sipi' container running in knora-stack. Needs Docker CLI experimental features turned on.
+stack-logs-sipi: ## prints out and follows the logs of the 'sipi' container running in knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml logs -f sipi
 
+.PHONY: stack-logs-sipi-no-follow
+stack-logs-sipi-no-follow: ## prints out the logs of the 'sipi' container running in knora-stack.
+	docker-compose -f docker/knora.docker-compose.yml logs sipi
+
 .PHONY: stack-logs-redis
-stack-logs-redis: ## prints out the logs of the 'redis' container running in knora-stack. Needs Docker CLI experimental features turned on.
+stack-logs-redis: ## prints out and follows the logs of the 'redis' container running in knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml logs -f redis
 
 .PHONY: stack-logs-api
-stack-logs-api: ## prints out the logs of the 'api' container running in knora-stack. Needs Docker CLI experimental features turned on.
+stack-logs-api: ## prints out and follows the logs of the 'api' container running in knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml logs -f api
 
 .PHONY: stack-logs-salsah1
-stack-logs-salsah1: ## prints out the logs of the 'salsah1' container running in knora-stack. Needs Docker CLI experimental features turned on.
+stack-logs-salsah1: ## prints out and follows the logs of the 'salsah1' container running in knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml logs -f salsah1
 
 .PHONY: stack-down
@@ -173,6 +181,10 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 .PHONY: it-tests
 it-tests: ## runs the integration tests
 	sbt "webapi/it:test"
+
+.PHONY: it-tests-with-coverage
+it-tests: ## runs the integration tests
+	sbt "webapi/clean coverage webapi/it:test webapi/coverageReport"
 
 .PHONY: init-knora-test
 init-knora-test: ## initializes the knora-test repository
