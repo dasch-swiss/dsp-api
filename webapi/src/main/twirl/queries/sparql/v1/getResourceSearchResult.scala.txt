@@ -19,6 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
+@import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 
 @*
  * Performs a search for resources matching the given criteria.
@@ -36,8 +37,7 @@
  * @param separator the separator to be used when concatenating the value strings.
  *@
 @(triplestore: String,
-  phrase: Option[String],
-  lastTerm: String,
+  searchPhrase: MatchStringWhileTyping,
   restypeIriOption: Option[IRI],
   numberOfProps: Int,
   limitOfResults: Int,
@@ -45,8 +45,7 @@
 
 @if(triplestore.startsWith("graphdb")) {
     @{
-        queries.sparql.v1.txt.getResourceSearchResultGraphDB(phrase = phrase,
-                                                             lastTerm = lastTerm,
+        queries.sparql.v1.txt.getResourceSearchResultGraphDB(searchPhrase = searchPhrase,
                                                              restypeIriOption = restypeIriOption,
                                                              numberOfProps = numberOfProps,
                                                              limitOfResults = limitOfResults,
@@ -55,8 +54,7 @@
 } else {
     @{
         queries.sparql.v1.txt.getResourceSearchResultStandard(triplestore = triplestore,
-                                                              phrase = phrase,
-                                                              lastTerm = lastTerm,
+                                                              searchPhrase = searchPhrase,
                                                               restypeIriOption = restypeIriOption,
                                                               numberOfProps = numberOfProps,
                                                               limitOfResults = limitOfResults,

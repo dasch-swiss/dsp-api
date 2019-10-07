@@ -41,6 +41,9 @@ object ClientApiRouteE2ESpec {
         """.stripMargin)
 }
 
+/**
+ * Tests client code generation.
+ */
 @E2ETest
 class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
