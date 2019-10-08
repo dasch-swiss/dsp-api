@@ -110,13 +110,6 @@ jobs:
       script:
         # set license
         - export KNORA_GDB_LICENSE=$TRAVIS_BUILD_DIR/travis/graphdb.license
-        # start the knora-stack
-        - make stack-up
-        - sleep 5
-        # initialize GraphDB
-        - make init-knora-test-unit
-        # restart stack
-        - make stack-restart
         # start the integration tests
         - make it-tests-with-coverage
         # print out Sipi logs

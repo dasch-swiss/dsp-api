@@ -569,9 +569,9 @@ lazy val webapi = knoraModule("webapi")
 
             EmbeddedJenaTDBTest / javaOptions := Seq("-Dconfig.resource=jenatdb.conf") ++ webapiJavaTestOptions,
 
-            // enable publishing the jar produced by `sbt test:package` and `sbt it:package`
-            Test / packageBin / publishArtifact := true,
-            IntegrationTest / packageBin / publishArtifact := true
+            // disable publishing the jar produced by `sbt test:package` and `sbt it:package`
+            Test / packageBin / publishArtifact := false,
+            IntegrationTest / packageBin / publishArtifact := false
         )
         .settings(
             // prepare for publishing
@@ -598,8 +598,6 @@ lazy val webapi = knoraModule("webapi")
             // need this here, so that the Manifest inside the jars has the correct main class set.
             Compile / mainClass := Some("org.knora.webapi.Main"),
             Compile / run / mainClass := Some("org.knora.webapi.Main"),
-            Test / mainClass := Some("org.scalatest.tools.Runner"),
-            IntegrationTest / mainClass := Some("org.scalatest.tools.Runner"),
 
             // add dockerCommands used to create the image
             // docker:stage, docker:publishLocal, docker:publish, docker:clean
@@ -659,6 +657,48 @@ lazy val webapiJavaTestOptions = Seq(
     //"-XX:MaxGCPauseMillis=500",
     //"-XX:MaxMetaspaceSize=4096m"
 )
+
+// packaging for runing normal tests
+lazy val webapiTestPackage = project
+  // we put the results  in a build folder
+  .in(file("webapi/build/test"))
+  .enablePlugins(JavaAppPackaging)
+  .settings(
+      Test / mainClass := Some("org.scalatest.tools.Runner"),
+      // adds the test jar to mappings
+      mappings in Universal += {
+          // generates the test package
+          val testjar = (packageBin in Test).value
+          // maps this file to your lib folder in your output package
+          testjar -> s"lib/${testjar.getName}"
+      },
+      scriptClasspath += (packageBin in Test).value.getName
+  )
+  .dependsOn(webapi)
+
+// packaging for runing IT tests
+lazy val webapiITPackage = project
+  // we put the results in a build folder
+  .in(file("webapi/build/it"))
+  .enablePlugins(JavaAppPackaging)
+  .configs(
+      IntegrationTest
+  )
+  .settings(
+      inConfig(IntegrationTest)(Defaults.testSettings),
+  )
+  .settings(
+      IntegrationTest / mainClass := Some("org.scalatest.tools.Runner"),
+      // adds the test jar to mappings
+      mappings in Universal += {
+          // generates the test package
+          val testjar = (packageBin in IntegrationTest).value
+          // maps this file to your lib folder in your output package
+          testjar -> s"lib/${testjar.getName}"
+      },
+      scriptClasspath += (packageBin in Test).value.getName
+  )
+  .dependsOn(webapi)
 
 def knoraModule(name: String): Project =
     Project(id = name, base = file(name))

@@ -176,12 +176,32 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 	docker-compose -f docker/knora.docker-compose.yml stop sipi
 
 .PHONY: it-tests
-it-tests: ## runs the integration tests
-	sbt webapi/it:test
+it-tests: stack-without-api init-knora-test-unit ## runs the integration tests. Please run 'stack-without-api' and 'init-knora-test-unit' first.
+	docker run 	--rm \
+				-v $(PWD):/src \
+				-v $(HOME)/.ivy2:/root/.ivy2 \
+				--name=api \
+				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
+				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
+				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
+				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
+				--network=docker_knora-net \
+				daschswiss/scala-sbt sbt webapi/it:test
+	#sbt webapi/it:test
 
 .PHONY: it-tests-with-coverage
-it-tests-with-coverage: ## runs the integration tests
-	sbt coverage webapi/it:test webapi/coverageReport
+it-tests-with-coverage: stack-without-api init-knora-test-unit ## runs the integration tests with code-coverage report. Please run 'stack-without-api' and 'init-knora-test-unit' first.
+	docker run 	--rm \
+				-v $(PWD):/src \
+				-v $(HOME)/.ivy2:/root/.ivy2 \
+				--name=api \
+				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
+				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
+				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
+				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
+				--network=docker_knora-net \
+				daschswiss/scala-sbt sbt coverage webapi/it:test webapi/coverageReport
+	# sbt coverage webapi/it:test webapi/coverageReport
 
 .PHONY: init-knora-test
 init-knora-test: ## initializes the knora-test repository
