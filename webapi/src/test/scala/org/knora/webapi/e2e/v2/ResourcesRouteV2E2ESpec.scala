@@ -638,6 +638,16 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(text == "this is text with standoff")
         }
 
+        "create a resource whose label contains a Unicode escape and quotation marks" in {
+            val jsonLDEntity: String = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithUnicodeEscape.jsonld"))
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri.toSmartIri.isKnoraDataIri)
+        }
+
         "create a resource with a custom creation date" in {
             val creationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
 
