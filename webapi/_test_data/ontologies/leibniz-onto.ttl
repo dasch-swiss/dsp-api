@@ -78,6 +78,43 @@
                                 """Letter is reply to another letter"""@en .
 
 
+### ###########################################
+### leibniz:citation
+
+:citation rdf:type owl:ObjectProperty ;
+
+                rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+                rdfs:label "Zitiervorschlag"@de ,
+                           "Citation"@en ;
+
+                rdfs:comment """Zitierfähige Vollfassung"""@de ,
+                             """printversion for citation"""@en ;
+
+                knora-base:subjectClassConstraint :letter ;
+
+                knora-base:objectClassConstraint biblio:letter ;
+
+                salsah-gui:guiElement salsah-gui:Searchbox .
+
+### ###########################################
+### leibniz:citationValue
+
+:citationValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   knora-base:subjectClassConstraint :letter ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                  rdfs:label "Zitiervorschlag"@de ,
+                             "Citation"@en ;
+
+                  rdfs:comment """Zitierfähige Vollfassung"""@de ,
+                               """printversion for citation"""@en .
+
+
 
 ##########################################################
 #
@@ -108,6 +145,18 @@
                           owl:onProperty :isReplyToValue ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                           salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :citation ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :citationValue ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                        ] ;
 
         knora-base:resourceIcon "letter.png" ;
