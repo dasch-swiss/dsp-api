@@ -202,8 +202,12 @@ interface `vocabularyResponse` in module `resourceResponseFormats`.
 
 ### Search for Resources by their Label
 
-This is a simplified way for searching for resources just by their
-label. It is a simple string-based method:
+This is a simplified way for searching for resources just by their label. 
+Search by label automatically adds Lucene operators, 
+search strings are expected not to contain any characters with a special meaning in 
+@ref:[Lucene Query Parser syntax](../../08-lucene/index.md).
+
+It is a simple string-based method:
 
 ```
 HTTP GET to http://host/v1/resources?searchstr=searchValue
@@ -232,8 +236,9 @@ TypeScript interface `resourceLabelSearchResponse` in module
 ### Fulltext Search
 
 Knora offers a fulltext search that searches through all textual
-representations of values. You can separate search terms by a white
-space and they will be combined using the Boolean `AND` operator. The search terms have to be URL encoded.
+representations of values. The search terms have to be URL encoded.
+Fulltext search supports the @ref:[Lucene Query Parser syntax](../../08-lucene/index.md).
+Note that Lucene's default operator is a logical OR when submitting several search terms.
 
 ```
 HTTP GET to http://host/v1/search/searchValue?searchtype=fulltext[&filter_by_restype=resourceClassIRI]
@@ -340,7 +345,7 @@ Explanation of the comparison operators:
   syntax rules would be violated.
 * `MATCH`: checks if a resource's text value *matches* the search
   value. The behaviour depends on the used triplestore's full text
-  index.
+  index, see @ref:[Lucene](../../08-lucene/index.md).
 * `LIKE`: checks if the search value is contained in a resource's
   text value.
 * `!LIKE`: checks if the search value is not contained in a

@@ -900,6 +900,21 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             }
         }
 
+        "return 1 resource containing 'Reise ins Heilige Lan' in its label with three of its values" in {
+            // http://0.0.0.0:3333/v1/resources?searchstr=Reise+ins+Heilige+Lan&numprops=3&limit=11&restype_id=-1
+            responderManager ! ResourceSearchGetRequestV1(
+                searchString = "Reise ins Heilige Lan",
+                numberOfProps = 3,
+                limitOfResults = 11,
+                resourceTypeIri = None,
+                userProfile = SharedTestDataADM.incunabulaMemberUser
+            )
+
+            expectMsgPF(timeout) {
+                case response: ResourceSearchResponseV1 => compareResourceSearchResults(received = response, expected = ReiseInsHeiligelandThreeValues)
+            }
+        }
+
         "return 1 resource of type incunabula:book containing 'Reis' in its label with its label (first property)" in {
             // http://0.0.0.0:3333/v1/resources?searchstr=Reis&numprops=1&limit=11&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
             responderManager ! ResourceSearchGetRequestV1(
