@@ -1036,7 +1036,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong permissions")
             }
 
-            _ = if (resource.label != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel) {
+            // Undo any escapes in the submitted rdfs:label to compare it with the saved one.
+            unescapedLabel: String = stringFormatter.fromSparqlEncodedString(resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel)
+
+            _ = if (resource.label != unescapedLabel) {
                 throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong label")
             }
 
