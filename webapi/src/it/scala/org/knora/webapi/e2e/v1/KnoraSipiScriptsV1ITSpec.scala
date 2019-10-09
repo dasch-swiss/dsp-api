@@ -19,7 +19,7 @@
 
 package org.knora.webapi.e2e.v1
 
-import java.io.File
+import java.io.{File,FileInputStream,FileOutputStream}
 
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
@@ -118,8 +118,6 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             val sipiGetResponseJson = getResponseJson(sipiGetRequest02)
         }
 
-
-
         "successfully call convert_from_file.lua sipi script" in {
 
             /* This is the case where the file is already stored on the sipi server as part of make_thumbnail*/
@@ -141,37 +139,20 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             val sipiMakeThumbnailRequest = Post(baseSipiUrl + "/make_thumbnail", sipiFormData)
             val sipiMakeThumbnailResponseJson = getResponseJson(sipiMakeThumbnailRequest)
 
-
             val originalFilename = sipiMakeThumbnailResponseJson.fields("original_filename").asInstanceOf[JsString].value
             val originalMimeType = sipiMakeThumbnailResponseJson.fields("original_mimetype").asInstanceOf[JsString].value
             val filename = sipiMakeThumbnailResponseJson.fields("filename").asInstanceOf[JsString].value
 
-            // ToDo: Find out why this way of sending json is not working with sipi
-            /*
-            val params =
-                s"""
-                   |{
-                   |    "originalfilename": "$originalFilename",
-                   |    "originalmimetype": "$originalMimeType",
-                   |    "filename": "$filename"
-                   |}
-                """.stripMargin
-
-            val convertFromFileRequest = Post(baseSipiUrl + "/convert_from_file", HttpEntity(ContentTypes.`application/json`, params))
-            val convertFromFileResponseJson = getResponseJson(convertFromFileRequest)
-            */
-
             // A form-data request containing the payload for convert_from_file.
-
             val sipiFormData02 = FormData(
                 Map(
-                    "originalFilename" -> originalFilename,
-                    "originalMimeType" -> originalMimeType,
+                    "originalfilename" -> originalFilename,
+                    "originalmimetype" -> originalMimeType,
                     "prefix" -> "0001",
                     "filename" -> filename
                 )
             )
-
+            
             val convertFromFileRequest = Post(baseSipiUrl + "/convert_from_file", sipiFormData02)
             val convertFromFileResponseJson = getResponseJson(convertFromFileRequest)
 
@@ -187,8 +168,6 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             val sipiGetInfoRequest = Get(baseSipiUrl + "/0001/" + filenameFull + "/info.json" ) ~> addCredentials(BasicHttpCredentials(username, password))
             val sipiGetInfoResponseJson = getResponseJson(sipiGetInfoRequest)
             log.debug("sipiGetInfoResponseJson: {}", sipiGetInfoResponseJson)
-
-
         }
 
         "successfully call convert_from_binaries.lua sipi script" in {
@@ -197,13 +176,24 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             val fileToSend = new File(pathToChlaus)
             assert(fileToSend.exists(), s"File $pathToChlaus does not exist")
 
+            // To be able to run packaged tests inside Docker, we need to copy
+            // the file first to a place which is shared with sipi
+            val dest = File.createTempFile("pre-",".jpg")
+            new FileOutputStream(dest)
+              .getChannel
+              .transferFrom(
+                  new FileInputStream(fileToSend).getChannel,
+                  0,
+                  Long.MaxValue
+              )
+
             // A multipart/form-data request containing the image.
             val sipiFormData = FormData(
                 Map(
-                    "originalFilename" -> fileToSend.getName,
-                    "originalMimeType" -> "image/jpeg",
+                    "originalfilename" -> dest.getName,
+                    "originalmimetype" -> "image/jpeg",
                     "prefix" -> "0001",
-                    "source" -> fileToSend.getAbsolutePath
+                    "source" -> dest.getAbsolutePath
                 )
             )
 

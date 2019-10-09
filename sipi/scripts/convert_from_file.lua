@@ -27,7 +27,7 @@ if not success then
 end
 
 if server.post == nil then
-    send_error(400, PARAMETERS_INCORRECT)
+    send_error(400, PARAMETERS_INCORRECT .. " (post)")
     return
 end
 
@@ -39,7 +39,7 @@ end
 prefix = server.post['prefix']
 
 if prefix == nil then
-    send_error(400, PARAMETERS_INCORRECT)
+    send_error(400, PARAMETERS_INCORRECT .. " (prefix)")
     return
 end
 
@@ -58,8 +58,18 @@ originalMimetype = server.post['originalmimetype']
 filename = server.post['filename']
 
 -- check if all the expected params are set
-if originalFilename == nil or originalMimetype == nil or filename == nil then
-    send_error(400, PARAMETERS_INCORRECT)
+if originalFilename == nil then
+    send_error(400, PARAMETERS_INCORRECT .. " (originalFilename)")
+    return
+end
+
+if originalMimetype == nil then
+    send_error(400, PARAMETERS_INCORRECT .. " (originalMimetype)")
+    return
+end
+
+if filename == nil then
+    send_error(400, PARAMETERS_INCORRECT .. " (filename)")
     return
 end
 

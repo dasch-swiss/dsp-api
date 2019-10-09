@@ -118,7 +118,7 @@ for image_index, image_params in pairs(server.uploads) do
     end
 
     -- Create a IIIF base URL for the converted file.
-    local iiif_base_url = get_external_protocol() .. get_external_hostname() .. ":" .. get_external_port() .. '/tmp/' .. jp2_filename
+    local iiif_base_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .. '/tmp/' .. jp2_filename
 
     -- Construct response data about the file that was uploaded.
     local this_file_upload_data = {}
