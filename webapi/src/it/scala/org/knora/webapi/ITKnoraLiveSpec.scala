@@ -119,8 +119,10 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+        logger.info("Loading test data started ...")
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, 8.minutes)
+        logger.info("Loading test data done.")
     }
 
     protected def checkIfSipiIsRunning(): Unit = {

@@ -1,8 +1,8 @@
 !knora-ontologies
 !webapi
 .git
-.gitignore
-.idea
+**/.gitignore
+**/.idea
 docs
 private
 triplestores

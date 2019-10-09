@@ -167,6 +167,15 @@ object Dependencies {
 
     }
 
+    object TestBinaries {
+        val akkaTestkit            = Def.setting {"com.typesafe.akka"            %% "akka-testkit"             % akkaVersion.value}
+        val akkaStreamTestkit      = Def.setting {"com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion.value}
+        val akkaHttpTestkit        = Def.setting {"com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion.value}
+        val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.0.4"
+        val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "2.3.1"
+        val gatlingTestFramework   = "io.gatling"                                 % "gatling-test-framework"   % "2.3.1"
+    }
+
     import Compile._
 
     val l = libraryDependencies
@@ -240,6 +249,15 @@ object Dependencies {
         xmlunitCore,
         icu4j,
         apacheHttpClient
+    )
+
+    val webapiTestAndITLibraryDependencies = l ++= Seq[sbt.ModuleID](
+        //TestBinaries.akkaTestkit,
+        //TestBinaries.akkaStreamTestkit,
+        //TestBinaries.akkaHttpTestkit,
+        TestBinaries.gatlingHighcharts,
+        TestBinaries.gatlingTestFramework,
+        TestBinaries.scalaTest
     )
 
 
