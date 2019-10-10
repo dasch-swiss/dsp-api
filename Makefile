@@ -192,7 +192,7 @@ it-tests: stack-without-api init-knora-test-unit ## runs the integration tests (
 				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
 				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt "webapi/it:testOnly *.KnoraSipiIntegrationV1ITSpec"
+				daschswiss/scala-sbt sbt "webapi/it:test"
 
 .PHONY: it-tests-with-coverage
 it-tests-with-coverage: stack-without-api init-knora-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.
