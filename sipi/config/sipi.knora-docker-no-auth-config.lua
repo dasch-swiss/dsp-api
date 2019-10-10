@@ -186,8 +186,8 @@ routes = {
     },
     {
         method = 'POST',
-        route = '/convert_from_binaries',
-        script = 'convert_from_binaries.lua'
+        route = '/convert_from_path',
+        script = 'convert_from_path.lua'
     },
     {
         method = 'POST',

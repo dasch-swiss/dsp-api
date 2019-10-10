@@ -33,13 +33,13 @@ if server.post == nil then
     return
 end
 
-originalFilename = server.post['originalfilename']
-originalMimetype = server.post['originalmimetype']
+originalFilename = server.post['originalFilename']
+originalMimeType = server.post['originalMimeType']
 sourcePath = server.post['source']
 prefix = server.post['prefix']
 
 -- check if all the expected params are set
-if originalFilename == nil or originalMimetype == nil or sourcePath == nil or prefix == nil then
+if originalFilename == nil or originalMimeType == nil or sourcePath == nil or prefix == nil then
     send_error(400, PARAMETERS_INCORRECT)
     return
 end
@@ -120,19 +120,19 @@ if mediatype == IMAGE then
         return
     end
 
-    success, check = fullImg:mimetype_consistency(originalMimetype, originalFilename)
-    if not success then
-        server.log("fullImg:mimetype_consistency() failed: " .. check, server.loglevel.LOG_ERR)
-        return
-    end
+    --success, check = fullImg:mimetype_consistency(originalMimeType, originalFilename)
+    --if not success then
+    --    server.log("fullImg:mimetype_consistency() failed: " .. check, server.loglevel.LOG_ERR)
+    --    return
+    --end
 
     -- if check returns false, the user's input is invalid
-    if not check then
-
-        send_error(400, MIMETYPES_INCONSISTENCY)
-
-        return
-    end
+    --if not check then
+    --
+    --    send_error(400, MIMETYPES_INCONSISTENCY)
+    --
+    --    return
+    --end
 
     success, fullDims = fullImg:dims()
     if not success then
@@ -163,7 +163,7 @@ if mediatype == IMAGE then
         filename_full = fullImgName,
         nx_full = fullDims.nx,
         ny_full = fullDims.ny,
-        original_mimetype = originalMimetype,
+        original_mimetype = originalMimeType,
         original_filename = originalFilename,
         file_type = IMAGE
     }
@@ -206,10 +206,10 @@ elseif mediatype == TEXT then
 
     -- check that the submitted mimetype is the same as the real mimetype of the file
 
-    local success, submitted_mimetype = server.parse_mimetype(originalMimetype)
+    local success, submitted_mimetype = server.parse_mimetype(originalMimeType)
 
     if not success then
-        send_error(400, "Couldn't parse mimetype: " .. originalMimetype)
+        send_error(400, "Couldn't parse mimetype: " .. originalMimeType)
         return -1
     end
 
@@ -231,7 +231,7 @@ elseif mediatype == TEXT then
         charset = submitted_mimetype.charset,
         file_type = TEXT,
         filename = filename,
-        original_mimetype = originalMimetype,
+        original_mimetype = originalMimeType,
         original_filename = originalFilename
     }
 

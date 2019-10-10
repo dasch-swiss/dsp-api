@@ -19,14 +19,14 @@
 
 package org.knora.webapi.e2e.v1
 
-import java.io.{File,FileInputStream,FileOutputStream}
+import java.io.{File, FileInputStream, FileOutputStream}
 
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.ITKnoraFakeSpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.{FileUtil, MutableTestIri}
 import spray.json._
 
 
@@ -140,14 +140,14 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             val sipiMakeThumbnailResponseJson = getResponseJson(sipiMakeThumbnailRequest)
 
             val originalFilename = sipiMakeThumbnailResponseJson.fields("original_filename").asInstanceOf[JsString].value
-            val originalMimeType = sipiMakeThumbnailResponseJson.fields("original_mimetype").asInstanceOf[JsString].value
+            val originalMimetype = sipiMakeThumbnailResponseJson.fields("original_mimetype").asInstanceOf[JsString].value
             val filename = sipiMakeThumbnailResponseJson.fields("filename").asInstanceOf[JsString].value
 
             // A form-data request containing the payload for convert_from_file.
             val sipiFormData02 = FormData(
                 Map(
-                    "originalfilename" -> originalFilename,
-                    "originalmimetype" -> originalMimeType,
+                    "originalFilename" -> originalFilename,
+                    "originalMimeType" -> originalMimetype,
                     "prefix" -> "0001",
                     "filename" -> filename
                 )
@@ -170,7 +170,7 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             log.debug("sipiGetInfoResponseJson: {}", sipiGetInfoResponseJson)
         }
 
-        "successfully call convert_from_binaries.lua sipi script" in {
+        "successfully call convert_from_path.lua sipi script" in {
 
             // The image to be uploaded.
             val fileToSend = new File(pathToChlaus)
@@ -178,7 +178,7 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
 
             // To be able to run packaged tests inside Docker, we need to copy
             // the file first to a place which is shared with sipi
-            val dest = File.createTempFile("pre-",".jpg")
+            val dest = FileUtil.createTempFile(settings)
             new FileOutputStream(dest)
               .getChannel
               .transferFrom(
@@ -190,20 +190,20 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             // A multipart/form-data request containing the image.
             val sipiFormData = FormData(
                 Map(
-                    "originalfilename" -> dest.getName,
-                    "originalmimetype" -> "image/jpeg",
+                    "originalFilename" -> dest.getName,
+                    "originalMimeType" -> "image/jpeg",
                     "prefix" -> "0001",
                     "source" -> dest.getAbsolutePath
                 )
             )
 
             // Send a POST request to Sipi, asking it to make a thumbnail of the image.
-            val sipiConvertFromBinariesPostRequest = Post(baseSipiUrl + "/convert_from_binaries", sipiFormData)
-            val sipiConvertFromBinariesPostResponseJson = getResponseJson(sipiConvertFromBinariesPostRequest)
+            val sipiConvertFromPathPostRequest = Post(baseSipiUrl + "/convert_from_path", sipiFormData)
+            val sipiConvertFromPathPostResponseJson = getResponseJson(sipiConvertFromPathPostRequest)
 
-            val filenameFull = sipiConvertFromBinariesPostResponseJson.fields("filename_full").asInstanceOf[JsString].value
+            val filenameFull = sipiConvertFromPathPostResponseJson.fields("filename_full").asInstanceOf[JsString].value
 
-            //log.debug("sipiConvertFromBinariesPostResponseJson: {}", sipiConvertFromBinariesPostResponseJson)
+            //log.debug("sipiConvertFromPathPostResponseJson: {}", sipiConvertFromPathPostResponseJson)
 
             // Running with KnoraFakeService which always allows access to files.
             val sipiGetImageRequest = Get(baseSipiUrl + "/0001/" + filenameFull + "/full/full/0/default.jpg") ~> addCredentials(BasicHttpCredentials(username, password))

@@ -101,19 +101,4 @@ class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeCore with
     protected def getResponseJson(request: HttpRequest): JsObject = {
         getResponseString(request).parseJson.asJsObject
     }
-
-    /**
-      * Creates the Knora API server's temporary upload directory if it doesn't exist.
-      */
-    def createTmpFileDir(): Unit = {
-        if (!Files.exists(Paths.get(settings.tmpDataDir))) {
-            try {
-                val tmpDir = new File(settings.tmpDataDir)
-                tmpDir.mkdir()
-            } catch {
-                case e: Throwable => throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
-            }
-        }
-    }
-
 }

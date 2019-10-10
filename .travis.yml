@@ -108,8 +108,9 @@ jobs:
     # integration tests
     - stage: test
       script:
-        # set license
+        # set graphdb license and data home directory
         - export KNORA_GDB_LICENSE=$TRAVIS_BUILD_DIR/travis/graphdb.license
+        - export KNORA_GDB_HOME=$TRAVIS_BUILD_DIR/graphdb-home
         # start the integration tests
         - make it-tests-with-coverage
         # print out Sipi logs

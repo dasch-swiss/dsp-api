@@ -415,7 +415,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             checkResponseOK(knoraPostRequest)
         }
 
-
         "create an 'p0803-incunabula:book' and an 'p0803-incunabula:page' with file parameters via XML import" in {
             val fileToUpload = new File(pathToChlaus)
             val absoluteFilePath = fileToUpload.getAbsolutePath

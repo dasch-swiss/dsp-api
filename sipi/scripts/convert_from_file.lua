@@ -53,8 +53,8 @@ if not exists then
     return -1
 end
 
-originalFilename = server.post['originalfilename']
-originalMimetype = server.post['originalmimetype']
+originalFilename = server.post['originalFilename']
+originalMimeType = server.post['originalMimeType']
 filename = server.post['filename']
 
 -- check if all the expected params are set
@@ -63,8 +63,8 @@ if originalFilename == nil then
     return
 end
 
-if originalMimetype == nil then
-    send_error(400, PARAMETERS_INCORRECT .. " (originalMimetype)")
+if originalMimeType == nil then
+    send_error(400, PARAMETERS_INCORRECT .. " (originalMimeType)")
     return
 end
 
@@ -115,10 +115,10 @@ if not success then
     return
 end
 
-local success, submitted_mimetype = server.parse_mimetype(originalMimetype)
+local success, submitted_mimetype = server.parse_mimetype(originalMimeType)
 
 if not success then
-    send_error(400, "Couldn't parse mimetype: " .. originalMimetype)
+    send_error(400, "Couldn't parse mimetype: " .. originalMimeType)
     return -1
 end
 
@@ -184,7 +184,7 @@ result = {
     filename_full = fullImgName,
     nx_full = fullDims.nx,
     ny_full = fullDims.ny,
-    original_mimetype = originalMimetype,
+    original_mimetype = originalMimeType,
     original_filename = originalFilename,
     file_type = 'image'
 }
