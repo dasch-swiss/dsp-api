@@ -114,6 +114,8 @@ jobs:
         - make it-tests-with-coverage
         # print out Sipi logs
         - make stack-logs-sipi-no-follow
+        # print out .env file used by the stack
+        - make print-env-file
     # upgrade tests
     - stage: test
       script:

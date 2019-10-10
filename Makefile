@@ -100,6 +100,10 @@ publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publi
 ## Docker-Compose targets
 #################################
 
+.PHONY: print-env-file
+print-env-file: env-file ## prints the env file used by knora-stack
+	@cat .env
+
 .PHONY: env-file
 env-file: ## write the env file used by knora-stack.
 ifeq ($(KNORA_GDB_LICENSE), "unknown")
