@@ -20,7 +20,7 @@ jdk:
 
 services:
   - docker
-  - redis-server
+  # - redis-server
 
 env:
   global:
