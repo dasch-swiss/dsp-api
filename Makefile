@@ -1,3 +1,7 @@
+# Determine this makefile's path.
+# Be sure to place this BEFORE `include` directives, if any.
+THIS_FILE := $(lastword $(MAKEFILE_LIST))
+
 include vars.mk
 
 #################################
@@ -195,7 +199,10 @@ unit-tests: stack-without-api init-knora-test-unit ## runs the unit tests (equiv
 				daschswiss/scala-sbt sbt 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest'
 
 .PHONY: unit-tests-with-coverage
-unit-tests-with-coverage: stack-without-api init-knora-test-unit ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
+unit-tests-with-coverage: stack-without-api ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
+	@echo $@  # print target name
+	@sleep 5
+	@$(MAKE) -f $(THIS_FILE) init-knora-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -225,7 +232,10 @@ e2e-tests: stack-without-api init-knora-test-unit ## runs the e2e tests (equival
 				daschswiss/scala-sbt sbt 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest'
 
 .PHONY: e2e-tests-with-coverage
-e2e-tests-with-coverage: stack-without-api init-knora-test-unit ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
+e2e-tests-with-coverage: stack-without-api ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
+	@echo $@  # print target name
+	@sleep 5
+	@$(MAKE) -f $(THIS_FILE) init-knora-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -255,7 +265,10 @@ it-tests: stack-without-api init-knora-test-unit ## runs the integration tests (
 				daschswiss/scala-sbt sbt "webapi/it:test"
 
 .PHONY: it-tests-with-coverage
-it-tests-with-coverage: stack-without-api init-knora-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.
+it-tests-with-coverage: stack-without-api ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.
+	@echo $@  # print target name
+	@sleep 5
+	@$(MAKE) -f $(THIS_FILE) init-knora-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -271,7 +284,7 @@ it-tests-with-coverage: stack-without-api init-knora-test-unit ## runs the integ
 
 .PHONY: normal-tests
 normal-tests: stack-without-api init-knora-test-unit ## runs the normal tests (equivalent to 'sbt webapi/test').
-	docker build -t webapi-test -f docker/knora-api-test.dockerfile  webapi/build/test/target/universal
+	# docker build -t webapi-test -f docker/knora-api-test.dockerfile  webapi/build/test/target/universal
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
