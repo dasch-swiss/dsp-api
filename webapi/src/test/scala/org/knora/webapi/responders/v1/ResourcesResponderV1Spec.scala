@@ -867,7 +867,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             }
         }
 
-        "return the context (describing 402 pages) of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
+        "return the context (describing 402 pages) of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" ignore {
+            // ToDo: Make test portable. Sipi IIIF URL should not be hardcoded but include the value from 'settings.externalSipiIIIFGetUrl'
             // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a?reqtype=context&resinfo=true
             responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0803/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
