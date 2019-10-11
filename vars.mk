@@ -16,8 +16,7 @@ ifeq ($(BUILD_TAG),)
   BUILD_TAG := $(shell git describe --tag --dirty --abbrev=7)
 endif
 ifeq ($(BUILD_TAG),)
-  BUILD_TAG := unknown
-  $(warning unable to set BUILD_TAG. Set the value manually.)
+  BUILD_TAG := $(shell git rev-parse --verify HEAD)
 endif
 
 ifeq ($(KNORA_API_IMAGE),)
