@@ -108,10 +108,12 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+        logger.info("Loading test data started ...")
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
         Await.result(appActor ? ResetTriplestoreContent(rdfDataObjects), 479999.milliseconds)
         Await.result(appActor ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
         Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
+        logger.info("Loading test data done.")
     }
 
     def memusage(): Unit = {
