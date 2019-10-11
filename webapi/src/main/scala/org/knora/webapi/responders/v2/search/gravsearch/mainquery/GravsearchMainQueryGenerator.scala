@@ -211,32 +211,21 @@ object GravsearchMainQueryGenerator {
 
             val mainAndDependentResourcesValueObjectsValuePattern = ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri)))
 
-            // Check whether the response should include standoff.
-            val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
-
-            // If we're not querying standoff, filter out knora-base:valueHasStandoff.
-            val filterStandoff = if (!queryStandoff) {
-                Some(
-                    FilterPattern(
-                        CompareExpression(
-                            leftArg = mainAndDependentResourceValueObjectProp,
-                            operator = CompareExpressionOperator.NOT_EQUALS,
-                            rightArg = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri)
-                        )
-                    )
-                )
-            } else {
-                None
-            }
-
             // WHERE patterns for statements about the main and dependent resources' values
             val wherePatternsForMainAndDependentResourcesValues = Seq(
                 mainAndDependentResourcesValueObjectsValuePattern,
                 StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri), obj = mainAndDependentResourceValueObject),
                 StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
                 StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
-            ) ++ filterStandoff
+                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj),
+                FilterPattern(
+                    CompareExpression(
+                        leftArg = mainAndDependentResourceValueObjectProp,
+                        operator = CompareExpressionOperator.NOT_EQUALS,
+                        rightArg = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri)
+                    )
+                )
+            )
 
             // return assertions about the main and dependent resources' values in CONSTRUCT clause
             val constructPatternsForMainAndDependentResourcesValues = Seq(
@@ -244,6 +233,9 @@ object GravsearchMainQueryGenerator {
                 StatementPattern(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
                 StatementPattern(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
             )
+
+            // Check whether the response should include standoff.
+            val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
 
             // WHERE patterns for querying the first page of standoff in each text value
             val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {
