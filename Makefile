@@ -190,7 +190,7 @@ unit-tests: stack-without-api init-knora-test-unit ## runs the unit tests (equiv
 				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS=-Xms2048M -Xmx2048M -Xss6M \
+				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest'
 
@@ -205,7 +205,7 @@ unit-tests-with-coverage: stack-without-api init-knora-test-unit ## runs the uni
 				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS=-Xms2048M -Xmx2048M -Xss6M \
+				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
 
@@ -220,7 +220,7 @@ e2e-tests: stack-without-api init-knora-test-unit ## runs the e2e tests (equival
 				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS=-Xms2048M -Xmx2048M -Xss6M \
+				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest'
 
@@ -235,7 +235,7 @@ e2e-tests-with-coverage: stack-without-api init-knora-test-unit ## runs the e2e 
 				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS=-Xms2048M -Xmx2048M -Xss6M \
+				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
 
@@ -250,7 +250,7 @@ it-tests: stack-without-api init-knora-test-unit ## runs the integration tests (
 				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS=-Xms2048M -Xmx2048M -Xss6M \
+				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt "webapi/it:test"
 
@@ -265,7 +265,7 @@ it-tests-with-coverage: stack-without-api init-knora-test-unit ## runs the integ
 				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS=-Xms2048M -Xmx2048M -Xss6M \
+				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt coverage webapi/it:test webapi/coverageReport
 
@@ -281,7 +281,7 @@ normal-tests: stack-without-api init-knora-test-unit ## runs the normal tests (e
 				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS=-Xms2048M -Xmx2048M -Xss6M \
+				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt webapi/test
 
