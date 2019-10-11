@@ -638,8 +638,8 @@ lazy val webapi = knoraModule("webapi")
 
 lazy val webapiJavaRunOptions = Seq(
     // "-showversion",
-    "-Xms1G",
-    "-Xmx1G",
+    "-Xms6G",
+    "-Xmx8G",
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
