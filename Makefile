@@ -315,6 +315,9 @@ clean: ## clean build artifacts
 	@rm -rf .env
 	@sbt clean
 
+clean-docker: ## cleans the docker installation
+	docker system prune -af
+
 .PHONY: info
 info: ## print out all variables
 	@echo "BUILD_TAG: \t\t\t $(BUILD_TAG)"
