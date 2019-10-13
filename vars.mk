@@ -52,7 +52,7 @@ ifeq ($(GIT_EMAIL),)
 endif
 
 ifeq ($(KNORA_GDB_LICENSE),)
-  KNORA_GDB_LICENSE := unknown)
+  KNORA_GDB_LICENSE := unknown
 endif
 
 ifeq ($(KNORA_GDB_HOME),)
