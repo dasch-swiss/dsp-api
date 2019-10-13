@@ -69,7 +69,7 @@ $ make stack-up
 Then to create a test repository and load some test data into the triplestore:
 
 ```
-$ make init-knora-test
+$ make init-knora-test-free
 ```
 
 Then we need to restart the knora-stack after loading the data:
@@ -91,6 +91,7 @@ $ make stack-down
 Run :
 
 ```
+$ make init-knora-test-unit-free
 $ make normal-tests
 ```
 

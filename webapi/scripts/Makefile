@@ -10,6 +10,19 @@ graphdb-se-docker-init-knora-test-minimal: ## initializes GraphDB-DE with the kn
 graphdb-se-docker-init-knora-test-unit: ## initializes GraphDB-SE with the knora-test-unit repository
 	./graphdb-se-docker-init-knora-test-unit.sh
 
+.PHONY: graphdb-free-docker-init-knora-test
+graphdb-free-docker-init-knora-test: ## initializes GraphDB-DE with the knora-test repository
+	./graphdb-free-docker-init-knora-test.sh
+
+.PHONY: graphdb-free-docker-init-knora-test-minimal
+graphdb-free-docker-init-knora-test-minimal: ## initializes GraphDB-DE with the knora-test repository and minimal data
+	./graphdb-free-docker-init-knora-test-minimal.sh
+
+.PHONY: graphdb-free-docker-init-knora-test-unit
+graphdb-free-docker-init-knora-test-unit: ## initializes GraphDB-SE with the knora-test-unit repository
+	./graphdb-free-docker-init-knora-test-unit.sh
+
+
 .PHONY: help
 help: ## this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort

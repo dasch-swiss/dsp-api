@@ -283,7 +283,7 @@ it-tests-with-coverage: stack-without-api ## runs the integration tests (equival
 				daschswiss/scala-sbt sbt coverage webapi/it:test webapi/coverageReport
 
 .PHONY: normal-tests
-normal-tests: stack-without-api init-knora-test-unit ## runs the normal tests (equivalent to 'sbt webapi/test').
+normal-tests: stack-without-api ## runs the normal tests (equivalent to 'sbt webapi/test').
 	# docker build -t webapi-test -f docker/knora-api-test.dockerfile  webapi/build/test/target/universal
 	docker run 	--rm \
 				-v /tmp:/tmp \
@@ -309,6 +309,18 @@ init-knora-test-minimal: ## initializes the knora-test repository with minimal d
 .PHONY: init-knora-test-unit
 init-knora-test-unit: ## initializes the knora-test-unit repository
 	$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-unit
+
+.PHONY: init-knora-test-free
+init-knora-test-free: ## initializes the knora-test repository (for GraphDB-Free)
+	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-free
+
+.PHONY: init-knora-test-minimal-free
+init-knora-test-minimal-free: ## initializes the knora-test repository with minimal data (for GraphDB-Free)
+	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-minimal
+
+.PHONY: init-knora-test-unit-free
+init-knora-test-unit-free: ## initializes the knora-test-unit repository (for GraphDB-Free)
+	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-unit
 
 clean: ## clean build artifacts
 	@rm -rf .docker
