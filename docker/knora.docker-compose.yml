@@ -81,3 +81,4 @@ networks:
 
 volumes:
   db-data:
+  no-license:

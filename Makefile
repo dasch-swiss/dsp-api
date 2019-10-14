@@ -113,7 +113,7 @@ env-file: ## write the env file used by knora-stack.
 ifeq ($(KNORA_GDB_LICENSE), unknown)
 	$(warning No GraphDB-SE license set. Using GraphDB-Free.)
 	@echo KNORA_GRAPHDB_IMAGE=$(KNORA_GRAPHDB_FREE_IMAGE) > .env
-	@echo KNORA_GDB_LICENSE_FILE=db-data/no.license >> .env
+	@echo KNORA_GDB_LICENSE_FILE=no-license >> .env
 	@echo KNORA_GDB_TYPE=graphdb-free >> .env
 else
 	@echo KNORA_GRAPHDB_IMAGE=$(KNORA_GRAPHDB_SE_IMAGE) > .env
