@@ -110,19 +110,19 @@ print-env-file: env-file ## prints the env file used by knora-stack
 
 .PHONY: env-file
 env-file: ## write the env file used by knora-stack.
-ifeq ($(KNORA_GDB_LICENSE), "unknown")
-	$(warning No GraphDB-SE license set. Using GraphDB-Free)
+ifeq ($(KNORA_GDB_LICENSE), unknown)
+	$(warning No GraphDB-SE license set. Using GraphDB-Free.)
 	@echo KNORA_GRAPHDB_IMAGE=$(KNORA_GRAPHDB_FREE_IMAGE) > .env
-	@echo KNORA_GDB_LICENSE_FILE=$(PWD)/triplestores/graphdb/graphdb.license >> .env
+	@echo KNORA_GDB_LICENSE_FILE=db-data/no.license >> .env
 	@echo KNORA_GDB_TYPE=graphdb-free >> .env
 else
 	@echo KNORA_GRAPHDB_IMAGE=$(KNORA_GRAPHDB_SE_IMAGE) > .env
 	@echo KNORA_GDB_LICENSE_FILE=$(KNORA_GDB_LICENSE) >> .env
 	@echo KNORA_GDB_TYPE=graphdb-se >> .env
 endif
-ifeq ($(KNORA_GDB_HOME), "unknown")
-	$(warning The path to your GraphDB home directory is not set. Using: $(PWD)/triplestores/graphdb/home)
-	@echo KNORA_GDB_HOME_DIR=$(PWD)/triplestores/graphdb/home >> .env
+ifeq ($(KNORA_GDB_HOME), unknown)
+	$(warning The path to the GraphDB home directory is not set. Using docker volume: db-data.)
+	@echo KNORA_GDB_HOME_DIR=db-data >> .env
 else
 	@echo KNORA_GDB_HOME_DIR=$(KNORA_GDB_HOME) >> .env
 endif
