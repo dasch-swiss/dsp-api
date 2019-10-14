@@ -311,6 +311,8 @@ object StandoffDataTypeClasses extends Enumeration {
 
     val StandoffInternalReferenceTag: Value = Value(OntologyConstants.KnoraBase.StandoffInternalReferenceTag)
 
+    val StandoffWordTag: Value = Value(OntologyConstants.KnoraBase.StandoffInternalReferenceTag)
+
     val valueMap: Map[IRI, Value] = values.toList.map(v => (v.toString, v)).toMap
 
     /**
