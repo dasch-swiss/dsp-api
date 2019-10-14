@@ -140,6 +140,10 @@ stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, re
 stack-restart: stack-up ## re-starts the knora-stack: graphdb, sipi, redis, api, salsah1.
 	docker-compose -f docker/knora.docker-compose.yml restart
 
+.PHONY: stack-restart-api
+stack-restart-api: ## re-starts the api. Usually used after loading data into GraphDB.
+	docker-compose -f docker/knora.docker-compose.yml restart api
+
 .PHONY: stack-logs
 stack-logs: ## prints out and follows the logs of the running knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml logs -f
