@@ -443,7 +443,7 @@ lazy val salsah1 = knoraModule("salsah1")
 
             Docker / dockerExposedPorts ++= Seq(3335),
             Docker / dockerCommands := Seq(
-                Cmd("FROM", "openjdk:10-jre-slim-sid"),
+                Cmd("FROM", "adoptopenjdk/openjdk11:alpine-jre"),
                 Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
 
                 Cmd("ENV", """LANG="en_US.UTF-8""""),
@@ -632,20 +632,15 @@ lazy val webapi = knoraModule("webapi")
 
             Docker / dockerExposedPorts ++= Seq(3333, 10001),
             Docker / dockerCommands := Seq(
-                Cmd("FROM", "openjdk:10-jre-slim-sid"),
+                Cmd("FROM", "adoptopenjdk/openjdk11:alpine-jre"),
                 Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-                // install wget
-                Cmd("RUN", "apt-get -qq update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*"),
-                // install yourkit profiler
-                Cmd("RUN", "wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip"),
 
                 Cmd("ADD", "opt/docker", "/webapi"),
                 Cmd("WORKDIR", "/webapi"),
 
                 Cmd("EXPOSE", "3333"),
-                Cmd("EXPOSE", "10001"),
 
-                ExecCmd("ENTRYPOINT", "bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"),
+                ExecCmd("ENTRYPOINT", "bin/webapi"),
             )
 
         )

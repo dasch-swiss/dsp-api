@@ -1,4 +1,4 @@
-FROM openjdk:10-jre-slim-sid
+FROM adoptopenjdk/openjdk11:alpine-jre
 
 ADD stage /webapi-it
 

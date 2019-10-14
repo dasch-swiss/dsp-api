@@ -1,11 +1,10 @@
-FROM openjdk:10-jre-slim-sid
+FROM adoptopenjdk/openjdk11:alpine-jre
 
 ADD stage /webapi-test
 
 WORKDIR /webapi-test
 
 EXPOSE 3333
-EXPOSE 10001
 
 ENTRYPOINT ["bin/webapi-test"]
 
