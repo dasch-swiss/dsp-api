@@ -451,6 +451,8 @@ lazy val salsah1 = knoraModule("salsah1")
                 Cmd("ENV", "KNORA_SALSAH1_DEPLOYED=true"),
                 Cmd("ENV", "KNORA_SALSAH1_WORKDIR=/salsah1"),
 
+                Cmd("RUN apk update && apk upgrade && apk add bash"),
+
                 Cmd("ADD", "opt/docker", "/salsah1"),
                 Cmd("WORKDIR", "/salsah1"),
 
@@ -634,6 +636,8 @@ lazy val webapi = knoraModule("webapi")
             Docker / dockerCommands := Seq(
                 Cmd("FROM", "adoptopenjdk/openjdk11:alpine-jre"),
                 Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
+
+                Cmd("RUN apk update && apk upgrade && apk add bash"),
 
                 Cmd("ADD", "opt/docker", "/webapi"),
                 Cmd("WORKDIR", "/webapi"),

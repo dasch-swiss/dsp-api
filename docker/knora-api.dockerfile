@@ -9,6 +9,11 @@ FROM adoptopenjdk/openjdk11:alpine-jre
 #    wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && \
 #    unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip
 
+RUN \
+    apk update && \
+    apk upgrade && \
+    apk add bash
+
 ADD stage /webapi
 
 WORKDIR /webapi
