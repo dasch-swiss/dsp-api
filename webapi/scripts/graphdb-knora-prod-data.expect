@@ -48,8 +48,6 @@ send "load ../_test_data/all_data/biblio-data.ttl into http://www.knora.org/data
 expect $prompt
 send "load ../_test_data/all_data/beol-data.ttl into http://www.knora.org/data/0801/beol .\r"
 expect $prompt
-send "load ../_test_data/ontologies/HS-onto.ttl into http://www.knora.org/ontology/0802/HS .\r"
-expect $prompt
 send "load ../_test_data/ontologies/webern-onto.ttl into http://www.knora.org/ontology/08AE/webern .\r"
 expect $prompt
 send "load ../_test_data/all_data/webern-data.ttl into http://www.knora.org/data/08AE/webern .\r"
