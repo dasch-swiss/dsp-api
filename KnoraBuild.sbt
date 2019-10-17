@@ -23,7 +23,9 @@ lazy val buildSettings = Dependencies.Versions ++ Seq(
     version := (ThisBuild / version).value
 )
 
-lazy val root = Project(id = "knora", file("."))
+lazy val rootBaseDir = baseDirectory.in(ThisBuild)
+
+lazy val root: Project = Project(id = "knora", file("."))
   .aggregate(aggregatedProjects: _*)
   .enablePlugins(DockerComposePlugin, GitVersioning, GitBranchPrompt)
   .settings(Dependencies.Versions)
@@ -81,8 +83,7 @@ lazy val root = Project(id = "knora", file("."))
           (webapi / Docker / publishLocal).value,
           (knoraGraphDbSe / Docker / publishLocal).value,
           (knoraGraphdbFree / Docker / publishLocal).value,
-          (knoraSipi / Docker / publishLocal).value,
-          (knoraAssets / Docker / publishLocal).value
+          (knoraSipi / Docker / publishLocal).value
       )
   )
 
@@ -94,7 +95,7 @@ lazy val root = Project(id = "knora", file("."))
 // Define `Configuration` instances representing our different documentation trees
 lazy val ParadoxSite = config("paradox")
 
-lazy val docs = knoraModule("docs")
+lazy val docs: Project = knoraModule("docs")
   .enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, GhpagesPlugin)
   .configs(
       ParadoxSite
@@ -190,7 +191,7 @@ lazy val graphdbseCommonSettings = Seq(
     name := "knora-graphdb-se"
 )
 
-lazy val knoraGraphDbSe = knoraModule("knora-graphdb-se")
+lazy val knoraGraphDbSe: Project = knoraModule("knora-graphdb-se")
   .enablePlugins(DockerPlugin)
   .settings(
       graphdbseCommonSettings
@@ -226,7 +227,7 @@ lazy val graphdbfreeCommonSettings = Seq(
     name := "knora-graphdb-free"
 )
 
-lazy val knoraGraphdbFree = knoraModule("knora-graphdb-free")
+lazy val knoraGraphdbFree: Project = knoraModule("knora-graphdb-free")
   .enablePlugins(DockerPlugin)
   .settings(
       graphdbfreeCommonSettings
@@ -262,7 +263,7 @@ lazy val knoraSipiCommonSettings = Seq(
     name := "knora-sipi"
 )
 
-lazy val knoraSipi = knoraModule("knora-sipi")
+lazy val knoraSipi: Project = knoraModule("knora-sipi")
   .enablePlugins(DockerPlugin)
   .settings(
       knoraSipiCommonSettings
@@ -298,7 +299,7 @@ lazy val knoraAssetsCommonSettings = Seq(
     name := "knora-assets"
 )
 
-lazy val knoraAssets = knoraModule("knora-assets")
+lazy val knoraAssets: Project = knoraModule("knora-assets")
   .enablePlugins(DockerPlugin)
   .settings(
       knoraAssetsCommonSettings
@@ -330,18 +331,18 @@ lazy val knoraAssets = knoraModule("knora-assets")
 // Knora upgrade scripts
 //////////////////////////////////////
 
-lazy val knoraUpgradeCommonSettings = Seq(
+lazy val upgradeCommonSettings = Seq(
     name := "upgrade"
 )
 
-lazy val knoraUpgrade = knoraModule("upgrade")
+lazy val upgrade: Project = knoraModule("upgrade")
   .dependsOn(webapi)
   .enablePlugins(JavaAppPackaging, DockerPlugin)
   .settings(
-      knoraUpgradeCommonSettings,
+      upgradeCommonSettings,
       Dependencies.upgradeLibraryDependencies,
       // add '../knora-ontologies' folder to the classpath
-      Compile / unmanagedClasspath += baseDirectory.value / "../knora-ontologies"
+      Compile / unmanagedClasspath += rootBaseDir.value / "knora-ontologies",
   )
   .settings(
       scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
@@ -353,14 +354,18 @@ lazy val knoraUpgrade = knoraModule("upgrade")
       Test / javaOptions ++= upgradeJavaTestOptions,
       Test / parallelExecution := false,
       /* show full stack traces and test case durations */
-      Test / testOptions += Tests.Argument("-oDF")
+      Test / testOptions += Tests.Argument("-oDF"),
   )
   .settings(
       Universal / mappings ++= {
           // copy the different folders
           directory("upgrade/graphdb-se") ++
-            directory("knora-ontologies")
+            directory("knora-ontologies"),
       },
+
+      // add 'knora-ontologies' directory to the classpath of the start script,
+      Universal / scriptClasspath := Seq("../knora-ontologies/") ++ scriptClasspath.value,
+
       // add dockerCommands used to create the image
       // docker:stage, docker:publishLocal, docker:publish, docker:clean
       dockerRepository := Some("dhlabbasel"),
@@ -368,10 +373,12 @@ lazy val knoraUpgrade = knoraModule("upgrade")
       Docker / dockerCommands := Seq(
           Cmd("FROM", "openjdk:10-jre-slim-sid"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
+
+          Cmd("ENV", """KNORA_UPGRADE_DOCKER="true""""),
           Cmd("ADD", "opt/docker", "/upgrade"),
           Cmd("WORKDIR", "/upgrade"),
-          ExecCmd("ENTRYPOINT", "graphdb-se/auto-upgrade.sh"),
-      )
+          Cmd("ENTRYPOINT", "graphdb-se/auto-upgrade.sh"),
+      ),
   )
 
 lazy val upgradeJavaRunOptions = Seq(
@@ -402,7 +409,7 @@ lazy val salsahCommonSettings = Seq(
     name := "salsah1"
 )
 
-lazy val salsah1 = knoraModule("salsah1")
+lazy val salsah1: Project = knoraModule("salsah1")
   .enablePlugins(JavaAppPackaging, DockerPlugin, DockerComposePlugin)
   .configs(
       HeadlessTest
@@ -466,7 +473,7 @@ lazy val salsah1 = knoraModule("salsah1")
 
           Cmd("EXPOSE", "3335"),
 
-          ExecCmd("ENTRYPOINT", "bin/salsah1"),
+          Cmd("ENTRYPOINT", "bin/salsah1"),
       ),
 
 
@@ -526,7 +533,7 @@ lazy val EmbeddedJenaTDBTest = config("tdb") extend Test
 // JavaAgent - adds AspectJ Weaver configuration
 // BuildInfoPlugin - allows generation of scala code with version information
 
-lazy val webapi = knoraModule("webapi")
+lazy val webapi: Project = knoraModule("webapi")
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
   .configs(
       IntegrationTest,
@@ -603,7 +610,10 @@ lazy val webapi = knoraModule("webapi")
 
       // enable publishing the jar produced by `sbt test:package` and `sbt it:package`
       Test / packageBin / publishArtifact := true,
-      IntegrationTest / packageBin / publishArtifact := true
+      IntegrationTest / packageBin / publishArtifact := true,
+
+      // add '../knora-ontologies' folder to the classpath
+      Compile / unmanagedClasspath += rootBaseDir.value / "knora-ontologies",
   )
   .settings(
       // prepare for publishing
@@ -655,7 +665,7 @@ lazy val webapi = knoraModule("webapi")
           Cmd("EXPOSE", "3333"),
           Cmd("EXPOSE", "10001"),
 
-          ExecCmd("ENTRYPOINT", "bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"),
+          Cmd("ENTRYPOINT", "bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"),
       )
 
   )
