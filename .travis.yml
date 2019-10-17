@@ -111,7 +111,7 @@ jobs:
       script:
         - mkdir -p $TRAVIS_BUILD_DIR/docs/target
         - chmod 777 $TRAVIS_BUILD_DIR/docs/target
-        - make build-docs
+        - make docs-build
     # Salsah browser tests
     #- stage: test
     #  script:
