@@ -14,7 +14,7 @@ RUN \
     apk upgrade && \
     apk add bash
 
-ADD stage /webapi
+COPY stage /webapi
 
 WORKDIR /webapi
 

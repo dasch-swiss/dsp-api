@@ -220,7 +220,7 @@ lazy val knoraGraphDbSe = knoraModule("knora-graphdb-se")
           // FIXME: Someday find out how to reference here Dependencies.Versions.gdbSEImage
           Cmd("FROM", "ontotext/graphdb:8.5.0-se"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-          Cmd("ADD", "opt/docker/scripts", "/scripts"),
+          Cmd("COPY", "opt/docker/scripts", "/scripts"),
           Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
       )
   )
@@ -259,7 +259,7 @@ lazy val knoraGraphdbFree = knoraModule("knora-graphdb-free")
           // FIXME: Someday find out how to reference here Dependencies.Versions.gdbFreeImage
           Cmd("FROM", "dhlabbasel/graphdb:8.10.0-free"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-          Cmd("ADD", "opt/docker/scripts", "/scripts"),
+          Cmd("COPY", "opt/docker/scripts", "/scripts"),
           Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
       )
   )
@@ -298,7 +298,7 @@ lazy val knoraSipi = knoraModule("knora-sipi")
           // FIXME: Someday find out how to reference here Dependencies.Versions.sipiImage
           Cmd("FROM", "dhlabbasel/sipi:v2.0.1"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-          Cmd("ADD", "opt/docker/scripts", "/sipi/scripts"),
+          Cmd("COPY", "opt/docker/scripts", "/sipi/scripts"),
       )
   )
 
@@ -338,7 +338,7 @@ lazy val knoraAssets = knoraModule("knora-assets")
       Docker / dockerCommands := Seq(
           Cmd("FROM", "scratch"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-          Cmd("ADD", "opt/docker", "/assets")
+          Cmd("COPY", "opt/docker", "/assets")
       )
   )
 
@@ -374,7 +374,7 @@ lazy val knoraUpgrade = knoraModule("knora-upgrade")
       Docker / dockerCommands := Seq(
           Cmd("FROM", "python:3.7-stretch"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-          Cmd("ADD", "opt/docker", "/"),
+          Cmd("COPY", "opt/docker", "/"),
           Cmd("RUN", "pip install -r /upgrade/requirements.txt"),
           Cmd("ENTRYPOINT", "/upgrade/update-repository.py"),
           Cmd("CMD", "-h")
@@ -453,7 +453,7 @@ lazy val salsah1 = knoraModule("salsah1")
 
                 Cmd("RUN apk update && apk upgrade && apk add bash"),
 
-                Cmd("ADD", "opt/docker", "/salsah1"),
+                Cmd("COPY", "opt/docker", "/salsah1"),
                 Cmd("WORKDIR", "/salsah1"),
 
                 Cmd("EXPOSE", "3335"),
@@ -639,7 +639,7 @@ lazy val webapi = knoraModule("webapi")
 
                 Cmd("RUN apk update && apk upgrade && apk add bash"),
 
-                Cmd("ADD", "opt/docker", "/webapi"),
+                Cmd("COPY", "opt/docker", "/webapi"),
                 Cmd("WORKDIR", "/webapi"),
 
                 Cmd("EXPOSE", "3333"),

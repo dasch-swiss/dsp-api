@@ -10,7 +10,7 @@ ENV JAVA_OPTS="-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
 ENV KNORA_SALSAH1_DEPLOYED=true
 ENV KNORA_SALSAH1_WORKDIR=/salsah1
 
-ADD stage /salsah1
+COPY stage /salsah1
 
 WORKDIR /salsah1
 EXPOSE 3335
