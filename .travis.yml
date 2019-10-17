@@ -127,7 +127,7 @@ jobs:
     # upgrade tests
     - stage: test
       script:
-        - cd cd $TRAVIS_BUILD_DIR/ && sbt upgrade/docker:publishLocal
+        - cd $TRAVIS_BUILD_DIR/ && sbt upgrade/docker:publishLocal
         - cd $TRAVIS_BUILD_DIR/ && sbt upgrade/test
         # prepare needed graphdb-se files
         - mkdir -p $TRAVIS_BUILD_DIR/graphdb
