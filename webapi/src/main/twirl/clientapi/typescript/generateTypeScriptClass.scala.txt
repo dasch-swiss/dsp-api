@@ -90,7 +90,7 @@ export class @{classDef.className}@{
         typeScriptType
     }
 }@handleOption(cardinality: Cardinality) = @{
-    if (cardinality == MayHaveOne || cardinality == MayHaveMany) {
+    if (cardinality == MayHaveOne) {
         "?"
     } else {
         ""

@@ -1048,7 +1048,6 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       */
     private val ProjectCardinalities = Map(
         OntologyConstants.KnoraAdminV2.ID -> Cardinality.MayHaveOne,
-        OntologyConstants.KnoraAdminV2.Members -> Cardinality.MayHaveMany,
         OntologyConstants.KnoraAdminV2.Ontologies -> Cardinality.MayHaveMany,
         OntologyConstants.KnoraAdminV2.SelfJoin -> Cardinality.MustHaveOne
     )
