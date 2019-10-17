@@ -127,6 +127,7 @@ jobs:
     # upgrade tests
     - stage: test
       script:
+        - cd cd $TRAVIS_BUILD_DIR/ && sbt upgrade/docker:publishLocal
         - cd $TRAVIS_BUILD_DIR/ && sbt upgrade/test
         # prepare needed graphdb-se files
         - mkdir -p $TRAVIS_BUILD_DIR/graphdb
@@ -136,12 +137,16 @@ jobs:
         - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.license.file=/graphdb/graphdb.license
         - sleep 15
         - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test.sh
-        # load v7.0.0 data and run auto-upgrade
+        # load v7.0.0 data and run auto-upgrade (sbt use case)
         - cd $TRAVIS_BUILD_DIR/upgrade/graphdb-se
         - unzip $TRAVIS_BUILD_DIR/test-data/v7.0.0/v7.0.0-knora-test.trig.zip
         - ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
         - ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
         - ./auto-upgrade.sh -r knora-test -u gaga -p gaga -h localhost:7200
+        # load v7.0.0 data and run auto-upgrade (docker use case)
+        - ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+        - ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
+        - docker run -v /tmp:/tmp dhlabbasel/upgrade -r knora-test -u gaga -p gaga -h $DOCKERHOST:7200
     # testing docs generation
     - stage: test
       script:
