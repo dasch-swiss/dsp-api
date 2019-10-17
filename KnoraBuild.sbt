@@ -341,8 +341,10 @@ lazy val upgrade: Project = knoraModule("upgrade")
   .settings(
       upgradeCommonSettings,
       Dependencies.upgradeLibraryDependencies,
-      // add '../knora-ontologies' folder to the classpath
-      Compile / unmanagedClasspath += rootBaseDir.value / "knora-ontologies",
+      // add files inside 'knora-ontologies' folder to the classpath
+      Runtime / unmanagedClasspath ++= Seq(
+          rootBaseDir.value / "knora-ontologies",
+      ),
   )
   .settings(
       scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
@@ -612,8 +614,10 @@ lazy val webapi: Project = knoraModule("webapi")
       Test / packageBin / publishArtifact := true,
       IntegrationTest / packageBin / publishArtifact := true,
 
-      // add '../knora-ontologies' folder to the classpath
-      Compile / unmanagedClasspath += rootBaseDir.value / "knora-ontologies",
+      // add files inside 'knora-ontologies' folder to the classpath
+      Runtime / unmanagedClasspath ++= Seq(
+          rootBaseDir.value / "knora-ontologies",
+      ),
   )
   .settings(
       // prepare for publishing
