@@ -8,11 +8,11 @@ include vars.mk
 # Documentation targets
 #################################
 
-.PHONY: publish-docs
+.PHONY: docs-publish
 docs-publish: ## build and publish docs
-	docker run --rm -it -v $(PWD):/knora -v $(HOME)/.ivy2:/root/.ivy2 -v $(HOME)/.ssh:/root/.ssh sbt-paradox /bin/sh -c "cd /knora && git config --global user.email $(GIT_EMAIL) && sbt docs/ghpagesPushSite"
+	docker run --rm -it -v $(PWD):/knora -v $(HOME)/.ivy2:/root/.ivy2 -v $(HOME)/.ssh:/root/.ssh daschswiss/sbt-paradox /bin/sh -c "cd /knora && git config --global user.email $(GIT_EMAIL) && sbt docs/ghpagesPushSite"
 
-.PHONY: build-docs
+.PHONY: docs-build
 docs-build: ## build the docs
 	docker run --rm -it -v $(PWD):/knora -v $(HOME)/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
 
