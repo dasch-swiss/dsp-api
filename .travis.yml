@@ -135,16 +135,6 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/salsah1/lib/chromedriver/ && unzip chromedriver_linux64.zip
     #    # start built-in salsah1 browser tests
     #    - cd $TRAVIS_BUILD_DIR/salsah1/ && sbt headless:test
-    # testing docker images
-    - stage: test
-      script:
-        - sbt webapi/docker:publishLocal
-        - sbt salsah1/docker:publishLocal
-        - sbt knora-sipi/docker:publishLocal
-        - sbt knora-graphdb-se/docker:publishLocal
-        - sbt knora-graphdb-free/docker:publishLocal
-        - sbt knora-upgrade/docker:publishLocal
-        - sbt knora-assets/docker:publishLocal
     - stage: publish
       script:
         # login into docker hub, build image, and push but only when on the "develop" branch or tagged
@@ -165,6 +155,8 @@ jobs:
         - sbt knora-upgrade/docker:publish
         # knora-assets
         - sbt knora-assets/docker:publish
+        # publish images to daschswiss dockerhub organization
+        - make publish-all-images
 
 notifications:
   slack:

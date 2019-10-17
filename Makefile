@@ -120,11 +120,11 @@ else
 	@echo KNORA_GDB_LICENSE_FILE=$(KNORA_GDB_LICENSE) >> .env
 	@echo KNORA_GDB_TYPE=graphdb-se >> .env
 endif
-ifeq ($(KNORA_GDB_HOME), unknown)
-	$(warning The path to the GraphDB home directory is not set. Using docker volume: db-data.)
-	@echo KNORA_GDB_HOME_DIR=db-data >> .env
+ifeq ($(KNORA_GDB_IMPORT), unknown)
+	$(warning The path to the GraphDB import directory is not set. Using docker volume: db-import.)
+	@echo KNORA_GDB_IMPORT_DIR=db-import >> .env
 else
-	@echo KNORA_GDB_HOME_DIR=$(KNORA_GDB_HOME) >> .env
+	@echo KNORA_GDB_IMPORT_DIR=$(KNORA_GDB_IMPORT) >> .env
 endif
 	@echo KNORA_GDB_HEAP_SIZE=$(KNORA_GDB_HEAP_SIZE) >> .env
 	@echo KNORA_SIPI_IMAGE=$(KNORA_SIPI_IMAGE) >> .env
@@ -206,7 +206,7 @@ unit-tests: stack-without-api init-knora-test-unit ## runs the unit tests (equiv
 unit-tests-with-coverage: stack-without-api ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
 	@echo $@  # print target name
 	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-knora-test-unit
+	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -239,7 +239,7 @@ e2e-tests: stack-without-api init-knora-test-unit ## runs the e2e tests (equival
 e2e-tests-with-coverage: stack-without-api ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest') with code-coverage reporting.
 	@echo $@  # print target name
 	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-knora-test-unit
+	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -272,7 +272,7 @@ it-tests: stack-without-api init-knora-test-unit ## runs the integration tests (
 it-tests-with-coverage: stack-without-api ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.
 	@echo $@  # print target name
 	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-knora-test-unit
+	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -302,28 +302,28 @@ normal-tests: stack-without-api ## runs the normal tests (equivalent to 'sbt web
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt webapi/test
 
-.PHONY: init-knora-test
-init-knora-test: ## initializes the knora-test repository
+.PHONY: init-db-test
+init-db-test: ## initializes the knora-test repository
 	$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test
 
-.PHONY: init-knora-test-minimal
-init-knora-test-minimal: ## initializes the knora-test repository with minimal data
+.PHONY: init-db-test-minimal
+init-db-test-minimal: ## initializes the knora-test repository with minimal data
 	$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-minimal
 
-.PHONY: init-knora-test-unit
-init-knora-test-unit: ## initializes the knora-test-unit repository
+.PHONY: init-db-test-unit
+init-db-test-unit: ## initializes the knora-test-unit repository
 	$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-unit
 
-.PHONY: init-knora-test-free
-init-knora-test-free: ## initializes the knora-test repository (for GraphDB-Free)
+.PHONY: init-db-test-free
+init-db-test-free: ## initializes the knora-test repository (for GraphDB-Free)
 	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-free
 
-.PHONY: init-knora-test-minimal-free
-init-knora-test-minimal-free: ## initializes the knora-test repository with minimal data (for GraphDB-Free)
+.PHONY: init-db-test-minimal-free
+init-db-test-minimal-free: ## initializes the knora-test repository with minimal data (for GraphDB-Free)
 	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-minimal
 
-.PHONY: init-knora-test-unit-free
-init-knora-test-unit-free: ## initializes the knora-test-unit repository (for GraphDB-Free)
+.PHONY: init-db-test-unit-free
+init-db-test-unit-free: ## initializes the knora-test-unit repository (for GraphDB-Free)
 	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-unit
 
 clean: ## clean build artifacts
@@ -348,7 +348,7 @@ info: ## print out all variables
 	@echo "KNORA_UPGRADE_IMAGE: \t\t $(KNORA_UPGRADE_IMAGE)"
 	@echo "KNORA_SALSAH1_IMAGE: \t\t $(KNORA_SALSAH1_IMAGE)"
 	@echo "KNORA_GDB_LICENSE: \t\t $(KNORA_GDB_LICENSE)"
-	@echo "KNORA_GDB_HOME: \t\t $(KNORA_GDB_HOME)"
+	@echo "KNORA_GDB_IMPORT: \t\t $(KNORA_GDB_IMPORT)"
 
 .PHONY: help
 help: ## this help

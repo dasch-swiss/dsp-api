@@ -40,7 +40,11 @@ object ResourcesResponderV1SpecContextData {
     in a file, and load that at runtime.
 
     */
-    private val expectedBookResourceContextResponseStr = FileUtil.readTextFile(new File("src/test/resources/test-data/v1/expectedBookContextResponse.json"))
+    private val expectedBookResourceContextResponseStr = FileUtil
+      .readTextFile(
+          new File("src/test/resources/test-data/v1/expectedBookContextResponse.json")
+      )
+      .replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
 
     val expectedBookResourceContextResponse: JsValue = JsonParser(expectedBookResourceContextResponseStr)
 

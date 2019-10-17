@@ -55,8 +55,8 @@ ifeq ($(KNORA_GDB_LICENSE),)
   KNORA_GDB_LICENSE := unknown
 endif
 
-ifeq ($(KNORA_GDB_HOME),)
-  KNORA_GDB_HOME := unknown
+ifeq ($(KNORA_GDB_IMPORT),)
+  KNORA_GDB_IMPORT := unknown
 endif
 
 ifeq ($(GDB_HEAP_SIZE),)
