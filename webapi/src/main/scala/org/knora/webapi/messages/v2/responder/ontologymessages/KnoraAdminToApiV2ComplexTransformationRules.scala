@@ -478,6 +478,31 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val BasicUserInfo = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.BasicUserInfo,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "basic user info"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Basic information about a user."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.Username -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.Email -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.GivenName -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.FamilyName -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.Lang -> Cardinality.MayHaveOne
+        )
+    )
+
     private val AdministrativePermissionProperty: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraAdminV2.AdministrativePermissionProperty,
         propertyType = OntologyConstants.Owl.ObjectProperty,
@@ -1048,6 +1073,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       * Classes that need to be added to the ontology after converting it to the target schema.
       */
     override val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
+        BasicUserInfo,
         UsersResponse,
         UserResponse,
         ProjectsResponse,
