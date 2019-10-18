@@ -29,7 +29,7 @@ sipi = {
     -- Sipi's hostname as returned in the thumbnail response, default is "localhost".
     -- If sipi is run behind a proxy, then this external FQDN needs to be set here.
     --
-    hostname = 'localhost',
+    hostname = '0.0.0.0',
 
     --
     -- port number the server is listening to
@@ -117,7 +117,7 @@ sipi = {
     --
     -- Path to Knora Application
     --
-    knora_path = 'webapi',
+    knora_path = 'api',
 
     --
     -- Port of Knora Application
@@ -185,8 +185,8 @@ routes = {
     },
     {
         method = 'POST',
-        route = '/convert_from_binaries',
-        script = 'convert_from_binaries.lua'
+        route = '/convert_from_path',
+        script = 'convert_from_path.lua'
     },
     {
         method = 'POST',

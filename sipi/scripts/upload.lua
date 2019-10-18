@@ -23,6 +23,7 @@ require "file_info"
 require "send_response"
 require "jwt"
 require "clean_temp_dir"
+require "util"
 
 -- Buffer the response (helps with error handling).
 
@@ -95,7 +96,9 @@ for file_index, file_params in pairs(server.uploads) do
     end
 
     local tmp_storage_file_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_filename
-    local tmp_storage_url = protocol .. server.host .. '/tmp/' .. tmp_storage_filename
+
+    -- Create a IIIF base URL for the converted file.
+    local tmp_storage_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .. '/tmp/' .. tmp_storage_filename
 
     -- Construct response data about the file that was uploaded.
     local this_file_upload_data = {}

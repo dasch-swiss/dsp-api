@@ -438,7 +438,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
             // Lucene, on disk
             //val indexDirectory: Directory = new SimpleFSDirectory(new File(luceneIndexPath.getAbsolutePath))
-            val indexDirectory: Directory = new RAMDirectory()
+            val indexDirectory: Directory = new ByteBuffersDirectory()
 
             TextDatasetFactory.createLucene(ds, indexDirectory, entDef, null)
         } else {
@@ -449,7 +449,7 @@ class JenaTDBActor extends Actor with ActorLogging {
             val ds = TDBFactory.createDataset()
 
             // Lucene, in memory.
-            val indexDirectory: Directory = new RAMDirectory()
+            val indexDirectory: Directory = new ByteBuffersDirectory()
 
             TextDatasetFactory.createLucene(ds, indexDirectory, entDef, null)
         }
