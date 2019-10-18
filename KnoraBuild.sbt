@@ -361,6 +361,14 @@ lazy val upgrade: Project = knoraModule("upgrade")
       Runtime / unmanagedClasspath ++= Seq(
           rootBaseDir.value / "knora-ontologies",
       ),
+      // add content of knora-ontologies to jar
+      mappings in (Compile, packageBin) ++= Seq(
+          (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl") -> "ontologies/knora-admin.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl") -> "ontologies/knora-base.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "ontologies/salsah-gui.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "ontologies/standoff-data.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "ontologies/standoff-onto.ttl",
+      ),
   )
   .settings(
       scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
@@ -378,6 +386,9 @@ lazy val upgrade: Project = knoraModule("upgrade")
       // Skip packageDoc and packageSrc task on stage
       Compile / packageDoc / mappings := Seq(),
       Compile / packageSrc / mappings := Seq(),
+
+
+
       Universal / mappings ++= {
           // copy the different folders
           directory("upgrade/graphdb-se") ++
@@ -385,7 +396,7 @@ lazy val upgrade: Project = knoraModule("upgrade")
       },
 
       // add 'knora-ontologies' directory to the classpath of the start script,
-      Universal / scriptClasspath := Seq("../knora-ontologies/") ++ scriptClasspath.value,
+      Universal / scriptClasspath := Seq("knora-ontologies/knora-admin.ttl") ++ scriptClasspath.value,
 
       // add dockerCommands used to create the image
       // docker:stage, docker:publishLocal, docker:publish, docker:clean
@@ -400,7 +411,7 @@ lazy val upgrade: Project = knoraModule("upgrade")
           Cmd("ENV", """KNORA_UPGRADE_DOCKER="true""""),
           Cmd("COPY", "opt/docker", "/upgrade"),
           Cmd("WORKDIR", "/upgrade/graphdb-se"),
-          ExecCmd("ENTRYPOINT", "./auto-upgrade.sh"),
+          ExecCmd("ENTRYPOINT", "/upgrade/graphdb-se/auto-upgrade.sh"),
       ),
   )
 
