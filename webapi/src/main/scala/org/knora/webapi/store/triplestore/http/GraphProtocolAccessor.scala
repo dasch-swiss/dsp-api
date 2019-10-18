@@ -153,7 +153,7 @@ object GraphProtocolAccessor {
 
         log.debug("==>> GraphProtocolAccessor END")
 
-        Await.result(responseFuture, settings.defaultTimeout * 2)
+        Await.result(responseFuture, settings.defaultTimeout)
     }
 
 }

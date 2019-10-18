@@ -16,6 +16,7 @@ services:
     volumes:
       - ${KNORA_GDB_LICENSE}:/graphdb/GRAPHDB_SE.license
       - ${KNORA_GDB_HOME}:/opt/graphdb/home:delegated
+      - ${KNORA_GDB_HOME}/graphdb-import:/root/graphdb-import
     networks:
       - knora-net
     environment:
