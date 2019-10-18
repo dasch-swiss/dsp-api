@@ -357,10 +357,7 @@ lazy val upgrade: Project = knoraModule("upgrade")
   .settings(
       upgradeCommonSettings,
       Dependencies.upgradeLibraryDependencies,
-      // add files inside 'knora-ontologies' folder to the classpath
-      Runtime / unmanagedClasspath ++= Seq(
-          rootBaseDir.value / "knora-ontologies",
-      ),
+
       // add content of knora-ontologies to jar
       mappings in (Compile, packageBin) ++= Seq(
           (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl") -> "ontologies/knora-admin.ttl",
@@ -387,16 +384,10 @@ lazy val upgrade: Project = knoraModule("upgrade")
       Compile / packageDoc / mappings := Seq(),
       Compile / packageSrc / mappings := Seq(),
 
-
-
       Universal / mappings ++= {
           // copy the different folders
-          directory("upgrade/graphdb-se") ++
-            directory("knora-ontologies"),
+          directory("upgrade/graphdb-se")
       },
-
-      // add 'knora-ontologies' directory to the classpath of the start script,
-      Universal / scriptClasspath := Seq("knora-ontologies/knora-admin.ttl") ++ scriptClasspath.value,
 
       // add dockerCommands used to create the image
       // docker:stage, docker:publishLocal, docker:publish, docker:clean
