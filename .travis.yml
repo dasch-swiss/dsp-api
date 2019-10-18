@@ -127,7 +127,6 @@ jobs:
     # upgrade tests
     - stage: test
       script:
-        - cd $TRAVIS_BUILD_DIR/ && sbt upgrade/docker:publishLocal
         - cd $TRAVIS_BUILD_DIR/ && sbt upgrade/test
         # prepare needed graphdb-se files
         - mkdir -p $TRAVIS_BUILD_DIR/graphdb
@@ -146,7 +145,8 @@ jobs:
         # load v7.0.0 data and run auto-upgrade (docker use case)
         - ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
         - ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
-        - docker run -v /tmp:/tmp dhlabbasel/upgrade -r knora-test -u gaga -p gaga -h $DOCKERHOST:7200
+        - cd $TRAVIS_BUILD_DIR/ && sbt upgrade/docker:publishLocal
+        - docker run -it --rm -v /tmp:/tmp -e KNORA_UPGRADE_DOCKER=true -e DOCKERHOST=$DOCKERHOST dhlabbasel/upgrade -r knora-test -u gaga -p gaga -h $DOCKERHOST:7200
     # testing docs generation
     - stage: test
       script:

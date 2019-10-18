@@ -215,7 +215,7 @@ lazy val knoraGraphDbSe: Project = knoraModule("knora-graphdb-se")
           Cmd("FROM", "ontotext/graphdb:8.5.0-se"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
           Cmd("ADD", "opt/docker/scripts", "/scripts"),
-          Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
+          ExecCmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
       )
   )
 
@@ -251,7 +251,7 @@ lazy val knoraGraphdbFree: Project = knoraModule("knora-graphdb-free")
           Cmd("FROM", "dhlabbasel/graphdb:8.10.0-free"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
           Cmd("ADD", "opt/docker/scripts", "/scripts"),
-          Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
+          ExecCmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
       )
   )
 
@@ -371,15 +371,17 @@ lazy val upgrade: Project = knoraModule("upgrade")
       // add dockerCommands used to create the image
       // docker:stage, docker:publishLocal, docker:publish, docker:clean
       dockerRepository := Some("dhlabbasel"),
+      dockerUpdateLatest := true,
       maintainer := "400790+subotic@users.noreply.github.com",
       Docker / dockerCommands := Seq(
           Cmd("FROM", "openjdk:10-jre-slim-sid"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
+          Cmd("RUN", "apt-get update && apt-get install -y curl"),
 
           Cmd("ENV", """KNORA_UPGRADE_DOCKER="true""""),
           Cmd("ADD", "opt/docker", "/upgrade"),
-          Cmd("WORKDIR", "/upgrade"),
-          Cmd("ENTRYPOINT", "graphdb-se/auto-upgrade.sh"),
+          Cmd("WORKDIR", "/upgrade/graphdb-se"),
+          ExecCmd("ENTRYPOINT", "./auto-upgrade.sh"),
       ),
   )
 
@@ -475,7 +477,7 @@ lazy val salsah1: Project = knoraModule("salsah1")
 
           Cmd("EXPOSE", "3335"),
 
-          Cmd("ENTRYPOINT", "bin/salsah1"),
+          ExecCmd("ENTRYPOINT", "bin/salsah1"),
       ),
 
 
@@ -669,7 +671,7 @@ lazy val webapi: Project = knoraModule("webapi")
           Cmd("EXPOSE", "3333"),
           Cmd("EXPOSE", "10001"),
 
-          Cmd("ENTRYPOINT", "bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"),
+          ExecCmd("ENTRYPOINT", "bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"),
       )
 
   )
