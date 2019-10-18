@@ -25,7 +25,7 @@
 
 @(classDef: ClientClassDefinition,
   subClassOf: Option[ClassRef],
-  importedClasses: Seq[ImportInfo])import { Any, JsonObject, JsonProperty } from "json2typescript";
+  importedClasses: Seq[ImportInfo])import { JsonObject, JsonProperty } from "json2typescript";
 
 @for(classInfo <- importedClasses) {import { @classInfo.className } from "@classInfo.importPath";
 }@classDef.classDescription match {
