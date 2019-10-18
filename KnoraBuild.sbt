@@ -393,9 +393,9 @@ lazy val upgrade: Project = knoraModule("upgrade")
       dockerUpdateLatest := true,
       maintainer := "400790+subotic@users.noreply.github.com",
       Docker / dockerCommands := Seq(
-          Cmd("FROM", "openjdk:10-jre-slim-sid"),
+          Cmd("FROM", "adoptopenjdk/openjdk11:alpine-jre"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-          Cmd("RUN", "apt-get update && apt-get install -y curl"),
+          Cmd("RUN apk update && apk upgrade && apk add bash"),
 
           Cmd("ENV", """KNORA_UPGRADE_DOCKER="true""""),
           Cmd("COPY", "opt/docker", "/upgrade"),
@@ -493,7 +493,7 @@ lazy val salsah1: Project = knoraModule("salsah1")
           Cmd("ENV", """JAVA_OPTS="-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8""""),
           Cmd("ENV", "KNORA_SALSAH1_DEPLOYED=true"),
           Cmd("ENV", "KNORA_SALSAH1_WORKDIR=/salsah1"),
-            Cmd("RUN apk update && apk upgrade && apk add bash"),
+          Cmd("RUN apk update && apk upgrade && apk add bash"),
           Cmd("COPY", "opt/docker", "/salsah1"),
           Cmd("WORKDIR", "/salsah1"),
 
