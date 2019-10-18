@@ -20,10 +20,10 @@ where `LOCAL_IP_ADDRESS` is the IP of the host running the `Knora-Service`.
 ### Using a Locally-Compiled Sipi
 
 Type the following in this directory, assuming that the Sipi source tree is in
-`../../Sipi` and the Sipi binary has been installed in `../../Sipi/local/bin/sipi`:
+`../../Sipi` and the Sipi binary is in the build folder under `../../Sipi/build/sipi`:
 
 ```
-$ ../../Sipi/local/bin/sipi --config config/sipi.knora-local-config.lua
+$ ../../Sipi/build/sipi --config config/sipi.knora-local-config.lua
 ```
 
 ### Starting Sipi with `no-auth` configuration
