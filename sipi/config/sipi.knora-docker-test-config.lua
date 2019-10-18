@@ -29,7 +29,7 @@ sipi = {
     -- Sipi's hostname as returned in the thumbnail response, default is "localhost".
     -- If sipi is run behind a proxy, then this external FQDN needs to be set here.
     --
-    hostname = 'localhost',
+    hostname = '0.0.0.0',
 
     --
     -- port number the server is listening to
@@ -46,7 +46,7 @@ sipi = {
     --
     max_post_size = '30M',
 
-  --
+    --
     -- indicates the path to the root of the image directory. Depending on the settings of the variable
     -- "prefix_as_path" the images are search at <imgroot>/<prefix>/<imageid> (prefix_as_path = TRUE)
     -- or <imgroot>/<imageid> (prefix_as_path = FALSE). Please note that "prefix" and "imageid" are
@@ -117,7 +117,7 @@ sipi = {
     --
     -- Path to Knora Application
     --
-    knora_path = 'webapi',
+    knora_path = 'api',
 
     --
     -- Port of Knora Application

@@ -16,7 +16,7 @@
 -- License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 --
--- configuration file for use with Knora
+-- ATTENTION: This configuration file should only be used for integration testing. It has additional routes defined!!!
 --
 sipi = {
     --
@@ -29,7 +29,7 @@ sipi = {
     -- Sipi's hostname as returned in the thumbnail response, default is "localhost".
     -- If sipi is run behind a proxy, then this external FQDN needs to be set here.
     --
-    hostname = 'localhost',
+    hostname = '0.0.0.0',
 
     --
     -- port number the server is listening to
@@ -115,9 +115,15 @@ sipi = {
     tmpdir = '/tmp',
 
     --
+    -- Maximum age of temporary files, in seconds (requires Knora's upload.lua).
+    -- Defaults to 86400 seconds (1 day).
+    --
+    max_temp_file_age = 86400,
+
+    --
     -- Path to Knora Application
     --
-    knora_path = 'webapi',
+    knora_path = 'api',
 
     --
     -- Port of Knora Application
@@ -158,9 +164,7 @@ fileserver = {
 }
 
 --
--- here we define routes that are handled by lua scripts. A route is a defined url:
--- http://<server-DNS>/<route>
--- executes the given script defined below
+-- Custom routes. Each route is an URL path associated with a Lua script.
 --
 routes = {
     {
@@ -177,7 +181,24 @@ routes = {
         method = 'DELETE',
         route = '/delete_temp_file',
         script = 'delete_temp_file.lua'
+    },
+    --
+    -- additional routes used for testing. should not be defined in production.
+    --
+    {
+        method = 'GET',
+        route = '/test_functions',
+        script = 'test_functions.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_mediatype',
+        script = 'test_mediatype.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_knora_session_cookie',
+        script = 'test_knora_session_cookie.lua'
     }
 
 }
-

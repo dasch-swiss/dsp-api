@@ -23,6 +23,7 @@ require "get_mediatype"
 require "send_response"
 require "jwt"
 require "clean_temp_dir"
+require "util"
 
 -- Buffer the response (helps with error handling).
 
@@ -118,7 +119,7 @@ for image_index, image_params in pairs(server.uploads) do
     end
 
     -- Create a IIIF base URL for the converted file.
-    local iiif_base_url = protocol .. server.host .. '/tmp'
+    local iiif_base_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .. '/tmp/' .. jp2_filename
 
     -- Construct response data about the file that was uploaded.
     local this_file_upload_data = {}

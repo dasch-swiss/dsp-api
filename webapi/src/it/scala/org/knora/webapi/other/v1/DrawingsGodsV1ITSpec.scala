@@ -141,7 +141,7 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
 
                 case _ => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
             }
-            logger.debug("iiiURL: {}", iiifUrl)
+            println("=====>>>> iiiURL: {}", iiifUrl)
 
             // Request the image from Sipi.
             val sipiGetRequest = Get(iiifUrl) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))

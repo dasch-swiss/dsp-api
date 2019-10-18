@@ -58,8 +58,5 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             val request = Get(baseSipiUrl + "/test_knora_session_cookie" )
             getResponseString(request)
         }
-
     }
 }
-
-
