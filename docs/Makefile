@@ -18,30 +18,34 @@ endif
 DOT_FIGURES = $(shell find src/paradox -type f -name '*.dot')
 PNG_FIGURES = $(patsubst %.dot,%.dot.png,$(DOT_FIGURES))
 
-.PHONY: help clean jsonformat jsonformattest graphvizfigures
-
-help:
-	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  jsonformat     to make a documentation of the json request and response format"
-	@echo "  jsonformattest to make a documentation of the json request and response format"
-
-
-clean:
+.PHONY: clean
+clean: ## to clean
 	rm -rf $(FORMATDOCDIRV1)/*
 	rm -rf $(FORMATDOCDIRV2)/*
 	rm -f $(PNG_FIGURES)
 
-jsonformat:
+.PHONY: jsonformat
+jsonformat: ## to make a documentation of the json request and response format
 	$(TYPEDOC) --out $(FORMATDOCDIRV1) --exclude **/sampleRequests/* --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIRV1)
 	$(TYPEDOC) --out $(FORMATDOCDIRV2) --exclude **/$(FORMATSRCDIRV2)/samples/* --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
 	@echo "Format Docs Build finished. The index page for V1 is $(FORMATDOCDIR)/index.html, for V2 $(FORMATDOCDIRV2)/index.html"
 
-jsonformattest:
+.PHONY: jsonformattest
+jsonformattest: ## to make a documentation of the json request and response format
 	$(TYPEDOC) --out $(FORMATDOCDIRV1) --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIRV1)
 	$(TYPEDOC) --out $(FORMATDOCDIRV2) --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
 	@echo "Sample requests test finished."
 
-graphvizfigures: $(PNG_FIGURES)
+.PHONY: graphvizfigures
+graphvizfigures: $(PNG_FIGURES) ## to generate images from dot files
 
 %.dot.png: %.dot
 	dot -Tpng $< -o $@
+
+
+.PHONY: help
+help: ## this help
+	@echo "Please use \`make <target>' where <target> is one of"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
+
+.DEFAULT_GOAL := help
