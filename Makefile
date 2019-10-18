@@ -73,7 +73,7 @@ build-knora-salsah1-image: build-all-scala ## build and publish knora-salsah1 do
 
 .PHONY: publish-knora-salsah1-image
 publish-knora-salsah1-image: build-knora-salsah1-image ## publish knora-salsah1 image to Dockerhub
-	docker push $(KNORA_SALSAH_IMAGE)
+	docker push $(KNORA_SALSAH1_IMAGE)
 
 ## knora-upgrade
 .PHONY: build-knora-upgrade-image
