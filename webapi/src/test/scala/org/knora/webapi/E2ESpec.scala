@@ -105,8 +105,10 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+        logger.info("Loading test data started ...")
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 5.minutes)
+        singleAwaitingRequest(request, 479999.milliseconds)
+        logger.info("Loading test data done.")
     }
 
     // duration is intentionally like this, so that it could be found with search if seen in a stack trace
