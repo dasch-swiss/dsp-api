@@ -27,7 +27,7 @@ if not success then
 end
 
 if server.post == nil then
-    send_error(400, PARAMETERS_INCORRECT)
+    send_error(400, PARAMETERS_INCORRECT .. " (post)")
     return
 end
 
@@ -39,7 +39,7 @@ end
 prefix = server.post['prefix']
 
 if prefix == nil then
-    send_error(400, PARAMETERS_INCORRECT)
+    send_error(400, PARAMETERS_INCORRECT .. " (prefix)")
     return
 end
 
@@ -53,13 +53,23 @@ if not exists then
     return -1
 end
 
-originalFilename = server.post['originalfilename']
-originalMimetype = server.post['originalmimetype']
+originalFilename = server.post['originalFilename']
+originalMimeType = server.post['originalMimeType']
 filename = server.post['filename']
 
 -- check if all the expected params are set
-if originalFilename == nil or originalMimetype == nil or filename == nil then
-    send_error(400, PARAMETERS_INCORRECT)
+if originalFilename == nil then
+    send_error(400, PARAMETERS_INCORRECT .. " (originalFilename)")
+    return
+end
+
+if originalMimeType == nil then
+    send_error(400, PARAMETERS_INCORRECT .. " (originalMimeType)")
+    return
+end
+
+if filename == nil then
+    send_error(400, PARAMETERS_INCORRECT .. " (filename)")
     return
 end
 
@@ -105,10 +115,10 @@ if not success then
     return
 end
 
-local success, submitted_mimetype = server.parse_mimetype(originalMimetype)
+local success, submitted_mimetype = server.parse_mimetype(originalMimeType)
 
 if not success then
-    send_error(400, "Couldn't parse mimetype: " .. originalMimetype)
+    send_error(400, "Couldn't parse mimetype: " .. originalMimeType)
     return -1
 end
 
@@ -174,7 +184,7 @@ result = {
     filename_full = fullImgName,
     nx_full = fullDims.nx,
     ny_full = fullDims.ny,
-    original_mimetype = originalMimetype,
+    original_mimetype = originalMimeType,
     original_filename = originalFilename,
     file_type = 'image'
 }

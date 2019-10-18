@@ -8,8 +8,10 @@
 /info.aduna.logging.dir_IS_UNDEFINED/
 .cache
 .classpath
+.docker
 .ensime
 .ensime_cache
+.env
 native
 **/.DS_Store
 docs/env
@@ -20,6 +22,7 @@ docs/project
 salsah1/project
 webapi/project
 webapi/_fuseki/run
+webapi/build
 triplestores/graphdb-se-7
 idea.vmoptions
 sipi/test
