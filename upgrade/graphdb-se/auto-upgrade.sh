@@ -29,6 +29,11 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -t|--tempdir)
+    TEMP_DIR="$2"
+    shift # past argument
+    shift # past value
+    ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
@@ -38,7 +43,7 @@ done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [[ -z "${REPOSITORY}" || -z "${USERNAME}" ]]; then
-    echo "Usage: $(basename "$0") -r|--repository REPOSITORY -u|--username USERNAME [-p|--password PASSWORD] [-h|--host HOST]"
+    echo "Usage: $(basename "$0") -r|--repository REPOSITORY -u|--username USERNAME [-p|--password PASSWORD] [-h|--host HOST] [-t|--tempdir temporary directory]"
     exit 1
 fi
 
@@ -52,7 +57,11 @@ if [[ -z "${HOST}" ]]; then
     HOST="localhost:7200"
 fi
 
-TEMP_DIR=$(mktemp -d)
+if [[ -z "${TEMP_DIR}" ]]; then
+    TEMP_DIR=$(mktemp -d)
+else
+    mkdir -p "${TEMP_DIR}"
+fi
 
 INPUT_FILE=${TEMP_DIR}/dump.trig
 OUTPUT_FILE=${TEMP_DIR}/transformed.trig
