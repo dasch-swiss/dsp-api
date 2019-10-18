@@ -6,6 +6,6 @@ COPY stage /upgrade
 
 WORKDIR /upgrade/graphdb-se
 
-ENTRYPOINT ./auto-upgrade.sh
+ENTRYPOINT ["/upgrade/graphdb-se/auto-upgrade.sh"]
 
 LABEL MAINTAINER="400790+subotic@users.noreply.github.com"

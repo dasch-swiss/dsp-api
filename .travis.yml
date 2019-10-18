@@ -124,7 +124,7 @@ jobs:
         - ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
         - ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
         - cd $TRAVIS_BUILD_DIR/ && sbt upgrade/docker:publishLocal
-        - docker run -it --rm --network=knora-net -v /tmp:/tmp -e KNORA_UPGRADE_DOCKER=true daschswiss/knora-upgrade -r knora-test -u gaga -p gaga -h db:7200
+        - docker run -it --rm --network=knora-net -v /tmp:/tmp -e KNORA_UPGRADE_DOCKER=true daschswiss/knora-upgrade -r knora-test -u gaga -p gaga -h db:7200 -t /tmp
     # testing docs generation
     - stage: test
       script:
