@@ -10,13 +10,13 @@ object Debug {
       */
     def printClasspath(): Unit = {
         // debug classpath
-        def urlses(cl: ClassLoader): Array[java.net.URL] = cl match {
-            case null => Array()
-            case u: java.net.URLClassLoader => u.getURLs ++ urlses(cl.getParent)
-            case _ => urlses(cl.getParent)
+        def urls(cl: ClassLoader): Array[java.net.URL] = Option(cl) match {
+            case None => Array()
+            case Some(u: java.net.URLClassLoader) => u.getURLs ++ urls(cl.getParent)
+            case Some(_) => urls(cl.getParent)
         }
-        val  urls = urlses(getClass.getClassLoader)
-        println(urls.filterNot(_.toString.contains("ivy")).mkString("\n"))
+        val  res = urls(getClass.getClassLoader)
+        println(res.filterNot(_.toString.contains("ivy")).mkString("\n"))
     }
 
     /**
