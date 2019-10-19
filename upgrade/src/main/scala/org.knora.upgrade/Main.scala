@@ -58,23 +58,23 @@ object Main extends App {
      */
     val builtInNamedGraphs: Set[BuiltInNamedGraph] = Set(
         BuiltInNamedGraph(
-            filename = "knora-admin.ttl",
+            filename = "knora-ontologies/knora-admin.ttl",
             iri = "http://www.knora.org/ontology/knora-admin"
         ),
         BuiltInNamedGraph(
-            filename = "knora-base.ttl",
+            filename = "knora-ontologies/knora-base.ttl",
             iri = "http://www.knora.org/ontology/knora-base"
         ),
         BuiltInNamedGraph(
-            filename = "salsah-gui.ttl",
+            filename = "knora-ontologies/salsah-gui.ttl",
             iri = "http://www.knora.org/ontology/salsah-gui"
         ),
         BuiltInNamedGraph(
-            filename = "standoff-onto.ttl",
+            filename = "knora-ontologies/standoff-onto.ttl",
             iri = "http://www.knora.org/ontology/standoff"
         ),
         BuiltInNamedGraph(
-            filename = "standoff-data.ttl",
+            filename = "knora-ontologies/standoff-data.ttl",
             iri = "http://www.knora.org/data/standoff"
         )
     )

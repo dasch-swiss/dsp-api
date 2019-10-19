@@ -360,11 +360,11 @@ lazy val upgrade: Project = knoraModule("upgrade")
 
       // add content of knora-ontologies to jar
       mappings in (Compile, packageBin) ++= Seq(
-          (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl") -> "ontologies/knora-admin.ttl",
-          (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl") -> "ontologies/knora-base.ttl",
-          (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "ontologies/salsah-gui.ttl",
-          (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "ontologies/standoff-data.ttl",
-          (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "ontologies/standoff-onto.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl") -> "knora-ontologies/knora-admin.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl") -> "knora-ontologies/knora-base.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "knora-ontologies/salsah-gui.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "knora-ontologies/standoff-data.ttl",
+          (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
       ),
   )
   .settings(
