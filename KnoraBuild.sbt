@@ -684,7 +684,7 @@ lazy val webapiJavaTestOptions = Seq(
 // packaging for running normal tests (usage: webapi_test/stage)
 lazy val webapi_test = project
   // we put the results  in a build folder
-  .in(file("webapi/build/test"))
+  .in(file("webapi-test"))
   .enablePlugins(JavaAppPackaging)
   .settings(
       Dependencies.webapiTestAndITLibraryDependencies,
@@ -717,7 +717,7 @@ lazy val webapi_test = project
 // packaging for running IT tests (usage: webapi_it/stage)
 lazy val webapi_it = project
   // we put the results in a build folder
-  .in(file("webapi/build/it"))
+  .in(file("webapi-it"))
   .enablePlugins(JavaAppPackaging)
   .configs(
       IntegrationTest

@@ -45,7 +45,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
 
         "convert a Turtle response into a resource" in {
             val resourceIri: IRI = "http://rdfh.ch/0803/c5058f3a"
-            val turtleStr: String = FileUtil.readTextFile(new File("src/test/resources/test-data/constructResponseUtilV2/Zeitglöcklein.ttl"))
+            val turtleStr: String = FileUtil.readTextFile(new File("src/test/resources/test-data/constructResponseUtilV2/Zeitglocklein.ttl"))
             val resourceRequestResponse: SparqlExtendedConstructResponse = SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log).get
             val queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = incunabulaUser)
 

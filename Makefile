@@ -254,7 +254,8 @@ e2e-tests-with-coverage: stack-without-api ## runs the e2e tests (equivalent to 
 				daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
 
 .PHONY: it-tests
-it-tests: stack-without-api init-knora-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it').
+it-tests: stack-without-api init-db-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it').
+	# docker build -t webapi-it -f docker/knora-api-it.dockerfile webapi-it/target/universal
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -287,8 +288,8 @@ it-tests-with-coverage: stack-without-api ## runs the integration tests (equival
 				daschswiss/scala-sbt sbt coverage webapi/it:test webapi/coverageReport
 
 .PHONY: normal-tests
-normal-tests: stack-without-api ## runs the normal tests (equivalent to 'sbt webapi/test').
-	# docker build -t webapi-test -f docker/knora-api-test.dockerfile  webapi/build/test/target/universal
+normal-tests: stack-without-api init-db-test-unit ## runs the normal tests (equivalent to 'sbt webapi/test').
+	# docker build -t webapi-test -f docker/knora-api-test.dockerfile webapi-test/target/universal
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \

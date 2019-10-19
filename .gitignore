@@ -22,10 +22,12 @@ docs/project
 salsah1/project
 webapi/project
 webapi/_fuseki/run
-webapi/build
+webapi-it
+webapi-test
 triplestores/graphdb-se-7
 idea.vmoptions
 sipi/test
+bazel-*
 
 **/project/target/
 /target/
