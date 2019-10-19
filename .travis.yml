@@ -119,12 +119,11 @@ jobs:
         - unzip $TRAVIS_BUILD_DIR/test-data/v7.0.0/v7.0.0-knora-test.trig.zip
         - ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
         - ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
-        - ./auto-upgrade.sh -r knora-test -u gaga -p gaga -h localhost:7200
+        - ./auto-upgrade.sh -r knora-test -u gaga -p gaga -h localhost:7200 -t /tmp/upgrade.dir
         # load v7.0.0 data and run auto-upgrade (docker use case)
         - ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
         - ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
-        - cd $TRAVIS_BUILD_DIR/ && sbt upgrade/docker:publishLocal
-        - docker run -it --rm --network=knora-net -v /tmp:/tmp -e KNORA_UPGRADE_DOCKER=true daschswiss/knora-upgrade -r knora-test -u gaga -p gaga -h db:7200 -t /tmp
+        - docker run -it --rm --network=knora-net -v /tmp:/tmp -e KNORA_UPGRADE_DOCKER=true daschswiss/knora-upgrade -r knora-test -u gaga -p gaga -h db:7200 -t /tmp/upgrade.dir
     # testing docs generation
     - stage: test
       script:
