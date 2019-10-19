@@ -112,8 +112,8 @@ jobs:
         # start and initialize graphdb-se
         - docker network create knora-net
         - docker run --rm -d --name=db --network=knora-net -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE daschswiss/knora-graphdb-se -Dgraphdb.license.file=/graphdb/graphdb.license
-        - sleep 15
-        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test.sh
+        - sleep 5
+        - make init-db-test-minimal
         # load v7.0.0 data and run auto-upgrade (sbt use case)
         - cd $TRAVIS_BUILD_DIR/upgrade/graphdb-se
         - unzip $TRAVIS_BUILD_DIR/test-data/v7.0.0/v7.0.0-knora-test.trig.zip
