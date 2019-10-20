@@ -73,7 +73,6 @@ object Dependencies {
 
         val typesafeConfig         = "com.typesafe"                             % "config"                   % "1.3.3"
 
-        // testing
 
         //CORS support
         val akkaHttpCors           = "ch.megard"                               %% "akka-http-cors"           % "0.3.4"

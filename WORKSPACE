@@ -43,16 +43,22 @@ http_archive(
     sha256 = "2ef429f5d7ce7111263289644d233707dba35e39696377ebab8b0bc701f7818e",
 )
 
-# @scala_test//jar
-maven_jar(
-    name = "scala_test",
-    artifact = "org.scalatest:scalatest_2.12:3.0.1",
+# used for maven dependency resolution in the third_party sub-folder
+RULES_JVM_EXTERNAL_TAG = "2.8"
+RULES_JVM_EXTERNAL_SHA = "79c9850690d7614ecdb72d68394f994fef7534b292c4867ce5e7dec0aa7bdfad"
+
+http_archive(
+    name = "rules_jvm_external",
+    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
+    sha256 = RULES_JVM_EXTERNAL_SHA,
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
 
-# @scala_xml//jar
-maven_jar(
-    name = "scala_xml",
-    artifact = "org.scala-lang.modules:scala-xml_2.12:1.2.0",
-    sha1 = "5d38ac30beb8420dd395c0af447ba412158965e6",
-)
+# load the dependencies defined in the third_party sub-folder
+load("//third_party:dependencies.bzl", "dependencies")
+dependencies()
 
+# pin dependencies to the ones stored in maven_install.json in the third_party sub-folder
+# to update: bazel run @maven//:pin
+load("@maven//:defs.bzl", "pinned_maven_install")
+pinned_maven_install()
