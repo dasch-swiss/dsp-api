@@ -1,5 +1,17 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@io_bazel_rules_twirl//twirl:twirl.bzl", "twirl_templates")
+
+twirl_templates(
+  name = "twirl-templates",
+  source_directory = "src",
+  include_play_imports = False,
+  srcs = glob(["src/main/twirl/**/*.scala.html"])
+    + glob(["src/main/twirl/**/*.scala.xml"])
+    + glob(["src/main/twirl/**/*.scala.js"])
+    + glob(["src/main/twirl/**/*.scala.txt"]),
+)
+
 filegroup(
     name = "webapi_resources",
     srcs = glob([
@@ -9,7 +21,7 @@ filegroup(
 
 scala_library(
     name = "webapi",
-    srcs = glob(["src/main/scala/org/knora/webapi/**/*.scala"]),
+    srcs = glob(["src/main/scala/org/knora/webapi/**/*.scala"]) + [":twirl-templates"],
     resources = [":webapi_resources"],
     deps = [
         "@maven//:cglib_cglib_nodep",
@@ -280,7 +292,6 @@ scala_library(
         "@maven//:org_scala_sbt_test_interface",
         "@maven//:org_scala_stm_scala_stm_2_12",
         "@maven//:org_scalactic_scalactic_2_12",
-
         "@maven//:org_simpleflatmapper_lightning_csv",
         "@maven//:org_simpleflatmapper_sfm_util",
         "@maven//:org_slf4j_jcl_over_slf4j",
@@ -311,7 +322,6 @@ scala_library(
         "@maven//:xalan_xalan",
         "@maven//:xerces_xercesImpl",
         "@maven//:xml_apis_xml_apis",
-
     ],
 )
 

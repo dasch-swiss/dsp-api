@@ -62,3 +62,21 @@ dependencies()
 # to update: bazel run @maven//:pin
 load("@maven//:defs.bzl", "pinned_maven_install")
 pinned_maven_install()
+
+# add rules_twirl (needed to compile twirl templates)
+RULES_TWIRL_VERSION = "105c51e4884d56805e51b36d38fb2113b0381a6d"
+RULES_TWIRL_SHA = "c89d8460d236ec7d3c2544a72f17d21c4855da0eb79556c9dbdc95938c411057"
+http_archive(
+  name = "io_bazel_rules_twirl",
+  strip_prefix = "rules_twirl-%s" % RULES_TWIRL_VERSION,
+  sha256 = RULES_TWIRL_SHA,
+  type = "zip",
+  url = "https://github.com/lucidsoftware/rules_twirl/archive/%s.zip" % RULES_TWIRL_VERSION,
+)
+
+load("@io_bazel_rules_twirl//:workspace.bzl", "twirl_repositories")
+twirl_repositories()
+
+load("@twirl//:defs.bzl", twirl_pinned_maven_install = "pinned_maven_install")
+twirl_pinned_maven_install()
+
