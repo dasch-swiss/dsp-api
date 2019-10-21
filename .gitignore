@@ -24,6 +24,8 @@ webapi/project
 webapi/_fuseki/run
 webapi-it
 webapi-test
+upgrade/project
+upgrade/target
 triplestores/graphdb-se-7
 idea.vmoptions
 sipi/test

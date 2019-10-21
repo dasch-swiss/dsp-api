@@ -1,8 +1,11 @@
-FROM python:3.7-stretch
+FROM adoptopenjdk/openjdk11:alpine-jre
 
-COPY stage/upgrade /upgrade
-RUN pip install -r /upgrade/requirements.txt
-ENTRYPOINT /upgrade/update-repository.py
-CMD -h
+RUN apk update && apk upgrade && apk add bash curl
+
+COPY stage /upgrade
+
+WORKDIR /upgrade/graphdb-se
+
+ENTRYPOINT ["/upgrade/graphdb-se/auto-upgrade.sh"]
 
 LABEL MAINTAINER="400790+subotic@users.noreply.github.com"

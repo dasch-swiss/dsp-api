@@ -83,9 +83,9 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val receivedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(JsonUtils.fromString(responseAs[String])).asInstanceOf[Map[IRI, Any]]
+                val receivedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavaToScala(JsonUtils.fromString(responseAs[String])).asInstanceOf[Map[IRI, Any]]
 
-                val expectedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(JsonUtils.fromString(FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld")))).asInstanceOf[Map[String, Any]]
+                val expectedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavaToScala(JsonUtils.fromString(FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld")))).asInstanceOf[Map[String, Any]]
 
                 assert(receivedJSONLDAsScala("@context") == expectedJSONLDAsScala("@context"), "@context incorrect")
 

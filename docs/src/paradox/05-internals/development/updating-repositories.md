@@ -24,62 +24,55 @@ As explained in
 the `knora-base` ontology contains a version string to ensure compatibility
 between a repository and a given version of Knora. The same version string
 is therefore hard-coded in the Knora source code, in the string constant
-`org.knora.webapi.KnoraBaseVersion`. The format of this string is currently
-`PR NNNN`, where `NNNN` is the number of a GitHub pull request. Each time
-a pull request introduces changes that are not compatible with existing data,
-the following must happen:
+`org.knora.webapi.KnoraBaseVersion`. For new pull requests, the format of this string
+is `knora-base vN`, where `N` is an integer that is incremented for
+each version. Each time a pull request introduces changes that are not compatible
+with existing data, the following must happen:
 
-- The `knora-base` version string must be updated in `knora-base.ttl` and
-  in the string constant `org.knora.webapi.KnoraBaseVersion`. This version
-  string must contain the number of the last pull request that introduced
-  a breaking change.
+- The `knora-base` version number must be incremented in `knora-base.ttl` and
+  in the string constant `org.knora.webapi.KnoraBaseVersion`.
   
-- A plugin must be added to the
-  @ref:[repository update program](../../04-publishing-deployment/updates.md), to update
-  existing repositories to work with the new version of Knora. The plugin will
-  be used by `update-repository.py` if needed.
+- A plugin must be added in the `upgrade` subproject under `org.knora.upgrade.plugins`,
+  and registered in `org.knora.upgrade.Main`, to transform
+  existing repositories so that they are compatible with the code changes
+  introduced in the pull request.
 
-## Adding an Update Plugin
+## Adding an Upgrade Plugin
 
-An update plugin is a Python module, which must be put in a subdirectory
-of `upgrade/plugins`. The name of the plugin's directory must be `prNNNN`, where
-`NNNN` is the pull request number. That directory must have a subdirectory called
-`knora-ontologies`, containing the following built-in Knora ontologies with any
-modifications introduced by that pull request:
+An upgrade plugin is a Scala class that extends `UpgradePlugin`. The name of the plugin
+class should refer to the pull request that made the transformation necessary,
+using the format `UpgradePluginPRNNNN`, where `NNNN` is the number of the pull request.
 
-- `knora-admin.ttl`
-- `knora-base.ttl`
-- `salsah-gui.ttl`
-- `standoff-onto.ttl`
+A plugin's `transform` method takes an RDF4J `Model` (a mutable object representing
+the repository) and modifies it as needed. For details on how to do this, see
+[The RDF Model API](https://rdf4j.eclipse.org/documentation/programming/model/)
+in the RDF4J documentation.
 
-The `knora-base.ttl` file must contain a `knora-base:ontologyVersion` that
-matches the pull request number.
-
-Each plugin module must be in a file called `update.py`, and must contain
-a class called `GraphTransformer`, defined like this:
-
-```python
-import rdflib
-from updatelib import rdftools
-
-class GraphTransformer(rdftools.GraphTransformer):
-    def transform(self, graph):
-        # Do the transformation
-```
-
-The `transform` method takes an `rdflib.graph.Graph` and returns a transformed
-graph (which may be the same graph instance or a new one). See the
-[rdflib documentation](https://rdflib.readthedocs.io/en/stable/index.html)
-for details of that class.
-
-This method will be called once for each named graph downloaded from the
-triplestore.
-
-The `updatelib.rdftools` library provides convenience functions for working
-with RDF data.
+The plugin must then be added to the collection `pluginsForVersions` in
+`org.knora.upgrade.Main`.
 
 ## Testing Update Plugins
 
-Each plugin should have a unit test that can be run by
-[pytest](https://docs.pytest.org/en/latest/index.html). To run all the
-plugin unit tests, run the script `./test.sh` in the `upgrade` directory.
+Each plugin should have a unit test that extends `UpgradePluginSpec`. A typical
+test loads a TriG file containing test data into a `Model`, runs the plugin,
+makes an RDF4J `SailRepository` containing the transformed `Model`, and uses
+SPARQL to check the result.
+
+## Design Rationale
+
+We tried and rejected other designs:
+
+- Running SPARQL updates in the triplestore: too slow, and no way to report
+  progress during the update.
+  
+- Downloading the repository and transforming it in Python using
+  [rdflib](https://rdflib.readthedocs.io/en/stable/): too slow.
+  
+- Downloading the repository and transforming it in C++ using
+  [Redland](http://librdf.org): also too slow.
+
+The Scala implementation is the fastest by far.
+
+The whole repository is uploaded in a single transaction because
+GraphDB's consistency checker can enforce dependencies between named
+graphs.
