@@ -21,6 +21,8 @@ package org.knora.webapi.util
 
 import java.util.function.{BiFunction, Function}
 
+import scala.language.implicitConversions
+
 /**
   * Utility functions for working with Java libraries.
   */
@@ -47,16 +49,16 @@ object JavaUtil {
     /**
       * Recursively converts a Java collection into a Scala collection.
       *
-      * Usage: val scalaObj = deepScalaToJava(javaObj).asInstanceOf[Map[String, Any]]
+      * Usage: `val scalaObj = deepScalaToJava(javaObj).asInstanceOf[Map[String, Any]]`
       *
       * @param javaObj the Java collection to be converted.
       * @return an equivalent Scala collection.
       */
-    def deepJavatoScala(javaObj: Any): Any = {
+    def deepJavaToScala(javaObj: Any): Any = {
         import collection.JavaConverters._
         javaObj match {
-            case x: java.util.HashMap[_, _] => x.asScala.toMap.mapValues(deepJavatoScala)
-            case x: java.util.ArrayList[_] => x.asScala.toList.map(deepJavatoScala)
+            case x: java.util.HashMap[_, _] => x.asScala.toMap.mapValues(deepJavaToScala)
+            case x: java.util.ArrayList[_] => x.asScala.toList.map(deepJavaToScala)
             case _ => javaObj
         }
     }
@@ -88,4 +90,13 @@ object JavaUtil {
     object Optional {
         def unapply[T](a: T): Some[Option[T]] = if (null == a) Some(None) else Some(Some(a))
     }
+
+    /**
+      * Wraps a Java `Optional` and converts it to a Scala [[Option]].
+      */
+    class JavaOptional[T](opt: java.util.Optional[T]) {
+        def toOption: Option[T] = if (opt.isPresent) Some(opt.get()) else None
+    }
+
+    implicit def toJavaOptional[T](optional: java.util.Optional[T]): JavaOptional[T] = new JavaOptional[T](optional)
 }
