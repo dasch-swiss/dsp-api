@@ -222,7 +222,7 @@ lazy val knoraGraphDbSe: Project = knoraModule("knora-graphdb-se")
           Cmd("FROM", "ontotext/graphdb:8.5.0-se"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
           Cmd("COPY", "opt/docker/scripts", "/scripts"),
-          ExecCmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
+          Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
       )
   )
 
@@ -261,7 +261,7 @@ lazy val knoraGraphdbFree: Project = knoraModule("knora-graphdb-free")
           Cmd("FROM", "dhlabbasel/graphdb:8.10.0-free"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
           Cmd("COPY", "opt/docker/scripts", "/scripts"),
-          ExecCmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
+          Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
       )
   )
 
