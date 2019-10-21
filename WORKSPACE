@@ -1,6 +1,7 @@
 workspace(name = "knora_api")
 
 rules_scala_version="0f89c210ade8f4320017daf718a61de3c1ac4773" # update this as needed
+rules_scala_version_sha256="37eb013ea3e6a940da70df43fe2dd6f423d1ac0849042aa586f9ac157321018d"
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 http_archive(
@@ -8,6 +9,7 @@ http_archive(
     strip_prefix = "rules_scala-%s" % rules_scala_version,
     type = "zip",
     url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip" % rules_scala_version,
+    sha256 = rules_scala_version_sha256,
 )
 
 load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
@@ -44,14 +46,14 @@ http_archive(
 )
 
 # used for maven dependency resolution in the third_party sub-folder
-RULES_JVM_EXTERNAL_TAG = "2.8"
-RULES_JVM_EXTERNAL_SHA = "79c9850690d7614ecdb72d68394f994fef7534b292c4867ce5e7dec0aa7bdfad"
+rules_jvm_external_version = "2.8"
+rules_jvm_external_version_sha256 = "79c9850690d7614ecdb72d68394f994fef7534b292c4867ce5e7dec0aa7bdfad"
 
 http_archive(
     name = "rules_jvm_external",
-    strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
-    sha256 = RULES_JVM_EXTERNAL_SHA,
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
+    strip_prefix = "rules_jvm_external-%s" % rules_jvm_external_version,
+    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % rules_jvm_external_version,
+    sha256 = rules_jvm_external_version_sha256,
 )
 
 # load the dependencies defined in the third_party sub-folder
@@ -64,14 +66,14 @@ load("@maven//:defs.bzl", "pinned_maven_install")
 pinned_maven_install()
 
 # add rules_twirl (needed to compile twirl templates)
-RULES_TWIRL_VERSION = "105c51e4884d56805e51b36d38fb2113b0381a6d"
-RULES_TWIRL_SHA = "c89d8460d236ec7d3c2544a72f17d21c4855da0eb79556c9dbdc95938c411057"
+rules_twirl_version = "105c51e4884d56805e51b36d38fb2113b0381a6d"
+rules_twirl_version_sha256 = "c89d8460d236ec7d3c2544a72f17d21c4855da0eb79556c9dbdc95938c411057"
 http_archive(
   name = "io_bazel_rules_twirl",
-  strip_prefix = "rules_twirl-%s" % RULES_TWIRL_VERSION,
-  sha256 = RULES_TWIRL_SHA,
+  strip_prefix = "rules_twirl-%s" % rules_twirl_version,
+  url = "https://github.com/lucidsoftware/rules_twirl/archive/%s.zip" % rules_twirl_version,
   type = "zip",
-  url = "https://github.com/lucidsoftware/rules_twirl/archive/%s.zip" % RULES_TWIRL_VERSION,
+  sha256 = rules_twirl_version_sha256,
 )
 
 load("@io_bazel_rules_twirl//:workspace.bzl", "twirl_repositories")
