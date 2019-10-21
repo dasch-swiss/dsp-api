@@ -60,50 +60,39 @@ A manual to get all mentioned components locally up and running can be found [he
 
 ### Run the Knora API server
 
-With [Docker](https://www.docker.com/) installed, start the [GraphDB Free](http://graphdb.ontotext.com/documentation/free/) triplestore:
+With [Docker](https://www.docker.com/) installed, run the following:
 
 ```
-$ docker run --rm -p 7200:7200 dhlabbasel/graphdb-free
+$ make stack-up
 ```
 
-Then in another terminal, create a test repository and load some test data into the triplestore:
+Then to create a test repository and load some test data into the triplestore:
 
 ```
-$ cd webapi/scripts
-$ ./graphdb-free-docker-init-knora-test.sh
+$ make init-db-test-free
 ```
 
-Then go back to the Knora root directory and use SBT to start the API server:
+Then we need to restart the knora-stack after loading the data:
 
 ```
-$ cd ../..
-$ sbt
-> webapi / compile
-> set webapi / reStart / javaOptions ++= Seq("-Dapp.triplestore.dbtype=graphdb-free")
-> webapi / reStart
+$ make stack-restart
 ```
 
 Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
 
-To shut down the Knora API server:
+To shut down the Knora-Stack:
 
 ```
-> webapi / reStop
+$ make stack-down
 ```
 
 ### Run the automated tests
 
-Make sure you've started GraphDB Free as shown above. Create an empty repository for running the automated tests:
+Run :
 
 ```
-$ cd webapi/scripts
-$ ./graphdb-free-init-knora-test-unit.sh
-```
-
-Then at the SBT prompt:
-
-```
-> webapi / GDBFree / test
+$ make init-knora-test-unit-free
+$ make normal-tests
 ```
 
 ## How to Contribute

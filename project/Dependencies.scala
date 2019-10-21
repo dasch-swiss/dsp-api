@@ -49,7 +49,7 @@ object Dependencies {
         akkaHttpVersion := "10.1.7",
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
-        sipiImage := "dhlabbasel/sipi:v1.4.3",
+        sipiImage := "dhlabbasel/sipi:v2.0.1",
         gdbSEImage := "ontotext/graphdb:8.5.0-se",
         gdbFreeImage := "dhlabbasel/graphdb:8.10.0-free"
     )
@@ -167,6 +167,15 @@ object Dependencies {
 
     }
 
+    object TestBinaries {
+        val akkaTestkit            = Def.setting {"com.typesafe.akka"            %% "akka-testkit"             % akkaVersion.value}
+        val akkaStreamTestkit      = Def.setting {"com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion.value}
+        val akkaHttpTestkit        = Def.setting {"com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion.value}
+        val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.0.4"
+        val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "2.3.1"
+        val gatlingTestFramework   = "io.gatling"                                 % "gatling-test-framework"   % "2.3.1"
+    }
+
     import Compile._
 
     val l = libraryDependencies
@@ -200,6 +209,7 @@ object Dependencies {
         akkaStream.value,
         WebapiTest.akkaStreamTestkit.value,
         WebapiTest.akkaTestkit.value,
+        apacheHttpClient,
         bcprov,
         chill,
         commonsBeanUtil,
@@ -211,6 +221,7 @@ object Dependencies {
         WebapiTest.gatlingHighcharts,
         WebapiTest.gatlingTestFramework,
         gwtServlet,
+        icu4j,
         jacksonScala,
         jaxbApi,
         jsonldJava,
@@ -237,9 +248,22 @@ object Dependencies {
         springSecurityCore,
         swaggerAkkaHttp,
         typesafeConfig,
-        xmlunitCore,
-        icu4j,
-        apacheHttpClient
+        xmlunitCore
+    )
+
+    val upgradeLibraryDependencies = l ++= Seq[sbt.ModuleID](
+        rdf4jRuntime,
+        SalsahTest.scalaTest,
+        scallop
+    )
+
+    val webapiTestAndITLibraryDependencies = l ++= Seq[sbt.ModuleID](
+        //TestBinaries.akkaTestkit,
+        //TestBinaries.akkaStreamTestkit,
+        //TestBinaries.akkaHttpTestkit,
+        TestBinaries.gatlingHighcharts,
+        TestBinaries.gatlingTestFramework,
+        TestBinaries.scalaTest
     )
 
 

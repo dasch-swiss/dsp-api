@@ -1,13 +1,14 @@
-dist: xenial
+dist: bionic
 
 sudo: required
 
 addons:
   chrome: stable
+  apt:
+    packages:
+      - expect
 
-language:
-  - "scala"
-  - "python"
+language: scala
 
 scala:
   - "2.12.1"
@@ -20,7 +21,7 @@ jdk:
 
 services:
   - docker
-  - redis-server
+  # - redis-server
 
 env:
   global:
@@ -41,12 +42,11 @@ before_cache:
 
 cache:
   directories:
-  - "$HOME/.ivy2"
+    - "$HOME/.ivy2"
+
 before_install:
   - openssl aes-256-cbc -K $encrypted_ec8f5e0fa991_key -iv $encrypted_ec8f5e0fa991_iv -in travis/secrets.tar.enc -out $TRAVIS_BUILD_DIR/travis/secrets.tar -d
   - tar -C travis -xvf travis/secrets.tar
-  - sudo apt-get -qq update
-  - sudo apt-get install -y expect
 
 stages:
   - compile and stage
@@ -69,73 +69,67 @@ jobs:
         # - sbt knora-sipi/docker:publish
         # - sbt knora-graphdb-se/docker:publish
         # - sbt knora-graphdb-free/docker:publish
-        # - sbt knora-upgrade/docker:publish
+        # - sbt upgrade/docker:publish
         # - sbt knora-assets/docker:publish
     # unit tests
     - stage: test
       script:
-        # prepare needed graphdb-se files
-        - mkdir -p $TRAVIS_BUILD_DIR/graphdb
-        - cp $TRAVIS_BUILD_DIR/travis/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
-        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
-        # start and initialize graphdb-se
-        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.license.file=/graphdb/graphdb.license
-        - sleep 15
-        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
-        # hit graphdb with a request "waking-it-up"
-        - curl http://localhost:7200/rest/repositories
-        # start the built-in webapi server tests
-        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
-        # upload code coverage report
-        # - sbt codacyCoverage
+        # set graphdb license
+        - export KNORA_GDB_LICENSE=$TRAVIS_BUILD_DIR/travis/graphdb.license
+        # start the integration tests
+        - make unit-tests-with-coverage
+        # print out .env file used by the stack
+        - make print-env-file
     # e2e tests
     - stage: test
       script:
-        # prepare needed graphdb-se files
-        - mkdir -p $TRAVIS_BUILD_DIR/graphdb
-        - cp $TRAVIS_BUILD_DIR/travis/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
-        - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
-        # start and initialize graphdb-se
-        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.license.file=/graphdb/graphdb.license
-        - sleep 15
-        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
-        # hit graphdb with a request "waking-it-up"
-        - curl http://localhost:7200/rest/repositories
-        # start the built-in webapi server tests
-        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
-        # upload code coverage report
-        # - sbt codacyCoverage
+        # set graphdb license
+        - export KNORA_GDB_LICENSE=$TRAVIS_BUILD_DIR/travis/graphdb.license
+        # start the integration tests
+        - make e2e-tests-with-coverage
+        # print out .env file used by the stack
+        - make print-env-file
     # integration tests
     - stage: test
       script:
+        # set graphdb license
+        - export KNORA_GDB_LICENSE=$TRAVIS_BUILD_DIR/travis/graphdb.license
+        # start the integration tests
+        - make it-tests-with-coverage
+        # print out Sipi logs
+        - make stack-logs-sipi-no-follow
+        # print out .env file used by the stack
+        - make print-env-file
+    # upgrade tests
+    - stage: test
+      script:
+        # build all docker images
+        - make build-all-images
         # prepare needed graphdb-se files
         - mkdir -p $TRAVIS_BUILD_DIR/graphdb
         - cp $TRAVIS_BUILD_DIR/travis/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
         - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
         # start and initialize graphdb-se
-        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.license.file=/graphdb/graphdb.license
-        - sleep 15
-        - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
-        # start the sipi container (with production config)
-        - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose up -d sipi-it
-        # start the integration tests
-        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/it:test webapi/coverageReport
-        # upload code coverage report
-        # - sbt codacyCoverage
-        # print out Sipi logs
-        - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose logs
-    # upgrade tests
-    - stage: test
-      script:
-        # run tests
-        - pyenv shell 3.7.1
-        - cd $TRAVIS_BUILD_DIR/upgrade && pip3 install -r requirements.txt && ./test.sh
+        - docker network create knora-net
+        - docker run --rm -d --name=db --network=knora-net -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE daschswiss/knora-graphdb-se -Dgraphdb.license.file=/graphdb/graphdb.license
+        - sleep 5
+        - make init-db-test-minimal
+        # load v7.0.0 data and run auto-upgrade (sbt use case)
+        - cd $TRAVIS_BUILD_DIR/upgrade/graphdb-se
+        - unzip $TRAVIS_BUILD_DIR/test-data/v7.0.0/v7.0.0-knora-test.trig.zip
+        - ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+        - ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
+        - ./auto-upgrade.sh -r knora-test -u gaga -p gaga -h localhost:7200 -t /tmp/upgrade.dir
+        # load v7.0.0 data and run auto-upgrade (docker use case)
+        - ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+        - ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
+        - docker run -it --rm --network=knora-net -v /tmp:/tmp -e KNORA_UPGRADE_DOCKER=true daschswiss/knora-upgrade -r knora-test -u gaga -p gaga -h db:7200 -t /tmp/upgrade.dir
     # testing docs generation
     - stage: test
       script:
         - mkdir -p $TRAVIS_BUILD_DIR/docs/target
         - chmod 777 $TRAVIS_BUILD_DIR/docs/target
-        - docker run --rm -v $TRAVIS_BUILD_DIR:/knora daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
+        - make docs-build
     # Salsah browser tests
     #- stage: test
     #  script:
@@ -159,25 +153,15 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/salsah1/lib/chromedriver/ && unzip chromedriver_linux64.zip
     #    # start built-in salsah1 browser tests
     #    - cd $TRAVIS_BUILD_DIR/salsah1/ && sbt headless:test
-    # testing docker images
-    - stage: test
-      script:
-        - sbt webapi/docker:publishLocal
-        - sbt salsah1/docker:publishLocal
-        - sbt knora-sipi/docker:publishLocal
-        - sbt knora-graphdb-se/docker:publishLocal
-        - sbt knora-graphdb-free/docker:publishLocal
-        - sbt knora-upgrade/docker:publishLocal
-        - sbt knora-assets/docker:publishLocal
     - stage: publish
       script:
         # login into docker hub, build image, and push but only when on the "develop" branch or tagged
         # when on 'develop' then $TRAVIS_BRANCH = develop
         # when on 'tag' then $TRAVIS_BRANCH = tag, e.g., v1.2.0
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
-        # webapi
+        # knora-api
         - sbt webapi/docker:publish
-        # salsah1
+        # knora-salsah1
         - sbt salsah1/docker:publish
         # knora-sipi
         - sbt knora-sipi/docker:publish
@@ -186,9 +170,11 @@ jobs:
         # knora-graphdb-free
         - sbt knora-graphdb-free/docker:publish
         # knora-upgrade
-        - sbt knora-upgrade/docker:publish
+        - sbt upgrade/docker:publish
         # knora-assets
         - sbt knora-assets/docker:publish
+        # publish images to daschswiss dockerhub organization
+        - make publish-all-images
 
 notifications:
   slack:

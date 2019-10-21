@@ -19,7 +19,7 @@
 
 package org.knora.webapi.e2e.v1
 
-import java.io.File
+import java.io.{File, FileInputStream, FileOutputStream}
 import java.net.URLEncoder
 
 import akka.http.scaladsl.model.headers._
@@ -48,7 +48,7 @@ object KnoraSipiIntegrationV1ITSpec {
 
 /**
   * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
-  * `sipi.knora-docker-it-config.lua`.
+  * `sipi.knora-docker-config.lua`.
   */
 class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol {
 
@@ -415,10 +415,21 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             checkResponseOK(knoraPostRequest)
         }
 
-
         "create an 'p0803-incunabula:book' and an 'p0803-incunabula:page' with file parameters via XML import" in {
             val fileToUpload = new File(pathToChlaus)
-            val absoluteFilePath = fileToUpload.getAbsolutePath
+
+            // To be able to run packaged tests inside Docker, we need to copy
+            // the file first to a place which is shared with sipi
+            val dest = FileUtil.createTempFile(settings)
+            new FileOutputStream(dest)
+              .getChannel
+              .transferFrom(
+                  new FileInputStream(fileToUpload).getChannel,
+                  0,
+                  Long.MaxValue
+              )
+
+            val absoluteFilePath = dest.getAbsolutePath
 
             val knoraParams =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
@@ -465,7 +476,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val locdata = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
             val origname = locdata.fields("origname").asInstanceOf[JsString].value
             val imageUrl = locdata.fields("path").asInstanceOf[JsString].value
-            assert(origname == fileToUpload.getName)
+            assert(origname == dest.getName)
 
             // Request the file from Sipi.
             val sipiGetRequest = Get(imageUrl) ~> addCredentials(BasicHttpCredentials(username, password))
