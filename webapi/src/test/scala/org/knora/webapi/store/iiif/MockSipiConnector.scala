@@ -128,7 +128,7 @@ class MockSipiConnector extends Actor with ActorLogging {
                 internalMimeType = "image/jp2",
                 width = Some(512),
                 height = Some(256),
-                pageCount = None
+                numpages = None
             )
         }
 
