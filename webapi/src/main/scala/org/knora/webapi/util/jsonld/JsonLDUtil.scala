@@ -810,7 +810,7 @@ object JsonLDUtil {
         val context: java.util.HashMap[String, Any] = new java.util.HashMap[String, Any]()
         val options: JsonLdOptions = new JsonLdOptions()
         val compact: java.util.Map[IRI, AnyRef] = JsonLdProcessor.compact(jsonObject, context, options)
-        val scalaColl: Any = JavaUtil.deepJavatoScala(compact)
+        val scalaColl: Any = JavaUtil.deepJavaToScala(compact)
 
         val scalaMap: Map[String, Any] = try {
             scalaColl.asInstanceOf[Map[String, Any]]
