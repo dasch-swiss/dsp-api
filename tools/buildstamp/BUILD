@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 filegroup(
     name = "all",
     srcs = [
-        "prelude_bazel",
+        "get_workspace_status",
     ],
 )
 
