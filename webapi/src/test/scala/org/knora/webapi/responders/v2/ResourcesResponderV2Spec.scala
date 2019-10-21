@@ -1093,8 +1093,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                             fileValue = FileValueV2(
                                 internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
                                 internalMimeType = "image/jp2",
-                                originalFilename = "test.tiff",
-                                originalMimeType = "image/tiff"
+                                originalFilename = Some("test.tiff"),
+                                originalMimeType = Some("image/tiff")
                             ),
                             dimX = 512,
                             dimY = 256

@@ -33,7 +33,7 @@
 
     :attachedToProject knora-admin:SystemProject ;
 
-    :ontologyVersion "PR 1440" .
+    :ontologyVersion "knora-base v6" .
 
 
 
@@ -1784,6 +1784,14 @@
                    [ rdf:type owl:Restriction ;
                      owl:onProperty :pageCount ;
                      owl:cardinality "1"^^xsd:nonNegativeInteger
+                   ] ,
+                   [ rdf:type owl:Restriction ;
+                     owl:onProperty :dimX ;
+                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                   ] ,
+                   [ rdf:type owl:Restriction ;
+                     owl:onProperty :dimY ;
+                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
                    ] .
 
 
@@ -1849,10 +1857,6 @@
 
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
-                             owl:onProperty :originalMimeType ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
                              owl:onProperty :internalFilename ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
@@ -1862,7 +1866,11 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :originalFilename ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
+                             owl:onProperty :originalMimeType ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 

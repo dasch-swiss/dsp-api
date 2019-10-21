@@ -326,23 +326,23 @@ case class GetFileMetadataRequestV2(fileUrl: String,
 /**
   * Represents a response from Sipi providing metadata about an image file.
   *
-  * @param originalFilename the file's original filename.
+  * @param originalFilename the file's original filename, if known.
   * @param originalMimeType the file's original MIME type.
   * @param width            the file's width in pixels, if applicable.
   * @param height           the file's height in pixels, if applicable.
-  * @param pageCount        the number of pages in the file, if applicable.
+  * @param numpages         the number of pages in the file, if applicable.
   */
-case class GetFileMetadataResponseV2(originalFilename: String,
-                                     originalMimeType: String,
+case class GetFileMetadataResponseV2(originalFilename: Option[String],
+                                     originalMimeType: Option[String],
                                      internalMimeType: String,
                                      width: Option[Int],
                                      height: Option[Int],
-                                     pageCount: Option[Int]) {
-    if (originalFilename.isEmpty) {
+                                     numpages: Option[Int]) {
+    if (originalFilename.contains("")) {
         throw SipiException(s"Sipi returned an empty originalFilename")
     }
 
-    if (originalMimeType.isEmpty) {
+    if (originalMimeType.contains("")) {
         throw SipiException(s"Sipi returned an empty originalMimeType")
     }
 }

@@ -940,7 +940,9 @@ object OntologyConstants {
         val StillImageFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
         val StillImageFileValueHasIIIFBaseUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
 
-        val DocumentValueHasPageCount: IRI = KnoraApiV2PrefixExpansion + "documentValueHasPageCount"
+        val DocumentFileValueHasPageCount: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasPageCount"
+        val DocumentFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasDimX"
+        val DocumentFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasDimY"
 
         val MovingImageFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimX"
         val MovingImageFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimY"
@@ -1127,7 +1129,7 @@ object OntologyConstants {
             KnoraBase.ValueHasGeonameCode -> KnoraApiV2Complex.GeonameValueAsGeonameCode,
             KnoraBase.ValueHasColor -> KnoraApiV2Complex.ColorValueAsColor,
             KnoraBase.ValueHasStandoff -> KnoraApiV2Complex.TextValueHasStandoff,
-            KnoraBase.PageCount -> KnoraApiV2Complex.DocumentValueHasPageCount,
+            KnoraBase.PageCount -> KnoraApiV2Complex.DocumentFileValueHasPageCount,
             KnoraAdmin.PreferredLanguage -> KnoraAdminV2.Lang,
             KnoraAdmin.IsInProject -> KnoraAdminV2.Projects,
             KnoraAdmin.IsInSystemAdminGroup -> KnoraAdminV2.SystemAdmin,
@@ -1178,7 +1180,7 @@ object OntologyConstants {
             KnoraApiV2Complex.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
             KnoraApiV2Complex.ColorValueAsColor -> KnoraBase.ValueHasColor,
             KnoraApiV2Complex.TextValueHasStandoff -> KnoraBase.ValueHasStandoff,
-            KnoraApiV2Complex.DocumentValueHasPageCount -> KnoraBase.PageCount,
+            KnoraApiV2Complex.DocumentFileValueHasPageCount -> KnoraBase.PageCount,
             KnoraAdminV2.Lang -> KnoraAdmin.PreferredLanguage,
             KnoraAdminV2.Projects -> KnoraAdmin.IsInProject,
             KnoraAdminV2.SystemAdmin -> KnoraAdmin.IsInSystemAdminGroup,

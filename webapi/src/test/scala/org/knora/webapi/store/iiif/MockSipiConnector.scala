@@ -123,8 +123,8 @@ class MockSipiConnector extends Actor with ActorLogging {
     private def getFileMetadataV2(getFileMetadataRequestV2: GetFileMetadataRequestV2): Try[GetFileMetadataResponseV2] =
         Success {
             GetFileMetadataResponseV2(
-                originalFilename = "test2.tiff",
-                originalMimeType = "image/tiff",
+                originalFilename = Some("test2.tiff"),
+                originalMimeType = Some("image/tiff"),
                 internalMimeType = "image/jp2",
                 width = Some(512),
                 height = Some(256),

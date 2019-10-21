@@ -12,7 +12,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.{JsonLDArray, JsonLDConstants, JsonLDDocument, JsonLDObject}
+import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
 import spray.json._
 
@@ -28,8 +28,8 @@ object KnoraSipiIntegrationV2ITSpec {
 }
 
 /**
-  * Tests interaction between Knora and Sipi using Knora API v2.
-  */
+ * Tests interaction between Knora and Sipi using Knora API v2.
+ */
 class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV2ITSpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -51,6 +51,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val incunabulaUserEmail = "test.user2@test.ch"
     private val password = "test"
     private val stillImageFileValueIri = new MutableTestIri
+    private val documentFileValueIri = new MutableTestIri
     private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 
     private val pdfOriginalFilename = "minimal.pdf"
@@ -58,38 +59,38 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
 
     /**
-      * Represents a file to be uploaded to Sipi.
-      *
-      * @param path     the path of the file.
-      * @param mimeType the MIME type of the file.
-      *
-      */
+     * Represents a file to be uploaded to Sipi.
+     *
+     * @param path     the path of the file.
+     * @param mimeType the MIME type of the file.
+     *
+     */
     case class FileToUpload(path: String, mimeType: ContentType)
 
     /**
-      * Represents an image file to be uploaded to Sipi.
-      *
-      * @param fileToUpload the file to be uploaded.
-      * @param width        the image's width in pixels.
-      * @param height       the image's height in pixels.
-      */
+     * Represents an image file to be uploaded to Sipi.
+     *
+     * @param fileToUpload the file to be uploaded.
+     * @param width        the image's width in pixels.
+     * @param height       the image's height in pixels.
+     */
     case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
 
     /**
-      * Represents the information that Sipi returns about each file that has been uploaded.
-      *
-      * @param originalFilename the original filename that was submitted to Sipi.
-      * @param internalFilename Sipi's internal filename for the stored temporary file.
-      * @param temporaryUrl     the URL at which the temporary file can be accessed.
-      * @param fileType         `image`, `text`, or `document`.
-      */
+     * Represents the information that Sipi returns about each file that has been uploaded.
+     *
+     * @param originalFilename the original filename that was submitted to Sipi.
+     * @param internalFilename Sipi's internal filename for the stored temporary file.
+     * @param temporaryUrl     the URL at which the temporary file can be accessed.
+     * @param fileType         `image`, `text`, or `document`.
+     */
     case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryUrl: String, fileType: String)
 
     /**
-      * Represents Sipi's response to a file upload request.
-      *
-      * @param uploadedFiles the information about each file that was uploaded.
-      */
+     * Represents Sipi's response to a file upload request.
+     *
+     * @param uploadedFiles the information about each file that was uploaded.
+     */
     case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
 
     object GetImageMetadataResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
@@ -100,30 +101,33 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     import GetImageMetadataResponseV2JsonProtocol._
 
     /**
-      * Represents the information that Knora returns about an image file value that was created.
-      *
-      * @param internalFilename the image's internal filename.
-      * @param iiifUrl          the image's IIIF URL.
-      * @param width            the image's width in pixels.
-      * @param height           the image's height in pixels.
-      */
+     * Represents the information that Knora returns about an image file value that was created.
+     *
+     * @param internalFilename the image's internal filename.
+     * @param iiifUrl          the image's IIIF URL.
+     * @param width            the image's width in pixels.
+     * @param height           the image's height in pixels.
+     */
     case class SavedImage(internalFilename: String, iiifUrl: String, width: Int, height: Int)
 
     /**
-      * Represents the information that Knora returns about a document file value that was created.
-      *
-      * @param internalFilename the files's internal filename.
-      * @param url          the file's URL.
-      */
-    case class SavedDocument(internalFilename: String, url: String)
+     * Represents the information that Knora returns about a document file value that was created.
+     *
+     * @param internalFilename the files's internal filename.
+     * @param url              the file's URL.
+     * @param pageCount        the document's page count.
+     * @param width            the document's width in pixels.
+     * @param height           the document's height in pixels.
+     */
+    case class SavedDocument(internalFilename: String, url: String, pageCount: Int, width: Option[Int], height: Option[Int])
 
     /**
-      * Uploads a file to Sipi and returns the information in Sipi's response.
-      *
-      * @param loginToken    the login token to be included in the request to Sipi.
-      * @param filesToUpload the files to be uploaded.
-      * @return a [[SipiUploadResponse]] representing Sipi's response.
-      */
+     * Uploads a file to Sipi and returns the information in Sipi's response.
+     *
+     * @param loginToken    the login token to be included in the request to Sipi.
+     * @param filesToUpload the files to be uploaded.
+     * @return a [[SipiUploadResponse]] representing Sipi's response.
+     */
     private def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse = {
         // Make a multipart/form-data request containing the files.
 
@@ -162,27 +166,27 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     }
 
     /**
-      * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
-      * property.
-      *
-      * @param resource            the JSON-LD document.
-      * @param propertyIriInResult the property IRI.
-      * @return a JSON-LD array containing the values of the specified property.
-      */
+     * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
+     * property.
+     *
+     * @param resource            the JSON-LD document.
+     * @param propertyIriInResult the property IRI.
+     * @return a JSON-LD array containing the values of the specified property.
+     */
     private def getValuesFromResource(resource: JsonLDDocument,
                                       propertyIriInResult: SmartIri): JsonLDArray = {
         resource.requireArray(propertyIriInResult.toString)
     }
 
     /**
-      * Given a JSON-LD document representing a resource, returns a JSON-LD object representing the expected single
-      * value of the specified property.
-      *
-      * @param resource            the JSON-LD document.
-      * @param propertyIriInResult the property IRI.
-      * @param expectedValueIri    the IRI of the expected value.
-      * @return a JSON-LD object representing the expected single value of the specified property.
-      */
+     * Given a JSON-LD document representing a resource, returns a JSON-LD object representing the expected single
+     * value of the specified property.
+     *
+     * @param resource            the JSON-LD document.
+     * @param propertyIriInResult the property IRI.
+     * @param expectedValueIri    the IRI of the expected value.
+     * @return a JSON-LD object representing the expected single value of the specified property.
+     */
     private def getValueFromResource(resource: JsonLDDocument,
                                      propertyIriInResult: SmartIri,
                                      expectedValueIri: IRI): JsonLDObject = {
@@ -205,11 +209,11 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     }
 
     /**
-      * Given a JSON-LD object representing a Knora image file value, returns a [[SavedImage]] containing the same information.
-      *
-      * @param savedValue a JSON-LD object representing a Knora image file value.
-      * @return a [[SavedImage]] containing the same information.
-      */
+     * Given a JSON-LD object representing a Knora image file value, returns a [[SavedImage]] containing the same information.
+     *
+     * @param savedValue a JSON-LD object representing a Knora image file value.
+     * @return a [[SavedImage]] containing the same information.
+     */
     private def savedValueToSavedImage(savedValue: JsonLDObject): SavedImage = {
         val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
@@ -231,23 +235,30 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     }
 
     /**
-      * Given a JSON-LD object representing a Knora document file value, returns a [[SavedImage]] containing the same information.
-      *
-      * @param savedValue a JSON-LD object representing a Knora document file value.
-      * @return a [[SavedDocument]] containing the same information.
-      */
+     * Given a JSON-LD object representing a Knora document file value, returns a [[SavedImage]] containing the same information.
+     *
+     * @param savedValue a JSON-LD object representing a Knora document file value.
+     * @return a [[SavedDocument]] containing the same information.
+     */
     private def savedValueToSavedDocument(savedValue: JsonLDObject): SavedDocument = {
         val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
-        val url = savedValue.requireDatatypeValueInObject(
+        val url: String = savedValue.requireDatatypeValueInObject(
             key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
             expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
             validationFun = stringFormatter.toSparqlEncodedString
         )
 
+        val pageCount: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount)
+        val dimX: Option[Int] = savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimX)
+        val dimY: Option[Int] = savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY)
+
         SavedDocument(
             internalFilename = internalFilename,
-            url = url
+            url = url,
+            pageCount = pageCount,
+            width = dimX,
+            height = dimY
         )
     }
 
@@ -434,14 +445,28 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val resource = getResponseJsonLD(knoraGetRequest)
 
             // Get the new file value from the resource.
-            val savedValue: JsonLDObject = getValueFromResource(
+
+            val savedValues: JsonLDArray = getValuesFromResource(
                 resource = resource,
-                propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
-                expectedValueIri = stillImageFileValueIri.get
+                propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri
             )
 
-            val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
+            val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
+                savedValues.value.head
+            } else {
+                throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
+            }
+
+            val savedValueObj: JsonLDObject = savedValue match {
+                case jsonLDObject: JsonLDObject => jsonLDObject
+                case other => throw AssertionException(s"Invalid value object: $other")
+            }
+
+            val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
             assert(savedDocument.internalFilename == uploadedFile.internalFilename)
+            assert(savedDocument.pageCount == 1)
+            assert(savedDocument.width.contains(1250))
+            assert(savedDocument.height.contains(600))
         }
     }
 }

@@ -1289,23 +1289,23 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
             _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
-                throw BadRequestException(s"Resource $gravsearchTemplateIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
+                throw BadRequestException(s"Resource $gravsearchTemplateIri is not a text file")
             }
 
             gravsearchFileValueContent: TextFileValueContentV2 = resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
                 case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
                     case value: ReadValueV2 => value.valueContent match {
                         case textRepr: TextFileValueContentV2 => textRepr
-                        case _ => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
+                        case _ => throw InconsistentTriplestoreDataException(s"Resource $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
                     }
                 }
 
-                case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
+                case None => throw InconsistentTriplestoreDataException(s"Resource $gravsearchTemplateIri has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
             }
 
             // check if `xsltFileValue` represents an XSL transformation
-            _ = if (!(gravsearchFileValueContent.fileValue.internalMimeType == "text/plain" && gravsearchFileValueContent.fileValue.originalFilename.endsWith(".txt"))) {
-                throw BadRequestException(s"$gravsearchTemplateIri does not have a file value referring to an XSL transformation")
+            _ = if (!(gravsearchFileValueContent.fileValue.internalMimeType == "text/plain" && gravsearchFileValueContent.fileValue.originalFilename.exists(_.endsWith(".txt")))) {
+                throw BadRequestException(s"Resource $gravsearchTemplateIri does not have a file value referring to a Gravsearch template")
             }
 
             gravSearchUrl: String = s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${gravsearchFileValueContent.fileValue.internalFilename}"
@@ -1313,7 +1313,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         } yield gravSearchUrl
 
         val recoveredGravsearchUrlFuture = gravsearchUrlFuture.recover {
-            case notFound: NotFoundException => throw BadRequestException(s"XSL transformation $gravsearchTemplateIri not found: ${notFound.message}")
+            case notFound: NotFoundException => throw BadRequestException(s"Gravsearch template $gravsearchTemplateIri not found: ${notFound.message}")
         }
 
         for {

@@ -1229,8 +1229,14 @@ knora-api:DocumentFileValue a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty knora-api:deletedBy
     ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:documentFileValueHasDimX
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:documentFileValueHasDimY
+    ], [ a owl:Restriction;
       owl:cardinality 1;
-      owl:onProperty knora-api:documentValueHasPageCount
+      owl:onProperty knora-api:documentFileValueHasPageCount
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -1273,9 +1279,25 @@ knora-api:DocumentFileValue a owl:Class;
       owl:onProperty knora-api:versionArkUrl
     ] .
 
-knora-api:documentValueHasPageCount a owl:DatatypeProperty;
+knora-api:documentFileValueHasDimX a owl:DatatypeProperty;
   knora-api:objectType xsd:integer;
-  knora-api:subjectType knora-api:FileValue;
+  knora-api:subjectType knora-api:DocumentFileValue;
+  rdfs:comment "The horizontal dimension of a document file value.";
+  rdfs:label "Document file value has X dimension";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:documentFileValueHasDimY a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:DocumentFileValue;
+  rdfs:comment "The vertical dimension of a document file value.";
+  rdfs:label "Document file value has Y dimension";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:documentFileValueHasPageCount a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:DocumentFileValue;
+  rdfs:comment "The page count of a document file value.";
+  rdfs:label "Document file value has page count";
   rdfs:subPropertyOf knora-api:valueHas .
 
 knora-api:DocumentRepresentation a owl:Class;

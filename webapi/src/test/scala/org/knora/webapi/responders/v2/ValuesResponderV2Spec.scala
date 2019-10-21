@@ -3299,8 +3299,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 fileValue = FileValueV2(
                     internalFilename = "B1D0OkEgfFp-Cew2Seur7Wi.jp2",
                     internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
+                    originalFilename = Some("test.tiff"),
+                    originalMimeType = Some("image/tiff")
                 ),
                 dimX = 512,
                 dimY = 256
@@ -3348,8 +3348,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 fileValue = FileValueV2(
                     internalFilename = "updated-filename.jp2",
                     internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
+                    originalFilename = Some("test.tiff"),
+                    originalMimeType = Some("image/tiff")
                 ),
                 dimX = 512,
                 dimY = 256
@@ -3401,8 +3401,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 fileValue = FileValueV2(
                     internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
                     internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
+                    originalFilename = Some("test.tiff"),
+                    originalMimeType = Some("image/tiff")
                 ),
                 dimX = 512,
                 dimY = 256
@@ -3436,8 +3436,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 fileValue = FileValueV2(
                     internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
                     internalMimeType = "image/jp2",
-                    originalFilename = "test.tiff",
-                    originalMimeType = "image/tiff"
+                    originalFilename = Some("test.tiff"),
+                    originalMimeType = Some("image/tiff")
                 ),
                 dimX = 512,
                 dimY = 256
