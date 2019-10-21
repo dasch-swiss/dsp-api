@@ -1,4 +1,5 @@
 /*
+/*
  * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
@@ -17,24 +18,19 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora
+package org.knora.webapi.update
+
+import org.eclipse.rdf4j.model.Model
 
 /**
-  * Contains definitions shared by the whole application.
+  * A trait for plugins that update a repository.
   */
-package object webapi {
+trait UpdatePlugin {
     /**
-      * The version of `knora-base` and of the other built-in ontologies that this version of Knora requires.
-      * Must be the same as the object of `knora-base:ontologyVersion` in the `knora-base` ontology being used.
+      * Transforms a repository.
+      *
+      * @param model a [[Model]] containing the repository data.
       */
-    val KnoraBaseVersion: String = "knora-base v6"
-
-    /**
-      * `IRI` is a synonym for `String`, used to improve code readability.
-      */
-    type IRI = String
-
-
-    def deserializationError(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) = throw InvalidJsonLDException(msg, cause)
-
+    def transform(model: Model): Unit
 }
+*/

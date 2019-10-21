@@ -17,24 +17,14 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora
+package org.knora.upgrade.plugins
+
+import org.eclipse.rdf4j.model.Model
+import org.knora.upgrade.UpgradePlugin
 
 /**
-  * Contains definitions shared by the whole application.
+  * An update plugin that does nothing. Used for updates in which only the built-in named graphs have changed.
   */
-package object webapi {
-    /**
-      * The version of `knora-base` and of the other built-in ontologies that this version of Knora requires.
-      * Must be the same as the object of `knora-base:ontologyVersion` in the `knora-base` ontology being used.
-      */
-    val KnoraBaseVersion: String = "knora-base v6"
-
-    /**
-      * `IRI` is a synonym for `String`, used to improve code readability.
-      */
-    type IRI = String
-
-
-    def deserializationError(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) = throw InvalidJsonLDException(msg, cause)
-
+class NoopPlugin extends UpgradePlugin {
+    override def transform(model: Model): Unit = {}
 }
