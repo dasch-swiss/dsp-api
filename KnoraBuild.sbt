@@ -586,7 +586,9 @@ lazy val webapi = knoraModule("webapi")
             resolvers ++= Seq(
                 Resolver.bintrayRepo("hseeberger", "maven")
             ),
-            Dependencies.webapiLibraryDependencies
+            Dependencies.webapiLibraryDependencies,
+            // use jars (and not class directory) for run, test, console
+            exportJars := true,
         )
         .settings(
             inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings),

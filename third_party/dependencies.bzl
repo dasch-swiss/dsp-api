@@ -108,6 +108,8 @@ def dependencies():
 
             "org.apache.httpcomponents:httpclient:4.5.6",
 
+            # Twirl templates
+            "com.typesafe.play:twirl-api_2.12:1.3.13",
 
             # scala stuff
             "org.scala-lang.modules:scala-xml_2.12:1.2.0",

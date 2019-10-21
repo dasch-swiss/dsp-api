@@ -1,28 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_twirl//twirl:twirl.bzl", "twirl_templates")
-
-twirl_templates(
-  name = "twirl-templates",
-  source_directory = "src",
-  include_play_imports = False,
-  srcs = glob(["src/main/twirl/**/*.scala.html"])
-    + glob(["src/main/twirl/**/*.scala.xml"])
-    + glob(["src/main/twirl/**/*.scala.js"])
-    + glob(["src/main/twirl/**/*.scala.txt"]),
-)
-
-filegroup(
-    name = "webapi_resources",
-    srcs = glob([
-        "src/main/resources/**",
-    ]),
-)
-
 scala_library(
     name = "webapi",
-    srcs = glob(["src/main/scala/org/knora/webapi/**/*.scala"]) + [":twirl-templates"],
-    resources = [":webapi_resources"],
+    srcs = ["//webapi/src/main:scala", "//webapi/src/main:twirl-templates"],
+    resources = ["//webapi/src/main:resources"],
     deps = [
         "@maven//:cglib_cglib_nodep",
         "@maven//:ch_megard_akka_http_cors_2_12",
@@ -73,6 +54,7 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
+        "@maven//:com_typesafe_play_twirl_api_2_12",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:com_typesafe_ssl_config_core_2_12",
         "@maven//:commons_beanutils_commons_beanutils",
@@ -323,19 +305,13 @@ scala_library(
         "@maven//:xerces_xercesImpl",
         "@maven//:xml_apis_xml_apis",
     ],
-)
-
-filegroup(
-    name = "webapi_test_resources",
-    srcs = glob([
-        "src/test/resources/**",
-    ]),
+    unused_dependency_checker_mode = "warn",
 )
 
 scala_test(
     name = "webapi_test",
-    srcs = glob(["src/test/scala/org/knora/webapi/**/*.scala"]),
-    resources = ["webapi_test_resources"],
+    srcs = ["//webapi/src/test:scala"],
+    resources = ["//webapi/src/test:resources"],
     size = "large", # Expect this test to run slowly
     deps = [
         ":webapi",
@@ -347,21 +323,15 @@ scala_test(
         "@maven//:io_gatling_gatling_test_framework",
     ],
     data = [
-        ":webapi_test_resources",
+        "//webapi/src/test:resources",
     ],
-)
-
-filegroup(
-    name = "webapi_it_resources",
-    srcs = glob([
-        "src/it/resources/**",
-    ]),
+    unused_dependency_checker_mode = "warn",
 )
 
 scala_test(
     name = "webapi_it",
-    srcs = glob(["src/it/scala/org/knora/webapi/**/*.scala"]),
-    resources = [":webapi_it_resources"],
+    srcs = ["//webapi/src/test:scala"],
+    resources = ["//webapi/src/it:resources"],
     size = "large", # Expect this test to run slowly
     deps = [
         ":webapi",
@@ -373,7 +343,8 @@ scala_test(
         "@maven//:io_gatling_gatling_test_framework",
     ],
     data = [
-        ":webapi_it_resources",
+        "//webapi/src/test:resources",
 
     ],
+    unused_dependency_checker_mode = "warn",
 )
