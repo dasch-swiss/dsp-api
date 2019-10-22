@@ -23,6 +23,8 @@ salsah1/project
 webapi/project
 webapi/_fuseki/run
 webapi/build
+upgrade/project
+upgrade/target
 triplestores/graphdb-se-7
 idea.vmoptions
 sipi/test
