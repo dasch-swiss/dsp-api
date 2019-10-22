@@ -51,12 +51,13 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val incunabulaUserEmail = "test.user2@test.ch"
     private val password = "test"
     private val stillImageFileValueIri = new MutableTestIri
-    private val documentFileValueIri = new MutableTestIri
     private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 
     private val pdfOriginalFilename = "minimal.pdf"
     private val pathToPdf = s"_test_data/test_route/files/$pdfOriginalFilename"
 
+    private val csvOriginalFilename = "eggs.csv"
+    private val pathToCsv = s"_test_data/test_route/files/$csvOriginalFilename"
 
     /**
      * Represents a file to be uploaded to Sipi.
@@ -467,6 +468,72 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             assert(savedDocument.pageCount == 1)
             assert(savedDocument.width.contains(1250))
             assert(savedDocument.height.contains(600))
+        }
+
+        "create a resource with a CSV file" ignore {
+            // Upload the file to Sipi.
+            val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+                loginToken = loginToken,
+                filesToUpload = Seq(FileToUpload(path = pathToCsv, mimeType = MediaTypes.`text/csv`.toContentType(HttpCharsets.`UTF-8`)))
+            )
+
+            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+            uploadedFile.originalFilename should ===(csvOriginalFilename)
+
+            // Ask Knora to create the resource.
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@type" : "anything:ThingDocument",
+                   |  "knora-api:hasDocumentFileValue" : {
+                   |    "@type" : "knora-api:DocumentFileValue",
+                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+                   |  },
+                   |  "knora-api:attachedToProject" : {
+                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |  },
+                   |  "rdfs:label" : "test thing",
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri.toSmartIri.isKnoraDataIri)
+
+            // Get the resource from Knora.
+            val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
+            val resource = getResponseJsonLD(knoraGetRequest)
+
+            // Get the new file value from the resource.
+
+            val savedValues: JsonLDArray = getValuesFromResource(
+                resource = resource,
+                propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri
+            )
+
+            val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
+                savedValues.value.head
+            } else {
+                throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
+            }
+
+            val savedValueObj: JsonLDObject = savedValue match {
+                case jsonLDObject: JsonLDObject => jsonLDObject
+                case other => throw AssertionException(s"Invalid value object: $other")
+            }
+
+            val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
+            assert(savedDocument.internalFilename == uploadedFile.internalFilename)
+            assert(savedDocument.pageCount == 1)
+            assert(savedDocument.width.isEmpty)
+            assert(savedDocument.height.isEmpty)
         }
     }
 }
