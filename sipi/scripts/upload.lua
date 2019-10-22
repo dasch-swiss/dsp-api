@@ -49,7 +49,8 @@ local file_upload_data = {}
 for file_index, file_params in pairs(server.uploads) do
     -- Check that the file's MIME type is supported.
 
-    local success, mime_info = server.file_mimetype(file_index)
+    local mime_info
+    success, mime_info = server.file_mimetype(file_index)
 
     if not success then
         send_error(500, "Unable to get MIME info: " .. tostring(mime_info))
@@ -72,7 +73,8 @@ for file_index, file_params in pairs(server.uploads) do
     end
 
     -- Make a random filename for the temporary file.
-    local success, uuid62 = server.uuid62()
+    local uuid62
+    success, uuid62 = server.uuid62()
 
     if not success then
         send_error(500, "Could not generate random filename: " .. tostring(uuid62))
@@ -88,7 +90,8 @@ for file_index, file_params in pairs(server.uploads) do
     local tmp_storage_filename = uuid62 .. "." .. file_info["extension"]
     
     -- Add a subdirectory path if necessary.
-    local success, hashed_tmp_storage_filename = helper.filename_hash(tmp_storage_filename)
+    local hashed_tmp_storage_filename
+    success, hashed_tmp_storage_filename = helper.filename_hash(tmp_storage_filename)
 
     if not success then
         send_error(500, "Unable to create hashed filename: " .. tostring(hashed_tmp_storage_filename))
@@ -101,19 +104,22 @@ for file_index, file_params in pairs(server.uploads) do
     local tmp_storage_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .. '/tmp/' .. tmp_storage_filename
 
     -- Construct response data about the file that was uploaded.
+
+    local media_type = file_info["media_type"]
     local this_file_upload_data = {}
     this_file_upload_data["internalFilename"] = tmp_storage_filename
     this_file_upload_data["originalFilename"] = original_filename
     this_file_upload_data["temporaryUrl"] = tmp_storage_url
-    this_file_upload_data["fileType"] = file_info["media_type"]
+    this_file_upload_data["fileType"] = media_type
     file_upload_data[file_index] = this_file_upload_data
 
     -- Is this an image file?
-    if file_info["media_type"] == IMAGE then
+    if media_type == IMAGE then
         -- Yes. Create a new Lua image object. This reads the image into an
         -- internal in-memory representation independent of the original
         -- image format.
-        local success, uploaded_image = SipiImage.new(file_index)
+        local uploaded_image
+        success, uploaded_image = SipiImage.new(file_index)
 
         if not success then
             send_error(500, "Unable to create SipiImage: " .. tostring(uploaded_image))
@@ -123,7 +129,7 @@ for file_index, file_params in pairs(server.uploads) do
         -- Convert the image to JPEG 2000 format, saving it in a subdirectory of
         -- the temporary directory.
 
-        local success, error_msg = uploaded_image:write(tmp_storage_file_path)
+        success, error_msg = uploaded_image:write(tmp_storage_file_path)
 
         if not success then
             send_error(500, "Unable to write " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
@@ -134,7 +140,7 @@ for file_index, file_params in pairs(server.uploads) do
     else
         -- It's not an image file. Just move it to its temporary storage location.
         
-        local success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
+        success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         
         if not success then
             send_error(500, "Unable to write " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
