@@ -80,8 +80,8 @@ publish-knora-salsah1-image: build-knora-salsah1-image ## publish knora-salsah1 
 build-knora-upgrade-image: build-all-scala ## build and publish knora-upgrade docker image locally
 	docker build -t $(KNORA_UPGRADE_IMAGE) -t $(REPO_PREFIX)/$(KNORA_UPGRADE_REPO):latest -f docker/knora-upgrade.dockerfile  upgrade/target/universal
 
-.PHONY: publish-knora-upgrade
-publish-knora-upgrade: build-knora-upgrade-image ## publish knora-upgrade image to Dockerhub
+.PHONY: publish-knora-upgrade-image
+publish-knora-upgrade-image: build-knora-upgrade-image ## publish knora-upgrade image to Dockerhub
 	docker push $(KNORA_UPGRADE_IMAGE)
 
 ## knora-assets
