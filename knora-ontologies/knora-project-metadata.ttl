@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Affero General Public
 # License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-@prefix : <http://www.knora.org/ontology/knora-project-metadata#> .
+@prefix knora-metadata: <http://www.knora.org/ontology/knora-project-metadata#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
@@ -27,8 +27,566 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @base <http://www.knora.org/ontology/knora-project-metadata> .
 
+# --- Ontology metadata ---
+
 <http://www.knora.org/ontology/knora-project-metadata> rdf:type owl:Ontology ;
-
      rdfs:label "The Knora project metadata ontology"@en ;
+     knora-base:attachedToProject knora-admin:SystemProject ;
+     knora-base:ontologyVersion "Version 1.0 - 2019-10-22" ;
+     dcterms:description "Ce document définit les métadonnées utilisées pour décrire (1) des projets (de recherche), (2) des producteurs de données (i.e. des chercheurs) et (3) des données de recherche organisées sous la forme de bases de données, principalement dans le domaine des sciences humaines, sciences sociales et politiques"@fr , "This document specifies the metadata used to descrive (1) (research) projects, (2) data producers (e.g. scholars) and (3) research data organized Metadta for research projects, research data in the form of databases, mainly in the humanities, social sciences and political sciences"@en .
 
-     knora-base:attachedToProject :SystemProject .
+
+# --- Datatype properties definition ---
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasName
+
+knora-metadata:hasName rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ;
+  knora-base:subjectClassConstraint knora-metadata:Agent ;
+  rdfs:comment "An agent's name"@en , "Un nom d'agent"@fr ;
+  rdfs:label "Name"@en , "Nom"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasGivenName
+
+knora-metadata:hasGivenName rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ;
+  knora-base:subjectClassConstraint knora-metadata:Person ;
+  rdfs:comment "A person's given name"@en , "Un prÃ©nom"@fr ;
+  rdfs:label "Given name"@en , "PrÃ©nom"@fr ;
+  rdfs:subPropertyOf knora-metadata:hasName .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasFamilyName
+
+knora-metadata:hasFamilyName rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ;
+  knora-base:subjectClassConstraint knora-metadata:Person ;
+  rdfs:comment "A person's family name"@en , "Un nom de famille"@fr ;
+  rdfs:label "Family name"@en , "Nom"@fr ;
+  rdfs:subPropertyOf knora-metadata:hasName .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasAddress
+
+knora-metadata:hasAddress rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ;
+  knora-base:subjectClassConstraint knora-metadata:Agent ;
+  rdfs:comment "An agent's address"@en , "L'adresse d'un agent"@fr ;
+  rdfs:label "Address"@en , "Adresse"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasEmail
+
+knora-metadata:hasEmail rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; # Check if the `xsd` is coorect
+  knora-base:subjectClassConstraint knora-metadata:Agent ;
+  rdfs:comment "The email of an agent"@en , "L'adresse email d'un agent"@fr ;
+  rdfs:label "Contact"@en , "Contact"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasURL
+
+knora-metadata:hasURL rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:anyURI ;
+  knora-base:subjectClassConstraint knora-metadata:Organisation ;
+  rdfs:comment "The homepage of an organisation's web site"@en , "La page d'accueil du site web d'une organisation"@fr ;
+  rdfs:label "Web site"@en , "Site web"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasORCID
+
+knora-metadata:hasORCID rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:anyURI ;
+  knora-base:subjectClassConstraint knora-metadata:Person ;
+  rdfs:comment "ORCID identifier"@en , "Identifiant ORCID"@fr ;
+  rdfs:label "ORCID"@en , "ORCID"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasRole
+
+knora-metadata:organisationHasRole rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; # Maybe instead of a free text field, define a controlled vocabulary of the main role types : Enseignement supérieur et recherche (Haute école ou université) / Musée / Bibliothèque / Archive / Infrastructure de recherche / Repository
+  knora-base:subjectClassConstraint knora-metadata:Agent ;
+  rdfs:comment "An agent's role"@en , "Rôle d'un agent"@fr ;
+  rdfs:label "Role"@en , "Rôle"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasPosition
+# Will evolve with time. Will probably need to be modelled with more complexity.
+
+knora-metadata:hasPosition rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; # Maybe instead of a free text field, define a controlled vocabulary of the main role types : Enseignement supérieur et recherche (Haute école ou université) / Musée / Bibliothèque / Archive / Infrastructure de recherche / Repository
+  knora-base:subjectClassConstraint knora-metadata:Person ;
+  rdfs:comment "Provides titles, functions or status of a person"@en , "Définit les titres, fonctions ou statuts d'une personne"@fr ;
+  rdfs:label "Position"@en , "Fonction"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasStatus
+
+knora-metadata:hasStatus rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; # Should be a controlled vocabulary : updated (additionnal data to expect); archived (no additionnal data).
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Defines the current status of a database"@en , "Définit le statut d'une base de données"@fr ;
+  rdfs:label "Status"@en , "Statut"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasDescription
+
+knora-metadata:hasDescription rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; 
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Description indicating how the database was created and its role regarding the research purposes. The proeminent entities of the database and their relationship could be briefly accounted for. If relevant, the workflow of the project's data production could be described here."@en , 
+  "Description précisant le contexte de création de la base de données et son rôle dans la recherche. Les principales entités de la base de données et leurs relations peuvent être brièvement décrites. Les différentes étapes de la production des données (chaîne de travail) peuvent également être explicitées ici."@fr ;
+  rdfs:label "Description of the database "@en , "Description de la base de données"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#databaseHasTitle
+
+knora-metadata:databaseHasTitle rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; 
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Defines the name of a database, which may differ from the title of a project itself"@en , "Définit le nom d'une base de données, qui peut différer du titre du projet lui-même"@fr ;
+  rdfs:label "Database's title"@en , "Titre de la base de données"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasShortTitle
+
+knora-metadata:hasShortTitle rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; 
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Database's short title within the DaSCH framework"@en , "Titre court de la base de données dans l'écosystème du DaSCH"@fr ;
+  rdfs:label "Database's short title"@en , "Titre court de la base de données"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasStartDateUse
+
+knora-metadata:hasStartDateUse rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:date ; 
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Defines the date of entry of the first data"@en , "Définit la date de saisie des premières données"@fr ;
+  rdfs:label "Start date of use"@en , "Date de début d'utilisation"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasEndDateUse
+
+knora-metadata:hasEndDateUse rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:date ; 
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Defines the end date of data entry"@en , "Définit la date de fin de saisie des données"@fr ;
+  rdfs:label "End date of use"@en , "Date de fin d'utilisation"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasPersistentIdentifier
+
+knora-metadata:hasPersistentIdentifier rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:anyURI ; 
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Persistent identifier of a (research) project"@en , "Identifiant pérenne d'un projet de recherche"@fr ;
+  rdfs:label "Persistent identifier"@en , "Identifiant pérenne"@fr . 
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasStandardCitation
+
+knora-metadata:hasStandardCitation rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; 
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Guidelines for standard database citation : Author(s), Year, Dataset title [database] (Data provider or archive), global persistent identifier"@en , "Recommandations pour la citation standard d'une base de données: Auteur(s), année, Nom du jeu de données [base de données] (Fournisseur de données ou archive), identifiant pérenne"@fr ;
+  rdfs:label "Database citation"@en , "Citation"@fr .  
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasAccessConditions
+
+knora-metadata:hasAccessConditions rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; # Should be a controlled vocabulary listing all the possibilities: Public, Partly public, Embargoed, Confidential.
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Defines the access conditions to a (research) project database"@en , "Définit les conditions d'accès à une base de données (de recherche)"@fr ;
+  rdfs:label "Access conditions"@en , "Conditions d'accès"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasRights
+
+knora-metadata:hasRights rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; # Should be a controlled vocabulary listing all the supported licences. See : https://spdx.org/licenses/
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Provides a rights management statement for a (research) database"@en , "Définit la licence s'appliquant à la diffusion d'une base de données"@fr ;
+  rdfs:label "Rights"@en , "Licence de diffusion"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasOntology
+
+knora-metadata:hasOntology rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:anyURI ; # At some point, project-specific ontologies should be dereferenced, right?
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Provides a link to one or several ontologies that organize project data"@en , "Fournit un lien vers une ontologie ou plusieurs ontologies qui structurent les données d'un projet"@fr ;
+  rdfs:label "Ontologie(s)"@en , "Ontologie(s)"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasLanguage
+
+knora-metadata:hasLanguage rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; 
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Language(s) in use in the database of a project"@en , "Langue(s) utilisée(s) dans la base de données d'un projet"@fr ;
+  rdfs:label "Language(s)"@en , "Langue(s)"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasContact
+
+knora-metadata:hasContact rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; 
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Contact person for any questions regarding a database"@en , "Personne à contacter pour toute question concernant une base de données"@fr ;
+  rdfs:label "Contact"@en , "Contact"@fr .
+  
+# 
+# http://www.knora.org/ontology/knora-project-metadata#projectHasTitle
+
+knora-metadata:projectHasTitle rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:string ; 
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Provides the official title of a (research) project"@en , "Définit le titre officiel du projet (de recherche)"@fr ;
+  rdfs:label "Project's title"@en , "Titre du projet"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasStartDate
+
+knora-metadata:hasStartDate rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:date ; 
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Defines the start date of a (research) projet"@en , "Définit la date de début d'un projet (de recherche)"@fr ;
+  rdfs:label "Project start date"@en , "Date de début de projet"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasEndDate
+
+knora-metadata:hasEndDate rdf:type owl:DatatypeProperty ;
+  knora-base:objectDatatypeConstraint xsd:date ; 
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Defines the end date of a (research) projet"@en , "Définit la date de fin d'un projet (de recherche)"@fr ;
+  rdfs:label "Project end date"@en , "Date de fin de projet"@fr .
+  
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasFundingProgram
+
+knora-metadata:hasFundingProgram rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint xsd:string ; # Maybe a controlled vocabulary for the main funding programs?
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Program funding a (research) project"@en , "Programme finançant un projet (de recherche)"@fr ;
+  rdfs:label "Funding program"@en , "Programme de financement"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasAbstract
+
+knora-metadata:hasAbstract rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint xsd:string ; 
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "A brief descriptif of a (research) project"@en , "Brève description d'un projet (de recherche)"@fr ;
+  rdfs:label "Abstract"@en , "Résumé"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasRelevantDiscipline
+
+knora-metadata:hasRelevantDiscipline rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint xsd:string ; # Maybe a controlled vocabulary ? Look for existing vocabularies.
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Academic discipline(s) in which a (research) project is conducted"@en , "Discipline(s) dans laquelle ou dans lesquelles s'inscrit un projet (de recherche)"@fr ;
+  rdfs:label "Academic disciplines"@en , "Disciplines"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasSubjectKeywords
+
+knora-metadata:hasSubjectKeywords rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint xsd:string ; 
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Keywords defining the scope and topics of a (research) project"@en , "Mots-clés décrivant la portée et les thèmes d'un projet (de recherche)"@fr ;
+  rdfs:label "Keywords"@en , "Mots-clés"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasSpatialCoverage
+
+knora-metadata:hasSpatialCoverage rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint xsd:string ; # At some point, should we try to link to gazetteers such as TGN? (http://vocab.getty.edu/)
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Defines the present or past geographical scope of a (research) project"@en , "Définit le cadre géographique présent ou passé d'un projet (de recherche)"@fr ;
+  rdfs:label "Geographical scope"@en , "Cadre géographique"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasTemporalCoverage
+
+knora-metadata:hasTemporalCoverage rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint xsd:string ; # Should we leave it as an free text field? Answers may includes calendar dates, date ranges, chronologicals period which ranges will differs according to the geographical scope. Should we try to point to gazetteers such as Perio.do : http://perio.do/technical-overview/ ?
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Defines the chronological scope of a (research) project"@en , "Définit le cadre chronologique d'un projet (de recherche)"@fr ;
+  rdfs:label "Chronological scope"@en , "Cadre chronologique"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasRawData
+
+knora-metadata:hasRawData rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint xsd:string ; # Maybe a controlled vocabulary ?
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Provides a description of primary or source data used in a (research) project (e.g. audio files, images, digitised texts)"@en , "Fournit une description des données brutes ou des données primaires utilisées dans un projet (de recherche). Par exemple: fichiers audio, textes numérisés, images, etc."@fr ;
+  rdfs:label "Primary data"@en , "Données primaires"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasReferences
+
+knora-metadata:hasReferences rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint xsd:string ; 
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Provides a list of publications relevant to a project AND its database"@en , "Fournit une liste de publications pertinentes pour un projet et sa base de données"@fr ;
+  rdfs:label "Bibliography"@en , "Bibliographie"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasDataManagementPlan
+
+knora-metadata:hasReferences rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint xsd:anyURI ; # Could either point to an external URL as well as to a DMP uploaded as PDF in Sipi. Does it makes sense?
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Provides a link to the final version of the data management plan (DMP) of a research project"@en , "Fournit un lien vers la version finale du plan de gestion des données d'un projet de recherche"@fr ;
+  rdfs:label "Data Management Plan"@en , "Plan de gestion des données"@fr .
+
+# --- Object properties definition ---
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasMembership
+
+knora-metadata:hasMembership rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint knora-metadata:Organisation ;
+  knora-base:subjectClassConstraint knora-metadata:Person ;
+  rdfs:comment "An organisation a person is member of"@en , "Définit le rattachement institutionnel d'une personne"@fr ;
+  rdfs:label "Membership"@en , "Affiliation"@fr .
+
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasDataProvider
+
+knora-metadata:hasDataProvider rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint knora-metadata:Organisation ;
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Defines the data provider of a database"@en , "Identifie le fournisseur de données"@fr ;
+  rdfs:label "Data provider"@en , "Fournisseur de données"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasProductionContext
+
+knora-metadata:hasProductionContext rdf:type  owl:ObjectProperty ;
+  knora-base:objectClassConstraint knora-metadata:Project ;
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Defines the production context of a database (projet, projet de recherche)"@en , "Identifie le contexte de production de la base de données (projet, projet de recherche)"@fr ;
+  rdfs:label "Production context"@en , "Contexte de production"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasAuthor
+
+knora-metadata:hasAuthor rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint knora-metadata:Person ;
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Research project leader"@en , "Porteur d'un projet (de recherche)"@fr ;
+  rdfs:label "Principal investigator"@en , "Porteur de projet"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasContributor
+
+knora-metadata:hasContributor rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint knora-metadata:Person ;
+  knora-base:subjectClassConstraint knora-metadata:Database ;
+  rdfs:comment "Collaborators who have contributed to a database"@en , "Collaborateurs ayant contribué à une base de données"@fr ;
+  rdfs:label "Contributor(s)"@en , "Contributeurs"@fr .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#hasFundingAgency
+
+knora-metadata:hasFundingAgency rdf:type owl:ObjectProperty ;
+  knora-base:objectClassConstraint knora-metadata:Agent ;
+  knora-base:subjectClassConstraint knora-metadata:Project ;
+  rdfs:comment "Funding agency of a (research) project"@en , "Agence de financement du projet (de recherche)"@fr ;
+  rdfs:label "Funding agency"@en , "Agence de financement"@fr .
+
+
+# --- Classes definition ---
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#Agent
+
+knora-metadata:Agent rdf:type owl:Class ;
+  rdfs:comment "An agent, involved in the data life cycle (research data, heritage data, etc.)"@en , "Un agent intervenant dans le cycle de vie des donnÃ©es (ex.: donnÃ©es de la recherche, donnÃ©es patrimoniales, etc.)"@fr ;
+  rdfs:label "Agent"@en , "Agent"@fr ;
+  rdfs:subClassOf [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasName ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasEmail ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasAddress ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasRole ] .
+
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#Person
+
+knora-metadata:Person rdf:type owl:Class ;
+  rdfs:comment "A person involved in the research data life cycle"@en , "Une personne impliquÃ©e dans le cycle de vie des donnÃ©es"@fr ;
+  rdfs:label "Person"@en , "Personne"@fr ;
+  rdfs:subClassOf knora-metadata:Agent , 
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasGivenName ] ,
+                  [ rdf:type owl:Restriction  ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasFamilyName ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasEmail ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasAddress ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasORCID ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasMembership ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasPosition ] .
+
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#Organisation
+
+knora-metadata:Organisation rdf:type owl:Class ;
+  rdfs:comment "An organisation involved in the research data life cycle management"@en ,
+    "Une institution impliquÃ©e dans la cycle de vie des donnÃ©es"@fr ;
+  rdfs:label "Organisation"@en , "Institution"@fr ;
+  rdfs:subClassOf knora-metadata:Agent, 
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasName ] ,
+                  [ rdf:type owl:Restriction;
+                    owl:maxCardinality "1"^^xsd:nonNegativeInteger;
+                    owl:onProperty knora-metadata:hasEmail ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasAddress ] , 
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasURL ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasRole ] .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#Project
+
+knora-metadata:Project rdf:type owl:Class ;
+  rdfs:comment "A project resulting in data production (e.g.: research data, heritage data)"@en ,
+    "Un projet engagÃ© dans la production de donnÃ©es (ex.: donnÃ©es de la recherche, donnÃ©es patrimoniales, etc.)"@fr ;
+  rdfs:label "Project"@en , "Projet"@fr ;
+  rdfs:subClassOf [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:projectHasTitle ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasStartDate ] , 
+                  [ rdf:type owl:Restriction ;
+                    owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasEndDate ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasAuthor ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasFundingAgency ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasFundingProgram ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasAbstract ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasRelevantDiscipline ] ,                    
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasSubjectKeywords ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasSpatialCoverage ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasTemporalCoverage ] ,                   
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasRawData ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasReferences ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasDataManagementPlan ] .
+
+# 
+# http://www.knora.org/ontology/knora-project-metadata#Database
+
+knora-metadata:Database rdf:type owl:Class ;
+  rdfs:comment "A database that gathers research data or heritage data"@en , "Une base de donnÃ©es qui fait Ã©tat de donnÃ©es de issues de la recherche ou du domaine patrimonial"@fr ;
+  rdfs:label "Database"@en , "Base de donnÃ©es"@fr ;
+  rdfs:subClassOf [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasPersistentIdentifier ] ,  
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:databaseHasTitle ] ,
+                  [ rdf:type owl:Restriction;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger;
+                    owl:onProperty knora-metadata:hasStandardCitation ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasShortTitle ] ,  
+                  [ rdf:type owl:Restriction;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger;
+                    owl:onProperty knora-metadata:hasDescription ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasStatus ] , 
+                  [ rdf:type owl:Restriction ;
+                    owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasStartDateUse ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasEndDateUse ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasDataProvider ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasProductionContext ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasContributor ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasAccessConditions ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasRights ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasOntology ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasLanguage ] ,
+                  [ rdf:type owl:Restriction ;
+                    owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                    owl:onProperty knora-metadata:hasContact ] .                    
+
+
+
+
