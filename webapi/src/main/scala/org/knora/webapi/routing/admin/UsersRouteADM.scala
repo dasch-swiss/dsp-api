@@ -85,6 +85,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val ProjectsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectsResponse.toSmartIri)
     private val GroupsResponse = classRef(OntologyConstants.KnoraAdminV2.GroupsResponse.toSmartIri)
     private val User = classRef(OntologyConstants.KnoraAdminV2.UserClass.toSmartIri)
+    private val UpdateUserRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateUserRequest.toSmartIri)
     private val StoredUser = User.toStoredClassRef
 
     private val anythingUser1IriEnc = URLEncoder.encode(SharedTestDataADM.anythingUser1.id, "UTF-8")
@@ -332,11 +333,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     private val updateUserBasicInformationFunction: ClientFunction =
         "updateUserBasicInformation" description "Updates an existing user's basic information." params (
-            "user" description "The user to be updated." paramType StoredUser
+            "iri" description "The IRI of the user to be updated." paramType UriDatatype,
+            "userInfo" description "The user information to be updated." paramType UpdateUserRequest
             ) doThis {
             httpPut(
-                path = str("iri") / argMember("user", "id") / str("BasicUserInformation"),
-                body = Some(arg("user"))
+                path = str("iri") / arg("iri") / str("BasicUserInformation"),
+                body = Some(arg("userInfo"))
             )
         } returns UserResponse
 
@@ -390,13 +392,13 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val updateUserPasswordFunction: ClientFunction =
         "updateUserPassword" description "Updates a user's password." params(
             "iri" description "The IRI of the user to be updated." paramType UriDatatype,
-            "oldPassword" description "The user's old password." paramType StringDatatype,
-            "newPassword" description "The user's new password." paramType StringDatatype
+            "requesterPassword" description "The requesting user's current password." paramType StringDatatype,
+            "newPassword" description "The specified user's new password." paramType StringDatatype
         ) doThis {
             httpPut(
                 path = str("iri") / arg("iri") / str("Password"),
                 body = Some(json(
-                    "requesterPassword" -> arg("oldPassword"),
+                    "requesterPassword" -> arg("requesterPassword"),
                     "newPassword" -> arg("newPassword")
                 ))
             )
@@ -839,6 +841,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns GroupsResponse
     // #getUserGroupMembershipsFunction
 
+    private def getUserGroupMembershipsTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$UsersBasePathString/iri/$anythingUser1IriEnc/group-memberships") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-user-group-memberships-response"),
+            text = responseStr
+        )
+    }
+
     /**
      * API MAY CHANGE: add user to group
      */
@@ -954,6 +965,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 getUsersTestResponse,
                 createUserTestRequest,
                 getUserTestResponse,
+                getUserGroupMembershipsTestResponse,
                 updateUserTestRequest,
                 updateUserPasswordTestRequest,
                 updateUserStatusTestRequest,
