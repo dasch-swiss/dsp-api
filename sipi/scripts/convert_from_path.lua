@@ -22,14 +22,12 @@ require "file_info"
 
 local success, errmsg = server.setBuffer()
 if not success then
-    server.log("server.setBuffer() failed: " .. errmsg, server.loglevel.LOG_ERR)
-    send_error(500, "buffer could not be set correctly")
+    send_error(500, "server.setBuffer() failed: " .. errmsg)
     return
 end
 
 if server.post == nil then
     send_error(400, PARAMETERS_INCORRECT)
-
     return
 end
 
@@ -51,13 +49,12 @@ end
 local readable
 success, readable = server.fs.is_readable(sourcePath)
 if not success then
-    server.log("server.fs.is_readable() failed: " .. readable, server.loglevel.LOG_ERR)
-    send_error(500, "server.fs.is_readable() failed")
+    send_error(500, "server.fs.is_readable() failed: " .. readable)
     return
 end
 
 if not readable then
-    send_error(500, FILE_NOT_READABLE .. sourcePath)
+    send_error(400, FILE_NOT_READABLE .. sourcePath)
     return
 end
 
@@ -66,8 +63,8 @@ local mime_info
 success, mime_info = server.file_mimetype(sourcePath)
 
 if not success then
-    server.log("server.file_mimetype() failed: " .. exists, server.loglevel.LOG_ERR)
-    send_error(500, "mimetype of file could not be determined")
+    send_error(500, "server.file_mimetype() failed: " .. mime_info)
+    return
 end
 
 local mime_type = mime_info["mimetype"]
@@ -97,14 +94,14 @@ if media_type == IMAGE then
     local exists
     success, exists = server.fs.exists(projectDir)
     if not success then
-        server.log("server.fs.exists() failed: " .. exists, server.loglevel.LOG_ERR)
+        send_error(500, "server.fs.exists() failed: " .. exists)
+        return
     end
 
     if not exists then
         success, errmsg = server.fs.mkdir(projectDir, 511)
         if not success then
-            server.log("server.fs.mkdir() failed: " .. errmsg, server.loglevel.LOG_ERR)
-            send_error(500, "Project directory could not be created on server")
+            send_error(500, "server.fs.mkdir() failed: " .. errmsg)
             return
         end
     end
@@ -112,8 +109,7 @@ if media_type == IMAGE then
     local baseName
     success, baseName = server.uuid62()
     if not success then
-        server.log("server.uuid62() failed: " .. baseName, server.loglevel.LOG_ERR)
-        send_error(500, "unique name could not be created")
+        send_error(500, "server.uuid62() failed: " .. baseName)
         return
     end
 
@@ -124,14 +120,14 @@ if media_type == IMAGE then
     local fullImg
     success, fullImg = SipiImage.new(sourcePath)
     if not success then
-        server.log("SipiImage.new() failed: " .. fullImg, server.loglevel.LOG_ERR)
+        send_error(500, "SipiImage.new() failed: " .. fullImg)
         return
     end
 
     local fullDims
     success, fullDims = fullImg:dims()
     if not success then
-        server.log("fullImg:dims() failed: " .. fullDims, server.loglevel.LOG_ERR)
+        send_error(500, "fullImg:dims() failed: " .. fullDims)
         return
     end
 
@@ -143,14 +139,13 @@ if media_type == IMAGE then
     local newFilePath
     success, newFilePath = helper.filename_hash(fullImgName)
     if not success then
-        server.sendStatus(500)
-        server.log(gaga, server.loglevel.error)
-        return false
+        send_error(500, "helper.filename_hash: " .. newFilePath)
+        return
     end
 
     success, errmsg = fullImg:write(projectDir .. newFilePath)
     if not success then
-        server.log("fullImg:write() failed: " .. errmsg, server.loglevel.LOG_ERR)
+        send_error(500, "fullImg:write() failed: " .. errmsg)
         return
     end
 
@@ -177,14 +172,14 @@ elseif media_type == TEXT then
     local exists
     success, exists = server.fs.exists(projectFileDir)
     if not success then
-        server.log("server.fs.exists() failed: " .. exists, server.loglevel.LOG_ERR)
+        send_error(500, "server.fs.exists() failed: " .. exists)
+        return
     end
 
     if not exists then
         success, errmsg = server.fs.mkdir(projectFileDir, 511)
         if not success then
-            server.log("server.fs.mkdir() failed: " .. errmsg, server.loglevel.LOG_ERR)
-            send_error(500, "Project directory could not be created on server")
+            send_error(500, "server.fs.mkdir() failed: " .. errmsg)
             return
         end
     end
@@ -192,7 +187,7 @@ elseif media_type == TEXT then
     local baseName
     success, baseName = server.uuid62()
     if not success then
-        send_error(500, "Couldn't generate uuid62")
+        send_error(500, "server.uuid62() failed: " .. baseName)
         return
     end
 
@@ -216,9 +211,8 @@ elseif media_type == TEXT then
 
     local result
     success, result = server.fs.copyFile(sourcePath, filePath)
-
     if not success then
-        send_error(400, "Couldn't copy file: " .. result)
+        send_error(500, "server.fs.copyFile() failed: " .. result)
         return
     end
 

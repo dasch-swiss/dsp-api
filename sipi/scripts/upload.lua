@@ -30,7 +30,7 @@ require "util"
 local success, error_msg = server.setBuffer()
 
 if not success then
-    server.log("server.setBuffer() failed: " .. error_msg, server.loglevel.LOG_ERR)
+    send_error(500, "server.setBuffer() failed: " .. error_msg)
     return
 end
 
@@ -53,14 +53,14 @@ for file_index, file_params in pairs(server.uploads) do
     success, mime_info = server.file_mimetype(file_index)
 
     if not success then
-        send_error(500, "Unable to get MIME info: " .. tostring(mime_info))
+        send_error(500, "server.file_mimetype() failed: " .. tostring(mime_info))
         return
     end
 
     local mime_type = mime_info["mimetype"]
 
     if mime_type == nil then
-        send_error(500, "Could not determine MIME type of uploaded file")
+        send_error(400, "Could not determine MIME type of uploaded file")
         return
     end
 
@@ -77,7 +77,7 @@ for file_index, file_params in pairs(server.uploads) do
     success, uuid62 = server.uuid62()
 
     if not success then
-        send_error(500, "Could not generate random filename: " .. tostring(uuid62))
+        send_error(500, "server.uuid62() failed: " .. uuid62)
         return
     end
 
@@ -94,7 +94,7 @@ for file_index, file_params in pairs(server.uploads) do
     success, hashed_tmp_storage_filename = helper.filename_hash(tmp_storage_filename)
 
     if not success then
-        send_error(500, "Unable to create hashed filename: " .. tostring(hashed_tmp_storage_filename))
+        send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_filename))
         return
     end
 
@@ -122,7 +122,7 @@ for file_index, file_params in pairs(server.uploads) do
         success, uploaded_image = SipiImage.new(file_index)
 
         if not success then
-            send_error(500, "Unable to create SipiImage: " .. tostring(uploaded_image))
+            send_error(500, "SipiImage.new() failed: " .. tostring(uploaded_image))
             return
         end
 
@@ -132,7 +132,7 @@ for file_index, file_params in pairs(server.uploads) do
         success, error_msg = uploaded_image:write(tmp_storage_file_path)
 
         if not success then
-            send_error(500, "Unable to write " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            send_error(500, "uploaded_image:write() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
             return
         end
 
@@ -143,7 +143,7 @@ for file_index, file_params in pairs(server.uploads) do
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         
         if not success then
-            send_error(500, "Unable to write " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
             return
         end
 

@@ -35,15 +35,13 @@ for findex,fparam in pairs(server.uploads) do
     admindir = config.docroot .. '/admin/'
     local success, exists = server.fs.exists(admindir)
     if not success then
-        server.log("server.fs.exists() failed: " .. exists, server.loglevel.LOG_ERR)
-        send_error(500, "Internal server error")
+        send_error(500, "server.fs.exists() failed: " .. exists)
         return false
     end
     if not exists then
         local success, errmsg = server.fs.mkdir(admindir, 511)
         if not success then
-            server.log("server.fs.mkdir() failed: " .. errmsg, server.loglevel.LOG_ERR)
-            send_error(500, "Admin directory could not be created on server")
+            send_error(500, "server.fs.mkdir() failed: " .. errmsg)
             return false
         end
     end
@@ -55,10 +53,11 @@ for findex,fparam in pairs(server.uploads) do
     origname = fparam["origname"]:gsub("%s+", "-")
 
     adminpath =  admindir .. uuid62 .. '-' .. origname
-    local success, errmsg = server.copyTmpfile(findex, adminpath)
+    local errmsg
+    success, errmsg = server.copyTmpfile(findex, adminpath)
     if not success then
         server.log(errmsg, server.loglevel.error)
-        send_error(500, "Couldn't upload file: " .. result)
+        send_error(500, )
         return false
     else
         files[findex] = uuid62 .. '-' .. origname

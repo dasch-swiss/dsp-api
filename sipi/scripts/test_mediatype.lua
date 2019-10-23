@@ -71,8 +71,7 @@ local mediatype_test_data = {
 success, errmsg = server.setBuffer()
 
 if not success then
-    server.log("server.setBuffer() failed: " .. errmsg, server.loglevel.LOG_ERR)
-    send_error(500, "buffer could not be set correctly")
+    send_error(500, "server.setBuffer() failed: " .. errmsg)
     return
 end
 

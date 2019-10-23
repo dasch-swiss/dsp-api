@@ -29,18 +29,19 @@ end
 -- check if temporary directory is available, if not, create it.
 --
 local tmpDir = config.imgroot .. '/tmp/'
+
 local success, exists = server.fs.exists(tmpDir)
 if not success then
-    send_error(500, "Internal server error: " .. exists)
-    return -1
+    send_error(500, "server.fs.exists() failed: " .. exists)
+    return
 end
+
 if not exists then
-    local success, result = server.fs.mkdir(tmpDir, 511)
+    local result
+    success, result = server.fs.mkdir(tmpDir, 511)
     if not success then
-        local errorMsg = "Could not create tmpDir: " .. tmpDir .. " , result: " .. result
-        send_error(500, errorMsg)
-        server.log(errorMsg, server.loglevel.LOG_ERR)
-        return -1
+        send_error(500, "server.fs.mkdir() failed: " .. result)
+        return
     end
 end
 
@@ -48,18 +49,18 @@ end
 -- check if thumbs directory is available, if not, create it.
 --
 local thumbsDir = config.imgroot .. '/thumbs/'
-local success, exists = server.fs.exists(thumbsDir)
+
+success, exists = server.fs.exists(thumbsDir)
 if not success then
-    send_error(500, "Internal server error: " .. exists)
-    return -1
+    send_error(500, "server.fs.exists() failed: " .. exists)
+    return
 end
 if not exists then
-    local success, result = server.fs.mkdir(thumbsDir, 511)
+    local result
+    success, result = server.fs.mkdir(thumbsDir, 511)
     if not success then
-        local errorMsg = "Could not create thumbsDir: " .. thumbsDir .. " , result: " .. result
-        send_error(500, errorMsg)
-        server.log(errorMsg, server.loglevel.LOG_ERR)
-        return -1
+        send_error(500, "server.fs.mkdir() failed: " .. result)
+        return
     end
 end
 
@@ -68,7 +69,7 @@ end
 --
 if server.uploads == nil then
     send_error(400, "no image uploaded")
-    return -1
+    return
 end
 
 for imgindex, imgparam in pairs(server.uploads) do
@@ -78,53 +79,55 @@ for imgindex, imgparam in pairs(server.uploads) do
     --
 
     -- create tmp name
-    local success, tmpName = server.uuid62()
+    local tmpName
+    success, tmpName = server.uuid62()
     if not success then
-        send_error(500, "Couldn't generate uuid62!")
-        return -1
+        send_error(500, "server.uuid62() failed: " .. tmpName)
+        return
     end
-    
-    local success, hashed_tmpName = helper.filename_hash(tmpName)
+
+    local hashed_tmpName
+    success, hashed_tmpName = helper.filename_hash(tmpName)
 
     if not success then
-        send_error(500, hashed_tmpName)
+        send_error(500, "helper.filename_hash() failed: " .. hashed_tmpName)
         return
     end
 
     local tmpPath =  tmpDir .. hashed_tmpName
 
-    local success, result = server.copyTmpfile(imgindex, tmpPath)
+    local result
+    success, result = server.copyTmpfile(imgindex, tmpPath)
     if not success then
-        local errorMsg = "Couldn't copy uploaded file to tmp path: " .. tmpPath .. ", result: " .. result
-        send_error(500, errorMsg)
-        server.log(errorMsg, server.loglevel.LOG_ERR)
-        return -1
+        send_error(500, "server.copyTmpfile() failed: " .. result)
+        return
     end
 
 
     --
     -- create a thumnail sized SipiImage
     --
-    local success, thumbImg = SipiImage.new(tmpPath, {size = config.thumb_size})
+    local thumbImg
+    success, thumbImg = SipiImage.new(tmpPath, {size = config.thumb_size})
     if not success then
-        local errorMsg = "Couldn't create thumbnail for path: " .. tmpPath  .. ", result: " .. tostring(thumbImg)
-        send_error(500, errorMsg)
-        server.log(errorMsg, server.loglevel.LOG_ERR)
-        return -1
+        send_error(500, "SipiImage.new() failed: " .. thumbImg)
+        return
     end
 
     local filename = imgparam["origname"]
-    local success, submitted_mimetype = server.parse_mimetype(imgparam["mimetype"])
+    local submitted_mimetype
+    success, submitted_mimetype = server.parse_mimetype(imgparam["mimetype"])
 
     if not success then
         send_error(400, "Couldn't parse mimetype: " .. imgparam["mimetype"])
-        return -1
+        return
     end
 
-    local success, check = thumbImg:mimetype_consistency(submitted_mimetype.mimetype, filename)
+    local check
+    success, check = thumbImg:mimetype_consistency(submitted_mimetype.mimetype, filename)
     if not success then
-        send_error(500, "Couldn't check mimteype consistency: " .. check)
-        return -1
+        send_error(500, "thumbImg:mimetype_consistency() failed: " .. check)
+        return
     end
 
     --
@@ -139,27 +142,26 @@ for imgindex, imgparam in pairs(server.uploads) do
     --
     -- get the dimensions
     --
-    local success, dims = thumbImg:dims()
+    local dims
+    success, dims = thumbImg:dims()
     if not success then
-        send_error(500, "Couldn't get image dimensions: " .. dims)
-        return -1
+        send_error(500, "thumbImg:dims() failed: " .. dims)
+        return
     end
 
 
     --
     -- write the thumbnail file
     --
-    thumbName = tmpName .. ".jpg"
-    thumbPath = thumbsDir .. thumbName
+    local thumbName = tmpName .. ".jpg"
+    local thumbPath = thumbsDir .. thumbName
 
     server.log("thumbnail path: " .. thumbPath, server.loglevel.LOG_DEBUG)
 
-    local success, result = thumbImg:write(thumbPath)
+    success, result = thumbImg:write(thumbPath)
     if not success then
-        local errorMsg = "Couldn't create thumbnail for path: " .. tostring(thumbPath) .. ", result: " .. tostring(result)
-        send_error(500, errorMsg)
-        server.log(errorMsg , server.loglevel.LOG_ERR)
-        return -1
+        send_error(500, "thumbImg:write() failed: " .. result)
+        return
     end
 
     -- #snip_marker
