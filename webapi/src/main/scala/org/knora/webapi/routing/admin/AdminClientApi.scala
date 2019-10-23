@@ -81,7 +81,6 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
             OntologyConstants.KnoraAdminV2.ProjectProperty
         ),
         OntologyConstants.KnoraAdminV2.ProjectClass ->  Set(
-            OntologyConstants.KnoraAdminV2.Members,
             OntologyConstants.KnoraAdminV2.Ontologies
         )
     ).map {
@@ -109,7 +108,7 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     /**
      * A set of property IRIs that are used for the unique IDs of objects.
      */
-    val idProperties: Set[SmartIri] = Set(
+    override val idProperties: Set[SmartIri] = Set(
         OntologyConstants.KnoraAdminV2.ID,
         OntologyConstants.KnoraAdminV2.Iri
     ).map(_.toSmartIri)
