@@ -17,3 +17,5 @@ scala_binary(
     ],
     main_class = "org.knora.webapi.Main"
 )
+
+

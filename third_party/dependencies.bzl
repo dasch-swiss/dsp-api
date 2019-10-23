@@ -1,47 +1,39 @@
-load("@rules_jvm_external//:defs.bzl", "maven_install")
-
 """ Maven dependencies loaded into the workspace """
 
-_scalaVersion = "2.12.8"
-_akkaVersion = "2.5.26"
-_akkaHttpVersion = "10.1.7"
-_jenaVersion = "3.4.0"
-_metricsVersion = "4.0.1"
-_sipiImage = "dhlabbasel/sipi:v2.0.1"
-_gdbSEImage = "ontotext/graphdb:8.5.0-se"
-_gdbFreeImage = "dhlabbasel/graphdb:8.10.0-free"
-
-#
 # docs for rules_jvm_external: https://github.com/bazelbuild/rules_jvm_external
-#
+load("@rules_jvm_external//:defs.bzl", "maven_install")
+
+load("//third_party:versions.bzl", "AKKA_VERSION", "AKKA_HTTP_VERSION", "JENA_VERSION")
+
 def dependencies():
     #
-    # to reference use: @maven//com_typesafe_akka_akka_actor_2_12
+    # e.g., to reference use: @maven//com_typesafe_akka_akka_actor_2_12
     #
     # ATTENTION: Transitive dependencies need to be explicitly added
     # to query: bazel query @maven//:all --output=build
+    # or: bazel query @maven//:all | sort
     #
     maven_install(
         artifacts = [
             # akka
-            "com.typesafe.akka:akka-actor_2.12:%s" % (_akkaVersion),
-            "com.typesafe.akka:akka-agent_2.12:%s" % (_akkaVersion),
-            "com.typesafe.akka:akka-stream_2.12:%s" % (_akkaVersion),
-            "com.typesafe.akka:akka-slf4j_2.12:%s" % (_akkaVersion),
+            "com.typesafe.akka:akka-actor_2.12:%s" % (AKKA_VERSION),
+            "com.typesafe.akka:akka-agent_2.12:%s" % (AKKA_VERSION),
+            "com.typesafe.akka:akka-stream_2.12:%s" % (AKKA_VERSION),
+            "com.typesafe.akka:akka-slf4j_2.12:%s" % (AKKA_VERSION),
 
             # akka http
-            "com.typesafe.akka:akka-http_2.12:%s" % (_akkaHttpVersion),
-            "com.typesafe.akka:akka-http-xml_2.12:%s" % (_akkaHttpVersion),
-            "com.typesafe.akka:akka-http-spray-json_2.12:%s" % (_akkaHttpVersion),
-            "com.typesafe.akka:akka-http-jackson_2.12:%s" % (_akkaHttpVersion),
+            "com.typesafe.akka:akka-http_2.12:%s" % (AKKA_HTTP_VERSION),
+            "com.typesafe.akka:akka-http-xml_2.12:%s" % (AKKA_HTTP_VERSION),
+            "com.typesafe.akka:akka-http-spray-json_2.12:%s" % (AKKA_HTTP_VERSION),
+            "com.typesafe.akka:akka-http-jackson_2.12:%s" % (AKKA_HTTP_VERSION),
             "com.typesafe:config:1.3.3",
 
             # CORS support
             "ch.megard:akka-http-cors_2.12:0.3.4",
 
             # Jena
-            "org.apache.jena:apache-jena-libs:%s" % (_jenaVersion),
-            "org.apache.jena:jena-text:%s" % (_jenaVersion),
+            "org.apache.jena:apache-jena-libs:%s" % (JENA_VERSION),
+            "org.apache.jena:jena-text:%s" % (JENA_VERSION),
 
             # Logging
             "commons-logging:commons-logging:1.2",
@@ -115,9 +107,9 @@ def dependencies():
             "org.scala-lang.modules:scala-xml_2.12:1.2.0",
 
             # testing
-            "com.typesafe.akka:akka-testkit_2.12:%s" % (_akkaVersion),
-            "com.typesafe.akka:akka-stream-testkit_2.12:%s" % (_akkaVersion),
-            "com.typesafe.akka:akka-http-testkit_2.12:%s" % (_akkaHttpVersion),
+            "com.typesafe.akka:akka-testkit_2.12:%s" % (AKKA_VERSION),
+            "com.typesafe.akka:akka-stream-testkit_2.12:%s" % (AKKA_VERSION),
+            "com.typesafe.akka:akka-http-testkit_2.12:%s" % (AKKA_HTTP_VERSION),
             "org.scalatest:scalatest_2.12:3.0.4",
             "io.gatling.highcharts:gatling-charts-highcharts:3.2.1",
             "io.gatling:gatling-test-framework:3.2.1",
