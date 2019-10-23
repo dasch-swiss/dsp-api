@@ -82,6 +82,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     private val MembersResponse = classRef(OntologyConstants.KnoraAdminV2.MembersResponse.toSmartIri)
     private val StoredGroup = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri).toStoredClassRef
     private val CreateGroupRequest = classRef(OntologyConstants.KnoraAdminV2.CreateGroupRequest.toSmartIri)
+    private val UpdateGroupRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateGroupRequest.toSmartIri)
 
     private val groupIri = SharedTestDataADM.imagesReviewerGroup.id
     private val groupIriEnc = java.net.URLEncoder.encode(groupIri, "utf-8")
@@ -247,11 +248,12 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
     private val updateGroupFunction: ClientFunction =
         "updateGroup" description "Updates a group." params (
-            "group" description "The group to be updated." paramType StoredGroup
+            "iri" description "The IRI of the group to be updated." paramType UriDatatype,
+            "groupInfo" description "The group information to be updated." paramType UpdateGroupRequest
             ) doThis {
             httpPut(
-                path = argMember("group", "id"),
-                body = Some(arg("group"))
+                path = arg("iri"),
+                body = Some(arg("groupInfo"))
             )
         } returns GroupResponse
 
@@ -308,11 +310,14 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
     private val changeGroupStatusFunction: ClientFunction =
         "updateGroupStatus" description "Updates the status of a group." params (
-            "group" description "The group to be updated." paramType StoredGroup
+            "iri" description "The IRI of the group to be updated." paramType UriDatatype,
+            "status" description "The new status of the group." paramType BooleanDatatype
             ) doThis {
             httpPut(
-                path = argMember("group", "id") / str("status"),
-                body = Some(arg("group"))
+                path = arg("iri") / str("status"),
+                body = Some(json(
+                    "status" -> arg("status")
+                ))
             )
         } returns GroupResponse
 
