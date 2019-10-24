@@ -55,6 +55,14 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
             assert(rootUser.ofType(UserInformationTypeADM.RESTRICTED) === rootUserRestricted)
         }
 
+        "return true if user is ProjectAdmin in any project " in {
+            assert(SharedTestDataADM.anythingAdminUser.permissions.isProjectAdminInAnyProject() === true, "user is not ProjectAdmin in any of his projects")
+        }
+
+        "return false if user is not ProjectAdmin in any project " in {
+            assert(SharedTestDataADM.anythingUser1.permissions.isProjectAdminInAnyProject() === false, "user is ProjectAdmin in one of his projects")
+        }
+
         "allow checking the SCrypt passwords" in {
             val encoder = new SCryptPasswordEncoder()
             val hp = encoder.encode("123456")

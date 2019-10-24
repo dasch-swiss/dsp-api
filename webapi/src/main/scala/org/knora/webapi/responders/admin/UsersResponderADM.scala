@@ -88,8 +88,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         for {
             _ <- Future(
-                if (!requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser) {
-                    throw ForbiddenException("SystemAdmin permissions are required.")
+                if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdminInAnyProject() && !requestingUser.isSystemUser) {
+                    throw ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")
                 }
             )
 
