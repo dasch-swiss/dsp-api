@@ -102,7 +102,7 @@ The `$ make stack-up` target can be additonally configured thorugh the following
 ```
 KNORA_GDB_LICENSE - sets the path to the GraphDB-SE license
 KNORA_GDB_IMPORT - sets the path to the import directory accessible from inside the GraphDB Workbench
-KNORA_GDB_DATA - sets the path to the folder where GraphDB will store the database files
+KNORA_GDB_HOME - sets the path to the folder where GraphDB will store the database files
 ```
 
 Some or all environment variables can be set, as required. If the license file is not set, then GraphDB-Free will be
