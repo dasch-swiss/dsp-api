@@ -22,15 +22,10 @@ package org.knora.webapi.routing
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
-import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.messages.app.appmessages.AppState.AppState
-import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
 import spray.json.{JsObject, JsString}
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
-
 
 import org.knora.webapi.BuildInfo
 
