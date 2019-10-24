@@ -1,16 +1,15 @@
 package(default_visibility = ["//visibility:public"])
 
-filegroup(
-    name = "lib",
-    srcs = glob([
-        "lib/**",
-    ]),
+scala_binary(
+    name = "app1",
+    deps = [":library"],
+    main_class = "org.knora.salsah.Main"
 )
 
 scala_library(
-    name = "salsah1",
+    name = "library",
     srcs = ["//salsah1/src/main:scala"],
-    resources = ["//salsah1/src/main:resources"],
+    resources = ["//salsah1/src/main/resources:resources"],
     deps = [
         "@maven//:cglib_cglib_nodep",
         "@maven//:ch_megard_akka_http_cors_2_12",
@@ -311,6 +310,13 @@ scala_library(
         "@maven//:xerces_xercesImpl",
         "@maven//:xml_apis_xml_apis",
     ],
+)
+
+filegroup(
+    name = "chrome_lib",
+    srcs = glob([
+        "lib/**",
+    ]),
 )
 
 filegroup(

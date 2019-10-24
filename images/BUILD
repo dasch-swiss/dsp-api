@@ -1,39 +1,38 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_docker//container:container.bzl", "container_image")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_layer")
+
+container_layer(
+    name = "bash_layer",
+    debs = ["bash"]
+
+)
 
 container_image(
-    name = "app1",
-    base = "@adoptopenjdk11//image",
+    name = "knora-app1",
+    base = "@openjdk11//image",
     # cmd = [""],
     entrypoint = [
-        "/webapi/bin/webapi",
+        "/salsah1/app1",
     ],
     env = {
-        "envVar": "My environment variable",
-        "xyz": "321",
+        "LANG": "en_US.UTF-8",
+        "JAVA_OPTS": "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8",
+        "KNORA_SALSAH1_DEPLOYED": "true",
+        "KNORA_SALSAH1_WORKDIR": "/salsah1"
     },
+    directory = "salsah1",
     files = [
-        "//extended/image_data:Data_file.txt",
-        "//extended/image_data:More_data.txt",
-        "//extended/image_data:file_to_copy.txt",
+        "//salsah1:app1",
+        "//salsah1/src:public",
     ],
     labels = {
-        "desc": "Description for version 7.7",
-        "version": "7.7",
+        "MAINTAINER": "400790+subotic@users.noreply.github.com",
     },
     ports = [
-        "8080/tcp",
-        "9876/udp",
+        "3335/tcp",
     ],
-    symlinks = {
-        "/usr/More_data.txt": "/More_data.txt",
-    },
-    tars = ["//extended/image_data:tarfile.tar"],
-    volumes = [
-        "/myVol1",
-        "/usr/myVol2",
-    ],
+    layers = [":bash_layer"]
 )
 
 #

@@ -3,11 +3,6 @@ package(default_visibility = ["//visibility:public"])
 load("@io_bazel_rules_twirl//twirl:twirl.bzl", "twirl_templates")
 
 filegroup(
-    name = "resources",
-    srcs = glob(["resources/**"]),
-)
-
-filegroup(
     name = "scala",
     srcs = glob(["scala/org/knora/webapi/**/*.scala"])
 )

@@ -1,9 +1,15 @@
 package(default_visibility = ["//visibility:public"])
 
+scala_binary(
+    name = "api",
+    deps = [":webapi_library"],
+    main_class = "org.knora.webapi.Main"
+)
+
 scala_library(
-    name = "webapi",
+    name = "webapi_library",
     srcs = ["//webapi/src/main:scala", "//webapi/src/main:twirl-templates"],
-    resources = ["//webapi/src/main:resources"],
+    resources = ["//webapi/src/main/resources:resources"],
     deps = [
         "//tools/buildstamp:build_info_jar",
         "@maven//:cglib_cglib_nodep",
