@@ -34,7 +34,10 @@ case class VersionCheckResult(name: String,
                               webapi: String,
                               scala: String,
                               sbt: String,
-                              akkaHttp: String)
+                              akkaHttp: String,
+                              sipi: String,
+                              gdbSE: String,
+                              gdbFree: String)
 
 /**
   * Provides version check logic
@@ -61,19 +64,29 @@ trait VersionCheck {
                     "webapi" -> JsString(result.webapi),
                     "scala" -> JsString(result.scala),
                     "sbt" -> JsString(result.sbt),
-                    "akkaHttp" -> JsString(result.akkaHttp)
+                    "akkaHttp" -> JsString(result.akkaHttp),
+                    "sipi" -> JsString(result.sipi),
+                    "gdbSE" -> JsString(result.gdbSE),
+                    "gdbFree" -> JsString(result.gdbFree)
                 ).compactPrint
             )
         )
     }
 
     private def getVersion() = {
+        val sipiVersion = BuildInfo.sipi
+        val gdbSEVersion = BuildInfo.gdbSE
+        val gdbFreeVersion = BuildInfo.gdbFree
+
         VersionCheckResult(
             name = "version",
             webapi = BuildInfo.version,
             scala = BuildInfo.scalaVersion,
             sbt = BuildInfo.sbtVersion,
-            akkaHttp = BuildInfo.akkaHttp
+            akkaHttp = BuildInfo.akkaHttp,
+            sipi = sipiVersion.substring(sipiVersion.indexOf(':')+1),
+            gdbSE = gdbSEVersion.substring(gdbSEVersion.indexOf(':')+1),
+            gdbFree = gdbFreeVersion.substring(gdbFreeVersion.indexOf(':')+1)
         )
     }
 }
