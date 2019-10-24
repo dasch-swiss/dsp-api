@@ -49,13 +49,10 @@ trait VersionCheck {
 
     override implicit val timeout: Timeout = 1.second
 
-    protected def versionCheck(): Future[HttpResponse] = for {
-
-        state <- (applicationStateActor ? GetAppState()).mapTo[AppState]
-
-        result = getVersion()
-        response = createResponse(result)
-    } yield response
+    protected def versionCheck() = {
+        val result = getVersion()
+        createResponse(result)
+    }
 
 
 
