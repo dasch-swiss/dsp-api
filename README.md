@@ -95,6 +95,19 @@ $ make init-knora-test-unit-free
 $ make normal-tests
 ```
 
+### Running with GraphDB License and Custom Folders
+
+The `$ make stack-up` target can be additonally configured thorugh the following environment variables:
+
+```
+KNORA_GDB_LICENSE - sets the path to the GraphDB-SE license
+KNORA_GDB_IMPORT - sets the path to the import directory accessible from inside the GraphDB Workbench
+KNORA_GDB_DATA - sets the path to folder where GraphDB will store the database files
+```
+
+Some or all environment variables can be set, as required. If the license file is not set, then GraphDB-Free will be
+started. If the import and/or data directories are not set, then Docker volumes will be used instead.
+
 ## How to Contribute
 
 You can help by testing Knora with your data, making bug reports, improving the documentation, and adding features that you need.
