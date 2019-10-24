@@ -45,6 +45,18 @@ http_archive(
     sha256 = "2ef429f5d7ce7111263289644d233707dba35e39696377ebab8b0bc701f7818e",
 )
 
+# rules_pkg - basic packaging rules
+rules_package_version="0.2.4"
+rules_package_version_sha256="4ba8f4ab0ff85f2484287ab06c0d871dcb31cc54d439457d28fd4ae14b18450a"
+http_archive(
+    name = "rules_pkg",
+    url = "https://github.com/bazelbuild/rules_pkg/releases/download/%s/rules_pkg-%s.tar.gz" % (rules_package_version, rules_package_version),
+    sha256 = rules_package_version_sha256
+)
+
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+rules_pkg_dependencies()
+
 # used for maven dependency resolution in the third_party sub-folder
 rules_jvm_external_version = "2.8"
 rules_jvm_external_version_sha256 = "79c9850690d7614ecdb72d68394f994fef7534b292c4867ce5e7dec0aa7bdfad"
@@ -65,7 +77,9 @@ dependencies()
 load("@maven//:defs.bzl", "pinned_maven_install")
 pinned_maven_install()
 
+#
 # add rules_twirl (needed to compile twirl templates)
+#
 rules_twirl_version = "105c51e4884d56805e51b36d38fb2113b0381a6d"
 rules_twirl_version_sha256 = "c89d8460d236ec7d3c2544a72f17d21c4855da0eb79556c9dbdc95938c411057"
 http_archive(
@@ -82,3 +96,35 @@ twirl_repositories()
 load("@twirl//:defs.bzl", twirl_pinned_maven_install = "pinned_maven_install")
 twirl_pinned_maven_install()
 
+#
+# Download the rules_docker repository at release v0.12.0
+#
+rules_docker_version="0.12.0"
+rules_docker_version_sha256="413bb1ec0895a8d3249a01edf24b82fd06af3c8633c9fb833a0cb1d4b234d46d"
+http_archive(
+    name = "io_bazel_rules_docker",
+    sha256 = rules_docker_version_sha256,
+    strip_prefix = "rules_docker-%s" % rules_docker_version,
+    url = "https://github.com/bazelbuild/rules_docker/releases/download/v%s/rules_docker-v%s.tar.gz" % (rules_docker_version, rules_docker_version),
+)
+
+# load rules_docker
+load(
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
+    container_repositories = "repositories",
+)
+
+container_repositories()
+
+# load container_pull method
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_pull"
+)
+
+container_pull(
+    name = "openjdk11",
+    registry = "index.docker.io",
+    repository = "adoptopenjdk/openjdk11",
+    tag = "alpine-jre",
+)

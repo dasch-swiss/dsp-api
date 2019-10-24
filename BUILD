@@ -5,7 +5,7 @@ scala_binary(
     ],
     data = [
         "//salsah1:lib",
-        "//salsah1:public",
+        "//salsah1/src:public",
     ],
     main_class = "org.knora.salsah.Main"
 )

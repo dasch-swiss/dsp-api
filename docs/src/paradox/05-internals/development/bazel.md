@@ -41,3 +41,32 @@ $ bazel run //:api
 $ bazel test //...
 ```
 
+## Build Structure
+
+The Bazel build is defined in a number of files:
+  - WORKSPACE - here are external dependencies defined
+  - BUILD - there are a number of BUILD files throughout the directory structure
+    where each represents a separate package responsible for everything underneath.
+  - *.bzl - custom extensions loaded and used in BUILD files
+
+For a more detailed discussion, please see the [Concepts and Terminology](https://docs.bazel.build/versions/master/build-ref.html)
+section in the Bazel documentation.
+
+### Directory Structure
+
+```
+WORKSPACE - external dependencies
+.bazel.rc - config
+|__ docs - build definitios and sources
+|__ images - build definitions for container images
+|__ knora-ontologies - build definitions and source
+|__ salsah1 - build definitions and source
+|__ sipi - build definitions and source
+|__ third_party - build definitions for third party maven dependencies
+|__ tools - build definitions 
+   |__ build_rules - bazel config
+   |__ buildstamp - stamping (generation of BuildInfo.scala)
+|__ travis - travis secrets
+|__ upgrade - build definitions and sources
+|__ webapi - build definitions and sources
+```

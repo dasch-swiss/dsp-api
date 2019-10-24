@@ -7,24 +7,10 @@ filegroup(
     ]),
 )
 
-filegroup(
-    name = "resources",
-    srcs = glob([
-        "src/main/resources/**",
-    ]),
-)
-
-filegroup(
-    name = "public",
-    srcs = glob([
-       "src/public/**",
-   ]),
-)
-
 scala_library(
     name = "salsah1",
-    srcs = glob(["src/main/scala/org/knora/salsah/**/*.scala"]),
-    resources = [":resources"],
+    srcs = ["//salsah1/src/main:scala"],
+    resources = ["//salsah1/src/main:resources"],
     deps = [
         "@maven//:cglib_cglib_nodep",
         "@maven//:ch_megard_akka_http_cors_2_12",
