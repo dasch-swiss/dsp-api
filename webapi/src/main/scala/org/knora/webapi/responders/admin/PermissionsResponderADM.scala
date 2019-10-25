@@ -26,11 +26,10 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.admin.PermissionsResponderADM._
 import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
@@ -61,7 +60,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
         case AdministrativePermissionCreateADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateADM(newAdministrativePermission, requestingUser)
         case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID)
-        //case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, requestingUser) => deleteAdministrativePermissionV1(administrativePermissionIri, requestingUser)
+        case AdministrativePermissionDeleteRequestADM(administrativePermissionIri, requestingUser, apiRequestID) => deleteAdministrativePermissionADM(administrativePermissionIri, requestingUser)
         case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
         case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
         case DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser) => defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser)
@@ -615,9 +614,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
     }
 
-    /*
-        private def deleteAdministrativePermission(administrativePermissionIri: IRI, requestingUser: UserADM): Future[AdministrativePermissionOperationResponseADM] = ???
-    */
+    private def deleteAdministrativePermissionADM(administrativePermissionIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[AdministrativePermissionOperationResponseADM] = ???
 
     ///////////////////////////////////////////////////////////////////////////
     // OBJECT ACCESS PERMISSIONS

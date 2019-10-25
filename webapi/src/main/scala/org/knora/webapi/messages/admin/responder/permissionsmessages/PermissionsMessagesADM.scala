@@ -50,17 +50,19 @@ case class PermissionDataGetADM(projectIris: Seq[IRI],
                                 requestingUser: UserADM
                                ) extends PermissionsResponderRequestADM
 
-/**
-  * A message that requests the creation of permissions (administrative and default) for a certain project
-  * based on a predefined template. These permissions can be applied to a newly created or an exesting project.
-  * In the case of an existing project, this operation behaves destructive, in the sense that all existing permissions
-  * attached to a project are deleted, before any new permissions are created.
-  *
-  * param projectIri          the IRI of the project.
-  * param permissionsTemplate the permissions template.
-  */
-//case class TemplatePermissionsCreateRequestV1(projectIri: IRI, permissionsTemplate: PermissionsTemplate, userProfileV1: UserProfileV1) extends PermissionsResponderRequestV1
 
+/**
+  * A message that requests a single permission. Response can be either a
+  * [[AdministrativePermissionADM]] or a [[DefaultObjectAccessPermissionADM]].
+  *
+  * @param permissionIri  the permission IRI.
+  * @param requestingUser the user initiation the request.
+  * @param apiRequestID   the API request ID.
+  */
+case class PermissionsGetRequestADM(permissionIri: IRI,
+                                    requestingUser: UserADM,
+                                    apiRequestID: UUID
+                                   ) extends PermissionsResponderRequestADM
 
 // Administrative Permissions
 
@@ -70,8 +72,12 @@ case class PermissionDataGetADM(projectIris: Seq[IRI],
   *
   * @param projectIri     the project for which the administrative permissions are queried.
   * @param requestingUser the user initiation the request.
+  * @param apiRequestID   the API request ID.
   */
-case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI,
+                                                            requestingUser: UserADM,
+                                                            apiRequestID: UUID
+                                                           ) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests an administrative permission object identified through his IRI.
@@ -90,7 +96,9 @@ case class AdministrativePermissionForIriGetRequestADM(administrativePermissionI
   * @param groupIri       the group.
   * @param requestingUser the user initiating the request.
   */
-case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI,
+                                                         groupIri: IRI,
+                                                         requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests an administrative permission object identified by project and group.
@@ -180,8 +188,12 @@ case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: 
   *
   * @param projectIri     the project for which the default object access permissions are queried.
   * @param requestingUser the user initiating this request.
+  * @param apiRequestID                the API request ID.
   */
-case class DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri: IRI,
+                                                                 requestingUser: UserADM,
+                                                                 apiRequestID: UUID
+                                                                ) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests an object access permission identified by project and either group / resource class / property.
@@ -192,7 +204,11 @@ case class DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri: IRI
   * @param resourceClassIRI the resource class.
   * @param propertyIRI      the property.
   */
-case class DefaultObjectAccessPermissionGetADM(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIRI: Option[IRI], propertyIRI: Option[IRI], requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class DefaultObjectAccessPermissionGetADM(projectIRI: IRI,
+                                               groupIRI: Option[IRI],
+                                               resourceClassIRI: Option[IRI],
+                                               propertyIRI: Option[IRI],
+                                               requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests an object access permission identified by project and either group / resource class / property.
@@ -204,7 +220,12 @@ case class DefaultObjectAccessPermissionGetADM(projectIRI: IRI, groupIRI: Option
   * @param propertyIRI      the property.
   * @param requestingUser   the user initiating this request.
   */
-case class DefaultObjectAccessPermissionGetRequestADM(projectIRI: IRI, groupIRI: Option[IRI], resourceClassIRI: Option[IRI], propertyIRI: Option[IRI], requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class DefaultObjectAccessPermissionGetRequestADM(projectIRI: IRI,
+                                                      groupIRI: Option[IRI],
+                                                      resourceClassIRI: Option[IRI],
+                                                      propertyIRI: Option[IRI],
+                                                      requestingUser: UserADM
+                                                     ) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests a default object access permission object identified through his IRI.
@@ -213,49 +234,85 @@ case class DefaultObjectAccessPermissionGetRequestADM(projectIRI: IRI, groupIRI:
   * @param defaultObjectAccessPermissionIri the iri of the default object access permission object.
   * @param requestingUser                   the user initiation the request.
   */
-case class DefaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class DefaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri: IRI,
+                                                            requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 
 /**
-  * A message that requests the default object access permissions string for a resource class inside a specific project. A successful response will be a
+  * A message that requests the default object access permissions string for a
+  * resource class inside a specific project. A successful response will be a
   * [[DefaultObjectAccessPermissionsStringResponseADM]].
   *
-  * @param projectIri       the project for which the default object permissions need to be retrieved.
-  * @param resourceClassIri the resource class which can also cary default object access permissions.
+  * @param projectIri       the project for which the default object permissions
+  *                         need to be retrieved.
+  * @param resourceClassIri the resource class which can also cary default object
+  *                         access permissions.
+  * @param targetUser       the user for whom we calculate the permission
+  * @param requestingUser   the requesting user.
   */
-case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri: IRI, resourceClassIri: IRI, targetUser: UserADM, requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri: IRI,
+                                                                      resourceClassIri: IRI,
+                                                                      targetUser: UserADM,
+                                                                      requestingUser: UserADM
+                                                                     ) extends PermissionsResponderRequestADM
 
 /**
-  * A message that requests default object access permissions for a resource class / property combination inside a specific project. A successful response will be a
+  * A message that requests default object access permissions for a resource
+  * class / property combination inside a specific project. A successful response
+  * will be a
   * [[DefaultObjectAccessPermissionsStringResponseADM]].
   *
-  * @param projectIri       the project for which the default object permissions need to be retrieved.
-  * @param resourceClassIri the resource class which can also cary default object access permissions.
-  * @param propertyIri      the property type which can also cary default object access permissions.
+  * @param projectIri       the project for which the default object permissions
+  *                         need to be retrieved.
+  * @param resourceClassIri the resource class which can also cary default object
+  *                         access permissions.
+  * @param propertyIri      the property type which can also cary default object
+  *                         access permissions.
+  * @param targetUser       the user for whom we calculate the permission
+  * @param requestingUser   the requesting user.
   */
-case class DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI, targetUser: UserADM, requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri: IRI,
+                                                                 resourceClassIri: IRI,
+                                                                 propertyIri: IRI,
+                                                                 targetUser: UserADM,
+                                                                 requestingUser: UserADM
+                                                                ) extends PermissionsResponderRequestADM
 
 /**
   * Create a single [[DefaultObjectAccessPermissionADM]].
   *
-  * @param newDefaultObjectAccessPermissionV1
-  * @param requestingUser
+  * @param createRequest  the create request.
+  * @param requestingUser the requesting user.
+  * @param apiRequestID   the API request ID.
   */
-case class DefaultObjectAccessPermissionCreateRequestADM(newDefaultObjectAccessPermissionV1: NewDefaultObjectAccessPermissionADM, requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class DefaultObjectAccessPermissionCreateRequestADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
+                                                         requestingUser: UserADM,
+                                                         apiRequestID: UUID
+                                                        ) extends PermissionsResponderRequestADM
+
+/**
+  * Change a single [[DefaultObjectAccessPermissionADM]].
+  *
+  * @param changeRequest  the change request.
+  * @param requestingUser the requesting user.
+  * @param apiRequestID   the API request ID.
+  */
+case class DefaultObjectAccessPermissionChangeRequestADM(changeRequest: ChangeDefaultObjectAccessPermissionAPIRequestADM,
+                                                         requestingUser: UserADM,
+                                                         apiRequestID: UUID
+                                                        ) extends PermissionsResponderRequestADM
 
 /**
   * Delete a single [[DefaultObjectAccessPermissionADM]]
   *
-  * @param defaultObjectAccessPermissionIri
+  * @param permissionIri  the permission IRI
+  * @param requestingUser the requesting user.
+  * @param apiRequestID   the API request ID.
   */
-case class DefaultObjectAccessPermissionDeleteRequestADM(defaultObjectAccessPermissionIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
-
-/**
-  * Update a single [[DefaultObjectAccessPermissionADM]].
-  *
-  * @param requestingUser
-  */
-case class DefaultObjectAccessPermissionUpdateRequestADM(requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class DefaultObjectAccessPermissionDeleteRequestADM(permissionIri: IRI,
+                                                         requestingUser: UserADM,
+                                                         apiRequestID: UUID
+                                                        ) extends PermissionsResponderRequestADM
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,7 +356,9 @@ case class AdministrativePermissionCreateResponseADM(administrativePermission: A
     def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
 }
 
+//
 // Default Object Access Permissions
+//
 
 /**
   * Represents an answer to [[DefaultObjectAccessPermissionsForProjectGetRequestADM]]
@@ -335,54 +394,6 @@ case class DefaultObjectAccessPermissionForIriGetResponseADM(defaultObjectAccess
   */
 case class DefaultObjectAccessPermissionsStringResponseADM(permissionLiteral: String)
 
-/*
-/**
-  * Represents an answer to a [[TemplatePermissionsCreateRequestV1]].
-  * @param success
-  * @param msg
-  * @param administrativePermissions
-  * @param defaultObjectAccessPermissions
-  */
-
-case class TemplatePermissionsCreateResponseV1(success: Boolean,
-                                               msg: String,
-                                               administrativePermissions: Seq[AdministrativePermissionV1],
-                                               defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionV1]
-                                              ) extends KnoraResponseV1 with PermissionV1JsonProtocol {
-    def toJsValue = templatePermissionsCreateResponseV1Format.write(this)
-}
-
-
-/**
-  * Represents an answer to an administrative permission creating/modifying/deletion operation.
-  * @param success
-  * @param operationType
-  * @param administrativePermissionV1
-  * @param msg
-  */
-
-case class AdministrativePermissionOperationResponseV1(success: Boolean,
-                                                       operationType: PermissionOperation,
-                                                       administrativePermissionV1:
-                                                       Option[AdministrativePermissionV1],
-                                                       msg: String) extends KnoraResponseV1 with PermissionV1JsonProtocol {
-    def toJsValue = administrativePermissionOperationResponseV1Format.write(this)
-}
-
-/**
-  * Represents an answer to a default object access permission creating/modifying/deletion operation.
-  * @param success
-  * @param operationType
-  * @param defaultObjectAccessPermissionV1
-  * @param msg
-  */
-case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
-                                                            operationType: PermissionOperation,
-                                                            defaultObjectAccessPermissionV1: Option[DefaultObjectAccessPermissionV1],
-                                                            msg: String) extends KnoraResponseV1 with PermissionV1JsonProtocol {
-    def toJsValue = defaultObjectAccessPermissionOperationResponseV1Format.write(this)
-}
-*/
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -567,7 +578,10 @@ case class ChangeAdministrativePermissionAPIRequestADM(iri: IRI,
   * @param forValue       the IRI of the value.
   * @param hasPermissions the permissions.
   */
-case class ObjectAccessPermissionADM(forResource: Option[IRI], forValue: Option[IRI], hasPermissions: Set[PermissionADM]) extends Jsonable with PermissionsADMJsonProtocol {
+case class ObjectAccessPermissionADM(forResource: Option[IRI],
+                                     forValue: Option[IRI],
+                                     hasPermissions: Set[PermissionADM]
+                                    ) extends Jsonable with PermissionsADMJsonProtocol {
 
     def toJsValue = objectAccessPermissionADMFormat.write(this)
 }
@@ -588,14 +602,20 @@ case class NewObjectAccessPermissionADM(forResource: Option[IRI],
 /**
   * Represents 'knora-base:DefaultObjectAccessPermission'
   *
-  * @param iri
-  * @param forProject
-  * @param forGroup
-  * @param forResourceClass
-  * @param forProperty
-  * @param hasPermissions
+  * @param iri              the permission IRI.
+  * @param forProject       the project.
+  * @param forGroup         the group.
+  * @param forResourceClass the resource class.
+  * @param forProperty      the property.
+  * @param hasPermissions   the permissions.
   */
-case class DefaultObjectAccessPermissionADM(iri: IRI, forProject: IRI, forGroup: Option[IRI], forResourceClass: Option[IRI], forProperty: Option[IRI], hasPermissions: Set[PermissionADM]) {
+case class DefaultObjectAccessPermissionADM(iri: IRI,
+                                            forProject: IRI,
+                                            forGroup: Option[IRI],
+                                            forResourceClass: Option[IRI],
+                                            forProperty: Option[IRI],
+                                            hasPermissions: Set[PermissionADM]
+                                           ) {
 
     /**
       * @return a simple string representing the permission which can be used as the cache key.
@@ -604,21 +624,40 @@ case class DefaultObjectAccessPermissionADM(iri: IRI, forProject: IRI, forGroup:
 }
 
 /**
-  * Represents information needed during default object access permission creation.
+  * Represents a payload that asks the Knora API server to create a new
+  * default object access permission
   *
-  * @param iri
-  * @param forProject
-  * @param forGroup
-  * @param forResourceClass
-  * @param forProperty
-  * @param hasPermissions
+  * @param iri              the IRI of the permission
+  * @param forProject       the project
+  * @param forGroup         the group
+  * @param forResourceClass the resource class
+  * @param forProperty      the property
+  * @param hasPermissions   the permissions
   */
-case class NewDefaultObjectAccessPermissionADM(iri: IRI,
-                                               forProject: IRI,
-                                               forGroup: IRI,
-                                               forResourceClass: IRI,
-                                               forProperty: IRI,
-                                               hasPermissions: Set[PermissionADM])
+case class CreateDefaultObjectAccessPermissionAPIRequestADM(iri: IRI,
+                                                            forProject: IRI,
+                                                            forGroup: IRI,
+                                                            forResourceClass: IRI,
+                                                            forProperty: IRI,
+                                                            hasPermissions: Set[PermissionADM])
+
+/**
+  * Represents a payload that asks the Knora API server to change an existing
+  * default object access permission
+  *
+  * @param iri              the IRI of the permission
+  * @param forProject       the project
+  * @param forGroup         the group
+  * @param forResourceClass the resource class
+  * @param forProperty      the property
+  * @param hasPermissions   the permissions
+  */
+case class ChangeDefaultObjectAccessPermissionAPIRequestADM(iri: IRI,
+                                                            forProject: IRI,
+                                                            forGroup: IRI,
+                                                            forResourceClass: IRI,
+                                                            forProperty: IRI,
+                                                            hasPermissions: Set[PermissionADM])
 
 /**
   * Case class representing a permission.
@@ -789,6 +828,7 @@ object PermissionType extends Enumeration {
 
     val OAP: PermissionType = Value(0, "ObjectAccessPermission")
     val AP: PermissionType = Value(1, "AdministrativePermission")
+    val DOAP: PermissionType = Value(2, "DefaultObjectAccessPermission")
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

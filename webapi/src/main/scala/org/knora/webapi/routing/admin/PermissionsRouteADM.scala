@@ -34,7 +34,7 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
 import org.knora.webapi.util.clientapi._
-import org.knora.webapi.{OntologyConstants, SharedTestDataADM}
+import org.knora.webapi.{BadRequestException, OntologyConstants, SharedTestDataADM}
 import org.springframework.web.client.HttpClientErrorException.BadRequest
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,8 +44,8 @@ object PermissionsRouteADM {
     val PermissionsBasePathString: String = "/admin/permissions"
 }
 
-@Api(value = "permissions", produces = "application/json")
-@Path("/admin/permissions")
+@Api(value = "administrative-permissions", produces = "application/json")
+@Path("/admin/administrative-permissions")
 class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
 
     import PermissionsRouteADM._
@@ -78,15 +78,42 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     private val groupIri: String = URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
 
     override def knoraApiPath: Route =
-        getAdministrativePermission ~
+        getPermissionsForProject ~
+          getPermission ~
           createAdministrativePermission ~
           changeAdministrativePermission ~
           deleteAdministrativePermission
 
     /**
-      * Get administrative permission
+      * Get list of permissions for project filtered by type: AdministrativePermission or DefaultObjectAccessPermission
       */
-    private def getAdministrativePermission: Route = path(PermissionsBasePath / Segment / Segment) { (projectIri, groupIri) =>
+    private def getPermissionsForProject: Route = path(PermissionsBasePath / Segment) { projectIri =>
+        get {
+            requestContext =>
+                val params = requestContext.request.uri.query().toMap
+                val permissionType = params.getOrElse("permissionType", "unknown")
+                val requestMessage = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield permissionType match {
+                    case PermissionType.AP => AdministrativePermissionsForProjectGetRequestADM(projectIri, requestingUser, UUID.randomUUID())
+                    case PermissionType.DOAP => DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser, UUID.randomUUID())
+                    case _ => throw BadRequestException("Please set the 'permissionType' to either 'AdministrativePermission' or 'DefaultObjectAccessPermission'.")
+                }
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    }
+
+    /**
+      * Get permission by type: AdministrativePermission or DefaultObjectAccessPermission
+      */
+    private def getPermission: Route = path(PermissionsBasePath / Segment) { permissionIri =>
         get {
             requestContext =>
                 val params = requestContext.request.uri.query().toMap
@@ -94,7 +121,8 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 val requestMessage = for {
                     requestingUser <- getUserADM(requestContext)
                 } yield permissionType match {
-                    case _ => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
+                    case PermissionType.AP => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
+                    case PermissionType.DOAP =>
                 }
 
                 RouteUtilADM.runJsonRoute(
@@ -187,6 +215,43 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 )
         }
     }
+
+    /**
+      * Get default object access permission
+      */
+    private def getDefaultObjectAccessPermission: Route = path(DefaultObjectAccessPermissionsBasePath / Segment) { permissionIri =>
+        get {
+            requestContext =>
+                val params = requestContext.request.uri.query().toMap
+                val permissionType = params.getOrElse("permissionType", PermissionType.AP)
+                val requestMessage = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield permissionType match {
+                    case _ => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
+                }
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    }
+
+
+    /**
+      * Create default object access permission
+      */
+
+    /**
+      * Change default object access permission
+      */
+
+    /**
+      * Delete default object access permission
+      */
 
 
     // #getAdministrativePermissionFunction

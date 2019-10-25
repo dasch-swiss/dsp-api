@@ -812,15 +812,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                 throw UpdateNotPerformedException(s"Project $newProjectIRI was not created. Please report this as a possible bug.")
             )
 
-            // create administrative and default permissions for project
-            createPermissionPayload = CreateAdministrativePermissionAPIRequestADM(
-                forProject = newProjectIRI,
-                forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
-                hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission, PermissionADM.ProjectAdminAllPermission)
-            )
-            createPermissionResponse <- (responderManager ? AdministrativePermissionCreateRequestADM)
-
-
         } yield ProjectOperationResponseADM(project = newProjectADM)
 
         for {
