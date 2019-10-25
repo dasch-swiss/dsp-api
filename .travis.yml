@@ -1,3 +1,4 @@
+os: linux
 dist: bionic
 
 sudo: required
@@ -12,7 +13,7 @@ addons:
 language: scala
 
 scala:
-  - "2.12.1"
+  - "2.12.8"
 
 python:
   - "3.7"
@@ -34,9 +35,10 @@ env:
   - SIPI_REPO=dhlabbasel/sipi
   - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
   - CHROME_BIN=google-chrome-stable
-  - GDB_HEAP_SIZE="2G"
   - TAG=${TRAVIS_BRANCH//\//-}
   - GRAPHDB_VERSION="8.5.0-se"
+  - GDB_HEAP_SIZE="2G"
+  - KNORA_GDB_LICENSE=$TRAVIS_BUILD_DIR/travis/graphdb.license
 
 before_cache:
   - sudo chown -R travis:travis $HOME/.ivy2
@@ -77,8 +79,6 @@ jobs:
     # unit tests
     - stage: test
       script:
-        # set graphdb license
-        - export KNORA_GDB_LICENSE=$TRAVIS_BUILD_DIR/travis/graphdb.license
         # start the integration tests
         - make unit-tests-with-coverage
         # print out .env file used by the stack
@@ -86,8 +86,6 @@ jobs:
     # e2e tests
     - stage: test
       script:
-        # set graphdb license
-        - export KNORA_GDB_LICENSE=$TRAVIS_BUILD_DIR/travis/graphdb.license
         # start the integration tests
         - make e2e-tests-with-coverage
         # print out .env file used by the stack
@@ -95,8 +93,6 @@ jobs:
     # integration tests
     - stage: test
       script:
-        # set graphdb license
-        - export KNORA_GDB_LICENSE=$TRAVIS_BUILD_DIR/travis/graphdb.license
         # start the integration tests
         - make it-tests-with-coverage
         # print out Sipi logs
