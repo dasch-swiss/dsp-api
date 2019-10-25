@@ -85,20 +85,14 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
           deleteAdministrativePermission
 
     /**
-      * Get list of permissions for project filtered by type: AdministrativePermission or DefaultObjectAccessPermission
+      * Get all permissions for a project.
       */
     private def getPermissionsForProject: Route = path(PermissionsBasePath / Segment) { projectIri =>
         get {
             requestContext =>
-                val params = requestContext.request.uri.query().toMap
-                val permissionType = params.getOrElse("permissionType", "unknown")
                 val requestMessage = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield permissionType match {
-                    case PermissionType.AP => AdministrativePermissionsForProjectGetRequestADM(projectIri, requestingUser, UUID.randomUUID())
-                    case PermissionType.DOAP => DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser, UUID.randomUUID())
-                    case _ => throw BadRequestException("Please set the 'permissionType' to either 'AdministrativePermission' or 'DefaultObjectAccessPermission'.")
-                }
+                } yield PermissionsForProjectGetRequestADM(projectIri, requestingUser, UUID.randomUUID())
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -121,8 +115,8 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 val requestMessage = for {
                     requestingUser <- getUserADM(requestContext)
                 } yield permissionType match {
-                    case PermissionType.AP => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
-                    case PermissionType.DOAP =>
+                    case PermissionType.AP => AdministrativePermissionForIriGetRequestADM(permissionIri, requestingUser, UUID.randomUUID())
+                    case PermissionType.DOAP => DefaultObjectAccessPermissionForIriGetRequestADM(permissionIri, requestingUser, UUID.randomUUID())
                 }
 
                 RouteUtilADM.runJsonRoute(
