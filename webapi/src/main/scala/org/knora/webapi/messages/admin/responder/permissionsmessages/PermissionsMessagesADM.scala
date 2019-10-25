@@ -428,6 +428,11 @@ case class PermissionsDataADM(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[I
         groupsPerProject.getOrElse(OntologyConstants.KnoraAdmin.SystemProject, List.empty[IRI]).contains(OntologyConstants.KnoraAdmin.SystemAdmin)
     }
 
+    /* Is the user a member of the ProjectAdmin group in any project */
+    def isProjectAdminInAnyProject(): Boolean = {
+        groupsPerProject.flatMap(_._2).toSeq.contains(OntologyConstants.KnoraAdmin.ProjectAdmin)
+    }
+
     /* Is the user a member of the ProjectAdmin group */
     def isProjectAdmin(projectIri: IRI): Boolean = {
         groupsPerProject.getOrElse(projectIri, List.empty[IRI]).contains(OntologyConstants.KnoraAdmin.ProjectAdmin)
