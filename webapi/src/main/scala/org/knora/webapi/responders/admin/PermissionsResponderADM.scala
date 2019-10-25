@@ -19,18 +19,21 @@
 
 package org.knora.webapi.responders.admin
 
+import java.util.UUID
+
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, SparqlUpdateRequest, SparqlUpdateResponse, VariableResultsRow}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.admin.PermissionsResponderADM._
-import org.knora.webapi.responders.{Responder, ResponderData}
+import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.{CacheUtil, PermissionUtilADM}
 
 import scala.collection.immutable.Iterable
@@ -56,7 +59,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser) => administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
         case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser)
         case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
-        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser) => administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser)
+        case AdministrativePermissionCreateADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateADM(newAdministrativePermission, requestingUser)
+        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID)
         //case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, requestingUser) => deleteAdministrativePermissionV1(administrativePermissionIri, requestingUser)
         case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
         case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
@@ -464,9 +468,18 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       */
     private def administrativePermissionForProjectGroupGetRequestADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM): Future[AdministrativePermissionForProjectGroupGetResponseADM] = {
 
-        // FIXME: Check user's permission for operation (issue #370)
-
         for {
+            _ <- Future {
+                if (
+                    !requestingUser.isSystemAdmin
+                      && !requestingUser.permissions.isProjectAdmin(projectIri)
+                      && !requestingUser.isSystemUser
+                ) {
+                    // not a system admin
+                    throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
+                }
+            }
+
             ap <- administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
             result = ap match {
                 case Some(ap) => permissionsmessages.AdministrativePermissionForProjectGroupGetResponseADM(ap)
@@ -476,41 +489,134 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     }
 
     /**
+      * Adds a new administrative permission (internal use).
       *
-      * @param newAdministrativePermissionV1
-      * @param userProfileV1
-      * @return
+      * @param createRequest the administrative permission to add.
+      * @param requestingUser the requesting user.
+      * @return an optional [[AdministrativePermissionADM]]
       */
-    private def administrativePermissionCreateRequestADM(newAdministrativePermissionV1: NewAdministrativePermissionADM, userProfileV1: UserADM): Future[AdministrativePermissionCreateResponseADM] = {
+    private def administrativePermissionCreateADM(createRequest: CreateAdministrativePermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[Option[AdministrativePermissionADM]] = {
         //log.debug("administrativePermissionCreateRequestADM")
 
-        // FIXME: Check user's permission for operation (issue #370)
+        /**
+          * The actual change project task run with an IRI lock.
+          */
+        def createPermissionTask(createRequest: CreateAdministrativePermissionAPIRequestADM, requestingUser: UserADM): Future[Option[AdministrativePermissionADM]] = for {
 
-        for {
             _ <- Future {
                 // check if necessary field are not empty.
-                if (newAdministrativePermissionV1.forProject.isEmpty) throw BadRequestException("Project cannot be empty")
-                if (newAdministrativePermissionV1.forGroup.isEmpty) throw BadRequestException("Group cannot be empty")
-                if (newAdministrativePermissionV1.hasNewPermissions.isEmpty) throw BadRequestException("New permissions cannot be empty")
+                if (createRequest.forProject.isEmpty) throw BadRequestException("Project cannot be empty")
+                if (createRequest.forGroup.isEmpty) throw BadRequestException("Group cannot be empty")
+                if (createRequest.hasPermissions.isEmpty) throw BadRequestException("New permissions cannot be empty")
             }
 
-            checkResult <- administrativePermissionForProjectGroupGetADM(newAdministrativePermissionV1.forProject, newAdministrativePermissionV1.forGroup, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            // check if the requesting user is allowed to add the administrative permission
+            // Allowed are SystemAdmin, ProjectAdmin and SystemUser
+            _ = if (
+                !requestingUser.isSystemAdmin
+                  && !requestingUser.permissions.isProjectAdmin(createRequest.forProject)
+                  && !requestingUser.isSystemUser
+            ) {
+                // not a system admin
+                throw ForbiddenException("A new administrative permission can only be added by a system admin.")
+            }
+
+            // does the permission already exist
+            checkResult <- administrativePermissionForProjectGroupGetADM(
+                createRequest.forProject,
+                createRequest.forGroup,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
 
             _ = checkResult match {
-                case Some(ap) => throw DuplicateValueException(s"Permission for project: '${newAdministrativePermissionV1.forProject}' and group: '${newAdministrativePermissionV1.forGroup}' combination already exists.")
+                case Some(ap) => throw DuplicateValueException(s"Permission for project: '${createRequest.forProject}' and group: '${createRequest.forGroup}' combination already exists.")
                 case None => ()
             }
 
-            // FIXME: Implement
-            response = AdministrativePermissionCreateResponseADM(administrativePermission = AdministrativePermissionADM(iri = "mock-iri", forProject = "mock-project", forGroup = "mock-group", hasPermissions = Set.empty[PermissionADM]))
+            // get project
+            projectIri = createRequest.forProject
+            maybeProjectF = responderManager ? ProjectGetADM(
+                ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                KnoraSystemInstances.Users.SystemUser
+              )
+
+            maybeProject: Option[ProjectADM] <- maybeProjectF
+
+            // if it doesnt exist then throw an error
+            project: ProjectADM = maybeProject.getOrElse(throw NotFoundException(s"Project '$projectIri' not found. Aborting request."))
+
+            // get group
+            groupIri = createRequest.forGroup
+            maybeGroupF = responderManager ? GroupGetADM(
+                groupIri,
+                KnoraSystemInstances.Users.SystemUser
+            )
+
+            maybeGroup: Option[GroupADM] <- maybeGroupF
+
+            // if it does not exist then throw an error
+            group: GroupADM = maybeGroup.getOrElse(throw NotFoundException(s"Group '$groupIri' not found. Aborting request."))
+
+
+            newPermissionIri = stringFormatter.makeRandomPermissionIri(project.shortcode)
+
+            // Create the administrative permission.
+            createAdministrativePermissionSparqlString = queries.sparql.admin.txt.createNewAdministrativePermission(
+                permissionsNamedGraphIri = OntologyConstants.NamedGraphs.PermissionsNamedGraph,
+                triplestore = settings.triplestoreType,
+                permissionClassIri = OntologyConstants.KnoraAdmin.Permission,
+                permissionIri = newPermissionIri,
+                forProject = project.id,
+                forGroup = group.id,
+                permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.AP)
+            ).toString
+            // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
+
+            createPermissionResponse <- (storeManager ? SparqlUpdateRequest(createAdministrativePermissionSparqlString)).mapTo[SparqlUpdateResponse]
+
+            // try to retrieve the newly created permission
+            response <- administrativePermissionForProjectGroupGetADM(
+                createRequest.forProject,
+                createRequest.forGroup,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
 
         } yield response
 
 
+        for {
+            // run the task with an IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                PERMISSIONS_GLOBAL_LOCK_IRI,
+                () => createPermissionTask(createRequest, requestingUser)
+            )
+        } yield taskResult
+    }
+
+    /**
+      * Adds a new administrative permission.
+      *
+      * @param createRequest the administrative permission to add.
+      * @param requestingUser the requesting user.
+      * @return an [[AdministrativePermissionCreateResponseADM]]
+      */
+    private def administrativePermissionCreateRequestADM(createRequest: CreateAdministrativePermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[AdministrativePermissionCreateResponseADM] = {
+
+        for {
+            maybePermission: Option[AdministrativePermissionADM] <- administrativePermissionCreateADM(createRequest, requestingUser, apiRequestID)
+            permission = maybePermission match {
+                case Some(p) => p
+                case None => throw NotFoundException(s"Permission not found")
+            }
+        } yield AdministrativePermissionCreateResponseADM(
+            administrativePermission = permission
+        )
+
     }
 
     /*
-        private def deleteAdministrativePermissionV1(administrativePermissionIri: IRI, userProfileV1: UserProfileV1): Future[AdministrativePermissionOperationResponseV1] = ???
+        private def deleteAdministrativePermission(administrativePermissionIri: IRI, requestingUser: UserADM): Future[AdministrativePermissionOperationResponseADM] = ???
     */
 
     ///////////////////////////////////////////////////////////////////////////

@@ -208,7 +208,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
                 val iri = stringFormatter.makeRandomPermissionIri(imagesProject.shortcode)
                 responderManager ! AdministrativePermissionCreateRequestADM(
-                    newAdministrativePermission = NewAdministrativePermissionADM(
+                    createRequest = CreateAdministrativePermissionAPIRequestADM(
                         iri = iri,
                         forProject = IMAGES_PROJECT_IRI,
                         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,

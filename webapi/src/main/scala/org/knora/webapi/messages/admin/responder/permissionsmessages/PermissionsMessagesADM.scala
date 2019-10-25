@@ -15,6 +15,8 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
+import java.util.UUID
+
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataType.PermissionProfileType
@@ -46,7 +48,7 @@ case class PermissionDataGetADM(projectIris: Seq[IRI],
                                 isInProjectAdminGroups: Seq[IRI],
                                 isInSystemAdminGroup: Boolean,
                                 requestingUser: UserADM
-                              ) extends PermissionsResponderRequestADM
+                               ) extends PermissionsResponderRequestADM
 
 /**
   * A message that requests the creation of permissions (administrative and default) for a certain project
@@ -66,7 +68,7 @@ case class PermissionDataGetADM(projectIris: Seq[IRI],
   * A message that requests all administrative permissions defined inside a project.
   * A successful response will contain a list of [[AdministrativePermissionADM]].
   *
-  * @param projectIri    the project for which the administrative permissions are queried.
+  * @param projectIri     the project for which the administrative permissions are queried.
   * @param requestingUser the user initiation the request.
   */
 case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
@@ -76,7 +78,7 @@ case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI, req
   * A successful response will contain an [[AdministrativePermissionADM]] object.
   *
   * @param administrativePermissionIri the iri of the administrative permission object.
-  * @param requestingUser               the user initiating the request.
+  * @param requestingUser              the user initiating the request.
   */
 case class AdministrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
 
@@ -84,8 +86,8 @@ case class AdministrativePermissionForIriGetRequestADM(administrativePermissionI
   * A message that requests an administrative permission object identified by project and group.
   * A response will contain an optional [[AdministrativePermissionADM]] object.
   *
-  * @param projectIri the project.
-  * @param groupIri   the group.
+  * @param projectIri     the project.
+  * @param groupIri       the group.
   * @param requestingUser the user initiating the request.
   */
 case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
@@ -98,29 +100,59 @@ case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupI
   * @param groupIri
   * @param requestingUser
   */
-case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI,
+                                                                groupIri: IRI,
+                                                                requestingUser: UserADM
+                                                               ) extends PermissionsResponderRequestADM
 
+
+/**
+  * Create a single [[AdministrativePermissionADM]] (internal use).
+  *
+  * @param createRequest  the API create request payload.
+  * @param requestingUser the requesting user.
+  * @param apiRequestID   the API request ID.
+  */
+case class AdministrativePermissionCreateADM(createRequest: CreateAdministrativePermissionAPIRequestADM,
+                                             requestingUser: UserADM,
+                                             apiRequestID: UUID
+                                            ) extends PermissionsResponderRequestADM
 
 /**
   * Create a single [[AdministrativePermissionADM]].
   *
-  * @param newAdministrativePermission
+  * @param createRequest  the API create request payload.
+  * @param requestingUser the requesting user.
+  * @param apiRequestID   the API request ID.
   */
-case class AdministrativePermissionCreateRequestADM(newAdministrativePermission: NewAdministrativePermissionADM, requestingUser: UserADM) extends PermissionsResponderRequestADM
-
-/**
-  * Delete a single [[AdministrativePermissionADM]]
-  *
-  * @param administrativePermissionIri
-  */
-case class AdministrativePermissionDeleteRequestADM(administrativePermissionIri: IRI, requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class AdministrativePermissionCreateRequestADM(createRequest: CreateAdministrativePermissionAPIRequestADM,
+                                                    requestingUser: UserADM,
+                                                    apiRequestID: UUID
+                                                   ) extends PermissionsResponderRequestADM
 
 /**
   * Update a single [[AdministrativePermissionADM]]
   *
-  * @param requestingUser
+  * @param changeRequest  the API change request payload.
+  * @param requestingUser the requesting user.
+  * @param apiRequestID   the API request ID.
   */
-case class AdministrativePermissionUpdateRequestADM(requestingUser: UserADM) extends PermissionsResponderRequestADM
+case class AdministrativePermissionChangeRequestADM(changeRequest: ChangeAdministrativePermissionAPIRequestADM,
+                                                    requestingUser: UserADM,
+                                                    apiRequestID: UUID
+                                                   ) extends PermissionsResponderRequestADM
+
+/**
+  * Delete a single [[AdministrativePermissionADM]]
+  *
+  * @param administrativePermissionIri the IRI of the administrative permission.
+  * @param requestingUser              the requesting user.
+  * @param apiRequestID                the API request ID.
+  */
+case class AdministrativePermissionDeleteRequestADM(administrativePermissionIri: IRI,
+                                                    requestingUser: UserADM,
+                                                    apiRequestID: UUID
+                                                   ) extends PermissionsResponderRequestADM
 
 
 // Object Access Permissions
@@ -365,7 +397,7 @@ case class DefaultObjectAccessPermissionOperationResponseV1(success: Boolean,
   */
 case class PermissionsDataADM(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[IRI, Seq[IRI]],
                               administrativePermissionsPerProject: Map[IRI, Set[PermissionADM]] = Map.empty[IRI, Set[PermissionADM]]
-                           ) {
+                             ) {
 
     /**
       * Returns [[PermissionsDataADM]] of the requested type.
@@ -475,9 +507,9 @@ case class PermissionsDataADM(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[I
 
     def toSourceString: String = {
         "PermissionDataV1( \n" +
-            s"\t groupsPerProject = ${groupsPerProject.toString} \n" +
-            s"\t administrativePermissionsPerProject = ${administrativePermissionsPerProject.toString} \n" +
-            ")"
+          s"\t groupsPerProject = ${groupsPerProject.toString} \n" +
+          s"\t administrativePermissionsPerProject = ${administrativePermissionsPerProject.toString} \n" +
+          ")"
     }
 }
 
@@ -490,25 +522,42 @@ case class PermissionsDataADM(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[I
   * @param forGroup       the group this permission applies to.
   * @param hasPermissions the administrative permissions.
   */
-case class AdministrativePermissionADM(iri: IRI, forProject: IRI, forGroup: IRI, hasPermissions: Set[PermissionADM]) extends Jsonable with PermissionsADMJsonProtocol {
+case class AdministrativePermissionADM(iri: IRI,
+                                       forProject: IRI,
+                                       forGroup: IRI,
+                                       hasPermissions: Set[PermissionADM]
+                                      ) extends Jsonable with PermissionsADMJsonProtocol {
 
     def toJsValue = administrativePermissionADMFormat.write(this)
 }
 
 /**
-  * Represents information needed during administrative permission creation / change.
+  * Represents a payload that asks the Knora API server to create a new
+  * administrative permission
   *
-  * @param iri
-  * @param forProject
-  * @param forGroup
-  * @param hasOldPermissions
-  * @param hasNewPermissions
+  * @param forProject     the project for which this permission is created.
+  * @param forGroup       the group for which this permission is created.
+  * @param hasPermissions the set of permissions.
   */
-case class NewAdministrativePermissionADM(iri: IRI,
-                                          forProject: IRI,
-                                          forGroup: IRI,
-                                          hasOldPermissions: Set[PermissionADM],
-                                          hasNewPermissions: Set[PermissionADM])
+case class CreateAdministrativePermissionAPIRequestADM(forProject: IRI,
+                                                       forGroup: IRI,
+                                                       hasPermissions: Set[PermissionADM])
+
+/**
+  * Represents a payload that asks the Knora API server to change an existing
+  * administrative permission
+  *
+  * @param iri               the IRI of the administrative permission.
+  * @param forProject        the project for which this permission is created.
+  * @param forGroup          the group for which this permission is created.
+  * @param hasOldPermissions the set of existing permissions.
+  * @param hasNewPermissions the set of new permissions.
+  */
+case class ChangeAdministrativePermissionAPIRequestADM(iri: IRI,
+                                                       forProject: IRI,
+                                                       forGroup: IRI,
+                                                       hasOldPermissions: Set[PermissionADM],
+                                                       hasNewPermissions: Set[PermissionADM])
 
 /**
   * Represents object access permissions attached to a resource OR value via the
@@ -580,7 +629,7 @@ case class NewDefaultObjectAccessPermissionADM(iri: IRI,
 case class PermissionADM(name: String,
                          additionalInformation: Option[IRI],
                          permissionCode: Option[Int]
-                       ) extends Jsonable with PermissionsADMJsonProtocol {
+                        ) extends Jsonable with PermissionsADMJsonProtocol {
 
     def toJsValue = permissionADMFormat.write(this)
 }

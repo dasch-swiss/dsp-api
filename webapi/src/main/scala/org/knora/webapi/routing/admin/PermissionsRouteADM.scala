@@ -20,22 +20,22 @@
 package org.knora.webapi.routing.admin
 
 import java.net.URLEncoder
+import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding.{Get, addCredentials}
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.client.RequestBuilding.Get
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
-import org.knora.webapi.{OntologyConstants, SharedTestDataADM}
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
 import org.knora.webapi.util.clientapi._
+import org.knora.webapi.{OntologyConstants, SharedTestDataADM}
+import org.springframework.web.client.HttpClientErrorException.BadRequest
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -77,8 +77,15 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     private val projectIri: String = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
     private val groupIri: String = URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
 
-    override def knoraApiPath: Route = getAdministrativePermission
+    override def knoraApiPath: Route =
+        getAdministrativePermission ~
+          createAdministrativePermission ~
+          changeAdministrativePermission ~
+          deleteAdministrativePermission
 
+    /**
+      * Get administrative permission
+      */
     private def getAdministrativePermission: Route = path(PermissionsBasePath / Segment / Segment) { (projectIri, groupIri) =>
         get {
             requestContext =>
@@ -99,6 +106,88 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 )
         }
     }
+
+    /**
+      * Create a new administrative permission
+      */
+    private def createAdministrativePermission: Route = path(PermissionsBasePath) {
+        post {
+            entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
+                requestContext =>
+                    val requestMessage: Future[AdministrativePermissionCreateRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield AdministrativePermissionCreateRequestADM(
+                        createRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        }
+    }
+
+    /**
+      * Change administrative permission
+      */
+    private def changeAdministrativePermission: Route = path(PermissionsBasePath / Segment) { permissionIri =>
+        put {
+            entity(as[ChangeAdministrativePermissionAPIRequestADM]) { apiRequest =>
+                requestContext =>
+
+                    if (apiRequest.iri != permissionIri) {
+                        throw new BadRequest("The permission IRI in the route does not match the permission IRI in the payload.")
+                    }
+
+                    val requestMessage: Future[AdministrativePermissionChangeRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield AdministrativePermissionChangeRequestADM(
+                        changeRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        }
+    }
+
+    /**
+      * Delete administrative permission
+      */
+    private def deleteAdministrativePermission: Route = path(PermissionsBasePath / Segment) { permissionIri =>
+        delete {
+            requestContext =>
+                val requestMessage: Future[AdministrativePermissionDeleteRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield AdministrativePermissionDeleteRequestADM(
+                    administrativePermissionIri = permissionIri,
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    }
+
 
     // #getAdministrativePermissionFunction
     private val getAdministrativePermissionFunction: ClientFunction =

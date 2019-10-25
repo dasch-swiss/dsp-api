@@ -26,7 +26,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupGetResponseADM, MultipleGroupsGetRequestADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.PermissionType
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionADM, PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages.{IriSubjectV2, LiteralV2, SparqlExtendedConstructResponse}
@@ -636,12 +636,12 @@ object PermissionUtilADM extends LazyLogging {
                     }
 
                     /* Sort permissions in descending order */
-                    val sortedPermissions = groupedPermissions.toArray.sortWith {
+                    val sortedPermissions: Array[(String, String)] = groupedPermissions.toArray.sortWith {
                         (left, right) => permissionStringsToPermissionLevels(left._1) > permissionStringsToPermissionLevels(right._1)
                     }
 
                     /* create the permissions string */
-                    sortedPermissions.foldLeft("") { (acc, perm) =>
+                    sortedPermissions.foldLeft("") { (acc, perm: (String, String)) =>
                         if (acc.isEmpty) {
                             acc + perm._1 + " " + perm._2
                         } else {
@@ -651,7 +651,26 @@ object PermissionUtilADM extends LazyLogging {
                 } else {
                     throw InconsistentTriplestoreDataException("Permissions cannot be empty")
                 }
+            case PermissionType.AP =>
+
+                if (permissions.nonEmpty) {
+
+                    val permNames: Set[String] = permissions.map(_.name)
+
+                    /* creates the permissions string. something like "ProjectResourceCreateAllPermission|ProjectAdminAllPermission" */
+                    permNames.foldLeft("") { (acc, perm: String) =>
+                        if (acc.isEmpty) {
+                            acc + perm
+                        } else {
+                          acc + OntologyConstants.KnoraBase.PermissionListDelimiter + perm
+                        }
+                    }
+
+                } else {
+                    throw InconsistentTriplestoreDataException("Permissions cannot be empty")
+                }
         }
+
     }
 
     /**

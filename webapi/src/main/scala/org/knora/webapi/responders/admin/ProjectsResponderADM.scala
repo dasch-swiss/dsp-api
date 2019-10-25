@@ -29,6 +29,7 @@ import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFHandler, RDFWriter, Rio}
 import org.knora.webapi._
 import org.knora.webapi.annotation.ApiMayChange
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionCreateRequestADM, CreateAdministrativePermissionAPIRequestADM, PermissionADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetProjectADM, CacheServicePutProjectADM, CacheServiceRemoveValues}
@@ -47,13 +48,6 @@ import scala.concurrent.Future
   */
 class ProjectsResponderADM(responderData: ResponderData) extends Responder(responderData) with InstrumentationSupport {
 
-
-    // Global lock IRI used for project creation and update
-    private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
-
-    private val ADMIN_DATA_GRAPH = "http://www.knora.org/data/admin"
-    private val PERMISSIONS_DATA_GRAPH = "http://www.knora.org/data/permissions"
-
     /**
       * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
       */
@@ -61,7 +55,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         case ProjectsGetADM(requestingUser) => projectsGetADM(requestingUser)
         case ProjectsGetRequestADM(requestingUser) => projectsGetRequestADM(requestingUser)
         case ProjectGetADM(identifier, requestingUser) => getSingleProjectADM(identifier, requestingUser)
-        case ProjectGetRequestADM(identifier, requestingUser) => getSingleProjectADMRequest(identifier, requestingUser)
+        case ProjectGetRequestADM(identifier, requestingUser) => getSingleProjectRequestADM(identifier, requestingUser)
         case ProjectMembersGetRequestADM(identifier, requestingUser) => projectMembersGetRequestADM(identifier, requestingUser)
         case ProjectAdminMembersGetRequestADM(identifier, requestingUser) => projectAdminMembersGetRequestADM(identifier, requestingUser)
         case ProjectsKeywordsGetRequestADM(requestingUser) => projectsKeywordsGetRequestADM(requestingUser)
@@ -207,9 +201,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       * @return information about the project as a [[ProjectInfoResponseV1]].
       * @throws NotFoundException when no project for the given IRI can be found
       */
-    private def getSingleProjectADMRequest(identifier: ProjectIdentifierADM, requestingUser: UserADM): Future[ProjectGetResponseADM] = {
+    private def getSingleProjectRequestADM(identifier: ProjectIdentifierADM, requestingUser: UserADM): Future[ProjectGetResponseADM] = {
 
-        // log.debug("getSingleProjectADMRequest - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
+        // log.debug("getSingleProjectRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
 
         for {
             maybeProject: Option[ProjectADM] <- getSingleProjectADM(identifier, requestingUser)
@@ -491,7 +485,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
             // Download the project's admin data.
 
-            adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = ADMIN_DATA_GRAPH, tempDir = tempDir)
+            adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = OntologyConstants.NamedGraphs.AdminNamedGraph, tempDir = tempDir)
 
             adminDataSparql: String = queries.sparql.admin.txt.getProjectAdminData(
                 triplestore = settings.triplestoreType,
@@ -506,7 +500,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
             // Download the project's permission data.
 
-            permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = PERMISSIONS_DATA_GRAPH, tempDir = tempDir)
+            permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = OntologyConstants.NamedGraphs.PermissionsNamedGraph, tempDir = tempDir)
 
             permissionDataSparql: String = queries.sparql.admin.txt.getProjectPermissions(
                 triplestore = settings.triplestoreType,
@@ -817,6 +811,15 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             newProjectADM = maybeNewProjectADM.getOrElse(
                 throw UpdateNotPerformedException(s"Project $newProjectIRI was not created. Please report this as a possible bug.")
             )
+
+            // create administrative and default permissions for project
+            createPermissionPayload = CreateAdministrativePermissionAPIRequestADM(
+                forProject = newProjectIRI,
+                forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
+                hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission, PermissionADM.ProjectAdminAllPermission)
+            )
+            createPermissionResponse <- (responderManager ? AdministrativePermissionCreateRequestADM)
+
 
         } yield ProjectOperationResponseADM(project = newProjectADM)
 
