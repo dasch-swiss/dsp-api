@@ -1,15 +1,6 @@
 os: linux
 dist: bionic
 
-sudo: required
-
-addons:
-  chrome: stable
-  apt:
-    packages:
-      - expect
-      - wget
-
 language: scala
 
 scala:
@@ -19,11 +10,17 @@ python:
   - "3.7"
 
 jdk:
-  - openjdk10
+  - openjdk11
+
+addons:
+  chrome: stable
+  apt:
+    packages:
+      - expect
+      - wget
 
 services:
   - docker
-  # - redis-server
 
 env:
   global:
