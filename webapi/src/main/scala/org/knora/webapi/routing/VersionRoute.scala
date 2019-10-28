@@ -74,9 +74,17 @@ trait VersionCheck {
     }
 
     private def getVersion() = {
-        val sipiVersion = BuildInfo.sipi
-        val gdbSEVersion = BuildInfo.gdbSE
-        val gdbFreeVersion = BuildInfo.gdbFree
+        var sipiVersion = BuildInfo.sipi
+        val sipiIndex = sipiVersion.indexOf(':')
+        sipiVersion = if (sipiIndex > 0) sipiVersion.substring(sipiIndex+1) else sipiVersion
+
+        var gdbSEVersion = BuildInfo.gdbSE
+        val gdbSEIndex = gdbSEVersion.indexOf(':')
+        gdbSEVersion = if (gdbSEIndex > 0) gdbSEVersion.substring(gdbSEIndex+1) else gdbSEVersion
+
+        var gdbFreeVersion = BuildInfo.gdbFree
+        val gdbFreeIndex = gdbFreeVersion.indexOf(':')
+        gdbFreeVersion = if (gdbFreeIndex > 0) gdbFreeVersion.substring(gdbFreeIndex+1) else gdbFreeVersion
 
         VersionCheckResult(
             name = "version",
@@ -84,9 +92,9 @@ trait VersionCheck {
             scala = BuildInfo.scalaVersion,
             sbt = BuildInfo.sbtVersion,
             akkaHttp = BuildInfo.akkaHttp,
-            sipi = sipiVersion.substring(sipiVersion.indexOf(':')+1),
-            gdbSE = gdbSEVersion.substring(gdbSEVersion.indexOf(':')+1),
-            gdbFree = gdbFreeVersion.substring(gdbFreeVersion.indexOf(':')+1)
+            sipi = sipiVersion,
+            gdbSE = gdbSEVersion,
+            gdbFree = gdbFreeVersion
         )
     }
 }
