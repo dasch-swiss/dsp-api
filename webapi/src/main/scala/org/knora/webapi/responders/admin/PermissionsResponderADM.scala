@@ -55,13 +55,14 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     def receive(msg: PermissionsResponderRequestADM) = msg match {
         case PermissionDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser) => permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser)
         case PermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID) => permissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID)
+        case PermissionForIriGetRequestADM(permissionIri, requestingUser, apiRequestID) => permissionForIriGetRequest(permissionIri, requestingUser, apiRequestID)
+        case PermissionDeleteRequestADM(administrativePermissionIri, requestingUser, apiRequestID) => deletePermissionADM(administrativePermissionIri, requestingUser, apiRequestID)
         case AdministrativePermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID) => administrativePermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID)
         case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, apiRequestID) => administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser, apiRequestID)
         case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser)
         case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
         case AdministrativePermissionCreateADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateADM(newAdministrativePermission, requestingUser, apiRequestID)
         case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID) => administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser, apiRequestID)
-        case AdministrativePermissionDeleteRequestADM(administrativePermissionIri, requestingUser, apiRequestID) => deleteAdministrativePermissionADM(administrativePermissionIri, requestingUser, apiRequestID)
         case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
         case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
         case DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID) => defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID)
@@ -70,7 +71,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri, resourceClassIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, None, ResourceEntityType, targetUser, requestingUser)
         case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser)
         case DefaultObjectAccessPermissionCreateRequestADM(createRequest, requestingUser, apiRequestID) => createDefaultObjectAccessPermissionADM(createRequest, requestingUser, apiRequestID)
-        case DefaultObjectAccessPermissionDeleteRequestADM(defaultObjectAccessPermissionIri, requestingUser, apiRequestID) => deleteDefaultObjectAccessPermissionADM(defaultObjectAccessPermissionIri, requestingUser, apiRequestID)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
@@ -289,13 +289,64 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                       && !requestingUser.permissions.isProjectAdmin(projectIri)
                       && !requestingUser.isSystemUser
                 ) {
-                    // not a system admin
-                    throw ForbiddenException("Permissions can only be queried by system and project admin.")
+                    // not system or project admin
+                    throw ForbiddenException("Permissions can only be queried by system and/or project admin.")
                 }
             }
 
         } yield ???
     }
+
+    /**
+      * Retrieve a single permission.
+      *
+      * @param permissionIri the IRI of the permission.
+      * @param requestingUser the requesting user.
+      * @param apiRequestID the API request ID.
+      * return a [[PermissionForIriGetResponseADM]]
+      */
+    private def permissionForIriGetRequest(permissionIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[PermissionForIriGetResponseADM] = {
+        for {
+            _ <- Future {
+                if (
+                    !requestingUser.isSystemAdmin
+                      && !requestingUser.permissions.isProjectAdminInAnyProject()
+                      && !requestingUser.isSystemUser
+                ) {
+                    // not system or project admin
+                    throw ForbiddenException("Permissions can only be queried by system and/or project admin.")
+                }
+            }
+
+        } yield ???
+    }
+
+
+    /**
+      * Delete permission.
+      *
+      * @param permissionIri the IRI of the permission.
+      * @param requestingUser the requesting user.
+      * @param apiRequestID the API request ID.
+      * @return a [[PermissionDeleteResponseADM]].
+      */
+    private def deletePermissionADM(permissionIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[PermissionDeleteResponseADM] = {
+        for {
+            _ <- Future {
+                if (
+                    !requestingUser.isSystemAdmin
+                      && !requestingUser.permissions.isProjectAdminInAnyProject()
+                      && !requestingUser.isSystemUser
+                ) {
+                    // not system or project admin
+                    throw ForbiddenException("Permissions can only be deleted by system and/or project admin.")
+                }
+            }
+
+        } yield ???
+    }
+
+
 
     /*************************************************************************/
     /* ADMINISTRATIVE PERMISSIONS                                            */
@@ -658,15 +709,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
     }
 
-    /**
-      * Delete administrative permission.
-      *
-      * @param administrativePermissionIri the IRI of the permission.
-      * @param requestingUser the requesting user.
-      * @param apiRequestID the API request ID.
-      * @return
-      */
-    private def deleteAdministrativePermissionADM(administrativePermissionIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[AdministrativePermissionOperationResponseADM] = ???
+
 
     ///////////////////////////////////////////////////////////////////////////
     // OBJECT ACCESS PERMISSIONS

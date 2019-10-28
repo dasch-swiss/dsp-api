@@ -26,6 +26,71 @@ import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponse
 import org.knora.webapi.responders.admin.PermissionsResponderADM
 import spray.json._
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// API requests
+
+/**
+  * Represents a payload that asks the Knora API server to create a new
+  * administrative permission
+  *
+  * @param forProject     the project for which this permission is created.
+  * @param forGroup       the group for which this permission is created.
+  * @param hasPermissions the set of permissions.
+  */
+case class CreateAdministrativePermissionAPIRequestADM(forProject: IRI,
+                                                       forGroup: IRI,
+                                                       hasPermissions: Set[PermissionADM])
+
+/**
+  * Represents a payload that asks the Knora API server to change an existing
+  * administrative permission
+  *
+  * @param iri               the IRI of the administrative permission.
+  * @param forProject        the project for which this permission is created.
+  * @param forGroup          the group for which this permission is created.
+  * @param hasOldPermissions the set of existing permissions.
+  * @param hasNewPermissions the set of new permissions.
+  */
+case class ChangeAdministrativePermissionAPIRequestADM(iri: IRI,
+                                                       forProject: IRI,
+                                                       forGroup: IRI,
+                                                       hasOldPermissions: Set[PermissionADM],
+                                                       hasNewPermissions: Set[PermissionADM])
+
+/**
+  * Represents a payload that asks the Knora API server to create a new
+  * default object access permission
+  *
+  * @param forProject       the project
+  * @param forGroup         the group
+  * @param forResourceClass the resource class
+  * @param forProperty      the property
+  * @param hasPermissions   the permissions
+  */
+case class CreateDefaultObjectAccessPermissionAPIRequestADM(forProject: IRI,
+                                                            forGroup: Option[IRI],
+                                                            forResourceClass: Option[IRI],
+                                                            forProperty: Option[IRI],
+                                                            hasPermissions: Set[PermissionADM])
+
+/**
+  * Represents a payload that asks the Knora API server to change an existing
+  * default object access permission
+  *
+  * @param iri              the IRI of the permission
+  * @param forProject       the project
+  * @param forGroup         the group
+  * @param forResourceClass the resource class
+  * @param forProperty      the property
+  * @param hasPermissions   the permissions
+  */
+case class ChangeDefaultObjectAccessPermissionAPIRequestADM(iri: IRI,
+                                                            forProject: IRI,
+                                                            forGroup: IRI,
+                                                            forResourceClass: IRI,
+                                                            forProperty: IRI,
+                                                            hasPermissions: Set[PermissionADM])
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -65,11 +130,37 @@ case class PermissionsForProjectGetRequestADM(projectIri: IRI,
                                               apiRequestID: UUID
                                              ) extends PermissionsResponderRequestADM
 
+
+/**
+  * A message that requests a permission object identified through its IRI.
+  * A successful response will contain a [[PermissionForIriGetResponseADM]].
+  *
+  * @param permissionIri  the iri of the permission object.
+  * @param requestingUser the user initiating the request.
+  * @param apiRequestID   the API request ID.
+  */
+case class PermissionForIriGetRequestADM(permissionIri: IRI,
+                                         requestingUser: UserADM,
+                                         apiRequestID: UUID
+                                        ) extends PermissionsResponderRequestADM
+
+/**
+  * Delete a permission.
+  *
+  * @param permissionIri  the IRI of the permission.
+  * @param requestingUser the requesting user.
+  * @param apiRequestID   the API request ID.
+  */
+case class PermissionDeleteRequestADM(permissionIri: IRI,
+                                      requestingUser: UserADM,
+                                      apiRequestID: UUID
+                                     ) extends PermissionsResponderRequestADM
+
 // Administrative Permissions
 
 /**
   * A message that requests all administrative permissions defined inside a project.
-  * A successful response will contain a list of [[AdministrativePermissionADM]].
+  * A successful response will be a [[AdministrativePermissionsForProjectGetResponseADM]].
   *
   * @param projectIri     the project for which the administrative permissions are queried.
   * @param requestingUser the user initiation the request.
@@ -82,7 +173,7 @@ case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI,
 
 /**
   * A message that requests an administrative permission object identified through his IRI.
-  * A successful response will contain an [[AdministrativePermissionADM]] object.
+  * A successful response will be a [[AdministrativePermissionForIriGetResponseADM]] object.
   *
   * @param administrativePermissionIri the iri of the administrative permission object.
   * @param requestingUser              the user initiating the request.
@@ -155,18 +246,6 @@ case class AdministrativePermissionChangeRequestADM(changeRequest: ChangeAdminis
                                                     apiRequestID: UUID
                                                    ) extends PermissionsResponderRequestADM
 
-/**
-  * Delete a single [[AdministrativePermissionADM]]
-  *
-  * @param administrativePermissionIri the IRI of the administrative permission.
-  * @param requestingUser              the requesting user.
-  * @param apiRequestID                the API request ID.
-  */
-case class AdministrativePermissionDeleteRequestADM(administrativePermissionIri: IRI,
-                                                    requestingUser: UserADM,
-                                                    apiRequestID: UUID
-                                                   ) extends PermissionsResponderRequestADM
-
 
 // Object Access Permissions
 
@@ -193,7 +272,7 @@ case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: 
   *
   * @param projectIri     the project for which the default object access permissions are queried.
   * @param requestingUser the user initiating this request.
-  * @param apiRequestID                the API request ID.
+  * @param apiRequestID   the API request ID.
   */
 case class DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri: IRI,
                                                                  requestingUser: UserADM,
@@ -310,32 +389,39 @@ case class DefaultObjectAccessPermissionChangeRequestADM(changeRequest: ChangeDe
                                                          apiRequestID: UUID
                                                         ) extends PermissionsResponderRequestADM
 
-/**
-  * Delete a single [[DefaultObjectAccessPermissionADM]]
-  *
-  * @param permissionIri  the permission IRI
-  * @param requestingUser the requesting user.
-  * @param apiRequestID   the API request ID.
-  */
-case class DefaultObjectAccessPermissionDeleteRequestADM(permissionIri: IRI,
-                                                         requestingUser: UserADM,
-                                                         apiRequestID: UUID
-                                                        ) extends PermissionsResponderRequestADM
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 
 /**
   * Represents an answer to [[PermissionsForProjectGetRequestADM]].
   *
-  * @param administrativePermissions the retrieved sequence of [[AdministrativePermissionADM]]
-  * @param defaultObjectAccessPermissions the retrieved sequence of [[AdministrativePermissionADM]]
+  * @param administrativePermissions      the retrieved sequence of [[AdministrativePermissionADM]].
+  * @param defaultObjectAccessPermissions the retrieved sequence of [[DefaultObjectAccessPermissionADM]].
   */
 case class PermissionsForProjectGetResponseADM(administrativePermissions: Seq[AdministrativePermissionADM],
-                                              defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionADM]
+                                               defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionADM]
                                               ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = permissionsForProjectGetResponseADMFormat.write(this)
+}
+
+/**
+  * Represents an answer to [[PermissionForIriGetRequestADM]].
+  *
+  * @param administrativePermission      the retrieved [[AdministrativePermissionADM]].
+  * @param defaultObjectAccessPermission the retrieved [[DefaultObjectAccessPermissionADM]].
+  */
+case class PermissionForIriGetResponseADM(administrativePermission: Option[AdministrativePermissionADM],
+                                          defaultObjectAccessPermission: Option[DefaultObjectAccessPermissionADM]
+                                         ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
+    def toJsValue = permissionForIriGetResponseADMFormat.write(this)
+}
+
+/**
+  * Represents an answer to [[PermissionDeleteRequestADM]].
+  */
+case class PermissionDeleteResponseADM(result: String = "permission deleted"
+                                      ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
+    def toJsValue = permissionDeleteResponseADMFormat.write(this)
 }
 
 // Administrative Permissions
@@ -351,7 +437,7 @@ case class AdministrativePermissionsForProjectGetResponseADM(administrativePermi
 }
 
 /**
-  * Represents an anser to [[AdministrativePermissionForIriGetRequestADM]].
+  * Represents an answer to [[AdministrativePermissionForIriGetRequestADM]].
   *
   * @param administrativePermission the retrieved [[AdministrativePermissionADM]].
   */
@@ -380,13 +466,7 @@ case class AdministrativePermissionCreateResponseADM(administrativePermission: A
     def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
 }
 
-/**
-  * Represents an answer to [[AdministrativePermissionDeleteRequestADM]].
-  */
-case class AdministrativePermissionDeleteResponseADM(result: String = "permission deleted"
-                                                    ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
-    def toJsValue = administrativePermissionDeleteResponseADMFormat.write(this)
-}
+
 
 //
 // Default Object Access Permissions
@@ -436,7 +516,7 @@ case class DefaultObjectAccessPermissionsStringResponseADM(permissionLiteral: St
   * @param defaultObjectAccessPermission the newly created [[DefaultObjectAccessPermissionADM]].
   */
 case class DefaultObjectAccessPermissionCreateResponseADM(defaultObjectAccessPermission: DefaultObjectAccessPermissionADM
-                                                    ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
+                                                         ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
 }
 
@@ -444,7 +524,7 @@ case class DefaultObjectAccessPermissionCreateResponseADM(defaultObjectAccessPer
   * Represents an answer to [[DefaultObjectAccessPermissionDeleteRequestADM]].
   */
 case class DefaultObjectAccessPermissionDeleteResponseADM(result: String = "permission deleted"
-                                                    ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
+                                                         ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = administrativePermissionDeleteResponseADMFormat.write(this)
 }
 
@@ -600,33 +680,6 @@ case class AdministrativePermissionADM(iri: IRI,
     def toJsValue = administrativePermissionADMFormat.write(this)
 }
 
-/**
-  * Represents a payload that asks the Knora API server to create a new
-  * administrative permission
-  *
-  * @param forProject     the project for which this permission is created.
-  * @param forGroup       the group for which this permission is created.
-  * @param hasPermissions the set of permissions.
-  */
-case class CreateAdministrativePermissionAPIRequestADM(forProject: IRI,
-                                                       forGroup: IRI,
-                                                       hasPermissions: Set[PermissionADM])
-
-/**
-  * Represents a payload that asks the Knora API server to change an existing
-  * administrative permission
-  *
-  * @param iri               the IRI of the administrative permission.
-  * @param forProject        the project for which this permission is created.
-  * @param forGroup          the group for which this permission is created.
-  * @param hasOldPermissions the set of existing permissions.
-  * @param hasNewPermissions the set of new permissions.
-  */
-case class ChangeAdministrativePermissionAPIRequestADM(iri: IRI,
-                                                       forProject: IRI,
-                                                       forGroup: IRI,
-                                                       hasOldPermissions: Set[PermissionADM],
-                                                       hasNewPermissions: Set[PermissionADM])
 
 /**
   * Represents object access permissions attached to a resource OR value via the
@@ -669,41 +722,6 @@ case class DefaultObjectAccessPermissionADM(iri: IRI,
     def cacheKey: String = PermissionsResponderADM.getDefaultObjectAccessPermissionADMKey(forProject, forGroup, forResourceClass, forProperty)
 }
 
-/**
-  * Represents a payload that asks the Knora API server to create a new
-  * default object access permission
-  *
-  * @param iri              the IRI of the permission
-  * @param forProject       the project
-  * @param forGroup         the group
-  * @param forResourceClass the resource class
-  * @param forProperty      the property
-  * @param hasPermissions   the permissions
-  */
-case class CreateDefaultObjectAccessPermissionAPIRequestADM(iri: IRI,
-                                                            forProject: IRI,
-                                                            forGroup: IRI,
-                                                            forResourceClass: IRI,
-                                                            forProperty: IRI,
-                                                            hasPermissions: Set[PermissionADM])
-
-/**
-  * Represents a payload that asks the Knora API server to change an existing
-  * default object access permission
-  *
-  * @param iri              the IRI of the permission
-  * @param forProject       the project
-  * @param forGroup         the group
-  * @param forResourceClass the resource class
-  * @param forProperty      the property
-  * @param hasPermissions   the permissions
-  */
-case class ChangeDefaultObjectAccessPermissionAPIRequestADM(iri: IRI,
-                                                            forProject: IRI,
-                                                            forGroup: IRI,
-                                                            forResourceClass: IRI,
-                                                            forProperty: IRI,
-                                                            hasPermissions: Set[PermissionADM])
 
 /**
   * Case class representing a permission.
@@ -907,11 +925,12 @@ trait PermissionsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtoc
     implicit val defaultObjectAccessPermissionADMFormat: JsonFormat[DefaultObjectAccessPermissionADM] = jsonFormat6(DefaultObjectAccessPermissionADM)
     implicit val permissionsDataADMFormat: JsonFormat[PermissionsDataADM] = jsonFormat2(PermissionsDataADM)
     implicit val permissionsForProjectGetResponseADMFormat: RootJsonFormat[PermissionsForProjectGetResponseADM] = jsonFormat(PermissionsForProjectGetResponseADM, "administrative_permissions", "default_object_access_permissions")
+    implicit val permissionForIriGetResponseADMFormat: RootJsonFormat[PermissionForIriGetResponseADM] = jsonFormat(PermissionForIriGetResponseADM, "administrative_permission", "default_object_access_permission")
+    implicit val permissionDeleteResponseADMFormat: RootJsonFormat[PermissionDeleteResponseADM] = jsonFormat(PermissionDeleteResponseADM, "result")
     implicit val administrativePermissionsForProjectGetResponseADMFormat: RootJsonFormat[AdministrativePermissionsForProjectGetResponseADM] = jsonFormat(AdministrativePermissionsForProjectGetResponseADM, "administrative_permissions")
     implicit val administrativePermissionForIriGetResponseADMFormat: RootJsonFormat[AdministrativePermissionForIriGetResponseADM] = jsonFormat(AdministrativePermissionForIriGetResponseADM, "administrative_permission")
     implicit val administrativePermissionForProjectGroupGetResponseADMFormat: RootJsonFormat[AdministrativePermissionForProjectGroupGetResponseADM] = jsonFormat(AdministrativePermissionForProjectGroupGetResponseADM, "administrative_permission")
     implicit val administrativePermissionCreateResponseADMFormat: RootJsonFormat[AdministrativePermissionCreateResponseADM] = jsonFormat(AdministrativePermissionCreateResponseADM, "administrative_permission")
-    implicit val administrativePermissionDeleteResponseADMFormat: RootJsonFormat[AdministrativePermissionDeleteResponseADM] = jsonFormat(AdministrativePermissionDeleteResponseADM, "result")
     implicit val defaultObjectAccessPermissionsForProjectGetResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionsForProjectGetResponseADM] = jsonFormat(DefaultObjectAccessPermissionsForProjectGetResponseADM, "default_object_access_permissions")
     implicit val defaultObjectAccessPermissionForIriGetResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionForIriGetResponseADM] = jsonFormat(DefaultObjectAccessPermissionForIriGetResponseADM, "default_object_access_permission")
     implicit val defaultObjectAccessPermissionForProjectGroupGetResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionGetResponseADM] = jsonFormat(DefaultObjectAccessPermissionGetResponseADM, "default_object_access_permission")

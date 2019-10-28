@@ -34,7 +34,7 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
 import org.knora.webapi.util.clientapi._
-import org.knora.webapi.{BadRequestException, OntologyConstants, SharedTestDataADM}
+import org.knora.webapi.{OntologyConstants, SharedTestDataADM}
 import org.springframework.web.client.HttpClientErrorException.BadRequest
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -82,7 +82,9 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
           getPermission ~
           createAdministrativePermission ~
           changeAdministrativePermission ~
-          deleteAdministrativePermission
+          createDefaultObjectAccessPermission ~
+          changeDefaultObjectAccessPermission ~
+          deletePermission
 
     /**
       * Get all permissions for a project.
@@ -105,19 +107,42 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     }
 
     /**
-      * Get permission by type: AdministrativePermission or DefaultObjectAccessPermission
+      * Get permission by IRI
       */
     private def getPermission: Route = path(PermissionsBasePath / Segment) { permissionIri =>
         get {
             requestContext =>
-                val params = requestContext.request.uri.query().toMap
-                val permissionType = params.getOrElse("permissionType", PermissionType.AP)
                 val requestMessage = for {
                     requestingUser <- getUserADM(requestContext)
-                } yield permissionType match {
-                    case PermissionType.AP => AdministrativePermissionForIriGetRequestADM(permissionIri, requestingUser, UUID.randomUUID())
-                    case PermissionType.DOAP => DefaultObjectAccessPermissionForIriGetRequestADM(permissionIri, requestingUser, UUID.randomUUID())
-                }
+                } yield PermissionForIriGetRequestADM(
+                    permissionIri = permissionIri,
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    }
+
+    /**
+      * Delete permission by IRI
+      */
+    private def deletePermission: Route = path(PermissionsBasePath / Segment) { permissionIri =>
+        delete {
+            requestContext =>
+                val requestMessage: Future[PermissionDeleteRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield PermissionDeleteRequestADM(
+                    permissionIri = permissionIri,
+                    requestingUser = requestingUser,
+                    apiRequestID = UUID.randomUUID()
+                )
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -132,7 +157,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     /**
       * Create a new administrative permission
       */
-    private def createAdministrativePermission: Route = path(PermissionsBasePath) {
+    private def createAdministrativePermission: Route = path(PermissionsBasePath / "ap") {
         post {
             entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
                 requestContext =>
@@ -158,7 +183,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     /**
       * Change administrative permission
       */
-    private def changeAdministrativePermission: Route = path(PermissionsBasePath / Segment) { permissionIri =>
+    private def changeAdministrativePermission: Route = path(PermissionsBasePath / "ap" / Segment) { permissionIri =>
         put {
             entity(as[ChangeAdministrativePermissionAPIRequestADM]) { apiRequest =>
                 requestContext =>
@@ -186,66 +211,64 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         }
     }
 
-    /**
-      * Delete administrative permission
-      */
-    private def deleteAdministrativePermission: Route = path(PermissionsBasePath / Segment) { permissionIri =>
-        delete {
-            requestContext =>
-                val requestMessage: Future[AdministrativePermissionDeleteRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield AdministrativePermissionDeleteRequestADM(
-                    administrativePermissionIri = permissionIri,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
-
-                RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
-                )
-        }
-    }
-
-    /**
-      * Get default object access permission
-      */
-    private def getDefaultObjectAccessPermission: Route = path(DefaultObjectAccessPermissionsBasePath / Segment) { permissionIri =>
-        get {
-            requestContext =>
-                val params = requestContext.request.uri.query().toMap
-                val permissionType = params.getOrElse("permissionType", PermissionType.AP)
-                val requestMessage = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield permissionType match {
-                    case _ => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
-                }
-
-                RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
-                )
-        }
-    }
-
 
     /**
       * Create default object access permission
       */
+    private def createDefaultObjectAccessPermission: Route = path(PermissionsBasePath / "doap") {
+        post {
+            entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest =>
+                requestContext =>
+                    val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield DefaultObjectAccessPermissionCreateRequestADM(
+                        createRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        }
+    }
 
     /**
       * Change default object access permission
       */
+    private def changeDefaultObjectAccessPermission: Route = path(PermissionsBasePath / "doap" / Segment) { permissionIri =>
+        put {
+            entity(as[ChangeDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest =>
+                requestContext =>
 
-    /**
-      * Delete default object access permission
-      */
+                    if (apiRequest.iri != permissionIri) {
+                        throw new BadRequest("The permission IRI in the route does not match the permission IRI in the payload.")
+                    }
+
+                    val requestMessage: Future[DefaultObjectAccessPermissionChangeRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield DefaultObjectAccessPermissionChangeRequestADM(
+                        changeRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        }
+    }
+
 
 
     // #getAdministrativePermissionFunction
