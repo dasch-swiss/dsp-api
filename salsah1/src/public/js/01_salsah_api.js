@@ -47,15 +47,15 @@ SALSAH.ApiGet = function() {
 			var data_type = 'json';
 			var content_type = 'application/json';
 			var method = arguments[n];
-			var api_version = API_VERSION;
-			if ((method !== undefined)) {
+			var api_version = ((API_VERSION == null) ? 'v1' : API_VERSION);
+			if ((method != null)) {
 				if (method.indexOf('.html') > 0)
 				{
 					data_type = 'html';
 					content_type = 'text/html';
 				}
 
-				if (method.slice(-2) == 'v2')
+				if (method.slice(-2) === 'v2')
 				{
 					method = method.slice(0, method.length-2);
 					api_version = 'v2';
@@ -63,7 +63,7 @@ SALSAH.ApiGet = function() {
 			}				
 			send_params = {
 				type: 'GET',
-				url: ((API_URL === undefined) ? SITE_URL : API_URL) + '/'+ api_version +'/' + method,
+				url: ((API_URL == null) ? SITE_URL : API_URL) + '/'+ api_version +'/' + method,
 				contentType: content_type,
 				dataType: data_type,
                 xhrFields: {
