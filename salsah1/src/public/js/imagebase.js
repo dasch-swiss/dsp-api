@@ -49,7 +49,7 @@ $(function() {
 			SALSAH.ApiGet('resourcesv2', resource.resdata.res_id, {resinfo: true, reqtype: 'context'}, function(datav2) {
 				if (datav2['knora-api:arkUrl'] && datav2['knora-api:arkUrl']['@value']) {
 					var now = new Date();
-					var nowstr = now.getFullYear().toString() + (now.getMonth() + 1).toString() + now.getDate().toString();
+					var nowstr = now.getFullYear().toString() + (now.getMonth() + 1).toString() + now.getDate().toString() + 'T' + now.getHours().toString() + now.getMinutes().toString() + now.getSeconds().toString() + "000Z";
 
 					arkdiv.append(
 								$('<em>')
