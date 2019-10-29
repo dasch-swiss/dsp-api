@@ -17,26 +17,19 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# The Knora APIs
+# Knora Util API
 
-The Knora APIs include:
+The Knora Util API allows retrieving information about the Knora-stack itself.
+It consists of the following elements:
+* Health: Knora health state
+* Version: Versions of used stack components
 
-* The Knora API versions 1 and 2, which is intended to be used by
-  virtual research environments and other clients for querying and updating
-  data.
-* The Knora Admin API, which is intended to be used only by the
-  [SALSAH](https://github.com/dhlab-basel/Salsah) user interface, for
-  administering projects that use Knora as well as Knora itself.
-* The Knora Util API, which is intended to be used for information retrieval
-  about the Knora-stack itself.
-
-@@toc { depth=2 }
+@@toc { depth=1 }
 
 @@@ index
 
-* [API v1](api-v1/index.md)
-* [API v2](api-v2/index.md)
-* [Admin API](api-admin/index.md)
-* [Util API](api-util/index.md)
+- [Health](health.md)
+- [Version](version.md)
+
 
 @@@
