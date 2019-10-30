@@ -72,10 +72,10 @@ Then to create a test repository and load some test data into the triplestore:
 $ make init-db-test-free
 ```
 
-Then we need to restart the knora-stack after loading the data:
+Then we need to restart knora-api after loading the data:
 
 ```
-$ make stack-restart
+$ make stack-restart-api
 ```
 
 Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
@@ -91,9 +91,22 @@ $ make stack-down
 Run :
 
 ```
-$ make init-knora-test-unit-free
+$ make init-db-test-unit-free
 $ make normal-tests
 ```
+
+### Running with a GraphDB License and Custom Folders
+
+The `$ make stack-up` target can be additonally configured thorugh the following environment variables:
+
+```
+KNORA_GDB_LICENSE - sets the path to the GraphDB-SE license
+KNORA_GDB_IMPORT - sets the path to the import directory accessible from inside the GraphDB Workbench
+KNORA_GDB_HOME - sets the path to the folder where GraphDB will store the database files
+```
+
+Some or all environment variables can be set, as required. If the license file is not set, then GraphDB-Free will be
+started. If the import and/or data directories are not set, then Docker volumes will be used instead.
 
 ## How to Contribute
 

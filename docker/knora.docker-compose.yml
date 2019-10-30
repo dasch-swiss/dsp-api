@@ -9,7 +9,7 @@ services:
     volumes:
       - ${KNORA_GDB_LICENSE_FILE}:/graphdb/graphdb.license
       - ${KNORA_GDB_IMPORT_DIR}:/root/graphdb-import
-      - db-data:/opt/graphdb/home
+      - ${KNORA_GDB_HOME_DIR}:/opt/graphdb/home
     networks:
       - knora-net
     environment:
@@ -81,6 +81,6 @@ networks:
   knora-net:
 
 volumes:
-  db-data:
+  db-home:
   db-import:
   no-license:
