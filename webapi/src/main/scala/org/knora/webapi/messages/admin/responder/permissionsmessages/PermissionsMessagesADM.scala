@@ -39,7 +39,9 @@ import spray.json._
   */
 case class CreateAdministrativePermissionAPIRequestADM(forProject: IRI,
                                                        forGroup: IRI,
-                                                       hasPermissions: Set[PermissionADM])
+                                                       hasPermissions: Set[PermissionADM]) extends PermissionsADMJsonProtocol{
+    def toJsValue: JsValue = createAdministrativePermissionAPIRequestADMFormat.write(this)
+}
 
 /**
   * Represents a payload that asks the Knora API server to change an existing
@@ -55,7 +57,9 @@ case class ChangeAdministrativePermissionAPIRequestADM(iri: IRI,
                                                        forProject: IRI,
                                                        forGroup: IRI,
                                                        hasOldPermissions: Set[PermissionADM],
-                                                       hasNewPermissions: Set[PermissionADM])
+                                                       hasNewPermissions: Set[PermissionADM]) extends PermissionsADMJsonProtocol {
+    def toJsValue: JsValue = changeAdministrativePermissionAPIRequestADMFormat.write(this)
+}
 
 /**
   * Represents a payload that asks the Knora API server to create a new
@@ -71,7 +75,9 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(forProject: IRI,
                                                             forGroup: Option[IRI],
                                                             forResourceClass: Option[IRI],
                                                             forProperty: Option[IRI],
-                                                            hasPermissions: Set[PermissionADM])
+                                                            hasPermissions: Set[PermissionADM]) extends PermissionsADMJsonProtocol {
+    def toJsValue: JsValue = createDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
+}
 
 /**
   * Represents a payload that asks the Knora API server to change an existing
@@ -89,7 +95,9 @@ case class ChangeDefaultObjectAccessPermissionAPIRequestADM(iri: IRI,
                                                             forGroup: IRI,
                                                             forResourceClass: IRI,
                                                             forProperty: IRI,
-                                                            hasPermissions: Set[PermissionADM])
+                                                            hasPermissions: Set[PermissionADM]) extends PermissionsADMJsonProtocol {
+    def toJsValue: JsValue = changeDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -517,15 +525,7 @@ case class DefaultObjectAccessPermissionsStringResponseADM(permissionLiteral: St
   */
 case class DefaultObjectAccessPermissionCreateResponseADM(defaultObjectAccessPermission: DefaultObjectAccessPermissionADM
                                                          ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
-    def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
-}
-
-/**
-  * Represents an answer to [[DefaultObjectAccessPermissionDeleteRequestADM]].
-  */
-case class DefaultObjectAccessPermissionDeleteResponseADM(result: String = "permission deleted"
-                                                         ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
-    def toJsValue = administrativePermissionDeleteResponseADMFormat.write(this)
+    def toJsValue = defaultObjectAccessPermissionCreateResponseADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -918,6 +918,10 @@ trait PermissionsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtoc
         }
     }
 
+    implicit val createAdministrativePermissionAPIRequestADMFormat: JsonFormat[CreateAdministrativePermissionAPIRequestADM] = jsonFormat3(CreateAdministrativePermissionAPIRequestADM)
+    implicit val changeAdministrativePermissionAPIRequestADMFormat: JsonFormat[ChangeAdministrativePermissionAPIRequestADM] = jsonFormat5(ChangeAdministrativePermissionAPIRequestADM)
+    implicit val createDefaultObjectAccessPermissionAPIRequestADMFormat: JsonFormat[CreateDefaultObjectAccessPermissionAPIRequestADM] = jsonFormat5(CreateDefaultObjectAccessPermissionAPIRequestADM)
+    implicit val changeDefaultObjectAccessPermissionAPIRequestADMFormat: JsonFormat[ChangeDefaultObjectAccessPermissionAPIRequestADM] = jsonFormat6(ChangeDefaultObjectAccessPermissionAPIRequestADM)
     implicit val permissionADMFormat: JsonFormat[PermissionADM] = jsonFormat(PermissionADM.apply, "name", "additionalInformation", "permissionCode")
     // apply needed because we have an companion object of a case class
     implicit val administrativePermissionADMFormat: JsonFormat[AdministrativePermissionADM] = jsonFormat(AdministrativePermissionADM, "iri", "forProject", "forGroup", "hasPermissions")
@@ -935,6 +939,4 @@ trait PermissionsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtoc
     implicit val defaultObjectAccessPermissionForIriGetResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionForIriGetResponseADM] = jsonFormat(DefaultObjectAccessPermissionForIriGetResponseADM, "default_object_access_permission")
     implicit val defaultObjectAccessPermissionForProjectGroupGetResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionGetResponseADM] = jsonFormat(DefaultObjectAccessPermissionGetResponseADM, "default_object_access_permission")
     implicit val defaultObjectAccessPermissionCreateResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionCreateResponseADM] = jsonFormat(DefaultObjectAccessPermissionCreateResponseADM, "default_object_access_permission")
-    implicit val defaultObjectAccessPermissionDeleteResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionDeleteResponseADM] = jsonFormat(DefaultObjectAccessPermissionDeleteResponseADM, "result")
-
 }

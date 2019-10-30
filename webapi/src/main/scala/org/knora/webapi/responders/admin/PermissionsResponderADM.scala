@@ -629,10 +629,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
             // get project
             projectIri = createRequest.forProject
-            maybeProjectF = responderManager ? ProjectGetADM(
+            maybeProjectF: Future[Option[ProjectADM]] = (responderManager ? ProjectGetADM(
                 ProjectIdentifierADM(maybeIri = Some(projectIri)),
                 KnoraSystemInstances.Users.SystemUser
-              )
+              )).mapTo[Option[ProjectADM]]
 
             maybeProject: Option[ProjectADM] <- maybeProjectF
 
@@ -641,10 +641,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
             // get group
             groupIri = createRequest.forGroup
-            maybeGroupF = responderManager ? GroupGetADM(
+            maybeGroupF = (responderManager ? GroupGetADM(
                 groupIri,
                 KnoraSystemInstances.Users.SystemUser
-            )
+            )).mapTo[Option[GroupADM]]
 
             maybeGroup: Option[GroupADM] <- maybeGroupF
 
@@ -1320,10 +1320,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
 
     private def createDefaultObjectAccessPermissionADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = ???
-
-    private def deleteDefaultObjectAccessPermissionADM(defaultObjectAccessPermissionIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionDeleteResponseADM] = ???
-
-
 
 }
 
