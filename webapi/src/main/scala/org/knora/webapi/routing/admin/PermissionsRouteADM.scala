@@ -34,19 +34,20 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
 import org.knora.webapi.util.clientapi._
-import org.knora.webapi.{OntologyConstants, SharedTestDataADM}
-import org.springframework.web.client.HttpClientErrorException.BadRequest
+import org.knora.webapi.{BadRequestException, OntologyConstants, SharedTestDataADM}
 
 import scala.concurrent.{ExecutionContext, Future}
+
+
 
 object PermissionsRouteADM {
     val PermissionsBasePath = PathMatcher("admin" / "permissions")
     val PermissionsBasePathString: String = "/admin/permissions"
 }
 
-@Api(value = "administrative-permissions", produces = "application/json")
-@Path("/admin/administrative-permissions")
-class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
+@Api(value = "permissions", produces = "application/json")
+@Path("/admin/permissions")
+class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with PermissionsADMJsonProtocol with Authenticator with ClientEndpoint {
 
     import PermissionsRouteADM._
 
@@ -158,6 +159,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
       * Create a new administrative permission
       */
     private def createAdministrativePermission: Route = path(PermissionsBasePath / "ap") {
+
         post {
             entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
                 requestContext =>
@@ -189,7 +191,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 requestContext =>
 
                     if (apiRequest.iri != permissionIri) {
-                        throw new BadRequest("The permission IRI in the route does not match the permission IRI in the payload.")
+                        throw new BadRequestException("The permission IRI in the route does not match the permission IRI in the payload.")
                     }
 
                     val requestMessage: Future[AdministrativePermissionChangeRequestADM] = for {
@@ -247,7 +249,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
                 requestContext =>
 
                     if (apiRequest.iri != permissionIri) {
-                        throw new BadRequest("The permission IRI in the route does not match the permission IRI in the payload.")
+                        throw new BadRequestException("The permission IRI in the route does not match the permission IRI in the payload.")
                     }
 
                     val requestMessage: Future[DefaultObjectAccessPermissionChangeRequestADM] = for {

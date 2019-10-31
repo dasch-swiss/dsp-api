@@ -330,12 +330,16 @@ class SipiConnector extends Actor with ActorLogging {
       * Tries to access the IIIF Service.
       */
     private def iiifGetStatus(): Try[IIIFServiceStatusResponse] = {
-        val request = new HttpGet(settings.internalSipiBaseUrl + "/server/test.html")
+        val sipiTestUrl = "/server/test.html"
+        val request = new HttpGet(sipiTestUrl)
 
+        log.info(s"Trying to access Sipi service at: $sipiTestUrl")
         val result: Try[String] = doSipiRequest(request)
         if (result.isSuccess) {
+            log.info("Success")
             Try(IIIFServiceStatusOK)
         } else {
+            log.warning(s"$result")
             Try(IIIFServiceStatusNOK)
         }
     }
@@ -343,7 +347,7 @@ class SipiConnector extends Actor with ActorLogging {
     /**
       * Makes an HTTP request to Sipi and returns the response.
       *
-      * @param request the HTTP request.
+      * @param request the HTTP request (without protocol://host:port).
       * @return Sipi's response.
       */
     private def doSipiRequest(request: HttpRequest): Try[String] = {
@@ -353,6 +357,7 @@ class SipiConnector extends Actor with ActorLogging {
             var maybeResponse: Option[CloseableHttpResponse] = None
 
             try {
+                log.info(s"targetHost: $targetHost, request: $request")
                 maybeResponse = Some(httpClient.execute(targetHost, request, httpContext))
 
                 val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {

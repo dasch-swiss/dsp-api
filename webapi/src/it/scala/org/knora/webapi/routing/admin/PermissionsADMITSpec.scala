@@ -22,7 +22,7 @@ package org.knora.webapi.e2e.admin
 import akka.http.scaladsl.model.StatusCodes
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.{E2ESpec, ITKnoraLiveSpec, OntologyConstants, SharedTestDataV1}
+import org.knora.webapi.{ITKnoraLiveSpec, OntologyConstants, SharedTestDataADM}
 
 import scala.concurrent.duration._
 
@@ -37,12 +37,12 @@ object PermissionsADMITSpec {
 /**
   * Test specification for testing the 'admin/permissions' route.
   */
-class PermissionsADMITSpec extends ITKnoraLiveSpec(PermissionsADME2ESpec.config) with TriplestoreJsonProtocol {
+class PermissionsADMITSpec extends ITKnoraLiveSpec(PermissionsADMITSpec.config) with TriplestoreJsonProtocol {
 
     "The Permissions Route ('admin/permissions/projectIri/groupIri')" should {
 
         "return administrative permissions" in {
-            val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
+            val projectIri = java.net.URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
             val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
 
             val request = Get(baseApiUrl + s"/admin/permissions/$projectIri/$groupIri")

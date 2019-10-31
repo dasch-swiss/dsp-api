@@ -84,9 +84,6 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         // waits until knora is up and running
         applicationStateRunning()
 
-        // check sipi
-        checkIfSipiIsRunning()
-
         // loadTestData
         loadTestData(rdfDataObjects)
     }
@@ -94,15 +91,6 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     override def afterAll: Unit = {
         /* Stop the server when everything else has finished */
         appActor ! AppStop()
-    }
-
-    protected def checkIfSipiIsRunning(): Unit = {
-        // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
-        val request = Get(baseSipiUrl + "/server/test.html")
-        val response = singleAwaitingRequest(request)
-        assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
-        if (response.status.isSuccess()) logger.info("Sipi is running.")
-        response.entity.discardBytes()
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {

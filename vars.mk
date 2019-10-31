@@ -68,3 +68,7 @@ ifeq ($(GDB_HEAP_SIZE),)
 else
   KNORA_GDB_HEAP_SIZE := $(GDB_HEAP_SIZE)
 endif
+
+ifeq ($(KNORA_CURRENT_DIR),)
+  KNORA_CURRENT_DIR := $(shell pwd)
+endif
