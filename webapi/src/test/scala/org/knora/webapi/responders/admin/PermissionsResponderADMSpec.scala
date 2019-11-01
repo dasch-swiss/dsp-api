@@ -19,12 +19,11 @@
 
 package org.knora.webapi.responders.admin
 
+import java.util.UUID
+
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.SharedOntologyTestDataADM._
-import org.knora.webapi.SharedPermissionsTestData._
-import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -86,7 +85,10 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 responderManager ! PermissionDataGetADM(
                     projectIris = SharedTestDataV1.multiuserUser.projects_info.keys.toSeq,
                     groupIris = SharedTestDataV1.multiuserUser.groups,
-                    isInProjectAdminGroups = Seq(INCUNABULA_PROJECT_IRI, IMAGES_PROJECT_IRI),
+                    isInProjectAdminGroups = Seq(
+                        SharedTestDataADM.incunabulaProject.id,
+                        SharedTestDataADM.imagesProject.id
+                    ),
                     isInSystemAdminGroup = false,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -97,7 +99,9 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 responderManager ! PermissionDataGetADM(
                     projectIris = SharedTestDataV1.incunabulaProjectAdminUser.projects_info.keys.toSeq,
                     groupIris = SharedTestDataV1.incunabulaProjectAdminUser.groups,
-                    isInProjectAdminGroups = Seq(INCUNABULA_PROJECT_IRI),
+                    isInProjectAdminGroups = Seq(
+                        SharedTestDataADM.incunabulaProject.id
+                    ),
                     isInSystemAdminGroup = false,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -130,7 +134,9 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 responderManager ! PermissionDataGetADM(
                     projectIris = SharedTestDataV1.imagesUser01.projects_info.keys.toSeq,
                     groupIris = SharedTestDataV1.imagesUser01.groups,
-                    isInProjectAdminGroups = Seq(IMAGES_PROJECT_IRI),
+                    isInProjectAdminGroups = Seq(
+                        SharedTestDataADM.imagesProject.id
+                    ),
                     isInSystemAdminGroup = false,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -166,38 +172,103 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             }
         }
 
-        "queried about administrative permissions " should {
+        "queried about permissions" should {
+
+            "return all permissions for a project" in {
+                responderManager ! PermissionsForProjectGetRequestADM(
+                    projectIri = SharedTestDataADM.imagesProject.id,
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+
+                val received = expectMsgType[PermissionsForProjectGetResponseADM](2.seconds)
+
+                assert(received.aps.equals(Seq(
+                    SharedPermissionsTestData.perm002_a1.p,
+                    SharedPermissionsTestData.perm002_a3.p,
+                    SharedPermissionsTestData.perm002_a2.p
+                )), "APs not returned as expected.")
+
+                assert(received.doaps.equals(Seq(
+                    SharedPermissionsTestData.perm002_d1.p,
+                    SharedPermissionsTestData.perm0003_a4.p,
+                    SharedPermissionsTestData.perm002_d2.p
+                )), "DOAPs not returned as expected.")
+
+            }
+        }
+
+        "queried about administrative permissions" should {
 
             "return all AdministrativePermissions for project " in {
                 responderManager ! AdministrativePermissionsForProjectGetRequestADM(
-                    projectIri = IMAGES_PROJECT_IRI,
-                    requestingUser = rootUser
+                    projectIri = SharedTestDataADM.imagesProject.id,
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
                 )
                 expectMsg(AdministrativePermissionsForProjectGetResponseADM(
-                    Seq(perm002_a1.p, perm002_a3.p, perm002_a2.p)
+                    Seq(
+                        SharedPermissionsTestData.perm002_a1.p,
+                        SharedPermissionsTestData.perm002_a3.p,
+                        SharedPermissionsTestData.perm002_a2.p
+                    )
                 ))
             }
 
             "return AdministrativePermission for project and group" in {
                 responderManager ! AdministrativePermissionForProjectGroupGetRequestADM(
-                    projectIri = IMAGES_PROJECT_IRI,
+                    projectIri = SharedTestDataADM.imagesProject.id,
                     groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
                     requestingUser = rootUser
                 )
-                expectMsg(AdministrativePermissionForProjectGroupGetResponseADM(perm002_a1.p))
+                expectMsg(
+                    AdministrativePermissionForProjectGroupGetResponseADM(
+                        SharedPermissionsTestData.perm002_a1.p
+                    )
+                )
             }
 
             "return AdministrativePermission for IRI " in {
                 responderManager ! AdministrativePermissionForIriGetRequestADM(
-                    administrativePermissionIri = perm002_a1.iri,
-                    requestingUser = rootUser
+                    administrativePermissionIri = SharedPermissionsTestData.perm002_a1.iri,
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
                 )
-                expectMsg(AdministrativePermissionForIriGetResponseADM(perm002_a1.p))
+                expectMsg(
+                    AdministrativePermissionForIriGetResponseADM(
+                        SharedPermissionsTestData.perm002_a1.p
+                    )
+                )
             }
 
         }
 
-        "asked to create an administrative permission" should {
+        "asked to create administrative permissions" should {
+
+            "create administrative permission" in {
+                responderManager ! AdministrativePermissionCreateRequestADM(
+                    createRequest = CreateAdministrativePermissionAPIRequestADM(
+                        forProject = SharedTestDataADM.imagesProject.id,
+                        forGroup = SharedTestDataADM.imagesReviewerGroup.id,
+                        hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+                    ),
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received = expectMsgType[AdministrativePermissionCreateResponseADM](2.seconds)
+
+                assert(
+                    received.ap.forProject.equals(
+                        SharedTestDataADM.imagesProject.id)
+                )
+                assert(
+                    received.ap.forGroup.equals(
+                        SharedTestDataADM.imagesReviewerGroup.id)
+                )
+                assert(
+                    received.ap.hasPermissions.equals(
+                        Set(PermissionADM.ProjectResourceCreateAllPermission)))
+            }
 
             "fail and return a 'BadRequestException' when project does not exist" ignore {}
 
@@ -206,18 +277,16 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             "fail and return a 'NotAuthorizedException' whe the user's permission are not high enough (e.g., not member of ProjectAdmin group" ignore {}
 
             "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
-                val iri = stringFormatter.makeRandomPermissionIri(imagesProject.shortcode)
                 responderManager ! AdministrativePermissionCreateRequestADM(
                     createRequest = CreateAdministrativePermissionAPIRequestADM(
-                        iri = iri,
-                        forProject = IMAGES_PROJECT_IRI,
+                        forProject = SharedTestDataADM.imagesProject.id,
                         forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-                        hasOldPermissions = Set.empty[PermissionADM],
-                        hasNewPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+                        hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
                     ),
-                    requestingUser = rootUser
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
                 )
-                expectMsg(Failure(DuplicateValueException(s"Permission for project: '$IMAGES_PROJECT_IRI' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists.")))
+                expectMsg(Failure(DuplicateValueException(s"Permission for project: '${SharedTestDataADM.imagesProject.id}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists.")))
             }
 
             "create and return an administrative permission " ignore {}
@@ -226,13 +295,19 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
         "queried about object access permissions " should {
 
             "return object access permissions for a resource" in {
-                responderManager ! ObjectAccessPermissionsForResourceGetADM(resourceIri = perm003_o1.iri, requestingUser = rootUser)
-                expectMsg(Some(perm003_o1.p))
+                responderManager ! ObjectAccessPermissionsForResourceGetADM(
+                    resourceIri = SharedPermissionsTestData.perm003_o1.iri,
+                    requestingUser = rootUser
+                )
+                expectMsg(Some(SharedPermissionsTestData.perm003_o1.p))
             }
 
             "return object access permissions for a value" in {
-                responderManager ! ObjectAccessPermissionsForValueGetADM(valueIri = perm003_o2.iri, requestingUser = rootUser)
-                expectMsg(Some(perm003_o2.p))
+                responderManager ! ObjectAccessPermissionsForValueGetADM(
+                    valueIri = SharedPermissionsTestData.perm003_o2.iri,
+                    requestingUser = rootUser
+                )
+                expectMsg(Some(SharedPermissionsTestData.perm003_o2.p))
             }
 
         }
@@ -241,79 +316,93 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return all DefaultObjectAccessPermissions for project" in {
                 responderManager ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
-                    projectIri = IMAGES_PROJECT_IRI,
-                    requestingUser = rootUser
+                    projectIri = SharedTestDataADM.imagesProject.id,
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
                 )
 
                 expectMsg(DefaultObjectAccessPermissionsForProjectGetResponseADM(
-                    defaultObjectAccessPermissions = Seq(perm002_d1.p, perm0003_a4.p, perm002_d2.p)
+                    doaps = Seq(
+                        SharedPermissionsTestData.perm002_d1.p,
+                        SharedPermissionsTestData.perm0003_a4.p,
+                        SharedPermissionsTestData.perm002_d2.p
+                    )
                 ))
             }
 
             "return DefaultObjectAccessPermission for IRI" in {
                 responderManager ! DefaultObjectAccessPermissionForIriGetRequestADM(
-                    defaultObjectAccessPermissionIri = perm002_d1.iri,
-                    requestingUser = rootUser
+                    defaultObjectAccessPermissionIri = SharedPermissionsTestData.perm002_d1.iri,
+                    requestingUser = rootUser,
+                    apiRequestID = UUID.randomUUID()
                 )
                 expectMsg(DefaultObjectAccessPermissionForIriGetResponseADM(
-                    defaultObjectAccessPermission = perm002_d1.p
+                    doap = SharedPermissionsTestData.perm002_d1.p
                 ))
             }
 
             "return DefaultObjectAccessPermission for project and group" in {
                 responderManager ! DefaultObjectAccessPermissionGetRequestADM(
-                    projectIRI = INCUNABULA_PROJECT_IRI,
+                    projectIRI = SharedTestDataADM.incunabulaProject.id,
                     groupIRI = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                     resourceClassIRI = None,
                     propertyIRI = None,
                     requestingUser = rootUser
                 )
-                expectMsg(DefaultObjectAccessPermissionGetResponseADM(
-                    defaultObjectAccessPermission = perm003_d1.p
-                ))
+                expectMsg(
+                    DefaultObjectAccessPermissionGetResponseADM(
+                        doap = SharedPermissionsTestData.perm003_d1.p
+                    )
+                )
             }
 
             "return DefaultObjectAccessPermission for project and resource class ('incunabula:Page')" in {
                 responderManager ! DefaultObjectAccessPermissionGetRequestADM(
-                    projectIRI = INCUNABULA_PROJECT_IRI,
+                    projectIRI = SharedTestDataADM.incunabulaProject.id,
                     groupIRI = None,
-                    resourceClassIRI = Some(INCUNABULA_BOOK_RESOURCE_CLASS),
+                    resourceClassIRI = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
                     propertyIRI = None,
                     requestingUser = rootUser
                 )
-                expectMsg(DefaultObjectAccessPermissionGetResponseADM(
-                    defaultObjectAccessPermission = perm003_d2.p
-                ))
+                expectMsg(
+                    DefaultObjectAccessPermissionGetResponseADM(
+                        doap = SharedPermissionsTestData.perm003_d2.p
+                    )
+                )
             }
 
             "return DefaultObjectAccessPermission for project and property ('knora-base:hasStillImageFileValue') (system property)" in {
                 responderManager ! DefaultObjectAccessPermissionGetRequestADM(
-                    projectIRI = INCUNABULA_PROJECT_IRI,
+                    projectIRI = SharedTestDataADM.incunabulaProject.id,
                     groupIRI = None,
                     resourceClassIRI = None,
                     propertyIRI = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
                     requestingUser = rootUser
                 )
-                expectMsg(DefaultObjectAccessPermissionGetResponseADM(
-                    defaultObjectAccessPermission = perm001_d3.p
-                ))
+                expectMsg(
+                    DefaultObjectAccessPermissionGetResponseADM(
+                        doap = SharedPermissionsTestData.perm001_d3.p
+                    )
+                )
             }
 
             "cache DefaultObjectAccessPermission" in {
                 responderManager ! DefaultObjectAccessPermissionGetRequestADM(
-                    projectIRI = INCUNABULA_PROJECT_IRI,
+                    projectIRI = SharedTestDataADM.incunabulaProject.id,
                     groupIRI = None,
                     resourceClassIRI = None,
                     propertyIRI = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
                     requestingUser = rootUser
                 )
-                expectMsg(DefaultObjectAccessPermissionGetResponseADM(
-                    defaultObjectAccessPermission = perm001_d3.p
-                ))
+                expectMsg(
+                    DefaultObjectAccessPermissionGetResponseADM(
+                        doap = SharedPermissionsTestData.perm001_d3.p
+                    )
+                )
 
-                val key = perm001_d3.p.cacheKey
+                val key = SharedPermissionsTestData.perm001_d3.p.cacheKey
                 val maybePermission = CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsResponderADM.PermissionsCacheName, key)
-                maybePermission should be (Some(perm001_d3.p))
+                maybePermission should be (Some(SharedPermissionsTestData.perm001_d3.p))
             }
         }
 
@@ -369,7 +458,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class (system resource class)" in {
                 responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-                    projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = OntologyConstants.KnoraBase.LinkObj,
+                    projectIri = SharedTestDataADM.incunabulaProject.id,
+                    resourceClassIri = OntologyConstants.KnoraBase.LinkObj,
                     targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -378,7 +468,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property (system property)" in {
                 responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
-                    projectIri = INCUNABULA_PROJECT_IRI,
+                    projectIri = SharedTestDataADM.incunabulaProject.id,
                     resourceClassIri = OntologyConstants.KnoraBase.StillImageRepresentation,
                     propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue,
                     targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -389,7 +479,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return the default object access permissions 'string' for the 'incunabula:book' resource class (project resource class)" in {
                 responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-                    projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_BOOK_RESOURCE_CLASS,
+                    projectIri = SharedTestDataADM.incunabulaProject.id,
+                    resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS,
                     targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -398,7 +489,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return the default object access permissions 'string' for the 'incunabula:page' resource class (project resource class)" in {
                 responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-                    projectIri = INCUNABULA_PROJECT_IRI, resourceClassIri = INCUNABULA_PAGE_RESOURCE_CLASS,
+                    projectIri = SharedTestDataADM.incunabulaProject.id,
+                    resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS,
                     targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -407,9 +499,9 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return the default object access permissions 'string' for the 'images:jahreszeit' property" in {
                 responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
-                    projectIri = IMAGES_PROJECT_IRI,
-                    resourceClassIri = s"$IMAGES_ONTOLOGY_IRI#bild",
-                    propertyIri = s"$IMAGES_ONTOLOGY_IRI#jahreszeit",
+                    projectIri = SharedTestDataADM.imagesProject.id,
+                    resourceClassIri = s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild",
+                    propertyIri = s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#jahreszeit",
                     targetUser = SharedTestDataADM.imagesUser01,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -418,7 +510,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return the default object access permissions 'string' for the 'anything:hasInterval' property" in {
                 responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
-                    projectIri = ANYTHING_PROJECT_IRI,
+                    projectIri = SharedTestDataADM.anythingProject.id,
                     resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                     propertyIri = "http://www.knora.org/ontology/0001/anything#hasInterval",
                     targetUser = SharedTestDataADM.anythingUser1,
@@ -429,7 +521,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return the default object access permissions 'string' for the 'anything:Thing' class" in {
                 responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-                    projectIri = ANYTHING_PROJECT_IRI,
+                    projectIri = SharedTestDataADM.anythingProject.id,
                     resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                     targetUser = SharedTestDataADM.anythingUser1,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -439,7 +531,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return the default object access permissions 'string' for the 'anything:Thing' class and 'anything:hasText' property" in {
                 responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
-                    projectIri = ANYTHING_PROJECT_IRI,
+                    projectIri = SharedTestDataADM.anythingProject.id,
                     resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                     propertyIri = "http://www.knora.org/ontology/0001/anything#hasText",
                     targetUser = SharedTestDataADM.anythingUser1,
@@ -450,8 +542,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return the default object access permissions 'string' for the 'images:Bild' class and 'anything:hasText' property" in {
                 responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
-                    projectIri = ANYTHING_PROJECT_IRI,
-                    resourceClassIri = s"$IMAGES_ONTOLOGY_IRI#bild",
+                    projectIri = SharedTestDataADM.anythingProject.id,
+                    resourceClassIri = s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild",
                     propertyIri = "http://www.knora.org/ontology/0001/anything#hasText",
                     targetUser = SharedTestDataADM.anythingUser1,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -461,7 +553,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
 
             "return the default object access permissions 'string' for the 'anything:Thing' resource class for the root user (system admin and not member of project)" in {
                 responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-                    projectIri = ANYTHING_PROJECT_IRI, resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
+                    projectIri = SharedTestDataADM.anythingProject.id,
+                    resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
                     targetUser = SharedTestDataADM.rootUser,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -475,7 +568,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                         PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
                         PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
                     )
-                val f: Future[Set[PermissionADM]] = responderUnderTest invokePrivate defaultObjectAccessPermissionsForGroupsGetADM(IMAGES_PROJECT_IRI, groups)
+                val f: Future[Set[PermissionADM]] = responderUnderTest invokePrivate defaultObjectAccessPermissionsForGroupsGetADM(SharedTestDataADM.imagesProject.id, groups)
                 val result: Set[PermissionADM] = Await.result(f, 1.seconds)
                 result should equal(expected)
             }

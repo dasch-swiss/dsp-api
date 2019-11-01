@@ -704,7 +704,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 case None => throw NotFoundException(s"Permission not found")
             }
         } yield AdministrativePermissionCreateResponseADM(
-            administrativePermission = permission
+            ap = permission
         )
 
     }

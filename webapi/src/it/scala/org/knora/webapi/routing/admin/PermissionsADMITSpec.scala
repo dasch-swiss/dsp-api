@@ -20,9 +20,11 @@
 package org.knora.webapi.e2e.admin
 
 import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.{ITKnoraLiveSpec, OntologyConstants, SharedTestDataADM}
+import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
+import org.knora.webapi.{ITKnoraLiveSpec, SharedTestDataADM}
 
 import scala.concurrent.duration._
 
@@ -39,15 +41,32 @@ object PermissionsADMITSpec {
   */
 class PermissionsADMITSpec extends ITKnoraLiveSpec(PermissionsADMITSpec.config) with TriplestoreJsonProtocol {
 
+    val rootCreds = CredentialsV1(
+        SharedTestDataADM.rootUser.id,
+        SharedTestDataADM.rootUser.email,
+        "test"
+    )
+
+    val projectAdminCreds = CredentialsV1(
+        SharedTestDataADM.imagesUser01.id,
+        SharedTestDataADM.imagesUser01.email,
+        "test"
+    )
+
+    val normalUserCreds = CredentialsV1(
+        SharedTestDataADM.normalUser.id,
+        SharedTestDataADM.normalUser.email,
+        "test"
+    )
+
     "The Permissions Route ('admin/permissions/projectIri/groupIri')" should {
 
-        "return administrative permissions" in {
+        "return all administrative permissions for the images project" in {
             val projectIri = java.net.URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
-            val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
 
-            val request = Get(baseApiUrl + s"/admin/permissions/$projectIri/$groupIri")
-            val response = singleAwaitingRequest(request, 1.seconds)
-            logger.debug("==>> " + response.toString)
+            val request = Get(baseApiUrl + s"/admin/permissions/$projectIri") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+            val response = singleAwaitingRequest(request, 3.seconds)
+            logger.info("==>> " + response.toString)
             assert(response.status === StatusCodes.OK)
         }
     }

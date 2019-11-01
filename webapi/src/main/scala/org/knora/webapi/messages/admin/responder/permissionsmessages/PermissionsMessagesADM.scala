@@ -403,11 +403,11 @@ case class DefaultObjectAccessPermissionChangeRequestADM(changeRequest: ChangeDe
 /**
   * Represents an answer to [[PermissionsForProjectGetRequestADM]].
   *
-  * @param administrativePermissions      the retrieved sequence of [[AdministrativePermissionADM]].
-  * @param defaultObjectAccessPermissions the retrieved sequence of [[DefaultObjectAccessPermissionADM]].
+  * @param aps      the retrieved sequence of [[AdministrativePermissionADM]].
+  * @param doaps the retrieved sequence of [[DefaultObjectAccessPermissionADM]].
   */
-case class PermissionsForProjectGetResponseADM(administrativePermissions: Seq[AdministrativePermissionADM],
-                                               defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionADM]
+case class PermissionsForProjectGetResponseADM(aps: Seq[AdministrativePermissionADM],
+                                               doaps: Seq[DefaultObjectAccessPermissionADM]
                                               ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = permissionsForProjectGetResponseADMFormat.write(this)
 }
@@ -415,11 +415,11 @@ case class PermissionsForProjectGetResponseADM(administrativePermissions: Seq[Ad
 /**
   * Represents an answer to [[PermissionForIriGetRequestADM]].
   *
-  * @param administrativePermission      the retrieved [[AdministrativePermissionADM]].
-  * @param defaultObjectAccessPermission the retrieved [[DefaultObjectAccessPermissionADM]].
+  * @param ap      the retrieved [[AdministrativePermissionADM]].
+  * @param doap the retrieved [[DefaultObjectAccessPermissionADM]].
   */
-case class PermissionForIriGetResponseADM(administrativePermission: Option[AdministrativePermissionADM],
-                                          defaultObjectAccessPermission: Option[DefaultObjectAccessPermissionADM]
+case class PermissionForIriGetResponseADM(ap: Option[AdministrativePermissionADM],
+                                          doap: Option[DefaultObjectAccessPermissionADM]
                                          ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = permissionForIriGetResponseADMFormat.write(this)
 }
@@ -437,9 +437,9 @@ case class PermissionDeleteResponseADM(result: String = "permission deleted"
 /**
   * Represents an answer to [[AdministrativePermissionsForProjectGetRequestADM]].
   *
-  * @param administrativePermissions the retrieved sequence of [[AdministrativePermissionADM]]
+  * @param ap the retrieved sequence of [[AdministrativePermissionADM]]
   */
-case class AdministrativePermissionsForProjectGetResponseADM(administrativePermissions: Seq[AdministrativePermissionADM]
+case class AdministrativePermissionsForProjectGetResponseADM(ap: Seq[AdministrativePermissionADM]
                                                             ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = administrativePermissionsForProjectGetResponseADMFormat.write(this)
 }
@@ -447,9 +447,9 @@ case class AdministrativePermissionsForProjectGetResponseADM(administrativePermi
 /**
   * Represents an answer to [[AdministrativePermissionForIriGetRequestADM]].
   *
-  * @param administrativePermission the retrieved [[AdministrativePermissionADM]].
+  * @param ap the retrieved [[AdministrativePermissionADM]].
   */
-case class AdministrativePermissionForIriGetResponseADM(administrativePermission: AdministrativePermissionADM
+case class AdministrativePermissionForIriGetResponseADM(ap: AdministrativePermissionADM
                                                        ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = administrativePermissionForIriGetResponseADMFormat.write(this)
 }
@@ -457,9 +457,9 @@ case class AdministrativePermissionForIriGetResponseADM(administrativePermission
 /**
   * Represents an answer to [[AdministrativePermissionForProjectGroupGetRequestADM]]
   *
-  * @param administrativePermission the retrieved [[AdministrativePermissionADM]]
+  * @param ap the retrieved [[AdministrativePermissionADM]]
   */
-case class AdministrativePermissionForProjectGroupGetResponseADM(administrativePermission: AdministrativePermissionADM
+case class AdministrativePermissionForProjectGroupGetResponseADM(ap: AdministrativePermissionADM
                                                                 ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = administrativePermissionForProjectGroupGetResponseADMFormat.write(this)
 }
@@ -467,9 +467,9 @@ case class AdministrativePermissionForProjectGroupGetResponseADM(administrativeP
 /**
   * Represents an answer to [[AdministrativePermissionCreateRequestADM]].
   *
-  * @param administrativePermission the newly created [[AdministrativePermissionADM]].
+  * @param ap the newly created [[AdministrativePermissionADM]].
   */
-case class AdministrativePermissionCreateResponseADM(administrativePermission: AdministrativePermissionADM
+case class AdministrativePermissionCreateResponseADM(ap: AdministrativePermissionADM
                                                     ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = administrativePermissionCreateResponseADMFormat.write(this)
 }
@@ -483,9 +483,9 @@ case class AdministrativePermissionCreateResponseADM(administrativePermission: A
 /**
   * Represents an answer to [[DefaultObjectAccessPermissionsForProjectGetRequestADM]]
   *
-  * @param defaultObjectAccessPermissions the retrieved sequence of [[DefaultObjectAccessPermissionADM]]
+  * @param doaps the retrieved sequence of [[DefaultObjectAccessPermissionADM]]
   */
-case class DefaultObjectAccessPermissionsForProjectGetResponseADM(defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionADM]
+case class DefaultObjectAccessPermissionsForProjectGetResponseADM(doaps: Seq[DefaultObjectAccessPermissionADM]
                                                                  ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
 }
@@ -493,9 +493,9 @@ case class DefaultObjectAccessPermissionsForProjectGetResponseADM(defaultObjectA
 /**
   * Represents an answer to [[DefaultObjectAccessPermissionGetRequestADM]].
   *
-  * @param defaultObjectAccessPermission the retrieved [[DefaultObjectAccessPermissionADM]].
+  * @param doap the retrieved [[DefaultObjectAccessPermissionADM]].
   */
-case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermission: DefaultObjectAccessPermissionADM
+case class DefaultObjectAccessPermissionGetResponseADM(doap: DefaultObjectAccessPermissionADM
                                                       ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = defaultObjectAccessPermissionForProjectGroupGetResponseADMFormat.write(this)
 }
@@ -503,9 +503,9 @@ case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermis
 /**
   * Represents an answer to [[DefaultObjectAccessPermissionForIriGetRequestADM]].
   *
-  * @param defaultObjectAccessPermission the retrieved [[DefaultObjectAccessPermissionADM]].
+  * @param doap the retrieved [[DefaultObjectAccessPermissionADM]].
   */
-case class DefaultObjectAccessPermissionForIriGetResponseADM(defaultObjectAccessPermission: DefaultObjectAccessPermissionADM
+case class DefaultObjectAccessPermissionForIriGetResponseADM(doap: DefaultObjectAccessPermissionADM
                                                             ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = defaultObjectAccessPermissionForIriGetResponseADMFormat.write(this)
 }
@@ -521,9 +521,9 @@ case class DefaultObjectAccessPermissionsStringResponseADM(permissionLiteral: St
 /**
   * Represents an answer to [[DefaultObjectAccessPermissionCreateRequestADM]].
   *
-  * @param defaultObjectAccessPermission the newly created [[DefaultObjectAccessPermissionADM]].
+  * @param doap the newly created [[DefaultObjectAccessPermissionADM]].
   */
-case class DefaultObjectAccessPermissionCreateResponseADM(defaultObjectAccessPermission: DefaultObjectAccessPermissionADM
+case class DefaultObjectAccessPermissionCreateResponseADM(doap: DefaultObjectAccessPermissionADM
                                                          ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
     def toJsValue = defaultObjectAccessPermissionCreateResponseADMFormat.write(this)
 }

@@ -195,7 +195,7 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 	docker-compose -f docker/knora.docker-compose.yml stop sipi
 
 .PHONY: unit-tests
-unit-tests: stack-without-api init-knora-test-unit ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest').
+unit-tests: ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest'). Please run 'make stack-without-api' manually.
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -228,7 +228,7 @@ unit-tests-with-coverage: stack-without-api ## runs the unit tests (equivalent t
 				daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
 
 .PHONY: e2e-tests
-e2e-tests: stack-without-api init-knora-test-unit ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
+e2e-tests: ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest'). Please run 'make stack-without-api' manually.
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -261,10 +261,10 @@ e2e-tests-with-coverage: stack-without-api ## runs the e2e tests (equivalent to 
 				daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
 
 .PHONY: it-tests
-it-tests: stack-without-api init-knora-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it').
-	docker run 	--rm \
+it-tests: ## runs the integration tests (equivalent to 'sbt webapi/it'). Please run 'make stack-without-api' manually.
+	@docker run --rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(KNORA_CURRENT_DIR):/src \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
@@ -273,7 +273,7 @@ it-tests: stack-without-api init-knora-test-unit ## runs the integration tests (
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
 				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt "webapi/it:test"
+				daschswiss/scala-sbt sbt "webapi/it:testOnly *.PermissionsADMITSpec"
 
 .PHONY: it-tests-with-coverage
 it-tests-with-coverage: stack-without-api ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.
@@ -282,7 +282,7 @@ it-tests-with-coverage: stack-without-api ## runs the integration tests (equival
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(KNORA_CURRENT_DIR):/src \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
