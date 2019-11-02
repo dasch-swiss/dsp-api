@@ -1,9 +1,11 @@
 workspace(name = "knora_api")
 
+# load http_archive method
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# download rules_scala repository
 rules_scala_version="0f89c210ade8f4320017daf718a61de3c1ac4773" # update this as needed
 rules_scala_version_sha256="37eb013ea3e6a940da70df43fe2dd6f423d1ac0849042aa586f9ac157321018d"
-
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 http_archive(
     name = "io_bazel_rules_scala",
     strip_prefix = "rules_scala-%s" % rules_scala_version,
@@ -12,10 +14,12 @@ http_archive(
     sha256 = rules_scala_version_sha256,
 )
 
+# register default and our custom scala toolchain
 load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
 scala_register_toolchains()
 register_toolchains("//toolchains:knora_api_scala_toolchain")
 
+# set the default scala version
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
 scala_repositories((
     "2.12.8",
@@ -26,6 +30,9 @@ scala_repositories((
     }
 ))
 
+#
+# Download the protobuf repository (needed by go)
+#
 protobuf_version="09745575a923640154bcf307fba8aedff47f240a"
 protobuf_version_sha256="416212e14481cff8fd4849b1c1c1200a7f34808a54377e22d7447efdf54ad758"
 
@@ -45,19 +52,10 @@ http_archive(
     sha256 = "2ef429f5d7ce7111263289644d233707dba35e39696377ebab8b0bc701f7818e",
 )
 
-# rules_pkg - basic packaging rules
-rules_package_version="0.2.4"
-rules_package_version_sha256="4ba8f4ab0ff85f2484287ab06c0d871dcb31cc54d439457d28fd4ae14b18450a"
-http_archive(
-    name = "rules_pkg",
-    url = "https://github.com/bazelbuild/rules_pkg/releases/download/%s/rules_pkg-%s.tar.gz" % (rules_package_version, rules_package_version),
-    sha256 = rules_package_version_sha256
-)
-
-load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
-rules_pkg_dependencies()
-
-# used for maven dependency resolution in the third_party sub-folder
+#
+# download rules_jvm_external used for maven dependency resolution
+# defined in the third_party sub-folder
+#
 rules_jvm_external_version = "2.8"
 rules_jvm_external_version_sha256 = "79c9850690d7614ecdb72d68394f994fef7534b292c4867ce5e7dec0aa7bdfad"
 
@@ -78,7 +76,7 @@ load("@maven//:defs.bzl", "pinned_maven_install")
 pinned_maven_install()
 
 #
-# add rules_twirl (needed to compile twirl templates)
+# download the rules_twirl repository (needed to compile twirl templates)
 #
 rules_twirl_version = "105c51e4884d56805e51b36d38fb2113b0381a6d"
 rules_twirl_version_sha256 = "c89d8460d236ec7d3c2544a72f17d21c4855da0eb79556c9dbdc95938c411057"
@@ -95,6 +93,20 @@ twirl_repositories()
 
 load("@twirl//:defs.bzl", twirl_pinned_maven_install = "pinned_maven_install")
 twirl_pinned_maven_install()
+
+#
+# download rules_pkg - basic packaging rules
+#
+rules_package_version="0.2.4"
+rules_package_version_sha256="4ba8f4ab0ff85f2484287ab06c0d871dcb31cc54d439457d28fd4ae14b18450a"
+http_archive(
+    name = "rules_pkg",
+    url = "https://github.com/bazelbuild/rules_pkg/releases/download/%s/rules_pkg-%s.tar.gz" % (rules_package_version, rules_package_version),
+    sha256 = rules_package_version_sha256
+)
+
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+rules_pkg_dependencies()
 
 #
 # Download the rules_go repository
@@ -126,20 +138,22 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_docker/releases/download/v%s/rules_docker-v%s.tar.gz" % (rules_docker_version, rules_docker_version),
 )
 
-# load rules_docker
+# load rules_docker repositories
 load(
     "@io_bazel_rules_docker//repositories:repositories.bzl",
     container_repositories = "repositories",
 )
-
 container_repositories()
+
+# furher dependencies
+load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
+container_deps()
 
 # load container_pull method
 load(
     "@io_bazel_rules_docker//container:container.bzl",
     "container_pull"
 )
-
 container_pull(
     name = "openjdk11",
     registry = "index.docker.io",
