@@ -2,11 +2,13 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_docker//container:container.bzl", "container_layer", "container_image")
 load("@io_bazel_rules_docker//scala:image.bzl", "scala_image")
+load("@debian_jessie_amd64_security//debs:deb_packages.bzl", "debian_jessie_amd64_security")
 
 container_layer(
     name = "bash_layer",
-    debs = ["bash"]
-
+    debs = [
+        debian_jessie_amd64_security["bash"],
+    ]
 )
 
 container_image(
@@ -32,7 +34,7 @@ container_image(
     ports = [
         "3335/tcp",
     ],
-    #layers = [":bash_layer"]
+    layers = [":bash_layer"]
 )
 
 # create language specific image

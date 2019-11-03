@@ -1,15 +1,70 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+# filegroups
+filegroup(
+    name = "resources",
+    srcs = glob(["src/main/resources/**"]),
+)
+
+filegroup(
+    name = "scala",
+    srcs = glob([
+        "src/main/scala/org/knora/salsah/**/*.scala",
+    ])
+)
+
+filegroup(
+    name = "public-srcs",
+    srcs = glob([
+       "src/public/**",
+   ]),
+)
+
+# tars used to package the filegroups into the correct folder
+pkg_tar(
+    name = "salsah1-bin",
+    strip_prefix = "/",
+    package_dir = "/salsah1/bin",
+    srcs = [":app1"],
+    mode = "0755",
+)
+
+pkg_tar(
+    name = "salsah1-public",
+    strip_prefix = "/src",
+    package_dir = "/salsah1/public",
+    srcs = [":public-srcs"],
+    mode = "0644",
+)
+
+pkg_tar(
+    name = "salsah1-config",
+    strip_prefix = "/src/main/resources",
+    package_dir = "/salsah1/config",
+    srcs = [":resources"],
+    mode = "0644",
+)
+
+#
+# BIN
+#
+
 scala_binary(
     name = "app1",
     deps = [":library"],
-    main_class = "org.knora.salsah.Main"
+    main_class = "org.knora.salsah.Main",
+    data = [
+        ":public-srcs",
+        ":resources",
+    ],
 )
 
 scala_library(
     name = "library",
-    srcs = ["//salsah1/src/main:scala"],
-    resources = ["//salsah1/src/main/resources:resources"],
+    srcs = [":scala"],
+    resources = [":resources"],
     deps = [
         "@maven//:cglib_cglib_nodep",
         "@maven//:ch_megard_akka_http_cors_2_12",
@@ -312,19 +367,15 @@ scala_library(
     ],
 )
 
-filegroup(
-    name = "chrome_lib",
-    srcs = glob([
-        "lib/**",
-    ]),
-)
 
-filegroup(
-    name = "test_resources",
-    srcs = glob([
-        "src/test/resources/**",
-    ]),
-)
+
+
+
+
+#
+# TEST
+#
+
 
 scala_test(
     name = "test",
@@ -343,4 +394,18 @@ scala_test(
     data = [
         "test_resources",
     ],
+)
+
+filegroup(
+    name = "test_resources",
+    srcs = glob([
+        "src/test/resources/**",
+    ]),
+)
+
+filegroup(
+    name = "chrome_lib",
+    srcs = glob([
+        "lib/**",
+    ]),
 )

@@ -1,7 +1,7 @@
-workspace(name = "knora_api")
+workspace(name = "io_dasch_knora_api")
 
 # load http_archive method
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 
 # download rules_scala repository
 rules_scala_version="0f89c210ade8f4320017daf718a61de3c1ac4773" # update this as needed
@@ -95,20 +95,6 @@ load("@twirl//:defs.bzl", twirl_pinned_maven_install = "pinned_maven_install")
 twirl_pinned_maven_install()
 
 #
-# download rules_pkg - basic packaging rules
-#
-rules_package_version="0.2.4"
-rules_package_version_sha256="4ba8f4ab0ff85f2484287ab06c0d871dcb31cc54d439457d28fd4ae14b18450a"
-http_archive(
-    name = "rules_pkg",
-    url = "https://github.com/bazelbuild/rules_pkg/releases/download/%s/rules_pkg-%s.tar.gz" % (rules_package_version, rules_package_version),
-    sha256 = rules_package_version_sha256
-)
-
-load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
-rules_pkg_dependencies()
-
-#
 # Download the rules_go repository
 #
 http_archive(
@@ -145,7 +131,7 @@ load(
 )
 container_repositories()
 
-# furher dependencies
+# load further dependencies of this rule
 load("@io_bazel_rules_docker//repositories:deps.bzl", container_deps = "deps")
 container_deps()
 
@@ -159,4 +145,110 @@ container_pull(
     registry = "index.docker.io",
     repository = "adoptopenjdk/openjdk11",
     tag = "alpine-jre",
+)
+
+#
+# download rules_pkg - basic packaging rules
+#
+rules_package_version="0.2.4"
+rules_package_version_sha256="4ba8f4ab0ff85f2484287ab06c0d871dcb31cc54d439457d28fd4ae14b18450a"
+http_archive(
+    name = "rules_pkg",
+    url = "https://github.com/bazelbuild/rules_pkg/releases/download/%s/rules_pkg-%s.tar.gz" % (rules_package_version, rules_package_version),
+    sha256 = rules_package_version_sha256
+)
+
+# load further dependencies of this rule
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+rules_pkg_dependencies()
+
+# Get complete rules_pkg rule repository because of the deb_packages subdirectory
+http_archive(
+   name = "deb_packages",
+   strip_prefix = "rules_pkg-master",
+   url = "https://github.com/bazelbuild/rules_pkg/archive/master.zip",
+)
+
+# load rule for downloading debian packages
+load("@deb_packages//deb_packages:deb_packages.bzl", "deb_packages")
+
+# Not all of the following keys are actually used...
+
+# The Debian jessie archive signing key
+# Source: https://ftp-master.debian.org/keys.html
+# Full fingerprint: 126C 0D24 BD8A 2942 CC7D F8AC 7638 D044 2B90 D010
+http_file(
+    name = "jessie_archive_key",
+    # It is highly recommended to use the sha256 hash of the key file to make sure it is untampered
+    sha256 = "e42141a829b9fde8392ea2c0e329321bb29e5c0453b0b48e33c9f88bdc4873c5",
+    urls = ["https://ftp-master.debian.org/keys/archive-key-8.asc"],
+)
+
+# The Debian jessie security archive signing key
+# Source: https://ftp-master.debian.org/keys.html
+# Full fingerprint: D211 6914 1CEC D440 F2EB 8DDA 9D6D 8F6B C857 C906
+http_file(
+    name = "jessie_security_archive_key",
+    # It is highly recommended to use the sha256 hash of the key file to make sure it is untampered
+    sha256 = "d05815c66deb71a595279b750aaf06370b6ad8c3b373651473c1c4b3d7da8f3c",
+    urls = ["https://ftp-master.debian.org/keys/archive-key-8-security.asc"],
+)
+
+# The Debian stretch archive signing key
+# Source: https://ftp-master.debian.org/keys.html
+# Full fingerprint: E1CF 20DD FFE4 B89E 8026 58F1 E0B1 1894 F66A EC98
+http_file(
+    name = "stretch_archive_key",
+    # It is highly recommended to use the sha256 hash of the key file to make sure it is untampered
+    sha256 = "33b6a997460e177804cc44c7049a19350c11034719219390b22887471f0a2b5e",
+    urls = ["https://ftp-master.debian.org/keys/archive-key-9.asc"],
+)
+
+# The Debian stretch security archive signing key
+# Source: https://ftp-master.debian.org/keys.html
+# Full fingerprint: 6ED6 F5CB 5FA6 FB2F 460A E88E EDA0 D238 8AE2 2BA9
+http_file(
+    name = "stretch_security_archive_key",
+    # It is highly recommended to use the sha256 hash of the key file to make sure it is untampered
+    sha256 = "4adecda0885f192b82c19fde129ca9d991f937437835a058da355b352a97e7dc",
+    urls = ["https://ftp-master.debian.org/keys/archive-key-9-security.asc"],
+)
+
+# pulls in deb packages
+deb_packages(
+    name = "debian_jessie_amd64",
+    arch = "amd64",
+    distro = "jessie",
+    distro_type = "debian",
+    mirrors = [
+        "http://deb.debian.org/debian",
+        # This ensures old states of this repository will build as long as the snapshot mirror works:
+        "http://snapshot.debian.org/archive/debian/20171219T131415Z",
+        "http://security.debian.org/debian-security",
+    ],
+    packages = {
+        "bash": "pool/updates/main/b/bash/bash_4.3-11+deb8u2_amd64.deb",
+    },
+    packages_sha256 = {
+        "bash": "9ef1f539367912045a85269b583b28d2a5b4f48e70a0457017a520d9c83992bf",
+    },
+    pgp_key = "jessie_archive_key",
+)
+
+# pulls in deb packages
+deb_packages(
+    name = "debian_jessie_amd64_security",
+    arch = "amd64",
+    distro = "jessie",
+    distro_type = "debian",
+    mirrors = [
+        "http://security.debian.org/debian-security",
+    ],
+    packages = {
+        "bash": "pool/updates/main/b/bash/bash_4.3-11+deb8u2_amd64.deb",
+    },
+    packages_sha256 = {
+        "bash": "9ef1f539367912045a85269b583b28d2a5b4f48e70a0457017a520d9c83992bf",
+    },
+    pgp_key = "jessie_security_archive_key",
 )
