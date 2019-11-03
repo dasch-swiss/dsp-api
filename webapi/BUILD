@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_binary", "scala_test")
+
 scala_binary(
     name = "api",
     deps = [":webapi_library"],

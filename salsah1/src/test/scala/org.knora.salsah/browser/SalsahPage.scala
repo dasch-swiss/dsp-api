@@ -30,6 +30,8 @@ import org.scalatest.concurrent.Eventually._
 import scala.collection.JavaConversions._
 import scala.concurrent.duration._
 
+import com.google.testing.web.WebTest
+
 
 /**
   * Gives browser tests access to elements in a SALSAH HTML page, using the Selenium API. By using methods provided
@@ -65,7 +67,8 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
     }
     options.addArguments("window-size=1400,1000")
 
-    implicit val driver: WebDriver = new ChromeDriver(options)
+    //implicit val driver: WebDriver = new ChromeDriver(options)
+    implicit val driver: WebDriver = new WebTest().newWebDriverSession()
 
     /**
       * Open the SALSAH home page.

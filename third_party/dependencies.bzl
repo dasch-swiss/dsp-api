@@ -3,6 +3,8 @@
 # docs for rules_jvm_external: https://github.com/bazelbuild/rules_jvm_external
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 
+load("@io_bazel_rules_webtesting//web:java_repositories.bzl", "RULES_WEBTESTING_ARTIFACTS")
+
 load("//third_party:versions.bzl", "AKKA_VERSION", "AKKA_HTTP_VERSION", "JENA_VERSION")
 
 def dependencies():
@@ -113,13 +115,15 @@ def dependencies():
             "org.scalatest:scalatest_2.12:3.0.4",
             "io.gatling.highcharts:gatling-charts-highcharts:3.2.1",
             "io.gatling:gatling-test-framework:3.2.1",
-            "org.seleniumhq.selenium:selenium-java:3.4.0",
-        ],
+            "org.seleniumhq.selenium:selenium-java:3.141.59",
+            "org.seleniumhq.selenium:selenium-api:3.141.59",
+        ] + RULES_WEBTESTING_ARTIFACTS,
+        # Enabling compatability support is required for rules_webtesting.
+        generate_compat_repositories = True,
         repositories = [
             "https://dl.bintray.com/typesafe/maven-releases/",
             "https://jcenter.bintray.com/",
             "https://maven.google.com",
             "https://repo1.maven.org/maven2",
-
         ],
     )
