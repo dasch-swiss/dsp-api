@@ -16,9 +16,9 @@ filegroup(
 )
 
 filegroup(
-    name = "public-srcs",
+    name = "public-folder",
     srcs = glob([
-       "src/public/**",
+       "public/**",
    ]),
 )
 
@@ -56,8 +56,7 @@ scala_binary(
     deps = [":library"],
     main_class = "org.knora.salsah.Main",
     data = [
-        ":public-srcs",
-        ":resources",
+        ":public-folder",
     ],
 )
 

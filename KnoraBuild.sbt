@@ -474,7 +474,7 @@ lazy val salsah1: Project = knoraModule("salsah1")
         Compile / packageSrc / mappings := Seq(),
       Universal / mappings ++= {
           // copy the public folder
-          directory("salsah1/src/public") ++
+          directory("salsah1/public") ++
             // copy the configuration files to config directory
             // contentOf("salsah1/configs").toMap.mapValues("config/" + _) ++
             // copy configuration files to config directory
