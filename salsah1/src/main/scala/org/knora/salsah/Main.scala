@@ -72,28 +72,36 @@ object Main extends App {
         val tempFile = new File("/tmp/00_init_javascript.js") // Temporary File
         val printWriter = new PrintWriter(tempFile)
 
-        Source.fromFile(originalFile)("UTF-8")
-                .getLines
-                .map { line =>
-                    if (line.contains("http://0.0.0.0:3333")) {
-                        s"var API_URL = '$webapiUrl';"
-                    } else if (line.contains("http://0.0.0.0:1024")) {
-                        s"var SIPI_URL = '$sipiUrl';"
-                    } else {
-                        line.toString
-                    }
-                }
-                .foreach(x => printWriter.println(x))
+        val origSource = Source.fromFile(originalFile)("UTF-8")
+        origSource.getLines
+          .map { line =>
+              if (line.contains("http://0.0.0.0:3333")) {
+                  s"var API_URL = '$webapiUrl';"
+              } else if (line.contains("http://0.0.0.0:1024")) {
+                  s"var SIPI_URL = '$sipiUrl';"
+              } else {
+                  line.toString
+              }
+          }
+          .foreach(x => printWriter.println(x))
 
+        origSource.close()
         printWriter.close()
         tempFile.renameTo(originalFile)
 
         serveFromPublicDir(publicDir)
     } else {
-        // undeployed state (default when run from sbt)
+        // undeployed state (default when run from sbt or from bazel)
         val wherami = System.getProperty("user.dir")
         log.info(s"user.dir: $wherami")
-        val publicDir = wherami + "/src/public"
+
+        val publicDir = if (wherami.contains("bazel")) {
+            // started through bazel
+            wherami + "/salsah1/public"
+        } else {
+            // started through sbt
+            wherami + "/public"
+        }
         log.info(s"serving files from: $publicDir")
 
         serveFromPublicDir(publicDir)
