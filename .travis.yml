@@ -1,6 +1,5 @@
+os: linux
 dist: bionic
-
-sudo: required
 
 addons:
   chrome: stable

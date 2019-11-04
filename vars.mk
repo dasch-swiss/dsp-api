@@ -59,6 +59,10 @@ ifeq ($(KNORA_GDB_IMPORT),)
   KNORA_GDB_IMPORT := unknown
 endif
 
+ifeq ($(KNORA_GDB_HOME),)
+  KNORA_GDB_HOME := unknown
+endif
+
 ifeq ($(GDB_HEAP_SIZE),)
   KNORA_GDB_HEAP_SIZE := $(GRAPHDB_HEAP_SIZE)
 else
