@@ -19,12 +19,11 @@
 
 package org.knora.webapi.util.clientapi
 
-import org.knora.webapi.{ClientApiGenerationException, IRI}
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.ClientApiGenerationException
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
-  * Parses type annotations representing collection types.
+  * Parses type annotations representing collection types for use in generated client code.
   */
 object ClientCollectionTypeParser {
 
@@ -32,10 +31,10 @@ object ClientCollectionTypeParser {
       * Parses a collection type annotation.
       *
       * @param typeStr the type annotation to be parsed.
-      * @param namespace the RDF namespace supplied with the type annotation.
+      * @param ontologyIri the ontology IRI supplied with the type annotation.
       * @return the parsed collection type annotation.
       */
-    def parse(typeStr: String, namespace: IRI): CollectionType = {
+    def parse(typeStr: String, ontologyIri: SmartIri): CollectionType = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Tokenise the input.
@@ -45,7 +44,7 @@ object ClientCollectionTypeParser {
         val (objectType, remainingTokens) = parseType(
             typeStr = typeStr,
             tokens = tokens,
-            namespace = namespace
+            ontologyIri = ontologyIri
         )
 
         // Are there any tokens left?
@@ -66,17 +65,17 @@ object ClientCollectionTypeParser {
     /**
       * A token in a type annotation.
       */
-    private trait TypeToken
+    private sealed trait TypeToken
 
     /**
       * An identifier.
       */
-    private trait Identifier extends TypeToken
+    private sealed trait Identifier extends TypeToken
 
     /**
       * A built-in identifier.
       */
-    private trait BuiltInIdentifier extends Identifier
+    private sealed trait BuiltInIdentifier extends Identifier
 
     /**
       * The name of a datatype.
@@ -172,7 +171,7 @@ object ClientCollectionTypeParser {
     /**
       * A token representing punctuation.
       */
-    sealed trait PunctuationToken extends TypeToken {
+    private sealed trait PunctuationToken extends TypeToken {
         def toChar: Char
     }
 
@@ -215,12 +214,12 @@ object ClientCollectionTypeParser {
         override def toString: String = className
 
         /**
-          * Converts this token to a [[ClassRef]], using the specified RDF namespace.
+          * Converts this token to a [[ClassRef]], using the specified ontology IRI.
           *
-          * @param namespace the RDF namespace.
+          * @param ontologyIri the IRI of the ontology supplied with the type annotation.
           */
-        def toClassRef(namespace: IRI)(implicit stringFormatter: StringFormatter): ClassRef = {
-            ClassRef(className = className, classIri = (namespace + className).toSmartIri)
+        def toClassRef(ontologyIri: SmartIri)(implicit stringFormatter: StringFormatter): ClassRef = {
+            ClassRef(className = className, classIri = ontologyIri.makeEntityIri(className))
         }
     }
 
@@ -337,10 +336,10 @@ object ClientCollectionTypeParser {
       *
       * @param typeStr the string representation of the type annotation being parsed.
       * @param tokens the tokens not yet parsed.
-      * @param namespace the RDF namespace supplied with the type annotation.
+      * @param ontologyIri the IRI of the ontology supplied with the type annotation.
       * @return the parsed type annotation and the tokens that follow it.
       */
-    private def parseType(typeStr: String, tokens: Vector[TypeToken], namespace: IRI)(implicit stringFormatter: StringFormatter): (ClientObjectType, Vector[TypeToken]) = {
+    private def parseType(typeStr: String, tokens: Vector[TypeToken], ontologyIri: SmartIri)(implicit stringFormatter: StringFormatter): (ClientObjectType, Vector[TypeToken]) = {
         tokens.headOption match {
             case Some(token) =>
                 token match {
@@ -348,19 +347,19 @@ object ClientCollectionTypeParser {
                         parseMap(
                             typeStr = typeStr,
                             tokens = tokens.tail,
-                            namespace = namespace
+                            ontologyIri = ontologyIri
                         )
 
                     case ArrayIdentifier =>
                         parseArray(
                             typeStr = typeStr,
                             tokens = tokens.tail,
-                            namespace = namespace
+                            ontologyIri = ontologyIri
                         )
 
                     case datatypeToken: DatatypeIdentifier => (datatypeToken.toClientDatatype, tokens.tail)
 
-                    case classRefToken: ClassRefIdentifier => (classRefToken.toClassRef(namespace), tokens.tail)
+                    case classRefToken: ClassRefIdentifier => (classRefToken.toClassRef(ontologyIri), tokens.tail)
 
                     case _ => throw ClientApiGenerationException(s"Invalid type: $typeStr")
                 }
@@ -374,10 +373,10 @@ object ClientCollectionTypeParser {
       *
       * @param typeStr the string representation of the type annotation being parsed.
       * @param tokens the tokens not yet parsed.
-      * @param namespace the RDF namespace supplied with the type annotation.
+      * @param ontologyIri the IRI of the ontology supplied with the type annotation.
       * @return a [[MapType]] and the tokens that follow it.
       */
-    private def parseMap(typeStr: String, tokens: Vector[TypeToken], namespace: IRI)(implicit stringFormatter: StringFormatter): (MapType, Vector[TypeToken]) = {
+    private def parseMap(typeStr: String, tokens: Vector[TypeToken], ontologyIri: SmartIri)(implicit stringFormatter: StringFormatter): (MapType, Vector[TypeToken]) = {
         // Consume the open bracket.
         val afterOpenBracket: Vector[TypeToken] = consumePunctuation(
             typeStr = typeStr,
@@ -389,7 +388,7 @@ object ClientCollectionTypeParser {
         val (keyType: ClientObjectType, afterKeyType: Vector[TypeToken]) = parseType(
             typeStr = typeStr,
             tokens = afterOpenBracket,
-            namespace = namespace
+            ontologyIri = ontologyIri
         )
 
         // Validate the key type.
@@ -409,7 +408,7 @@ object ClientCollectionTypeParser {
         val (valueType: ClientObjectType, afterValueType: Vector[TypeToken]) = parseType(
             typeStr = typeStr,
             tokens = afterComma,
-            namespace = namespace
+            ontologyIri = ontologyIri
         )
 
         // Validate the value type.
@@ -433,10 +432,10 @@ object ClientCollectionTypeParser {
       *
       * @param typeStr the string representation of the type annotation being parsed.
       * @param tokens the tokens not yet parsed.
-      * @param namespace the RDF namespace supplied with the type annotation.
+      * @param ontologyIri the IRI of the ontology supplied with the type annotation.
       * @return a [[ArrayType]] and the tokens that follow it.
       */
-    private def parseArray(typeStr: String, tokens: Vector[TypeToken], namespace: IRI)(implicit stringFormatter: StringFormatter): (ArrayType, Vector[TypeToken]) = {
+    private def parseArray(typeStr: String, tokens: Vector[TypeToken], ontologyIri: SmartIri)(implicit stringFormatter: StringFormatter): (ArrayType, Vector[TypeToken]) = {
         // Consume the open bracket.
         val afterOpenBracket: Vector[TypeToken] = consumePunctuation(
             typeStr = typeStr,
@@ -448,7 +447,7 @@ object ClientCollectionTypeParser {
         val (elementType: ClientObjectType, afterKeyType: Vector[TypeToken]) = parseType(
             typeStr = typeStr,
             tokens = afterOpenBracket,
-            namespace = namespace
+            ontologyIri = ontologyIri
         )
 
         // Validate the element type.

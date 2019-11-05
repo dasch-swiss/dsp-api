@@ -689,19 +689,30 @@ case object UriDatatype extends ClientDatatype with MapKeyDatatype
 case object DateTimeStampDatatype extends ClientDatatype
 
 /**
+  * A trait for types that may refer to a class IRI, either because the type represents that class,
+  * or because it is a collection type with a type variable referring to that class.
+  */
+sealed trait TypeWithClassIri {
+    /**
+      * Returns the class IRI, if any, that the type refers to.
+      */
+    def getClassIri: Option[SmartIri]
+}
+
+/**
   * A trait for types representing collections in the target language.
   */
-sealed trait CollectionType extends ClientObjectType
+sealed trait CollectionType extends TypeWithClassIri
 
 /**
   * A trait for types that can be keys in [[MapType]] data structures.
   */
-sealed trait MapKeyDatatype extends ClientObjectType
+sealed trait MapKeyDatatype
 
 /**
   * A trait for types that can be values in [[MapType]] data structures.
   */
-sealed trait MapValueType extends ClientObjectType
+sealed trait MapValueType
 
 /**
   * Represents a map-like data structure in the target language.
@@ -709,7 +720,12 @@ sealed trait MapValueType extends ClientObjectType
   * @param keyType   the type of the keys of the map.
   * @param valueType the type of the values of the map.
   */
-case class MapType(keyType: MapKeyDatatype, valueType: MapValueType) extends CollectionType with MapValueType with ArrayElementType
+case class MapType(keyType: MapKeyDatatype, valueType: MapValueType) extends ClientObjectType with CollectionType with MapValueType with ArrayElementType {
+    override def getClassIri: Option[SmartIri] = valueType match {
+        case typeWithClassIri: TypeWithClassIri => typeWithClassIri.getClassIri
+        case _ => None
+    }
+}
 
 /**
   * A trait for types that can be elements in an [[ArrayType]] data structure.
@@ -721,7 +737,12 @@ sealed trait ArrayElementType extends ClientObjectType
   *
   * @param elementType the type of the elements of the array.
   */
-case class ArrayType(elementType: ArrayElementType) extends CollectionType with MapValueType with ArrayElementType
+case class ArrayType(elementType: ArrayElementType) extends ClientObjectType with CollectionType with MapValueType with ArrayElementType {
+    override def getClassIri: Option[SmartIri] = elementType match {
+        case typeWithClassIri: TypeWithClassIri => typeWithClassIri.getClassIri
+        case _ => None
+    }
+}
 
 /**
   * The type of enums.
@@ -736,7 +757,7 @@ case class EnumDatatype(values: Set[String]) extends ClientDatatype
   * @param className the name of the class.
   * @param classIri  the IRI of the class.
   */
-case class ClassRef(className: String, classIri: SmartIri) extends MapValueType with ArrayElementType {
+case class ClassRef(className: String, classIri: SmartIri) extends ClientObjectType with TypeWithClassIri with MapValueType with ArrayElementType {
     /**
       * Converts this [[ClassRef]] to one that represents a `Stored*` derived class.
       */
@@ -754,6 +775,8 @@ case class ClassRef(className: String, classIri: SmartIri) extends MapValueType 
         val readClassIri = classIri.getOntologyFromEntity.makeEntityIri(readClassName)
         ClassRef(className = readClassName, classIri = readClassIri)
     }
+
+    override def getClassIri: Option[SmartIri] = Some(classIri)
 }
 
 object ClassRef {
