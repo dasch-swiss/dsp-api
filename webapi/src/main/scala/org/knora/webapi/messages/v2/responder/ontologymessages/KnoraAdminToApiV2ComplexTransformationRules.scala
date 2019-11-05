@@ -1083,7 +1083,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         OntologyConstants.KnoraAdminV2.Token -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraAdminV2.SessionID -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraAdminV2.SystemAdmin -> Cardinality.MayHaveOne,
-        OntologyConstants.KnoraAdminV2.Groups -> Cardinality.MayHaveMany
+        OntologyConstants.KnoraAdminV2.Groups -> Cardinality.MayHaveMany,
+        OntologyConstants.KnoraAdminV2.Permissions -> Cardinality.MustHaveOne
     )
 
     /**
