@@ -64,7 +64,7 @@ class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                 settings,
                                 responderManager,
                                 log
-                            )(timeout = 5.minutes, executionContext = executionContext)
+                            )(timeout = 479999.milliseconds, executionContext = executionContext)
                     }
 
                 }

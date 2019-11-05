@@ -22,7 +22,7 @@ MIMETYPES_INCONSISTENCY = "Submitted mimetypes and/or file extension are inconsi
 
 FILE_NOT_READABLE = "Submitted file path could not be read: "
 
-PARAMETERS_INCORRECT = "Parameters not set correctly"
+PARAMETERS_INCORRECT = "Parameters not set correctly."
 -------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------

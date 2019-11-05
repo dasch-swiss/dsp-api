@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
-import akka.event.LoggingAdapter
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.{FileWriteException, NotFoundException, SettingsImpl}
 import resource._

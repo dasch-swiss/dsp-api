@@ -522,3 +522,4 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-admin:isInProject <http://rdfh.ch/projects/08AE> ;
   knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
   knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/08AE> .
+

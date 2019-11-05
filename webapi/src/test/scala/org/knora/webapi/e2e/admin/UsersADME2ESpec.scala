@@ -204,10 +204,10 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 response.status should be(StatusCodes.OK)
             }
 
-            "return 'Forbidden' for all users for ProjectAdmin" in {
+            "return all users for ProjectAdmin" in {
                 val request = Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(projectAdminCreds.email, projectAdminCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be(StatusCodes.Forbidden)
+                response.status should be(StatusCodes.OK)
             }
 
             "return 'Forbidden' for all users for normal user" in {
