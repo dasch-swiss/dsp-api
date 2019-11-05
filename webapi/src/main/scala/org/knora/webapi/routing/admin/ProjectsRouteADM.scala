@@ -85,6 +85,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     private val StoredProject = Project.toStoredClassRef
     private val ProjectsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectsResponse.toSmartIri)
     private val ProjectResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectResponse.toSmartIri)
+    private val UpdateProjectRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateProjectRequest.toSmartIri)
     private val KeywordsResponse = classRef(OntologyConstants.KnoraAdminV2.KeywordsResponse.toSmartIri)
     private val MembersResponse = classRef(OntologyConstants.KnoraAdminV2.MembersResponse.toSmartIri)
     private val ProjectRestrictedViewSettingsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettingsResponse.toSmartIri)
@@ -397,11 +398,12 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
     private val updateProjectFunction: ClientFunction =
         "updateProject" description "Updates a project." params (
-            "project" description "The project to be updated." paramType StoredProject
+            "iri" description "The IRI of the project to be updated." paramType UriDatatype,
+            "projectInfo" description "The project info to be updated." paramType UpdateProjectRequest
             ) doThis {
             httpPut(
-                path = str("iri") / argMember("project", "id"),
-                body = Some(arg("project"))
+                path = str("iri") / arg("iri"),
+                body = Some(arg("projectInfo"))
             )
         } returns ProjectResponse
 
