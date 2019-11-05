@@ -701,7 +701,10 @@ lazy val webapi = knoraModule("webapi")
             buildInfoKeys ++= Seq[BuildInfoKey](
                 name,
                 version,
-                "akkaHttp" -> Dependencies.akkaHttpVersion.value
+                "akkaHttp" -> Dependencies.akkaHttpVersion.value,
+                "sipi" -> Dependencies.sipiImage.value,
+                "gdbSE" -> Dependencies.gdbSEImage.value,
+                "gdbFree" -> Dependencies.gdbFreeImage.value
             ),
             buildInfoPackage := "org.knora.webapi"
         )
