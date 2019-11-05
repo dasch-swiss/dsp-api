@@ -141,7 +141,10 @@ function pre_flight(prefix, identifier, cookie)
             restrictedViewSize = config.thumb_size
         end
 
-        return 'restrict:size=' .. restrictedViewSize, filepath
+        return {
+            type = 'restrict',
+            size = restrictedViewSize
+        }, filepath
     elseif response_json.permissionCode >= 2 then
         -- full view permissions on file
         return 'allow', filepath

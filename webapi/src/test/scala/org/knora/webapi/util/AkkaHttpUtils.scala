@@ -96,7 +96,7 @@ object AkkaHttpUtils extends LazyLogging {
         println("expanded json-ld: " + expanded)
         */
 
-        JavaUtil.deepJavatoScala(normalized).asInstanceOf[Map[String, Any]]
+        JavaUtil.deepJavaToScala(normalized).asInstanceOf[Map[String, Any]]
     }
 
 }

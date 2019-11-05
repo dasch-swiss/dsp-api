@@ -18,4 +18,5 @@ curl -F filedata=@../_test_data/ontologies/beol-onto.ttl http://localhost:3030/k
 curl -F filedata=@../_test_data/ontologies/biblio-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/0801/biblio > /dev/null
 curl -F filedata=@../_test_data/all_data/biblio-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/biblio > /dev/null
 curl -F filedata=@../_test_data/all_data/beol-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/beol > /dev/null
-
+curl -F filedata=@../_test_data/ontologies/newton-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/0801/newton > /dev/null
+curl -F filedata=@../_test_data/ontologies/leibniz-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/0801/leibniz > /dev/null

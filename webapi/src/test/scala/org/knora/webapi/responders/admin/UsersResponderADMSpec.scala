@@ -57,7 +57,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
     private val timeout = 5.seconds
 
     private val rootUser = SharedTestDataADM.rootUser
-
+    private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
     private val normalUser = SharedTestDataADM.normalUser
 
     private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
@@ -70,11 +70,23 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
     "The UsersResponder " when {
 
         "asked about all users" should {
-            "return a list" in {
+            "return a list if asked by SystemAdmin" in {
                 responderManager ! UsersGetRequestADM(requestingUser = rootUser)
                 val response = expectMsgType[UsersGetResponseADM](timeout)
                 response.users.nonEmpty should be (true)
                 response.users.size should be (18)
+            }
+
+            "return a list if asked by ProjectAdmin" in {
+                responderManager ! UsersGetRequestADM(requestingUser = anythingAdminUser)
+                val response = expectMsgType[UsersGetResponseADM](timeout)
+                response.users.nonEmpty should be (true)
+                response.users.size should be (18)
+            }
+
+            "return 'ForbiddenException' if asked by normal user'" in {
+                responderManager ! UsersGetRequestADM(requestingUser = normalUser)
+                expectMsg(Failure(ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")))
             }
 
             "not return the system and anonymous users" in {

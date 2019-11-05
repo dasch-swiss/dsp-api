@@ -40,7 +40,11 @@ object ResourcesResponderV1SpecContextData {
     in a file, and load that at runtime.
 
     */
-    private val expectedBookResourceContextResponseStr = FileUtil.readTextFile(new File("src/test/resources/test-data/v1/expectedBookContextResponse.json"))
+    private val expectedBookResourceContextResponseStr = FileUtil
+      .readTextFile(
+          new File("src/test/resources/test-data/v1/expectedBookContextResponse.json")
+      )
+      .replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
 
     val expectedBookResourceContextResponse: JsValue = JsonParser(expectedBookResourceContextResponseStr)
 
@@ -76,7 +80,7 @@ object ResourcesResponderV1SpecContextData {
                     protocol = "file",
                     duration = 0,
                     fps = 0,
-                    path = "http://0.0.0.0:1024/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
+                    path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
                     ny = Some(3505),
                     nx = Some(2613),
                     origname = "ad+s167_druck1=0001.tif",
@@ -87,7 +91,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://0.0.0.0:1024/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
+                        path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                         ny = Some(128),
                         nx = Some(95),
                         origname = "ad+s167_druck1=0001.tif",
@@ -97,7 +101,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://0.0.0.0:1024/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
+                        path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
                         ny = Some(110),
                         nx = Some(82),
                         origname = "ad+s167_druck1=0001.tif",
@@ -107,7 +111,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://0.0.0.0:1024/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
+                        path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
                         ny = Some(219),
                         nx = Some(163),
                         origname = "ad+s167_druck1=0001.tif",
@@ -117,7 +121,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://0.0.0.0:1024/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
+                        path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
                         ny = Some(438),
                         nx = Some(327),
                         origname = "ad+s167_druck1=0001.tif",
@@ -127,7 +131,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://0.0.0.0:1024/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
+                        path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
                         ny = Some(876),
                         nx = Some(653),
                         origname = "ad+s167_druck1=0001.tif",
@@ -137,7 +141,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://0.0.0.0:1024/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
+                        path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
                         ny = Some(1753),
                         nx = Some(1307),
                         origname = "ad+s167_druck1=0001.tif",
@@ -147,7 +151,7 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://0.0.0.0:1024/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
+                        path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
                         ny = Some(3505),
                         nx = Some(2613),
                         origname = "ad+s167_druck1=0001.tif",
@@ -158,7 +162,7 @@ object ResourcesResponderV1SpecContextData {
                     protocol = "file",
                     duration = 0,
                     fps = 0,
-                    path = "http://0.0.0.0:1024/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
+                    path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                     ny = Some(128),
                     nx = Some(95),
                     origname = "ad+s167_druck1=0001.tif",
