@@ -650,6 +650,69 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val Permissions: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.Permissions,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.UserClass),
+        objectType = Some(OntologyConstants.KnoraAdminV2.PermissionsData),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "permissions data"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A user's permissions data."
+                )
+            )
+        )
+    )
+
+    private val AdministrativePermissionsPerProject: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.AdministrativePermissionsPerProject,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.PermissionsData),
+        objectType = Some(OntologyConstants.KnoraAdminV2.AdministrativePermissionsPerProjectCollectionType),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "administrative permissions per project"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A user's administrative permissions per project."
+                )
+            )
+        )
+    )
+
+    private val GroupsPerProject: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.GroupsPerProject,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.PermissionsData),
+        objectType = Some(OntologyConstants.KnoraAdminV2.GroupsPerProjectCollectionType),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "groups per project"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A user's groups per project."
+                )
+            )
+        )
+    )
+
     private val Name: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraAdminV2.Name,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -908,6 +971,28 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val PermissionsData = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.PermissionsData,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "permissions data"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A user's permissions data."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.AdministrativePermissionsPerProject -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.GroupsPerProject -> Cardinality.MayHaveOne
+        )
+    )
+
     private val CreateGroupRequest = makeClass(
         classIri = OntologyConstants.KnoraAdminV2.CreateGroupRequest,
         predicates = Seq(
@@ -1139,6 +1224,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         AdministrativePermissionResponse,
         AdministrativePermissionClass,
         Permission,
+        PermissionsData,
         MembersResponse,
         KeywordsResponse,
         ProjectRestrictedViewSettings,
@@ -1162,6 +1248,9 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         ProjectDescription,
         AdministrativePermissionProperty,
         AdministrativePermissions,
+        Permissions,
+        AdministrativePermissionsPerProject,
+        GroupsPerProject,
         ForGroup,
         ForProject,
         ForResourceClass,

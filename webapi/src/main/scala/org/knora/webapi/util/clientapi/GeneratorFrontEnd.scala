@@ -68,119 +68,104 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
           * @return the class definitions and ontologies resulting from recursion.
           */
         def getClassDefsRec(classIri: SmartIri, definitionAcc: ClientDefsWithOntologies): Future[ClientDefsWithOntologies] = {
-            // Is this a collection type?
-            if (classIri.isClientCollectionTypeIri) {
-                val collectionType = classIri.getClientCollectionType
+            val className = classIri.getEntityName
 
-                // Does this collection type refer to a class IRI?
-                collectionType.getClassIri match {
-                    case Some(classIri) =>
-                        // Yes. Do we already have the definition of that class?
-                        if (definitionAcc.clientDefs.contains(classIri)) {
-                            // Yes. Return.
-                            FastFuture.successful(definitionAcc)
-                        } else {
-                            // No. Recurse to get it.
-                            getClassDefsRec(classIri, definitionAcc)
-                        }
+            // Is this the IRI of a derived class that hasn't been generated yet?
+            if (ClassRef.isGeneratedDerivedClassName(className)) {
+                // Yes. Do we already have the definition of the base class?
 
-                    case None =>
-                        // The collection type doesn't refer to a class IRI. Return.
-                        FastFuture.successful(definitionAcc)
+                val baseClassIri: SmartIri = classIri.getOntologyFromEntity.makeEntityIri(ClassRef.toBaseClassName(className))
+
+                if (definitionAcc.clientDefs.contains(baseClassIri)) {
+                    // Yes. Return.
+                    FastFuture.successful(definitionAcc)
+                } else {
+                    // No. Recurse to get it.
+                    getClassDefsRec(baseClassIri, definitionAcc)
                 }
             } else {
-                // This isn't a collection type. Is it the IRI of a derived class that hasn't been generated yet?
+                // Get the IRI of the ontology containing the class.
+                val classOntologyIri: SmartIri = classIri.getOntologyFromEntity
 
-                val className = classIri.getEntityName
+                for {
+                    // Get the ontology containing the class.
+                    ontologiesWithClassOntology <- getOntology(classOntologyIri, definitionAcc.ontologies)
+                    classOntology = ontologiesWithClassOntology(classOntologyIri)
 
-                if (ClassRef.isGeneratedDerivedClassName(className)) {
-                    // Yes. Do we already have the definition of the base class?
+                    // Get the RDF definition of the class.
+                    rdfClassDef: ClassInfoContentV2 = classOntology.classes.getOrElse(classIri, throw ClientApiGenerationException(s"Class <$classIri> not found"))
 
-                    val baseClassIri: SmartIri = classIri.getOntologyFromEntity.makeEntityIri(ClassRef.toBaseClassName(className))
-
-                    if (definitionAcc.clientDefs.contains(baseClassIri)) {
-                        // Yes. Return.
-                        FastFuture.successful(definitionAcc)
-                    } else {
-                        // No. Recurse to get it.
-                        getClassDefsRec(baseClassIri, definitionAcc)
+                    // Get the IRIs of the class's Knora properties.
+                    rdfPropertyIris: Set[SmartIri] = rdfClassDef.directCardinalities.keySet.filter {
+                        propertyIri => propertyIri.isKnoraEntityIri
                     }
-                } else {
-                    // Get the IRI of the ontology containing the class.
-                    val classOntologyIri: SmartIri = classIri.getOntologyFromEntity
 
-                    for {
-                        // Get the ontology containing the class.
-                        ontologiesWithClassOntology <- getOntology(classOntologyIri, definitionAcc.ontologies)
-                        classOntology = ontologiesWithClassOntology(classOntologyIri)
+                    // Get the ontologies containing the definitions of those properties.
+                    ontologiesWithPropertyDefs: Map[SmartIri, InputOntologyV2] <- rdfPropertyIris.foldLeft(FastFuture.successful(ontologiesWithClassOntology)) {
+                        case (acc, propertyIri) =>
+                            val propertyOntologyIri = propertyIri.getOntologyFromEntity
 
-                        // Get the RDF definition of the class.
-                        rdfClassDef: ClassInfoContentV2 = classOntology.classes.getOrElse(classIri, throw ClientApiGenerationException(s"Class <$classIri> not found"))
+                            for {
+                                currentOntologies: Map[SmartIri, InputOntologyV2] <- acc
+                                ontologiesWithPropertyDef: Map[SmartIri, InputOntologyV2] <- getOntology(propertyOntologyIri, currentOntologies)
+                            } yield ontologiesWithPropertyDef
+                    }
 
-                        // Get the IRIs of the class's Knora properties.
-                        rdfPropertyIris: Set[SmartIri] = rdfClassDef.directCardinalities.keySet.filter {
-                            propertyIri => propertyIri.isKnoraEntityIri
-                        }
+                    // Get the definitions of the properties.
+                    rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = rdfPropertyIris.map {
+                        propertyIri =>
+                            val ontology = ontologiesWithPropertyDefs(propertyIri.getOntologyFromEntity)
+                            propertyIri -> ontology.properties.getOrElse(propertyIri, throw ClientApiGenerationException(s"Property <$propertyIri> not found"))
+                    }.toMap
 
-                        // Get the ontologies containing the definitions of those properties.
-                        ontologiesWithPropertyDefs: Map[SmartIri, InputOntologyV2] <- rdfPropertyIris.foldLeft(FastFuture.successful(ontologiesWithClassOntology)) {
-                            case (acc, propertyIri) =>
-                                val propertyOntologyIri = propertyIri.getOntologyFromEntity
+                    // Convert the RDF class definition into a ClientClassDefinition.
+                    clientClassDef: ClientClassDefinition = rdfClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
 
-                                for {
-                                    currentOntologies: Map[SmartIri, InputOntologyV2] <- acc
-                                    ontologiesWithPropertyDef: Map[SmartIri, InputOntologyV2] <- getOntology(propertyOntologyIri, currentOntologies)
-                                } yield ontologiesWithPropertyDef
-                        }
+                    // Make a new ClientDefsWithOntologies including that ClientClassDefinition as well as the ontologies
+                    // we've collected.
+                    accForRecursion = ClientDefsWithOntologies(
+                        clientDefs = definitionAcc.clientDefs + (clientClassDef.classIri -> clientClassDef),
+                        ontologies = ontologiesWithPropertyDefs
+                    )
 
-                        // Get the definitions of the properties.
-                        rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = rdfPropertyIris.map {
-                            propertyIri =>
-                                val ontology = ontologiesWithPropertyDefs(propertyIri.getOntologyFromEntity)
-                                propertyIri -> ontology.properties.getOrElse(propertyIri, throw ClientApiGenerationException(s"Property <$propertyIri> not found"))
-                        }.toMap
+                    // Recursively get definitions of classes used as property object types.
+                    accFromRecursion: ClientDefsWithOntologies <- clientClassDef.properties.foldLeft(FastFuture.successful(accForRecursion)) {
+                        case (acc: Future[ClientDefsWithOntologies], clientPropertyDef: ClientPropertyDefinition) =>
+                            // Does this property have something containing a class IRI as its object type
+                            // (a ClassRef, or a CollectionType referring to a class IRI)?
+                            clientPropertyDef.objectType match {
+                                case typeWithClassIri: TypeWithClassIri =>
+                                    typeWithClassIri.getClassIri match {
+                                        case Some(objectTypeClassIri) =>
+                                            // Yes.
+                                            for {
+                                                currentAcc: ClientDefsWithOntologies <- acc
 
-                        // Convert the RDF class definition into a ClientClassDefinition.
-                        clientClassDef: ClientClassDefinition = rdfClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
+                                                // Do we have this class definition already?
+                                                newAcc: ClientDefsWithOntologies <- if (currentAcc.clientDefs.contains(objectTypeClassIri)) {
+                                                    // Yes. Nothing to do.
+                                                    acc
+                                                } else {
+                                                    // No. Recurse to get it.
+                                                    for {
+                                                        recursionResults: ClientDefsWithOntologies <- getClassDefsRec(
+                                                            classIri = objectTypeClassIri,
+                                                            definitionAcc = currentAcc
+                                                        )
+                                                    } yield recursionResults
+                                                }
+                                            } yield newAcc
 
-                        // Make a new ClientDefsWithOntologies including that ClientClassDefinition as well as the ontologies
-                        // we've collected.
-                        accForRecursion = ClientDefsWithOntologies(
-                            clientDefs = definitionAcc.clientDefs + (clientClassDef.classIri -> clientClassDef),
-                            ontologies = ontologiesWithPropertyDefs
-                        )
+                                        case None =>
+                                            // This property doesn't have an object type containing a class IRI.
+                                            acc
+                                    }
 
-                        // Recursively get definitions of classes used as property object types.
-                        accFromRecursion: ClientDefsWithOntologies <- clientClassDef.properties.foldLeft(FastFuture.successful(accForRecursion)) {
-                            case (acc: Future[ClientDefsWithOntologies], clientPropertyDef: ClientPropertyDefinition) =>
-                                // Does this property have a class as its object type?
-                                clientPropertyDef.objectType match {
-                                    case classRef: ClassRef =>
-                                        // Yes.
-                                        for {
-                                            currentAcc: ClientDefsWithOntologies <- acc
-
-                                            // Do we have this class definition already?
-                                            newAcc: ClientDefsWithOntologies <- if (currentAcc.clientDefs.contains(classRef.classIri)) {
-                                                // Yes. Nothing to do.
-                                                acc
-                                            } else {
-                                                // No. Recurse to get it.
-                                                for {
-                                                    recursionResults: ClientDefsWithOntologies <- getClassDefsRec(
-                                                        classIri = classRef.classIri,
-                                                        definitionAcc = currentAcc
-                                                    )
-                                                } yield recursionResults
-                                            }
-                                        } yield newAcc
-
-                                    // This property doesn't have a class as its object type.
-                                    case _ => acc
-                                }
-                        }
-                    } yield accFromRecursion
-                }
+                                // This property doesn't have an object type containing a class IRI.
+                                case _ => acc
+                            }
+                    }
+                } yield accFromRecursion
             }
         }
 
@@ -230,9 +215,9 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                     propDef.objectType match {
                         case classRef: ClassRef =>
                             classIrisToReplace.get(classRef.classIri) match {
-                                case Some(targetProperty) =>
+                                case Some(targetClassIri) =>
                                     propDef.copy(
-                                        objectType = ClassRef(className = targetProperty.getEntityName, classIri = targetProperty)
+                                        objectType = ClassRef(className = makeClientClassName(targetClassIri), classIri = targetClassIri)
                                     )
 
                                 case None => propDef
@@ -581,18 +566,23 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
       * @return the corresponding [[ClientObjectType]].
       */
     private def nonResourcePropObjectTypeToClientObjectType(ontologyObjectType: SmartIri): ClientObjectType = {
-        ontologyObjectType.toString match {
-            case OntologyConstants.Xsd.String => StringDatatype
-            case OntologyConstants.Xsd.Boolean => BooleanDatatype
-            case OntologyConstants.Xsd.Integer => IntegerDatatype
-            case OntologyConstants.Xsd.Decimal => DecimalDatatype
-            case OntologyConstants.Xsd.Uri => UriDatatype
-            case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => DateTimeStampDatatype
+        if (ontologyObjectType.isClientCollectionTypeIri) {
+            ontologyObjectType.getClientCollectionType
+        } else {
+            ontologyObjectType.toString match {
+                case OntologyConstants.Xsd.String => StringDatatype
+                case OntologyConstants.Xsd.Boolean => BooleanDatatype
+                case OntologyConstants.Xsd.Integer => IntegerDatatype
+                case OntologyConstants.Xsd.Decimal => DecimalDatatype
+                case OntologyConstants.Xsd.Uri => UriDatatype
+                case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => DateTimeStampDatatype
 
-            case _ => ClassRef(
-                className = makeClientClassName(ontologyObjectType),
-                classIri = ontologyObjectType
-            )
+                case _ =>
+                    ClassRef(
+                        className = makeClientClassName(ontologyObjectType),
+                        classIri = ontologyObjectType
+                    )
+            }
         }
     }
 }

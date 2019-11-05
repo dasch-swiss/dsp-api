@@ -625,7 +625,7 @@ case class ClientClassDefinition(className: String,
     lazy val classObjectTypesUsed: Set[ClassRef] = properties.foldLeft(Set.empty[ClassRef]) {
         (acc, property) =>
             property.objectType match {
-                case classRef: ClassRef => acc + classRef
+                case typeWithClassIri: TypeWithClassIri => acc ++ typeWithClassIri.getClassRef
                 case _ => acc
             }
     }
@@ -697,22 +697,31 @@ sealed trait TypeWithClassIri {
       * Returns the class IRI, if any, that the type refers to.
       */
     def getClassIri: Option[SmartIri]
+
+    /**
+      * Returns a [[ClassRef]] representing the class IRI, if any, that the type refers to.
+      */
+    def getClassRef: Option[ClassRef] = {
+        getClassIri.map {
+            classIri => ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
+        }
+    }
 }
 
 /**
   * A trait for types representing collections in the target language.
   */
-sealed trait CollectionType extends TypeWithClassIri
+sealed trait CollectionType extends ClientObjectType with TypeWithClassIri
 
 /**
   * A trait for types that can be keys in [[MapType]] data structures.
   */
-sealed trait MapKeyDatatype
+sealed trait MapKeyDatatype extends ClientObjectType
 
 /**
   * A trait for types that can be values in [[MapType]] data structures.
   */
-sealed trait MapValueType
+sealed trait MapValueType extends ClientObjectType
 
 /**
   * Represents a map-like data structure in the target language.
