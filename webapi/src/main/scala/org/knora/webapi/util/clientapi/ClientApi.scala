@@ -103,12 +103,6 @@ trait ClientApi {
     val propertyNames: Map[SmartIri, String]
 
     /**
-      * A set of IRIs of classes that are inherently read only and therefore do not need
-      * `Stored*` or `Read*` subclasses generated for them.
-      */
-    val inherentlyReadOnlyClasses: Set[SmartIri]
-
-    /**
       * The IRIs of the classes used by this API.
       */
     lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet

@@ -23,7 +23,6 @@ import java.io.File
 import java.nio.file.{Path, Paths}
 
 import org.knora.webapi.ClientApiGenerationException
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
 import org.knora.webapi.util.{FileUtil, SmartIri, StringFormatter}
@@ -318,7 +317,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
 
                 val propertiesNeedingCustomConverters: Vector[ClientPropertyDefinition] = clientClassDef.properties.filter {
                     propertyDef => propertyDef.objectType match {
-                        case collectionType: CollectionType => true
+                        case _: CollectionType => true
                         case _ => false
                     }
                 }

@@ -1,8 +1,7 @@
-import {JsonConverter, JsonCustomConvert} from "json2typescript";
+import {JsonCustomConvert} from "../../../json2typescript";
 
 import {Permission} from "../permission";
 
-@JsonConverter
 export class AdministrativePermissionsPerProjectConverter implements JsonCustomConvert<{ [key: string]: Permission[] }> {
 
     serialize(permissions: { [key: string]: Permission[] }): any {

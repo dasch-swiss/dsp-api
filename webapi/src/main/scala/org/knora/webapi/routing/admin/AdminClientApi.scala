@@ -125,10 +125,4 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
         case (propertyIri, propertyName) =>
             propertyIri.toSmartIri -> propertyName
     }
-
-    /**
-      * A set of IRIs of classes that are inherently read only and therefore do not need
-      * `Stored*` or `Read*` subclasses generated for them.
-      */
-    override val inherentlyReadOnlyClasses: Set[SmartIri] = Set(OntologyConstants.KnoraAdminV2.PermissionsData.toSmartIri)
 }
