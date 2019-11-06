@@ -159,6 +159,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
 
         // Generate source code for class definitions.
         val classSourceCode: Set[SourceCodeFileContent] = generateClassSourceCode(
+            apiDef = api.apiDef,
             clientClassDefs = api.clientClassDefs,
             clientClassCodePaths = clientClassCodePaths
         )
@@ -299,11 +300,13 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     /**
       * Generates source code for classes.
       *
+      * @param apiDef               the API definition.
       * @param clientClassDefs      the definitions of the classes for which source code is to be generated.
       * @param clientClassCodePaths the file paths to be used for the generated classes.
       * @return the generated source code.
       */
-    private def generateClassSourceCode(clientClassDefs: Set[ClientClassDefinition],
+    private def generateClassSourceCode(apiDef: ClientApi,
+                                        clientClassDefs: Set[ClientClassDefinition],
                                         clientClassCodePaths: Map[String, SourceCodeFilePath]): Set[SourceCodeFileContent] = {
         clientClassDefs.map {
             clientClassDef =>
@@ -313,17 +316,48 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
                     subClassOfIri: SmartIri => ClassRef(className = subClassOfIri.getEntityName.capitalize, classIri = subClassOfIri)
                 }
 
+                val propertiesNeedingCustomConverters: Vector[ClientPropertyDefinition] = clientClassDef.properties.filter {
+                    propertyDef => propertyDef.objectType match {
+                        case collectionType: CollectionType => true
+                        case _ => false
+                    }
+                }
+
+                val customConverterImports: Vector[ImportInfo] = propertiesNeedingCustomConverters.map {
+                    propertyDef =>
+                        val converterName: String = TypeScriptBackEnd.makeConverterName(propertyDef)
+
+                        val converterPath: SourceCodeFilePath = makeCustomConverterFilePath(
+                            apiDef = apiDef,
+                            propertyDefinition = propertyDef,
+                            converterClassName = converterName
+                        )
+
+                        val convertImportPath = classFilePath.makeImportPath(
+                            thatSourceCodeFilePath = converterPath,
+                            includeFileExtension = false
+                        )
+
+                        ImportInfo(
+                            className = converterName,
+                            importPath = convertImportPath
+                        )
+                }
+
                 val importsWithBaseClass: Set[ClassRef] = clientClassDef.classObjectTypesUsed ++ subClassOf
 
                 val importInfos: Vector[ImportInfo] = importsWithBaseClass.toVector.sortBy(_.classIri).map {
                     classRef =>
-                        val classImportPath: String = classFilePath.makeImportPath(clientClassCodePaths(classRef.className), includeFileExtension = false)
+                        val classImportPath: String = classFilePath.makeImportPath(
+                            thatSourceCodeFilePath = clientClassCodePaths(classRef.className),
+                            includeFileExtension = false
+                        )
 
                         ImportInfo(
                             className = classRef.className,
                             importPath = classImportPath
                         )
-                }
+                } ++ customConverterImports
 
                 val classText: String = clientapi.typescript.txt.generateTypeScriptClass(
                     classDef = clientClassDef,
@@ -386,6 +420,25 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     /**
+      * Generates the file path of a custom converter that is expected to exist.
+      *
+      * @param apiDef             the API definition.
+      * @param propertyDefinition the definition of the property that needs a custom converter.
+      * @return the file path of the custom converter.
+      */
+    private def makeCustomConverterFilePath(apiDef: ClientApi,
+                                            propertyDefinition: ClientPropertyDefinition,
+                                            converterClassName: String): SourceCodeFilePath = {
+        val converterLocalName: String = stringFormatter.camelCaseToSeparatedLowerCase(converterClassName)
+
+        SourceCodeFilePath(
+            directoryPath = Seq("models", apiDef.directoryName, "custom-converters"),
+            filename = converterLocalName,
+            fileExtension = "ts"
+        )
+    }
+
+    /**
       * Generates a variable name that can be used for an instance of a class.
       *
       * @param className the name of the class.
@@ -416,14 +469,54 @@ object TypeScriptBackEnd {
                           variableName: Option[String] = None,
                           urlPath: Option[String] = None)
 
+    /**
+      * Generates the name of a custom converter for a property whose object type is a collection.
+      *
+      * @param propertyDefinition the property definition.
+      * @return the name of the custom converter.
+      */
+    def makeConverterName(propertyDefinition: ClientPropertyDefinition): String = {
+        s"${propertyDefinition.propertyName.capitalize}Converter"
+    }
 
     /**
-      * Generates a type annotation for an object type.
+      * Generates the type name used for a property's object type in json2typescript's `@JsonProperty` annotation.
+      *
+      * @param propertyDefinition the property definition.
+      * @return the type name.
+      */
+    def makeJson2TypeScriptType(propertyDefinition: ClientPropertyDefinition): String = {
+        propertyDefinition.objectType match {
+            case _: CollectionType =>
+                // json2typescript can't handle arbitrary collection signatures, so we assume there's a custom
+                // converter for each collection type.
+                makeConverterName(propertyDefinition)
+
+            case other =>
+                val propertyObjectType: String = makePropertyObjectType(other)
+
+                // Capitalise TypeScript datatype names. (Class references are already capitalised.)
+                val capitalisedType = propertyDefinition.objectType match {
+                    case _: ClientDatatype => propertyObjectType.capitalize
+                    case _ => propertyObjectType
+                }
+
+                // If the property can have multiple values, wrap the type in brackets.
+                if (propertyDefinition.cardinality == MayHaveMany || propertyDefinition.cardinality == MustHaveSome) {
+                    s"[$capitalisedType]"
+                } else {
+                    capitalisedType
+                }
+        }
+    }
+
+    /**
+      * Generates a type annotation for a property object type.
       *
       * @param objectType the object type.
       * @return the corresponding type annotation.
       */
-    def makeTypeScriptType(objectType: ClientObjectType): String = {
+    def makePropertyObjectType(objectType: ClientObjectType): String = {
         objectType match {
             case StringDatatype => "string"
             case BooleanDatatype => "boolean"
@@ -432,14 +525,14 @@ object TypeScriptBackEnd {
             case UriDatatype => "string"
             case DateTimeStampDatatype => "string"
             case classRef: ClassRef => classRef.className
-            case arrayType: ArrayType => s"[${makeTypeScriptType(arrayType.elementType)}]"
-            case mapType: MapType => s"{ [key: ${makeTypeScriptType(mapType.keyType)}]: ${makeTypeScriptType(mapType.valueType)} }"
+            case arrayType: ArrayType => s"${makePropertyObjectType(arrayType.elementType)}[]"
+            case mapType: MapType => s"{ [key: ${makePropertyObjectType(mapType.keyType)}]: ${makePropertyObjectType(mapType.valueType)} }"
             case _ => throw ClientApiGenerationException(s"Type $objectType not yet supported")
         }
     }
 
     /**
-      * Generates the default value for an object type.
+      * Generates the default value for a property object type.
       *
       * @param objectType  the object type.
       * @param cardinality the property's cardinality.
@@ -464,21 +557,6 @@ object TypeScriptBackEnd {
                     case _: MapType => "{}"
                     case _ => throw ClientApiGenerationException(s"Type $objectType not supported in this template")
                 }
-        }
-    }
-
-    /**
-      * Wraps an type in brackets if the cardinality allows it to be an array.
-      *
-      * @param typeScriptType a TypeScript type.
-      * @param cardinality    the property's cardinality.
-      * @return the type, wrapped in brackets if necessary.
-      */
-    def wrapInBracketsForCardinality(typeScriptType: String, cardinality: Cardinality): String = {
-        if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
-            s"[$typeScriptType]"
-        } else {
-            typeScriptType
         }
     }
 

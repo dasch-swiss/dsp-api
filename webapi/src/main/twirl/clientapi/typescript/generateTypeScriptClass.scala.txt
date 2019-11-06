@@ -44,14 +44,14 @@ export class @{classDef.className}@{
     }
 } {
 @for(property <- classDef.properties) {
-@defining(TypeScriptBackEnd.makeTypeScriptType(property.objectType)) { typeScriptType => @property.propertyDescription match {
+@defining(TypeScriptBackEnd.makePropertyObjectType(property.objectType)) { propertyObjectType => @property.propertyDescription match {
     case Some(propDescStr) => {   /**
      * @propDescStr
      */}
 
     case None => {}
     }
-    @@JsonProperty("@{property.propertyName}", @TypeScriptBackEnd.wrapInBracketsForCardinality(typeScriptType.capitalize, property.cardinality)@if(property.cardinality == MayHaveOne) {, true})
-    @{property.propertyName}@TypeScriptBackEnd.handleOption(property.cardinality): @TypeScriptBackEnd.addBracketsForCardinality(typeScriptType, property.cardinality) = @TypeScriptBackEnd.makeDefaultValue(property.objectType, property.cardinality);
+    @@JsonProperty("@{property.propertyName}", @TypeScriptBackEnd.makeJson2TypeScriptType(property)@if(property.cardinality == MayHaveOne) {, true})
+    @{property.propertyName}@TypeScriptBackEnd.handleOption(property.cardinality): @TypeScriptBackEnd.addBracketsForCardinality(propertyObjectType, property.cardinality) = @TypeScriptBackEnd.makeDefaultValue(property.objectType, property.cardinality);
 }}
 }
