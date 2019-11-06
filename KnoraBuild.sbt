@@ -698,7 +698,10 @@ lazy val webapi: Project = knoraModule("webapi")
       buildInfoKeys ++= Seq[BuildInfoKey](
           name,
           version,
-          "akkaHttp" -> Dependencies.akkaHttpVersion.value
+          "akkaHttp" -> Dependencies.akkaHttpVersion.value,
+          "sipi" -> Dependencies.sipiImage.value,
+          "gdbSE" -> Dependencies.gdbSEImage.value,
+          "gdbFree" -> Dependencies.gdbFreeImage.value
       ),
       buildInfoPackage := "org.knora.webapi"
   )
@@ -737,7 +740,7 @@ lazy val webapi_test = project
       // Skip packageDoc and packageSrc task on stage
       Compile / packageDoc / mappings := Seq(),
       Compile / packageSrc / mappings := Seq(),
-      publishArtifact in(Test, packageBin) := true,
+      publishArtifact in (Test, packageBin) := true,
       Compile / mainClass := Some("org.scalatest.tools.Runner"),
       // adds the test jar to mappings
       mappings in Universal ++= {
@@ -777,7 +780,7 @@ lazy val webapi_it = project
       Compile / packageDoc / mappings := Seq(),
       Compile / packageSrc / mappings := Seq(),
       IntegrationTest / packageBin / publishArtifact := true,
-      addArtifact(artifact in(IntegrationTest, packageBin), packageBin in IntegrationTest),
+      addArtifact(artifact in (IntegrationTest, packageBin), packageBin in IntegrationTest),
       Compile / mainClass := Some("org.scalatest.run"),
       // adds the test jar to mappings
       mappings in Universal += {
