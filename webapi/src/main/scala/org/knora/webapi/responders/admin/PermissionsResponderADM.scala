@@ -404,7 +404,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     private def administrativePermissionsForProjectGetRequestADM(projectIRI: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[AdministrativePermissionsForProjectGetResponseADM] = {
 
         for {
-
             _ <- Future {
                 if (
                     !requestingUser.isSystemAdmin
