@@ -108,7 +108,7 @@ export class @name extends Endpoint {
                     }.mkString(", ") +
                     " }"
 
-                case arg: ArgValue => makeValue(arg)
+                case arg: ArgValue => s"this.jsonConvert.serializeObject(${makeValue(arg)})"
             }
 
             ", " + requestBodyContent
