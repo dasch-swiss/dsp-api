@@ -1,5 +1,5 @@
-import {AjaxResponse} from "rxjs/ajax";
-import {JsonConvert} from "json2typescript";
+import {AjaxResponse} from "../rxjs/ajax";
+import {JsonConvert} from "../json2typescript";
 
 export class ApiResponseData<T> {
 
