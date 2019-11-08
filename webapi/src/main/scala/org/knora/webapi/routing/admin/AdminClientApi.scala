@@ -75,7 +75,8 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
             OntologyConstants.KnoraAdminV2.Token,
             OntologyConstants.KnoraAdminV2.SessionID,
             OntologyConstants.KnoraAdminV2.Groups,
-            OntologyConstants.KnoraAdminV2.Projects
+            OntologyConstants.KnoraAdminV2.Projects,
+            OntologyConstants.KnoraAdminV2.Permissions
         ),
         OntologyConstants.KnoraAdminV2.GroupClass ->  Set(
             OntologyConstants.KnoraAdminV2.ProjectProperty
