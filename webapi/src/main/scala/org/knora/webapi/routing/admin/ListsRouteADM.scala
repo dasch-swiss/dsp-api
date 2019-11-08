@@ -21,30 +21,67 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
+import akka.actor.ActorSystem
+import akka.http.scaladsl.client.RequestBuilding.{Get, addCredentials, _}
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.stream.ActorMaterializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.clientapi.EndpointFunctionDSL._
+import org.knora.webapi.util.clientapi._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
+
+object ListsRouteADM {
+    val ListsBasePath = PathMatcher("admin" / "lists")
+    val ListsBasePathString: String = "/admin/lists"
+}
 
 /**
- * Provides a spray-routing function for API routes that deal with lists.
+ * Provides an akka-http-routing function for API routes that deal with lists.
  */
-
 @Api(value = "lists", produces = "application/json")
 @Path("/admin/lists")
-class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ListADMJsonProtocol {
+class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ListADMJsonProtocol with ClientEndpoint {
+
+    import ListsRouteADM._
+
+    /**
+      * The name of this [[ClientEndpoint]].
+      */
+    override val name: String = "ListsEndpoint"
+
+    /**
+      * The directory name to be used for this endpoint's code.
+      */
+    override val directoryName: String = "lists"
+
+    /**
+      * The URL path of this [[ClientEndpoint]].
+      */
+    override val urlPath: String = "/lists"
+
+    /**
+      * A description of this [[ClientEndpoint]].
+      */
+    override val description: String = "An endpoint for working with Knora lists."
+
+    // Classes used in client function definitions.
+
+    private val ListsResponse = classRef(OntologyConstants.KnoraAdminV2.ListsResponse.toSmartIri)
 
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /* return all lists optionally filtered by project */
-    def getLists: Route = path("admin" / "lists") {
+    def getLists: Route = path(ListsBasePath) {
         get {
             /* return all lists */
             parameters("projectIri".?) { maybeProjectIri: Option[IRI] =>
@@ -66,6 +103,21 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    private val getListsFunction: ClientFunction =
+        "getLists" description "Returns a list of lists." params() doThis {
+            httpGet(BasePath)
+        } returns ListsResponse
+
+
+    private def getUsersTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(baseApiUrl + ListsBasePathString) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-lists-response"),
+            text = responseStr
+        )
+    }
+
     @ApiOperation(value = "Add new list", nickname = "addList", httpMethod = "POST", response = classOf[ListGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"list\" to create", required = true,
@@ -75,7 +127,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /* create a new list (root node) */
-    def postList: Route = path("admin" / "lists") {
+    def postList: Route = path(ListsBasePath) {
         post {
             /* create a list */
             entity(as[CreateListApiRequestADM]) { apiRequest =>
@@ -105,7 +157,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /* get a list */
-    def getList: Route = path("admin" / "lists" / Segment) { iri =>
+    def getList: Route = path(ListsBasePath / Segment) { iri =>
         get {
             /* return a list (a graph with all list nodes) */
             requestContext =>
@@ -137,7 +189,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * update list
      */
-    def putList: Route = path("admin" / "lists" / Segment) { iri =>
+    def putList: Route = path(ListsBasePath / Segment) { iri =>
         put {
             /* update existing list node (either root or child) */
             entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
@@ -176,7 +228,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * create a new child node
      */
-    def postListChildNode: Route = path("admin" / "lists" / Segment) { iri =>
+    def postListChildNode: Route = path(ListsBasePath / Segment) { iri =>
         post {
             /* add node to existing list node. the existing list node can be either the root or a child */
             entity(as[CreateChildNodeApiRequestADM]) { apiRequest =>
@@ -204,7 +256,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /* delete list node which should also delete its children */
-    def deleteListNode: Route = path("admin" / "lists" / Segment) { iri =>
+    def deleteListNode: Route = path(ListsBasePath / Segment) { iri =>
         delete {
             /* delete (deactivate) list */
             throw NotImplementedException("Method not implemented.")
@@ -214,7 +266,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putList ~ postListChildNode ~ deleteListNode ~ {
 
-        path("admin" / "lists" / "infos" / Segment) { iri =>
+        path(ListsBasePath / "infos" / Segment) { iri =>
             get {
                 /* return information about a list (without children) */
                 requestContext =>
@@ -257,7 +309,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     }
                 }
         } ~
-            path("admin" / "lists" / "nodes" / Segment) { iri =>
+            path(ListsBasePath / "nodes" / Segment) { iri =>
                 get {
                     /* return information about a single node (without children) */
                     requestContext =>
@@ -286,5 +338,25 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         ???
                     }
             }
+    }
+
+    /**
+      * The functions defined by this [[ClientEndpoint]].
+      */
+    override val functions: Seq[ClientFunction] = Seq(
+        getListsFunction
+    )
+
+    /**
+      * Returns test data for this endpoint.
+      *
+      * @return a set of test data files to be used for testing this endpoint.
+      */
+    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+        Future.sequence {
+            Set(
+                getUsersTestResponse
+            )
+        }
     }
 }

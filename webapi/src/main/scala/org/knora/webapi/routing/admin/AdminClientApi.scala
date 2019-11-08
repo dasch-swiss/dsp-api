@@ -44,7 +44,8 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
         new UsersRouteADM(routeData),
         new GroupsRouteADM(routeData),
         new ProjectsRouteADM(routeData),
-        new PermissionsRouteADM(routeData)
+        new PermissionsRouteADM(routeData),
+        new ListsRouteADM(routeData)
     )
 
     /**
@@ -104,6 +105,7 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
         OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse,
         OntologyConstants.KnoraAdminV2.AdministrativePermissionsResponse,
         OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettingsResponse,
+        OntologyConstants.KnoraAdminV2.ListsResponse
     ).map(_.toSmartIri)
 
     /**
@@ -118,7 +120,7 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
       * A map of property IRIs to non-standard names that those properties must have.
       */
     override val propertyNames: Map[SmartIri, String] = Map(
-        OntologyConstants.KnoraAdminV2.ProjectIri -> "project",
+        OntologyConstants.KnoraAdminV2.ProjectWithIriObj -> "project",
         OntologyConstants.KnoraAdminV2.ProjectDescription -> "description",
         OntologyConstants.KnoraAdminV2.GroupDescription -> "description"
     ).map {

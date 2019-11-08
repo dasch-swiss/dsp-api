@@ -295,7 +295,7 @@ case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfoADM) extends KnoraRe
 /**
   * Responds to a [[NodePathGetRequestADM]] by providing the path to a particular hierarchical list node.
   *
-  * @param nodelist a list of the nodes composing the path from the list's root node up to and including the specified node.
+  * @param elements a list of the nodes composing the path from the list's root node up to and including the specified node.
   */
 case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends KnoraResponseADM with ListADMJsonProtocol {
 
@@ -327,8 +327,6 @@ case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM
   * @param name        the name of the list node.
   * @param labels      the labels of the node in all available languages.
   * @param comments    the comments attached to the node in all available languages.
-  * @param position    the position of the node among its siblings (optional).
-  * @param hasRootNode the Iri of the root node, if this is not the root node.
   */
 abstract class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2) {
 
@@ -872,7 +870,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         /**
           * Converts a [[NodePathElementADM]] to a [[JsValue]].
           *
-          * @param nodeInfo a [[NodePathElementADM]].
+          * @param element a [[NodePathElementADM]].
           * @return a [[JsValue]].
           */
         def write(element: NodePathElementADM): JsValue = {

@@ -625,7 +625,18 @@ case class ClientClassDefinition(className: String,
     lazy val classObjectTypesUsed: Set[ClassRef] = properties.foldLeft(Set.empty[ClassRef]) {
         (acc, property) =>
             property.objectType match {
-                case typeWithClassIri: TypeWithClassIri => acc ++ typeWithClassIri.getClassRef
+                case typeWithClassIri: TypeWithClassIri =>
+                    typeWithClassIri.getClassRef match {
+                        case Some(classRef) =>
+                            if (classRef.classIri == classIri) {
+                                acc
+                            } else {
+                                acc + classRef
+                            }
+
+                        case None => acc
+                    }
+
                 case _ => acc
             }
     }
