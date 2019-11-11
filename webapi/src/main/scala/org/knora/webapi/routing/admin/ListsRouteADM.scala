@@ -19,6 +19,7 @@
 
 package org.knora.webapi.routing.admin
 
+import java.net.URLEncoder
 import java.util.UUID
 
 import akka.actor.ActorSystem
@@ -75,6 +76,10 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // Classes used in client function definitions.
 
     private val ListsResponse = classRef(OntologyConstants.KnoraAdminV2.ListsResponse.toSmartIri)
+    private val CreateListRequest = classRef(OntologyConstants.KnoraAdminV2.CreateListRequest.toSmartIri)
+    private val ListResponse = classRef(OntologyConstants.KnoraAdminV2.ListResponse.toSmartIri)
+
+    private val anythingList = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "UTF-8")
 
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
     @ApiResponses(Array(
@@ -104,12 +109,16 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private val getListsFunction: ClientFunction =
-        "getLists" description "Returns a list of lists." params() doThis {
-            httpGet(BasePath)
+        "getLists" description "Returns a list of lists." params(
+            "projectIri" description "The IRI of the project." paramOptionType UriDatatype
+            ) doThis {
+            httpGet(
+                path = BasePath,
+                params = Seq("projectIri" -> arg("projectIri"))
+            )
         } returns ListsResponse
 
-
-    private def getUsersTestResponse: Future[SourceCodeFileContent] = {
+    private def getListsTestResponse: Future[SourceCodeFileContent] = {
         for {
             responseStr <- doTestDataRequest(Get(baseApiUrl + ListsBasePathString) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
         } yield SourceCodeFileContent(
@@ -151,6 +160,16 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    private val createListFunction: ClientFunction =
+        "createList" description "Creates a list." params(
+            "listInfo" description "Information about the list to be created." paramOptionType CreateListRequest
+            ) doThis {
+            httpPost(
+                path = BasePath,
+                body = Some(arg("listInfo"))
+            )
+        } returns ListResponse
+
     @Path("/{IRI}")
     @ApiOperation(value = "Get a list", nickname = "getlist", httpMethod = "GET", response = classOf[ListGetResponseADM])
     @ApiResponses(Array(
@@ -175,6 +194,24 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     log
                 )
         }
+    }
+
+    private val getListFunction: ClientFunction =
+        "getList" description "Gets a list." params(
+            "iri" description "The IRI of the list." paramType UriDatatype
+            ) doThis {
+            httpGet(
+                path = arg("iri")
+            )
+        } returns ListResponse
+
+    private def getListTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/$anythingList") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-list-response"),
+            text = responseStr
+        )
     }
 
     @Path("/{IRI}")
@@ -344,7 +381,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       * The functions defined by this [[ClientEndpoint]].
       */
     override val functions: Seq[ClientFunction] = Seq(
-        getListsFunction
+        getListsFunction,
+        createListFunction,
+        getListFunction
     )
 
     /**
@@ -355,7 +394,8 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
         Future.sequence {
             Set(
-                getUsersTestResponse
+                getListsTestResponse,
+                getListTestResponse
             )
         }
     }
