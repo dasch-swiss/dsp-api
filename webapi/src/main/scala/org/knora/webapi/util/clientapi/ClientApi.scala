@@ -49,6 +49,16 @@ case object JsonLD extends ApiSerialisationFormat
   */
 trait ClientApi {
     /**
+      * If `true`, generate endpoints for this API.
+      */
+    val generateEndpoints: Boolean = true
+
+    /**
+      * If `true`, generate classes for this API.
+      */
+    val generateClasses: Boolean = true
+
+    /**
       * The serialisation format used by the API.
       */
     val serialisationFormat: ApiSerialisationFormat
@@ -103,15 +113,29 @@ trait ClientApi {
     val propertyNames: Map[SmartIri, String]
 
     /**
-      * The IRIs of the classes used by this API.
+      * Class IRIs that are used by this API, other than the ones used in endpoints.
       */
-    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet
+    val generalClassIrisUsed: Set[SmartIri] = Set.empty
 
     /**
-      * Returns test data for this API.
+      * Returns test data for this API, other than the test data returned by the endpoints.
+      *
+      * @return a set of test data files to be used for testing this endpoint. The directory paths should be empty.
+      */
+    def getGeneralTestData(implicit executionContext: ExecutionContext,
+                           actorSystem: ActorSystem,
+                           materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = Future(Set.empty)
+
+    /**
+      * The IRIs of the classes used by this API.
+      */
+    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet ++ generalClassIrisUsed
+
+    /**
+      * Returns test data for this API and its endpoints.
       *
       * @param testDataDirectoryPath the path of the top-level test data directory.
-      * @return a set of test data files to be used for testing this API.
+      * @return a set of test data files to be used for testing this API and its endpoints.
       */
     def getTestData(testDataDirectoryPath: Seq[String])(implicit executionContext: ExecutionContext,
                                                         actorSystem: ActorSystem,
@@ -132,7 +156,9 @@ trait ClientApi {
                         }
                 }
             }
-        } yield endpointTestData.flatten.toSet
+
+            generalTestData <- getGeneralTestData
+        } yield endpointTestData.flatten.toSet ++ generalTestData
     }
 }
 
