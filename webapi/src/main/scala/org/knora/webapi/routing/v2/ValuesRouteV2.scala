@@ -19,82 +19,116 @@
 
 package org.knora.webapi.routing.v2
 
+import java.net.URLEncoder
 import java.time.Instant
 import java.util.UUID
 
+import akka.actor.ActorSystem
+import akka.http.scaladsl.client.RequestBuilding._
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.clientapi.{ClientEndpoint, ClientFunction, SourceCodeFileContent, SourceCodeFilePath}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
+
+object ValuesRouteV2 {
+    val ValuesBasePath = PathMatcher("v2" / "values")
+    val ValuesBasePathString = "/v2/values"
+}
 
 /**
   * Provides a routing function for API v2 routes that deal with values.
   */
-class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
 
-    def knoraApiPath: Route = {
+    import ValuesRouteV2._
 
-        path("v2" / "values" / Segment / Segment) { (resourceIriStr: IRI, valueUuidStr: String) =>
-            get {
-                requestContext => {
-                    val resourceIri: SmartIri = resourceIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
+    // Definitions for ClientEndpoint
+    override val name: String = "ValuesEndpoint"
+    override val directoryName: String = "values"
+    override val urlPath: String = "values"
+    override val description: String = "An endpoint for working with Knora values."
+    override val functions: Seq[ClientFunction] = Seq.empty
 
-                    if (!resourceIri.isKnoraResourceIri) {
-                        throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
-                    }
+    private val thingWithHistoryResourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
+    private val thingWithHistoryValueUuid = "pLlW4ODASumZfZFbJdpw1g"
 
-                    val valueUuid: UUID = stringFormatter.decodeUuidWithErr(valueUuidStr, throw BadRequestException(s"Invalid value UUID: $valueUuidStr"))
+    override def knoraApiPath: Route = getValue ~ createValue ~ updateValue ~ deleteValue
 
-                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+    private def getValue: Route = path(ValuesBasePath / Segment / Segment) { (resourceIriStr: IRI, valueUuidStr: String) =>
+        get {
+            requestContext => {
+                val resourceIri: SmartIri = resourceIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
 
-                    // Was a version date provided?
-                    val versionDate: Option[Instant] = params.get("version").map {
-                        versionStr =>
-                            def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
-
-                            // Yes. Try to parse it as an xsd:dateTimeStamp.
-                            try {
-                                stringFormatter.xsdDateTimeStampToInstant(versionStr, errorFun)
-                            } catch {
-                                // If that doesn't work, try to parse it as a Knora ARK timestamp.
-                                case _: Exception => stringFormatter.arkTimestampToInstant(versionStr, errorFun)
-                            }
-                    }
-
-                    val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
-                    val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
-
-                    val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield ResourcesGetRequestV2(
-                        resourceIris = Seq(resourceIri.toString),
-                        valueUuid = Some(valueUuid),
-                        versionDate = versionDate,
-                        targetSchema = targetSchema,
-                        requestingUser = requestingUser
-                    )
-
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageF = requestMessageFuture,
-                        requestContext = requestContext,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log,
-                        targetSchema = targetSchema,
-                        schemaOptions = schemaOptions
-                    )
+                if (!resourceIri.isKnoraResourceIri) {
+                    throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
                 }
+
+                val valueUuid: UUID = stringFormatter.decodeUuidWithErr(valueUuidStr, throw BadRequestException(s"Invalid value UUID: $valueUuidStr"))
+
+                val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+                // Was a version date provided?
+                val versionDate: Option[Instant] = params.get("version").map {
+                    versionStr =>
+                        def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
+
+                        // Yes. Try to parse it as an xsd:dateTimeStamp.
+                        try {
+                            stringFormatter.xsdDateTimeStampToInstant(versionStr, errorFun)
+                        } catch {
+                            // If that doesn't work, try to parse it as a Knora ARK timestamp.
+                            case _: Exception => stringFormatter.arkTimestampToInstant(versionStr, errorFun)
+                        }
+                }
+
+                val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+                val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
+                val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield ResourcesGetRequestV2(
+                    resourceIris = Seq(resourceIri.toString),
+                    valueUuid = Some(valueUuid),
+                    versionDate = versionDate,
+                    targetSchema = targetSchema,
+                    requestingUser = requestingUser
+                )
+
+                RouteUtilV2.runRdfRouteWithFuture(
+                    requestMessageF = requestMessageFuture,
+                    requestContext = requestContext,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log,
+                    targetSchema = targetSchema,
+                    schemaOptions = schemaOptions
+                )
             }
-        } ~
-        // #post-value-parse-jsonld
-        path("v2" / "values") {
+        }
+    }
+
+    private def getValueTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ValuesBasePathString/$thingWithHistoryResourceIri/$thingWithHistoryValueUuid") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingUser1.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-value-response"),
+            text = responseStr
+        )
+    }
+
+    private def createValue: Route =
+        path(ValuesBasePath) {
+            // #post-value-parse-jsonld
             post {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
@@ -129,37 +163,44 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         // #specify-response-schema
                     }
                 }
-            } ~ put {
-                entity(as[String]) { jsonRequest =>
-                    requestContext => {
-                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+            }
+        }
 
-                        val requestMessageFuture: Future[UpdateValueRequestV2] = for {
-                            requestingUser <- getUserADM(requestContext)
-                            requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
-                                requestDoc,
-                                apiRequestID = UUID.randomUUID,
-                                requestingUser = requestingUser,
-                                responderManager = responderManager,
-                                storeManager = storeManager,
-                                settings = settings,
-                                log = log
-                            )
-                        } yield requestMessage
+    private def updateValue: Route = path(ValuesBasePath) {
+        put {
+            entity(as[String]) { jsonRequest =>
+                requestContext => {
+                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                        RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageF = requestMessageFuture,
-                            requestContext = requestContext,
-                            settings = settings,
+                    val requestMessageFuture: Future[UpdateValueRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                        requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
+                            requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            requestingUser = requestingUser,
                             responderManager = responderManager,
-                            log = log,
-                            targetSchema = ApiV2Complex,
-                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                            storeManager = storeManager,
+                            settings = settings,
+                            log = log
                         )
-                    }
+                    } yield requestMessage
+
+                    RouteUtilV2.runRdfRouteWithFuture(
+                        requestMessageF = requestMessageFuture,
+                        requestContext = requestContext,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log,
+                        targetSchema = ApiV2Complex,
+                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                    )
                 }
             }
-        } ~ path("v2" / "values" / "delete" ) {
+        }
+    }
+
+    private def deleteValue: Route = path(ValuesBasePath) {
+        path(ValuesBasePath / "delete" ) {
             post {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
@@ -190,6 +231,14 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     }
                 }
             }
+        }
+    }
+
+    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+        Future.sequence {
+            Set(
+                getValueTestResponse
+            )
         }
     }
 }

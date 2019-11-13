@@ -19,15 +19,9 @@
 
 package org.knora.webapi.routing.v2
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
-import org.knora.webapi.OntologyConstants
 import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.util.clientapi.{ApiSerialisationFormat, ClientApi, ClientEndpoint, JsonLD}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.clientapi.{ApiSerialisationFormat, ClientApi, ClientEndpoint, JsonLD, SourceCodeFileContent}
-
-import scala.concurrent.{ExecutionContext, Future}
 
 class V2ClientApi (routeData: KnoraRouteData) extends ClientApi {
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -50,7 +44,9 @@ class V2ClientApi (routeData: KnoraRouteData) extends ClientApi {
     /**
       * The endpoints in this [[ClientApi]].
       */
-    override val endpoints: Seq[ClientEndpoint] = Seq.empty
+    override val endpoints: Seq[ClientEndpoint] = Seq(
+        new ValuesRouteV2(routeData)
+    )
 
     /**
       * The name of this [[ClientApi]].
@@ -91,10 +87,4 @@ class V2ClientApi (routeData: KnoraRouteData) extends ClientApi {
       * A map of property IRIs to non-standard names that those properties must have.
       */
     override val propertyNames: Map[SmartIri, String] = Map.empty
-
-    override def getGeneralTestData(implicit executionContext: ExecutionContext,
-                                    actorSystem: ActorSystem,
-                                    materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
-        Future(Set.empty)
-    }
 }

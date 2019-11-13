@@ -118,15 +118,6 @@ trait ClientApi {
     val generalClassIrisUsed: Set[SmartIri] = Set.empty
 
     /**
-      * Returns test data for this API, other than the test data returned by the endpoints.
-      *
-      * @return a set of test data files to be used for testing this endpoint. The directory paths should be empty.
-      */
-    def getGeneralTestData(implicit executionContext: ExecutionContext,
-                           actorSystem: ActorSystem,
-                           materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = Future(Set.empty)
-
-    /**
       * The IRIs of the classes used by this API.
       */
     lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet ++ generalClassIrisUsed
@@ -156,9 +147,7 @@ trait ClientApi {
                         }
                 }
             }
-
-            generalTestData <- getGeneralTestData
-        } yield endpointTestData.flatten.toSet ++ generalTestData
+        } yield endpointTestData.flatten.toSet
     }
 }
 
