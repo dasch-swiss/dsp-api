@@ -721,6 +721,9 @@
 							var ele;
 							var vv;
 
+							// fake a click to show up the model dialog
+							$('#hiddenaddrespending').click();
+
 							for (var pinfo in rtinfo.properties) {
 								//propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
 								propname = rtinfo.properties[pinfo].name;
@@ -1144,9 +1147,6 @@
 							var tmplabelFirstElem = tmplabel[0];
 							var labelStr = tmplabelFirstElem.richtext_value.utf8str;
 							propvals['__LABEL__'] = undefined;
-
-							// fake a click to show up the model dialog
-							$('#hiddenaddrespending').click();
 
 							SALSAH.ApiPost('resources', {
 								restype_id: rtinfo.name,
