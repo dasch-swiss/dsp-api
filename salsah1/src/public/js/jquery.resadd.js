@@ -713,10 +713,14 @@
 						}
 						form.append(table);
 
-						form.append($('<input>', {
+						// define the submit button
+						var submit_button = $('<input>', {
 							'type': 'button',
 							'value': strings._save
-						}).one('click', function(event) {
+						});
+
+						// define the function for the `click` event callback
+						var submit_button_callback = function(event) {
 							var propname;
 							var ele;
 							var vv;
@@ -1143,6 +1147,8 @@
 								alert(strings._label_required);
 								// release the modal when the async method failed
 								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
+								// resubscribe the button `submit` for a single event callback on `click` event
+								submit_button.one('click', submit_button_callback);
 								return;
 							}
 
@@ -1178,7 +1184,12 @@
 								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
 							});
 							return false;
-						}));
+						};
+
+						// subscribe the `submit` button for a single call back on a `click` event
+						submit_button.one('click', submit_button_callback);
+
+						form.append(submit_button);
 
 						form.append($('<input>', {
 							'type': 'button',
