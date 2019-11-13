@@ -713,7 +713,10 @@
 						}
 						form.append(table);
 
-						var submit_cb = function(event) {
+						form.append($('<input>', {
+							'type': 'button',
+							'value': strings._save
+						}).one('click', function(event) {
 							var propname;
 							var ele;
 							var vv;
@@ -1173,18 +1176,7 @@
 								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
 							});
 							return false;
-						}
-
-						var submit_button = $('<input>', {
-							'type': 'button',
-							'value': strings._save
-						});
-
-						// adding the call back to the DOM element underlying the jQuery button
-						var underlying_dom = submit_button[0];
-						underlying_dom.addEventListener('click', submit_cb, {capture: true, once: true});
-
-						form.append(submit_button);
+						}));
 
 						form.append($('<input>', {
 							'type': 'button',
