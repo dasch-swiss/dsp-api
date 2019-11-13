@@ -19,6 +19,8 @@
 
 package org.knora.webapi
 
+import java.net.URLEncoder
+
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
@@ -623,4 +625,38 @@ object SharedTestDataADM {
         s"""{
            |    "systemAdmin": true
            |}""".stripMargin
+
+    def createIntValueRequest(resourceIri: IRI, intValue: Int): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    object AThing {
+        val aThingIri: IRI = "http://rdfh.ch/0001/a-thing"
+    }
+
+    object TestDing {
+        val testDingIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
+        val testDingIriEncoded: String = URLEncoder.encode(testDingIri, "UTF-8")
+        val intValueUuid = "dJ1ES8QTQNepFKF5-EAqdg"
+        val decimalValueUuid = "bXMwnrHvQH2DMjOFrGmNzg"
+        val booleanValueUuid = "IN4R19yYR0ygi3K2VEHpUQ"
+        val uriValueUuid = "uBAmWuRhR-eo1u1eP7qqNg"
+        val intervalValueUuid = "RbDKPKHWTC-0lkRKae-E6A"
+        val colorValueUuid = "TAziKNP8QxuyhC4Qf9-b6w"
+        val textValueWithStandoffUuid = "rvB4eQ5MTF-Qxq0YgkwaDg"
+        val textValueWithoutStandoffUuid = "SZyeLLmOTcCCuS3B0VksHQ"
+        val listValueUuid = "XAhEeE3kSVqM4JPGdLt4Ew"
+        val linkValueUuid = "uvRVxzL1RD-t9VIQ1TpfUw"
+    }
 }

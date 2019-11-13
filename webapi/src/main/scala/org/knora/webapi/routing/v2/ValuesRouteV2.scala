@@ -19,7 +19,6 @@
 
 package org.knora.webapi.routing.v2
 
-import java.net.URLEncoder
 import java.time.Instant
 import java.util.UUID
 
@@ -28,7 +27,9 @@ import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
+import org.knora.webapi.SharedTestDataADM.{AThing, TestDing}
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -58,9 +59,6 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     override val urlPath: String = "values"
     override val description: String = "An endpoint for working with Knora values."
     override val functions: Seq[ClientFunction] = Seq.empty
-
-    private val thingWithHistoryResourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
-    private val thingWithHistoryValueUuid = "pLlW4ODASumZfZFbJdpw1g"
 
     override def knoraApiPath: Route = getValue ~ createValue ~ updateValue ~ deleteValue
 
@@ -117,13 +115,34 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private def getValueTestResponse: Future[SourceCodeFileContent] = {
+    // The UUIDs of values in <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw>.
+    private val testDingValues: Map[String, String] = Map(
+        "int-value" -> TestDing.intValueUuid,
+        "decimal-value" -> TestDing.decimalValueUuid,
+        "boolean-value" -> TestDing.booleanValueUuid,
+        "uri-value" -> TestDing.uriValueUuid,
+        "interval-value" -> TestDing.intervalValueUuid,
+        "color-value" -> TestDing.colorValueUuid,
+        "text-value-with-standoff" -> TestDing.textValueWithStandoffUuid,
+        "text-value-without-standoff" -> TestDing.textValueWithoutStandoffUuid,
+        "list-value" -> TestDing.listValueUuid,
+        "link-value" -> TestDing.linkValueUuid
+    )
+
+    private def getValueTestResponses: Future[Set[SourceCodeFileContent]] = {
+        val responseFutures: Iterable[Future[SourceCodeFileContent]] = testDingValues.map {
+            case (valueTypeName, valueUuid) =>
+                for {
+                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ValuesBasePathString/${TestDing.testDingIriEncoded}/$valueUuid") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingUser1.email, SharedTestDataADM.testPass)))
+                } yield SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath(s"get-$valueTypeName-response"),
+                    text = responseStr
+                )
+        }
+
         for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ValuesBasePathString/$thingWithHistoryResourceIri/$thingWithHistoryValueUuid") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingUser1.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-value-response"),
-            text = responseStr
-        )
+            files: Iterable[SourceCodeFileContent] <- Future.sequence(responseFutures)
+        } yield files.toSet
     }
 
     private def createValue: Route =
@@ -165,6 +184,18 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 }
             }
         }
+
+    private def createIntValueTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("create-int-value-request"),
+                text = SharedTestDataADM.createIntValueRequest(
+                    resourceIri = AThing.aThingIri,
+                    intValue = 4
+                )
+            )
+        )
+    }
 
     private def updateValue: Route = path(ValuesBasePath) {
         put {
@@ -235,10 +266,15 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
-        Future.sequence {
+        val updateRequestsFuture = Future.sequence {
             Set(
-                getValueTestResponse
+                createIntValueTestRequest
             )
         }
+
+        for {
+            getRequests: Set[SourceCodeFileContent] <- getValueTestResponses
+            updateRequests: Set[SourceCodeFileContent] <- updateRequestsFuture
+        } yield getRequests ++ updateRequests
     }
 }

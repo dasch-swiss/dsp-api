@@ -46,7 +46,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     private val zeitglöckleinIri: IRI = "http://rdfh.ch/0803/c5058f3a"
     private val generationeIri = "http://rdfh.ch/0803/c3f913666f"
-    private val aThingIri: IRI = "http://rdfh.ch/0001/a-thing"
+    private val aThingIri: IRI = SharedTestDataADM.AThing.aThingIri
     private val standardMappingIri: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
     private val incunabulaUserEmail = SharedTestDataADM.incunabulaMemberUser.email
@@ -219,19 +219,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val intValue: Int = 4
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createIntValueRequest(
+                resourceIri = resourceIri,
+                intValue = intValue
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
