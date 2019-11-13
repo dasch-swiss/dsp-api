@@ -1141,6 +1141,8 @@
 
 							if (tmplabel === undefined || tmplabel.length == 0) {
 								alert(strings._label_required);
+								// release the modal when the async method failed
+								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
 								return;
 							}
 
