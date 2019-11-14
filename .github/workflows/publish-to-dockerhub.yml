@@ -12,5 +12,5 @@ jobs:
           fetch-depth: 50
       - name: Build and publish images to Dockerhub
         run: |
-          docker login -u ${{ secrets.DOCKER_USER }} --password-stdin ${{ secrets.DOCKER_HUB_TOKEN }}
+          ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make publish-all-images
