@@ -26,7 +26,7 @@ container_image(
     },
     directory = "salsah1",
     files = [
-        "//salsah1/src:public",
+        "//salsah1:public_folder",
     ],
     labels = {
         "MAINTAINER": "400790+subotic@users.noreply.github.com",
