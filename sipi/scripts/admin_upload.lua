@@ -57,7 +57,7 @@ for findex,fparam in pairs(server.uploads) do
     success, errmsg = server.copyTmpfile(findex, adminpath)
     if not success then
         server.log(errmsg, server.loglevel.error)
-        send_error(500, )
+        send_error(500,  "Couldn't upload file: " .. errmsg)
         return false
     else
         files[findex] = uuid62 .. '-' .. origname
