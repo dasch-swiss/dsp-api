@@ -34,41 +34,41 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * The front end of the client code generator. It is responsible for producing [[ClientClassDefinition]] objects
- * representing the Knora classes used in an API.
- */
+  * The front end of the client code generator. It is responsible for producing [[ClientClassDefinition]] objects
+  * representing the Knora classes used in an API.
+  */
 class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
-    implicit protected val system: ActorSystem = routeData.system
-    implicit protected val responderManager: ActorRef = routeData.appActor
-    implicit protected val settings: SettingsImpl = Settings(system)
-    implicit protected val timeout: Timeout = settings.defaultTimeout
-    implicit protected val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    implicit private val system: ActorSystem = routeData.system
+    implicit private val responderManager: ActorRef = routeData.appActor
+    implicit private val settings: SettingsImpl = Settings(system)
+    implicit private val timeout: Timeout = settings.defaultTimeout
+    implicit private val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     // Return code documentation in English.
     private val userWithLang = requestingUser.copy(lang = LanguageCodes.EN)
 
     /**
-     * Returns a set of [[ClientClassDefinition]] instances representing the Knora classes used by a client API.
-     */
+      * Returns a set of [[ClientClassDefinition]] instances representing the Knora classes used by a client API.
+      */
     def getClientClassDefs(clientApi: ClientApi): Future[Set[ClientClassDefinition]] = {
         /**
-         * An accumulator for client class definitions and ontologies.
-         *
-         * @param clientDefs the client class definitions accumulated so far.
-         * @param ontologies the ontologies accumulated so far.
-         */
+          * An accumulator for client class definitions and ontologies.
+          *
+          * @param clientDefs the client class definitions accumulated so far.
+          * @param ontologies the ontologies accumulated so far.
+          */
         case class ClientDefsWithOntologies(clientDefs: Map[SmartIri, ClientClassDefinition], ontologies: Map[SmartIri, InputOntologyV2])
 
         /**
-         * Recursively gets class definitions.
-         *
-         * @param classIri      the IRI of a class whose definition is needed.
-         * @param definitionAcc the class definitions and ontologies collected so far.
-         * @return the class definitions and ontologies resulting from recursion.
-         */
+          * Recursively gets class definitions.
+          *
+          * @param classIri      the IRI of a class whose definition is needed.
+          * @param definitionAcc the class definitions and ontologies collected so far.
+          * @return the class definitions and ontologies resulting from recursion.
+          */
         def getClassDefsRec(classIri: SmartIri, definitionAcc: ClientDefsWithOntologies): Future[ClientDefsWithOntologies] = {
-            val className: String = classIri.getEntityName
+            val className = classIri.getEntityName
 
             // Is this the IRI of a derived class that hasn't been generated yet?
             if (ClassRef.isGeneratedDerivedClassName(className)) {
@@ -131,29 +131,37 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                     // Recursively get definitions of classes used as property object types.
                     accFromRecursion: ClientDefsWithOntologies <- clientClassDef.properties.foldLeft(FastFuture.successful(accForRecursion)) {
                         case (acc: Future[ClientDefsWithOntologies], clientPropertyDef: ClientPropertyDefinition) =>
-                            // Does this property have a class as its object type?
+                            // Does this property have something containing a class IRI as its object type
+                            // (a ClassRef, or a CollectionType referring to a class IRI)?
                             clientPropertyDef.objectType match {
-                                case classRef: ClassRef =>
-                                    // Yes.
-                                    for {
-                                        currentAcc: ClientDefsWithOntologies <- acc
-
-                                        // Do we have this class definition already?
-                                        newAcc: ClientDefsWithOntologies <- if (currentAcc.clientDefs.contains(classRef.classIri)) {
-                                            // Yes. Nothing to do.
-                                            acc
-                                        } else {
-                                            // No. Recurse to get it.
+                                case typeWithClassIri: TypeWithClassIri =>
+                                    typeWithClassIri.getClassIri match {
+                                        case Some(objectTypeClassIri) =>
+                                            // Yes.
                                             for {
-                                                recursionResults: ClientDefsWithOntologies <- getClassDefsRec(
-                                                    classIri = classRef.classIri,
-                                                    definitionAcc = currentAcc
-                                                )
-                                            } yield recursionResults
-                                        }
-                                    } yield newAcc
+                                                currentAcc: ClientDefsWithOntologies <- acc
 
-                                // This property doesn't have a class as its object type.
+                                                // Do we have this class definition already?
+                                                newAcc: ClientDefsWithOntologies <- if (currentAcc.clientDefs.contains(objectTypeClassIri)) {
+                                                    // Yes. Nothing to do.
+                                                    acc
+                                                } else {
+                                                    // No. Recurse to get it.
+                                                    for {
+                                                        recursionResults: ClientDefsWithOntologies <- getClassDefsRec(
+                                                            classIri = objectTypeClassIri,
+                                                            definitionAcc = currentAcc
+                                                        )
+                                                    } yield recursionResults
+                                                }
+                                            } yield newAcc
+
+                                        case None =>
+                                            // This property doesn't have an object type containing a class IRI.
+                                            acc
+                                    }
+
+                                // This property doesn't have an object type containing a class IRI.
                                 case _ => acc
                             }
                     }
@@ -185,21 +193,21 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
     }
 
     /**
-     * Transforms client class definitions by adding `Stored*` and `Read*` classes, transforming the properties of their base
-     * classes, and transforming the properties of response classes.
-     *
-     * @param clientApi  the client API definition.
-     * @param clientDefs the client class definitions used by the API.
-     * @return the transformed class definitions.
-     */
+      * Transforms client class definitions by adding `Stored*` and `Read*` classes, transforming the properties of their base
+      * classes, and transforming the properties of response classes.
+      *
+      * @param clientApi  the client API definition.
+      * @param clientDefs the client class definitions used by the API.
+      * @return the transformed class definitions.
+      */
     private def transformClientClassDefs(clientApi: ClientApi, clientDefs: Map[SmartIri, ClientClassDefinition]): Set[ClientClassDefinition] = {
         /**
-         * Transforms the class reference object types of properties.
-         *
-         * @param properties         the properties to transform.
-         * @param classIrisToReplace A map of source class IRIs to replacement class IRIs.
-         * @return the transformed properties.
-         */
+          * Transforms the class reference object types of properties.
+          *
+          * @param properties         the properties to transform.
+          * @param classIrisToReplace A map of source class IRIs to replacement class IRIs.
+          * @return the transformed properties.
+          */
         def transformPropertyObjectTypes(properties: Vector[ClientPropertyDefinition],
                                          classIrisToReplace: Map[SmartIri, SmartIri]): Vector[ClientPropertyDefinition] = {
             properties.map {
@@ -207,9 +215,9 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                     propDef.objectType match {
                         case classRef: ClassRef =>
                             classIrisToReplace.get(classRef.classIri) match {
-                                case Some(targetProperty) =>
+                                case Some(targetClassIri) =>
                                     propDef.copy(
-                                        objectType = ClassRef(className = targetProperty.getEntityName, classIri = targetProperty)
+                                        objectType = ClassRef(className = makeClientClassName(targetClassIri), classIri = targetClassIri)
                                     )
 
                                 case None => propDef
@@ -240,7 +248,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
         }.toSet
 
         // A map of the IRIs of classes that need Stored* classes, to the IRIs of their Stored* classes.
-        val storedClassIris: Map[SmartIri, SmartIri] = clientDefs.keySet.map {
+        val storedClassIris: Map[SmartIri, SmartIri] = classIrisNeedingStoredClasses.map {
             classIri => classIri -> classIri.getOntologyFromEntity.makeEntityIri(ClassRef.makeStoredClassName(classIri.getEntityName))
         }.toMap
 
@@ -335,16 +343,16 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                 )
         }
 
-        (clientDefs ++ generatedSubclassesAndTransformedBaseClasses ++ transformedResponseClasses).values.toSet
+        (classesWithRenamedProps ++ generatedSubclassesAndTransformedBaseClasses ++ transformedResponseClasses).values.toSet
     }
 
     /**
-     * Gets an ontology from Knora.
-     *
-     * @param ontologyIri the IRI of the ontology.
-     * @param ontologies  the ontologies collected so far.
-     * @return `ontologies` plus the requested ontology.
-     */
+      * Gets an ontology from Knora.
+      *
+      * @param ontologyIri the IRI of the ontology.
+      * @param ontologies  the ontologies collected so far.
+      * @return `ontologies` plus the requested ontology.
+      */
     private def getOntology(ontologyIri: SmartIri, ontologies: Map[SmartIri, InputOntologyV2]): Future[Map[SmartIri, InputOntologyV2]] = {
         val requestMessage = OntologyEntitiesGetRequestV2(
             ontologyIri = ontologyIri,
@@ -366,12 +374,12 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
     }
 
     /**
-     * Converts RDF class definitions into [[ClientClassDefinition]] instances.
-     *
-     * @param rdfClassDef     the class definition to be converted.
-     * @param rdfPropertyDefs the definitions of the properties used in the class.
-     * @return a [[ClientClassDefinition]] describing the class.
-     */
+      * Converts RDF class definitions into [[ClientClassDefinition]] instances.
+      *
+      * @param rdfClassDef     the class definition to be converted.
+      * @param rdfPropertyDefs the definitions of the properties used in the class.
+      * @return a [[ClientClassDefinition]] describing the class.
+      */
     private def rdfClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -385,12 +393,12 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
     }
 
     /**
-     * Converts Knora resource class definitions into [[ClientClassDefinition]] instances.
-     *
-     * @param rdfClassDef     the class definition to be converted.
-     * @param rdfPropertyDefs the definitions of the properties used in the class.
-     * @return a [[ClientClassDefinition]] describing the class.
-     */
+      * Converts Knora resource class definitions into [[ClientClassDefinition]] instances.
+      *
+      * @param rdfClassDef     the class definition to be converted.
+      * @param rdfPropertyDefs the definitions of the properties used in the class.
+      * @return a [[ClientClassDefinition]] describing the class.
+      */
     private def rdfResourceClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -463,12 +471,12 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
     }
 
     /**
-     * Converts Knora non-resource class definitions into [[ClientClassDefinition]] instances.
-     *
-     * @param rdfClassDef     the class definition to be converted.
-     * @param rdfPropertyDefs the definitions of the properties used in the class.
-     * @return a [[ClientClassDefinition]] describing the class.
-     */
+      * Converts Knora non-resource class definitions into [[ClientClassDefinition]] instances.
+      *
+      * @param rdfClassDef     the class definition to be converted.
+      * @param rdfPropertyDefs the definitions of the properties used in the class.
+      * @return a [[ClientClassDefinition]] describing the class.
+      */
     private def rdfNonResourceClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -512,21 +520,21 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
     }
 
     /**
-     * Given the IRI of an RDF class, creates a client class name for it.
-     *
-     * @param classIri the class IRI.
-     * @return the client class name.
-     */
+      * Given the IRI of an RDF class, creates a client class name for it.
+      *
+      * @param classIri the class IRI.
+      * @return the client class name.
+      */
     private def makeClientClassName(classIri: SmartIri): String = {
         classIri.getEntityName.capitalize
     }
 
     /**
-     * Given a Knora value object type, returns the corresponding [[ClientObjectType]].
-     *
-     * @param ontologyObjectType the RDF type.
-     * @return the corresponding [[ClientObjectType]].
-     */
+      * Given a Knora value object type, returns the corresponding [[ClientObjectType]].
+      *
+      * @param ontologyObjectType the RDF type.
+      * @return the corresponding [[ClientObjectType]].
+      */
     private def resourcePropObjectTypeToClientObjectType(ontologyObjectType: SmartIri): ClientObjectType = {
         ontologyObjectType.toString match {
             case OntologyConstants.KnoraApiV2Complex.Value => AbstractKnoraVal
@@ -552,24 +560,29 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
     }
 
     /**
-     * Given an object type that is not a Knora value type, returns the corresponding [[ClientObjectType]].
-     *
-     * @param ontologyObjectType the RDF type.
-     * @return the corresponding [[ClientObjectType]].
-     */
+      * Given an object type that is not a Knora value type, returns the corresponding [[ClientObjectType]].
+      *
+      * @param ontologyObjectType the RDF type.
+      * @return the corresponding [[ClientObjectType]].
+      */
     private def nonResourcePropObjectTypeToClientObjectType(ontologyObjectType: SmartIri): ClientObjectType = {
-        ontologyObjectType.toString match {
-            case OntologyConstants.Xsd.String => StringDatatype
-            case OntologyConstants.Xsd.Boolean => BooleanDatatype
-            case OntologyConstants.Xsd.Integer => IntegerDatatype
-            case OntologyConstants.Xsd.Decimal => DecimalDatatype
-            case OntologyConstants.Xsd.Uri => UriDatatype
-            case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => DateTimeStampDatatype
+        if (ontologyObjectType.isClientCollectionTypeIri) {
+            ontologyObjectType.getClientCollectionType
+        } else {
+            ontologyObjectType.toString match {
+                case OntologyConstants.Xsd.String => StringDatatype
+                case OntologyConstants.Xsd.Boolean => BooleanDatatype
+                case OntologyConstants.Xsd.Integer => IntegerDatatype
+                case OntologyConstants.Xsd.Decimal => DecimalDatatype
+                case OntologyConstants.Xsd.Uri => UriDatatype
+                case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => DateTimeStampDatatype
 
-            case _ => ClassRef(
-                className = makeClientClassName(ontologyObjectType),
-                classIri = ontologyObjectType
-            )
+                case _ =>
+                    ClassRef(
+                        className = makeClientClassName(ontologyObjectType),
+                        classIri = ontologyObjectType
+                    )
+            }
         }
     }
 }

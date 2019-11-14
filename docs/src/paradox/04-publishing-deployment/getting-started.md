@@ -25,9 +25,11 @@ can be freely downloaded. Please follow the instructions for installing
 
 Additional software:
 
+- [Apple Xcode](https://itunes.apple.com/us/app/xcode/id497799835)
 - git
 - expect
 - sbt
+- java 11
 
 These can be easily installed on macOS using [Homebrew](https://brew.sh):
 
@@ -35,6 +37,19 @@ These can be easily installed on macOS using [Homebrew](https://brew.sh):
 $ brew install git
 $ brew install expect
 $ brew install sbt
+```
+
+To install Adoptopenjdk Java 11 with [Homebrew](https://brew.sh):
+
+```bash
+$ brew tap AdoptOpenJDK/openjdk
+$ brew cask install AdoptOpenJDK/openjdk/adoptopenjdk11
+```
+
+To pin the version of Java, please add this environment variable to you startup script (bashrc, etc.):
+
+```
+export JAVA_HOME=`/usr/libexec/java_home -v 11`
 ```
 
 ## Choosing a Triplestore
@@ -60,79 +75,60 @@ Built-in support and configuration for other triplestores is planned.
 
 Use `git` to clone the Knora repository from [Github](https://github.com/dhlab-basel/Knora).
 
-After having GraphDB licensed, you need to set some environment variables, based
-on the GraphDB version that you have licensed:
+After having GraphDB licensed, you need to set some environment variables:
 
 **GraphDB-Free**:
 
+The following environment variables are **optional**:
+
 ```bash
-$ export KNORA_GDB_TYPE=graphdb-free
-$ export KNORA_GDB_HOME=/path/to/some/folder // optional. default is './triplestores/graphdb/home'
+$ export KNORA_GDB_IMPORT=/path/to/some/folder - sets the path to the import directory accessible from inside the GraphDB Workbench
+$ export KNORA_GDB_HOME=/path/to/some/other_folder // sets the path to the folder where GraphDB will store the database files
 ```
 
 **GraphDB-SE**:
+
+The following environment variable is **required**:
+
 ```bash
-$ export KNORA_GDB_TYPE=graphdb-se // optional. 'graphdb-se' is the default value
-$ export KNORA_GDB_TYPE=/path/to/license/file // path to the GraphDB-SE license file. default is './triplestores/graphdb/graphdb.license'
-$ export KNORA_GDB_HOME=/path/to/some/folder // optional. default is './triplestores/graphdb/home'
+export KNORA_GDB_LICENSE=/path/to/license/file - sets the path to the GraphDB-SE license file
+```
+
+The following environment variables are **optional**:
+
+```bash
+$ export KNORA_GDB_IMPORT=/path/to/some/folder - sets the path to the import directory accessible from inside the GraphDB Workbench
+$ export KNORA_GDB_HOME=/path/to/some/other_folder // sets the path to the folder where GraphDB will store the database files
 ```
 
 Then from inside the cloned `Knora` repository folder, run:
 
 ```bash
-$ sbt
-> dockerComposeUp
-```
-
-After some time, you should see the following output:
-
-```
-The following endpoints are available for your local instance: 335114
-+---------+-----------+------------------+--------------+----------------+--------------+---------+
-| Service | Host:Port | Tag Version      | Image Source | Container Port | Container Id | IsDebug |
-+=========+===========+==================+==============+================+==============+=========+
-| graphdb | :7200     | 8.0.0-7-ga7827e9 | build        | 7200           | 95d29c651090 |         |
-| redis   | :6379     | 5                | defined      | 6379           | 1b47c3d27362 |         |
-| salsah1 | :3335     | 8.0.0-7-ga7827e9 | build        | 3335           | 1795a58a4dd6 |         |
-| sipi    | :1024     | 8.0.0-7-ga7827e9 | build        | 1024           | 8b916936bb38 |         |
-| webapi  | :3333     | 8.0.0-7-ga7827e9 | build        | 3333           | 629588f04066 |         |
-| webapi  | :10001    | 8.0.0-7-ga7827e9 | build        | 10001          | 629588f04066 |         |
-+---------+-----------+------------------+--------------+----------------+--------------+---------+
-Instance commands:
-1) To stop instance from sbt run:
-   dockerComposeStop 335114
-2) To open a command shell from bash run:
-   docker exec -it <Container Id> bash
-3) To view log files from bash run:
-   docker-compose -p 335114 -f /var/folders/y5/lzx7l8210lnd52jz23_tbztm0000gn/T/compose-updated8134225889726981844.yml logs -f
-4) To execute test cases against instance from sbt run:
-   dockerComposeTest 335114
+$ make stack-up
 ```
 
 ## Creating Repositories and Loading Test Data
 
-To create a test repository called `knora-test` and load test data into
-it, go to `webapi/scripts` and run the script for the triplestore you
-have chosen.
+To create a test repository called `knora-test` and load test data, run:
 
-  - For GraphDB-SE, run `graphdb-se-docker-init-knora-test.sh`.
+  - For GraphDB-SE: `$ make init-db-test`.
 
-  - For GraphDB-Free, run `graphdb-free-docker-init-knora-test.sh`.
+  - For GraphDB-Free: `$ make init-db-test-free`.
 
-You can create your own scripts based on these scripts, to create new
+The scripts called by `make` can be found under `webapi/scripts`. You can
+create your own scripts based on these scripts, to create new
 repositories and optionally to load existing Knora-compliant RDF data
 into them.
 
 If you are using GraphDB, you must create your repository using a
 repository configuration file that specifies the file `KnoraRules.pie`
 as its `owlim:ruleset`. This enables RDFS inference and Knora-specific
-consistency rules. When using GraphDB, Knora uses RDFS
-inference to improve query performance. The Knora-specific consistency
-rules help ensure that your data is internally consistent and conforms
-to the Knora ontologies.
+consistency rules. When using GraphDB, Knora uses RDFS inference to improve
+query performance. The Knora-specific consistency rules help ensure that your
+data is internally consistent and conforms to the Knora ontologies.
 
-This file is already packaged inside
-Knora's Docker images for GraphDB-SE and GraphDB-Free.
+This file is already packaged inside Knora's Docker images for GraphDB-SE and
+GraphDB-Free.
 
 When testing with GraphDB, you may sometimes get an error when loading
 the test data that says that there are multiple IDs for the same
@@ -141,3 +137,4 @@ dropping and recreating the repository. You can solve this by deleting
 the repository manually and starting over. **Make sure you don't delete
 important data.** To delete the repository, stop GraphDB, delete the
 `data` directory in your GraphDB installation, and restart GraphDB.
+
