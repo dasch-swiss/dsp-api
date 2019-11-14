@@ -56,7 +56,6 @@ for findex,fparam in pairs(server.uploads) do
     local errmsg
     success, errmsg = server.copyTmpfile(findex, adminpath)
     if not success then
-        server.log(errmsg, server.loglevel.error)
         send_error(500, "Couldn't upload file: " .. errmsg)
         return false
     else
