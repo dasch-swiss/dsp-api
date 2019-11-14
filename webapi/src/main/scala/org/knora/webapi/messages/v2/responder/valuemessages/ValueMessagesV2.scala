@@ -108,14 +108,14 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
                     for {
                         valueContent: ValueContentV2 <-
-                        ValueContentV2.fromJsonLDObject(
-                            jsonLDObject = jsonLDObject,
-                            requestingUser = requestingUser,
-                            responderManager = responderManager,
-                            storeManager = storeManager,
-                            settings = settings,
-                            log = log
-                        )
+                            ValueContentV2.fromJsonLDObject(
+                                jsonLDObject = jsonLDObject,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                storeManager = storeManager,
+                                settings = settings,
+                                log = log
+                            )
 
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
@@ -443,14 +443,18 @@ trait IOValueV2 {
 /**
   * Provides information about the deletion of a resource or value.
   *
-  * @param deleteDate    the date when the resource or value was deleted.
-  * @param deleteComment the reason why the resource or value was deleted.
+  * @param deleteDate         the date when the resource or value was deleted.
+  * @param maybeDeleteComment the reason why the resource or value was deleted.
   */
 case class DeletionInfo(deleteDate: Instant,
-                        deleteComment: String) {
+                        maybeDeleteComment: Option[String]) {
     def toJsonLDFields(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
         if (targetSchema != ApiV2Complex) {
             throw AssertionException("DeletionInfo is available in JSON-LD only in the complex schema")
+        }
+
+        val maybeDeleteCommentStatement = maybeDeleteComment.map {
+            deleteComment => OntologyConstants.KnoraApiV2Complex.DeleteComment -> JsonLDString(deleteComment)
         }
 
         Map(
@@ -460,9 +464,8 @@ case class DeletionInfo(deleteDate: Instant,
                     JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
                     JsonLDConstants.VALUE -> JsonLDString(deleteDate.toString)
                 )
-            ),
-            OntologyConstants.KnoraApiV2Complex.DeleteComment -> JsonLDString(deleteComment)
-        )
+            )
+        ) ++ maybeDeleteCommentStatement
     }
 }
 
