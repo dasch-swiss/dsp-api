@@ -12,4 +12,4 @@ jobs:
         with:
           fetch-depth: 1
       - name: publish to dockerhub
-        run: docker login --username $DOCKER_USER | $DOCKER_HUB_TOKEN && make publish-all-images
+        run: docker login --username ${{ secrets.DOCKER_USER }} | ${{ secrets.DOCKER_HUB_TOKEN }} && make publish-all-images
