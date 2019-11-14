@@ -1,15 +1,15 @@
-name: publish-to-dockerhub
+name: Publish to Dockerhub
 
 on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v1
         with:
-          fetch-depth: 1
-      - name: publish to dockerhub
-        run: docker login --username ${{ secrets.DOCKER_USER }} | ${{ secrets.DOCKER_HUB_TOKEN }} && make publish-all-images
+          fetch-depth: 50
+      - name: Build and publish images to Dockerhub
+        run: |
+          docker login --username ${{ secrets.DOCKER_USER }} | ${{ secrets.DOCKER_HUB_TOKEN }}
+          make publish-all-images
