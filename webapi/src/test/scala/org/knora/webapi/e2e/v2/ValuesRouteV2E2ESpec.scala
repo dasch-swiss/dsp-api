@@ -47,7 +47,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     private val zeitglöckleinIri: IRI = "http://rdfh.ch/0803/c5058f3a"
     private val generationeIri = "http://rdfh.ch/0803/c3f913666f"
     private val aThingIri: IRI = SharedTestDataADM.AThing.aThingIri
-    private val standardMappingIri: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
+    private val standardMappingIri: IRI = SharedTestDataADM.standardMappingIri
 
     private val incunabulaUserEmail = SharedTestDataADM.incunabulaMemberUser.email
     private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
@@ -277,22 +277,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val customPermissions: String = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue,
-                   |    "knora-api:hasPermissions" : "$customPermissions"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createIntValueWithCustomPermissionsRequest(
+                resourceIri = resourceIri,
+                intValue = intValue,
+                customPermissions = customPermissions
+            )
 
-            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -322,21 +313,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUserEmail)
 
-            val jsonLDEntity =
-                s"""
-                   |{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "incunabula:book",
-                   |  "incunabula:book_comment" : {
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:valueAsString" : "$valueAsString"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
-                   |  }
-                   |}
-                """.stripMargin
+            val jsonLDEntity = SharedTestDataADM.createTextValueWithoutStandoffRequest(
+                resourceIri = resourceIri,
+                valueAsString = valueAsString
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -374,22 +354,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasText" : {
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
-                   |    "knora-api:textValueHasMapping" : {
-                   |      "@id": "$standardMappingIri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLDEntity = SharedTestDataADM.createTextValueWithStandoffRequest(
+                resourceIri = resourceIri,
+                textValueAsXml = textValueAsXml,
+                mappingIri = standardMappingIri
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1063,20 +1032,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUserEmail)
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "incunabula:book",
-                   |  "incunabula:book_comment" : {
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:valueAsString" : "$valueAsString",
-                   |    "knora-api:valueHasComment" : "$valueHasComment"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLDEntity = SharedTestDataADM.createTextValueWithCommentRequest(
+                resourceIri = resourceIri,
+                valueAsString = valueAsString,
+                valueHasComment = valueHasComment
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1131,23 +1091,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val decimalValueAsDecimal = BigDecimal(4.3)
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDecimal" : {
-                   |    "@type" : "knora-api:DecimalValue",
-                   |    "knora-api:decimalValueAsDecimal" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$decimalValueAsDecimal"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDecimalValueRequest(
+                resourceIri = resourceIri,
+                decimalValueAsDecimal = decimalValueAsDecimal
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1190,28 +1137,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasEndEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
-                   |    "knora-api:dateValueHasEndDay" : $dateValueHasEndDay,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithDayPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartDay = dateValueHasStartDay,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasEndYear,
+                dateValueHasEndMonth = dateValueHasEndMonth,
+                dateValueHasEndDay = dateValueHasEndDay,
+                dateValueHasEndEra = dateValueHasEndEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1255,26 +1192,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasEndEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithMonthPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasEndYear,
+                dateValueHasEndMonth = dateValueHasEndMonth,
+                dateValueHasEndEra = dateValueHasEndEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1316,24 +1243,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasEndEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithYearPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasEndYear,
+                dateValueHasEndEra = dateValueHasEndEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1376,28 +1293,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasStartEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasEndDay" : $dateValueHasStartDay,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasStartEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithDayPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartDay = dateValueHasStartDay,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasStartYear,
+                dateValueHasEndMonth = dateValueHasStartMonth,
+                dateValueHasEndDay = dateValueHasStartDay,
+                dateValueHasEndEra = dateValueHasStartEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1438,26 +1345,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasStartEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasStartEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithMonthPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasStartYear,
+                dateValueHasEndMonth = dateValueHasStartMonth,
+                dateValueHasEndEra = dateValueHasStartEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1497,24 +1394,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasStartEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasStartEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithYearPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasStartYear,
+                dateValueHasEndEra = dateValueHasStartEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)

@@ -185,13 +185,92 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             }
         }
 
-    private def createIntValueTestRequest: Future[SourceCodeFileContent] = {
+    private def createValueTestResponses: Future[Set[SourceCodeFileContent]] = {
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("create-int-value-request"),
-                text = SharedTestDataADM.createIntValueRequest(
-                    resourceIri = AThing.aThingIri,
-                    intValue = 4
+            Set(
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-int-value-request"),
+                    text = SharedTestDataADM.createIntValueRequest(
+                        resourceIri = AThing.aThingIri,
+                        intValue = 4
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-int-value-with-custom-permissions-request"),
+                    text = SharedTestDataADM.createIntValueWithCustomPermissionsRequest(
+                        resourceIri = AThing.aThingIri,
+                        intValue = 4,
+                        customPermissions = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-text-value-without-standoff-request"),
+                    text = SharedTestDataADM.createTextValueWithoutStandoffRequest(
+                        resourceIri = AThing.aThingIri,
+                        valueAsString = "How long is a piece of string?"
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-text-value-with-standoff-request"),
+                    text = SharedTestDataADM.createTextValueWithStandoffRequest(
+                        resourceIri = AThing.aThingIri,
+                        textValueAsXml = SharedTestDataADM.textValueAsXmlWithStandardMapping,
+                        mappingIri = SharedTestDataADM.standardMappingIri
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-text-value-with-comment-request"),
+                    text = SharedTestDataADM.createTextValueWithCommentRequest(
+                        resourceIri = AThing.aThingIri,
+                        valueAsString = "This is the text.",
+                        valueHasComment = "This is the comment on the text."
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-decimal-value-request"),
+                    text = SharedTestDataADM.createDecimalValueRequest(
+                        resourceIri = AThing.aThingIri,
+                        decimalValueAsDecimal = BigDecimal(4.3)
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-date-with-day-precision-request"),
+                    text = SharedTestDataADM.createDateValueWithDayPrecisionRequest(
+                        resourceIri = AThing.aThingIri,
+                        dateValueHasCalendar = "GREGORIAN",
+                        dateValueHasStartYear = 2018,
+                        dateValueHasStartMonth = 10,
+                        dateValueHasStartDay = 5,
+                        dateValueHasStartEra = "CE",
+                        dateValueHasEndYear = 2018,
+                        dateValueHasEndMonth = 10,
+                        dateValueHasEndDay = 6,
+                        dateValueHasEndEra = "CE"
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-date-with-month-precision-request"),
+                    text = SharedTestDataADM.createDateValueWithMonthPrecisionRequest(
+                        resourceIri = AThing.aThingIri,
+                        dateValueHasCalendar = "GREGORIAN",
+                        dateValueHasStartYear = 2018,
+                        dateValueHasStartMonth = 10,
+                        dateValueHasStartEra = "CE",
+                        dateValueHasEndYear = 2018,
+                        dateValueHasEndMonth = 10,
+                        dateValueHasEndEra = "CE"
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-date-with-year-precision-request"),
+                    text = SharedTestDataADM.createDateValueWithYearPrecisionRequest(
+                        resourceIri = AThing.aThingIri,
+                        dateValueHasCalendar = "GREGORIAN",
+                        dateValueHasStartYear = 2018,
+                        dateValueHasStartEra = "CE",
+                        dateValueHasEndYear = 2019,
+                        dateValueHasEndEra = "CE"
+                    )
                 )
             )
         )
@@ -231,7 +310,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private def deleteValue: Route = path(ValuesBasePath) {
-        path(ValuesBasePath / "delete" ) {
+        path(ValuesBasePath / "delete") {
             post {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
@@ -266,15 +345,9 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
-        val updateRequestsFuture = Future.sequence {
-            Set(
-                createIntValueTestRequest
-            )
-        }
-
         for {
             getRequests: Set[SourceCodeFileContent] <- getValueTestResponses
-            updateRequests: Set[SourceCodeFileContent] <- updateRequestsFuture
-        } yield getRequests ++ updateRequests
+            createRequests: Set[SourceCodeFileContent] <- createValueTestResponses
+        } yield getRequests ++ createRequests
     }
 }

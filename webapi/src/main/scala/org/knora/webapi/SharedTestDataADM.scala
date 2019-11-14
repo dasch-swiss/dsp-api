@@ -27,6 +27,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{Permission
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.util.StringFormatter
 
 /**
   * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
@@ -370,15 +371,15 @@ object SharedTestDataADM {
         id = "http://rdfh.ch/users/incunabulaMemberUser",
         username = "incunabulaMemberUser"
         , email = "test.user2@test.ch", password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), token = None, givenName = "User", familyName = "Test2", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq(incunabulaProject), sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember)
-                ),
-                administrativePermissionsPerProject = Map(
-                    INCUNABULA_PROJECT_IRI -> Set(
-                        PermissionADM.ProjectResourceCreateAllPermission
-                    )
+            groupsPerProject = Map(
+                INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember)
+            ),
+            administrativePermissionsPerProject = Map(
+                INCUNABULA_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectResourceCreateAllPermission
                 )
-            ))
+            )
+        ))
 
     /* represents the ProjectInfoV1 of the incunabula project */
     def incunabulaProject: ProjectADM = ProjectADM(
@@ -505,6 +506,7 @@ object SharedTestDataADM {
         status = true,
         selfjoin = false
     )
+
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
     def beolUser = UserADM(
         id = "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE",
@@ -641,6 +643,185 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
+    def createIntValueWithCustomPermissionsRequest(resourceIri: IRI, intValue: Int, customPermissions: String): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue,
+           |    "knora-api:hasPermissions" : "$customPermissions"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createTextValueWithoutStandoffRequest(resourceIri: IRI, valueAsString: String): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "incunabula:book",
+           |  "incunabula:book_comment" : {
+           |    "@type" : "knora-api:TextValue",
+           |    "knora-api:valueAsString" : "$valueAsString"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    val standardMappingIri: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
+
+    val textValueAsXmlWithStandardMapping: String =
+        """<?xml version="1.0" encoding="UTF-8"?>
+          |<text documentType="html">
+          |    <p>This an <span data-description="an &quot;event&quot;" data-date="GREGORIAN:2017-01-27 CE" class="event">event</span>.</p>
+          |</text>""".stripMargin
+
+    def createTextValueWithStandoffRequest(resourceIri: IRI, textValueAsXml: String, mappingIri: String)(implicit stringFormatter: StringFormatter): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasText" : {
+           |    "@type" : "knora-api:TextValue",
+           |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
+           |    "knora-api:textValueHasMapping" : {
+           |      "@id": "$mappingIri"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createTextValueWithCommentRequest(resourceIri: IRI, valueAsString: String, valueHasComment: String): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "incunabula:book",
+           |  "incunabula:book_comment" : {
+           |    "@type" : "knora-api:TextValue",
+           |    "knora-api:valueAsString" : "$valueAsString",
+           |    "knora-api:valueHasComment" : "$valueHasComment"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createDecimalValueRequest(resourceIri: IRI, decimalValueAsDecimal: BigDecimal): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasDecimal" : {
+           |    "@type" : "knora-api:DecimalValue",
+           |    "knora-api:decimalValueAsDecimal" : {
+           |      "@type" : "xsd:decimal",
+           |      "@value" : "$decimalValueAsDecimal"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createDateValueWithDayPrecisionRequest(resourceIri: IRI,
+                                               dateValueHasCalendar: String,
+                                               dateValueHasStartYear: Int,
+                                               dateValueHasStartMonth: Int,
+                                               dateValueHasStartDay: Int,
+                                               dateValueHasStartEra: String,
+                                               dateValueHasEndYear: Int,
+                                               dateValueHasEndMonth: Int,
+                                               dateValueHasEndDay: Int,
+                                               dateValueHasEndEra: String): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasDate" : {
+           |    "@type" : "knora-api:DateValue",
+           |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
+           |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
+           |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
+           |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
+           |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
+           |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
+           |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
+           |    "knora-api:dateValueHasEndDay" : $dateValueHasEndDay,
+           |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createDateValueWithMonthPrecisionRequest(resourceIri: IRI,
+                                                 dateValueHasCalendar: String,
+                                                 dateValueHasStartYear: Int,
+                                                 dateValueHasStartMonth: Int,
+                                                 dateValueHasStartEra: String,
+                                                 dateValueHasEndYear: Int,
+                                                 dateValueHasEndMonth: Int,
+                                                 dateValueHasEndEra: String): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasDate" : {
+           |    "@type" : "knora-api:DateValue",
+           |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
+           |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
+           |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
+           |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
+           |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
+           |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
+           |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createDateValueWithYearPrecisionRequest(resourceIri: IRI,
+                                                dateValueHasCalendar: String,
+                                                dateValueHasStartYear: Int,
+                                                dateValueHasStartEra: String,
+                                                dateValueHasEndYear: Int,
+                                                dateValueHasEndEra: String): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasDate" : {
+           |    "@type" : "knora-api:DateValue",
+           |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
+           |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
+           |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
+           |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
+           |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
     object AThing {
         val aThingIri: IRI = "http://rdfh.ch/0001/a-thing"
     }
@@ -659,4 +840,5 @@ object SharedTestDataADM {
         val listValueUuid = "XAhEeE3kSVqM4JPGdLt4Ew"
         val linkValueUuid = "uvRVxzL1RD-t9VIQ1TpfUw"
     }
+
 }
