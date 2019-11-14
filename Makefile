@@ -126,6 +126,12 @@ ifeq ($(KNORA_GDB_IMPORT), unknown)
 else
 	@echo KNORA_GDB_IMPORT_DIR=$(KNORA_GDB_IMPORT) >> .env
 endif
+ifeq ($(KNORA_GDB_HOME), unknown)
+	$(warning The path to the GraphDB home directory is not set. Using docker volume: db-home.)
+	@echo KNORA_GDB_HOME_DIR=db-home >> .env
+else
+	@echo KNORA_GDB_HOME_DIR=$(KNORA_GDB_HOME) >> .env
+endif
 	@echo KNORA_GDB_HEAP_SIZE=$(KNORA_GDB_HEAP_SIZE) >> .env
 	@echo KNORA_SIPI_IMAGE=$(KNORA_SIPI_IMAGE) >> .env
 	@echo KNORA_API_IMAGE=$(KNORA_API_IMAGE) >> .env
@@ -350,6 +356,7 @@ info: ## print out all variables
 	@echo "KNORA_SALSAH1_IMAGE: \t\t $(KNORA_SALSAH1_IMAGE)"
 	@echo "KNORA_GDB_LICENSE: \t\t $(KNORA_GDB_LICENSE)"
 	@echo "KNORA_GDB_IMPORT: \t\t $(KNORA_GDB_IMPORT)"
+	@echo "KNORA_GDB_HOME: \t\t $(KNORA_GDB_HOME)"
 
 .PHONY: help
 help: ## this help

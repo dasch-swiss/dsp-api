@@ -335,7 +335,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                 )
         }
 
-        (clientDefs ++ generatedSubclassesAndTransformedBaseClasses ++ transformedResponseClasses).values.toSet
+        (classesWithRenamedProps ++ generatedSubclassesAndTransformedBaseClasses ++ transformedResponseClasses).values.toSet
     }
 
     /**
