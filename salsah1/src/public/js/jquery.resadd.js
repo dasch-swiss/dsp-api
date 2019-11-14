@@ -1008,7 +1008,11 @@
 												var geos = localdata.settings.viewer.topCanvas().regions('returnObjects', 'active');
 												if (geos.length < 1) {
 													alert(strings._err_empty_geometry);
-													return false;
+													// release the modal when the async method failed
+													$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
+													// resubscribe the button `submit` for a single event callback on `click` event
+													submit_button.one('click', submit_button_callback);
+													return;
 												}
 												for (var idx in geos) {
 													geos[idx].lineColor = col;
@@ -1183,7 +1187,7 @@
 								// release the modal when the async method failed
 								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
 							});
-							return false;
+							return;
 						};
 
 						// subscribe the `submit` button for a single call back on a `click` event
