@@ -1077,12 +1077,12 @@ object ConstructResponseUtilV2 {
 
             if (isDeleted) {
                 val deleteDate = rdfData.requireDateTimeObject(OntologyConstants.KnoraBase.DeleteDate.toSmartIri)
-                val deleteComment = rdfData.requireStringObject(OntologyConstants.KnoraBase.DeleteComment.toSmartIri)
+                val maybeDeleteComment = rdfData.maybeStringObject(OntologyConstants.KnoraBase.DeleteComment.toSmartIri)
 
                 Some(
                     DeletionInfo(
                         deleteDate = deleteDate,
-                        deleteComment = deleteComment
+                        maybeDeleteComment = maybeDeleteComment
                     )
                 )
             } else {
