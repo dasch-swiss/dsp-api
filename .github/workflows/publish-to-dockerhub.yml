@@ -12,4 +12,4 @@ jobs:
         with:
           fetch-depth: 1
       - name: run upgrade tests
-        run: docker login -u $DOCKER_USER -p $DOCKER_PASS && make publish-all-images
+        run: docker login -u $DOCKER_USER -p $DOCKER_HUB_TOKEN && make publish-all-images
