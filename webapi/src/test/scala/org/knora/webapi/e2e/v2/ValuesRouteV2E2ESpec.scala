@@ -3037,6 +3037,38 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             assert(response.status == StatusCodes.OK, response.toString)
         }
 
+        "delete an integer value without supplying a delete comment" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
+            val valueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg"
+
+            // Mark a value as deleted.
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasInteger" : {
+                   |    "@id" : "$valueIri",
+                   |    "@type" : "knora-api:IntValue"
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val deleteRequest = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingUser2.email, password))
+            val deleteResponse: HttpResponse = singleAwaitingRequest(deleteRequest)
+            assert(deleteResponse.status == StatusCodes.OK, deleteResponse.toString)
+
+            // Request the resource as it was before the value was deleted.
+
+            val getRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}?version=${URLEncoder.encode("2018-05-28T15:52:03.897Z", "UTF-8")}")
+            val getResponse: HttpResponse = singleAwaitingRequest(getRequest)
+            val getResponseAsString = responseToString(getResponse)
+            assert(getResponse.status == StatusCodes.OK, getResponseAsString)
+        }
+
         "delete a link between two resources" in {
             val jsonLdEntity =
                 s"""{
