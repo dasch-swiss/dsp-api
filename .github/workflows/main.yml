@@ -8,15 +8,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-          with:
-            fetch-depth: 1
+        with:
+          fetch-depth: 1
       - name: Run compile and stage
           run: sbt clean stage
   # unit-tests:
   # e2e-tests:
   # integration-tests:
   # upgrade-tests:
-  
+
   publish:
     name: Publish
     needs: compile
