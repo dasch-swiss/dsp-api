@@ -59,8 +59,8 @@ jobs:
         - rm -rf $HOME/.ivy2
         - cd $TRAVIS_BUILD_DIR && sbt clean stage
         # only uncomment if docker image is needed for this branch. remove before merging into develop
-        - docker login -u $DOCKER_USER -p $DOCKER_PASS
-        - make publish-all-images
+        # - echo $DOCKER_PASS | docker login -u $DOCKER_USER --pasword-stdin $DOCKER_PASS
+        # - make publish-all-images
     # unit tests
     - stage: test
       script:
@@ -148,7 +148,7 @@ jobs:
         # login into docker hub, build image, and push but only when on the "develop" branch or tagged
         # when on 'develop' then $TRAVIS_BRANCH = develop
         # when on 'tag' then $TRAVIS_BRANCH = tag, e.g., v1.2.0
-        - docker login -u $DOCKER_USER -p $DOCKER_PASS
+        - echo $DOCKER_PASS | docker login -u $DOCKER_USER --pasword-stdin $DOCKER_PASS
         # knora-api
         - sbt webapi/docker:publish
         # knora-salsah1
@@ -163,8 +163,6 @@ jobs:
         - sbt upgrade/docker:publish
         # knora-assets
         - sbt knora-assets/docker:publish
-        # publish images to daschswiss dockerhub organization
-        - make publish-all-images
 
 notifications:
   slack:
