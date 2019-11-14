@@ -44,9 +44,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val zeitglöckleinIri: IRI = "http://rdfh.ch/0803/c5058f3a"
+    private val zeitglöckleinIri: IRI = SharedTestDataADM.Zeitglöcklein.iri
     private val generationeIri = "http://rdfh.ch/0803/c3f913666f"
-    private val aThingIri: IRI = SharedTestDataADM.AThing.aThingIri
+    private val aThingIri: IRI = SharedTestDataADM.AThing.iri
     private val standardMappingIri: IRI = SharedTestDataADM.standardMappingIri
 
     private val incunabulaUserEmail = SharedTestDataADM.incunabulaMemberUser.email
@@ -1439,19 +1439,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val booleanValue: Boolean = true
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasBoolean" : {
-                   |    "@type" : "knora-api:BooleanValue",
-                   |    "knora-api:booleanValueAsBoolean" : $booleanValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createBooleanValueRequest(
+                resourceIri = resourceIri,
+                booleanValue = booleanValue
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1478,22 +1469,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         "create a geometry value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
-            val geometryValue = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasGeometry" : {
-                   |    "@type" : "knora-api:GeomValue",
-                   |    "knora-api:geometryValueAsGeometry" : ${stringFormatter.toJsonEncodedString(geometryValue)}
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createGeometryValueRequest(
+                resourceIri = resourceIri,
+                geometryValue = SharedTestDataADM.geometryValue
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1514,7 +1495,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             )
 
             val geometryValueAsGeometry: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry)
-            geometryValueAsGeometry should ===(geometryValue)
+            geometryValueAsGeometry should ===(SharedTestDataADM.geometryValue)
         }
 
         "create an interval value" in {
@@ -1524,27 +1505,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val intervalEnd = BigDecimal("3.4")
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInterval" : {
-                   |    "@type" : "knora-api:IntervalValue",
-                   |    "knora-api:intervalValueHasStart" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$intervalStart"
-                   |    },
-                   |    "knora-api:intervalValueHasEnd" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$intervalEnd"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createIntervalValueRequest(
+                resourceIri = resourceIri,
+                intervalStart = intervalStart,
+                intervalEnd = intervalEnd
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1587,22 +1552,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val listNode = "http://rdfh.ch/lists/0001/treeList03"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasListItem" : {
-                   |    "@type" : "knora-api:ListValue",
-                   |    "knora-api:listValueAsListNode" : {
-                   |      "@id" : "$listNode"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createListValueRequest(
+                resourceIri = resourceIri,
+                listNode = listNode
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1632,20 +1585,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val color = "#ff3333"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasColor" : {
-                   |    "@type" : "knora-api:ColorValue",
-                   |    "knora-api:colorValueAsColor" : "$color"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createColorValueRequest(
+                resourceIri = resourceIri,
+                color = color
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1675,23 +1618,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val uri = "https://www.knora.org"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasUri" : {
-                   |    "@type" : "knora-api:UriValue",
-                   |    "knora-api:uriValueAsUri" : {
-                   |      "@type" : "xsd:anyURI",
-                   |      "@value" : "$uri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createUriValueRequest(
+                resourceIri = resourceIri,
+                uri = uri
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1726,20 +1656,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val geonameCode = "2661604"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasGeoname" : {
-                   |    "@type" : "knora-api:GeonameValue",
-                   |    "knora-api:geonameValueAsGeonameCode" : "$geonameCode"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createGeonameValueRequest(
+                resourceIri = resourceIri,
+                geonameCode = geonameCode
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1769,22 +1689,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "knora-api:LinkObj",
-                   |  "knora-api:hasLinkToValue" : {
-                   |    "@type" : "knora-api:LinkValue",
-                   |    "knora-api:linkValueHasTargetIri" : {
-                   |      "@id" : "$zeitglöckleinIri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createLinkValueRequest(
+                resourceIri = resourceIri,
+                targetResourceIri = zeitglöckleinIri
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)

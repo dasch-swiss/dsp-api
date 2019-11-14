@@ -822,8 +822,164 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
+    def createBooleanValueRequest(resourceIri: IRI,
+                                  booleanValue: Boolean): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasBoolean" : {
+           |    "@type" : "knora-api:BooleanValue",
+           |    "knora-api:booleanValueAsBoolean" : $booleanValue
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    val geometryValue = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
+
+    def createGeometryValueRequest(resourceIri: IRI,
+                                   geometryValue: String)(implicit stringFormatter: StringFormatter): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasGeometry" : {
+           |    "@type" : "knora-api:GeomValue",
+           |    "knora-api:geometryValueAsGeometry" : ${stringFormatter.toJsonEncodedString(geometryValue)}
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createIntervalValueRequest(resourceIri: IRI,
+                                   intervalStart: BigDecimal,
+                                   intervalEnd: BigDecimal): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInterval" : {
+           |    "@type" : "knora-api:IntervalValue",
+           |    "knora-api:intervalValueHasStart" : {
+           |      "@type" : "xsd:decimal",
+           |      "@value" : "$intervalStart"
+           |    },
+           |    "knora-api:intervalValueHasEnd" : {
+           |      "@type" : "xsd:decimal",
+           |      "@value" : "$intervalEnd"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createListValueRequest(resourceIri: IRI,
+                               listNode: String): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasListItem" : {
+           |    "@type" : "knora-api:ListValue",
+           |    "knora-api:listValueAsListNode" : {
+           |      "@id" : "$listNode"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createColorValueRequest(resourceIri: IRI,
+                                color: String): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasColor" : {
+           |    "@type" : "knora-api:ColorValue",
+           |    "knora-api:colorValueAsColor" : "$color"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createUriValueRequest(resourceIri: IRI,
+                              uri: String): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasUri" : {
+           |    "@type" : "knora-api:UriValue",
+           |    "knora-api:uriValueAsUri" : {
+           |      "@type" : "xsd:anyURI",
+           |      "@value" : "$uri"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createGeonameValueRequest(resourceIri: IRI,
+                                  geonameCode: String): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasGeoname" : {
+           |    "@type" : "knora-api:GeonameValue",
+           |    "knora-api:geonameValueAsGeonameCode" : "$geonameCode"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createLinkValueRequest(resourceIri: IRI,
+                               targetResourceIri: IRI): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "knora-api:LinkObj",
+           |  "knora-api:hasLinkToValue" : {
+           |    "@type" : "knora-api:LinkValue",
+           |    "knora-api:linkValueHasTargetIri" : {
+           |      "@id" : "$targetResourceIri"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+           |  }
+           |}""".stripMargin
+
+    }
+
+    object Zeitglöcklein {
+        val iri: IRI = "http://rdfh.ch/0803/c5058f3a"
+    }
+
     object AThing {
-        val aThingIri: IRI = "http://rdfh.ch/0001/a-thing"
+        val iri: IRI = "http://rdfh.ch/0001/a-thing"
     }
 
     object TestDing {

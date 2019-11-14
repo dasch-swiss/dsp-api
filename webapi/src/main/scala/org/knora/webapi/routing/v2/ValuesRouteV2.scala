@@ -29,7 +29,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
-import org.knora.webapi.SharedTestDataADM.{AThing, TestDing}
+import org.knora.webapi.SharedTestDataADM.{AThing, TestDing, Zeitglöcklein}
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -185,20 +185,20 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             }
         }
 
-    private def createValueTestResponses: Future[Set[SourceCodeFileContent]] = {
+    private def createValueTestRequests: Future[Set[SourceCodeFileContent]] = {
         FastFuture.successful(
             Set(
                 SourceCodeFileContent(
                     filePath = SourceCodeFilePath.makeJsonPath("create-int-value-request"),
                     text = SharedTestDataADM.createIntValueRequest(
-                        resourceIri = AThing.aThingIri,
+                        resourceIri = AThing.iri,
                         intValue = 4
                     )
                 ),
                 SourceCodeFileContent(
                     filePath = SourceCodeFilePath.makeJsonPath("create-int-value-with-custom-permissions-request"),
                     text = SharedTestDataADM.createIntValueWithCustomPermissionsRequest(
-                        resourceIri = AThing.aThingIri,
+                        resourceIri = AThing.iri,
                         intValue = 4,
                         customPermissions = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
                     )
@@ -206,14 +206,14 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 SourceCodeFileContent(
                     filePath = SourceCodeFilePath.makeJsonPath("create-text-value-without-standoff-request"),
                     text = SharedTestDataADM.createTextValueWithoutStandoffRequest(
-                        resourceIri = AThing.aThingIri,
+                        resourceIri = AThing.iri,
                         valueAsString = "How long is a piece of string?"
                     )
                 ),
                 SourceCodeFileContent(
                     filePath = SourceCodeFilePath.makeJsonPath("create-text-value-with-standoff-request"),
                     text = SharedTestDataADM.createTextValueWithStandoffRequest(
-                        resourceIri = AThing.aThingIri,
+                        resourceIri = AThing.iri,
                         textValueAsXml = SharedTestDataADM.textValueAsXmlWithStandardMapping,
                         mappingIri = SharedTestDataADM.standardMappingIri
                     )
@@ -221,7 +221,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 SourceCodeFileContent(
                     filePath = SourceCodeFilePath.makeJsonPath("create-text-value-with-comment-request"),
                     text = SharedTestDataADM.createTextValueWithCommentRequest(
-                        resourceIri = AThing.aThingIri,
+                        resourceIri = AThing.iri,
                         valueAsString = "This is the text.",
                         valueHasComment = "This is the comment on the text."
                     )
@@ -229,14 +229,14 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 SourceCodeFileContent(
                     filePath = SourceCodeFilePath.makeJsonPath("create-decimal-value-request"),
                     text = SharedTestDataADM.createDecimalValueRequest(
-                        resourceIri = AThing.aThingIri,
+                        resourceIri = AThing.iri,
                         decimalValueAsDecimal = BigDecimal(4.3)
                     )
                 ),
                 SourceCodeFileContent(
-                    filePath = SourceCodeFilePath.makeJsonPath("create-date-with-day-precision-request"),
+                    filePath = SourceCodeFilePath.makeJsonPath("create-date-value-with-day-precision-request"),
                     text = SharedTestDataADM.createDateValueWithDayPrecisionRequest(
-                        resourceIri = AThing.aThingIri,
+                        resourceIri = AThing.iri,
                         dateValueHasCalendar = "GREGORIAN",
                         dateValueHasStartYear = 2018,
                         dateValueHasStartMonth = 10,
@@ -249,9 +249,9 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
                 ),
                 SourceCodeFileContent(
-                    filePath = SourceCodeFilePath.makeJsonPath("create-date-with-month-precision-request"),
+                    filePath = SourceCodeFilePath.makeJsonPath("create-date-value-with-month-precision-request"),
                     text = SharedTestDataADM.createDateValueWithMonthPrecisionRequest(
-                        resourceIri = AThing.aThingIri,
+                        resourceIri = AThing.iri,
                         dateValueHasCalendar = "GREGORIAN",
                         dateValueHasStartYear = 2018,
                         dateValueHasStartMonth = 10,
@@ -262,14 +262,71 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
                 ),
                 SourceCodeFileContent(
-                    filePath = SourceCodeFilePath.makeJsonPath("create-date-with-year-precision-request"),
+                    filePath = SourceCodeFilePath.makeJsonPath("create-date-value-with-year-precision-request"),
                     text = SharedTestDataADM.createDateValueWithYearPrecisionRequest(
-                        resourceIri = AThing.aThingIri,
+                        resourceIri = AThing.iri,
                         dateValueHasCalendar = "GREGORIAN",
                         dateValueHasStartYear = 2018,
                         dateValueHasStartEra = "CE",
                         dateValueHasEndYear = 2019,
                         dateValueHasEndEra = "CE"
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-boolean-value-request"),
+                    text = SharedTestDataADM.createBooleanValueRequest(
+                        resourceIri = AThing.iri,
+                        booleanValue = true
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-geometry-value-request"),
+                    text = SharedTestDataADM.createGeometryValueRequest(
+                        resourceIri = AThing.iri,
+                        geometryValue = SharedTestDataADM.geometryValue
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-interval-value-request"),
+                    text = SharedTestDataADM.createIntervalValueRequest(
+                        resourceIri = AThing.iri,
+                        intervalStart = BigDecimal("1.2"),
+                        intervalEnd = BigDecimal("3.4")
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-list-value-request"),
+                    text = SharedTestDataADM.createListValueRequest(
+                        resourceIri = AThing.iri,
+                        listNode = "http://rdfh.ch/lists/0001/treeList03"
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-color-value-request"),
+                    text = SharedTestDataADM.createColorValueRequest(
+                        resourceIri = AThing.iri,
+                        color = "#ff3333"
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-uri-value-request"),
+                    text = SharedTestDataADM.createUriValueRequest(
+                        resourceIri = AThing.iri,
+                        uri = "https://www.knora.org"
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-geoname-value-request"),
+                    text = SharedTestDataADM.createGeonameValueRequest(
+                        resourceIri = AThing.iri,
+                        geonameCode = "2661604"
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-link-value-request"),
+                    text = SharedTestDataADM.createLinkValueRequest(
+                        resourceIri = AThing.iri,
+                        targetResourceIri = Zeitglöcklein.iri
                     )
                 )
             )
@@ -347,7 +404,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
         for {
             getRequests: Set[SourceCodeFileContent] <- getValueTestResponses
-            createRequests: Set[SourceCodeFileContent] <- createValueTestResponses
+            createRequests: Set[SourceCodeFileContent] <- createValueTestRequests
         } yield getRequests ++ createRequests
     }
 }
