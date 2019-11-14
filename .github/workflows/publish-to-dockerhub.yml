@@ -1,0 +1,15 @@
+name: publish-to-dockerhub
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: run upgrade tests
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASS && make publish-all-images
