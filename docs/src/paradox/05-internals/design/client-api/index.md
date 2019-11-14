@@ -57,7 +57,7 @@ generates each file using a Twirl template, and arranges the files in the
 correct directory structure.
 
 Currently one back end, `TypeScriptBackEnd`, is implemented; it generates code
-for use with [knora-api-js-lib](https://github.com/dhlab-basel/knora-api-js-lib).
+for use with [knora-api-js-lib](https://github.com/dasch-swiss/knora-api-js-lib).
 
 ## Client Function DSL
 
@@ -148,6 +148,34 @@ submit a resource with an embedded link value), but the property pointing from a
 link value to an embedded resource is read-only.
 
 The read-only properties and ID properties are specified in each `ClientApi`.
+
+## Collection Types
+
+`Array[T]` and `Map[K, V]` collection types can be generated and used as the object types
+of properties in ordinary classes. The collection type is specified in the IRI of the
+property object type, using a Scala-like type annotation syntax, like this:
+
+```
+http://api.knora.org/ontology/knora-admin/v2#collection: Map[URI, Array[Permission]]
+```
+
+(The local part of the IRI can also be URL-encoded.) The keyword `collection:` indicates
+that the rest of the IRI specifies a collection type, which must be an `Array` or `Map` type.
+The following literal types can be used:
+
+- `String`
+- `Boolean`
+- `Integer`
+- `Decimal`
+- `URI`
+- `DateTimeStamp`
+
+Class names (like `Permission`) in the example above refer to classes in the same IRI
+namespace as the collection type. The keys of a `Map` must be `String` or `URI`.
+
+`ClientCollectionTypeParser` parses these definitions into `MapType` and `ArrayType`
+objects, which can then be used by a language-specific back end to generate type signatures
+in the target language.
 
 ## Testing
 
