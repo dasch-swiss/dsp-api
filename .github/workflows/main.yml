@@ -11,7 +11,7 @@ jobs:
         with:
           fetch-depth: 1
       - name: Run compile and stage
-          run: sbt clean stage
+        run: sbt clean stage
   # unit-tests:
   # e2e-tests:
   # integration-tests:
@@ -21,6 +21,7 @@ jobs:
     name: Publish
     needs: compile
     runs-on: ubuntu-latest
+    # if: github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v1
         with:
