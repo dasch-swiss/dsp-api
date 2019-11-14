@@ -1,0 +1,31 @@
+name: CI
+
+on: [push]
+
+jobs:
+  compile:
+    name: Compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+          with:
+            fetch-depth: 1
+      - name: Run compile and stage
+          run: sbt clean stage
+  # unit-tests:
+  # e2e-tests:
+  # integration-tests:
+  # upgrade-tests:
+  
+  publish:
+    name: Publish
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 50
+      - name: Build and publish images to Dockerhub
+        run: |
+          echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+          make publish-all-images
