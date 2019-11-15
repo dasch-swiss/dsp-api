@@ -713,13 +713,20 @@
 						}
 						form.append(table);
 
-						form.append($('<input>', {
+						// define the submit button
+						var submit_button = $('<input>', {
 							'type': 'button',
 							'value': strings._save
-						}).click(function(event) {
+						});
+
+						// define the function for the `click` event callback
+						var submit_button_callback = function(event) {
 							var propname;
 							var ele;
 							var vv;
+
+							// fake a click to show up the model dialog
+							$('#hiddenaddrespending').click();
 
 							for (var pinfo in rtinfo.properties) {
 								//propname = rtinfo.properties[pinfo].vocabulary + ':' + rtinfo.properties[pinfo].name;
@@ -1001,7 +1008,11 @@
 												var geos = localdata.settings.viewer.topCanvas().regions('returnObjects', 'active');
 												if (geos.length < 1) {
 													alert(strings._err_empty_geometry);
-													return false;
+													// release the modal when the async method failed
+													$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
+													// resubscribe the button `submit` for a single event callback on `click` event
+													submit_button.one('click', submit_button_callback);
+													return;
 												}
 												for (var idx in geos) {
 													geos[idx].lineColor = col;
@@ -1138,15 +1149,16 @@
 
 							if (tmplabel === undefined || tmplabel.length == 0) {
 								alert(strings._label_required);
+								// release the modal when the async method failed
+								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
+								// resubscribe the button `submit` for a single event callback on `click` event
+								submit_button.one('click', submit_button_callback);
 								return;
 							}
 
 							var tmplabelFirstElem = tmplabel[0];
 							var labelStr = tmplabelFirstElem.richtext_value.utf8str;
 							propvals['__LABEL__'] = undefined;
-
-							// fake a click to show up the model dialog
-							$('#hiddenaddrespending').click();
 
 							SALSAH.ApiPost('resources', {
 								restype_id: rtinfo.name,
@@ -1175,8 +1187,13 @@
 								// release the modal when the async method failed
 								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
 							});
-							return false;
-						}));
+							return;
+						};
+
+						// subscribe the `submit` button for a single call back on a `click` event
+						submit_button.one('click', submit_button_callback);
+
+						form.append(submit_button);
 
 						form.append($('<input>', {
 							'type': 'button',
