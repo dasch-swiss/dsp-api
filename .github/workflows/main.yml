@@ -36,6 +36,9 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
+          with:
+            fetch-depth: 1
       - name: build all docker images
         run: make build-all-images
       - name: prepare needed graphdb-se files
@@ -70,6 +73,9 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
+          with:
+            fetch-depth: 1
       - name: run docs build test
         run: |
           mkdir -p $GITHUB_WORKSPACE/docs/target
@@ -78,8 +84,8 @@ jobs:
 
   # publish only for develop and tags
   publish:
-    name: Publish
-    needs: compile
+    name: Publish to Dockerhub
+    needs: [upgrade-unit-tests, upgrade-integration-tests, docs-build-test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/tags/*'
     steps:
