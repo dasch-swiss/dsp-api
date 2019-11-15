@@ -39,11 +39,13 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
+      - name: install requirements
+        run: sudo apt-get install expect
       - name: build all docker images
         run: make build-all-images
       - name: prepare needed graphdb-se files
         run: |
-          openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
+          openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
           tar -C travis -xvf travis/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
