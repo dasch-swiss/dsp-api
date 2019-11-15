@@ -15,6 +15,7 @@ jobs:
           fetch-depth: 1
       - name: Run compile and stage
         run: sbt clean stage
+
   # api-unit-tests:
   # api-e2e-tests:
   # api-integration-tests:
