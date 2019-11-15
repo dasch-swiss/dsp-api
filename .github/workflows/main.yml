@@ -3,11 +3,11 @@ name: CI
 on: [push]
 
 env:
-  KNORA_GDB_LICENSE: ./travis/graphdb.license
+  KNORA_GDB_LICENSE: $GITHUB_WORKSPACE/travis/graphdb.license
 
 jobs:
   compile:
-    name: Compile and stage
+    name: Compile and Stage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -31,7 +31,39 @@ jobs:
       - name: run upgrade tests
         run: sbt "upgrade/test"
 
-  # upgrade-integration-tests:
+  upgrade-integration-tests:
+    name: Upgrade Integration Tests
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: build all docker images
+        run: make build-all-images
+      - name: prepare needed graphdb-se files
+        run: |
+          openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
+          tar -C travis -xvf travis/secrets.tar
+          mkdir -p $GITHUB_WORKSPACE/graphdb
+          cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
+          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
+      - name: start and initialize graphdb-se
+        run: |
+          docker network create knora-net
+          docker run --rm -d --name=db --network=knora-net -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE daschswiss/knora-graphdb-se -Dgraphdb.license.file=/graphdb/graphdb.license
+          sleep 5
+          make init-db-test-minimal
+      - name: load v7.0.0 data and run auto-upgrade (sbt use case)
+        run: |
+          cd $GITHUB_WORKSPACE/upgrade/graphdb-se
+          unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip
+          pwd
+          ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+          ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
+          ./auto-upgrade.sh -r knora-test -u gaga -p gaga -h localhost:7200 -t /tmp/upgrade.dir
+      - name: load v7.0.0 data and run auto-upgrade (docker use case)
+        run: |
+          ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+          ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
+          docker run -it --rm --network=knora-net -v /tmp:/tmp -e KNORA_UPGRADE_DOCKER=true daschswiss/knora-upgrade -r knora-test -u gaga -p gaga -h db:7200 -t /tmp/upgrade.dir
 
   docs-build-test:
     name: Docs Build Test
@@ -40,8 +72,8 @@ jobs:
     steps:
       - name: run docs build test
         run: |
-          mkdir -p ./docs/target
-          chmod 777 ./docs/target
+          mkdir -p $GITHUB_WORKSPACE/docs/target
+          chmod 777 $GITHUB_WORKSPACE/docs/target
           make docs-build
 
   # publish only for develop and tags
