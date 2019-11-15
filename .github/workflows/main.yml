@@ -37,8 +37,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-          with:
-            fetch-depth: 1
+        with:
+          fetch-depth: 1
       - name: build all docker images
         run: make build-all-images
       - name: prepare needed graphdb-se files
@@ -74,8 +74,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-          with:
-            fetch-depth: 1
+        with:
+          fetch-depth: 1
       - name: run docs build test
         run: |
           mkdir -p $GITHUB_WORKSPACE/docs/target
