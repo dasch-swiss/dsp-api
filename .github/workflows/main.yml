@@ -1,0 +1,59 @@
+name: CI
+
+on: [push]
+
+env:
+  KNORA_GDB_LICENSE: ./travis/graphdb.license
+
+jobs:
+  compile:
+    name: Compile and stage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: Run compile and stage
+        run: sbt clean stage
+  # api-unit-tests:
+  # api-e2e-tests:
+  # api-integration-tests:
+
+  upgrade-unit-tests:
+    name: Upgrade Unit Tests
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: run upgrade tests
+        run: sbt "upgrade/test"
+
+  # upgrade-integration-tests:
+
+  docs-build-test:
+    name: Docs Build Test
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: run docs build test
+        run: |
+          mkdir -p ./docs/target
+          chmod 777 ./docs/target
+          make docs-build
+
+  # publish only for develop and tags
+  publish:
+    name: Publish
+    needs: compile
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/tags/*'
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 50
+      - name: Build and publish all images to Dockerhub
+        run: |
+          echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+          make publish-all-images
