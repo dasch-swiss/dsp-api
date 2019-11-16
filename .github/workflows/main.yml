@@ -49,6 +49,7 @@ jobs:
 
   api-unit-tests:
     name: API Unit Tests
+    needs: compile
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -75,9 +76,9 @@ jobs:
       - name: Run API unit tests
         run: make unit-tests-with-coverage
 
-
   api-e2e-tests:
     name: API E2E Tests
+    needs: compile
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -104,6 +105,7 @@ jobs:
 
   api-integration-tests:
     name: API E2E Tests
+    needs: compile
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -195,6 +197,7 @@ jobs:
           ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
           docker run -it --rm --network=knora-net -v /tmp:/tmp -e KNORA_UPGRADE_DOCKER=true daschswiss/knora-upgrade -r knora-test -u gaga -p gaga -h db:7200 -t /tmp/upgrade.dir
 
+
   docs-build-test:
     name: Docs Build Test
     needs: compile
@@ -209,10 +212,11 @@ jobs:
           chmod 777 $GITHUB_WORKSPACE/docs/target
           make docs-build
 
+
   # publish only for develop and tags
   publish:
     name: Publish to Dockerhub
-    needs: [upgrade-unit-tests, upgrade-integration-tests, docs-build-test]
+    needs: [api-unite-tests, api-e2e-tests, api-integration-tests, upgrade-unit-tests, upgrade-integration-tests, docs-build-test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/tags/*'
     steps:
