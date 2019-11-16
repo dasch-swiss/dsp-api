@@ -13,6 +13,13 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
+      - name: Cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: $HOME/.ivy2
+          key: ${{ runner.OS }}
+          restore-keys: |
+            ${{ runner.OS }}
       - name: Run compile and stage
         run: sbt clean stage
 
@@ -23,6 +30,13 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
+      - name: Cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: $HOME/.ivy2
+          key: ${{ runner.OS }}
+          restore-keys: |
+            ${{ runner.OS }}
       - name: prepare needed graphdb-se files
         run: |
           openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
@@ -32,10 +46,11 @@ jobs:
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
       - name: Check license
         run: file $GITHUB_WORKSPACE/travis/graphdb.license
-      - name: Run API unit tests
-        run: make unit-tests-with-coverage
       - name: Print env file
         run: make print-env-file
+      - name: Run API unit tests
+        run: make unit-tests-with-coverage
+
 
   api-e2e-tests:
     name: API E2E Tests
@@ -44,6 +59,13 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
+      - name: Cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: $HOME/.ivy2
+          key: ${{ runner.OS }}
+          restore-keys: |
+            ${{ runner.OS }}
       - name: prepare needed graphdb-se files
         run: |
           openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
@@ -51,10 +73,10 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: Run API E2E tests
-        run: make e2e-tests-with-coverage
       - name: Print env file
         run: make print-env-file
+      - name: Run API E2E tests
+        run: make e2e-tests-with-coverage
 
   api-integration-tests:
     name: API E2E Tests
@@ -70,10 +92,10 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: Run API integration tests
-        run: make it-tests-with-coverage
       - name: Print env file
         run: make print-env-file
+      - name: Run API integration tests
+        run: make it-tests-with-coverage
 
   upgrade-unit-tests:
     name: Upgrade Unit Tests
