@@ -40,7 +40,7 @@ jobs:
       - name: Cache maven artifacts
         uses: actions/cache@v1
         with:
-          path: $HOME/.ivy2
+          path: ~/.ivy2
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
@@ -57,7 +57,7 @@ jobs:
       - name: Cache maven artifacts
         uses: actions/cache@v1
         with:
-          path: $HOME/.ivy2
+          path: ~/.ivy2
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
@@ -86,7 +86,7 @@ jobs:
       - name: Cache maven artifacts
         uses: actions/cache@v1
         with:
-          path: $HOME/.ivy2
+          path: ~/.ivy2
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
@@ -109,6 +109,13 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
+      - name: Cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}
+          restore-keys: |
+            ${{ runner.OS }}
       - name: prepare needed graphdb-se files
         run: |
           openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
@@ -129,6 +136,13 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
+      - name: Cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}
+          restore-keys: |
+            ${{ runner.OS }}
       - name: run upgrade tests
         run: sbt "upgrade/test"
 
@@ -143,6 +157,13 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: '11.x.x'
+      - name: Cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}
+          restore-keys: |
+            ${{ runner.OS }}
       - name: install requirements
         run: sudo apt-get install expect
       - name: build all docker images
@@ -198,6 +219,13 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 50
+      - name: Cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}
+          restore-keys: |
+            ${{ runner.OS }}
       - name: Build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
