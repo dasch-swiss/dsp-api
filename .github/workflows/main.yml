@@ -216,7 +216,7 @@ jobs:
   # publish only for develop and tags
   publish:
     name: Publish to Dockerhub
-    needs: [api-unite-tests, api-e2e-tests, api-integration-tests, upgrade-unit-tests, upgrade-integration-tests, docs-build-test]
+    needs: [api-unit-tests, api-e2e-tests, api-integration-tests, upgrade-unit-tests, upgrade-integration-tests, docs-build-test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/tags/*'
     steps:
