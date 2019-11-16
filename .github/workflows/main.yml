@@ -183,20 +183,18 @@ jobs:
           docker run --rm -d --name=db --network=knora-net -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE daschswiss/knora-graphdb-se -Dgraphdb.license.file=/graphdb/graphdb.license
           sleep 5
           make init-db-test-minimal
+      - name: unzip test data
+        run: unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip
       - name: load v7.0.0 data and run auto-upgrade (sbt use case)
         run: |
-          cd $GITHUB_WORKSPACE/upgrade/graphdb-se
-          unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip
-          pwd
-          ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-          ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
-          ./auto-upgrade.sh -r knora-test -u gaga -p gaga -h localhost:7200 -t /tmp/upgrade.dir
+          $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+          $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
+          $GITHUB_WORKSPACE/upgrade/graphdb-se/auto-upgrade.sh -r knora-test -u gaga -p gaga -h localhost:7200 -t /tmp/upgrade.dir
       - name: load v7.0.0 data and run auto-upgrade (docker use case)
         run: |
-          ./empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-          ./upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 v7.0.0-knora-test.trig
-          docker run -it --rm --network=knora-net -v /tmp:/tmp -e KNORA_UPGRADE_DOCKER=true daschswiss/knora-upgrade -r knora-test -u gaga -p gaga -h db:7200 -t /tmp/upgrade.dir
-
+          $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+          $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
+          docker run --rm --network=knora-net -v /tmp:/tmp -e KNORA_UPGRADE_DOCKER=true daschswiss/knora-upgrade -r knora-test -u gaga -p gaga -h db:7200 -t /tmp/upgrade.dir
 
   docs-build-test:
     name: Docs Build Test
@@ -211,7 +209,6 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/docs/target
           chmod 777 $GITHUB_WORKSPACE/docs/target
           make docs-build
-
 
   # publish only for develop and tags
   publish:
