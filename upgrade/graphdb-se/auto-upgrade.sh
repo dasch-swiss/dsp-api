@@ -75,7 +75,7 @@ echo "Checking for needed transformations..."
 
 if [[ -z "${KNORA_UPGRADE_DOCKER}" ]]; then
     # Run the upgrade program using SBT.
-    (cd ../.. && sbt "upgrade/run ${INPUT_FILE} ${OUTPUT_FILE}")
+    (cd ../.. && sbt "upgrade/run ${INPUT_FILE} ${OUTPUT_FILE}";)
 else
     # Run the upgrade program using Docker.
     /upgrade/bin/upgrade "${INPUT_FILE}" "${OUTPUT_FILE}"
