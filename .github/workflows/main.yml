@@ -104,7 +104,7 @@ jobs:
         run: make e2e-tests-with-coverage
 
   api-integration-tests:
-    name: API E2E Tests
+    name: API Integration Tests
     needs: compile
     runs-on: ubuntu-latest
     steps:
@@ -185,16 +185,18 @@ jobs:
           make init-db-test-minimal
       - name: unzip test data
         run: unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip
-      - name: load v7.0.0 data and run auto-upgrade (docker use case)
-        run: |
-          $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-          $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
-          docker run --rm --network=knora-net -v $GITHUB_WORKSPACE/upgrade/tmp1:/tmp -e KNORA_UPGRADE_DOCKER=true daschswiss/knora-upgrade -r knora-test -u gaga -p gaga -h db:7200 -t /tmp/upgrade.dir
-      - name: load v7.0.0 data and run auto-upgrade (sbt use case)
-        run: |
-          $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-          $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
-          $GITHUB_WORKSPACE/upgrade/graphdb-se/auto-upgrade.sh -r knora-test -u gaga -p gaga -h localhost:7200 -t $GITHUB_WORKSPACE/upgrade/upgrade.dir
+      - name: empty repository
+        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+      - name: load v7.0.0 data
+        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
+      - name: run auto-upgrade (sbt use case)
+        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/auto-upgrade.sh -r knora-test -u gaga -p gaga -h localhost:7200 -t $GITHUB_WORKSPACE/upgrade/upgrade.dir
+      - name: empty repository
+        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+      - name: load v7.0.0 data
+        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
+      - name: run auto-upgrade (docker use case)
+        run: docker run --rm --network=knora-net -v $GITHUB_WORKSPACE/upgrade/tmp1:/tmp -e KNORA_UPGRADE_DOCKER=true daschswiss/knora-upgrade -r knora-test -u gaga -p gaga -h db:7200 -t /tmp/upgrade.dir
 
   docs-build-test:
     name: Docs Build Test
