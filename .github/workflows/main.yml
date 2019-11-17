@@ -204,6 +204,13 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
+      - name: Cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}
+          restore-keys: |
+            ${{ runner.OS }}
       - name: run docs build test
         run: |
           mkdir -p $GITHUB_WORKSPACE/docs/target
