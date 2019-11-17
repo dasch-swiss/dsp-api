@@ -185,12 +185,12 @@ jobs:
           make init-db-test-minimal
       - name: unzip test data
         run: unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip
-      - name: empty repository
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-      - name: load v7.0.0 data
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
-      - name: run auto-upgrade (sbt use case)
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/auto-upgrade.sh -r knora-test -u gaga -p gaga -h localhost:7200 -t $GITHUB_WORKSPACE/upgrade/upgrade.dir
+#      - name: empty repository
+#        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
+#      - name: load v7.0.0 data
+#        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig
+#      - name: run auto-upgrade (sbt use case)
+#        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/auto-upgrade.sh -r knora-test -u gaga -p gaga -h localhost:7200 -t $GITHUB_WORKSPACE/upgrade/upgrade.dir
       - name: empty repository
         run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
       - name: load v7.0.0 data
