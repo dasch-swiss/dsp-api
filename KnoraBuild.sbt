@@ -219,7 +219,7 @@ lazy val knoraGraphDbSe: Project = knoraModule("knora-graphdb-se")
       Docker / dockerExposedPorts ++= Seq(7200),
       Docker / dockerCommands := Seq(
           // FIXME: Someday find out how to reference here Dependencies.Versions.gdbSEImage
-          Cmd("FROM", "ontotext/graphdb:8.5.0-se"),
+          Cmd("FROM", "ontotext/graphdb:8.10.1-se"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
           Cmd("COPY", "opt/docker/scripts", "/scripts"),
           Cmd("RUN", "mkdir -p /graphdb && cp /scripts/KnoraRules.pie /graphdb/KnoraRules.pie && rm -rf /scripts"),
@@ -407,8 +407,8 @@ lazy val upgrade: Project = knoraModule("upgrade")
 
           Cmd("ENV", """KNORA_UPGRADE_DOCKER="true""""),
           Cmd("COPY", "opt/docker", "/upgrade"),
-          Cmd("WORKDIR", "/upgrade/graphdb-se"),
-          ExecCmd("ENTRYPOINT", "/upgrade/graphdb-se/auto-upgrade.sh"),
+          Cmd("WORKDIR", "/upgrade"),
+          ExecCmd("ENTRYPOINT", "/upgrade/bin/upgrade"),
       ),
   )
 
@@ -703,7 +703,10 @@ lazy val webapi = knoraModule("webapi")
             buildInfoKeys ++= Seq[BuildInfoKey](
                 name,
                 version,
-                "akkaHttp" -> Dependencies.akkaHttpVersion.value
+                "akkaHttp" -> Dependencies.akkaHttpVersion.value,
+                "sipi" -> Dependencies.sipiImage.value,
+                "gdbSE" -> Dependencies.gdbSEImage.value,
+                "gdbFree" -> Dependencies.gdbFreeImage.value
             ),
             buildInfoPackage := "org.knora.webapi"
         )

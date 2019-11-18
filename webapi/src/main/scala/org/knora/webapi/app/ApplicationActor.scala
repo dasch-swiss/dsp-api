@@ -335,6 +335,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
         addServerHeader {
             CORS(
                 new HealthRoute(routeData).knoraApiPath ~
+                  new VersionRoute(routeData).knoraApiPath ~
                   new RejectingRoute(routeData).knoraApiPath ~
                   new ClientApiRoute(routeData).knoraApiPath ~
                   new ResourcesRouteV1(routeData).knoraApiPath ~
