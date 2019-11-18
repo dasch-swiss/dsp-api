@@ -92,12 +92,12 @@ range of ephemeral port numbers. The script
 
 ## Continuous Integration
 
-For continuous integration testing, we use Travis-CI. Every commit
+For continuous integration testing, we use Github CI Actions. Every commit
 pushed to the git repository or every pull request, triggers the build.
-Additionaly, in Github there is a litle checkmark beside every commit,
-signaling the status of the build (successful, unsucessful, ongoing).
+Additionally, in Github there is a small checkmark beside every commit,
+signaling the status of the build (successful, unsuccessful, ongoing).
 
-The build that is executed on Github-CI-Actions is defined in
+The build that is executed on Github CI Actions is defined in
 `.github/workflows/main.yml`, and looks like this:
 
 @@snip[main.yml](../../../../../.github/workflows/main.yml) { }
