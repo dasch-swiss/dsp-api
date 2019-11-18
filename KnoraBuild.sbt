@@ -407,8 +407,8 @@ lazy val upgrade: Project = knoraModule("upgrade")
 
           Cmd("ENV", """KNORA_UPGRADE_DOCKER="true""""),
           Cmd("COPY", "opt/docker", "/upgrade"),
-          Cmd("WORKDIR", "/upgrade/graphdb-se"),
-          ExecCmd("ENTRYPOINT", "/upgrade/graphdb-se/auto-upgrade.sh"),
+          Cmd("WORKDIR", "/upgrade"),
+          ExecCmd("ENTRYPOINT", "/upgrade/bin/upgrade"),
       ),
   )
 
