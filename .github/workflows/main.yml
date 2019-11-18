@@ -47,9 +47,26 @@ jobs:
       - name: Run build everything
         run: sbt clean test:compile it:compile stage
 
+  bazel-build:
+    name: Bazel Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}
+          restore-keys: |
+            ${{ runner.OS }}
+      - name: run bazel build
+        run: bazel build //...
+
   api-unit-tests:
     name: API Unit Tests
-    needs: compile
+    needs: [compile, bazel-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -76,7 +93,7 @@ jobs:
 
   api-e2e-tests:
     name: API E2E Tests
-    needs: compile
+    needs: [compile, bazel-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -103,7 +120,7 @@ jobs:
 
   api-integration-tests:
     name: API Integration Tests
-    needs: compile
+    needs: [compile, bazel-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -130,7 +147,7 @@ jobs:
 
   upgrade-unit-tests:
     name: Upgrade Unit Tests
-    needs: compile
+    needs: [compile, bazel-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -148,7 +165,7 @@ jobs:
 
   upgrade-integration-tests:
     name: Upgrade Integration Tests
-    needs: compile
+    needs: [compile, bazel-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -198,7 +215,7 @@ jobs:
 
   docs-build-test:
     name: Docs Build Test
-    needs: compile
+    needs: [compile, bazel-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -217,28 +234,11 @@ jobs:
           chmod 777 $GITHUB_WORKSPACE/docs/target
           make docs-build
 
-  bazel-build:
-    name: Bazel Build
-    needs: compile
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-      - name: cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}
-          restore-keys: |
-            ${{ runner.OS }}
-      - name: run bazel build
-        run: bazel build //...
 
   # publish only for develop and tags
   publish:
     name: Publish to Dockerhub
-    needs: [api-unit-tests, api-e2e-tests, api-integration-tests, upgrade-unit-tests, upgrade-integration-tests, docs-build-test, bazel-build]
+    needs: [api-unit-tests, api-e2e-tests, api-integration-tests, upgrade-unit-tests, upgrade-integration-tests, docs-build-test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/tags/*'
     steps:
