@@ -44,11 +44,6 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: cache source and build artifacts
-        uses: actions/cache@v1
-        with:
-          path: ${{ github.workspace }}
-          key: ${{ runner.OS }}-${{ github.sha }}
       - name: Run build everything
         run: sbt clean test:compile it:compile stage
 
@@ -57,6 +52,9 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -64,12 +62,7 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: cache sources and build artifacts
-        uses: actions/cache@v1
-        with:
-          path: $GITHUB_WORKSPACE
-          key: ${{ runner.OS }}-${{ github.sha }}
-      - name: prepare needed graphdb-se files
+     - name: prepare needed graphdb-se files
         run: |
           openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
           tar -C travis -xvf travis/secrets.tar
@@ -88,6 +81,9 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -95,11 +91,6 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: cache sources and build artifacts
-        uses: actions/cache@v1
-        with:
-          path: $GITHUB_WORKSPACE
-          key: ${{ runner.OS }}-${{ github.sha }}
       - name: prepare needed graphdb-se files
         run: |
           openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
@@ -117,6 +108,9 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -124,11 +118,6 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: cache sources and build artifacts
-        uses: actions/cache@v1
-        with:
-          path: $GITHUB_WORKSPACE
-          key: ${{ runner.OS }}-${{ github.sha }}
       - name: prepare needed graphdb-se files
         run: |
           openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
@@ -146,6 +135,9 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -153,11 +145,6 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: cache sources and build artifacts
-        uses: actions/cache@v1
-        with:
-          path: $GITHUB_WORKSPACE
-          key: ${{ runner.OS }}-${{ github.sha }}
       - name: run upgrade tests
         run: sbt "upgrade/test"
 
@@ -166,6 +153,9 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
       - uses: actions/setup-java@v1
         with:
           java-version: '11.x.x'
@@ -176,11 +166,6 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: cache sources and build artifacts
-        uses: actions/cache@v1
-        with:
-          path: $GITHUB_WORKSPACE
-          key: ${{ runner.OS }}-${{ github.sha }}
       - name: install requirements
         run: sudo apt-get install expect
       - name: build knora graphdb-se image
@@ -218,6 +203,9 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -225,11 +213,6 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: cache sources and build artifacts
-        uses: actions/cache@v1
-        with:
-          path: $GITHUB_WORKSPACE
-          key: ${{ runner.OS }}-${{ github.sha }}
       - name: run docs build test
         run: |
           mkdir -p $GITHUB_WORKSPACE/docs/target
@@ -245,7 +228,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
         with:
-          fetch-depth: 1
+          fetch-depth: 50
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
