@@ -7,7 +7,7 @@ env:
 
 jobs:
   compile:
-    name: Compile Everything
+    name: Build Everything
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -37,19 +37,19 @@ jobs:
         env:
           MATRIX_CONTEXT: ${{ toJson(matrix) }}
         run: echo "$MATRIX_CONTEXT"
-      - name: Cache maven artifacts
+      - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: Cache source and build artifacts
+      - name: cache source and build artifacts
         uses: actions/cache@v1
         with:
-          path: $GITHUB_WORKSPACE
+          path: /
           key: ${{ runner.OS }}-${{ github.sha }}
-      - name: Run compile and stage
+      - name: Run build everything
         run: sbt clean test:compile it:compile stage
 
   api-unit-tests:
@@ -57,14 +57,14 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Cache maven artifacts
+      - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: Cache sources and build artifacts
+      - name: cache sources and build artifacts
         uses: actions/cache@v1
         with:
           path: $GITHUB_WORKSPACE
@@ -88,14 +88,14 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Cache maven artifacts
+      - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: Cache sources and build artifacts
+      - name: cache sources and build artifacts
         uses: actions/cache@v1
         with:
           path: $GITHUB_WORKSPACE
@@ -107,9 +107,9 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: Print env file
+      - name: print env file
         run: make print-env-file
-      - name: Run API E2E tests
+      - name: run API E2E tests
         run: make e2e-tests-with-coverage
 
   api-integration-tests:
@@ -117,14 +117,14 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Cache maven artifacts
+      - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: Cache sources and build artifacts
+      - name: cache sources and build artifacts
         uses: actions/cache@v1
         with:
           path: $GITHUB_WORKSPACE
@@ -136,9 +136,9 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: Print env file
+      - name: print env file
         run: make print-env-file
-      - name: Run API integration tests
+      - name: run API integration tests
         run: make it-tests-with-coverage
 
   upgrade-unit-tests:
@@ -146,14 +146,14 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Cache maven artifacts
+      - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: Cache sources and build artifacts
+      - name: cache sources and build artifacts
         uses: actions/cache@v1
         with:
           path: $GITHUB_WORKSPACE
@@ -169,14 +169,14 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: '11.x.x'
-      - name: Cache maven artifacts
+      - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: Cache sources and build artifacts
+      - name: cache sources and build artifacts
         uses: actions/cache@v1
         with:
           path: $GITHUB_WORKSPACE
@@ -218,14 +218,14 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Cache maven artifacts
+      - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: Cache sources and build artifacts
+      - name: cache sources and build artifacts
         uses: actions/cache@v1
         with:
           path: $GITHUB_WORKSPACE
@@ -243,19 +243,19 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/tags/*'
     steps:
-      - name: Cache maven artifacts
+      - name: cache maven artifacts
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: Cache sources and build artifacts
+      - name: cache sources and build artifacts
         uses: actions/cache@v1
         with:
           path: $GITHUB_WORKSPACE
           key: ${{ runner.OS }}-${{ github.sha }}
-      - name: Build and publish all images to Dockerhub
+      - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make publish-all-images
