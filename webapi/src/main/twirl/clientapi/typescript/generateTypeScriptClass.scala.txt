@@ -20,12 +20,12 @@
 @import org.knora.webapi._
 @import org.knora.webapi.util._
 @import org.knora.webapi.util.clientapi._
-@import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
+@import org.knora.webapi.util.clientapi.TypeScriptBackEnd
 @import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 
 @(classDef: ClientClassDefinition,
   subClassOf: Option[ClassRef],
-  importedClasses: Seq[ImportInfo])import { JsonObject, JsonProperty } from "json2typescript";
+  importedClasses: Seq[TypeScriptBackEnd.ImportInfo])import { JsonObject, JsonProperty } from "json2typescript";
 
 @for(classInfo <- importedClasses) {import { @classInfo.className } from "@classInfo.importPath";
 }@classDef.classDescription match {
@@ -44,61 +44,14 @@ export class @{classDef.className}@{
     }
 } {
 @for(property <- classDef.properties) {
-@defining(makeTypeScriptType(property.objectType)) { typeScriptType => @property.propertyDescription match {
+@defining(TypeScriptBackEnd.makePropertyObjectType(property.objectType)) { propertyObjectType => @property.propertyDescription match {
     case Some(propDescStr) => {   /**
      * @propDescStr
      */}
 
     case None => {}
     }
-    @@JsonProperty("@{property.propertyName}", @wrapInArrayForCardinality(typeScriptType.capitalize, property.cardinality)@if(property.cardinality == MayHaveOne) {, true})
-    @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(property.objectType, typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
+    @@JsonProperty("@{property.propertyName}", @TypeScriptBackEnd.makeJson2TypeScriptType(property)@if(property.cardinality == MayHaveOne) {, true})
+    @{property.propertyName}@TypeScriptBackEnd.handleOption(property.cardinality): @TypeScriptBackEnd.addBracketsForCardinality(propertyObjectType, property.cardinality) = @TypeScriptBackEnd.makeDefaultValue(property.objectType, property.cardinality);
 }}
-}@makeTypeScriptType(objectType: ClientObjectType) = @{
-    objectType match {
-        case StringDatatype => "string"
-        case BooleanDatatype => "boolean"
-        case IntegerDatatype => "number"
-        case DecimalDatatype => "number"
-        case UriDatatype => "string"
-        case DateTimeStampDatatype => "string"
-        case classRef: ClassRef => classRef.className
-        case other => throw ClientApiGenerationException(s"Type $other not yet supported")
-    }
-}@makeDefaultValue(objectType: ClientObjectType, cardinality: Cardinality) = @{
-    cardinality match {
-        case MayHaveMany | MustHaveSome => "[]"
-
-        case MayHaveOne => "undefined"
-
-        case MustHaveOne =>
-            objectType match {
-                case StringDatatype => "\"\""
-                case BooleanDatatype => "false"
-                case IntegerDatatype => "0"
-                case DecimalDatatype => "0"
-                case UriDatatype => "\"\""
-                case DateTimeStampDatatype => "\"\""
-                case classRef: ClassRef => s"new ${classRef.className}()"
-                case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
-            }
-    }
-}@wrapInArrayForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
-    if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
-        s"[$typeScriptType]"
-    } else {
-        typeScriptType
-    }
-}@handleOption(cardinality: Cardinality) = @{
-    if (cardinality == MayHaveOne) {
-        "?"
-    } else {
-        ""
-    }
-}@addForCardinality(objectType: ClientObjectType, typeScriptType: String, cardinality: Cardinality) = @{
-    if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
-        s"$typeScriptType[]"
-    } else {
-        typeScriptType
-    }
 }

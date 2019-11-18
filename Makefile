@@ -14,7 +14,7 @@ docs-publish: ## build and publish docs
 
 .PHONY: docs-build
 docs-build: ## build the docs
-	docker run --rm -it -v $(PWD):/knora -v $(HOME)/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
+	docker run --rm -v $(PWD):/knora -v $(HOME)/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
 
 #################################
 # Docker targets
