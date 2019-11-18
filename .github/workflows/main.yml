@@ -217,10 +217,28 @@ jobs:
           chmod 777 $GITHUB_WORKSPACE/docs/target
           make docs-build
 
+  bazel-build:
+    name: Bazel Build
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}
+          restore-keys: |
+            ${{ runner.OS }}
+      - name: run bazel build
+        run: bazel build //...
+
   # publish only for develop and tags
   publish:
     name: Publish to Dockerhub
-    needs: [api-unit-tests, api-e2e-tests, api-integration-tests, upgrade-unit-tests, upgrade-integration-tests, docs-build-test]
+    needs: [api-unit-tests, api-e2e-tests, api-integration-tests, upgrade-unit-tests, upgrade-integration-tests, docs-build-test, bazel-build]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/tags/*'
     steps:
