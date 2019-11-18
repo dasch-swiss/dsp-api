@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
         with:
-          fetch-depth: 50
+          fetch-depth: 1
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
@@ -243,6 +243,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/tags/*'
     steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -250,11 +253,6 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
-      - name: cache sources and build artifacts
-        uses: actions/cache@v1
-        with:
-          path: $GITHUB_WORKSPACE
-          key: ${{ runner.OS }}-${{ github.sha }}
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
