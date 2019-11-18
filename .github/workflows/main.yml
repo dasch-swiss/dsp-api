@@ -7,12 +7,12 @@ env:
 
 jobs:
   compile:
-    name: Compile and Stage
+    name: Compile Everything
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
         with:
-          fetch-depth: 1
+          fetch-depth: 5
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
@@ -44,17 +44,19 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
+      - name: Cache source and build artifacts
+        uses: actions/cache@v1
+        with:
+          path: $GITHUB_WORKSPACE
+          key: ${{ runner.OS }}-${{ github.sha }}
       - name: Run compile and stage
-        run: sbt clean stage
+        run: sbt clean test:compile it:compile stage
 
   api-unit-tests:
     name: API Unit Tests
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
       - name: Cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -62,6 +64,11 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
+      - name: Cache sources and build artifacts
+        uses: actions/cache@v1
+        with:
+          path: $GITHUB_WORKSPACE
+          key: ${{ runner.OS }}-${{ github.sha }}
       - name: prepare needed graphdb-se files
         run: |
           openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
@@ -81,9 +88,6 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
       - name: Cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -91,6 +95,11 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
+      - name: Cache sources and build artifacts
+        uses: actions/cache@v1
+        with:
+          path: $GITHUB_WORKSPACE
+          key: ${{ runner.OS }}-${{ github.sha }}
       - name: prepare needed graphdb-se files
         run: |
           openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
@@ -108,9 +117,6 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
       - name: Cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -118,6 +124,11 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
+      - name: Cache sources and build artifacts
+        uses: actions/cache@v1
+        with:
+          path: $GITHUB_WORKSPACE
+          key: ${{ runner.OS }}-${{ github.sha }}
       - name: prepare needed graphdb-se files
         run: |
           openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
@@ -135,9 +146,6 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
       - name: Cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -145,6 +153,11 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
+      - name: Cache sources and build artifacts
+        uses: actions/cache@v1
+        with:
+          path: $GITHUB_WORKSPACE
+          key: ${{ runner.OS }}-${{ github.sha }}
       - name: run upgrade tests
         run: sbt "upgrade/test"
 
@@ -153,9 +166,6 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
       - uses: actions/setup-java@v1
         with:
           java-version: '11.x.x'
@@ -166,6 +176,11 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
+      - name: Cache sources and build artifacts
+        uses: actions/cache@v1
+        with:
+          path: $GITHUB_WORKSPACE
+          key: ${{ runner.OS }}-${{ github.sha }}
       - name: install requirements
         run: sudo apt-get install expect
       - name: build knora graphdb-se image
@@ -182,7 +197,7 @@ jobs:
           sleep 5
           make init-db-test-minimal
       - name: unzip test data
-        run: unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip
+        run: unzip $GITHUB_WORKSPACE/test-data/v7.0.0/v7.0.0-knora-test.trig.zip -d $GITHUB_WORKSPACE/test-data/v7.0.0/
       - name: empty repository
         run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
       - name: load v7.0.0 data
@@ -203,9 +218,6 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
       - name: Cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -213,6 +225,11 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
+      - name: Cache sources and build artifacts
+        uses: actions/cache@v1
+        with:
+          path: $GITHUB_WORKSPACE
+          key: ${{ runner.OS }}-${{ github.sha }}
       - name: run docs build test
         run: |
           mkdir -p $GITHUB_WORKSPACE/docs/target
@@ -226,9 +243,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/tags/*'
     steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 50
       - name: Cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -236,6 +250,11 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
+      - name: Cache sources and build artifacts
+        uses: actions/cache@v1
+        with:
+          path: $GITHUB_WORKSPACE
+          key: ${{ runner.OS }}-${{ github.sha }}
       - name: Build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
