@@ -61,6 +61,10 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
+      - name: install bazel
+        run: |
+          wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel_1.1.0-linux-x86_64.deb
+          sudo dpkg -i bazel_1.1.0-linux-x86_64.deb
       - name: run bazel build
         run: bazel build //...
 
