@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
         with:
-          fetch-depth: 5
+          fetch-depth: 50
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
@@ -47,7 +47,7 @@ jobs:
       - name: cache source and build artifacts
         uses: actions/cache@v1
         with:
-          path: /
+          path: ${{ github.workspace }}
           key: ${{ runner.OS }}-${{ github.sha }}
       - name: Run build everything
         run: sbt clean test:compile it:compile stage
