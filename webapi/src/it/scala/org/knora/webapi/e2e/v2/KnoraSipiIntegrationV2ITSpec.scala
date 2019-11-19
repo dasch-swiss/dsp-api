@@ -196,7 +196,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
             uploadedFile.originalFilename should ===(trp88OriginalFilename)
             val resourceIri: IRI = aThingPictureIri
-            stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/file1")
+            stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q")
 
             // JSON describing the new image to Knora.
             val jsonLdEntity =
