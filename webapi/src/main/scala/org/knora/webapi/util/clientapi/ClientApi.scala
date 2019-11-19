@@ -23,6 +23,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpRequest
 import akka.stream.ActorMaterializer
+import org.knora.webapi.ClientApiGenerationException
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Cardinality
 import org.knora.webapi.util.SmartIri
 
@@ -48,6 +49,16 @@ case object JsonLD extends ApiSerialisationFormat
   * Represents a client API.
   */
 trait ClientApi {
+    /**
+      * If `true`, generate endpoints for this API.
+      */
+    val generateEndpoints: Boolean = true
+
+    /**
+      * If `true`, generate classes for this API.
+      */
+    val generateClasses: Boolean = true
+
     /**
       * The serialisation format used by the API.
       */
@@ -109,15 +120,20 @@ trait ClientApi {
     val propertyNames: Map[SmartIri, String]
 
     /**
-      * The IRIs of the classes used by this API.
+      * Class IRIs that are used by this API, other than the ones used in endpoints.
       */
-    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet
+    val generalClassIrisUsed: Set[SmartIri] = Set.empty
 
     /**
-      * Returns test data for this API.
+      * The IRIs of the classes used by this API.
+      */
+    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet ++ generalClassIrisUsed
+
+    /**
+      * Returns test data for this API and its endpoints.
       *
       * @param testDataDirectoryPath the path of the top-level test data directory.
-      * @return a set of test data files to be used for testing this API.
+      * @return a set of test data files to be used for testing this API and its endpoints.
       */
     def getTestData(testDataDirectoryPath: Seq[String])(implicit executionContext: ExecutionContext,
                                                         actorSystem: ActorSystem,
@@ -202,6 +218,10 @@ trait ClientEndpoint {
         for {
             response <- Http().singleRequest(request)
             responseStr <- response.entity.toStrict(10240.millis).map(_.data.decodeString("UTF-8"))
+
+            _ = if (response.status.isFailure) {
+                throw ClientApiGenerationException(s"Failed to get test data: $responseStr")
+            }
         } yield responseStr
     }
 

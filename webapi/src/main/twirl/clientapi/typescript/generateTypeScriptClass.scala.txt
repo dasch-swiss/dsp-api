@@ -20,12 +20,12 @@
 @import org.knora.webapi._
 @import org.knora.webapi.util._
 @import org.knora.webapi.util.clientapi._
-@import org.knora.webapi.util.clientapi.TypeScriptBackEnd
+@import org.knora.webapi.util.clientapi.TypeScriptBackEnd._
 @import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 
 @(classDef: ClientClassDefinition,
   subClassOf: Option[ClassRef],
-  importedClasses: Seq[TypeScriptBackEnd.ImportInfo])import { JsonObject, JsonProperty } from "json2typescript";
+  importedClasses: Seq[ImportInfo])import { JsonObject, JsonProperty } from "json2typescript";
 
 @for(classInfo <- importedClasses) {import { @classInfo.className } from "@classInfo.importPath";
 }@classDef.classDescription match {
@@ -44,14 +44,14 @@ export class @{classDef.className}@{
     }
 } {
 @for(property <- classDef.properties) {
-@defining(TypeScriptBackEnd.makePropertyObjectType(property.objectType)) { propertyObjectType => @property.propertyDescription match {
+@defining(makePropertyObjectType(property.objectType)) { propertyObjectType => @property.propertyDescription match {
     case Some(propDescStr) => {   /**
      * @propDescStr
      */}
 
     case None => {}
     }
-    @@JsonProperty("@{property.propertyName}", @TypeScriptBackEnd.makeJson2TypeScriptType(property)@if(property.cardinality == MayHaveOne || property.isOptionalSet) {, true})
-    @{property.propertyName}@TypeScriptBackEnd.handleOption(property): @TypeScriptBackEnd.addBracketsForCardinality(propertyObjectType, property.cardinality) = @TypeScriptBackEnd.makeDefaultValue(property);
+    @@JsonProperty("@{property.propertyName}", @makeJson2TypeScriptType(property)@if(property.cardinality == MayHaveOne || property.isOptionalSet) {, true})
+    @{property.propertyName}@handleOption(property): @addBracketsForCardinality(propertyObjectType, property.cardinality) = @makeDefaultValue(property);
 }}
 }

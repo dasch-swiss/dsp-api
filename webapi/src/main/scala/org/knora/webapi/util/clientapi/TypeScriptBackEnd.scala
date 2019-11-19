@@ -157,30 +157,40 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         }.toMap
 
         // Generate source code for class definitions.
-        val classSourceCode: Set[SourceCodeFileContent] = generateClassSourceCode(
-            apiDef = api.apiDef,
-            clientClassDefs = api.clientClassDefs,
-            clientClassCodePaths = clientClassCodePaths
-        )
-
-        // Generate source code for endpoints.
-        val endpointInfos: Seq[EndpointInfo] = api.apiDef.endpoints.map {
-            endpoint =>
-                generateEndpointInfo(
-                    apiDef = api.apiDef,
-                    endpoint = endpoint,
-                    clientClassDefs = api.clientClassDefs,
-                    clientClassCodePaths = clientClassCodePaths
-                )
+        val classSourceCode: Set[SourceCodeFileContent] = if (api.apiDef.generateClasses) {
+            generateClassSourceCode(
+                apiDef = api.apiDef,
+                clientClassDefs = api.clientClassDefs,
+                clientClassCodePaths = clientClassCodePaths
+            )
+        } else {
+            Set.empty
         }
 
-        // Generate source code for the main endpoint.
-        val mainEndpointSourceCode = generateMainEndpointSourceCode(
-            apiDef = api.apiDef,
-            endpointInfos = endpointInfos
-        )
+        // Generate source code for endpoints.
+        val endpointSourceCode: Seq[SourceCodeFileContent] = if (api.apiDef.generateEndpoints) {
+            val endpointInfos: Seq[EndpointInfo] = api.apiDef.endpoints.map {
+                endpoint =>
+                    generateEndpointInfo(
+                        apiDef = api.apiDef,
+                        endpoint = endpoint,
+                        clientClassDefs = api.clientClassDefs,
+                        clientClassCodePaths = clientClassCodePaths
+                    )
+            }
 
-        classSourceCode ++ endpointInfos.map(_.fileContent) + mainEndpointSourceCode
+            // Generate source code for the main endpoint.
+            val mainEndpointSourceCode = generateMainEndpointSourceCode(
+                apiDef = api.apiDef,
+                endpointInfos = endpointInfos
+            )
+
+            endpointInfos.map(_.fileContent) :+ mainEndpointSourceCode
+        } else {
+            Seq.empty
+        }
+
+        classSourceCode ++ endpointSourceCode
     }
 
     /**
@@ -196,7 +206,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
             fileExtension = "ts"
         )
 
-        val importInfos: Set[ImportInfo] = apiDefs.map {
+        val importInfos: Set[ImportInfo] = apiDefs.filter(_.generateEndpoints).map {
             apiDef =>
                 val mainEndpointFilePath: SourceCodeFilePath = makeMainEndpointFilePath(apiDef)
 
@@ -524,6 +534,7 @@ object TypeScriptBackEnd {
             case UriDatatype => "string"
             case DateTimeStampDatatype => "string"
             case classRef: ClassRef => classRef.className
+            case enum: EnumDatatype => enum.values.map(value => "\"" + value + "\"").mkString(" | ")
             case arrayType: ArrayType => s"${makePropertyObjectType(arrayType.elementType)}[]"
             case mapType: MapType => s"{ [key: ${makePropertyObjectType(mapType.keyType)}]: ${makePropertyObjectType(mapType.valueType)} }"
             case _ => throw ClientApiGenerationException(s"Type $objectType not yet supported")
@@ -591,6 +602,82 @@ object TypeScriptBackEnd {
             "?"
         } else {
             ""
+        }
+    }
+
+    /**
+      * Generates the name of the function for the specified HTTP method.
+      *
+      * @param httpMethod the HTTP method.
+      * @return the name of the corresponding function.
+      */
+    def makeHttpMethod(httpMethod: ClientHttpMethod): String = {
+        httpMethod match {
+            case GET => "httpGet"
+            case POST => "httpPost"
+            case PUT => "httpPut"
+            case DELETE => "httpDelete"
+        }
+    }
+
+    /**
+      * Generates the TypeScript representation of a value (a literal or variable) used in a function.
+      *
+      * @param value the value.
+      * @return the TypeScript representation of the value.
+      */
+    def makeValue(value: Value): String = {
+        value match {
+            case stringLiteral: StringLiteralValue => "\"" + stringLiteral + "\""
+            case booleanLiteral: BooleanLiteralValue => "\"" + booleanLiteral + "\""
+            case integerLiteral: IntegerLiteralValue => integerLiteral.toString
+            case arg: ArgValue => arg.name + arg.memberVariableName.map(varName => "." + varName).getOrElse("")
+        }
+    }
+
+    /**
+      * Generates the TypeScript representation of the URL of a Knora route.
+      *
+      * @param urlElementsAsValues the URL elements represented as a sequence of [[Value]] objects.
+      * @return the TypeScript representation of the URL.
+      */
+    def makeUrl(urlElementsAsValues: Seq[Value]): String = {
+        if (urlElementsAsValues.isEmpty) {
+            "\"\""
+        } else {
+            urlElementsAsValues.map {
+                value: Value =>
+                    value match {
+                        case arg: ArgValue => "encodeURIComponent(" + makeValue(arg) + ")"
+                        case _ => makeValue(value)
+                    }
+            }.mkString(" + ")
+        }
+    }
+
+    /**
+      * Generates the TypeScript representation of the body of an HTTP request.
+      *
+      * @param maybeRequestBody the request body, or `None` if there is none.
+      * @return the TypeScript representation of the HTTP request.
+      */
+    def makeHttpRequestBody(maybeRequestBody: Option[HttpRequestBody]): String = {
+        maybeRequestBody match {
+            case Some(requestBody) =>
+                val requestBodyContent = requestBody match {
+                    case jsonRequestBody: JsonRequestBody =>
+                        "{ " +
+                            jsonRequestBody.jsonObject.map {
+                                case (key, value) => key + ": " + makeValue(value)
+                            }.mkString(", ") +
+                            " }"
+
+                    case arg: ArgValue => s"this.jsonConvert.serializeObject(${makeValue(arg)})"
+                }
+
+                ", " + requestBodyContent
+
+            case None => ""
         }
     }
 }
