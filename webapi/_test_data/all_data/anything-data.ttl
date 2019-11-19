@@ -170,7 +170,9 @@
   anything:hasBoolean <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ>;
   anything:hasUri <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uBAmWuRhR-eo1u1eP7qqNg>;
   anything:hasInterval <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/RbDKPKHWTC-0lkRKae-E6A>;
-  anything:hasColor <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/TAziKNP8QxuyhC4Qf9-b6w> .
+  anything:hasColor <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/TAziKNP8QxuyhC4Qf9-b6w>;
+  anything:hasGeometry <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/we-ybmj-SRen-91n4RaDOQ>;
+  anything:hasGeoname <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/hty-ONF8SwKN2RKU7rLKDg>.
 
 <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/-rG4F5FTTu2iB5mTBPVn5Q> a knora-base:DateValue;
   knora-base:valueHasUUID "-rG4F5FTTu2iB5mTBPVn5Q"^^xsd:string;
@@ -223,6 +225,26 @@
   knora-base:valueHasColor "#ff3333";
   knora-base:valueHasOrder 0;
   knora-base:valueHasString "#ff3333";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/we-ybmj-SRen-91n4RaDOQ> a knora-base:GeomValue;
+  knora-base:valueHasUUID "we-ybmj-SRen-91n4RaDOQ"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime;
+  knora-base:valueHasGeometry """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}""";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}""";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/hty-ONF8SwKN2RKU7rLKDg> a knora-base:GeonameValue;
+  knora-base:valueHasUUID "hty-ONF8SwKN2RKU7rLKDg"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime;
+  knora-base:valueHasGeonameCode "2661604";
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "2661604";
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
   knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
@@ -527,10 +549,10 @@
   rdfs:label "A thing with a picture";
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser";
   knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTime;
-  knora-base:hasStillImageFileValue <http://rdfh.ch/0001/a-thing-picture/values/file1> .
+  knora-base:hasStillImageFileValue <http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q> .
 
-<http://rdfh.ch/0001/a-thing-picture/values/file1> a knora-base:StillImageFileValue;
-  knora-base:valueHasUUID "file1"^^xsd:string;
+<http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q> a knora-base:StillImageFileValue;
+  knora-base:valueHasUUID "goZ7JFRNSeqF-dNxsqAS7Q"^^xsd:string;
   knora-base:valueHasString "test.tiff";
   knora-base:originalFilename "test.tiff";
   knora-base:originalMimeType "image/tiff";
@@ -542,9 +564,9 @@
   knora-base:dimX 512;
   knora-base:dimY 256;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser" ;
-  knora-base:previousValue <http://rdfh.ch/0001/a-thing-picture/values/file1a> .
+  knora-base:previousValue <http://rdfh.ch/0001/a-thing-picture/values/_7a19EDVRh2858kmmRZBOQ> .
 
-<http://rdfh.ch/0001/a-thing-picture/values/file1a> a knora-base:StillImageFileValue;
+<http://rdfh.ch/0001/a-thing-picture/values/_7a19EDVRh2858kmmRZBOQ> a knora-base:StillImageFileValue;
   knora-base:valueHasString "test.tiff";
   knora-base:originalFilename "test.tiff";
   knora-base:originalMimeType "image/tiff";
