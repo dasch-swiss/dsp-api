@@ -544,18 +544,24 @@ object TypeScriptBackEnd {
     /**
       * Generates the default value for a property object type.
       *
-      * @param objectType  the object type.
-      * @param cardinality the property's cardinality.
+      * @param propertyDefinition the property definition.
       * @return the default value.
       */
-    def makeDefaultValue(objectType: ClientObjectType, cardinality: Cardinality): String = {
-        cardinality match {
-            case MayHaveMany | MustHaveSome => "[]"
+    def makeDefaultValue(propertyDefinition: ClientPropertyDefinition): String = {
+        propertyDefinition.cardinality match {
+            case MayHaveMany =>
+                if (propertyDefinition.isOptionalSet) {
+                    "undefined"
+                } else {
+                    "[]"
+                }
+
+            case MustHaveSome => "[]"
 
             case MayHaveOne => "undefined"
 
             case MustHaveOne =>
-                objectType match {
+                propertyDefinition.objectType match {
                     case StringDatatype => "\"\""
                     case BooleanDatatype => "false"
                     case IntegerDatatype => "0"
@@ -565,7 +571,7 @@ object TypeScriptBackEnd {
                     case classRef: ClassRef => s"new ${classRef.className}()"
                     case _: ArrayType => "[]"
                     case _: MapType => "{}"
-                    case _ => throw ClientApiGenerationException(s"Type $objectType not supported in this template")
+                    case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
                 }
         }
     }
@@ -588,11 +594,11 @@ object TypeScriptBackEnd {
     /**
       * Returns `?` if a cardinality represents an optional value.
       *
-      * @param cardinality the cardinality on the property.
+      * @param propertyDefinition the property definition.
       * @return `?` if the cardinality represents an optional value, otherwise the empty string.
       */
-    def handleOption(cardinality: Cardinality): String = {
-        if (cardinality == MayHaveOne) {
+    def handleOption(propertyDefinition: ClientPropertyDefinition): String = {
+        if (propertyDefinition.cardinality == MayHaveOne || propertyDefinition.isOptionalSet) {
             "?"
         } else {
             ""

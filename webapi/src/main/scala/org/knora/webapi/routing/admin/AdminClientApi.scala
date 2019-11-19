@@ -90,6 +90,20 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     }
 
     /**
+      * A map of class IRIs to IRIs of optional set properties. Such properties have cardinality 0-n, and should
+      * be made optional in generated code.
+      */
+    override val classesWithOptionalSetProperties: Map[SmartIri, Set[SmartIri]] = Map(
+        OntologyConstants.KnoraAdminV2.UpdateProjectRequest -> Set(
+            OntologyConstants.KnoraAdminV2.KeywordsProperty,
+            OntologyConstants.KnoraAdminV2.ProjectDescription
+        )
+    ).map {
+        case (classIri, propertyIris) =>
+            classIri.toSmartIri -> propertyIris.map(_.toSmartIri)
+    }
+
+    /**
       * A set of IRIs of classes that represent API responses.
       */
     override val responseClasses: Set[SmartIri] = Set(
