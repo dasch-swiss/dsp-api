@@ -3292,7 +3292,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not update a still image file value without changing it" in {
             val resourceIri: IRI = aThingPictureIri
-            stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/file1")
+            stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q")
 
             val valueContent = StillImageFileValueContentV2(
                 ontologySchema = ApiV2Complex,
