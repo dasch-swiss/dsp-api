@@ -53,4 +53,4 @@ if [[ -z "${HOST}" ]]; then
     HOST="localhost:7200"
 fi
 
-curl -X GET -H "Accept: application/trig" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/repositories/${REPOSITORY}/statements?infer=false" > "${FILE}"
+curl -sS -X GET -H "Accept: application/trig" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/repositories/${REPOSITORY}/statements?infer=false" > "${FILE}"
