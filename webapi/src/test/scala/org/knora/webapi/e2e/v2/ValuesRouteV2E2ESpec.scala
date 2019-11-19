@@ -240,7 +240,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
         "not create an integer value if @id is given" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
-            val intValue: Int = 4
+            val intValue: Int = 10
 
             val jsonLdEntity =
                 s"""{
@@ -260,6 +260,27 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.BadRequest, response.toString)
+        }
+
+        "not create an integer value if the simple schema is submitted" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val intValue: Int = 10
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasInteger" : $intValue,
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.BadRequest, responseAsString)
         }
 
         "create an integer value with custom permissions" in {
@@ -1703,6 +1724,31 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             intValueAsInt should ===(intValue)
         }
 
+        "not update an integer value if the simple schema is submitted" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val intValue: Int = 10
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasInteger" : {
+                   |    "@id" : "${intValueIri.get}",
+                   |    "@type" : "knora-api:IntValue",
+                   |    "knora-api:intValueAsInt" : $intValue
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.BadRequest, responseAsString)
+        }
+
         "update an integer value with custom permissions" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
@@ -2587,6 +2633,27 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val request = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
+        }
+
+        "not delete an integer value if the simple schema is submitted" in {
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "${SharedTestDataADM.AThing.iri}",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasInteger" : {
+                   |    "@id" : "${intValueIri.get}",
+                   |    "@type" : "knora-api:IntValue"
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.BadRequest, responseAsString)
         }
 
         "delete an integer value without supplying a delete comment" in {
