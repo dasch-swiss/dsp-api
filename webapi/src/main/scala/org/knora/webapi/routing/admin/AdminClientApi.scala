@@ -105,7 +105,9 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
         OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse,
         OntologyConstants.KnoraAdminV2.AdministrativePermissionsResponse,
         OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettingsResponse,
-        OntologyConstants.KnoraAdminV2.ListsResponse
+        OntologyConstants.KnoraAdminV2.ListsResponse,
+        OntologyConstants.KnoraAdminV2.ListResponse,
+        OntologyConstants.KnoraAdminV2.ListInfoResponse
     ).map(_.toSmartIri)
 
     /**
@@ -113,7 +115,8 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
      */
     override val idProperties: Set[SmartIri] = Set(
         OntologyConstants.KnoraAdminV2.ID,
-        OntologyConstants.KnoraAdminV2.Iri
+        OntologyConstants.KnoraAdminV2.Iri,
+        OntologyConstants.KnoraAdminV2.ListIri
     ).map(_.toSmartIri)
 
     /**
