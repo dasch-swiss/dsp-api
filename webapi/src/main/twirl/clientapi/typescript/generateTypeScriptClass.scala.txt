@@ -51,7 +51,7 @@ export class @{classDef.className}@{
 
     case None => {}
     }
-    @@JsonProperty("@{property.propertyName}", @TypeScriptBackEnd.makeJson2TypeScriptType(property)@if(property.cardinality == MayHaveOne) {, true})
+    @@JsonProperty("@{property.propertyName}", @TypeScriptBackEnd.makeJson2TypeScriptType(property)@if(property.cardinality == MayHaveOne || property.isOptionalSet) {, true})
     @{property.propertyName}@TypeScriptBackEnd.handleOption(property): @TypeScriptBackEnd.addBracketsForCardinality(propertyObjectType, property.cardinality) = @TypeScriptBackEnd.makeDefaultValue(property);
 }}
 }
