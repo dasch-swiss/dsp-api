@@ -362,6 +362,30 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val UpdateListInfoRequest = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.ListNodeInfo,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "update list info request"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A request to update information about a list."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.ListIri -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraAdminV2.ProjectIri -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.Labels -> Cardinality.MustHaveSome,
+            OntologyConstants.KnoraAdminV2.Comments -> Cardinality.MayHaveMany
+        )
+    )
+
     private val CreateListRequest = makeClass(
         classIri = OntologyConstants.KnoraAdminV2.CreateListRequest,
         predicates = Seq(
@@ -404,6 +428,27 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         ),
         directCardinalities = Map(
             OntologyConstants.KnoraAdminV2.ListProperty -> Cardinality.MustHaveOne
+        )
+    )
+
+    private val ListInfoResponse = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.ListInfoResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "list info response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response containing information about a list."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.ListInfoProperty -> Cardinality.MustHaveOne
         )
     )
 
@@ -513,6 +558,26 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Provides a list."
+                )
+            )
+        )
+    )
+
+    private val ListIri: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.ListIri,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "list IRI"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides a list IRI."
                 )
             )
         )
@@ -1570,6 +1635,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         ListResponse,
         ListClass,
         CreateListRequest,
+        UpdateListInfoRequest,
+        ListInfoResponse,
         CreateGroupRequest,
         UpdateGroupRequest,
         AdministrativePermissionsResponse,
@@ -1617,6 +1684,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         Lists,
         ListInfoProperty,
         ListProperty,
+        ListIri,
         GroupProperty,
         KeywordsProperty,
         Settings,

@@ -78,7 +78,8 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val ListsResponse = classRef(OntologyConstants.KnoraAdminV2.ListsResponse.toSmartIri)
     private val CreateListRequest = classRef(OntologyConstants.KnoraAdminV2.CreateListRequest.toSmartIri)
     private val ListResponse = classRef(OntologyConstants.KnoraAdminV2.ListResponse.toSmartIri)
-
+    private val ListInfoResponse = classRef(OntologyConstants.KnoraAdminV2.ListInfoResponse.toSmartIri)
+    private val UpdateListInfoRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateListInfoRequest.toSmartIri)
     private val anythingList = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "UTF-8")
 
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
@@ -162,7 +163,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     private val createListFunction: ClientFunction =
         "createList" description "Creates a list." params(
-            "listInfo" description "Information about the list to be created." paramOptionType CreateListRequest
+            "listInfo" description "Information about the list to be created." paramType CreateListRequest
             ) doThis {
             httpPost(
                 path = BasePath,
@@ -252,6 +253,16 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             }
         }
     }
+
+    private val updateListInfoFunction: ClientFunction =
+        "updateListInfo" description "Updates information about a list." params(
+            "listInfo" description "Information about the list to be created." paramType UpdateListInfoRequest
+            ) doThis {
+            httpPut(
+                path = BasePath / argMember("listInfo", "listIri"),
+                body = Some(arg("listInfo"))
+            )
+        } returns ListInfoResponse
 
     @Path("/{IRI}")
     @ApiOperation(value = "Add new child node", nickname = "addListChildNode", httpMethod = "POST", response = classOf[ListNodeInfoGetResponseADM])
@@ -383,7 +394,8 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     override val functions: Seq[ClientFunction] = Seq(
         getListsFunction,
         createListFunction,
-        getListFunction
+        getListFunction,
+        updateListInfoFunction
     )
 
     /**
