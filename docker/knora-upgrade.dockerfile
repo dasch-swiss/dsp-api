@@ -4,8 +4,8 @@ RUN apk update && apk upgrade && apk add bash curl
 
 COPY stage /upgrade
 
-WORKDIR /upgrade/graphdb-se
+WORKDIR /upgrade
 
-ENTRYPOINT ["/upgrade/graphdb-se/auto-upgrade.sh"]
+ENTRYPOINT ["/upgrade/bin/upgrade"]
 
 LABEL MAINTAINER="400790+subotic@users.noreply.github.com"
