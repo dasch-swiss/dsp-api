@@ -119,7 +119,11 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                     }.toMap
 
                     // Convert the RDF class definition into a ClientClassDefinition.
-                    clientClassDef: ClientClassDefinition = rdfClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
+                    clientClassDef: ClientClassDefinition = rdfClassDef2ClientClassDef(
+                        clientApi = clientApi,
+                        rdfClassDef = rdfClassDef,
+                        rdfPropertyDefs = rdfPropertyDefs
+                    )
 
                     // Make a new ClientDefsWithOntologies including that ClientClassDefinition as well as the ontologies
                     // we've collected.
@@ -243,7 +247,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
         }
 
         // A class that has an ID property needs a Stored* subclass.
-        val classIrisNeedingStoredClasses: Set[SmartIri] = clientDefs.collect {
+        val classIrisNeedingStoredClasses: Set[SmartIri] = classesWithRenamedProps.collect {
             case (classIri, classDef) if classDef.properties.exists(propDef => clientApi.idProperties.contains(propDef.propertyIri)) => classIri
         }.toSet
 
@@ -376,30 +380,40 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
     /**
       * Converts RDF class definitions into [[ClientClassDefinition]] instances.
       *
+      * @param clientApi       the client API definition.
       * @param rdfClassDef     the class definition to be converted.
       * @param rdfPropertyDefs the definitions of the properties used in the class.
       * @return a [[ClientClassDefinition]] describing the class.
       */
-    private def rdfClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
+    private def rdfClassDef2ClientClassDef(clientApi: ClientApi, rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val isResourceClass = rdfClassDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2Complex.IsResourceClass.toSmartIri)
 
         if (isResourceClass) {
-            rdfResourceClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
+            rdfResourceClassDef2ClientClassDef(
+                clientApi = clientApi,
+                rdfClassDef = rdfClassDef,
+                rdfPropertyDefs = rdfPropertyDefs
+            )
         } else {
-            rdfNonResourceClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
+            rdfNonResourceClassDef2ClientClassDef(
+                clientApi = clientApi,
+                rdfClassDef = rdfClassDef,
+                rdfPropertyDefs = rdfPropertyDefs
+            )
         }
     }
 
     /**
       * Converts Knora resource class definitions into [[ClientClassDefinition]] instances.
       *
+      * @param clientApi       the client API definition.
       * @param rdfClassDef     the class definition to be converted.
       * @param rdfPropertyDefs the definitions of the properties used in the class.
       * @return a [[ClientClassDefinition]] describing the class.
       */
-    private def rdfResourceClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
+    private def rdfResourceClassDef2ClientClassDef(clientApi: ClientApi, rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val classDescription: Option[String] = rdfClassDef.getPredicateStringLiteralObject(OntologyConstants.Rdfs.Comment.toSmartIri)
@@ -415,6 +429,12 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
         val clientPropertyDefs: Vector[ClientPropertyDefinition] = cardinalitiesWithoutLinkProps.map {
             case (propertyIri, knoraCardinalityInfo) =>
                 val propertyName = propertyIri.getEntityName
+
+                val isOptionalSet = isOptionalSetProperty(
+                    clientApi = clientApi,
+                    classIri = rdfClassDef.classIri,
+                    propertyIri = propertyIri
+                )
 
                 if (propertyIri.isKnoraEntityIri) {
                     val rdfPropertyDef = rdfPropertyDefs(propertyIri)
@@ -438,6 +458,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                             propertyIri = propertyIri,
                             objectType = clientObjectType,
                             cardinality = knoraCardinalityInfo.cardinality,
+                            isOptionalSet = isOptionalSet,
                             isEditable = isEditable
                         )
                     } else {
@@ -447,6 +468,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                             propertyIri = propertyIri,
                             objectType = nonResourcePropObjectTypeToClientObjectType(ontologyObjectType),
                             cardinality = knoraCardinalityInfo.cardinality,
+                            isOptionalSet = isOptionalSet,
                             isEditable = isEditable
                         )
                     }
@@ -457,6 +479,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                         propertyIri = propertyIri,
                         objectType = StringDatatype,
                         cardinality = knoraCardinalityInfo.cardinality,
+                        isOptionalSet = isOptionalSet,
                         isEditable = propertyIri.toString == OntologyConstants.Rdfs.Label // Labels of resources are editable
                     )
                 }
@@ -473,11 +496,12 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
     /**
       * Converts Knora non-resource class definitions into [[ClientClassDefinition]] instances.
       *
+      * @param clientApi       the client API definition.
       * @param rdfClassDef     the class definition to be converted.
       * @param rdfPropertyDefs the definitions of the properties used in the class.
       * @return a [[ClientClassDefinition]] describing the class.
       */
-    private def rdfNonResourceClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
+    private def rdfNonResourceClassDef2ClientClassDef(clientApi: ClientApi, rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val classDescription: Option[String] = rdfClassDef.getPredicateStringLiteralObject(OntologyConstants.Rdfs.Comment.toSmartIri)
@@ -485,6 +509,12 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
         val clientPropertyDefs = rdfClassDef.directCardinalities.map {
             case (propertyIri, knoraCardinalityInfo) =>
                 val propertyName = propertyIri.getEntityName
+
+                val isOptionalSet = isOptionalSetProperty(
+                    clientApi = clientApi,
+                    classIri = rdfClassDef.classIri,
+                    propertyIri = propertyIri
+                )
 
                 if (propertyIri.isKnoraEntityIri) {
                     val rdfPropertyDef = rdfPropertyDefs(propertyIri)
@@ -497,6 +527,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                         propertyIri = propertyIri,
                         objectType = nonResourcePropObjectTypeToClientObjectType(ontologyObjectType),
                         cardinality = knoraCardinalityInfo.cardinality,
+                        isOptionalSet = isOptionalSet,
                         isEditable = true
                     )
                 } else {
@@ -506,6 +537,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                         propertyIri = propertyIri,
                         objectType = StringDatatype,
                         cardinality = knoraCardinalityInfo.cardinality,
+                        isOptionalSet = isOptionalSet,
                         isEditable = true
                     )
                 }
@@ -517,6 +549,18 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
             classIri = rdfClassDef.classIri,
             properties = clientPropertyDefs.sortBy(_.propertyIri)
         )
+    }
+
+    /**
+      * Returns `true` if the specified property IRI is an optional set property in the specified class.
+      *
+      * @param clientApi   the client API definition.
+      * @param classIri    the class IRI.
+      * @param propertyIri the property IRI.
+      * @return
+      */
+    private def isOptionalSetProperty(clientApi: ClientApi, classIri: SmartIri, propertyIri: SmartIri): Boolean = {
+        clientApi.classesWithOptionalSetProperties.get(classIri).exists(_.contains(propertyIri))
     }
 
     /**
