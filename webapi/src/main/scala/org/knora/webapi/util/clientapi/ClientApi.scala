@@ -97,6 +97,12 @@ trait ClientApi {
     val classesWithReadOnlyProperties: Map[SmartIri, Set[SmartIri]]
 
     /**
+      * A map of class IRIs to IRIs of optional set properties. Such properties have cardinality 0-n, and should
+      * be made optional in generated code.
+      */
+    val classesWithOptionalSetProperties: Map[SmartIri, Set[SmartIri]]
+
+    /**
       * A set of IRIs of classes that represent API responses and whose contents are therefore
       * always read-only.
       */
@@ -670,6 +676,7 @@ case class ClientClassDefinition(className: String,
   * @param propertyIri         the IRI of the property in the Knora API.
   * @param objectType          the type of object that the property points to.
   * @param cardinality         the cardinality of the property in the class.
+  * @param isOptionalSet       `true` if this property represents an optional set.
   * @param isEditable          `true` if the property's value is editable via the API.
   */
 case class ClientPropertyDefinition(propertyName: String,
@@ -677,6 +684,7 @@ case class ClientPropertyDefinition(propertyName: String,
                                     propertyIri: SmartIri,
                                     objectType: ClientObjectType,
                                     cardinality: Cardinality,
+                                    isOptionalSet: Boolean,
                                     isEditable: Boolean)
 
 /**
