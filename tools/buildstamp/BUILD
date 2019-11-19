@@ -15,7 +15,7 @@ filegroup(
 )
 
 # bring our version constants in
-load("//third_party:versions.bzl", "AKKA_VERSION", "AKKA_HTTP_VERSION", "SIPI_VERSION")
+load("//third_party:versions.bzl", "AKKA_VERSION", "AKKA_HTTP_VERSION", "SIPI_VERSION", "GDB_SE_VERSION", "GDB_FREE_VERSION")
 
 # Generates a scala source file that includes version information
 load("//tools/buildstamp:gen_build_info.bzl", "gen_build_info")
@@ -24,6 +24,8 @@ gen_build_info(
     akka_version = AKKA_VERSION,
     akka_http_version = AKKA_HTTP_VERSION,
     sipi_version = SIPI_VERSION,
+    gdb_se_version = GDB_SE_VERSION,
+    gdb_free_version = GDB_FREE_VERSION
 )
 
 scala_library(

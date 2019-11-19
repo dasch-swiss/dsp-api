@@ -74,7 +74,7 @@ trait VersionCheck {
     }
 
     private def getVersion() = {
-        var sipiVersion = BuildInfo.sipi
+        var sipiVersion = BuildInfo.sipiVersion
         val sipiIndex = sipiVersion.indexOf(':')
         sipiVersion = if (sipiIndex > 0) sipiVersion.substring(sipiIndex+1) else sipiVersion
 

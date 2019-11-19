@@ -19,7 +19,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path, _}
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.tags.E2ETest
 
 
 /**

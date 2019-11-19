@@ -25,7 +25,7 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v1.SearchRouteV1
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.tags.E2ETest
 import org.scalatest.Assertion
 import spray.json._
 

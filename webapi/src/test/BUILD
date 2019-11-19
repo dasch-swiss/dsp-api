@@ -10,3 +10,8 @@ filegroup(
     srcs = glob(["scala/org/knora/webapi/**/*.scala"])
 )
 
+filegroup(
+    name = "java",
+    srcs = glob(["java/org/knora/webapi/**/*.java"])
+)
+

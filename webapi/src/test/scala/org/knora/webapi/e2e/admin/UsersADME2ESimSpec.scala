@@ -1,10 +1,11 @@
+/*
 package org.knora.webapi.e2e.admin
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import org.knora.webapi.E2ESimSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.tags.E2ETest
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -67,3 +68,4 @@ class UsersADME2ESimSpec extends E2ESimSpec {
 }
 
 
+*/

@@ -22,7 +22,7 @@ package org.knora.webapi.e2e
 import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{AssertionException, E2ESpec}

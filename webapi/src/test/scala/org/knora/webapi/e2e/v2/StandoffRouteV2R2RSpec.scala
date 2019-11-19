@@ -31,7 +31,7 @@ import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v2.StandoffRouteV2
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.util.FileUtil
 
 import scala.concurrent.ExecutionContextExecutor

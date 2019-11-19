@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.testing.tags;
+package org.knora.webapi.tags;
 
 import java.lang.annotation.*;
 import org.scalatest.TagAnnotation;

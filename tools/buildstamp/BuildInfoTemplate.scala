@@ -36,9 +36,13 @@ case object BuildInfo {
 
     val sipiVersion: String = "{SIPI_VERSION}"
 
+    val gdbSE = ""
+
+    val gdbFree = ""
+
     override val toString: String = {
-        "name: %s, version: %s, scalaVersion: %s, sbtVersion: %s, akkaHttp: %s".format(
-            name, version, scalaVersion, sbtVersion, akkaHttp, sipiVersion
+        "name: %s, version: %s, scalaVersion: %s, sbtVersion: %s, akkaHttp: %s, sipiVersion: %s, gdbSE: %s, gdbFree: %s".format(
+            name, version, scalaVersion, sbtVersion, akkaHttp, sipiVersion, gdbSE, gdbFree
         )
     }
 }

@@ -21,4 +21,4 @@ package org.knora.webapi.testing.tagobjects
 
 import org.scalatest.Tag
 
-object E2ETest extends Tag("org.knora.webapi.testing.tags.E2ETest")
+object E2ETest extends Tag("org.knora.webapi.tags.E2ETest")

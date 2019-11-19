@@ -31,7 +31,7 @@ import org.knora.webapi.util.FileUtil
 import scala.concurrent.duration._
 import sys.process._
 import org.apache.commons.io.FileUtils
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.tags.E2ETest
 
 object ClientApiRouteE2ESpec {
     val config: Config = ConfigFactory.parseString(

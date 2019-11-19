@@ -22,7 +22,7 @@ package org.knora.webapi.e2e.admin
 import akka.http.scaladsl.model.StatusCodes
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.{E2ESpec, OntologyConstants, SharedTestDataV1}
 
 import scala.concurrent.duration._

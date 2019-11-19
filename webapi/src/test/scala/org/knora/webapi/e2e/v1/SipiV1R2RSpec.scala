@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceAp
 import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store.iiif.SourcePath
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.tags.E2ETest
 
 /**
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
