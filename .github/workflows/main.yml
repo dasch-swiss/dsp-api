@@ -58,7 +58,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.cache
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-bazel-cache
       - name: install bazel
         run: |
           wget https://github.com/bazelbuild/bazel/releases/download/1.1.0/bazel_1.1.0-linux-x86_64.deb
