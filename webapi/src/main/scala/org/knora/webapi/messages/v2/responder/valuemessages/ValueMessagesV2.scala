@@ -369,7 +369,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
                     throw BadRequestException(s"Invalid value IRI: <$valueIri>")
                 }
 
-                val valueTypeIri: SmartIri = jsonLDObject.getTypeAsKnoraTypeIri
+                val valueTypeIri: SmartIri = jsonLDObject.getTypeAsKnoraApiV2ComplexTypeIri
 
                 val deleteComment: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2Complex.DeleteComment, stringFormatter.toSparqlEncodedString)
 
