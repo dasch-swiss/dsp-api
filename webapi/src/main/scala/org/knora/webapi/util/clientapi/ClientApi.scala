@@ -23,6 +23,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpRequest
 import akka.stream.ActorMaterializer
+import org.knora.webapi.ClientApiGenerationException
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Cardinality
 import org.knora.webapi.util.SmartIri
 
@@ -211,6 +212,10 @@ trait ClientEndpoint {
         for {
             response <- Http().singleRequest(request)
             responseStr <- response.entity.toStrict(10240.millis).map(_.data.decodeString("UTF-8"))
+
+            _ = if (response.status.isFailure) {
+                throw ClientApiGenerationException(s"Failed to get test data: $responseStr")
+            }
         } yield responseStr
     }
 
