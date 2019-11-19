@@ -80,6 +80,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val ListResponse = classRef(OntologyConstants.KnoraAdminV2.ListResponse.toSmartIri)
     private val ListInfoResponse = classRef(OntologyConstants.KnoraAdminV2.ListInfoResponse.toSmartIri)
     private val UpdateListInfoRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateListInfoRequest.toSmartIri)
+    private val CreateChildNodeRequest = classRef(OntologyConstants.KnoraAdminV2.CreateChildNodeRequest.toSmartIri)
     private val anythingList = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "UTF-8")
 
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
@@ -303,6 +304,16 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    private val createChildNodeFunction: ClientFunction =
+        "createChildNode" description "Creates a child node in a list." params(
+            "node" description "The node to be created." paramType CreateChildNodeRequest
+            ) doThis {
+            httpPut(
+                path = BasePath / argMember("node", "parentNodeIri"),
+                body = Some(arg("node"))
+            )
+        } returns ListInfoResponse
+
     /* delete list node which should also delete its children */
     def deleteListNode: Route = path(ListsBasePath / Segment) { iri =>
         delete {
@@ -395,7 +406,8 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         getListsFunction,
         createListFunction,
         getListFunction,
-        updateListInfoFunction
+        updateListInfoFunction,
+        createChildNodeFunction
     )
 
     /**
