@@ -1225,7 +1225,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                     )
             }.toVector
 
-            resourcesResponse <- Future.sequence(resourcesResponseFutures)
+            resourcesResponse: Vector[ReadResourceV2] <- Future.sequence(resourcesResponseFutures)
+
+            _ = valueUuid match {
+                case Some(definedValueUuid) =>
+                    if (!resourcesResponse.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
+                        throw NotFoundException(s"Value with UUID ${stringFormatter.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it, or it is marked as deleted)")
+                    }
+
+                case None => ()
+            }
 
         } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
 
