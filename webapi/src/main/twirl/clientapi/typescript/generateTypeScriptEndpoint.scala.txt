@@ -45,7 +45,7 @@ export class @name extends Endpoint {
      * @for(param <- function.params) {
      * @@param @param.name @param.description}}
      */
-    @{function.name}(@for((param, index) <- function.params.zipWithIndex) {@if(index > 0) {, }@param.name: @makePropertyObjectType(param.objectType)}): Observable<ApiResponseData<@makePropertyObjectType(function.returnType)> | ApiResponseError> {
+    @{function.name}(@for((param, index) <- function.params.zipWithIndex) {@if(index > 0) {, }@param.name@handleOptionalParam(param): @makePropertyObjectType(param.objectType)@if(param.isOptional){ = undefined}): Observable<ApiResponseData<@makePropertyObjectType(function.returnType)> | ApiResponseError> {
     @function.implementation match {
     case httpRequest: ClientHttpRequest => {
         return this.@{makeHttpMethod(httpRequest.httpMethod)}(@makeUrl(httpRequest.urlElementsAsValues)@makeHttpRequestBody(httpRequest.requestBody)).pipe(

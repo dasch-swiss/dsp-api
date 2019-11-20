@@ -579,12 +579,13 @@ object TypeScriptBackEnd {
     /**
       * Adds `[]` to the end of a type if the cardinality allows it to be an array.
       *
-      * @param typeScriptType a TypeScript type.
-      * @param cardinality    the property's cardinality.
+      * @param propertyDefinition the property definition.
       * @return the type, followed by `[]` if necessary.
       */
-    def addBracketsForCardinality(typeScriptType: String, cardinality: Cardinality): String = {
-        if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
+    def typeWithBracketsForCardinality(propertyDefinition: ClientPropertyDefinition): String = {
+        val typeScriptType: String = makePropertyObjectType(propertyDefinition.objectType)
+
+        if (propertyDefinition.cardinality == MayHaveMany || propertyDefinition.cardinality == MustHaveSome) {
             s"$typeScriptType[]"
         } else {
             typeScriptType
@@ -592,13 +593,28 @@ object TypeScriptBackEnd {
     }
 
     /**
-      * Returns `?` if a cardinality represents an optional value.
+      * Returns `?` if a property's cardinality represents an optional value.
       *
       * @param propertyDefinition the property definition.
       * @return `?` if the cardinality represents an optional value, otherwise the empty string.
       */
-    def handleOption(propertyDefinition: ClientPropertyDefinition): String = {
+    def handleOptionalProperty(propertyDefinition: ClientPropertyDefinition): String = {
         if (propertyDefinition.cardinality == MayHaveOne || propertyDefinition.isOptionalSet) {
+            "?"
+        } else {
+            ""
+        }
+    }
+
+
+    /**
+      * Returns `?` if a function parameter represents an optional value.
+      *
+      * @param functionParam the parameter.
+      * @return `?` if the cardinality represents an optional value, otherwise the empty string.
+      */
+    def handleOptionalParam(functionParam: FunctionParam): String = {
+        if (functionParam.isOptional) {
             "?"
         } else {
             ""
