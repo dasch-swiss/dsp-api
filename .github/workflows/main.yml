@@ -89,13 +89,11 @@ jobs:
             ${{ runner.OS }}
       - name: prepare needed graphdb-se files
         run: |
-          ./.github/scripts/decrypt_secrets.sh
+          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
           tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-          env:
-            SECRETS_PASSPHRASE: ${{ secrets.license_encryption_key }}
       - name: print env file
         run: make print-env-file
       - name: run API E2E tests
@@ -118,13 +116,11 @@ jobs:
             ${{ runner.OS }}
       - name: prepare needed graphdb-se files
         run: |
-          ./.github/scripts/decrypt_secrets.sh
+          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
           tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-          env:
-            SECRETS_PASSPHRASE: ${{ secrets.license_encryption_key }}
       - name: print env file
         run: make print-env-file
       - name: run API integration tests
@@ -172,13 +168,11 @@ jobs:
         run: make build-all-images
       - name: prepare needed graphdb-se files
         run: |
-          ./.github/scripts/decrypt_secrets.sh
+          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
           tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-          env:
-            SECRETS_PASSPHRASE: ${{ secrets.license_encryption_key }}
       - name: start and initialize graphdb-se
         run: |
           docker network create knora-net
