@@ -25,6 +25,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.routing.admin.AdminClientApi
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{OntologyUtil, SmartIri, StringFormatter}
@@ -45,12 +46,12 @@ object InstanceChecker {
     /**
       * Returns an [[InstanceChecker]] for Knora responses in JSON format.
       */
-    def getJsonChecker(): InstanceChecker = new InstanceChecker(new JsonInstanceInspector)
+    def getJsonChecker: InstanceChecker = new InstanceChecker(new JsonInstanceInspector)
 
     /**
       * Returns an [[InstanceChecker]] for Knora responses in JSON-LD format.
       */
-    def getJsonLDChecker(): InstanceChecker = new InstanceChecker(new JsonLDInstanceInspector)
+    def getJsonLDChecker: InstanceChecker = new InstanceChecker(new JsonLDInstanceInspector)
 }
 
 /**
@@ -96,7 +97,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
       * @param msg the error message.
       */
     private def throwAndLogAssertionException(msg: String): Nothing = {
-        logger.debug(msg)
+        logger.info(msg)
         throw AssertionException(msg)
     }
 
@@ -116,7 +117,8 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
 
         // Make a map of property IRIs to property names used in the instance.
         val propertyIrisToInstancePropertyNames: Map[SmartIri, String] = classDef.directCardinalities.keySet.map {
-            propertyIri => propertyIri -> instanceInspector.propertyIriToInstancePropertyName(propertyIri)
+            propertyIri =>
+                propertyIri -> instanceInspector.propertyIriToInstancePropertyName(classIri, propertyIri)
         }.toMap
 
         // Check that there are no extra properties.
@@ -179,7 +181,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
                             // It's a class that Knora doesn't serve. Accept the object only if it's an IRI.
                             throwAndLogAssertionException(s"Property $propertyIri requires an IRI referring to an instance of $objectType, but object content was received instead")
                         }
-                    } else {
+                    } else if (!objectType.isClientCollectionTypeIri) {
                         // We're expecting a literal. Ask the element inspector if the object is compatible with
                         // the expected type.
                         if (!instanceInspector.elementHasCompatibleType(element = obj, expectedType = objectType, definitions = definitions)) {
@@ -252,16 +254,20 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         // Recursively add the definitions of base classes and classes that we identified as object types.
         classIrisForRecursion.foldLeft(updatedDefs) {
             case (acc, classIriFromObjectType) =>
-                val recDefinitions: Definitions = getDefinitionsRec(
-                    classIri = classIriFromObjectType,
-                    knoraRouteGet = knoraRouteGet,
-                    definitions = acc
-                )
+                if (classIriFromObjectType.isClientCollectionTypeIri) {
+                    acc
+                } else {
+                    val recDefinitions: Definitions = getDefinitionsRec(
+                        classIri = classIriFromObjectType,
+                        knoraRouteGet = knoraRouteGet,
+                        definitions = acc
+                    )
 
-                acc.copy(
-                    classDefs = acc.classDefs ++ recDefinitions.classDefs,
-                    propertyDefs = acc.propertyDefs ++ recDefinitions.propertyDefs
-                )
+                    acc.copy(
+                        classDefs = acc.classDefs ++ recDefinitions.classDefs,
+                        propertyDefs = acc.propertyDefs ++ recDefinitions.propertyDefs
+                    )
+                }
         }
     }
 
@@ -277,7 +283,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         // aren't available in each external schema. But these lists include knora-base classes
         // that are converted to custom datatypes in the simple schema, so we first need to check
         // if we're talking about one of those.
-        if (classIri.isKnoraApiV2EntityIri) {
+        if (classIri.isKnoraApiV2EntityIri && !classIri.isClientCollectionTypeIri) {
             val objectTypeInternal = classIri.toOntologySchema(InternalSchema)
 
             classIri.getOntologySchema.get match {
@@ -401,7 +407,7 @@ trait InstanceInspector {
     /**
       * Converts an RDF property IRI to the property name used in instances.
       */
-    def propertyIriToInstancePropertyName(propertyIri: SmartIri): String
+    def propertyIriToInstancePropertyName(classIri: SmartIri, propertyIri: SmartIri): String
 
     /**
       * Returns `true` if the specified instance element is an IRI pointing to an object, as opposed to
@@ -455,6 +461,8 @@ class JsonInstanceInspector extends InstanceInspector {
 
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+    private val nonStandardJsonPropertyNames: Map[SmartIri, Map[SmartIri, String]] = AdminClientApi.propertyNames
+
     override def toElement(response: String): InstanceElement = {
         jsObjectToElement(JsonParser(response).asJsObject)
     }
@@ -503,9 +511,18 @@ class JsonInstanceInspector extends InstanceInspector {
         InstanceElement(elementType = OBJECT, propertyObjects = propertyObjects)
     }
 
-    override def propertyIriToInstancePropertyName(propertyIri: SmartIri): String = {
-        // To convert a property IRI to a JSON object key, remove the namespace.
-        propertyIri.getEntityName
+    override def propertyIriToInstancePropertyName(classIri: SmartIri, propertyIri: SmartIri): String = {
+        // If this property IRI has a non-standard name in this class, return that name. Otherwise,
+        // just remove the namespace.
+        nonStandardJsonPropertyNames.get(classIri) match {
+            case Some(propertyMap) =>
+                propertyMap.get(propertyIri) match {
+                    case Some(propertyName) => propertyName
+                    case None => propertyIri.getEntityName
+                }
+
+            case None => propertyIri.getEntityName
+        }
     }
 
     override def elementIsIri(element: InstanceElement): Boolean = {
@@ -513,15 +530,20 @@ class JsonInstanceInspector extends InstanceInspector {
     }
 
     override def elementHasCompatibleType(element: InstanceElement, expectedType: SmartIri, definitions: Definitions): Boolean = {
-        // Is the element a literal?
-        LiteralTypeMap.get(element.elementType) match {
-            case Some(typeIris) =>
-                // Yes. It's compatible if the the expected type is one of the types that it could represent.
-                typeIris.contains(expectedType.toString)
+        // Don't try to check collection types.
+        if (expectedType.isClientCollectionTypeIri) {
+            true
+        } else {
+            // Is the element a literal?
+            LiteralTypeMap.get(element.elementType) match {
+                case Some(typeIris) =>
+                    // Yes. It's compatible if the the expected type is one of the types that it could represent.
+                    typeIris.contains(expectedType.toString)
 
-            case None =>
-                // No. It's compatible if the expected type isn't a literal type.
-                !LiteralTypeIris.contains(expectedType.toString)
+                case None =>
+                    // No. It's compatible if the expected type isn't a literal type.
+                    !LiteralTypeIris.contains(expectedType.toString)
+            }
         }
     }
 }
@@ -587,7 +609,7 @@ class JsonLDInstanceInspector extends InstanceInspector {
         InstanceElement(elementType = elementType, propertyObjects = propertyObjects)
     }
 
-    override def propertyIriToInstancePropertyName(propertyIri: SmartIri): String = {
+    override def propertyIriToInstancePropertyName(classIri: SmartIri, propertyIri: SmartIri): String = {
         propertyIri.toString
     }
 
@@ -596,17 +618,21 @@ class JsonLDInstanceInspector extends InstanceInspector {
     }
 
     override def elementHasCompatibleType(element: InstanceElement, expectedType: SmartIri, definitions: Definitions): Boolean = {
-        val expectedTypeStr: IRI = expectedType.toString
-
-        // Is the element's type a Knora class?
-        if (expectedType.isKnoraApiV2EntityIri) {
-            // Yes. It's compatible if its type is a subclass of the expected type.
-            definitions.getBaseClasses(element.elementType.toSmartIri).contains(expectedType)
+        if (expectedType.isClientCollectionTypeIri) {
+            true
         } else {
-            // The element's type isn't a Knora class. It's compatible if it's the same as the expected type, or if
-            // we expected an xsd:integer and we got an xsd:nonNegativeInteger.
-            element.elementType == expectedTypeStr ||
-                (element.elementType == OntologyConstants.Xsd.NonNegativeInteger && expectedTypeStr == OntologyConstants.Xsd.Integer)
+            val expectedTypeStr: IRI = expectedType.toString
+
+            // Is the element's type a Knora class?
+            if (expectedType.isKnoraApiV2EntityIri) {
+                // Yes. It's compatible if its type is a subclass of the expected type.
+                definitions.getBaseClasses(element.elementType.toSmartIri).contains(expectedType)
+            } else {
+                // The element's type isn't a Knora class. It's compatible if it's the same as the expected type, or if
+                // we expected an xsd:integer and we got an xsd:nonNegativeInteger.
+                element.elementType == expectedTypeStr ||
+                    (element.elementType == OntologyConstants.Xsd.NonNegativeInteger && expectedTypeStr == OntologyConstants.Xsd.Integer)
+            }
         }
     }
 }

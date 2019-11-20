@@ -237,8 +237,13 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
             case (classIri: SmartIri, classDef: ClientClassDefinition) =>
                 val transformedProps = classDef.properties.map {
                     propDef =>
-                        clientApi.propertyNames.get(propDef.propertyIri) match {
-                            case Some(propertyName) => propDef.copy(propertyName = propertyName)
+                        clientApi.propertyNames.get(classIri) match {
+                            case Some(propertyMap) =>
+                                propertyMap.get(propDef.propertyIri) match {
+                                    case Some(propertyName) => propDef.copy(propertyName = propertyName)
+                                    case None => propDef
+                                }
+
                             case None => propDef
                         }
                 }
