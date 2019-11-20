@@ -126,8 +126,21 @@ for file_index, file_params in pairs(server.uploads) do
             return
         end
 
-        -- Convert the image to JPEG 2000 format, saving it in a subdirectory of
-        -- the temporary directory.
+        -- Check that the file extension is correct for the file's MIME type.
+        local check
+        success, check = uploaded_image:mimetype_consistency(mime_type, original_filename)
+
+        if not success then
+            send_error(500, "uploaded_image:mimetype_consistency() failed: " .. check)
+            return
+        end
+
+        if not check then
+            send_error(400, MIMETYPES_INCONSISTENCY)
+            return
+        end
+
+        -- Convert the image to JPEG 2000 format.
 
         success, error_msg = uploaded_image:write(tmp_storage_file_path)
 

@@ -115,8 +115,12 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     protected def getResponseString(request: HttpRequest): String = {
         val response: HttpResponse = singleAwaitingRequest(request)
         val responseBodyStr: String = Await.result(response.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
-        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
-        responseBodyStr
+
+        if (response.status.isSuccess) {
+            responseBodyStr
+        } else {
+            throw AssertionException(s"Got HTTP ${response.status.intValue}\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
+        }
     }
 
     protected def checkResponseOK(request: HttpRequest): Unit = {
@@ -126,8 +130,6 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     protected def getResponseJson(request: HttpRequest): JsObject = {
         getResponseString(request).parseJson.asJsObject
     }
-
-
 
     protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 5999.milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)

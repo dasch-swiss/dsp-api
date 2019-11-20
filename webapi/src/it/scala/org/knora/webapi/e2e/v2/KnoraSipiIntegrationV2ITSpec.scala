@@ -48,6 +48,8 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val marblesWidth = 1419
     private val marblesHeight = 1001
 
+    private val pathToMarblesWithWrongExtension = "_test_data/test_route/images/marbles_with_wrong_extension.jpg"
+
     private val trp88OriginalFilename = "Trp88.tiff"
     private val pathToTrp88 = s"_test_data/test_route/images/$trp88OriginalFilename"
     private val trp88Width = 499
@@ -155,6 +157,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
         // Send Sipi the file in a POST request.
         val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData)
+
         val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
         // println(sipiUploadResponseJson.prettyPrint)
         val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
@@ -384,6 +387,17 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             assert(savedImage.internalFilename == uploadedFile.internalFilename)
             assert(savedImage.width == marblesWidth)
             assert(savedImage.height == marblesHeight)
+        }
+
+        "reject an image file with the wrong file extension" in {
+            val exception = intercept[AssertionException] {
+                uploadToSipi(
+                    loginToken = loginToken,
+                    filesToUpload = Seq(FileToUpload(path = pathToMarblesWithWrongExtension, mimeType = MediaTypes.`image/tiff`))
+                )
+            }
+
+            assert(exception.getMessage.contains("MIME type and/or file extension are inconsistent"))
         }
 
         "change a still image file value" in {

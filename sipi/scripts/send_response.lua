@@ -18,7 +18,7 @@
 -------------------------------------------------------------------------------
 -- String constants to be used in error messages
 -------------------------------------------------------------------------------
-MIMETYPES_INCONSISTENCY = "Submitted mimetypes and/or file extension are inconsistent"
+MIMETYPES_INCONSISTENCY = "MIME type and/or file extension are inconsistent"
 
 FILE_NOT_READABLE = "Submitted file path could not be read: "
 
