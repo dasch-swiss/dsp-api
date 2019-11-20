@@ -62,7 +62,7 @@ jobs:
           key: ${{ runner.OS }}
       - name: prepare needed graphdb-se files
         run: |
-          openssl enc -d -aes-256-cbc -in $GITHUB_WORKSPACE/ci/secrets.tar.enc -out $GITHUB_WORKSPACE/ci/secrets.tar -k ${{ secrets.license_encryption_key }}
+          $GITHUB_WORKSPACE/ci/decrypt_secrets.sh
           tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
@@ -91,7 +91,7 @@ jobs:
             ${{ runner.OS }}
       - name: prepare needed graphdb-se files
         run: |
-          openssl enc -d -aes-256-cbc -in $GITHUB_WORKSPACE/ci/secrets.tar.enc -out $GITHUB_WORKSPACE/ci/secrets.tar -k ${{ secrets.license_encryption_key }}
+          $GITHUB_WORKSPACE/ci/decrypt_secrets.sh
           tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
@@ -118,7 +118,7 @@ jobs:
             ${{ runner.OS }}
       - name: prepare needed graphdb-se files
         run: |
-          openssl enc -d -aes-256-cbc -in $GITHUB_WORKSPACE/ci/secrets.tar.enc -out $GITHUB_WORKSPACE/ci/secrets.tar -k ${{ secrets.license_encryption_key }}
+          $GITHUB_WORKSPACE/ci/decrypt_secrets.sh
           tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
@@ -170,7 +170,7 @@ jobs:
         run: make build-all-images
       - name: prepare needed graphdb-se files
         run: |
-          openssl enc -d -aes-256-cbc -in $GITHUB_WORKSPACE/ci/secrets.tar.enc -out $GITHUB_WORKSPACE/ci/secrets.tar -k ${{ secrets.license_encryption_key }}
+          $GITHUB_WORKSPACE/ci/decrypt_secrets.sh
           tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
       - name: start and initialize graphdb-se
