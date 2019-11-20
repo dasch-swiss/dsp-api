@@ -62,7 +62,7 @@ jobs:
           key: ${{ runner.OS }}
       - name: prepare needed graphdb-se files
         run: |
-          ./.github/scripts/decrypt_secrets.sh
+          echo $SECRETS_PASSPHRASE | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
           tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
