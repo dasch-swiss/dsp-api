@@ -3,7 +3,7 @@ name: CI
 on: [push]
 
 env:
-  KNORA_GDB_LICENSE: ${{ github.workspace }}/travis/graphdb.license
+  KNORA_GDB_LICENSE: ${{ github.workspace }}/ci/graphdb.license
 
 jobs:
   compile:
@@ -67,8 +67,6 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/graphdb
           cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: Check license
-        run: file $GITHUB_WORKSPACE/ci/graphdb.license
       - name: Print env file
         run: make print-env-file
       - name: Run API unit tests
