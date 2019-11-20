@@ -50,7 +50,7 @@ object Dependencies {
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
         sipiImage := "dhlabbasel/sipi:v2.0.1",
-        gdbSEImage := "ontotext/graphdb:8.10.1-se",
+        gdbSEImage := "ontotext/graphdb:9.0.0-se",
         gdbFreeImage := "dhlabbasel/graphdb:8.10.0-free"
     )
 
