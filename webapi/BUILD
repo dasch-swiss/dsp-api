@@ -5,7 +5,13 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_binary", 
 scala_binary(
     name = "api",
     deps = [":api_library"],
-    main_class = "org.knora.webapi.Main"
+    main_class = "org.knora.webapi.Main",
+    resources = [
+        "//webapi/src/main/resources:resources",
+    ],
+    data = [
+        "//webapi/src/main/resources:resources",
+    ]
 )
 
 scala_library(
@@ -64,7 +70,7 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_http_xml_2_12",
         "@maven//:com_typesafe_akka_akka_parsing_2_12",
         "@maven//:com_typesafe_akka_akka_protobuf_2_12",
-        # "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:com_typesafe_play_twirl_api_2_12",
