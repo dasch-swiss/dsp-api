@@ -37,7 +37,7 @@ publish-knora-api-image: build-knora-api-image ## publish knora-api image to Doc
 .PHONY: build-knora-graphdb-se-image
 build-knora-graphdb-se-image: build-all-scala ## build and publish knora-graphdb-se docker image locally
 	@mkdir -p .docker
-	@sed -e "s/@GRAPHDB_IMAGE@/ontotext\/graphdb\:$(GRAPHDB_SE_VERSION)-se/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-se.dockerfile
+	@sed -e "s/@GRAPHDB_IMAGE@/daschswiss\/graphdb\:$(GRAPHDB_SE_VERSION)-se/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-se.dockerfile
 	docker build -t $(KNORA_GRAPHDB_SE_IMAGE) -t $(REPO_PREFIX)/$(KNORA_GRAPHDB_SE_REPO):latest -f .docker/knora-graphdb-se.dockerfile  knora-graphdb-se/target/universal
 
 .PHONY: publish-knora-graphdb-se-image
@@ -48,7 +48,7 @@ publish-knora-graphdb-se-image: build-knora-graphdb-se-image ## publish knora-gr
 .PHONY: build-knora-graphdb-free-image
 build-knora-graphdb-free-image: build-all-scala ## build and publish knora-graphdb-free docker image locally
 	@mkdir -p .docker
-	@sed -e "s/@GRAPHDB_IMAGE@/dhlabbasel\/graphdb\:$(GRAPHDB_FREE_VERSION)-free/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-free.dockerfile
+	@sed -e "s/@GRAPHDB_IMAGE@/daschswiss\/graphdb\:$(GRAPHDB_FREE_VERSION)-free/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-free.dockerfile
 	docker build -t $(KNORA_GRAPHDB_FREE_IMAGE) -f .docker/knora-graphdb-free.dockerfile  knora-graphdb-free/target/universal
 
 .PHONY: publish-knora-graphdb-free-image
