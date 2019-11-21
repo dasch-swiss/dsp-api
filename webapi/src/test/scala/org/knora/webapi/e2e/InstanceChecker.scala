@@ -97,7 +97,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
       * @param msg the error message.
       */
     private def throwAndLogAssertionException(msg: String): Nothing = {
-        logger.info(msg)
+        logger.debug(msg)
         throw AssertionException(msg)
     }
 
