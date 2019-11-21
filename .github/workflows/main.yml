@@ -89,6 +89,8 @@ jobs:
           key: ${{ runner.OS }}
           restore-keys: |
             ${{ runner.OS }}
+      - name: install requirements
+        run: sudo apt-get install nodejs
       - name: prepare needed graphdb-se files
         run: |
           openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
