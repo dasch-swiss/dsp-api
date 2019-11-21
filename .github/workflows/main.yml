@@ -88,7 +88,7 @@ jobs:
           restore-keys: |
             ${{ runner.OS }}
       - name: install requirements
-        run: sudo apt-get install nodejs
+        run: sudo apt-get install nodejs npm
       - name: prepare needed graphdb-se files
         run: |
           echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
