@@ -114,7 +114,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
 
     protected def getResponseString(request: HttpRequest): String = {
         val response: HttpResponse = singleAwaitingRequest(request)
-        val responseBodyStr: String = Await.result(response.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
+        val responseBodyStr: String = Await.result(response.entity.toStrict(10999.milliseconds).map(_.data.decodeString("UTF-8")), 10.seconds)
         assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
         responseBodyStr
     }
@@ -129,7 +129,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
 
 
 
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 5999.milliseconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 9999.milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }
