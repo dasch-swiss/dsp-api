@@ -4,3 +4,4 @@
 !.gitignore
 !decrypt_secrets.sh
 !secrets.tar.gpg
+!README.md
