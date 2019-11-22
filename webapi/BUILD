@@ -4,7 +4,9 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_binary", 
 
 scala_binary(
     name = "api",
-    deps = [":api_library"],
+    deps = [
+        ":library",
+    ],
     main_class = "org.knora.webapi.Main",
     resources = [
         "//webapi/src/main/resources:resources",
@@ -15,7 +17,7 @@ scala_binary(
 )
 
 scala_library(
-    name = "api_library",
+    name = "library",
     srcs = [
         "//webapi/src/main:scala",
         "//webapi/src/main:twirl-templates",
@@ -28,7 +30,7 @@ scala_library(
         # "@maven//:cglib_cglib_nodep",
         "@maven//:ch_megard_akka_http_cors_2_12",
         # "@maven//:ch_qos_logback_logback_classic",
-        "@maven//:ch_qos_logback_logback_core",
+        # "@maven//:ch_qos_logback_logback_core",
         "@maven//:com_eatthepath_fast_uuid",
         # "@maven//:com_esotericsoftware_kryo_shaded",
         "@maven//:com_esotericsoftware_minlog",
@@ -295,9 +297,9 @@ scala_library(
         "@maven//:org_scalactic_scalactic_2_12",
         "@maven//:org_simpleflatmapper_lightning_csv",
         "@maven//:org_simpleflatmapper_sfm_util",
-        "@maven//:org_slf4j_jcl_over_slf4j",
-        "@maven//:org_slf4j_slf4j_api",
-        "@maven//:org_slf4j_slf4j_log4j12",
+        # "@maven//:org_slf4j_jcl_over_slf4j",
+        # "@maven//:org_slf4j_slf4j_api",
+        # "@maven//:org_slf4j_slf4j_log4j12",
         "@maven//:org_spire_math_jawn_parser_2_12",
         "@maven//:org_springframework_security_spring_security_core",
         "@maven//:org_springframework_spring_aop",
