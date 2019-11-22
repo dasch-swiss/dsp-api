@@ -41,9 +41,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: Run build everything
         run: sbt clean test:compile it:compile stage
 
@@ -59,7 +61,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: prepare needed graphdb-se files
         run: |
           echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
@@ -84,9 +90,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: install requirements
         run: sudo apt-get install nodejs npm
       - name: prepare needed graphdb-se files
@@ -113,9 +121,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: prepare needed graphdb-se files
         run: |
           echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
@@ -140,9 +150,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: run upgrade tests
         run: sbt "upgrade/test"
 
@@ -161,9 +173,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: install requirements
         run: sudo apt-get install expect
       - name: build all images
@@ -210,9 +224,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: run docs build test
         run: |
           mkdir -p $GITHUB_WORKSPACE/docs/target
@@ -233,9 +249,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
