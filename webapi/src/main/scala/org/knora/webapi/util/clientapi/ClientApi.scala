@@ -402,14 +402,6 @@ object EndpointFunctionDSL {
         def paramType(objectType: ClientObjectType): FunctionParam = FunctionParam(
             name = name,
             objectType = objectType,
-            isOptional = false,
-            description = description
-        )
-
-        def paramOptionType(objectType: ClientObjectType): FunctionParam = FunctionParam(
-            name = name,
-            objectType = objectType,
-            isOptional = true,
             description = description
         )
     }
@@ -457,12 +449,10 @@ case class ClientFunction(name: String,
   *
   * @param name        the name of the parameter.
   * @param objectType  the type of the parameter.
-  * @param isOptional  `true` if the parameter is optional.
   * @param description a human-readable description of the parameter.
   */
 case class FunctionParam(name: String,
                          objectType: ClientObjectType,
-                         isOptional: Boolean,
                          description: String)
 
 /**

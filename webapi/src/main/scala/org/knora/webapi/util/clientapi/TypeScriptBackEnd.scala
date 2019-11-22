@@ -606,21 +606,6 @@ object TypeScriptBackEnd {
         }
     }
 
-
-    /**
-      * Returns `?` if a function parameter represents an optional value.
-      *
-      * @param functionParam the parameter.
-      * @return `?` if the cardinality represents an optional value, otherwise the empty string.
-      */
-    def handleOptionalParam(functionParam: FunctionParam): String = {
-        if (functionParam.isOptional) {
-            "?"
-        } else {
-            ""
-        }
-    }
-
     /**
       * Generates the name of the function for the specified HTTP method.
       *

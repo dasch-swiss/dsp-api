@@ -628,6 +628,22 @@ object SharedTestDataADM {
            |    "systemAdmin": true
            |}""".stripMargin
 
+    val createListRequest: String =
+        s"""{
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+           |    "comments": []
+           |}""".stripMargin
+
+    def updateListRequest(listIri: IRI): String = {
+        s"""{
+           |    "listIri": "$listIri",
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+           |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+           |}""".stripMargin
+    }
+
     def createIntValueRequest(resourceIri: IRI, intValue: Int): String = {
         s"""{
            |  "@id" : "$resourceIri",

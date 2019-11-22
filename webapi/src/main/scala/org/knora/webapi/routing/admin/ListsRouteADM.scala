@@ -27,6 +27,7 @@ import akka.http.scaladsl.client.RequestBuilding.{Get, addCredentials, _}
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import io.swagger.annotations._
 import javax.ws.rs.Path
@@ -111,8 +112,14 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private val getListsFunction: ClientFunction =
-        "getLists" description "Returns a list of lists." params(
-            "projectIri" description "The IRI of the project." paramOptionType UriDatatype
+        "getLists" description "Returns a list of lists." params() doThis {
+            httpGet(BasePath)
+        } returns ListsResponse
+
+
+    private val getListsInProjectFunction: ClientFunction =
+        "getListsInProject" description "Returns a list of lists in a project." params(
+            "projectIri" description "The IRI of the project." paramType UriDatatype
             ) doThis {
             httpGet(
                 path = BasePath,
@@ -171,6 +178,15 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 body = Some(arg("listInfo"))
             )
         } returns ListResponse
+
+    private def createListTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("create-list-request"),
+                text = SharedTestDataADM.createListRequest
+            )
+        )
+    }
 
     @Path("/{IRI}")
     @ApiOperation(value = "Get a list", nickname = "getlist", httpMethod = "GET", response = classOf[ListGetResponseADM])
@@ -265,6 +281,15 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
         } returns ListInfoResponse
 
+    private def updateListInfoTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-list-request"),
+                text = SharedTestDataADM.updateListRequest("http://rdfh.ch/lists/0001/treeList01")
+            )
+        )
+    }
+
     @Path("/{IRI}")
     @ApiOperation(value = "Add new child node", nickname = "addListChildNode", httpMethod = "POST", response = classOf[ListNodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
@@ -323,17 +348,41 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putList ~ postListChildNode ~ deleteListNode ~ {
+    def getListInfo: Route = path(ListsBasePath / "infos" / Segment) { iri =>
+        get {
+            /* return information about a list (without children) */
+            requestContext =>
+                val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-        path(ListsBasePath / "infos" / Segment) { iri =>
-            get {
-                /* return information about a list (without children) */
+                val requestMessage: Future[ListInfoGetRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield ListInfoGetRequestADM(listIri, requestingUser)
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    }
+
+    def updateListInfo: Route = path(ListsBasePath / "infos" / Segment) { iri =>
+        put {
+            /* update list info */
+            entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
                 requestContext =>
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage: Future[ListInfoGetRequestADM] = for {
+                    val requestMessage: Future[ListInfoChangeRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield ListInfoGetRequestADM(listIri, requestingUser)
+                    } yield ListInfoChangeRequestADM(
+                        listIri = listIri,
+                        changeListRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
@@ -342,68 +391,49 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         responderManager,
                         log
                     )
-            } ~
-                put {
-                    /* update list info */
-                    entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
-                        requestContext =>
-                            val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+            }
+        }
+    }
 
-                            val requestMessage: Future[ListInfoChangeRequestADM] = for {
-                                requestingUser <- getUserADM(requestContext)
-                            } yield ListInfoChangeRequestADM(
-                                listIri = listIri,
-                                changeListRequest = apiRequest,
-                                requestingUser = requestingUser,
-                                apiRequestID = UUID.randomUUID()
-                            )
+    def getListNodeInfo: Route = path(ListsBasePath / "nodes" / Segment) { iri =>
+        get {
+            /* return information about a single node (without children) */
+            requestContext =>
+                val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                            RouteUtilADM.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            )
-                    }
-                }
+                val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield ListNodeInfoGetRequestADM(listIri, requestingUser)
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
         } ~
-            path(ListsBasePath / "nodes" / Segment) { iri =>
-                get {
-                    /* return information about a single node (without children) */
-                    requestContext =>
-                        val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
-                        val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-                            requestingUser <- getUserADM(requestContext)
-                        } yield ListNodeInfoGetRequestADM(listIri, requestingUser)
-
-                        RouteUtilADM.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                } ~
-                    put {
-                        /* update list node */
-                        throw NotImplementedException("Method not implemented.")
-                        ???
-                    } ~
-                    delete {
-                        /* delete list node */
-                        throw NotImplementedException("Method not implemented.")
-                        ???
-                    }
+            put {
+                /* update list node */
+                throw NotImplementedException("Method not implemented.")
+                ???
+            } ~
+            delete {
+                /* delete list node */
+                throw NotImplementedException("Method not implemented.")
+                ???
             }
     }
+
+    override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putList ~ postListChildNode ~ deleteListNode ~
+        getListInfo ~ updateListInfo ~ getListNodeInfo
 
     /**
       * The functions defined by this [[ClientEndpoint]].
       */
     override val functions: Seq[ClientFunction] = Seq(
         getListsFunction,
+        getListsInProjectFunction,
         createListFunction,
         getListFunction,
         updateListInfoFunction,
@@ -419,7 +449,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         Future.sequence {
             Set(
                 getListsTestResponse,
-                getListTestResponse
+                getListTestResponse,
+                createListTestRequest,
+                updateListInfoTestRequest
             )
         }
     }

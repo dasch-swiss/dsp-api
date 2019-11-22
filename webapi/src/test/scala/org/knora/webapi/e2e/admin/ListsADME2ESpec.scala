@@ -184,16 +184,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
             "create a list" in {
 
-                val params =
-                    s"""
-                       |{
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-                       |    "comments": []
-                       |}
-                """.stripMargin
-
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, SharedTestDataADM.createListRequest)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -285,16 +276,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             }
 
             "update basic list information" in {
-                val params =
-                    s"""
-                       |{
-                       |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                       |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                       |}
-                """.stripMargin
-
+                val params = SharedTestDataADM.updateListRequest(newListIri.get)
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
                 val request = Put(baseApiUrl + s"/admin/lists/infos/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
