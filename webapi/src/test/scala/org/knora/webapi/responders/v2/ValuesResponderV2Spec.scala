@@ -1002,7 +1002,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val valueHasIntervalStart = BigDecimal("1.2")
-            val valueHasIntervalEnd = BigDecimal("3.4")
+            val valueHasIntervalEnd = BigDecimal("3")
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             responderManager ! CreateValueRequestV2(
@@ -1048,7 +1048,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val valueHasIntervalStart = BigDecimal("1.2")
-            val valueHasIntervalEnd = BigDecimal("3.4")
+            val valueHasIntervalEnd = BigDecimal("3")
 
             responderManager ! CreateValueRequestV2(
                 CreateValueV2(
@@ -3292,7 +3292,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not update a still image file value without changing it" in {
             val resourceIri: IRI = aThingPictureIri
-            stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/file1")
+            stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q")
 
             val valueContent = StillImageFileValueContentV2(
                 ontologySchema = ApiV2Complex,

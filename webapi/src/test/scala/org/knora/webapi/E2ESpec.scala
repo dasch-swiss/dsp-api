@@ -19,7 +19,9 @@
 
 package org.knora.webapi
 
-import java.io.{File, StringReader}
+import java.io.{ByteArrayInputStream, File, StringReader}
+import java.nio.file.{Files, Path}
+import java.util.zip.{ZipEntry, ZipFile, ZipInputStream}
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
@@ -36,8 +38,10 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{FileUtil, StartupUtils, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
+import resource.managed
 import spray.json._
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
@@ -47,15 +51,18 @@ object E2ESpec {
 }
 
 /**
-  * This class can be used in End-to-End testing. It starts the Knora-API server
-  * and provides access to settings and logging.
-  */
+ * This class can be used in End-to-End testing. It starts the Knora-API server
+ * and provides access to settings and logging.
+ */
 class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
 
     /* constructors */
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
+
     def this(config: Config) = this(ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig)))
+
     def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
+
     def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
 
     /* needed by the core trait */
@@ -98,12 +105,14 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+        logger.info("Loading test data started ...")
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 5.minutes)
+        singleAwaitingRequest(request, 479999.milliseconds)
+        logger.info("Loading test data done.")
     }
 
     // duration is intentionally like this, so that it could be found with search if seen in a stack trace
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 2999.milliseconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 5999.milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }
@@ -137,20 +146,57 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
         Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML)
     }
 
+    protected def getResponseEntityBytes(httpResponse: HttpResponse): Array[Byte] = {
+        val responseBodyFuture: Future[Array[Byte]] = httpResponse.entity.toStrict(5.seconds).map(_.data.toArray)
+        Await.result(responseBodyFuture, 5.seconds)
+    }
+
+    protected def getZipContents(responseBytes: Array[Byte]): Set[String] = {
+        val zippedFilenames = collection.mutable.Set.empty[String]
+
+        for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
+            var zipEntry: ZipEntry = null
+
+            while ( {
+                zipEntry = zipInputStream.getNextEntry
+                zipEntry != null
+            }) {
+                zippedFilenames.add(zipEntry.getName)
+            }
+        }
+
+        zippedFilenames.toSet
+    }
+
+    def unzip(zipFilePath: Path, outputPath: Path): Unit = {
+        val zipFile = new ZipFile(zipFilePath.toFile)
+
+        for (entry <- zipFile.entries.asScala) {
+            val entryPath = outputPath.resolve(entry.getName)
+
+            if (entry.isDirectory) {
+                Files.createDirectories(entryPath)
+            } else {
+                Files.createDirectories(entryPath.getParent)
+                Files.copy(zipFile.getInputStream(entry), entryPath)
+            }
+        }
+    }
+
     /**
-      * Reads or writes a test data file.
-      *
-      * @param responseAsString the API response received from Knora.
-      * @param file             the file in which the expected API response is stored.
-      * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-      * @return the expected response.
-      */
+     * Reads or writes a test data file.
+     *
+     * @param responseAsString the API response received from Knora.
+     * @param file             the file in which the expected API response is stored.
+     * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
+     * @return the expected response.
+     */
     protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
         if (writeFile) {
-            FileUtil.writeTextFile(file, responseAsString)
+            FileUtil.writeTextFile(file, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
             responseAsString
         } else {
-            FileUtil.readTextFile(file)
+            FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
         }
     }
 }

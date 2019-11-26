@@ -31,8 +31,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
-  * A route used to send requests which can directly affect the data stored inside the triplestore.
-  */
+ * A route used to send requests which can directly affect the data stored inside the triplestore.
+ */
 
 @Api(value = "store", produces = "application/json")
 @Path("/admin/store")
@@ -44,8 +44,8 @@ class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 requestContext =>
 
                     /** Maybe return some statistics about the store, e.g., what triplestore, number of triples in
-                      * each named graph and in total, etc.
-                      */
+                     * each named graph and in total, etc.
+                     */
                     // TODO: Implement some simple return
                     requestContext.complete("Hello World")
             }
@@ -64,8 +64,8 @@ class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                 settings,
                                 responderManager,
                                 log
-                            )(timeout = 5.minutes, executionContext = executionContext)
-                  }
+                            )(timeout = 479999.milliseconds, executionContext = executionContext)
+                    }
 
                 }
             }

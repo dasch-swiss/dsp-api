@@ -21,7 +21,7 @@ package org.knora.webapi.responders.v2.search.gravsearch.prequery
 
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
-import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.CombineSearchTerms
+import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.responders.v2.search.gravsearch.types._
@@ -136,17 +136,6 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     protected val standoffMarkedUpVariables = mutable.Set.empty[QueryVariable]
 
     /**
-      * Create a unique variable from a whole statement.
-      *
-      * @param baseStatement the statement to be used to create the variable base name.
-      * @param suffix        the suffix to be appended to the base name.
-      * @return a unique variable.
-      */
-    protected def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
-        QueryVariable(SparqlTransformer.escapeEntityForVariable(baseStatement.subj) + "__" + SparqlTransformer.escapeEntityForVariable(baseStatement.pred) + "__" + SparqlTransformer.escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
-    }
-
-    /**
       * Checks if a statement represents the knora-base:isMainResource statement and returns the query variable representing the main resource if so.
       *
       * @param statementPattern the statement pattern to be checked.
@@ -230,9 +219,12 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
       */
     private def generateStatementsForLinkValue(linkSource: Entity, linkPred: Entity, linkTarget: Entity): Seq[StatementPattern] = {
         // Generate a variable name representing the link value
-        val linkValueObjVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
-            base = linkTarget,
-            propertyIri = OntologyConstants.KnoraBase.LinkValue
+        val linkValueObjVar: QueryVariable = SparqlTransformer.createUniqueVariableFromStatementForLinkValue(
+            baseStatement = StatementPattern(
+                subj = linkSource,
+                pred = linkPred,
+                obj = linkTarget
+            )
         )
 
         // add variable to collection representing value objects
@@ -300,7 +292,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             val listNode: Entity = statementPattern.obj
 
             // variable representing the list node to match for
-            val listNodeVar: QueryVariable = createUniqueVariableFromStatement(
+            val listNodeVar: QueryVariable = SparqlTransformer.createUniqueVariableFromStatement(
                 baseStatement = statementPattern,
                 suffix = "listNodeVar"
             )
@@ -1161,13 +1153,12 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
         val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
 
-        // combine search terms with a logical AND (Lucene syntax)
-        val searchTerms: CombineSearchTerms = CombineSearchTerms(searchTerm.value)
+        val searchTerms: LuceneQueryString = LuceneQueryString(searchTerm.value)
 
         TransformedFilterPattern(
             None, // FILTER has been replaced by statements
             valueHasStringStatement ++ Seq(
-                StatementPattern.makeExplicit(subj = textValHasString, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.combineSearchTermsWithLogicalAnd, OntologyConstants.Xsd.String.toSmartIri))
+                StatementPattern.makeExplicit(subj = textValHasString, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri))
             )
         )
     }
@@ -1203,13 +1194,12 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
         val searchTermStr: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
 
-        // combine search terms with a logical AND (Lucene syntax)
-        val searchTerms: CombineSearchTerms = CombineSearchTerms(searchTermStr.value)
+        val searchTerms: LuceneQueryString = LuceneQueryString(searchTermStr.value)
 
         TransformedFilterPattern(
             None, // FILTER has been replaced by statements
             Seq(
-                StatementPattern.makeExplicit(subj = stringVar, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.combineSearchTermsWithLogicalAnd, OntologyConstants.Xsd.String.toSmartIri))
+                StatementPattern.makeExplicit(subj = stringVar, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri))
             )
         )
     }
@@ -1249,12 +1239,11 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         // A string literal representing the search terms.
         val searchTermStr: XsdLiteral = functionCallExpression.getArgAsLiteral(pos = 2, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
 
-        // Combine the search terms with logical AND (Lucene syntax).
-        val searchTerms: CombineSearchTerms = CombineSearchTerms(searchTermStr.value)
+        val searchTerms: LuceneQueryString = LuceneQueryString(searchTermStr.value)
 
         // Generate a statement to search the full-text search index, to assert that text value contains
         // the search terms.
-        val fullTextSearchStatement: Seq[StatementPattern] = Seq(StatementPattern.makeInferred(subj = textValueStringLiteralVar, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.combineSearchTermsWithLogicalAnd, OntologyConstants.Xsd.String.toSmartIri)))
+        val fullTextSearchStatement: Seq[StatementPattern] = Seq(StatementPattern.makeInferred(subj = textValueStringLiteralVar, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.getQueryString, OntologyConstants.Xsd.String.toSmartIri)))
 
         // Generate query patterns to assign the text in the standoff tag to a variable, if we
         // haven't done so already.
@@ -1297,12 +1286,12 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         // standoff tag contains the term:
         // FILTER REGEX(?standoffTag__markedUp, 'term', "i")
         // TODO: handle the differences between regex syntax and Lucene syntax.
-        val regexFilters: Seq[FilterPattern] = searchTerms.terms.map {
-            term =>
+        val regexFilters: Seq[FilterPattern] = searchTerms.getSingleTerms.map {
+            term: String =>
                 FilterPattern(
                     expression = RegexFunction(
                         textVar = markedUpVariable,
-                        pattern = term,
+                        pattern = term, // TODO: Ignore Lucene operators
                         modifier = Some("i")
                     )
                 )

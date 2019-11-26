@@ -1,12 +1,23 @@
 module.exports = {
-    "dataSource": "commits",
+    "dataSource": "milestones",
     "prefix": "",
-    "includeMessages": "all",
-    "changelogFilename": "CHANGELOG.md",
+    "ignoreIssuesWith": [
+        "duplicate",
+        "wontfix",
+        "invalid",
+        "help wanted",
+        "question",
+        "testing",
+        "test"
+    ],
     "groupBy": {
-        "Enhancements:": ["feat"],
-        "Bug Fixes:": ["fix"],
-        "Documentation:": ["docs"],
+        "Breaking Changes": ["breaking/data", "breaking/api"],
+        "Enhancements:": ["enhancement"],
+        "Bug Fixes:": ["bug"],
+        "Documentation:": ["documentation"],
         "Other": ["chore", "refactor"]
+    },
+    "template": {
+        "issue": "- [{{text}}]({{url}}) {{name}}"
     }
 };

@@ -38,12 +38,12 @@ import scala.concurrent.{ExecutionContext, Future}
   * representing the Knora classes used in an API.
   */
 class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
-    implicit protected val system: ActorSystem = routeData.system
-    implicit protected val responderManager: ActorRef = routeData.appActor
-    implicit protected val settings: SettingsImpl = Settings(system)
-    implicit protected val timeout: Timeout = settings.defaultTimeout
-    implicit protected val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-    implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    implicit private val system: ActorSystem = routeData.system
+    implicit private val responderManager: ActorRef = routeData.appActor
+    implicit private val settings: SettingsImpl = Settings(system)
+    implicit private val timeout: Timeout = settings.defaultTimeout
+    implicit private val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     // Return code documentation in English.
     private val userWithLang = requestingUser.copy(lang = LanguageCodes.EN)
@@ -68,80 +68,109 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
           * @return the class definitions and ontologies resulting from recursion.
           */
         def getClassDefsRec(classIri: SmartIri, definitionAcc: ClientDefsWithOntologies): Future[ClientDefsWithOntologies] = {
-            // Get the IRI of the ontology containing the class.
-            val classOntologyIri: SmartIri = classIri.getOntologyFromEntity
+            val className = classIri.getEntityName
 
-            for {
-                // Get the ontology containing the class.
-                ontologiesWithClassOntology <- getOntology(classOntologyIri, definitionAcc.ontologies)
-                classOntology = ontologiesWithClassOntology(classOntologyIri)
+            // Is this the IRI of a derived class that hasn't been generated yet?
+            if (ClassRef.isGeneratedDerivedClassName(className)) {
+                // Yes. Do we already have the definition of the base class?
 
-                // Get the RDF definition of the class.
-                rdfClassDef: ClassInfoContentV2 = classOntology.classes.getOrElse(classIri, throw ClientApiGenerationException(s"Class <$classIri> not found"))
+                val baseClassIri: SmartIri = classIri.getOntologyFromEntity.makeEntityIri(ClassRef.toBaseClassName(className))
 
-                // Get the IRIs of the class's Knora properties.
-                rdfPropertyIris: Set[SmartIri] = rdfClassDef.directCardinalities.keySet.filter {
-                    propertyIri => propertyIri.isKnoraEntityIri
+                if (definitionAcc.clientDefs.contains(baseClassIri)) {
+                    // Yes. Return.
+                    FastFuture.successful(definitionAcc)
+                } else {
+                    // No. Recurse to get it.
+                    getClassDefsRec(baseClassIri, definitionAcc)
                 }
+            } else {
+                // Get the IRI of the ontology containing the class.
+                val classOntologyIri: SmartIri = classIri.getOntologyFromEntity
 
-                // Get the ontologies containing the definitions of those properties.
-                ontologiesWithPropertyDefs: Map[SmartIri, InputOntologyV2] <- rdfPropertyIris.foldLeft(FastFuture.successful(ontologiesWithClassOntology)) {
-                    case (acc, propertyIri) =>
-                        val propertyOntologyIri = propertyIri.getOntologyFromEntity
+                for {
+                    // Get the ontology containing the class.
+                    ontologiesWithClassOntology <- getOntology(classOntologyIri, definitionAcc.ontologies)
+                    classOntology = ontologiesWithClassOntology(classOntologyIri)
 
-                        for {
-                            currentOntologies: Map[SmartIri, InputOntologyV2] <- acc
-                            ontologiesWithPropertyDef: Map[SmartIri, InputOntologyV2] <- getOntology(propertyOntologyIri, currentOntologies)
-                        } yield ontologiesWithPropertyDef
-                }
+                    // Get the RDF definition of the class.
+                    rdfClassDef: ClassInfoContentV2 = classOntology.classes.getOrElse(classIri, throw ClientApiGenerationException(s"Class <$classIri> not found"))
 
-                // Get the definitions of the properties.
-                rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = rdfPropertyIris.map {
-                    propertyIri =>
-                        val ontology = ontologiesWithPropertyDefs(propertyIri.getOntologyFromEntity)
-                        propertyIri -> ontology.properties.getOrElse(propertyIri, throw ClientApiGenerationException(s"Property <$propertyIri> not found"))
-                }.toMap
+                    // Get the IRIs of the class's Knora properties.
+                    rdfPropertyIris: Set[SmartIri] = rdfClassDef.directCardinalities.keySet.filter {
+                        propertyIri => propertyIri.isKnoraEntityIri
+                    }
 
-                // Convert the RDF class definition into a ClientClassDefinition.
-                clientClassDef: ClientClassDefinition = rdfClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
+                    // Get the ontologies containing the definitions of those properties.
+                    ontologiesWithPropertyDefs: Map[SmartIri, InputOntologyV2] <- rdfPropertyIris.foldLeft(FastFuture.successful(ontologiesWithClassOntology)) {
+                        case (acc, propertyIri) =>
+                            val propertyOntologyIri = propertyIri.getOntologyFromEntity
 
-                // Make a new ClientDefsWithOntologies including that ClientClassDefinition as well as the ontologies
-                // we've collected.
-                accForRecursion = ClientDefsWithOntologies(
-                    clientDefs = definitionAcc.clientDefs + (clientClassDef.classIri -> clientClassDef),
-                    ontologies = ontologiesWithPropertyDefs
-                )
+                            for {
+                                currentOntologies: Map[SmartIri, InputOntologyV2] <- acc
+                                ontologiesWithPropertyDef: Map[SmartIri, InputOntologyV2] <- getOntology(propertyOntologyIri, currentOntologies)
+                            } yield ontologiesWithPropertyDef
+                    }
 
-                // Recursively get definitions of classes used as property object types.
-                accFromRecursion: ClientDefsWithOntologies <- clientClassDef.properties.foldLeft(FastFuture.successful(accForRecursion)) {
-                    case (acc: Future[ClientDefsWithOntologies], clientPropertyDef: ClientPropertyDefinition) =>
-                        // Does this property have a class as its object type?
-                        clientPropertyDef.objectType match {
-                            case classRef: ClassRef =>
-                                // Yes.
-                                for {
-                                    currentAcc: ClientDefsWithOntologies <- acc
+                    // Get the definitions of the properties.
+                    rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = rdfPropertyIris.map {
+                        propertyIri =>
+                            val ontology = ontologiesWithPropertyDefs(propertyIri.getOntologyFromEntity)
+                            propertyIri -> ontology.properties.getOrElse(propertyIri, throw ClientApiGenerationException(s"Property <$propertyIri> not found"))
+                    }.toMap
 
-                                    // Do we have this class definition already?
-                                    newAcc: ClientDefsWithOntologies <- if (currentAcc.clientDefs.contains(classRef.classIri)) {
-                                        // Yes. Nothing to do.
-                                        acc
-                                    } else {
-                                        // No. Recurse to get it.
-                                        for {
-                                            recursionResults: ClientDefsWithOntologies <- getClassDefsRec(
-                                                classIri = classRef.classIri,
-                                                definitionAcc = currentAcc
-                                            )
-                                        } yield recursionResults
+                    // Convert the RDF class definition into a ClientClassDefinition.
+                    clientClassDef: ClientClassDefinition = rdfClassDef2ClientClassDef(
+                        clientApi = clientApi,
+                        rdfClassDef = rdfClassDef,
+                        rdfPropertyDefs = rdfPropertyDefs
+                    )
+
+                    // Make a new ClientDefsWithOntologies including that ClientClassDefinition as well as the ontologies
+                    // we've collected.
+                    accForRecursion = ClientDefsWithOntologies(
+                        clientDefs = definitionAcc.clientDefs + (clientClassDef.classIri -> clientClassDef),
+                        ontologies = ontologiesWithPropertyDefs
+                    )
+
+                    // Recursively get definitions of classes used as property object types.
+                    accFromRecursion: ClientDefsWithOntologies <- clientClassDef.properties.foldLeft(FastFuture.successful(accForRecursion)) {
+                        case (acc: Future[ClientDefsWithOntologies], clientPropertyDef: ClientPropertyDefinition) =>
+                            // Does this property have something containing a class IRI as its object type
+                            // (a ClassRef, or a CollectionType referring to a class IRI)?
+                            clientPropertyDef.objectType match {
+                                case typeWithClassIri: TypeWithClassIri =>
+                                    typeWithClassIri.getClassIri match {
+                                        case Some(objectTypeClassIri) =>
+                                            // Yes.
+                                            for {
+                                                currentAcc: ClientDefsWithOntologies <- acc
+
+                                                // Do we have this class definition already?
+                                                newAcc: ClientDefsWithOntologies <- if (currentAcc.clientDefs.contains(objectTypeClassIri)) {
+                                                    // Yes. Nothing to do.
+                                                    acc
+                                                } else {
+                                                    // No. Recurse to get it.
+                                                    for {
+                                                        recursionResults: ClientDefsWithOntologies <- getClassDefsRec(
+                                                            classIri = objectTypeClassIri,
+                                                            definitionAcc = currentAcc
+                                                        )
+                                                    } yield recursionResults
+                                                }
+                                            } yield newAcc
+
+                                        case None =>
+                                            // This property doesn't have an object type containing a class IRI.
+                                            acc
                                     }
-                                } yield newAcc
 
-                            // This property doesn't have a class as its object type.
-                            case _ => acc
-                        }
-                }
-            } yield accFromRecursion
+                                // This property doesn't have an object type containing a class IRI.
+                                case _ => acc
+                            }
+                    }
+                } yield accFromRecursion
+            }
         }
 
         // Iterate over all the class IRIs used in the client API, making a client definition for each class,
@@ -161,14 +190,176 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                         )
                     } yield recursionResults
             }
-        } yield allDefs.clientDefs.values.toSet
+        } yield transformClientClassDefs(
+            clientApi = clientApi,
+            clientDefs = allDefs.clientDefs
+        )
+    }
+
+    /**
+      * Transforms client class definitions by adding `Stored*` and `Read*` classes, transforming the properties of their base
+      * classes, and transforming the properties of response classes.
+      *
+      * @param clientApi  the client API definition.
+      * @param clientDefs the client class definitions used by the API.
+      * @return the transformed class definitions.
+      */
+    private def transformClientClassDefs(clientApi: ClientApi, clientDefs: Map[SmartIri, ClientClassDefinition]): Set[ClientClassDefinition] = {
+        /**
+          * Transforms the class reference object types of properties.
+          *
+          * @param properties         the properties to transform.
+          * @param classIrisToReplace A map of source class IRIs to replacement class IRIs.
+          * @return the transformed properties.
+          */
+        def transformPropertyObjectTypes(properties: Vector[ClientPropertyDefinition],
+                                         classIrisToReplace: Map[SmartIri, SmartIri]): Vector[ClientPropertyDefinition] = {
+            properties.map {
+                propDef: ClientPropertyDefinition =>
+                    propDef.objectType match {
+                        case classRef: ClassRef =>
+                            classIrisToReplace.get(classRef.classIri) match {
+                                case Some(targetClassIri) =>
+                                    propDef.copy(
+                                        objectType = ClassRef(className = makeClientClassName(targetClassIri), classIri = targetClassIri)
+                                    )
+
+                                case None => propDef
+                            }
+
+                        case _ => propDef
+                    }
+            }
+        }
+
+        // Rename properties as requested.
+        val classesWithRenamedProps: Map[SmartIri, ClientClassDefinition] = clientDefs.map {
+            case (classIri: SmartIri, classDef: ClientClassDefinition) =>
+                val transformedProps = classDef.properties.map {
+                    propDef =>
+                        clientApi.propertyNames.get(classIri) match {
+                            case Some(propertyMap) =>
+                                propertyMap.get(propDef.propertyIri) match {
+                                    case Some(propertyName) => propDef.copy(propertyName = propertyName)
+                                    case None => propDef
+                                }
+
+                            case None => propDef
+                        }
+                }
+
+                classIri -> classDef.copy(properties = transformedProps)
+        }
+
+        // A class that has an ID property needs a Stored* subclass.
+        val classIrisNeedingStoredClasses: Set[SmartIri] = classesWithRenamedProps.collect {
+            case (classIri, classDef) if classDef.properties.exists(propDef => clientApi.idProperties.contains(propDef.propertyIri)) => classIri
+        }.toSet
+
+        // A map of the IRIs of classes that need Stored* classes, to the IRIs of their Stored* classes.
+        val storedClassIris: Map[SmartIri, SmartIri] = classIrisNeedingStoredClasses.map {
+            classIri => classIri -> classIri.getOntologyFromEntity.makeEntityIri(ClassRef.makeStoredClassName(classIri.getEntityName))
+        }.toMap
+
+        // A class that has one or more read-only properties needs a Read* subclass.
+        val classIrisNeedingReadClasses: Set[SmartIri] = clientApi.classesWithReadOnlyProperties.keySet
+
+        // A map of the IRIs of classes that need Read* classes, to the IRIs of their Read* classes.
+        val readClassIris: Map[SmartIri, SmartIri] = classIrisNeedingReadClasses.map {
+            classIri => classIri -> classIri.getOntologyFromEntity.makeEntityIri(ClassRef.makeReadClassName(classIri.getEntityName))
+        }.toMap
+
+        val classesNeedingStoredClasses: Map[SmartIri, ClientClassDefinition] = classesWithRenamedProps.filterKeys(classIrisNeedingStoredClasses)
+
+        val generatedSubclassesAndTransformedBaseClasses: Map[SmartIri, ClientClassDefinition] = classesNeedingStoredClasses.flatMap {
+            case (classIri: SmartIri, classDef: ClientClassDefinition) =>
+                // A Stored* class contains only the ID property from the base class. The ID property's cardinality
+                // in the Stored* class is MustHaveOne.
+                val propsForStoredClass: Vector[ClientPropertyDefinition] = classDef.properties.collect {
+                    case propDef if clientApi.idProperties.contains(propDef.propertyIri) =>
+                        propDef.copy(cardinality = Cardinality.MustHaveOne)
+                }
+
+                if (propsForStoredClass.length > 1) {
+                    throw ClientApiGenerationException(s"Class $classIri has more than one ID property: ${propsForStoredClass.map(_.propertyIri).mkString(", ")}")
+                }
+
+                val storedClassIri = storedClassIris(classIri)
+
+                val storedClassDef: ClientClassDefinition = classDef.copy(
+                    className = storedClassIri.getEntityName,
+                    classIri = storedClassIri,
+                    properties = propsForStoredClass,
+                    subClassOf = Some(classDef.classIri)
+                )
+
+                val readOnlyPropertyIris: Set[SmartIri] = clientApi.classesWithReadOnlyProperties.getOrElse(classDef.classIri, Set.empty)
+
+                val maybeReadClassIriAndDef: Option[(SmartIri, ClientClassDefinition)] = if (classIrisNeedingReadClasses.contains(classIri)) {
+                    // In a Read* class, only read-only properties should be included.
+                    val readOnlyPropsInClass: Vector[ClientPropertyDefinition] = classDef.properties.filter {
+                        propDef => readOnlyPropertyIris.contains(propDef.propertyIri)
+                    }
+
+                    // To avoid circular dependencies, the read-only properties should point to Stored* classes.
+                    val propsForReadClass = transformPropertyObjectTypes(
+                        properties = readOnlyPropsInClass,
+                        classIrisToReplace = storedClassIris
+                    )
+
+                    val readClassIri = readClassIris(classIri)
+
+                    val readClassDef: ClientClassDefinition = classDef.copy(
+                        className = readClassIri.getEntityName,
+                        classIri = readClassIri,
+                        properties = propsForReadClass,
+                        subClassOf = Some(storedClassIri)
+                    )
+
+                    Some(readClassIri -> readClassDef)
+                } else {
+                    None
+                }
+
+                // Remove the ID property and read-only properties from the transformed base class.
+
+                val baseClassDef: ClientClassDefinition = classDef.copy(
+                    properties = classDef.properties.filterNot {
+                        propDef =>
+                            clientApi.idProperties.contains(propDef.propertyIri) || readOnlyPropertyIris.contains(propDef.propertyIri)
+                    }
+                )
+
+                Map(
+                    baseClassDef.classIri -> baseClassDef,
+                    storedClassIri -> storedClassDef
+                ) ++ maybeReadClassIriAndDef
+        }
+
+        // In a response class, every property should have another Read* class (if available) as its object type.
+
+        val responseClasses: Map[SmartIri, ClientClassDefinition] = classesWithRenamedProps.filterKeys(clientApi.responseClasses)
+
+        val transformedResponseClasses: Map[SmartIri, ClientClassDefinition] = responseClasses.map {
+            case (classIri: SmartIri, classDef: ClientClassDefinition) =>
+                val transformedProps = transformPropertyObjectTypes(
+                    properties = classDef.properties,
+                    classIrisToReplace = readClassIris
+                )
+
+                classIri -> classDef.copy(
+                    properties = transformedProps
+                )
+        }
+
+        (classesWithRenamedProps ++ generatedSubclassesAndTransformedBaseClasses ++ transformedResponseClasses).values.toSet
     }
 
     /**
       * Gets an ontology from Knora.
       *
       * @param ontologyIri the IRI of the ontology.
-      * @param ontologies the ontologies collected so far.
+      * @param ontologies  the ontologies collected so far.
       * @return `ontologies` plus the requested ontology.
       */
     private def getOntology(ontologyIri: SmartIri, ontologies: Map[SmartIri, InputOntologyV2]): Future[Map[SmartIri, InputOntologyV2]] = {
@@ -194,30 +385,40 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
     /**
       * Converts RDF class definitions into [[ClientClassDefinition]] instances.
       *
+      * @param clientApi       the client API definition.
       * @param rdfClassDef     the class definition to be converted.
       * @param rdfPropertyDefs the definitions of the properties used in the class.
       * @return a [[ClientClassDefinition]] describing the class.
       */
-    private def rdfClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
+    private def rdfClassDef2ClientClassDef(clientApi: ClientApi, rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val isResourceClass = rdfClassDef.getPredicateBooleanObject(OntologyConstants.KnoraApiV2Complex.IsResourceClass.toSmartIri)
 
         if (isResourceClass) {
-            rdfResourceClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
+            rdfResourceClassDef2ClientClassDef(
+                clientApi = clientApi,
+                rdfClassDef = rdfClassDef,
+                rdfPropertyDefs = rdfPropertyDefs
+            )
         } else {
-            rdfNonResourceClassDef2ClientClassDef(rdfClassDef, rdfPropertyDefs)
+            rdfNonResourceClassDef2ClientClassDef(
+                clientApi = clientApi,
+                rdfClassDef = rdfClassDef,
+                rdfPropertyDefs = rdfPropertyDefs
+            )
         }
     }
 
     /**
       * Converts Knora resource class definitions into [[ClientClassDefinition]] instances.
       *
+      * @param clientApi       the client API definition.
       * @param rdfClassDef     the class definition to be converted.
       * @param rdfPropertyDefs the definitions of the properties used in the class.
       * @return a [[ClientClassDefinition]] describing the class.
       */
-    private def rdfResourceClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
+    private def rdfResourceClassDef2ClientClassDef(clientApi: ClientApi, rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val classDescription: Option[String] = rdfClassDef.getPredicateStringLiteralObject(OntologyConstants.Rdfs.Comment.toSmartIri)
@@ -233,6 +434,12 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
         val clientPropertyDefs: Vector[ClientPropertyDefinition] = cardinalitiesWithoutLinkProps.map {
             case (propertyIri, knoraCardinalityInfo) =>
                 val propertyName = propertyIri.getEntityName
+
+                val isOptionalSet = isOptionalSetProperty(
+                    clientApi = clientApi,
+                    classIri = rdfClassDef.classIri,
+                    propertyIri = propertyIri
+                )
 
                 if (propertyIri.isKnoraEntityIri) {
                     val rdfPropertyDef = rdfPropertyDefs(propertyIri)
@@ -256,6 +463,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                             propertyIri = propertyIri,
                             objectType = clientObjectType,
                             cardinality = knoraCardinalityInfo.cardinality,
+                            isOptionalSet = isOptionalSet,
                             isEditable = isEditable
                         )
                     } else {
@@ -265,6 +473,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                             propertyIri = propertyIri,
                             objectType = nonResourcePropObjectTypeToClientObjectType(ontologyObjectType),
                             cardinality = knoraCardinalityInfo.cardinality,
+                            isOptionalSet = isOptionalSet,
                             isEditable = isEditable
                         )
                     }
@@ -275,6 +484,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                         propertyIri = propertyIri,
                         objectType = StringDatatype,
                         cardinality = knoraCardinalityInfo.cardinality,
+                        isOptionalSet = isOptionalSet,
                         isEditable = propertyIri.toString == OntologyConstants.Rdfs.Label // Labels of resources are editable
                     )
                 }
@@ -291,11 +501,12 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
     /**
       * Converts Knora non-resource class definitions into [[ClientClassDefinition]] instances.
       *
+      * @param clientApi       the client API definition.
       * @param rdfClassDef     the class definition to be converted.
       * @param rdfPropertyDefs the definitions of the properties used in the class.
       * @return a [[ClientClassDefinition]] describing the class.
       */
-    private def rdfNonResourceClassDef2ClientClassDef(rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
+    private def rdfNonResourceClassDef2ClientClassDef(clientApi: ClientApi, rdfClassDef: ClassInfoContentV2, rdfPropertyDefs: Map[SmartIri, PropertyInfoContentV2]): ClientClassDefinition = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val classDescription: Option[String] = rdfClassDef.getPredicateStringLiteralObject(OntologyConstants.Rdfs.Comment.toSmartIri)
@@ -303,6 +514,12 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
         val clientPropertyDefs = rdfClassDef.directCardinalities.map {
             case (propertyIri, knoraCardinalityInfo) =>
                 val propertyName = propertyIri.getEntityName
+
+                val isOptionalSet = isOptionalSetProperty(
+                    clientApi = clientApi,
+                    classIri = rdfClassDef.classIri,
+                    propertyIri = propertyIri
+                )
 
                 if (propertyIri.isKnoraEntityIri) {
                     val rdfPropertyDef = rdfPropertyDefs(propertyIri)
@@ -315,6 +532,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                         propertyIri = propertyIri,
                         objectType = nonResourcePropObjectTypeToClientObjectType(ontologyObjectType),
                         cardinality = knoraCardinalityInfo.cardinality,
+                        isOptionalSet = isOptionalSet,
                         isEditable = true
                     )
                 } else {
@@ -324,6 +542,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                         propertyIri = propertyIri,
                         objectType = StringDatatype,
                         cardinality = knoraCardinalityInfo.cardinality,
+                        isOptionalSet = isOptionalSet,
                         isEditable = true
                     )
                 }
@@ -335,6 +554,18 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
             classIri = rdfClassDef.classIri,
             properties = clientPropertyDefs.sortBy(_.propertyIri)
         )
+    }
+
+    /**
+      * Returns `true` if the specified property IRI is an optional set property in the specified class.
+      *
+      * @param clientApi   the client API definition.
+      * @param classIri    the class IRI.
+      * @param propertyIri the property IRI.
+      * @return
+      */
+    private def isOptionalSetProperty(clientApi: ClientApi, classIri: SmartIri, propertyIri: SmartIri): Boolean = {
+        clientApi.classesWithOptionalSetProperties.get(classIri).exists(_.contains(propertyIri))
     }
 
     /**
@@ -384,18 +615,23 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
       * @return the corresponding [[ClientObjectType]].
       */
     private def nonResourcePropObjectTypeToClientObjectType(ontologyObjectType: SmartIri): ClientObjectType = {
-        ontologyObjectType.toString match {
-            case OntologyConstants.Xsd.String => StringDatatype
-            case OntologyConstants.Xsd.Boolean => BooleanDatatype
-            case OntologyConstants.Xsd.Integer => IntegerDatatype
-            case OntologyConstants.Xsd.Decimal => DecimalDatatype
-            case OntologyConstants.Xsd.Uri => UriDatatype
-            case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => DateTimeStampDatatype
+        if (ontologyObjectType.isClientCollectionTypeIri) {
+            ontologyObjectType.getClientCollectionType
+        } else {
+            ontologyObjectType.toString match {
+                case OntologyConstants.Xsd.String => StringDatatype
+                case OntologyConstants.Xsd.Boolean => BooleanDatatype
+                case OntologyConstants.Xsd.Integer => IntegerDatatype
+                case OntologyConstants.Xsd.Decimal => DecimalDatatype
+                case OntologyConstants.Xsd.Uri => UriDatatype
+                case OntologyConstants.Xsd.DateTime | OntologyConstants.Xsd.DateTimeStamp => DateTimeStampDatatype
 
-            case _ => ClassRef(
-                className = makeClientClassName(ontologyObjectType),
-                classIri = ontologyObjectType
-            )
+                case _ =>
+                    ClassRef(
+                        className = makeClientClassName(ontologyObjectType),
+                        classIri = ontologyObjectType
+                    )
+            }
         }
     }
 }

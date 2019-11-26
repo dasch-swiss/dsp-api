@@ -30,29 +30,27 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.responders.v2.search.SparqlQueryConstants
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
+import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.diff.Diff
 
+@E2ETest
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
     private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val zeitglöckleinIri: IRI = "http://rdfh.ch/0803/c5058f3a"
-    private val generationeIri = "http://rdfh.ch/0803/c3f913666f"
-    private val aThingIri: IRI = "http://rdfh.ch/0001/a-thing"
-    private val standardMappingIri: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
-
-    private val incunabulaUserEmail = SharedTestDataADM.incunabulaMemberUser.email
     private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
     private val password = "test"
 
     private val intValueIri = new MutableTestIri
-    private val commentValueIri = new MutableTestIri
-    private val thingTextValueIri = new MutableTestIri
-    private val thingTextValueWithEscapeIri = new MutableTestIri
+    private val textValueWithoutStandoffIri = new MutableTestIri
+    private val textValueWithStandoffIri = new MutableTestIri
+    private val textValueWithEscapeIri = new MutableTestIri
     private val decimalValueIri = new MutableTestIri
     private val dateValueIri = new MutableTestIri
     private val booleanValueIri = new MutableTestIri
@@ -66,8 +64,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
@@ -210,24 +206,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create an integer value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 4
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createIntValueRequest(
+                resourceIri = resourceIri,
+                intValue = intValue
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -247,13 +234,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 userEmail = anythingUserEmail
             )
 
-            val intValueAsInt: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
-            intValueAsInt should ===(intValue)
+            val savedIntValue: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
+            savedIntValue should ===(intValue)
         }
 
         "not create an integer value if @id is given" in {
-            val resourceIri: IRI = aThingIri
-            val intValue: Int = 4
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val intValue: Int = 10
 
             val jsonLdEntity =
                 s"""{
@@ -275,29 +262,41 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             assert(response.status == StatusCodes.BadRequest, response.toString)
         }
 
+        "not create an integer value if the simple schema is submitted" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val intValue: Int = 10
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasInteger" : $intValue,
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.BadRequest, responseAsString)
+        }
+
         "create an integer value with custom permissions" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 1
             val customPermissions: String = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue,
-                   |    "knora-api:hasPermissions" : "$customPermissions"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createIntValueWithCustomPermissionsRequest(
+                resourceIri = resourceIri,
+                intValue = intValue,
+                customPermissions = customPermissions
+            )
 
-            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -322,33 +321,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a text value without standoff" in {
-            val resourceIri: IRI = zeitglöckleinIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val valueAsString: String = "Comment 1a"
-            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUserEmail)
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLDEntity =
-                s"""
-                   |{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "incunabula:book",
-                   |  "incunabula:book_comment" : {
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:valueAsString" : "$valueAsString"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
-                   |  }
-                   |}
-                """.stripMargin
+            val jsonLDEntity = SharedTestDataADM.createTextValueWithoutStandoffRequest(
+                resourceIri = resourceIri,
+                valueAsString = valueAsString
+            )
 
-            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            commentValueIri.set(valueIri)
+            textValueWithoutStandoffIri.set(valueIri)
             val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
             valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
 
@@ -357,8 +345,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = commentValueIri.get,
-                userEmail = incunabulaUserEmail
+                expectedValueIri = textValueWithoutStandoffIri.get,
+                userEmail = anythingUserEmail
             )
 
             val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
@@ -366,41 +354,31 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a text value with standoff" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
 
             val textValueAsXml: String =
                 """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>
                   |   This text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
+                  |   And this <strong id="link_id">strong value</strong> is linked by this <a class="internal-link" href="#link_id">link</a>
                   |</text>
                 """.stripMargin
 
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasText" : {
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
-                   |    "knora-api:textValueHasMapping" : {
-                   |      "@id": "$standardMappingIri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLDEntity = SharedTestDataADM.createTextValueWithStandoffRequest(
+                resourceIri = resourceIri,
+                textValueAsXml = textValueAsXml,
+                mappingIri = SharedTestDataADM.standardMappingIri
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            thingTextValueIri.set(valueIri)
+            textValueWithStandoffIri.set(valueIri)
             val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
             valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
 
@@ -409,16 +387,484 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = thingTextValueIri.get,
+                expectedValueIri = textValueWithStandoffIri.get,
                 userEmail = anythingUserEmail
             )
 
             val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
-            savedTextValueAsXml.contains("salsah-link") should ===(true)
+
+            // Compare the original XML with the regenerated XML.
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(textValueAsXml)).withTest(Input.fromString(savedTextValueAsXml)).build()
+            xmlDiff.hasDifferences should be(false)
+        }
+
+        "create a very long text value with standoff and linked tags" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+
+            val textValueAsXml: String =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<text>
+                  |   <p>This <a class="internal-link" href="#link_id">ref</a> is a link to an out of page tag.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>Many lines to force to create a page.</p>
+                  |   <p>This <strong id="link_id">strong value</strong> is linked by an out of page anchor link at the top.</p>
+                  |</text>
+                """.stripMargin
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLDEntity = SharedTestDataADM.createTextValueWithStandoffRequest(
+                resourceIri = resourceIri,
+                textValueAsXml = textValueAsXml,
+                mappingIri = SharedTestDataADM.standardMappingIri
+            )
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            textValueWithStandoffIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = textValueWithStandoffIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+
+            // Compare the original XML with the regenerated XML.
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(textValueAsXml)).withTest(Input.fromString(savedTextValueAsXml)).build()
+            xmlDiff.hasDifferences should be(false)
         }
 
         "create a text value with standoff containing a URL" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
 
             val textValueAsXml: String =
                 """<?xml version="1.0" encoding="UTF-8"?>
@@ -428,24 +874,13 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 """.stripMargin
 
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasText" : {
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
-                   |    "knora-api:textValueHasMapping" : {
-                   |      "@id": "$standardMappingIri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLDEntity = SharedTestDataADM.createTextValueWithStandoffRequest(
+                resourceIri = resourceIri,
+                textValueAsXml = textValueAsXml,
+                mappingIri = SharedTestDataADM.standardMappingIri
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -469,18 +904,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a text value with standoff containing escaped text" in {
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
+            val resourceIri = SharedTestDataADM.AThing.iri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
             val jsonLDEntity = FileUtil.readTextFile(new File("src/test/resources/test-data/valuesE2EV2/CreateValueWithEscape.jsonld"))
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            thingTextValueWithEscapeIri.set(valueIri)
+            textValueWithEscapeIri.set(valueIri)
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
 
             val savedValue: JsonLDObject = getValue(
-                resourceIri = aThingIri,
+                resourceIri = SharedTestDataADM.AThing.iri,
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
@@ -534,9 +970,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
             // Create the text value.
 
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
             val textValueAsXml =
                 """<?xml version="1.0" encoding="UTF-8"?>
@@ -544,32 +980,21 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                   |    <p>This an <span data-description="an &quot;event&quot;" data-date="GREGORIAN:2017-01-27 CE" class="event">event</span>.</p>
                   |</text>""".stripMargin
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasText" : {
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
-                   |    "knora-api:textValueHasMapping" : {
-                   |      "@id": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}/mappings/HTMLMapping"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLDEntity = SharedTestDataADM.createTextValueWithStandoffRequest(
+                resourceIri = resourceIri,
+                textValueAsXml = textValueAsXml,
+                mappingIri = s"${SharedTestDataADM.ANYTHING_PROJECT_IRI}/mappings/HTMLMapping"
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            thingTextValueIri.set(valueIri)
+            textValueWithStandoffIri.set(valueIri)
 
             val savedValue: JsonLDObject = getValue(
-                resourceIri = aThingIri,
+                resourceIri = resourceIri,
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
@@ -582,33 +1007,24 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a text value with a comment" in {
-            val resourceIri: IRI = zeitglöckleinIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val valueAsString: String = "this is a text value that has a comment"
             val valueHasComment: String = "this is a comment"
-            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUserEmail)
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "incunabula:book",
-                   |  "incunabula:book_comment" : {
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:valueAsString" : "$valueAsString",
-                   |    "knora-api:valueHasComment" : "$valueHasComment"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLDEntity = SharedTestDataADM.createTextValueWithCommentRequest(
+                resourceIri = resourceIri,
+                valueAsString = valueAsString,
+                valueHasComment = valueHasComment
+            )
 
-            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            commentValueIri.set(valueIri)
+            textValueWithoutStandoffIri.set(valueIri)
             val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
             valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
 
@@ -617,8 +1033,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = commentValueIri.get,
-                userEmail = incunabulaUserEmail
+                expectedValueIri = textValueWithoutStandoffIri.get,
+                userEmail = anythingUserEmail
             )
 
             val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
@@ -628,51 +1044,29 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not create an empty text value" in {
-            val resourceIri: IRI = zeitglöckleinIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val valueAsString: String = ""
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "incunabula:book",
-                   |  "incunabula:book_comment" : {
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:valueAsString" : "$valueAsString"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLDEntity = SharedTestDataADM.createTextValueWithoutStandoffRequest(
+                resourceIri = resourceIri,
+                valueAsString = valueAsString
+            )
 
-            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.BadRequest, response.toString)
         }
 
         "create a decimal value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
             val decimalValueAsDecimal = BigDecimal(4.3)
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDecimal" : {
-                   |    "@type" : "knora-api:DecimalValue",
-                   |    "knora-api:decimalValueAsDecimal" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$decimalValueAsDecimal"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDecimalValueRequest(
+                resourceIri = resourceIri,
+                decimalValue = decimalValueAsDecimal
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -702,7 +1096,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a date value representing a range with day precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -715,28 +1109,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasEndEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
-                   |    "knora-api:dateValueHasEndDay" : $dateValueHasEndDay,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithDayPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartDay = dateValueHasStartDay,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasEndYear,
+                dateValueHasEndMonth = dateValueHasEndMonth,
+                dateValueHasEndDay = dateValueHasEndDay,
+                dateValueHasEndEra = dateValueHasEndEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -769,7 +1153,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a date value representing a range with month precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -780,26 +1164,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasEndEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithMonthPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasEndYear,
+                dateValueHasEndMonth = dateValueHasEndMonth,
+                dateValueHasEndEra = dateValueHasEndEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -832,7 +1206,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a date value representing a range with year precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -841,24 +1215,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasEndEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithYearPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasEndYear,
+                dateValueHasEndEra = dateValueHasEndEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -892,7 +1256,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
 
         "create a date value representing a single date with day precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -901,28 +1265,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasStartEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasEndDay" : $dateValueHasStartDay,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasStartEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithDayPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartDay = dateValueHasStartDay,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasStartYear,
+                dateValueHasEndMonth = dateValueHasStartMonth,
+                dateValueHasEndDay = dateValueHasStartDay,
+                dateValueHasEndEra = dateValueHasStartEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -955,7 +1309,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a date value representing a single date with month precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -963,26 +1317,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasStartEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasStartEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithMonthPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasStartYear,
+                dateValueHasEndMonth = dateValueHasStartMonth,
+                dateValueHasEndEra = dateValueHasStartEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1015,31 +1359,21 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a date value representing a single date with year precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
             val dateValueHasStartEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasStartEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createDateValueWithYearPrecisionRequest(
+                resourceIri = resourceIri,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasStartYear,
+                dateValueHasEndEra = dateValueHasStartEra
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1072,24 +1406,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a boolean value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
             val booleanValue: Boolean = true
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasBoolean" : {
-                   |    "@type" : "knora-api:BooleanValue",
-                   |    "knora-api:booleanValueAsBoolean" : $booleanValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createBooleanValueRequest(
+                resourceIri = resourceIri,
+                booleanValue = booleanValue
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1114,24 +1439,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a geometry value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
-            val geometryValue = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasGeometry" : {
-                   |    "@type" : "knora-api:GeomValue",
-                   |    "knora-api:geometryValueAsGeometry" : ${stringFormatter.toJsonEncodedString(geometryValue)}
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createGeometryValueRequest(
+                resourceIri = resourceIri,
+                geometryValue = SharedTestDataADM.geometryValue1
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1152,37 +1467,21 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             )
 
             val geometryValueAsGeometry: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry)
-            geometryValueAsGeometry should ===(geometryValue)
+            geometryValueAsGeometry should ===(SharedTestDataADM.geometryValue1)
         }
 
         "create an interval value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val intervalStart = BigDecimal("1.2")
             val intervalEnd = BigDecimal("3.4")
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInterval" : {
-                   |    "@type" : "knora-api:IntervalValue",
-                   |    "knora-api:intervalValueHasStart" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$intervalStart"
-                   |    },
-                   |    "knora-api:intervalValueHasEnd" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$intervalEnd"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createIntervalValueRequest(
+                resourceIri = resourceIri,
+                intervalStart = intervalStart,
+                intervalEnd = intervalEnd
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1220,27 +1519,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a list value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
             val listNode = "http://rdfh.ch/lists/0001/treeList03"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasListItem" : {
-                   |    "@type" : "knora-api:ListValue",
-                   |    "knora-api:listValueAsListNode" : {
-                   |      "@id" : "$listNode"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createListValueRequest(
+                resourceIri = resourceIri,
+                listNode = listNode
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1265,25 +1552,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a color value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
             val color = "#ff3333"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasColor" : {
-                   |    "@type" : "knora-api:ColorValue",
-                   |    "knora-api:colorValueAsColor" : "$color"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createColorValueRequest(
+                resourceIri = resourceIri,
+                color = color
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1308,28 +1585,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a URI value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
             val uri = "https://www.knora.org"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasUri" : {
-                   |    "@type" : "knora-api:UriValue",
-                   |    "knora-api:uriValueAsUri" : {
-                   |      "@type" : "xsd:anyURI",
-                   |      "@value" : "$uri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createUriValueRequest(
+                resourceIri = resourceIri,
+                uri = uri
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1359,25 +1623,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a geoname value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
             val geonameCode = "2661604"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasGeoname" : {
-                   |    "@type" : "knora-api:GeonameValue",
-                   |    "knora-api:geonameValueAsGeonameCode" : "$geonameCode"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createGeonameValueRequest(
+                resourceIri = resourceIri,
+                geonameCode = geonameCode
+            )
 
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1402,29 +1656,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a link between two resources" in {
-            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
-            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
+            val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "knora-api:LinkObj",
-                   |  "knora-api:hasLinkToValue" : {
-                   |    "@type" : "knora-api:LinkValue",
-                   |    "knora-api:linkValueHasTargetIri" : {
-                   |      "@id" : "$zeitglöckleinIri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.createLinkValueRequest(
+                resourceIri = resourceIri,
+                targetResourceIri = SharedTestDataADM.TestDing.iri
+            )
 
-            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -1440,34 +1682,25 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 propertyIriForGravsearch = linkPropertyIri,
                 propertyIriInResult = linkValuePropertyIri,
                 expectedValueIri = linkValueIri.get,
-                userEmail = incunabulaUserEmail
+                userEmail = anythingUserEmail
             )
 
             val savedTarget: JsonLDObject = savedValue.requireObject(OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget)
             val savedTargetIri: IRI = savedTarget.requireString(JsonLDConstants.ID)
-            savedTargetIri should ===(zeitglöckleinIri)
+            savedTargetIri should ===(SharedTestDataADM.TestDing.iri)
         }
 
         "update an integer value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 5
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "${intValueIri.get}",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateIntValueRequest(
+                resourceIri = resourceIri,
+                valueIri = intValueIri.get,
+                intValue = intValue
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1491,28 +1724,44 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             intValueAsInt should ===(intValue)
         }
 
-        "update an integer value with custom permissions" in {
-            val resourceIri: IRI = aThingIri
-            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val intValue: Int = 6
-            val customPermissions: String = "CR http://rdfh.ch/groups/0001/thing-searcher"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+        "not update an integer value if the simple schema is submitted" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val intValue: Int = 10
 
-            val jsonLDEntity =
+            val jsonLdEntity =
                 s"""{
                    |  "@id" : "$resourceIri",
                    |  "@type" : "anything:Thing",
                    |  "anything:hasInteger" : {
                    |    "@id" : "${intValueIri.get}",
                    |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue,
-                   |    "knora-api:hasPermissions" : "$customPermissions"
+                   |    "knora-api:intValueAsInt" : $intValue
                    |  },
                    |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
                    |  }
                    |}""".stripMargin
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.BadRequest, responseAsString)
+        }
+
+        "update an integer value with custom permissions" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue: Int = 6
+            val customPermissions: String = "CR http://rdfh.ch/groups/0001/thing-searcher"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLDEntity = SharedTestDataADM.updateIntValueWithCustomPermissionsRequest(
+                resourceIri = resourceIri,
+                valueIri = intValueIri.get,
+                intValue = intValue,
+                customPermissions = customPermissions
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1539,25 +1788,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update an integer value, changing only the permissions" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val customPermissions: String = "CR http://rdfh.ch/groups/0001/thing-searcher|V knora-admin:KnownUser"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "${intValueIri.get}",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:hasPermissions" : "$customPermissions"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLDEntity = SharedTestDataADM.updateIntValuePermissionsOnlyRequest(
+                resourceIri = resourceIri,
+                valueIri = intValueIri.get,
+                customPermissions = customPermissions
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1581,35 +1821,63 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             hasPermissions should ===(customPermissions)
         }
 
-        "update a text value without standoff" in {
-            val resourceIri: IRI = zeitglöckleinIri
-            val valueAsString: String = "Comment 1a updated"
-            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUserEmail)
+        "update a decimal value" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
+            val decimalValue = BigDecimal(5.6)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLDEntity =
-                s"""
-                   |{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "incunabula:book",
-                   |  "incunabula:book_comment" : {
-                   |    "@id" : "${commentValueIri.get}",
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:valueAsString" : "$valueAsString"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
-                   |  }
-                   |}
-                """.stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateDecimalValueRequest(
+                resourceIri = resourceIri,
+                valueIri = decimalValueIri.get,
+                decimalValue = decimalValue
+            )
 
-            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            commentValueIri.set(valueIri)
+            decimalValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.DecimalValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = decimalValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedDecimalValue: BigDecimal = savedValue.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.DecimalValueAsDecimal,
+                expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
+                stringFormatter.validateBigDecimal
+            )
+
+            savedDecimalValue should ===(decimalValue)
+        }
+
+        "update a text value without standoff" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val valueAsString: String = "Comment 1a updated"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLDEntity = SharedTestDataADM.updateTextValueWithoutStandoffRequest(
+                resourceIri = resourceIri,
+                valueIri = textValueWithoutStandoffIri.get,
+                valueAsString = valueAsString
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            textValueWithoutStandoffIri.set(valueIri)
             val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
             valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
 
@@ -1618,8 +1886,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = commentValueIri.get,
-                userEmail = incunabulaUserEmail
+                expectedValueIri = textValueWithoutStandoffIri.get,
+                userEmail = anythingUserEmail
             )
 
             val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
@@ -1627,42 +1895,24 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a text value with standoff" in {
-            val resourceIri: IRI = aThingIri
-
-            val textValueAsXml: String =
-                """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text>
-                  |   This updated text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
-                  |</text>
-                """.stripMargin
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
 
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasText" : {
-                   |    "@id" : "${thingTextValueIri.get}",
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
-                   |    "knora-api:textValueHasMapping" : {
-                   |      "@id": "$standardMappingIri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLDEntity = SharedTestDataADM.updateTextValueWithStandoffRequest(
+                resourceIri = resourceIri,
+                valueIri = textValueWithStandoffIri.get,
+                textValueAsXml = SharedTestDataADM.textValue2AsXmlWithStandardMapping,
+                mappingIri = SharedTestDataADM.standardMappingIri
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            thingTextValueIri.set(valueIri)
+            textValueWithStandoffIri.set(valueIri)
             val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
             valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
 
@@ -1671,7 +1921,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = thingTextValueIri.get,
+                expectedValueIri = textValueWithStandoffIri.get,
                 userEmail = anythingUserEmail
             )
 
@@ -1681,19 +1931,20 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a text value with standoff containing escaped text" in {
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
+            val resourceIri = SharedTestDataADM.AThing.iri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
             val jsonLDEntity = FileUtil.readTextFile(new File("src/test/resources/test-data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
-            val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", thingTextValueWithEscapeIri.get)
+            val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            thingTextValueWithEscapeIri.set(valueIri)
+            textValueWithEscapeIri.set(valueIri)
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
 
             val savedValue: JsonLDObject = getValue(
-                resourceIri = aThingIri,
+                resourceIri = resourceIri,
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
@@ -1711,34 +1962,25 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a text value with a comment" in {
-            val resourceIri: IRI = zeitglöckleinIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val valueAsString: String = "this is a text value that has an updated comment"
             val valueHasComment: String = "this is an updated comment"
-            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUserEmail)
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "incunabula:book",
-                   |  "incunabula:book_comment" : {
-                   |    "@id" : "${commentValueIri.get}",
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:valueAsString" : "$valueAsString",
-                   |    "knora-api:valueHasComment" : "$valueHasComment"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLDEntity = SharedTestDataADM.updateTextValueWithCommentRequest(
+                resourceIri = resourceIri,
+                valueIri = textValueWithoutStandoffIri.get,
+                valueAsString = valueAsString,
+                valueHasComment = valueHasComment
+            )
 
-            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
             val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            commentValueIri.set(valueIri)
+            textValueWithoutStandoffIri.set(valueIri)
             val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
             valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
 
@@ -1747,8 +1989,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = commentValueIri.get,
-                userEmail = incunabulaUserEmail
+                expectedValueIri = textValueWithoutStandoffIri.get,
+                userEmail = anythingUserEmail
             )
 
             val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
@@ -1758,31 +2000,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "not update a text value so it's empty" in {
-            val resourceIri: IRI = zeitglöckleinIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val valueAsString: String = ""
 
-            val jsonLDEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "incunabula:book",
-                   |  "incunabula:book_comment" : {
-                   |    "@id" : "${commentValueIri.get}",
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:valueAsString" : "$valueAsString"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLDEntity = SharedTestDataADM.updateTextValueWithoutStandoffRequest(
+                resourceIri = resourceIri,
+                valueIri = textValueWithoutStandoffIri.get,
+                valueAsString = valueAsString
+            )
 
-            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.BadRequest, response.toString)
         }
 
         "update a date value representing a range with day precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -1795,29 +2028,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasEndEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@id" : "${dateValueIri.get}",
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
-                   |    "knora-api:dateValueHasEndDay" : $dateValueHasEndDay,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateDateValueWithDayPrecisionRequest(
+                resourceIri = resourceIri,
+                valueIri = dateValueIri.get,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartDay = dateValueHasStartDay,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasEndYear,
+                dateValueHasEndMonth = dateValueHasEndMonth,
+                dateValueHasEndDay = dateValueHasEndDay,
+                dateValueHasEndEra = dateValueHasEndEra
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1850,7 +2073,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a date value representing a range with month precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -1861,27 +2084,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasEndEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@id" : "${dateValueIri.get}",
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateDateValueWithMonthPrecisionRequest(
+                resourceIri = resourceIri,
+                valueIri = dateValueIri.get,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasEndYear,
+                dateValueHasEndMonth = dateValueHasEndMonth,
+                dateValueHasEndEra = dateValueHasEndEra
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1914,7 +2127,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a date value representing a range with year precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -1923,25 +2136,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasEndEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@id" : "${dateValueIri.get}",
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateDateValueWithYearPrecisionRequest(
+                resourceIri = resourceIri,
+                valueIri = dateValueIri.get,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasEndYear,
+                dateValueHasEndEra = dateValueHasEndEra
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -1974,7 +2177,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a date value representing a single date with day precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -1983,29 +2186,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasStartEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@id" : "${dateValueIri.get}",
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasEndDay" : $dateValueHasStartDay,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasStartEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateDateValueWithDayPrecisionRequest(
+                resourceIri = resourceIri,
+                valueIri = dateValueIri.get,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartDay = dateValueHasStartDay,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasStartYear,
+                dateValueHasEndMonth = dateValueHasStartMonth,
+                dateValueHasEndDay = dateValueHasStartDay,
+                dateValueHasEndEra = dateValueHasStartEra
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -2038,7 +2231,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a date value representing a single date with month precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2018
@@ -2046,27 +2239,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val dateValueHasStartEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@id" : "${dateValueIri.get}",
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasEndMonth" : $dateValueHasStartMonth,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasStartEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateDateValueWithMonthPrecisionRequest(
+                resourceIri = resourceIri,
+                valueIri = dateValueIri.get,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartMonth = dateValueHasStartMonth,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasStartYear,
+                dateValueHasEndMonth = dateValueHasStartMonth,
+                dateValueHasEndEra = dateValueHasStartEra
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -2099,32 +2282,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a date value representing a single date with year precision" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val dateValueHasCalendar = "GREGORIAN"
             val dateValueHasStartYear = 2019
             val dateValueHasStartEra = "CE"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDate" : {
-                   |    "@id" : "${dateValueIri.get}",
-                   |    "@type" : "knora-api:DateValue",
-                   |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-                   |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-                   |    "knora-api:dateValueHasEndYear" : $dateValueHasStartYear,
-                   |    "knora-api:dateValueHasEndEra" : "$dateValueHasStartEra"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateDateValueWithYearPrecisionRequest(
+                resourceIri = resourceIri,
+                valueIri = dateValueIri.get,
+                dateValueHasCalendar = dateValueHasCalendar,
+                dateValueHasStartYear = dateValueHasStartYear,
+                dateValueHasStartEra = dateValueHasStartEra,
+                dateValueHasEndYear = dateValueHasStartYear,
+                dateValueHasEndEra = dateValueHasStartEra
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -2157,25 +2330,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a boolean value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
             val booleanValue: Boolean = false
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasBoolean" : {
-                   |    "@id" : "${booleanValueIri.get}",
-                   |    "@type" : "knora-api:BooleanValue",
-                   |    "knora-api:booleanValueAsBoolean" : $booleanValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateBooleanValueRequest(
+                resourceIri = resourceIri,
+                valueIri = booleanValueIri.get,
+                booleanValue = booleanValue
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -2200,25 +2364,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a geometry value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
-            val geometryValue = """{"status":"active","lineColor":"#ff3344","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasGeometry" : {
-                   |    "@id" : "${geometryValueIri.get}",
-                   |    "@type" : "knora-api:GeomValue",
-                   |    "knora-api:geometryValueAsGeometry" : ${stringFormatter.toJsonEncodedString(geometryValue)}
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateGeometryValueRequest(
+                resourceIri = resourceIri,
+                valueIri = geometryValueIri.get,
+                geometryValue = SharedTestDataADM.geometryValue2
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -2239,38 +2393,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             )
 
             val geometryValueAsGeometry: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.GeometryValueAsGeometry)
-            geometryValueAsGeometry should ===(geometryValue)
+            geometryValueAsGeometry should ===(SharedTestDataADM.geometryValue2)
         }
 
         "update an interval value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val intervalStart = BigDecimal("5.6")
             val intervalEnd = BigDecimal("7.8")
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInterval" : {
-                   |    "@id" : "${intervalValueIri.get}",
-                   |    "@type" : "knora-api:IntervalValue",
-                   |    "knora-api:intervalValueHasStart" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$intervalStart"
-                   |    },
-                   |    "knora-api:intervalValueHasEnd" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$intervalEnd"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateIntervalValueRequest(
+                resourceIri = resourceIri,
+                valueIri = intervalValueIri.get,
+                intervalStart = intervalStart,
+                intervalEnd = intervalEnd
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -2308,28 +2446,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a list value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
             val listNode = "http://rdfh.ch/lists/0001/treeList02"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasListItem" : {
-                   |    "@id" : "${listValueIri.get}",
-                   |    "@type" : "knora-api:ListValue",
-                   |    "knora-api:listValueAsListNode" : {
-                   |      "@id" : "$listNode"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateListValueRequest(
+                resourceIri = resourceIri,
+                valueIri = listValueIri.get,
+                listNode = listNode
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -2354,26 +2480,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a color value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
             val color = "#ff3344"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasColor" : {
-                   |    "@id" : "${colorValueIri.get}",
-                   |    "@type" : "knora-api:ColorValue",
-                   |    "knora-api:colorValueAsColor" : "$color"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateColorValueRequest(
+                resourceIri = resourceIri,
+                valueIri = colorValueIri.get,
+                color = color
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -2398,29 +2514,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a URI value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
             val uri = "https://docs.knora.org"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasUri" : {
-                   |    "@id" : "${uriValueIri.get}",
-                   |    "@type" : "knora-api:UriValue",
-                   |    "knora-api:uriValueAsUri" : {
-                   |      "@type" : "xsd:anyURI",
-                   |      "@value" : "$uri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateUriValueRequest(
+                resourceIri = resourceIri,
+                valueIri = uriValueIri.get,
+                uri = uri
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -2450,26 +2553,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a geoname value" in {
-            val resourceIri: IRI = aThingIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
             val geonameCode = "2988507"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasGeoname" : {
-                   |    "@id" : "${geonameValueIri.get}",
-                   |    "@type" : "knora-api:GeonameValue",
-                   |    "knora-api:geonameValueAsGeonameCode" : "$geonameCode"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateGeonameValueRequest(
+                resourceIri = resourceIri,
+                valueIri = geonameValueIri.get,
+                geonameCode = geonameCode
+            )
 
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -2494,30 +2587,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a link between two resources" in {
-            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
-            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
-            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
+            val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
+            val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "knora-api:LinkObj",
-                   |  "knora-api:hasLinkToValue" : {
-                   |    "@id" : "${linkValueIri.get}",
-                   |    "@type" : "knora-api:LinkValue",
-                   |    "knora-api:linkValueHasTargetIri" : {
-                   |      "@id" : "$generationeIri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateLinkValueRequest(
+                resourceIri = resourceIri,
+                valueIri = linkValueIri.get,
+                targetResourceIri = linkTargetIri
+            )
 
-            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2533,52 +2615,76 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 propertyIriForGravsearch = linkPropertyIri,
                 propertyIriInResult = linkValuePropertyIri,
                 expectedValueIri = linkValueIri.get,
-                userEmail = incunabulaUserEmail
+                userEmail = anythingUserEmail
             )
 
             val savedTarget: JsonLDObject = savedValue.requireObject(OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget)
             val savedTargetIri: IRI = savedTarget.requireString(JsonLDConstants.ID)
-            savedTargetIri should ===(generationeIri)
+            savedTargetIri should ===(linkTargetIri)
         }
 
         "delete an integer value" in {
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$aThingIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "${intValueIri.get}",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:deleteComment" : "this value was incorrect"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.deleteIntValueRequest(
+                resourceIri = SharedTestDataADM.AThing.iri,
+                valueIri = intValueIri.get,
+                maybeDeleteComment = Some("this value was incorrect")
+            )
 
             val request = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
         }
 
-        "delete a link between two resources" in {
+        "not delete an integer value if the simple schema is submitted" in {
             val jsonLdEntity =
                 s"""{
-                   |  "@id" : "http://rdfh.ch/0803/cb1a74e3e2f6",
-                   |  "@type" : "knora-api:LinkObj",
-                   |  "knora-api:hasLinkToValue" : {
-                   |    "@id": "${linkValueIri.get}",
-                   |    "@type" : "knora-api:LinkValue"
+                   |  "@id" : "${SharedTestDataADM.AThing.iri}",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasInteger" : {
+                   |    "@id" : "${intValueIri.get}",
+                   |    "@type" : "knora-api:IntValue"
                    |  },
                    |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
                    |  }
                    |}""".stripMargin
 
-            val request = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val request = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.BadRequest, responseAsString)
+        }
+
+        "delete an integer value without supplying a delete comment" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
+            val valueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg"
+
+            val jsonLdEntity = SharedTestDataADM.deleteIntValueRequest(
+                resourceIri = resourceIri,
+                valueIri = valueIri,
+                maybeDeleteComment = None
+            )
+
+            val deleteRequest = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingUser2.email, password))
+            val deleteResponse: HttpResponse = singleAwaitingRequest(deleteRequest)
+            assert(deleteResponse.status == StatusCodes.OK, deleteResponse.toString)
+
+            // Request the resource as it was before the value was deleted.
+
+            val getRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}?version=${URLEncoder.encode("2018-05-28T15:52:03.897Z", "UTF-8")}")
+            val getResponse: HttpResponse = singleAwaitingRequest(getRequest)
+            val getResponseAsString = responseToString(getResponse)
+            assert(getResponse.status == StatusCodes.OK, getResponseAsString)
+        }
+
+        "delete a link between two resources" in {
+            val jsonLdEntity = SharedTestDataADM.deleteLinkValueRequest(
+                resourceIri = SharedTestDataADM.AThing.iri,
+                valueIri = linkValueIri.get
+            )
+
+            val request = Post(baseApiUrl + "/v2/values/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
         }

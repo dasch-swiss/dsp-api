@@ -33,6 +33,7 @@ import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util._
@@ -45,6 +46,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Tests the API v2 resources route.
   */
+@E2ETest
 class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -64,10 +66,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-
     )
 
-    private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker()
+    private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
 
     "The resources v2 endpoint" should {
         "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
@@ -173,6 +174,15 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             val responseAsString = responseToString(response)
             assert(response.status == StatusCodes.OK, responseAsString)
             val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+        }
+
+        "perform a resource request for the first page of the book '[Das] Narrenschiff (lat.)' using the complex schema" in {
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/7bbb8e59b703", "UTF-8")}")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeTestDataFiles)
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
@@ -300,6 +310,22 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             instanceChecker.check(
                 instanceResponse = responseAsString,
                 expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+                knoraRouteGet = doGetRequest
+            )
+        }
+
+        "perform a full resource request for a resource with values of different types" in {
+            val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw", "UTF-8")}")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/Testding.jsonld"), writeTestDataFiles)
+            compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
+
+            // Check that the resource corresponds to the ontology.
+            instanceChecker.check(
+                instanceResponse = responseAsString,
+                expectedClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                 knoraRouteGet = doGetRequest
             )
         }
@@ -611,6 +637,16 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(text == "this is text with standoff")
         }
 
+        "create a resource whose label contains a Unicode escape and quotation marks" in {
+            val jsonLDEntity: String = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithUnicodeEscape.jsonld"))
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri.toSmartIri.isKnoraDataIri)
+        }
+
         "create a resource with a custom creation date" in {
             val creationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
 
@@ -785,7 +821,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
             val jsonLDEntity =
                 s"""|{
-                    |  "@id" : "http://rdfh.ch/0001/a-thing",
+                    |  "@id" : "$resourceIri",
                     |  "@type" : "anything:Thing",
                     |  "knora-api:lastModificationDate" : {
                     |    "@type" : "xsd:dateTimeStamp",
@@ -812,7 +848,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
         }
 
-        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" in {
+        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
             // Create a resource containing the text of Hamlet.
 
             val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
@@ -850,7 +886,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             hamletResourceIri.set(resourceIri)
         }
 
-        "read the large text and its markup as XML, and check that it matches the original XML" in {
+        "read the large text and its markup as XML, and check that it matches the original XML" ignore { // depends on previous test
             val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
 
             // Request the newly created resource.
@@ -875,7 +911,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             xmlDiff.hasDifferences should be(false)
         }
 
-        "read the large text without its markup, and get the markup separately as pages of standoff" in {
+        "read the large text without its markup, and get the markup separately as pages of standoff" ignore { // depends on previous test
             // Get the resource without markup.
             val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}").addHeader(new MarkupHeader(RouteUtilV2.MARKUP_STANDOFF)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)
@@ -937,6 +973,38 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                     knoraRouteGet = doGetRequest
                 )
            }
+        }
+
+        "erase a resource" in {
+            val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+            val resourceLastModificationDate = Instant.parse("2019-02-13T09:05:10Z")
+
+            val jsonLDEntity =
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "knora-api:lastModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$resourceLastModificationDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
+
+            val updateRequest = Post(s"$baseApiUrl/v2/resources/erase", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
+            val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
+            val updateResponseAsString = responseToString(updateResponse)
+            assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+
+            val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
+            val previewResponseAsString = responseToString(previewResponse)
+            assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
         }
     }
 }

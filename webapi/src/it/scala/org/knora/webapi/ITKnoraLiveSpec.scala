@@ -96,9 +96,25 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         appActor ! AppStop()
     }
 
+    protected def checkIfSipiIsRunning(): Unit = {
+        // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
+        val request = Get(baseSipiUrl + "/server/test.html")
+        val response = singleAwaitingRequest(request)
+        assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
+        if (response.status.isSuccess()) logger.info("Sipi is running.")
+        response.entity.discardBytes()
+    }
+
+    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+        logger.info("Loading test data started ...")
+        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        singleAwaitingRequest(request, 479999.milliseconds)
+        logger.info("Loading test data done.")
+    }
+
     protected def getResponseString(request: HttpRequest): String = {
         val response: HttpResponse = singleAwaitingRequest(request)
-        val responseBodyStr: String = Await.result(response.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
+        val responseBodyStr: String = Await.result(response.entity.toStrict(10999.milliseconds).map(_.data.decodeString("UTF-8")), 10.seconds)
         assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
         responseBodyStr
     }
@@ -111,28 +127,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         getResponseString(request).parseJson.asJsObject
     }
 
-    protected def checkIfKnoraIsRunning(): Unit = {
-        val request = Get(baseApiUrl + "/health")
-        val response = singleAwaitingRequest(request)
-        assert(response.status == StatusCodes.OK, s"Knora is probably not running: ${response.status}")
-        if (response.status.isSuccess()) logger.info("Knora is running.")
-    }
-
-    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 8.minutes)
-    }
-
-    protected def checkIfSipiIsRunning(): Unit = {
-        // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
-        val request = Get(baseSipiUrl + "/server/test.html")
-        val response = singleAwaitingRequest(request)
-        assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
-        if (response.status.isSuccess()) logger.info("Sipi is running.")
-        response.entity.discardBytes()
-    }
-
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 5999.milliseconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }

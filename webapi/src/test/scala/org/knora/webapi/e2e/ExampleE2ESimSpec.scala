@@ -23,6 +23,7 @@ import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import org.knora.webapi.E2ESimSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.testing.tags.E2ETest
 
 import scala.concurrent.duration._
 
@@ -31,7 +32,8 @@ import scala.concurrent.duration._
   *
   * This simulation scenario accesses the users endpoint with
   * 1000 users concurrently.
-  * */
+  */
+@E2ETest
 class ExampleE2ESimSpec extends E2ESimSpec {
 
     override lazy val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]

@@ -30,6 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v2.ResourcesRouteV2
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.jsonld.JsonLDUtil
 import org.knora.webapi.util.{FileUtil, JavaUtil}
 
@@ -38,6 +39,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * End-to-end specification for the handling of JSONLD documents.
   */
+@E2ETest
 class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =
@@ -63,13 +65,13 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
         "expand prefixes (on the client side)" in {
 
             // JSONLD with prefixes and context object
-            val jsonldWithPrefixes = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"))
+            val jsonldWithPrefixes = readOrWriteTextFile("", new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false)
 
             // expand JSONLD with JSONLD processor
             val jsonldParsedExpanded = JsonLDUtil.parseJsonLD(jsonldWithPrefixes)
 
             // expected result after expansion
-            val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld")))
+            val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(readOrWriteTextFile("", new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"), writeFile = false))
 
             compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonldExpandedParsed, receivedResponse = jsonldParsedExpanded)
 
@@ -81,9 +83,9 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val receivedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(JsonUtils.fromString(responseAs[String])).asInstanceOf[Map[IRI, Any]]
+                val receivedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavaToScala(JsonUtils.fromString(responseAs[String])).asInstanceOf[Map[IRI, Any]]
 
-                val expectedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(JsonUtils.fromString(FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld")))).asInstanceOf[Map[String, Any]]
+                val expectedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavaToScala(JsonUtils.fromString(readOrWriteTextFile("", new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false))).asInstanceOf[Map[String, Any]]
 
                 assert(receivedJSONLDAsScala("@context") == expectedJSONLDAsScala("@context"), "@context incorrect")
 

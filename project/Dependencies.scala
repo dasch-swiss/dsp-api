@@ -49,9 +49,9 @@ object Dependencies {
         akkaHttpVersion := "10.1.7",
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
-        sipiImage := "dhlabbasel/sipi:v1.4.3",
-        gdbSEImage := "ontotext/graphdb:8.5.0-se",
-        gdbFreeImage := "dhlabbasel/graphdb:8.10.0-free"
+        sipiImage := "dhlabbasel/sipi:v2.0.1",
+        gdbSEImage := "daschswiss/graphdb:9.0.0-se",
+        gdbFreeImage := "daschswiss/graphdb:9.0.0-free"
     )
 
     // the user can change the default 'graphdb-se' value by creating an environment variable containing 'graphdb-free'
@@ -121,7 +121,7 @@ object Dependencies {
         val xmlunitCore            = "org.xmlunit"                              % "xmlunit-core"             % "2.1.1"
 
         // other
-        val rdf4jRuntime           = "org.eclipse.rdf4j"                        % "rdf4j-runtime"            % "2.3.2"
+        val rdf4jRuntime           = "org.eclipse.rdf4j"                        % "rdf4j-runtime"            % "3.0.0"
         val scallop                = "org.rogach"                              %% "scallop"                  % "3.2.0"
         val gwtServlet             = "com.google.gwt"                           % "gwt-servlet"              % "2.8.0"
         val saxonHE                = "net.sf.saxon"                             % "Saxon-HE"                 % "9.9.0-2"
@@ -167,6 +167,15 @@ object Dependencies {
 
     }
 
+    object TestBinaries {
+        val akkaTestkit            = Def.setting {"com.typesafe.akka"            %% "akka-testkit"             % akkaVersion.value}
+        val akkaStreamTestkit      = Def.setting {"com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion.value}
+        val akkaHttpTestkit        = Def.setting {"com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion.value}
+        val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.0.4"
+        val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "2.3.1"
+        val gatlingTestFramework   = "io.gatling"                                 % "gatling-test-framework"   % "2.3.1"
+    }
+
     import Compile._
 
     val l = libraryDependencies
@@ -200,6 +209,7 @@ object Dependencies {
         akkaStream.value,
         WebapiTest.akkaStreamTestkit.value,
         WebapiTest.akkaTestkit.value,
+        apacheHttpClient,
         bcprov,
         chill,
         commonsBeanUtil,
@@ -211,6 +221,7 @@ object Dependencies {
         WebapiTest.gatlingHighcharts,
         WebapiTest.gatlingTestFramework,
         gwtServlet,
+        icu4j,
         jacksonScala,
         jaxbApi,
         jsonldJava,
@@ -237,9 +248,22 @@ object Dependencies {
         springSecurityCore,
         swaggerAkkaHttp,
         typesafeConfig,
-        xmlunitCore,
-        icu4j,
-        apacheHttpClient
+        xmlunitCore
+    )
+
+    val upgradeLibraryDependencies = l ++= Seq[sbt.ModuleID](
+        rdf4jRuntime,
+        SalsahTest.scalaTest,
+        scallop
+    )
+
+    val webapiTestAndITLibraryDependencies = l ++= Seq[sbt.ModuleID](
+        //TestBinaries.akkaTestkit,
+        //TestBinaries.akkaStreamTestkit,
+        //TestBinaries.akkaHttpTestkit,
+        TestBinaries.gatlingHighcharts,
+        TestBinaries.gatlingTestFramework,
+        TestBinaries.scalaTest
     )
 
 

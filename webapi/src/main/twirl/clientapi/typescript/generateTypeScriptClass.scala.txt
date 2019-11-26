@@ -20,20 +20,15 @@
 @import org.knora.webapi._
 @import org.knora.webapi.util._
 @import org.knora.webapi.util.clientapi._
-@import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
+@import org.knora.webapi.util.clientapi.TypeScriptBackEnd._
 @import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 
 @(classDef: ClientClassDefinition,
-  interfacePathInClass: String,
-  importedClasses: Seq[ImportInfo])
+  subClassOf: Option[ClassRef],
+  importedClasses: Seq[ImportInfo])import { JsonObject, JsonProperty } from "json2typescript";
 
-import { Any, JsonObject, JsonProperty } from "json2typescript";
-
-import { I@{classDef.className} } from "@interfacePathInClass";
-@for(classInfo <- importedClasses) {
-import { @classInfo.className } from "@classInfo.importPath";}
-
-@classDef.classDescription match {
+@for(classInfo <- importedClasses) {import { @classInfo.className } from "@classInfo.importPath";
+}@classDef.classDescription match {
     case Some(classDescStr) => {
 /**
  * @classDescStr
@@ -42,70 +37,21 @@ import { @classInfo.className } from "@classInfo.importPath";}
     case None => {}
 }
 @@JsonObject("@{classDef.className}")
-export class @{classDef.className} implements I@{classDef.className} {
+export class @{classDef.className}@{
+    subClassOf match {
+       case Some(subClassDef) => " extends " + subClassDef.className
+       case None => ""
+    }
+} {
 @for(property <- classDef.properties) {
-@defining(makeTypeScriptType(property.objectType)) { typeScriptType => @property.propertyDescription match {
-    case Some(propDescStr) => {  /**
+@defining(makePropertyObjectType(property.objectType)) { propertyObjectType => @property.propertyDescription match {
+    case Some(propDescStr) => {   /**
      * @propDescStr
      */}
 
     case None => {}
     }
-    @@JsonProperty("@{property.propertyName}", @wrapInArrayForCardinality(typeScriptType.capitalize, property.cardinality))
-    public @{property.propertyName}@handleOption(property.cardinality): @addForCardinality(typeScriptType, property.cardinality) = @makeDefaultValue(property.objectType, property.cardinality);
+    @@JsonProperty("@{property.propertyName}", @makeJson2TypeScriptType(property)@if(property.cardinality == MayHaveOne || property.isOptionalSet) {, true})
+    @{property.propertyName}@handleOption(property): @addBracketsForCardinality(propertyObjectType, property.cardinality) = @makeDefaultValue(property);
 }}
-}
-
-@makeTypeScriptType(objectType: ClientObjectType) = @{
-    objectType match {
-        case StringDatatype => "string"
-        case BooleanDatatype => "boolean"
-        case IntegerDatatype => "number"
-        case DecimalDatatype => "number"
-        case UriDatatype => "string"
-        case DateTimeStampDatatype => "string"
-        case classRef: ClassRef => classRef.className
-        case other => throw ClientApiGenerationException(s"Type $other not yet supported")
-    }
-}
-
-@makeDefaultValue(objectType: ClientObjectType, cardinality: Cardinality) = @{
-    if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
-        "[]"
-    } else {
-        objectType match {
-           case StringDatatype => "\"\""
-           case BooleanDatatype => "false"
-           case IntegerDatatype => "0"
-           case DecimalDatatype => "0"
-           case UriDatatype => "\"\""
-           case DateTimeStampDatatype => "\"\""
-           case classRef: ClassRef => "null"
-           case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
-        }
-    }
-}
-
-@wrapInArrayForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
-    if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
-        s"[$typeScriptType]"
-    } else {
-        typeScriptType
-    }
-}
-
-@handleOption(cardinality: Cardinality) = @{
-    if (cardinality == MayHaveOne) {
-        "?"
-    } else {
-        ""
-    }
-}
-
-@addForCardinality(typeScriptType: String, cardinality: Cardinality) = @{
-    if (cardinality == MayHaveMany || cardinality == MustHaveSome) {
-        s"$typeScriptType[]"
-    } else {
-        typeScriptType
-    }
 }

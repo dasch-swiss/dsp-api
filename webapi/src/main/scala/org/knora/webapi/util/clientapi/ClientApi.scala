@@ -19,18 +19,60 @@
 
 package org.knora.webapi.util.clientapi
 
+import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.HttpRequest
+import akka.stream.ActorMaterializer
+import org.knora.webapi.ClientApiGenerationException
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Cardinality
 import org.knora.webapi.util.SmartIri
 
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+
+/**
+  * A trait for enumerated values representing API serialisation formats.
+  */
+trait ApiSerialisationFormat
+
+/**
+  * Indicates that an API uses plain JSON as its serialisation format.
+  */
+case object Json extends ApiSerialisationFormat
+
+/**
+  * Indicates that an API uses JSON-LD as its serialisation format.
+  */
+case object JsonLD extends ApiSerialisationFormat
 
 /**
   * Represents a client API.
   */
 trait ClientApi {
     /**
+      * If `true`, generate endpoints for this API.
+      */
+    val generateEndpoints: Boolean = true
+
+    /**
+      * If `true`, generate classes for this API.
+      */
+    val generateClasses: Boolean = true
+
+    /**
+      * The serialisation format used by the API.
+      */
+    val serialisationFormat: ApiSerialisationFormat
+
+    /**
       * The machine-readable name of the API.
       */
     val name: String
+
+    /**
+      * The name of a directory in which the API code can be generated.
+      */
+    val directoryName: String
 
     /**
       * The URL path of the API.
@@ -48,9 +90,73 @@ trait ClientApi {
     val endpoints: Seq[ClientEndpoint]
 
     /**
+      * A map of class IRIs to their read-only properties. Each class in this collection will
+      * be separated into a base class without the read-only properties, and a subclass with the
+      * read-only properties.
+      */
+    val classesWithReadOnlyProperties: Map[SmartIri, Set[SmartIri]]
+
+    /**
+      * A map of class IRIs to IRIs of optional set properties. Such properties have cardinality 0-n, and should
+      * be made optional in generated code.
+      */
+    val classesWithOptionalSetProperties: Map[SmartIri, Set[SmartIri]]
+
+    /**
+      * A set of IRIs of classes that represent API responses and whose contents are therefore
+      * always read-only.
+      */
+    val responseClasses: Set[SmartIri]
+
+    /**
+      * A set of property IRIs that are used for the unique IDs of objects.
+      */
+    val idProperties: Set[SmartIri]
+
+    /**
+      * A map of class IRIs to maps of property IRIs to non-standard names that those properties must have
+      * in those classes. Needed only for JSON, and only if two different properties should have the same name in
+      * different classes. `JsonInstanceInspector` also needs to know about these.
+      */
+    val propertyNames: Map[SmartIri, Map[SmartIri, String]]
+
+    /**
+      * Class IRIs that are used by this API, other than the ones used in endpoints.
+      */
+    val generalClassIrisUsed: Set[SmartIri] = Set.empty
+
+    /**
       * The IRIs of the classes used by this API.
       */
-    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet
+    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet ++ generalClassIrisUsed
+
+    /**
+      * Returns test data for this API and its endpoints.
+      *
+      * @param testDataDirectoryPath the path of the top-level test data directory.
+      * @return a set of test data files to be used for testing this API and its endpoints.
+      */
+    def getTestData(testDataDirectoryPath: Seq[String])(implicit executionContext: ExecutionContext,
+                                                        actorSystem: ActorSystem,
+                                                        materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+        for {
+            endpointTestData <- Future.sequence {
+                endpoints.map {
+                    endpoint: ClientEndpoint =>
+                        for {
+                            endpointTestData: Set[SourceCodeFileContent] <- endpoint.getTestData
+                        } yield endpointTestData.map {
+                            sourceCodeFileContent: SourceCodeFileContent =>
+                                sourceCodeFileContent.copy(
+                                    filePath = sourceCodeFileContent.filePath.copy(
+                                        directoryPath = testDataDirectoryPath :+ directoryName :+ endpoint.directoryName
+                                    )
+                                )
+                        }
+                }
+            }
+        } yield endpointTestData.flatten.toSet
+    }
 }
 
 /**
@@ -61,6 +167,11 @@ trait ClientEndpoint {
       * The machine-readable name of the endpoint.
       */
     val name: String
+
+    /**
+      * The name of a directory in which the endpoint code can be generated.
+      */
+    val directoryName: String
 
     /**
       * The URL path of the endpoint, relative to its API path.
@@ -95,12 +206,41 @@ trait ClientEndpoint {
 
             paramClasses ++ maybeReturnedClass
     }.toSet
+
+    /**
+      * Makes a request to Knora to get test data.
+      *
+      * @param request the request to send.
+      * @return the string value of the response.
+      */
+    protected def doTestDataRequest(request: HttpRequest)(implicit executionContext: ExecutionContext,
+                                                          actorSystem: ActorSystem,
+                                                          materializer: ActorMaterializer): Future[String] = {
+        for {
+            response <- Http().singleRequest(request)
+            responseStr <- response.entity.toStrict(10240.millis).map(_.data.decodeString("UTF-8"))
+
+            _ = if (response.status.isFailure) {
+                throw ClientApiGenerationException(s"Failed to get test data: $responseStr")
+            }
+        } yield responseStr
+    }
+
+    /**
+      * Returns test data for this endpoint.
+      *
+      * @return a set of test data files to be used for testing this endpoint. The directory paths should be empty.
+      */
+    def getTestData(implicit executionContext: ExecutionContext,
+                    actorSystem: ActorSystem,
+                    materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]]
 }
 
 /**
   * A DSL for defining functions in client endpoints.
   */
 object EndpointFunctionDSL {
+
     import scala.language.implicitConversions
 
     /**
@@ -151,7 +291,7 @@ object EndpointFunctionDSL {
       * @param classIri the IRI of the class.
       * @return a [[ClassRef]] that can be used for referring to the class.
       */
-    def classRef(classIri: SmartIri) = ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
+    def classRef(classIri: SmartIri): ClassRef = ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
 
     /**
       * Constructs a [[StringLiteralValue]].
@@ -477,7 +617,7 @@ case class IntegerLiteralValue(value: Int) extends LiteralValue {
   * @param convertTo          if provided, the type that the argument should be converted to.
   */
 case class ArgValue(name: String, memberVariableName: Option[String] = None, convertTo: Option[ClientObjectType] = None) extends Value with HttpRequestBody {
-    def as(convertTo: ClientObjectType):ArgValue = copy(convertTo = Some(convertTo))
+    def as(convertTo: ClientObjectType): ArgValue = copy(convertTo = Some(convertTo))
 }
 
 /**
@@ -499,18 +639,20 @@ case class JsonRequestBody(jsonObject: Seq[(String, Value)]) extends HttpRequest
   * @param classDescription a description of the class.
   * @param classIri         the IRI of the class in the Knora API.
   * @param properties       definitions of the properties used in the class.
+  * @param subClassOf       the IRI of the class's base class (used only in generated subclasses).
   */
 case class ClientClassDefinition(className: String,
                                  classDescription: Option[String],
                                  classIri: SmartIri,
-                                 properties: Vector[ClientPropertyDefinition]) {
+                                 properties: Vector[ClientPropertyDefinition],
+                                 subClassOf: Option[SmartIri] = None) {
     /**
       * The classes used by this class.
       */
     lazy val classObjectTypesUsed: Set[ClassRef] = properties.foldLeft(Set.empty[ClassRef]) {
         (acc, property) =>
             property.objectType match {
-                case classRef: ClassRef => acc + classRef
+                case typeWithClassIri: TypeWithClassIri => acc ++ typeWithClassIri.getClassRef
                 case _ => acc
             }
     }
@@ -524,6 +666,7 @@ case class ClientClassDefinition(className: String,
   * @param propertyIri         the IRI of the property in the Knora API.
   * @param objectType          the type of object that the property points to.
   * @param cardinality         the cardinality of the property in the class.
+  * @param isOptionalSet       `true` if this property represents an optional set.
   * @param isEditable          `true` if the property's value is editable via the API.
   */
 case class ClientPropertyDefinition(propertyName: String,
@@ -531,6 +674,7 @@ case class ClientPropertyDefinition(propertyName: String,
                                     propertyIri: SmartIri,
                                     objectType: ClientObjectType,
                                     cardinality: Cardinality,
+                                    isOptionalSet: Boolean,
                                     isEditable: Boolean)
 
 /**
@@ -541,12 +685,12 @@ sealed trait ClientObjectType
 /**
   * A trait for datatypes.
   */
-sealed trait ClientDatatype extends ClientObjectType
+sealed trait ClientDatatype extends MapValueType with ArrayElementType
 
 /**
   * The type of string datatype values.
   */
-case object StringDatatype extends ClientDatatype
+case object StringDatatype extends ClientDatatype with MapKeyDatatype
 
 /**
   * The type of boolean datatype values.
@@ -566,12 +710,77 @@ case object DecimalDatatype extends ClientDatatype
 /**
   * The type of URI datatype values.
   */
-case object UriDatatype extends ClientDatatype
+case object UriDatatype extends ClientDatatype with MapKeyDatatype
 
 /**
   * The type of timestamp datatype values.
   */
 case object DateTimeStampDatatype extends ClientDatatype
+
+/**
+  * A trait for types that may refer to a class IRI, either because the type represents that class,
+  * or because it is a collection type with a type variable referring to that class.
+  */
+sealed trait TypeWithClassIri {
+    /**
+      * Returns the class IRI, if any, that the type refers to.
+      */
+    def getClassIri: Option[SmartIri]
+
+    /**
+      * Returns a [[ClassRef]] representing the class IRI, if any, that the type refers to.
+      */
+    def getClassRef: Option[ClassRef] = {
+        getClassIri.map {
+            classIri => ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
+        }
+    }
+}
+
+/**
+  * A trait for types representing collections in the target language.
+  */
+sealed trait CollectionType extends ClientObjectType with TypeWithClassIri
+
+/**
+  * A trait for types that can be keys in [[MapType]] data structures.
+  */
+sealed trait MapKeyDatatype extends ClientObjectType
+
+/**
+  * A trait for types that can be values in [[MapType]] data structures.
+  */
+sealed trait MapValueType extends ClientObjectType
+
+/**
+  * Represents a map-like data structure in the target language.
+  *
+  * @param keyType   the type of the keys of the map.
+  * @param valueType the type of the values of the map.
+  */
+case class MapType(keyType: MapKeyDatatype, valueType: MapValueType) extends ClientObjectType with CollectionType with MapValueType with ArrayElementType {
+    override def getClassIri: Option[SmartIri] = valueType match {
+        case typeWithClassIri: TypeWithClassIri => typeWithClassIri.getClassIri
+        case _ => None
+    }
+}
+
+/**
+  * A trait for types that can be elements in an [[ArrayType]] data structure.
+  */
+sealed trait ArrayElementType extends ClientObjectType
+
+/**
+  * Represents an array-like data structure in the target language.
+  *
+  * @param elementType the type of the elements of the array.
+  */
+case class ArrayType(elementType: ArrayElementType) extends ClientObjectType with CollectionType with MapValueType with ArrayElementType {
+    override def getClassIri: Option[SmartIri] = elementType match {
+        case typeWithClassIri: TypeWithClassIri => typeWithClassIri.getClassIri
+        case _ => None
+    }
+}
 
 /**
   * The type of enums.
@@ -586,7 +795,65 @@ case class EnumDatatype(values: Set[String]) extends ClientDatatype
   * @param className the name of the class.
   * @param classIri  the IRI of the class.
   */
-case class ClassRef(className: String, classIri: SmartIri) extends ClientObjectType
+case class ClassRef(className: String, classIri: SmartIri) extends ClientObjectType with TypeWithClassIri with MapValueType with ArrayElementType {
+    /**
+      * Converts this [[ClassRef]] to one that represents a `Stored*` derived class.
+      */
+    def toStoredClassRef: ClassRef = {
+        val storedClassName = ClassRef.makeStoredClassName(className)
+        val storedClassIri = classIri.getOntologyFromEntity.makeEntityIri(storedClassName)
+        ClassRef(className = storedClassName, classIri = storedClassIri)
+    }
+
+    /**
+      * Converts this [[ClassRef]] to one that represents a `Read*` derived class.
+      */
+    def toReadClassRef: ClassRef = {
+        val readClassName = ClassRef.makeReadClassName(className)
+        val readClassIri = classIri.getOntologyFromEntity.makeEntityIri(readClassName)
+        ClassRef(className = readClassName, classIri = readClassIri)
+    }
+
+    override def getClassIri: Option[SmartIri] = Some(classIri)
+}
+
+object ClassRef {
+    def isStoredClassName(className: String): Boolean = {
+        className.startsWith("Stored")
+    }
+
+    def isReadClassName(className: String): Boolean = {
+        className.startsWith("Read")
+    }
+
+    def isGeneratedDerivedClassName(className: String): Boolean = {
+        isStoredClassName(className) || isReadClassName(className)
+    }
+
+    def toBaseClassName(className: String): String = {
+        if (isStoredClassName(className)) {
+            className.stripPrefix("Stored")
+        } else if (isReadClassName(className)) {
+            className.stripPrefix("Read")
+        } else {
+            className
+        }
+    }
+
+    /**
+      * Converts a base class name to a `Stored*` derived class name.
+      */
+    def makeStoredClassName(className: String): String = {
+        s"Stored$className"
+    }
+
+    /**
+      * Converts a base class name to a `Read*` derived class name.
+      */
+    def makeReadClassName(className: String): String = {
+        s"Read$className"
+    }
+}
 
 /**
   * A trait for Knora value types.

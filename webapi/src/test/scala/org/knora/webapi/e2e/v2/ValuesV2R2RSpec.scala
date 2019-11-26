@@ -28,6 +28,7 @@ import org.knora.webapi.app.{APPLICATION_MANAGER_ACTOR_NAME, ApplicationActor}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.responders.v2.search.SparqlQueryConstants
 import org.knora.webapi.routing.v2.{SearchRouteV2, ValuesRouteV2}
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
@@ -37,6 +38,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Tests creating a still image file value using a mock Sipi.
   */
+@E2ETest
 class ValuesV2R2RSpec extends R2RSpec {
     override def testConfigSource: String =
         """
@@ -131,23 +133,13 @@ class ValuesV2R2RSpec extends R2RSpec {
     "The values v2 endpoint" should {
         "update a still image file value using a mock Sipi" in {
             val resourceIri: IRI = aThingPictureIri
+            val internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2"
 
-            val internalFilename ="IQUO3t1AABm-FSLC0vNvVpr.jp2"
-
-            val jsonLdEntity =
-                s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:ThingPicture",
-                   |  "knora-api:hasStillImageFileValue" : {
-                   |    "@id" : "http://rdfh.ch/0001/a-thing-picture/values/file1",
-                   |    "@type" : "knora-api:StillImageFileValue",
-                   |    "knora-api:fileValueHasFilename" : "$internalFilename"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+            val jsonLdEntity = SharedTestDataADM.updateStillImageFileValueRequest(
+                resourceIri = resourceIri,
+                valueIri = "http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q",
+                internalFilename = internalFilename
+            )
 
             Put("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)

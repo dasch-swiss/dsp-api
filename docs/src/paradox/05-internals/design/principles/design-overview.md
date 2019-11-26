@@ -111,9 +111,9 @@ API v2, but API v2 does not depend on API v1.
 ## Actor Supervision and Creation
 
 At system start, the main application supervisor actor is created in
-`KnoraLiveService.scala`:
+`LiveCore.scala`:
 
-@@snip [KnoraLiveService.scala]($src$/org/knora/webapi/KnoraLiveService.scala) { #supervisor }
+@@snip [KnoraLiveService.scala]($src$/org/knora/webapi/LiveCore.scala) { #supervisor }
 
 and through mixin also the store and responder manager actors:
 
@@ -220,7 +220,7 @@ Responders are not expected to know which triplestore is being used or how it
 is accessed. To perform a SPARQL SELECT query, a responder sends a `SparqlSelectRequest`
 message to the `storeManager` actor, like this:
 
-@@snip [OntologyResponderV2.scala]($src$/org/knora/webapi/responders/v2/OntologyResponderV2.scala) { #sparql-select }
+@@snip [OntologyResponderV2.scala]($src$/org/knora/webapi/responders/Responder.scala) { #sparql-select }
 
 The reply message, `SparqlSelectResponse`, is a data structure containing the rows
 that were returned as the query result.

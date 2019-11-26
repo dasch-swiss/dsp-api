@@ -27,6 +27,8 @@ The Knora APIs include:
 * The Knora Admin API, which is intended to be used only by the
   [SALSAH](https://github.com/dhlab-basel/Salsah) user interface, for
   administering projects that use Knora as well as Knora itself.
+* The Knora Util API, which is intended to be used for information retrieval
+  about the Knora-stack itself.
 
 @@toc { depth=2 }
 
@@ -35,5 +37,6 @@ The Knora APIs include:
 * [API v1](api-v1/index.md)
 * [API v2](api-v2/index.md)
 * [Admin API](api-admin/index.md)
+* [Util API](api-util/index.md)
 
 @@@

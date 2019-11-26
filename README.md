@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/dhlab-basel/Knora.svg?branch=develop)](https://travis-ci.org/dhlab-basel/Knora)
+[![Build Status](https://github.com/dasch-swiss/knora-api/workflows/.github/workflows/main.yml/badge.svg)](https://github.com/dasch-swiss/knora-api/actions)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7e7c734a37ef403a964345e29106b267)](https://app.codacy.com/app/dhlab-basel/Knora?utm_source=github.com&utm_medium=referral&utm_content=dhlab-basel/Knora&utm_campaign=Badge_Grade_Dashboard)
 # Knora
 
@@ -60,51 +60,53 @@ A manual to get all mentioned components locally up and running can be found [he
 
 ### Run the Knora API server
 
-With [Docker](https://www.docker.com/) installed, start the [GraphDB Free](http://graphdb.ontotext.com/documentation/free/) triplestore:
+With [Docker](https://www.docker.com/) installed, run the following:
 
 ```
-$ docker run --rm -p 7200:7200 dhlabbasel/graphdb-free
+$ make stack-up
 ```
 
-Then in another terminal, create a test repository and load some test data into the triplestore:
+Then to create a test repository and load some test data into the triplestore:
 
 ```
-$ cd webapi/scripts
-$ ./graphdb-free-docker-init-knora-test.sh
+$ make init-db-test-free
 ```
 
-Then go back to the Knora root directory and use SBT to start the API server:
+Then we need to restart knora-api after loading the data:
 
 ```
-$ cd ../..
-$ sbt
-> webapi / compile
-> set webapi / reStart / javaOptions ++= Seq("-Dapp.triplestore.dbtype=graphdb-free")
-> webapi / reStart
+$ make stack-restart-api
 ```
 
 Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
 
-To shut down the Knora API server:
+To shut down the Knora-Stack:
 
 ```
-> webapi / reStop
+$ make stack-down
 ```
 
 ### Run the automated tests
 
-Make sure you've started GraphDB Free as shown above. Create an empty repository for running the automated tests:
+Run :
 
 ```
-$ cd webapi/scripts
-$ ./graphdb-free-init-knora-test-unit.sh
+$ make init-db-test-unit-free
+$ make normal-tests
 ```
 
-Then at the SBT prompt:
+### Running with a GraphDB License and Custom Folders
+
+The `$ make stack-up` target can be additonally configured thorugh the following environment variables:
 
 ```
-> webapi / GDBFree / test
+KNORA_GDB_LICENSE - sets the path to the GraphDB-SE license
+KNORA_GDB_IMPORT - sets the path to the import directory accessible from inside the GraphDB Workbench
+KNORA_GDB_HOME - sets the path to the folder where GraphDB will store the database files
 ```
+
+Some or all environment variables can be set, as required. If the license file is not set, then GraphDB-Free will be
+started. If the import and/or data directories are not set, then Docker volumes will be used instead.
 
 ## How to Contribute
 
@@ -138,7 +140,7 @@ A pull request should include tests and documentation for the changes that were 
 
 ### Technical
 
-Please use the [knora-user](https://www.maillist.unibas.ch/mailman/listinfo/knora-user) mailing list for technical questions.
+Please use the [discuss.dasch.swiss](https://discuss.dasch.swiss) forum for technical questions.
 
 ### Administrative
 

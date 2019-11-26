@@ -166,10 +166,10 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
-    private val Description: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraAdminV2.Description,
+    private val ProjectDescription: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.ProjectDescription,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
-        objectType = Some(OntologyConstants.Xsd.String),
+        objectType = Some(OntologyConstants.KnoraAdminV2.StringLiteral),
         predicates = Seq(
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
@@ -180,7 +180,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
-                    LanguageCodes.EN -> "A description of the enclosing object."
+                    LanguageCodes.EN -> "A description of a project."
                 )
             )
         )
@@ -478,6 +478,31 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val UpdateUserRequest = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.UpdateUserRequest,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "update user request"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A request to update a user."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.Username -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.Email -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.GivenName -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.FamilyName -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.Lang -> Cardinality.MayHaveOne
+        )
+    )
+
     private val AdministrativePermissionProperty: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraAdminV2.AdministrativePermissionProperty,
         propertyType = OntologyConstants.Owl.ObjectProperty,
@@ -620,6 +645,69 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "The permissions granted by an AdministrativePermission."
+                )
+            )
+        )
+    )
+
+    private val Permissions: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.Permissions,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.UserClass),
+        objectType = Some(OntologyConstants.KnoraAdminV2.PermissionsData),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "permissions data"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A user's permissions data."
+                )
+            )
+        )
+    )
+
+    private val AdministrativePermissionsPerProject: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.AdministrativePermissionsPerProject,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.PermissionsData),
+        objectType = Some(OntologyConstants.KnoraAdminV2.AdministrativePermissionsPerProjectCollectionType),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "administrative permissions per project"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A user's administrative permissions per project."
+                )
+            )
+        )
+    )
+
+    private val GroupsPerProject: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.GroupsPerProject,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.PermissionsData),
+        objectType = Some(OntologyConstants.KnoraAdminV2.GroupsPerProjectCollectionType),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "groups per project"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A user's groups per project."
                 )
             )
         )
@@ -770,6 +858,27 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val ProjectIri: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.ProjectIri,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.CreateGroupRequest),
+        objectType = Some(OntologyConstants.Xsd.Uri),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "project iri"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The IRI of a project."
+                )
+            )
+        )
+    )
+
     private val ProjectRestrictedViewSettings = makeClass(
         classIri = OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettings,
         predicates = Seq(
@@ -862,6 +971,168 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val PermissionsData = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.PermissionsData,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "permissions data"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A user's permissions data."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.AdministrativePermissionsPerProject -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.GroupsPerProject -> Cardinality.MayHaveOne
+        )
+    )
+
+    private val CreateGroupRequest = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.CreateGroupRequest,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "create group"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A request to create a group."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.Name -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraAdminV2.GroupDescription -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.ProjectIri -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraAdminV2.Status -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraAdminV2.SelfJoin -> Cardinality.MustHaveOne
+        )
+    )
+
+    private val UpdateGroupRequest = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.UpdateGroupRequest,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "update group"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A request to update a group."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.Name -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.GroupDescription -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.Status -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.SelfJoin -> Cardinality.MayHaveOne
+        )
+    )
+
+    private val UpdateProjectRequest = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.UpdateProjectRequest,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "update project"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A request to update a project."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.Shortname -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.Longname -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.ProjectDescription -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraAdminV2.KeywordsProperty -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraAdminV2.Logo -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.Status -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraAdminV2.SelfJoin -> Cardinality.MayHaveOne
+        )
+    )
+
+    private val Value: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.Value,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.StringLiteral),
+        objectType = Some(OntologyConstants.Xsd.String),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "value"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The value of a string literal."
+                )
+            )
+        )
+    )
+
+    private val Language: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.Language,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subjectType = Some(OntologyConstants.KnoraAdminV2.StringLiteral),
+        objectType = Some(OntologyConstants.Xsd.String),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "language"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The language of a string literal."
+                )
+            )
+        )
+    )
+
+    private val StringLiteral = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.StringLiteral,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "string literal"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A string with an optional language tag."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.Value -> Cardinality.MustHaveOne,
+            OntologyConstants.KnoraAdminV2.Language -> Cardinality.MayHaveOne
+        )
+    )
+
     /**
       * Properties to remove from the ontology before converting it to the target schema.
       * See also [[OntologyConstants.CorrespondingIris]].
@@ -893,10 +1164,12 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       */
     private val UserCardinalities = Map(
         OntologyConstants.KnoraAdminV2.ID -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraAdminV2.Password -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraAdminV2.Token -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraAdminV2.SessionID -> Cardinality.MayHaveOne,
         OntologyConstants.KnoraAdminV2.SystemAdmin -> Cardinality.MayHaveOne,
-        OntologyConstants.KnoraAdminV2.Groups -> Cardinality.MayHaveMany
+        OntologyConstants.KnoraAdminV2.Groups -> Cardinality.MayHaveMany,
+        OntologyConstants.KnoraAdminV2.Permissions -> Cardinality.MustHaveOne
     )
 
     /**
@@ -904,7 +1177,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       */
     private val GroupCardinalities = Map(
         OntologyConstants.KnoraAdminV2.ID -> Cardinality.MayHaveOne,
-        OntologyConstants.KnoraAdminV2.Name -> Cardinality.MustHaveOne
+        OntologyConstants.KnoraAdminV2.Name -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraAdminV2.SelfJoin -> Cardinality.MustHaveOne
     )
 
     /**
@@ -912,8 +1186,8 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       */
     private val ProjectCardinalities = Map(
         OntologyConstants.KnoraAdminV2.ID -> Cardinality.MayHaveOne,
-        OntologyConstants.KnoraAdminV2.Members -> Cardinality.MayHaveMany,
-        OntologyConstants.KnoraAdminV2.Ontologies -> Cardinality.MayHaveMany
+        OntologyConstants.KnoraAdminV2.Ontologies -> Cardinality.MayHaveMany,
+        OntologyConstants.KnoraAdminV2.SelfJoin -> Cardinality.MustHaveOne
     )
 
     /**
@@ -936,20 +1210,26 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
       * Classes that need to be added to the ontology after converting it to the target schema.
       */
     override val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
+        UpdateUserRequest,
         UsersResponse,
         UserResponse,
         ProjectsResponse,
         ProjectResponse,
+        UpdateProjectRequest,
         GroupsResponse,
         GroupResponse,
+        CreateGroupRequest,
+        UpdateGroupRequest,
         AdministrativePermissionsResponse,
         AdministrativePermissionResponse,
         AdministrativePermissionClass,
         Permission,
+        PermissionsData,
         MembersResponse,
         KeywordsResponse,
         ProjectRestrictedViewSettings,
-        ProjectRestrictedViewSettingsResponse
+        ProjectRestrictedViewSettingsResponse,
+        StringLiteral
     ).map {
         classInfo => classInfo.entityInfoContent.classIri -> classInfo
     }.toMap
@@ -965,9 +1245,12 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         Token,
         SessionID,
         Ontologies,
-        Description,
+        ProjectDescription,
         AdministrativePermissionProperty,
         AdministrativePermissions,
+        Permissions,
+        AdministrativePermissionsPerProject,
+        GroupsPerProject,
         ForGroup,
         ForProject,
         ForResourceClass,
@@ -983,7 +1266,10 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         KeywordsProperty,
         Settings,
         Size,
-        Watermark
+        Watermark,
+        ProjectIri,
+        Value,
+        Language
     ).map {
         propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
     }.toMap
