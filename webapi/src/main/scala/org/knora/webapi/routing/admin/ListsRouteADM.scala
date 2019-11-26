@@ -40,9 +40,8 @@ import scala.concurrent.Future
 class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ListADMJsonProtocol {
 
     /* concatenate paths in the CORRECT order and return */
-    override def knoraApiPath: Route = getLists ~ postList ~ getList ~
-      putListInfo ~ postListChildNode ~ deleteList ~
-      deleteListNode ~
+    override def knoraApiPath: Route = getLists ~ postList ~ getList ~ postListChildNode ~ deleteList ~
+    getListInfo ~ putListInfo ~ getListNode ~ deleteListNode ~ putNodeInfo
 
     @ApiOperation(
         value = "Get all lists optionally filtered by project",
@@ -278,7 +277,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /** update list node */
-    def putListNode: Route = path("admin" / "lists" / "nodes" / Segment) { iri =>
+    def putNodeInfo: Route = path("admin" / "lists" / "nodes" / Segment) { iri =>
         put {
 
             throw NotImplementedException("Method not implemented.")
