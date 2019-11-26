@@ -41,7 +41,8 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     /* concatenate paths in the CORRECT order and return */
     override def knoraApiPath: Route = getLists ~ postList ~ getList ~
-      putListInfo ~ postListChildNode ~ deleteList ~ deleteListNode ~
+      putListInfo ~ postListChildNode ~ deleteList ~
+      deleteListNode ~
 
     @ApiOperation(
         value = "Get all lists optionally filtered by project",

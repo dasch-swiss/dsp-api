@@ -28,14 +28,25 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - `POST: /admin/lists` : create new list
 - `POST: /admin/lists/<nodeIri>` : create new child node under the supplied parent node IRI
 - NOT IMPLEMENTED: `DELETE: /admin/lists/<listIri>` : delete list including children if not used
-- `GET: /admin/lists/infos/<listIri>` : return list information (without children)
-- `PUT: /admin/lists/infos/<listIri>` : update list information
+- `GET: /admin/lists/<listIri>/Info` : return list information (without children)
+- `PUT: /admin/lists/<listIri>/ListInfoName` : update list information
+- `PUT: /admin/lists/<listIri>/ListInfoLabel` : update list information
+- `PUT: /admin/lists/<listIri>/ListInfoComment` : update list information
+- `DELETE: /admin/lists/<listIri>/ListInfoComment` : update list information
 
 **List Node operations**
 
-- `GET: /admin/lists/nodes/<nodeIri>` : return list node information (without children)
-- NOT IMPLEMENTED: `POST: /admin/lists/nodes/<nodeIri>` : update list node information
-- NOT IMPLEMENTED: `DELETE: /admin/lists/nodes/<nodeIri>` : delete list node including children if not used
+- `GET: /admin/nodes/<nodeIri>` : return list node information (with children)
+- `GET: /admin/nodes/<nodeIri>/Info` : return list node information (without children)
+- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIri>/NodeInfoName` : update list node information
+- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIri>/NodeInfoLabel` : update list node information
+- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIri>/NodeInfoComment` : update list node information
+- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIri>/NodeInfoPosition` : update list node information
+- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIri>/MoveToNewParent`: move node (append to new parent's children)
+    - ```
+      {"newParentIri": iri}
+      ```
+- NOT IMPLEMENTED: `DELETE: /admin/nodes/<nodeIri>` : delete list node including children if not used
 
 ## List Operations
 
