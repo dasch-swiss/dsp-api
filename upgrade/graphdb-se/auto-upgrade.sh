@@ -87,7 +87,7 @@ if [[ -f "${OUTPUT_FILE}" ]]; then
     curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/repositories/${REPOSITORY}/statements"
 
     echo "Uploading transformed data to repository..."
-    curl -X POST -H "Content-Type: application/trig" -d "@${OUTPUT_FILE}" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/repositories/${REPOSITORY}/statements" | tee /dev/null
+    curl -X POST -H "Content-Type: application/trig" --data-binary "@${OUTPUT_FILE}" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/repositories/${REPOSITORY}/statements" | tee /dev/null
 fi
 
 rm -r "${TEMP_DIR}"

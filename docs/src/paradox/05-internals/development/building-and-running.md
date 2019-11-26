@@ -92,26 +92,15 @@ range of ephemeral port numbers. The script
 
 ## Continuous Integration
 
-For continuous integration testing, we use Travis-CI. Every commit
+For continuous integration testing, we use Github CI Actions. Every commit
 pushed to the git repository or every pull request, triggers the build.
-Additionaly, in Github there is a litle checkmark beside every commit,
-signaling the status of the build (successful, unsucessful, ongoing).
+Additionally, in Github there is a small checkmark beside every commit,
+signaling the status of the build (successful, unsuccessful, ongoing).
 
-The build that is executed on Travis-CI is defined in `.travis.yml`
-situated in the root folder of the project, and looks like this:
+The build that is executed on Github CI Actions is defined in
+`.github/workflows/main.yml`, and looks like this:
 
-@@snip[.travis.yml](../../../../../.travis.yml) { }
-
-It basically means:
-
-   - use the virtual machine based environment (line 1)
-   - checkout git with a shorter history (lines 2-3)
-   - add scala libraries (lines 4-6)
-   - add oracle jdk version 8 (lines 7-8)
-   - cache some directories between builds to make it faster (line
-     9-11)
-   - start fuseki and afterwards start all tests (lines 12-14)
-   - send notification to our slack channel (lines 15-17)
+@@snip[main.yml](../../../../../.github/workflows/main.yml) { }
 
 ## Webapi Server Startup-Flags
 

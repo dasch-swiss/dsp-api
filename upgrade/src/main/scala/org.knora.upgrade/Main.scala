@@ -27,13 +27,12 @@ import org.eclipse.rdf4j.model.{Model, Statement}
 import org.eclipse.rdf4j.rio.helpers.StatementCollector
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
 import org.knora.upgrade.plugins._
-import org.knora.webapi.util.{Debug, FileUtil}
+import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.JavaUtil._
 import org.knora.webapi.{InconsistentTriplestoreDataException, OntologyConstants}
 import org.rogach.scallop._
 
 import scala.collection.JavaConverters._
-import scala.io.{BufferedSource, Codec, Source}
 
 
 /**

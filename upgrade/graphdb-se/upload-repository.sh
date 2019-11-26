@@ -53,4 +53,4 @@ if [[ -z "${HOST}" ]]; then
     HOST="localhost:7200"
 fi
 
-curl -X POST -H "Content-Type: application/trig" -d "@${FILE}" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/repositories/${REPOSITORY}/statements" | tee /dev/null
+curl -sS -X POST -H "Content-Type: application/trig" --data-binary "@${FILE}" -u "${USERNAME}:${PASSWORD}" "http://${HOST}/repositories/${REPOSITORY}/statements" | tee /dev/null

@@ -20,7 +20,7 @@
 @import org.knora.webapi._
 @import org.knora.webapi.util._
 @import org.knora.webapi.util.clientapi._
-@import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
+@import org.knora.webapi.util.clientapi.TypeScriptBackEnd._
 
 @(name: String,
   description: String,
@@ -45,11 +45,11 @@ export class @name extends Endpoint {
      * @for(param <- function.params) {
      * @@param @param.name @param.description}}
      */
-    @{function.name}(@for((param, index) <- function.params.zipWithIndex) {@if(index > 0) {, }@param.name: @makeObjectType(param.objectType)}): Observable<ApiResponseData<@makeObjectType(function.returnType)> | ApiResponseError> {
+    @{function.name}(@for((param, index) <- function.params.zipWithIndex) {@if(index > 0) {, }@param.name: @makePropertyObjectType(param.objectType)}): Observable<ApiResponseData<@makePropertyObjectType(function.returnType)> | ApiResponseError> {
     @function.implementation match {
     case httpRequest: ClientHttpRequest => {
         return this.@{makeHttpMethod(httpRequest.httpMethod)}(@makeUrl(httpRequest.urlElementsAsValues)@makeHttpRequestBody(httpRequest.requestBody)).pipe(
-            map(ajaxResponse => ApiResponseData.fromAjaxResponse(ajaxResponse, @makeObjectType(function.returnType), this.jsonConvert)),
+            map(ajaxResponse => ApiResponseData.fromAjaxResponse(ajaxResponse, @makePropertyObjectType(function.returnType), this.jsonConvert)),
             catchError(error => this.handleError(error))
         );
     }
@@ -58,61 +58,5 @@ export class @name extends Endpoint {
         return this.@{functionCall.name}(@{functionCall.args.map(arg => makeValue(arg)).mkString(", ")});
     }}
     }
-    }
-}@makeObjectType(objectType: ClientObjectType) = @{
-    objectType match {
-        case StringDatatype => "string"
-        case BooleanDatatype => "boolean"
-        case IntegerDatatype => "number"
-        case DecimalDatatype => "number"
-        case UriDatatype => "string"
-        case DateTimeStampDatatype => "string"
-        case enum: EnumDatatype => enum.values.map(value => "\"" + value + "\"").mkString(" | ")
-        case classRef: ClassRef => classRef.className
-        case other => throw ClientApiGenerationException(s"Type $other not yet supported")
-    }
-}@makeHttpMethod(httpMethod: ClientHttpMethod) = @{
-    httpMethod match {
-        case GET => "httpGet"
-        case POST => "httpPost"
-        case PUT => "httpPut"
-        case DELETE => "httpDelete"
-    }
-}@makeValue(value: Value) = @{
-    value match {
-        case stringLiteral: StringLiteralValue => "\"" + stringLiteral + "\""
-        case booleanLiteral: BooleanLiteralValue => "\"" + booleanLiteral + "\""
-        case integerLiteral: IntegerLiteralValue => integerLiteral.toString
-        case arg: ArgValue => arg.name + arg.memberVariableName.map(varName => "." + varName).getOrElse("")
-    }
-}@makeUrl(urlElementsAsValues: Seq[Value]) = @{
-    if (urlElementsAsValues.isEmpty) {
-        "\"\""
-    } else {
-        urlElementsAsValues.map {
-            value: Value =>
-                value match {
-                    case arg: ArgValue => "encodeURIComponent(" + makeValue(arg) + ")"
-                    case _ => makeValue(value)
-                }
-        }.mkString(" + ")
-    }
-}@makeHttpRequestBody(maybeRequestBody: Option[HttpRequestBody]) = @{
-    maybeRequestBody match {
-        case Some(requestBody) =>
-            val requestBodyContent = requestBody match {
-                case jsonRequestBody: JsonRequestBody =>
-                    "{ " +
-                    jsonRequestBody.jsonObject.map {
-                        case (key, value) => key + ": " + makeValue(value)
-                    }.mkString(", ") +
-                    " }"
-
-                case arg: ArgValue => makeValue(arg)
-            }
-
-            ", " + requestBodyContent
-
-        case None => ""
     }
 }
