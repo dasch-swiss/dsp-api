@@ -131,7 +131,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         getResponseString(request).parseJson.asJsObject
     }
 
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 9999.milliseconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }
