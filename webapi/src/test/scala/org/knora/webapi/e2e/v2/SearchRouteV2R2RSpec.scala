@@ -7821,7 +7821,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" in {
+        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
             // Create a resource containing the text of Hamlet.
 
             val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
