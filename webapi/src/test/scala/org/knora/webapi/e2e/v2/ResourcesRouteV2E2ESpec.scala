@@ -886,7 +886,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             hamletResourceIri.set(resourceIri)
         }
 
-        "read the large text and its markup as XML, and check that it matches the original XML" in {
+        "read the large text and its markup as XML, and check that it matches the original XML" ignore { // depends on previous test
             val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
 
             // Request the newly created resource.
@@ -911,7 +911,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             xmlDiff.hasDifferences should be(false)
         }
 
-        "read the large text without its markup, and get the markup separately as pages of standoff" in {
+        "read the large text without its markup, and get the markup separately as pages of standoff" in { // depends on previous test
             // Get the resource without markup.
             val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}").addHeader(new MarkupHeader(RouteUtilV2.MARKUP_STANDOFF)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)
