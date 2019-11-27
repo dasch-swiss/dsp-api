@@ -66,10 +66,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-
     )
 
-    private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker()
+    private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
 
     "The resources v2 endpoint" should {
         "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
@@ -849,7 +848,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
         }
 
-        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" in {
+        "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
             // Create a resource containing the text of Hamlet.
 
             val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
@@ -887,7 +886,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             hamletResourceIri.set(resourceIri)
         }
 
-        "read the large text and its markup as XML, and check that it matches the original XML" in {
+        "read the large text and its markup as XML, and check that it matches the original XML" ignore { // depends on previous test
             val hamletXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/hamlet.xml"))
 
             // Request the newly created resource.
@@ -912,7 +911,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             xmlDiff.hasDifferences should be(false)
         }
 
-        "read the large text without its markup, and get the markup separately as pages of standoff" in {
+        "read the large text without its markup, and get the markup separately as pages of standoff" ignore { // depends on previous test
             // Get the resource without markup.
             val resourceGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(hamletResourceIri.get, "UTF-8")}").addHeader(new MarkupHeader(RouteUtilV2.MARKUP_STANDOFF)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val resourceGetResponse: HttpResponse = singleAwaitingRequest(resourceGetRequest)

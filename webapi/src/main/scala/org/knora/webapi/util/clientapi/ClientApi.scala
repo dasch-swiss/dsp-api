@@ -120,10 +120,11 @@ trait ClientApi {
     val idProperties: Set[SmartIri]
 
     /**
-      * A map of property IRIs to non-standard names that those properties must have.
-      * Needed only if two different properties should have the same name in different classes.
+      * A map of class IRIs to maps of property IRIs to non-standard names that those properties must have
+      * in those classes. Needed only for JSON, and only if two different properties should have the same name in
+      * different classes. `JsonInstanceInspector` also needs to know about these.
       */
-    val propertyNames: Map[SmartIri, String]
+    val propertyNames: Map[SmartIri, Map[SmartIri, String]]
 
     /**
       * Class IRIs that are used by this API, other than the ones used in endpoints.

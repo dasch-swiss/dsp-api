@@ -90,9 +90,11 @@ class V2ClientApi (routeData: KnoraRouteData) extends ClientApi {
     override val idProperties: Set[SmartIri] = Set.empty
 
     /**
-      * A map of property IRIs to non-standard names that those properties must have.
+      * A map of class IRIs to maps of property IRIs to non-standard names that those properties must have
+      * in those classes. Needed only for JSON, and only if two different properties should have the same name in
+      * different classes. `JsonInstanceInspector` also needs to know about these.
       */
-    override val propertyNames: Map[SmartIri, String] = Map.empty
+    override val propertyNames: Map[SmartIri, Map[SmartIri, String]] = Map.empty
     /**
       * A map of class IRIs to IRIs of optional set properties. Such properties have cardinality 0-n, and should
       * be made optional in generated code.
