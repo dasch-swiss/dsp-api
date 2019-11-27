@@ -70,10 +70,10 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
                 "./api/endpoint.ts",
                 "./api/admin/admin-endpoint.ts",
                 "./api/admin/users/users-endpoint.ts",
-                "./api/admin/users/groups-endpoint.ts",
-                "./api/admin/users/projects-endpoint.ts",
-                "./api/admin/users/permissions-endpoint.ts",
-                "./api/admin/users/lists-endpoint.ts",
+                "./api/admin/groups/groups-endpoint.ts",
+                "./api/admin/projects/projects-endpoint.ts",
+                "./api/admin/permissions/permissions-endpoint.ts",
+                "./api/admin/lists/lists-endpoint.ts",
                 "./models/admin/user.ts"
             )
 
