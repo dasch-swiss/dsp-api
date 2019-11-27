@@ -56,7 +56,7 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
     "The client API route" should {
         "generate a Zip file of TypeScript code that compiles" in {
             val request = Get(baseApiUrl + s"/clientapi/typescript?mock=true")
-            val response: HttpResponse = singleAwaitingRequest(request = request, duration = 20480.millis)
+            val response: HttpResponse = singleAwaitingRequest(request = request, duration = 40960.millis)
             val responseBytes: Array[Byte] = getResponseEntityBytes(response)
             val filenames: Set[String] = getZipContents(responseBytes)
 
@@ -70,6 +70,10 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
                 "./api/endpoint.ts",
                 "./api/admin/admin-endpoint.ts",
                 "./api/admin/users/users-endpoint.ts",
+                "./api/admin/users/groups-endpoint.ts",
+                "./api/admin/users/projects-endpoint.ts",
+                "./api/admin/users/permissions-endpoint.ts",
+                "./api/admin/users/lists-endpoint.ts",
                 "./models/admin/user.ts"
             )
 
