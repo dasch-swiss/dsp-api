@@ -80,9 +80,11 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val CreateListRequest = classRef(OntologyConstants.KnoraAdminV2.CreateListRequest.toSmartIri)
     private val ListResponse = classRef(OntologyConstants.KnoraAdminV2.ListResponse.toSmartIri)
     private val ListInfoResponse = classRef(OntologyConstants.KnoraAdminV2.ListInfoResponse.toSmartIri)
+    private val ListNodeInfoResponse = classRef(OntologyConstants.KnoraAdminV2.ListNodeInfoResponse.toSmartIri)
     private val UpdateListInfoRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateListInfoRequest.toSmartIri)
     private val CreateChildNodeRequest = classRef(OntologyConstants.KnoraAdminV2.CreateChildNodeRequest.toSmartIri)
     private val anythingList = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "UTF-8")
+    private val anythingListNode = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList01", "UTF-8")
 
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
     @ApiResponses(Array(
@@ -276,7 +278,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             "listInfo" description "Information about the list to be created." paramType UpdateListInfoRequest
             ) doThis {
             httpPut(
-                path = BasePath / argMember("listInfo", "listIri"),
+                path = argMember("listInfo", "listIri"),
                 body = Some(arg("listInfo"))
             )
         } returns ListInfoResponse
@@ -284,8 +286,8 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private def updateListInfoTestRequest: Future[SourceCodeFileContent] = {
         FastFuture.successful(
             SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("update-list-request"),
-                text = SharedTestDataADM.updateListRequest("http://rdfh.ch/lists/0001/treeList01")
+                filePath = SourceCodeFilePath.makeJsonPath("update-list-info-request"),
+                text = SharedTestDataADM.updateListInfoRequest("http://rdfh.ch/lists/0001/treeList01")
             )
         )
     }
@@ -334,7 +336,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             "node" description "The node to be created." paramType CreateChildNodeRequest
             ) doThis {
             httpPut(
-                path = BasePath / argMember("node", "parentNodeIri"),
+                path = argMember("node", "parentNodeIri"),
                 body = Some(arg("node"))
             )
         } returns ListInfoResponse
@@ -366,6 +368,24 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     log
                 )
         }
+    }
+
+    private val getListInfoFunction: ClientFunction =
+        "getListInfo" description "Returns information about a list." params(
+            "iri" description "The IRI of the list." paramType UriDatatype
+            ) doThis {
+            httpGet(
+                path = str("infos") / arg("iri")
+            )
+        } returns ListInfoResponse
+
+    private def getListInfoTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/infos/$anythingList") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-list-info-response"),
+            text = responseStr
+        )
     }
 
     def updateListInfo: Route = path(ListsBasePath / "infos" / Segment) { iri =>
@@ -425,6 +445,24 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             }
     }
 
+    private val getListNodeInfoFunction: ClientFunction =
+        "getListNodeInfo" description "Returns information about a list node." params(
+            "iri" description "The IRI of the node." paramType UriDatatype
+            ) doThis {
+            httpGet(
+                path = str("nodes") / arg("iri")
+            )
+        } returns ListNodeInfoResponse
+
+    private def getListNodeInfoTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/nodes/$anythingListNode") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-list-node-info-response"),
+            text = responseStr
+        )
+    }
+
     override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putList ~ postListChildNode ~ deleteListNode ~
         getListInfo ~ updateListInfo ~ getListNodeInfo
 
@@ -437,7 +475,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         createListFunction,
         getListFunction,
         updateListInfoFunction,
-        createChildNodeFunction
+        createChildNodeFunction,
+        getListInfoFunction,
+        getListNodeInfoFunction
     )
 
     /**
@@ -449,9 +489,11 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         Future.sequence {
             Set(
                 getListsTestResponse,
-                getListTestResponse,
                 createListTestRequest,
-                updateListInfoTestRequest
+                getListTestResponse,
+                updateListInfoTestRequest,
+                getListInfoTestResponse,
+                getListNodeInfoTestResponse
             )
         }
     }

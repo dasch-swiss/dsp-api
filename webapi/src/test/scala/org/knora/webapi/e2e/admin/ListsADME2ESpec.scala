@@ -276,7 +276,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             }
 
             "update basic list information" in {
-                val params = SharedTestDataADM.updateListRequest(newListIri.get)
+                val params = SharedTestDataADM.updateListInfoRequest(newListIri.get)
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
                 val request = Put(baseApiUrl + s"/admin/lists/infos/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)

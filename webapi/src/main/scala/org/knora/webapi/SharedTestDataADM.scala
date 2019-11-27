@@ -635,7 +635,7 @@ object SharedTestDataADM {
            |    "comments": []
            |}""".stripMargin
 
-    def updateListRequest(listIri: IRI): String = {
+    def updateListInfoRequest(listIri: IRI): String = {
         s"""{
            |    "listIri": "$listIri",
            |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",

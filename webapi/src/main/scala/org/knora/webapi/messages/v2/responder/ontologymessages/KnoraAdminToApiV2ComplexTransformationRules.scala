@@ -477,6 +477,27 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
+    private val ListNodeInfoResponse = makeClass(
+        classIri = OntologyConstants.KnoraAdminV2.ListNodeInfoResponse,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "list node info response"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "A response containing information about a list node."
+                )
+            )
+        ),
+        directCardinalities = Map(
+            OntologyConstants.KnoraAdminV2.NodeInfo -> Cardinality.MustHaveOne
+        )
+    )
+
     private val ListClass = makeClass(
         classIri = OntologyConstants.KnoraAdminV2.ListClass,
         predicates = Seq(
@@ -563,6 +584,26 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Provides information about a list."
+                )
+            )
+        )
+    )
+
+    private val NodeInfo: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraAdminV2.NodeInfo,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        objectType = Some(OntologyConstants.KnoraAdminV2.ListNodeInfo),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "list node info"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides information about a list node."
                 )
             )
         )
@@ -1683,6 +1724,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         CreateChildNodeRequest,
         UpdateListInfoRequest,
         ListInfoResponse,
+        ListNodeInfoResponse,
         CreateGroupRequest,
         UpdateGroupRequest,
         AdministrativePermissionsResponse,
@@ -1732,6 +1774,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         ListProperty,
         ListIri,
         ParentNodeIri,
+        NodeInfo,
         GroupProperty,
         KeywordsProperty,
         Settings,

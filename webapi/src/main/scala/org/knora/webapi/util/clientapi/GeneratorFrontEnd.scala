@@ -249,7 +249,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
         // A class that has an ID property needs a Stored* subclass.
         val classIrisNeedingStoredClasses: Set[SmartIri] = classesWithRenamedProps.collect {
             case (classIri, classDef) if classDef.properties.exists(propDef => clientApi.idProperties.contains(propDef.propertyIri)) => classIri
-        }.toSet
+        }.toSet -- clientApi.requestClasses
 
         // A map of the IRIs of classes that need Stored* classes, to the IRIs of their Stored* classes.
         val storedClassIris: Map[SmartIri, SmartIri] = classIrisNeedingStoredClasses.map {

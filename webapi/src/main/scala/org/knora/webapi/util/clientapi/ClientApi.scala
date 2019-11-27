@@ -103,6 +103,12 @@ trait ClientApi {
     val classesWithOptionalSetProperties: Map[SmartIri, Set[SmartIri]]
 
     /**
+      * A set of IRIs of classes that represent API requests and that therefore do not need `Stored*`
+      * subclasses.
+      */
+    val requestClasses: Set[SmartIri]
+
+    /**
       * A set of IRIs of classes that represent API responses and whose contents are therefore
       * always read-only.
       */
