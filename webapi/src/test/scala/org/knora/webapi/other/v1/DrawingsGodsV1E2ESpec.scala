@@ -26,6 +26,7 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusC
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.{MutableTestIri, ResourceResponseExtractorMethods, ValuesResponseExtractorMethods}
 
 object DrawingsGodsV1E2ESpec {
@@ -39,6 +40,7 @@ object DrawingsGodsV1E2ESpec {
 /**
   * End-to-End (E2E) test specification for additional testing of permissions.
   */
+@E2ETest
 class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with TriplestoreJsonProtocol {
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(

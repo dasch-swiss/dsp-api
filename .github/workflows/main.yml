@@ -3,7 +3,7 @@ name: CI
 on: [push]
 
 env:
-  KNORA_GDB_LICENSE: ${{ github.workspace }}/travis/graphdb.license
+  KNORA_GDB_LICENSE: ${{ github.workspace }}/ci/graphdb.license
 
 jobs:
   compile:
@@ -41,9 +41,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: Run build everything
         run: sbt clean test:compile it:compile stage
 
@@ -59,16 +61,18 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: prepare needed graphdb-se files
         run: |
-          openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
-          tar -C travis -xvf travis/secrets.tar
+          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
+          tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
-          cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
+          cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-      - name: Check license
-        run: file $GITHUB_WORKSPACE/travis/graphdb.license
       - name: Print env file
         run: make print-env-file
       - name: Run API unit tests
@@ -86,15 +90,17 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: prepare needed graphdb-se files
         run: |
-          openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
-          tar -C travis -xvf travis/secrets.tar
+          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
+          tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
-          cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
+          cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
       - name: print env file
         run: make print-env-file
@@ -113,15 +119,17 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: prepare needed graphdb-se files
         run: |
-          openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
-          tar -C travis -xvf travis/secrets.tar
+          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
+          tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
-          cp $GITHUB_WORKSPACE/travis/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
+          cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
       - name: print env file
         run: make print-env-file
@@ -140,9 +148,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: run upgrade tests
         run: sbt "upgrade/test"
 
@@ -161,22 +171,26 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: install requirements
         run: sudo apt-get install expect
       - name: build all images
         run: make build-all-images
       - name: prepare needed graphdb-se files
         run: |
-          openssl aes-256-cbc -K ${{ secrets.license_encryption_key }} -iv ${{ secrets.license_encryption_iv }} -in $GITHUB_WORKSPACE/travis/secrets.tar.enc -out $GITHUB_WORKSPACE/travis/secrets.tar -d
-          tar -C travis -xvf travis/secrets.tar
+          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
+          tar -C ci -xvf ci/secrets.tar
           mkdir -p $GITHUB_WORKSPACE/graphdb
+          cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
+          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
       - name: start and initialize graphdb-se
         run: |
           docker network create knora-net
-          docker run --rm -d --name=db --network=knora-net -p 127.0.0.1:7200:7200 -v $GITHUB_WORKSPACE/travis/graphdb.license:/graphdb/graphdb.license -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE daschswiss/knora-graphdb-se -Dgraphdb.license.file=/graphdb/graphdb.license
+          docker run --rm -d --name=db --network=knora-net -p 127.0.0.1:7200:7200 -v $GITHUB_WORKSPACE/ci/graphdb.license:/graphdb/graphdb.license -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE daschswiss/knora-graphdb-se -Dgraphdb.license.file=/graphdb/graphdb.license
           sleep 5
           make init-db-test-minimal
       - name: unzip test data
@@ -208,9 +222,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: run docs build test
         run: |
           mkdir -p $GITHUB_WORKSPACE/docs/target
@@ -231,9 +247,11 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.ivy2
-          key: ${{ runner.OS }}
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
           restore-keys: |
-            ${{ runner.OS }}
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
