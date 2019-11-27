@@ -1298,7 +1298,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
             _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.TextRepresentation) {
-                throw BadRequestException(s"Resource $gravsearchTemplateIri is not a text file")
+                throw BadRequestException(s"Resource $gravsearchTemplateIri is not a Gravsearch template (text file expected)")
             }
 
             gravsearchFileValueContent: TextFileValueContentV2 = resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
