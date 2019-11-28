@@ -126,7 +126,7 @@ for imgindex, imgparam in pairs(server.uploads) do
     local check
     success, check = thumbImg:mimetype_consistency(submitted_mimetype.mimetype, filename)
     if not success then
-        send_error(500, "thumbImg:mimetype_consistency() failed: " .. check)
+        send_error(500, "make_thumbnail.lua: thumbImg:mimetype_consistency() failed: " .. check)
         return
     end
 

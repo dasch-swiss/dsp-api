@@ -69,6 +69,21 @@ end
 
 local mime_type = mime_info["mimetype"]
 
+-- check that the submitted mimetype is the same as the real mimetype of the file
+
+local submitted_mimetype
+success, submitted_mimetype = server.parse_mimetype(originalMimeType)
+
+if not success then
+    send_error(400, "Couldn't parse mimetype: " .. originalMimeType)
+    return
+end
+
+if (mime_type ~= submitted_mimetype.mimetype) then
+    send_error(400, MIMETYPES_INCONSISTENCY)
+    return
+end
+
 -- handle the file depending on its media type (image, text file)
 local file_info = get_file_info(originalFilename, mime_type)
 
@@ -125,10 +140,10 @@ if media_type == IMAGE then
     end
 
     local check
-    success, check = fullImg:mimetype_consistency(originalMimeType, originalFilename)
+    success, check = fullImg:mimetype_consistency(submitted_mimetype.mimetype, originalFilename)
 
     if not success then
-        send_error(500, "fullImg:mimetype_consistency() failed: " .. check)
+        send_error(500, "convert_from_path.lua: fullImg:mimetype_consistency() failed: " .. check)
         return
     end
 
@@ -202,21 +217,6 @@ elseif media_type == TEXT then
     success, baseName = server.uuid62()
     if not success then
         send_error(500, "server.uuid62() failed: " .. baseName)
-        return
-    end
-
-    -- check that the submitted mimetype is the same as the real mimetype of the file
-
-    local submitted_mimetype
-    success, submitted_mimetype = server.parse_mimetype(originalMimeType)
-
-    if not success then
-        send_error(400, "Couldn't parse mimetype: " .. originalMimeType)
-        return
-    end
-
-    if (mime_type ~= submitted_mimetype.mimetype) then
-        send_error(400, MIMETYPES_INCONSISTENCY)
         return
     end
 

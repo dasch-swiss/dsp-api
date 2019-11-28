@@ -131,7 +131,7 @@ for file_index, file_params in pairs(server.uploads) do
         success, check = uploaded_image:mimetype_consistency(mime_type, original_filename)
 
         if not success then
-            send_error(500, "uploaded_image:mimetype_consistency() failed: " .. check)
+            send_error(500, "upload.lua: uploaded_image:mimetype_consistency() failed: " .. check)
             return
         end
 

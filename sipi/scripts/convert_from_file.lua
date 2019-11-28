@@ -139,7 +139,7 @@ local check
 success, check = fullImg:mimetype_consistency(submitted_mimetype.mimetype, originalFilename)
 
 if not success then
-    send_error(500, "fullImg:mimetype_consistency() failed: " .. check)
+    send_error(500, "convert_from_file.lua: fullImg:mimetype_consistency() failed: " .. check)
     return
 end
 
