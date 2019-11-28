@@ -107,9 +107,6 @@ class SettingsImpl(config: Config) extends Extension {
 
     val externalSipiIIIFGetUrl: String = externalSipiBaseUrl
 
-    val internalSipiFileServerGetUrl: String = s"$internalSipiBaseUrl/$sipiFileServerPrefix"
-    val externalSipiFileServerGetUrl: String = s"$externalSipiBaseUrl/$sipiFileServerPrefix"
-
     val internalSipiImageConversionUrlV1: String = s"$internalSipiBaseUrl"
     val sipiFileConversionRouteV1: String = config.getString("app.sipi.v1.file-conversion-route")
 

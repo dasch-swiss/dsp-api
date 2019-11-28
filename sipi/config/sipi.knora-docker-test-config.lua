@@ -205,8 +205,8 @@ routes = {
     },
     {
         method = 'GET',
-        route = '/test_mediatype',
-        script = 'test_mediatype.lua'
+        route = '/test_file_info',
+        script = 'test_file_info.lua'
     },
     {
         method = 'GET',

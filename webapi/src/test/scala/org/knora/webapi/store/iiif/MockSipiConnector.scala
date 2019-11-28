@@ -51,20 +51,22 @@ class MockSipiConnector extends Actor with ActorLogging {
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     def receive = {
-        case getFileMetadataRequest: GetImageMetadataRequest => try2Message(sender(), getFileMetadata(getFileMetadataRequest), log)
+        case getFileMetadataRequest: GetFileMetadataRequest => try2Message(sender(), getFileMetadata(getFileMetadataRequest), log)
         case moveTemporaryFileToPermanentStorageRequest: MoveTemporaryFileToPermanentStorageRequest => try2Message(sender(), moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequest), log)
         case deleteTemporaryFileRequest: DeleteTemporaryFileRequest => try2Message(sender(), deleteTemporaryFile(deleteTemporaryFileRequest), log)
         case IIIFServiceGetStatus => future2Message(sender(), FastFuture.successful(IIIFServiceStatusOK), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
-    private def getFileMetadata(getFileMetadataRequestV2: GetImageMetadataRequest): Try[GetImageMetadataResponseV2] =
+    private def getFileMetadata(getFileMetadataRequestV2: GetFileMetadataRequest): Try[GetFileMetadataResponseV2] =
         Success {
-            GetImageMetadataResponseV2(
-                originalFilename = "test2.tiff",
-                originalMimeType = "image/tiff",
-                width = 512,
-                height = 256
+            GetFileMetadataResponseV2(
+                originalFilename = Some("test2.tiff"),
+                originalMimeType = Some("image/tiff"),
+                internalMimeType = "image/jp2",
+                width = Some(512),
+                height = Some(256),
+                numpages = None
             )
         }
 

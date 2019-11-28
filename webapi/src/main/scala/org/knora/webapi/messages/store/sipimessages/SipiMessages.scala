@@ -38,38 +38,40 @@ sealed trait SipiRequest extends IIIFRequest {
 }
 
 /**
-  * Requests file metadata from Sipi. A successful response is a [[GetImageMetadataResponseV2]].
+  * Requests file metadata from Sipi. A successful response is a [[GetFileMetadataResponseV2]].
   *
   * @param fileUrl        the URL at which Sipi can serve the file.
   * @param requestingUser the user making the request.
   */
-case class GetImageMetadataRequest(fileUrl: String,
-                                   requestingUser: UserADM) extends SipiRequest
-
+case class GetFileMetadataRequest(fileUrl: String,
+                                  requestingUser: UserADM) extends SipiRequest
 
 /**
   * Represents a response from Sipi providing metadata about an image file.
   *
-  * @param originalFilename the image's original filename.
-  * @param originalMimeType the image's original MIME type.
-  * @param width            the image's width in pixels.
-  * @param height           the image's height in pixels.
+  * @param originalFilename the file's original filename, if known.
+  * @param originalMimeType the file's original MIME type.
+  * @param width            the file's width in pixels, if applicable.
+  * @param height           the file's height in pixels, if applicable.
+  * @param numpages         the number of pages in the file, if applicable.
   */
-case class GetImageMetadataResponseV2(originalFilename: String,
-                                      originalMimeType: String,
-                                      width: Int,
-                                      height: Int) {
-    if (originalFilename.isEmpty) {
+case class GetFileMetadataResponseV2(originalFilename: Option[String],
+                                     originalMimeType: Option[String],
+                                     internalMimeType: String,
+                                     width: Option[Int],
+                                     height: Option[Int],
+                                     numpages: Option[Int]) {
+    if (originalFilename.contains("")) {
         throw SipiException(s"Sipi returned an empty originalFilename")
     }
 
-    if (originalMimeType.isEmpty) {
+    if (originalMimeType.contains("")) {
         throw SipiException(s"Sipi returned an empty originalMimeType")
     }
 }
 
-object GetImageMetadataResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-    implicit val getImageMetadataResponseV2Format: RootJsonFormat[GetImageMetadataResponseV2] = jsonFormat4(GetImageMetadataResponseV2)
+object GetFileMetadataResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+    implicit val getImageMetadataResponseV2Format: RootJsonFormat[GetFileMetadataResponseV2] = jsonFormat6(GetFileMetadataResponseV2)
 }
 
 /**
@@ -104,6 +106,7 @@ case class SipiGetTextFileRequest(fileUrl: String,
 
 /**
   * Represents a response for [[SipiGetTextFileRequest]].
+  *
   * @param content the file content.
   */
 case class SipiGetTextFileResponse(content: String)

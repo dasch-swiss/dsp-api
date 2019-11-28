@@ -95,9 +95,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1, external: Boolean = true): String = {
 
         if (external) {
-            s"${settings.externalSipiFileServerGetUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
+            s"${settings.externalSipiBaseUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
         } else {
-            s"${settings.internalSipiFileServerGetUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
+            s"${settings.internalSipiBaseUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
         }
     }
 

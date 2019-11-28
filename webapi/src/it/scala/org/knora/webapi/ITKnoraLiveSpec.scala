@@ -117,9 +117,13 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
 
     protected def getResponseString(request: HttpRequest): String = {
         val response: HttpResponse = singleAwaitingRequest(request)
-        val responseBodyStr: String = Await.result(response.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
-        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
-        responseBodyStr
+        val responseBodyStr: String = Await.result(response.entity.toStrict(10999.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
+
+        if (response.status.isSuccess) {
+            responseBodyStr
+        } else {
+            throw AssertionException(s"Got HTTP ${response.status.intValue}\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
+        }
     }
 
     protected def checkResponseOK(request: HttpRequest): Unit = {
@@ -130,9 +134,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
         getResponseString(request).parseJson.asJsObject
     }
 
-
-
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 5999.milliseconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }
@@ -162,11 +164,12 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
     /**
       * Represents the information that Sipi returns about each file that has been uploaded.
       *
-      * @param originalFilename     the original filename that was submitted to Sipi.
-      * @param internalFilename     Sipi's internal filename for the stored temporary file.
-      * @param temporaryBaseIIIFUrl the base URL for constructing a IIIF URL for accessing the temporary file.
+      * @param originalFilename the original filename that was submitted to Sipi.
+      * @param internalFilename Sipi's internal filename for the stored temporary file.
+      * @param temporaryUrl     the URL at which the temporary file can be accessed.
+      * @param fileType         `image`, `text`, or `document`.
       */
-    protected case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryBaseIIIFUrl: String)
+    protected case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryUrl: String, fileType: String)
 
     /**
       * Represents Sipi's response to a file upload request.
@@ -175,22 +178,12 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
       */
     protected case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
 
-    object SipiUploadResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat3(SipiUploadResponseEntry)
+    object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(SipiUploadResponseEntry)
         implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
     }
 
-    import SipiUploadResponseV2JsonProtocol._
-
-    /**
-      * Represents the information that Knora returns about an image file value that was created.
-      *
-      * @param internalFilename the image's internal filename.
-      * @param iiifUrl          the image's IIIF URL.
-      * @param width            the image's width in pixels.
-      * @param height           the image's height in pixels.
-      */
-    protected case class SavedImage(internalFilename: String, iiifUrl: String, width: Int, height: Int)
+    import SipiUploadResponseJsonProtocol._
 
     /**
       * Uploads a file to Sipi and returns the information in Sipi's response.
@@ -216,19 +209,24 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
 
         val sipiFormData = Multipart.FormData(formDataParts: _*)
 
-        // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
+        // Send Sipi the file in a POST request.
         val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData)
+
         val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
         // println(sipiUploadResponseJson.prettyPrint)
         val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
 
-        // Request the temporary image from Sipi.
+        // Request the temporary file from Sipi.
         for (responseEntry <- sipiUploadResponse.uploadedFiles) {
-            val sipiGetTmpFileRequest = Get(responseEntry.temporaryBaseIIIFUrl + "/" + responseEntry.internalFilename + "/full/full/0/default.jpg")
+            val sipiGetTmpFileRequest: HttpRequest = if (responseEntry.fileType == "image") {
+                Get(responseEntry.temporaryUrl + "/full/full/0/default.jpg")
+            } else {
+                Get(responseEntry.temporaryUrl)
+            }
+
             checkResponseOK(sipiGetTmpFileRequest)
         }
 
         sipiUploadResponse
     }
-
 }

@@ -31,7 +31,7 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.GetImageMetadataResponseV2JsonProtocol._
+import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponseV2JsonProtocol._
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.routing.JWTHelper
@@ -60,15 +60,15 @@ class SipiConnector extends Actor with ActorLogging {
     private val sipiTimeoutMillis = settings.sipiTimeout.toMillis.toInt
 
     private val sipiRequestConfig = RequestConfig.custom()
-            .setConnectTimeout(sipiTimeoutMillis)
-            .setConnectionRequestTimeout(sipiTimeoutMillis)
-            .setSocketTimeout(sipiTimeoutMillis)
-            .build()
+        .setConnectTimeout(sipiTimeoutMillis)
+        .setConnectionRequestTimeout(sipiTimeoutMillis)
+        .setSocketTimeout(sipiTimeoutMillis)
+        .build()
 
     private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultRequestConfig(sipiRequestConfig).build
 
     override def receive: Receive = {
-        case getFileMetadataRequest: GetImageMetadataRequest => try2Message(sender(), getFileMetadata(getFileMetadataRequest), log)
+        case getFileMetadataRequest: GetFileMetadataRequest => try2Message(sender(), getFileMetadata(getFileMetadataRequest), log)
         case moveTemporaryFileToPermanentStorageRequest: MoveTemporaryFileToPermanentStorageRequest => try2Message(sender(), moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequest), log)
         case deleteTemporaryFileRequest: DeleteTemporaryFileRequest => try2Message(sender(), deleteTemporaryFile(deleteTemporaryFileRequest), log)
         case SipiGetTextFileRequest(fileUrl, requestingUser) => try2Message(sender(), sipiGetXsltTransformationRequest(fileUrl, requestingUser), log)
@@ -80,16 +80,16 @@ class SipiConnector extends Actor with ActorLogging {
       * Asks Sipi for metadata about a file.
       *
       * @param getFileMetadataRequestV2 the request.
-      * @return a [[GetImageMetadataResponseV2]] containing the requested metadata.
+      * @return a [[GetFileMetadataResponseV2]] containing the requested metadata.
       */
-    private def getFileMetadata(getFileMetadataRequestV2: GetImageMetadataRequest): Try[GetImageMetadataResponseV2] = {
+    private def getFileMetadata(getFileMetadataRequestV2: GetFileMetadataRequest): Try[GetFileMetadataResponseV2] = {
         val knoraInfoUrl = getFileMetadataRequestV2.fileUrl + "/knora.json"
 
         val request = new HttpGet(knoraInfoUrl)
 
         for {
             responseStr <- doSipiRequest(request)
-        } yield responseStr.parseJson.convertTo[GetImageMetadataResponseV2]
+        } yield responseStr.parseJson.convertTo[GetFileMetadataResponseV2]
     }
 
     /**

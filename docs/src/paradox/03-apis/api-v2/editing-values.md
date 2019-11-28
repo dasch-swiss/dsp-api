@@ -188,8 +188,12 @@ provided.
 Knora supports the storage of certain types of data as files, using
 [Sipi](https://github.com/dhlab-basel/Sipi)
 (see @ref:[FileValue](../../02-knora-ontologies/knora-base.md#filevalue)).
-Knora API v2 currently supports using Sipi to store image files. Support for
-other types of files will be added in the near future.
+Knora API v2 currently supports using Sipi to store the following types of files:
+
+* Images (JPEG, JPEG2000, TIFF, PNG), which are stored internally as JPEG2000
+* PDF
+
+Support for other types of files will be added in the future.
 
 The following sections describe the steps for creating a file value.
 
@@ -209,9 +213,10 @@ must contain a parameter `filename`, providing the file's original filename,
 which both Knora and Sipi will store; these filenames can be descriptive
 and need not be unique.
 
-Sipi will then convert the uploaded image files to JPEG 2000 format and store
-them in a temporary location. If this is successful, it will return a JSON
-response that looks something like this:
+Sipi stores the file in a temporary location. If the file is an image, it is
+converted first to JPEG2000 format, and the converted file is stored.
+
+Sipi then returns a JSON response that looks something like this:
 
 ```json
 {
@@ -235,9 +240,9 @@ array with two elements. For each file, we have:
 - the `temporaryBaseIIIFUrl`, which we can use to construct a IIIF URL for
   previewing the file
 
-The client may now wish to get a thumbnail of each uploaded image, to allow
-the user to confirm that the correct files have been uploaded. This can be done
-by adding IIIF parameters to `temporaryBaseIIIFUrl`. For example, to get
+In the case of an image file, the client may now wish to get a thumbnail of each
+uploaded image, to allow the user to confirm that the correct files have been uploaded.
+This can be done by adding IIIF parameters to `temporaryBaseIIIFUrl`. For example, to get
 a JPG thumbnail image that is 150 pixels wide, you would add
 `/full/150,/0/default.jpg`.
 
@@ -283,6 +288,11 @@ Knora then gets the rest of the file's metadata from Sipi. If the client's
 request to Knora is valid, Knora saves the file value in the triplestore and
 instructs Sipi to move the file to permanent storage. Otherwise, the
 temporary file that was stored by Sipi is deleted.
+
+If you're submitting a PDF document, use the resource class
+`knora-api:DocumentRepresentation`, which has the property
+`knora-api:hasDocumentFileValue`, pointing to a
+`knora-api:DocumentFileValue`.
 
 ## Updating a Value
 

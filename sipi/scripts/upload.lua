@@ -19,7 +19,7 @@
 -- Upload route for binary files (currently only images) to be used with Knora.
 --
 
-require "get_mediatype"
+require "file_info"
 require "send_response"
 require "jwt"
 require "clean_temp_dir"
@@ -30,7 +30,7 @@ require "util"
 local success, error_msg = server.setBuffer()
 
 if not success then
-    server.log("server.setBuffer() failed: " .. error_msg, server.loglevel.LOG_ERR)
+    send_error(500, "server.setBuffer() failed: " .. error_msg)
     return
 end
 
@@ -42,112 +42,126 @@ if token == nil then
     return
 end
 
--- Create the temporary directory if necessary.
-
-local temp_dir = config.imgroot .. '/tmp/'
-local success, exists = server.fs.exists(temp_dir)
-
-if not success then
-    send_error(500, "Unable to check whether " .. temp_dir .. "exists: " .. tostring(exists))
-    return
-end
-
-if not exists then
-    local success, error_msg = server.fs.mkdir(temp_dir, 511)
-    if not success then
-        send_error(500, "Unable to create " .. temp_dir .. ": " .. tostring(error_msg))
-        return
-    end
-end
-
 -- A table of data about each file that was uploaded.
 local file_upload_data = {}
 
 -- Process the uploaded files.
-for image_index, image_params in pairs(server.uploads) do
-    -- Check that the file is an image (TODO: support other file types.)
+for file_index, file_params in pairs(server.uploads) do
+    -- Check that the file's MIME type is supported.
 
-    local success, mime_info = server.file_mimetype(image_index)
+    local mime_info
+    success, mime_info = server.file_mimetype(file_index)
 
     if not success then
-        send_error(500, "Unable to get MIME info: " .. tostring(mime_info))
+        send_error(500, "server.file_mimetype() failed: " .. tostring(mime_info))
         return
     end
 
     local mime_type = mime_info["mimetype"]
 
     if mime_type == nil then
-        send_error(500, "Could not determine MIME type of uploaded file")
+        send_error(400, "Could not determine MIME type of uploaded file")
         return
     end
 
-    local media_type = get_mediatype(mime_info["mimetype"])
+    local original_filename = file_params["origname"]
+    local file_info = get_file_info(original_filename, mime_type)
 
-    if media_type ~= IMAGE then
+    if file_info == nil then
         send_error(400, "Unsupported MIME type: " .. tostring(mime_type))
         return
     end
 
-    -- Get the file's original name.
-    local original_filename = image_params["origname"]
-
-    -- Create a new Lua image object. This reads the image into an
-    -- internal in-memory representation independent of the original
-    -- image format.
-    local success, uploaded_image = SipiImage.new(image_index)
+    -- Make a random filename for the temporary file.
+    local uuid62
+    success, uuid62 = server.uuid62()
 
     if not success then
-        send_error(500, "Unable to create SipiImage: " .. tostring(uploaded_image))
+        send_error(500, "server.uuid62() failed: " .. uuid62)
         return
     end
-
-    -- Make a random filename for the converted image file.
-    local success, uuid62 = server.uuid62()
-
-    if not success then
-        send_error(500, "Could not generate random filename: " .. tostring(uuid62))
-        return
-    end
-
-    local jp2_filename = uuid62 .. '.jp2'
-    local protocol
 
     if server.secure then
         protocol = 'https://'
     else
         protocol = 'http://'
     end
+    
+    local tmp_storage_filename = uuid62 .. "." .. file_info["extension"]
+    
+    -- Add a subdirectory path if necessary.
+    local hashed_tmp_storage_filename
+    success, hashed_tmp_storage_filename = helper.filename_hash(tmp_storage_filename)
+
+    if not success then
+        send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_filename))
+        return
+    end
+
+    local tmp_storage_file_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_filename
 
     -- Create a IIIF base URL for the converted file.
-    local iiif_base_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .. '/tmp/' .. jp2_filename
+    local tmp_storage_url = get_external_protocol() .. "://" .. get_external_hostname() .. ":" .. get_external_port() .. '/tmp/' .. tmp_storage_filename
 
     -- Construct response data about the file that was uploaded.
+
+    local media_type = file_info["media_type"]
     local this_file_upload_data = {}
-    this_file_upload_data["internalFilename"] = jp2_filename
+    this_file_upload_data["internalFilename"] = tmp_storage_filename
     this_file_upload_data["originalFilename"] = original_filename
-    this_file_upload_data["temporaryBaseIIIFUrl"] = iiif_base_url
-    file_upload_data[image_index] = this_file_upload_data
+    this_file_upload_data["temporaryUrl"] = tmp_storage_url
+    this_file_upload_data["fileType"] = media_type
+    file_upload_data[file_index] = this_file_upload_data
 
-    -- Convert the image to JPEG 2000 format, saving it in a subdirectory of
-    -- the temporary directory.
+    -- Is this an image file?
+    if media_type == IMAGE then
+        -- Yes. Create a new Lua image object. This reads the image into an
+        -- internal in-memory representation independent of the original
+        -- image format.
+        local uploaded_image
+        success, uploaded_image = SipiImage.new(file_index)
 
-    local success, hashed_jp2_filename = helper.filename_hash(jp2_filename)
+        if not success then
+            send_error(500, "SipiImage.new() failed: " .. tostring(uploaded_image))
+            return
+        end
 
-    if not success then
-        send_error(500, "Unable to create hashed filename: " .. tostring(hashed_jp2_filename))
-        return
+        -- Check that the file extension is correct for the file's MIME type.
+        local check
+        success, check = uploaded_image:mimetype_consistency(mime_type, original_filename)
+
+        if not success then
+            send_error(500, "upload.lua: uploaded_image:mimetype_consistency() failed: " .. check)
+            return
+        end
+
+        if not check then
+            send_error(400, MIMETYPES_INCONSISTENCY)
+            return
+        end
+
+        -- Convert the image to JPEG 2000 format.
+
+        success, error_msg = uploaded_image:write(tmp_storage_file_path)
+
+        if not success then
+            send_error(500, "uploaded_image:write() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            return
+        end
+
+        server.log("upload.lua: wrote image file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
+    else
+        -- It's not an image file. Just move it to its temporary storage location.
+        
+        success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
+        
+        if not success then
+            send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            return
+        end
+
+        server.log("upload.lua: wrote non-image file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
     end
-
-    local jp2_file_path = config.imgroot .. '/tmp/' .. hashed_jp2_filename
-    local success, error_msg = uploaded_image:write(jp2_file_path)
-
-    if not success then
-        send_error(500, "Unable to write " .. tostring(jp2_file_path) .. ": " .. tostring(error_msg))
-        return
-    end
-
-    server.log("upload.lua: wrote JPEG 2000 file to " .. jp2_file_path, server.loglevel.LOG_DEBUG)
-
 end
 
 -- Clean up old temporary files.

@@ -1170,7 +1170,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
 
         override def isKnoraOntologyIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.ontologyName.nonEmpty && iriInfo.entityName.isEmpty
 
-        override def isKnoraEntityIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.entityName.nonEmpty
+        override def isKnoraEntityIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.entityName.nonEmpty && iriInfo.clientCollectionType.isEmpty
 
         override def isClientCollectionTypeIri: Boolean = iriInfo.clientCollectionType.nonEmpty
 
