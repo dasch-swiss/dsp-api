@@ -20,9 +20,9 @@
 
 require "send_response"
 
-success, errmsg = server.setBuffer()
+local success, errmsg = server.setBuffer()
 if not success then
-    server.log("server.setBuffer() failed: " .. errmsg, server.loglevel.LOG_ERR)
+    send_error(500, "server.setBuffer() failed: " .. errmsg)
     return
 end
 
@@ -32,30 +32,39 @@ if server.post == nil then
 end
 
 --
--- check if the project directory is available. it needs to be created before sipi is started,
--- so that sipi can create the directory sublevels on startup.
+-- check if the project directory is available, otherwise create it.
 --
 
-prefix = server.post['prefix']
+local prefix = server.post['prefix']
 
 if prefix == nil then
     send_error(400, PARAMETERS_INCORRECT .. " (prefix)")
     return
 end
 
-projectDir = config.imgroot .. '/' .. prefix .. '/'
+local projectDir = config.imgroot .. '/' .. prefix .. '/'
 
-local success, exists = server.fs.exists(projectDir)
-if not exists then
-    local errorMsg = "Directory " .. projectDir .. " not found. Please make sure it exists before starting Sipi."
-    send_error(500, errorMsg)
-    server.log(errorMsg, server.loglevel.LOG_ERR)
-    return -1
+local exists
+success, exists = server.fs.exists(projectDir)
+
+if not success then
+    send_error(500, "server.fs.exists() failed: " .. exists)
+    return
 end
 
-originalFilename = server.post['originalFilename']
-originalMimeType = server.post['originalMimeType']
-filename = server.post['filename']
+if not exists then
+    local error_msg
+    success, error_msg = server.fs.mkdir(storage_dir, 511)
+
+    if not success then
+        send_error(500, "server.fs.mkdir() failed: " .. error_msg)
+        return
+    end
+end
+
+local originalFilename = server.post['originalFilename']
+local originalMimeType = server.post['originalMimeType']
+local filename = server.post['filename']
 
 -- check if all the expected params are set
 if originalFilename == nil then
@@ -74,107 +83,114 @@ if filename == nil then
 end
 
 -- file with name given in param "filename" has been saved by make_thumbnail.lua beforehand
-tmpDir = config.imgroot .. '/tmp/'
+local tmpDir = config.imgroot .. '/tmp/'
 
-local success, hashed_filename = helper.filename_hash(filename)
+local hashed_filename
+success, hashed_filename = helper.filename_hash(filename)
 
 if not success then
-    send_error(500, hashed_filename)
+    send_error(500, "helper.filename_hash() failed: " .. hashed_filename)
     return
 end
 
-sourcePath = tmpDir .. hashed_filename
+local sourcePath = tmpDir .. hashed_filename
 
 -- check if source is readable
+local readable
 success, readable = server.fs.is_readable(sourcePath)
 if not success then
-    server.log("Source: " .. sourcePath .. "not readable, " .. readable, server.loglevel.LOG_ERR)
+    send_error(500, "server.fs.is_readable() failed: " .. readable)
     return
 end
+
 if not readable then
-
-    send_error(500, FILE_NOT_READABLE .. sourcePath)
-
+    send_error(400, FILE_NOT_READABLE .. sourcePath)
     return
 end
 
 -- all params are set
 
+local baseName
 success, baseName = server.uuid62()
 if not success then
-    server.log("server.uuid62() failed: " .. baseName, server.loglevel.LOG_ERR)
+    send_error(500, "server.uuid62() failed: " .. baseName)
     return
 end
 
 --
 -- create full quality image (jp2)
 --
+local fullImg
 success, fullImg = SipiImage.new(sourcePath)
 if not success then
-    server.log("SipiImage.new() failed: " .. fullImg, server.loglevel.LOG_ERR)
+    send_error(500, "SipiImage.new() failed: " .. fullImg)
     return
 end
 
-local success, submitted_mimetype = server.parse_mimetype(originalMimeType)
+local submitted_mimetype
+success, submitted_mimetype = server.parse_mimetype(originalMimeType)
 
 if not success then
     send_error(400, "Couldn't parse mimetype: " .. originalMimeType)
-    return -1
+    return
 end
 
+local check
 success, check = fullImg:mimetype_consistency(submitted_mimetype.mimetype, originalFilename)
 
 if not success then
-    server.log("fullImg:mimetype_consistency() failed: " .. check, server.loglevel.LOG_ERR)
+    send_error(500, "convert_from_file.lua: fullImg:mimetype_consistency() failed: " .. check)
     return
 end
 
 -- if check returns false, the user's input is invalid
 if not check then
-
     send_error(400, MIMETYPES_INCONSISTENCY)
-
     return
 end
 
-fullImgName = baseName .. '.jpx'
+local fullImgName = baseName .. ".jp2"
 
 --
 -- create new full quality image file path with sublevels:
 --
+local newFilePath
 success, newFilePath = helper.filename_hash(fullImgName);
 if not success then
-    server.sendStatus(500)
-    server.log(gaga, server.loglevel.LOG_ERR)
-    return false
-end
-
-success, fullDims = fullImg:dims()
-if not success then
-    server.log("fullImg:dims() failed: " .. fullDIms, server.loglevel.LOG_ERR)
+    send_error(500, "helper.filename_hash() failed: " .. newFilePath)
     return
 end
+
+local fullDims
+success, fullDims = fullImg:dims()
+if not success then
+    send_error(500, "fullImg:dims() failed: " .. fullDims)
+    return
+end
+
 fullImg:write(projectDir .. newFilePath)
 
 -- create thumbnail (jpg)
+local thumbImg
 success, thumbImg = SipiImage.new(sourcePath, { size = config.thumb_size })
 if not success then
-    server.log("SipiImage.new failed: " .. thumbImg, server.loglevel.LOG_ERR)
+    send_error(500, "SipiImage.new() failed: " .. thumbImg)
     return
 end
 
+local thumbDims
 success, thumbDims = thumbImg:dims()
 if not success then
-    server.log("thumbImg:dims failed: " .. thumbDims, server.loglevel.LOG_ERR)
+    send_error(500, "thumbImg:dims() failed: " .. thumbDims)
     return
 end
 
 --
--- delete tmp and preview files
+-- delete tmp file
 --
 success, errmsg = server.fs.unlink(sourcePath)
 if not success then
-    server.log("server.fs.unlink failed: " .. errmsg, server.loglevel.LOG_ERR)
+    send_error(500, "server.fs.unlink() failed: " .. errmsg)
     return
 end
 
@@ -186,7 +202,7 @@ result = {
     ny_full = fullDims.ny,
     original_mimetype = originalMimeType,
     original_filename = originalFilename,
-    file_type = 'image'
+    file_type = "image"
 }
 
 send_success(result)

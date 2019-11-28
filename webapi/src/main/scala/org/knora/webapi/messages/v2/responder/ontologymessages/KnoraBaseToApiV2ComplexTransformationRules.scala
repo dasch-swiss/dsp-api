@@ -1337,6 +1337,72 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         )
     )
 
+    private val DocumentFileValueHasDimX: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimX,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2Complex.DocumentFileValue),
+        objectType = Some(OntologyConstants.Xsd.Integer),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Document file value has X dimension"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The horizontal dimension of a document file value."
+                )
+            )
+        )
+    )
+
+    private val DocumentFileValueHasDimY: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2Complex.DocumentFileValue),
+        objectType = Some(OntologyConstants.Xsd.Integer),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Document file value has Y dimension"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The vertical dimension of a document file value."
+                )
+            )
+        )
+    )
+
+    private val DocumentFileValueHasPageCount: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2Complex.DocumentFileValue),
+        objectType = Some(OntologyConstants.Xsd.Integer),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Document file value has page count"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "The page count of a document file value."
+                )
+            )
+        )
+    )
+
     private val MovingImageFileValueHasDimX: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimX,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1548,6 +1614,12 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl -> Cardinality.MustHaveOne
     )
 
+    private val DocumentFileValueCardinalities = Map(
+        OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount -> Cardinality.MustHaveOne,
+        OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimX -> Cardinality.MayHaveOne,
+        OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY -> Cardinality.MayHaveOne
+    )
+
     private val MovingImageFileValueCardinalities = Map(
         OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimX -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimY -> Cardinality.MustHaveOne,
@@ -1664,6 +1736,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         OntologyConstants.KnoraApiV2Complex.GeonameValue -> GeonameValueCardinalities,
         OntologyConstants.KnoraApiV2Complex.FileValue -> FileValueCardinalities,
         OntologyConstants.KnoraApiV2Complex.StillImageFileValue -> StillImageFileValueCardinalities,
+        OntologyConstants.KnoraApiV2Complex.DocumentFileValue -> DocumentFileValueCardinalities,
         OntologyConstants.KnoraApiV2Complex.MovingImageFileValue -> MovingImageFileValueCardinalities,
         OntologyConstants.KnoraApiV2Complex.AudioFileValue -> AudioFileValueCardinalities
     ).map {
@@ -1745,6 +1818,9 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
         StillImageFileValueHasDimX,
         StillImageFileValueHasDimY,
         StillImageFileValueHasIIIFBaseUrl,
+        DocumentFileValueHasDimX,
+        DocumentFileValueHasDimY,
+        DocumentFileValueHasPageCount,
         MovingImageFileValueHasDimX,
         MovingImageFileValueHasDimY,
         MovingImageFileValueHasFps,

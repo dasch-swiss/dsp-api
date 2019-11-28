@@ -237,6 +237,22 @@
       "salsah-gui:guiOrder" : 13,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
+        "@id" : "anything:hasThingDocument"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "salsah-gui:guiOrder" : 13,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "anything:hasThingDocumentValue"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "salsah-gui:guiOrder" : 13,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
         "@id" : "anything:hasThingPicture"
       }
     }, {
@@ -665,6 +681,20 @@
       "salsah-gui:guiOrder" : 13,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
+        "@id" : "anything:hasThingDocument"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "salsah-gui:guiOrder" : 13,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "anything:hasThingDocumentValue"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "salsah-gui:guiOrder" : 13,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
         "@id" : "anything:hasThingPicture"
       }
     }, {
@@ -687,6 +717,149 @@
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
         "@id" : "anything:isPartOfOtherThingValue"
+      }
+    } ]
+  }, {
+    "@id" : "anything:ThingDocument",
+    "@type" : "owl:Class",
+    "knora-api:canBeInstantiated" : true,
+    "knora-api:isResourceClass" : true,
+    "knora-api:resourceIcon" : "thing.png",
+    "rdfs:comment" : "A document about a thing",
+    "rdfs:label" : "Document",
+    "rdfs:subClassOf" : [ {
+      "@id" : "knora-api:DocumentRepresentation"
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "anything:hasDocumentTitle"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:attachedToProject"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:attachedToUser"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:creationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:deleteComment"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:deleteDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:deletedBy"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:hasDocumentFileValue"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "knora-api:hasIncomingLinkValue"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:hasPermissions"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "knora-api:hasStandoffLinkTo"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "knora-api:hasStandoffLinkToValue"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:isDeleted"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:userHasPermission"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionArkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:versionDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "rdfs:label"
       }
     } ]
   }, {
@@ -1368,6 +1541,22 @@
       "salsah-gui:guiOrder" : 13,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
+        "@id" : "anything:hasThingDocument"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "salsah-gui:guiOrder" : 13,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "anything:hasThingDocumentValue"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "salsah-gui:guiOrder" : 13,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
         "@id" : "anything:hasThingPicture"
       }
     }, {
@@ -1641,6 +1830,25 @@
       "@id" : "knora-api:hasValue"
     }
   }, {
+    "@id" : "anything:hasDocumentTitle",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:isEditable" : true,
+    "knora-api:isResourceProperty" : true,
+    "knora-api:objectType" : {
+      "@id" : "knora-api:TextValue"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "anything:ThingDocument"
+    },
+    "salsah-gui:guiAttribute" : [ "maxlength=255", "size=80" ],
+    "salsah-gui:guiElement" : {
+      "@id" : "salsah-gui:SimpleText"
+    },
+    "rdfs:label" : "document title",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:hasValue"
+    }
+  }, {
     "@id" : "anything:hasGeometry",
     "@type" : "owl:ObjectProperty",
     "knora-api:isEditable" : true,
@@ -1844,6 +2052,44 @@
     "rdfs:label" : "Text",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:hasValue"
+    }
+  }, {
+    "@id" : "anything:hasThingDocument",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:isEditable" : true,
+    "knora-api:isLinkProperty" : true,
+    "knora-api:isResourceProperty" : true,
+    "knora-api:objectType" : {
+      "@id" : "anything:ThingDocument"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "anything:Thing"
+    },
+    "salsah-gui:guiElement" : {
+      "@id" : "salsah-gui:Searchbox"
+    },
+    "rdfs:label" : "document about a thing",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:hasRepresentation"
+    }
+  }, {
+    "@id" : "anything:hasThingDocumentValue",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:isEditable" : true,
+    "knora-api:isLinkValueProperty" : true,
+    "knora-api:isResourceProperty" : true,
+    "knora-api:objectType" : {
+      "@id" : "knora-api:LinkValue"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "anything:Thing"
+    },
+    "salsah-gui:guiElement" : {
+      "@id" : "salsah-gui:Searchbox"
+    },
+    "rdfs:label" : "document about a thing",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:hasRepresentationValue"
     }
   }, {
     "@id" : "anything:hasThingPicture",

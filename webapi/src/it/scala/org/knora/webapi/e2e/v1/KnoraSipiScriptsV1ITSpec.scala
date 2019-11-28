@@ -62,7 +62,7 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
         }
 
         "successfully call Lua functions for mediatype handling" in {
-            val request = Get(baseSipiUrl + "/test_mediatype" )
+            val request = Get(baseSipiUrl + "/test_file_type" )
             getResponseString(request)
         }
 
@@ -190,7 +190,7 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
             // A multipart/form-data request containing the image.
             val sipiFormData = FormData(
                 Map(
-                    "originalFilename" -> dest.getName,
+                    "originalFilename" -> fileToSend.getName,
                     "originalMimeType" -> "image/jpeg",
                     "prefix" -> "0001",
                     "source" -> dest.getAbsolutePath
