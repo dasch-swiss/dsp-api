@@ -4,7 +4,7 @@ version: '3'
 services:
   # sipi using default (production-like) configuration with additional routes for testing
   sipi:
-    image: dhlabbasel/sipi:v2.0.1
+    image: dhlabbasel/sipi:develop
     container_name: sipi
     ports:
       - "1024:1024"
