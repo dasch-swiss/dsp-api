@@ -106,6 +106,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         "application/octet-stream" -> "BINARY-UNKNOWN",
         "image/jpeg" -> "JPEG",
         "image/jp2" -> "JPEG2000",
+        "image/jpx" -> "JPEG2000",
         "application/pdf" -> "PDF",
         "application/postscript" -> "POSTSCRIPT",
         "application/vnd.ms-powerpoint" -> "PPT",
