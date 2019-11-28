@@ -21,9 +21,9 @@ package org.knora.webapi.routing.admin
 
 import org.knora.webapi.OntologyConstants
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.clientapi._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 
 /**
@@ -90,6 +90,20 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     }
 
     /**
+      * A map of class IRIs to IRIs of optional set properties. Such properties have cardinality 0-n, and should
+      * be made optional in generated code.
+      */
+    override val classesWithOptionalSetProperties: Map[SmartIri, Set[SmartIri]] = Map(
+        OntologyConstants.KnoraAdminV2.UpdateProjectRequest -> Set(
+            OntologyConstants.KnoraAdminV2.KeywordsProperty,
+            OntologyConstants.KnoraAdminV2.ProjectDescription
+        )
+    ).map {
+        case (classIri, propertyIris) =>
+            classIri.toSmartIri -> propertyIris.map(_.toSmartIri)
+    }
+
+    /**
       * A set of IRIs of classes that represent API responses.
       */
     override val responseClasses: Set[SmartIri] = Set(
@@ -115,14 +129,23 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     ).map(_.toSmartIri)
 
     /**
-      * A map of property IRIs to non-standard names that those properties must have.
+      * A map of class IRIs to maps of property IRIs to non-standard names that those properties must have
+      * in those classes. Needed only for JSON, and only if two different properties should have the same name in
+      * different classes. `JsonInstanceInspector` also needs to know about these.
       */
-    override val propertyNames: Map[SmartIri, String] = Map(
-        OntologyConstants.KnoraAdminV2.ProjectIri -> "project",
-        OntologyConstants.KnoraAdminV2.ProjectDescription -> "description",
-        OntologyConstants.KnoraAdminV2.GroupDescription -> "description"
+    override lazy val propertyNames: Map[SmartIri, Map[SmartIri, String]] = AdminClientApi.propertyNames
+}
+
+object AdminClientApi {
+    def propertyNames(implicit stringFormatter: StringFormatter): Map[SmartIri, Map[SmartIri, String]] = Map(
+        OntologyConstants.KnoraAdminV2.CreateGroupRequest -> Map(OntologyConstants.KnoraAdminV2.ProjectIri -> "project"),
+        OntologyConstants.KnoraAdminV2.ProjectClass -> Map(OntologyConstants.KnoraAdminV2.ProjectDescription -> "description"),
+        OntologyConstants.KnoraAdminV2.GroupClass -> Map(OntologyConstants.KnoraAdminV2.GroupDescription -> "description")
     ).map {
-        case (propertyIri, propertyName) =>
-            propertyIri.toSmartIri -> propertyName
+        case (classIri, propertyMap) =>
+            classIri.toSmartIri -> propertyMap.map {
+                case (propertyIri, propertyName) =>
+                    propertyIri.toSmartIri -> propertyName
+            }
     }
 }

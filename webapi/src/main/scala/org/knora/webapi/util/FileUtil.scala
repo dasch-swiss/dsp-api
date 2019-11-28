@@ -149,9 +149,10 @@ object FileUtil {
       * Creates an empty file in the default temporary-file directory specified in Knora's application settings.
       *
       * @param settings Knora's application settings.
+      * @param fileExtension the extension to be used for the temporary file name, if any,
       * @return the location where the file has been written to.
       */
-    def createTempFile(settings: SettingsImpl): File = {
+    def createTempFile(settings: SettingsImpl, fileExtension: Option[String] = None): File = {
 
         // check if the location for writing temporary files exists
         if (!Files.exists(Paths.get(settings.tmpDataDir))) {
@@ -160,7 +161,13 @@ object FileUtil {
             } does not exist on server")
         }
 
-        val file: File = File.createTempFile("tmp_", ".bin", new File(settings.tmpDataDir))
+        val extension = if (fileExtension.nonEmpty) {
+            fileExtension.get
+        } else {
+            "bin"
+        }
+
+        val file: File = File.createTempFile("tmp_", "." + extension, new File(settings.tmpDataDir))
 
         if (!file.canWrite)
             throw FileWriteException(s"File $file cannot be written.")

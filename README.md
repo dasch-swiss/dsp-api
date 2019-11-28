@@ -140,7 +140,7 @@ A pull request should include tests and documentation for the changes that were 
 
 ### Technical
 
-Please use the [knora-user](https://www.maillist.unibas.ch/mailman/listinfo/knora-user) mailing list for technical questions.
+Please use the [discuss.dasch.swiss](https://discuss.dasch.swiss) forum for technical questions.
 
 ### Administrative
 
