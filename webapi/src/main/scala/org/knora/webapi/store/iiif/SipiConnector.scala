@@ -31,7 +31,7 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.GetImageMetadataResponseV2JsonProtocol._
+import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponseV2JsonProtocol._
 import org.knora.webapi.messages.store.sipimessages.RepresentationV1JsonProtocol._
 import org.knora.webapi.messages.store.sipimessages.SipiConstants.FileType
 import org.knora.webapi.messages.store.sipimessages._
@@ -73,7 +73,7 @@ class SipiConnector extends Actor with ActorLogging {
     override def receive: Receive = {
         case convertPathRequest: SipiConversionPathRequestV1 => try2Message(sender(), convertPathV1(convertPathRequest), log)
         case convertFileRequest: SipiConversionFileRequestV1 => try2Message(sender(), convertFileV1(convertFileRequest), log)
-        case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
+        case getFileMetadataRequestV2: GetFileMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
         case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)
         case deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2 => try2Message(sender(), deleteTemporaryFileV2(deleteTemporaryFileRequestV2), log)
         case SipiGetTextFileRequest(fileUrl, requestingUser) => try2Message(sender(), sipiGetXsltTransformationRequestV2(fileUrl, requestingUser), log)
@@ -235,16 +235,16 @@ class SipiConnector extends Actor with ActorLogging {
       * Asks Sipi for metadata about a file.
       *
       * @param getFileMetadataRequestV2 the request.
-      * @return a [[GetImageMetadataResponseV2]] containing the requested metadata.
+      * @return a [[GetFileMetadataResponseV2]] containing the requested metadata.
       */
-    private def getFileMetadataV2(getFileMetadataRequestV2: GetImageMetadataRequestV2): Try[GetImageMetadataResponseV2] = {
+    private def getFileMetadataV2(getFileMetadataRequestV2: GetFileMetadataRequestV2): Try[GetFileMetadataResponseV2] = {
         val knoraInfoUrl = getFileMetadataRequestV2.fileUrl + "/knora.json"
 
         val request = new HttpGet(knoraInfoUrl)
 
         for {
             responseStr <- doSipiRequest(request)
-        } yield responseStr.parseJson.convertTo[GetImageMetadataResponseV2]
+        } yield responseStr.parseJson.convertTo[GetFileMetadataResponseV2]
     }
 
     /**

@@ -152,20 +152,54 @@
 
             }
 
-            case stillImageFileValue: StillImageFileValueContentV2 => {
-                <@newValueIri> knora-base:originalFilename """@stillImageFileValue.fileValue.originalFilename""" ;
-                                     knora-base:originalMimeType """@stillImageFileValue.fileValue.originalMimeType""" ;
-                                     knora-base:internalFilename """@stillImageFileValue.fileValue.internalFilename""" ;
-                                     knora-base:internalMimeType """@stillImageFileValue.fileValue.internalMimeType""" ;
-                                     knora-base:dimX @stillImageFileValue.dimX ;
-                                     knora-base:dimY @stillImageFileValue.dimY .
-            }
+            case fileValueContentV2: FileValueContentV2 => {
+                <@newValueIri> knora-base:internalFilename """@fileValueContentV2.fileValue.internalFilename""" ;
+                    knora-base:internalMimeType """@fileValueContentV2.fileValue.internalMimeType""" .
 
-            case textFileValue: TextFileValueContentV2 => {
-                <@newValueIri> knora-base:originalFilename """@textFileValue.fileValue.originalFilename""" ;
-                                     knora-base:originalMimeType """@textFileValue.fileValue.originalMimeType""" ;
-                                     knora-base:internalFilename """@textFileValue.fileValue.internalFilename""" ;
-                                     knora-base:internalMimeType """@textFileValue.fileValue.internalMimeType""" .
+                @fileValueContentV2.fileValue.originalFilename match {
+                    case Some(definedOriginalFilename) => {
+                        <@newValueIri> knora-base:originalFilename """@definedOriginalFilename""" .
+                    }
+
+                    case None => {}
+                }
+
+                @fileValueContentV2.fileValue.originalMimeType match {
+                    case Some(definedOriginalMimeType) => {
+                        <@newValueIri> knora-base:originalMimeType """@definedOriginalMimeType""" .
+                    }
+
+                    case None => {}
+                }
+
+                @fileValueContentV2 match {
+                    case stillImageFileValue: StillImageFileValueContentV2 => {
+                        <@newValueIri> knora-base:dimX @stillImageFileValue.dimX ;
+                            knora-base:dimY @stillImageFileValue.dimY .
+                    }
+
+                    case documentFileValue: DocumentFileValueContentV2 => {
+                        <@newValueIri> knora-base:pageCount @documentFileValue.pageCount .
+
+                        @documentFileValue.dimX match {
+                            case Some(definedDimX) => {
+                                <@newValueIri> knora-base:dimX @documentFileValue.dimX .
+                            }
+
+                            case None => {}
+                        }
+
+                        @documentFileValue.dimY match {
+                            case Some(definedDimY) => {
+                                <@newValueIri> knora-base:dimY @documentFileValue.dimY .
+                            }
+
+                            case None => {}
+                        }
+                    }
+
+                    case _ => {}
+                }
             }
 
             case listValue: HierarchicalListValueContentV2 => {
