@@ -288,7 +288,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             // To be able to run packaged tests inside Docker, we need to copy
             // the file first to a place which is shared with sipi
-            val dest = FileUtil.createTempFile(settings)
+            val dest = FileUtil.createTempFile(settings, Some("jpg"))
             new FileOutputStream(dest)
               .getChannel
               .transferFrom(
