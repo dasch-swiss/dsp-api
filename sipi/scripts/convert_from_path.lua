@@ -124,6 +124,20 @@ if media_type == IMAGE then
         return
     end
 
+    local check
+    success, check = fullImg:mimetype_consistency(originalMimeType, originalFilename)
+
+    if not success then
+        send_error(500, "fullImg:mimetype_consistency() failed: " .. check)
+        return
+    end
+
+    -- if check returns false, the user's input is invalid
+    if not check then
+        send_error(400, MIMETYPES_INCONSISTENCY)
+        return
+    end
+
     local fullDims
     success, fullDims = fullImg:dims()
     if not success then
