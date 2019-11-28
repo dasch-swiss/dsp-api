@@ -30,7 +30,7 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{GetImageMetadataRequestV2, GetImageMetadataResponseV2}
+import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequestV2, GetFileMetadataResponseV2}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -990,6 +990,9 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
 
                 case OntologyConstants.KnoraApiV2Complex.StillImageFileValue =>
                     StillImageFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+
+                case OntologyConstants.KnoraApiV2Complex.DocumentFileValue =>
+                    DocumentFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
             }
@@ -2564,8 +2567,45 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
   */
 case class FileValueV2(internalFilename: String,
                        internalMimeType: String,
-                       originalFilename: String,
-                       originalMimeType: String)
+                       originalFilename: Option[String],
+                       originalMimeType: Option[String])
+
+/**
+  * Holds a [[FileValueV2]] and the metadata that Sipi returned about the file.
+  *
+  * @param fileValue        a [[FileValueV2]].
+  * @param sipiFileMetadata the metadata that Sipi returned about the file.
+  */
+case class FileValueWithSipiMetadata(fileValue: FileValueV2, sipiFileMetadata: GetFileMetadataResponseV2)
+
+/**
+  * Constructs [[FileValueWithSipiMetadata]] objects based on JSON-LD input.
+  */
+object FileValueWithSipiMetadata {
+    def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                         requestingUser: UserADM,
+                         responderManager: ActorRef,
+                         storeManager: ActorRef,
+                         settings: SettingsImpl,
+                         log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[FileValueWithSipiMetadata] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        for {
+            // The submitted value provides only Sipi's internal filename for the file.
+            internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename, stringFormatter.toSparqlEncodedString))
+
+            // Ask Sipi about the rest of the file's metadata.
+            tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$internalFilename"
+            fileMetadataResponse: GetFileMetadataResponseV2 <- (storeManager ? GetFileMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetFileMetadataResponseV2]
+            fileValue = FileValueV2(
+                internalFilename = internalFilename,
+                internalMimeType = fileMetadataResponse.internalMimeType,
+                originalFilename = fileMetadataResponse.originalFilename,
+                originalMimeType = fileMetadataResponse.originalMimeType
+            )
+        } yield FileValueWithSipiMetadata(fileValue, fileMetadataResponse)
+    }
+}
 
 /**
   * A trait for case classes representing different types of file values.
@@ -2599,9 +2639,9 @@ sealed trait FileValueContentV2 extends ValueContentV2 {
   * Represents image file metadata.
   *
   * @param fileValue the basic metadata about the file value.
-  * @param dimX      the with of the the image file corresponding to this file value in pixels.
-  * @param dimY      the height of the the image file corresponding to this file value in pixels.
-  * @param comment   a comment on this [[StillImageFileValueContentV2]], if any.
+  * @param dimX      the with of the the image in pixels.
+  * @param dimY      the height of the the image in pixels.
+  * @param comment   a comment on this `StillImageFileValueContentV2`, if any.
   */
 case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
                                         fileValue: FileValueV2,
@@ -2673,31 +2713,128 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
-            // The submitted value provides only Sipi's internal filename for the image.
-            internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename, stringFormatter.toSparqlEncodedString))
-
-            // Ask Sipi about the rest of the file's metadata.
-            tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$internalFilename"
-            imageMetadataResponse: GetImageMetadataResponseV2 <- (storeManager ? GetImageMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetImageMetadataResponseV2]
-
-            fileValue = FileValueV2(
-                internalFilename = internalFilename,
-                internalMimeType = "image/jp2", // Sipi stores all images as JPEG 2000.
-                originalFilename = imageMetadataResponse.originalFilename,
-                originalMimeType = imageMetadataResponse.originalMimeType
+            fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
+                jsonLDObject = jsonLDObject,
+                requestingUser = requestingUser,
+                responderManager = responderManager,
+                storeManager = storeManager,
+                settings = settings,
+                log = log
             )
         } yield StillImageFileValueContentV2(
             ontologySchema = ApiV2Complex,
-            fileValue = fileValue,
-            dimX = imageMetadataResponse.width,
-            dimY = imageMetadataResponse.height,
+            fileValue = fileValueWithSipiMetadata.fileValue,
+            dimX = fileValueWithSipiMetadata.sipiFileMetadata.width.getOrElse(throw SipiException(s"Sipi did not return the image width")),
+            dimY = fileValueWithSipiMetadata.sipiFileMetadata.height.getOrElse(throw SipiException(s"Sipi did not return the image height")),
             comment = getComment(jsonLDObject)
         )
     }
 }
 
 /**
-  * Represents a text file value. Please note that the file itself is managed by Sipi.
+  * Represents document file metadata.
+  *
+  * @param fileValue the basic metadata about the file value.
+  * @param pageCount the number of pages in the document.
+  * @param dimX      the with of the the document in pixels.
+  * @param dimY      the height of the the document in pixels.
+  * @param comment   a comment on this `DocumentFileValueContentV2`, if any.
+  */
+case class DocumentFileValueContentV2(ontologySchema: OntologySchema,
+                                      fileValue: FileValueV2,
+                                      pageCount: Int,
+                                      dimX: Option[Int],
+                                      dimY: Option[Int],
+                                      comment: Option[String] = None) extends FileValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.DocumentFileValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
+
+    override def valueHasString: String = fileValue.internalFilename
+
+    override def toOntologySchema(targetSchema: OntologySchema): DocumentFileValueContentV2 = copy(ontologySchema = targetSchema)
+
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+        val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}"
+
+        targetSchema match {
+            case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
+
+            case ApiV2Complex =>
+                val maybeDimXStatement: Option[(IRI, JsonLDInt)] = dimX.map {
+                    definedDimX => OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimX -> JsonLDInt(definedDimX)
+                }
+
+                val maybeDimYStatement: Option[(IRI, JsonLDInt)] = dimY.map {
+                    definedDimY => OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY -> JsonLDInt(definedDimY)
+                }
+
+                JsonLDObject(
+                    toJsonLDObjectMapInComplexSchema(fileUrl) ++ Map(
+                        OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount -> JsonLDInt(pageCount)
+                    ) ++ maybeDimXStatement ++ maybeDimYStatement
+                )
+        }
+    }
+
+    override def unescape: ValueContentV2 = {
+        copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    }
+
+    override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = {
+        that match {
+            case thatDocumentFile: DocumentFileValueContentV2 =>
+                fileValue == thatDocumentFile.fileValue
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
+        }
+    }
+
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatDocumentFile: DocumentFileValueContentV2 =>
+                wouldDuplicateOtherValue(thatDocumentFile) && comment == thatDocumentFile.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
+}
+
+/**
+  * Constructs [[DocumentFileValueContentV2]] objects based on JSON-LD input.
+  */
+object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValueContentV2] {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  requestingUser: UserADM,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
+                                  settings: SettingsImpl,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DocumentFileValueContentV2] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        for {
+            fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
+                jsonLDObject = jsonLDObject,
+                requestingUser = requestingUser,
+                responderManager = responderManager,
+                storeManager = storeManager,
+                settings = settings,
+                log = log
+            )
+        } yield DocumentFileValueContentV2(
+            ontologySchema = ApiV2Complex,
+            fileValue = fileValueWithSipiMetadata.fileValue,
+            pageCount = fileValueWithSipiMetadata.sipiFileMetadata.numpages.getOrElse(throw SipiException("Sipi did not return a page count")),
+            dimX = fileValueWithSipiMetadata.sipiFileMetadata.width,
+            dimY = fileValueWithSipiMetadata.sipiFileMetadata.height,
+            comment = getComment(jsonLDObject)
+        )
+    }
+}
+
+/**
+  * Represents text file metadata.
   *
   * @param fileValue the basic metadata about the file value.
   * @param comment   a comment on this [[TextFileValueContentV2]], if any.
@@ -2715,7 +2852,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
     override def toOntologySchema(targetSchema: OntologySchema): TextFileValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
-        val fileUrl: String = s"${settings.externalSipiFileServerGetUrl}/${fileValue.internalFilename}"
+        val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}"
 
         targetSchema match {
             case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
@@ -2759,11 +2896,24 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
                                   storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextFileValueContentV2] = {
-        // TODO
-        throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        for {
+            fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
+                jsonLDObject = jsonLDObject,
+                requestingUser = requestingUser,
+                responderManager = responderManager,
+                storeManager = storeManager,
+                settings = settings,
+                log = log
+            )
+        } yield TextFileValueContentV2(
+            ontologySchema = ApiV2Complex,
+            fileValue = fileValueWithSipiMetadata.fileValue,
+            comment = getComment(jsonLDObject)
+        )
     }
 }
-
 
 /**
   * Represents a Knora link value.
