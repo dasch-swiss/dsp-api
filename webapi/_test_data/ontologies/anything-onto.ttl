@@ -621,6 +621,18 @@
                  "Blue thing"@en .
 
 
+:YellowThing rdf:type owl:Class ;
+
+      rdfs:subClassOf :Thing ;
+
+      rdfs:comment """Diese Resource-Klasse beschreibt ein gelbes Ding"""@de ;
+
+      rdfs:label "Gelbes Ding"@de ,
+                 "Chose jaune, avec un accès limité à certains groupes d'utilisateurs"@fr ,
+                 "Cosa gialla"@it ,
+                 "Yellow thing, with restricted access"@en .
+
+
 :hasPictureTitle rdf:type owl:ObjectProperty ;
 
        rdfs:subPropertyOf knora-base:hasValue ;
