@@ -132,7 +132,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                     case _ => false
                 }
 
-            case _ => throw InvalidApiJsonException("bulk import response should have memeber 'createdResources'")
+            case _ => throw InvalidApiJsonException("bulk import response should have member 'createdResources'")
         }
 
         if (resIriOption.nonEmpty) {
@@ -174,30 +174,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             loginToken = lr.token
 
             loginToken.nonEmpty should be(true)
-        }
-
-        "reject an 'incunabula:page' with binary data if the file extension is incorrect" ignore { // Ignored because of issue #1531.
-            // The image to be uploaded.
-            val fileToSend = new File(pathToMarblesWithWrongExtension)
-            assert(fileToSend.exists(), s"File $pathToMarblesWithWrongExtension does not exist")
-
-            // A multipart/form-data request containing the image.
-            val formData = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "file",
-                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
-                    Map("filename" -> fileToSend.getName)
-                )
-            )
-
-            // Send the image in a PUT request to the Knora API server.
-            val knoraPutRequest = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(firstPageIri.get, "UTF-8"), formData) ~> addCredentials(BasicHttpCredentials(username, password))
-
-            val exception = intercept[AssertionException] {
-                checkResponseOK(knoraPutRequest)
-            }
-
-            assert(exception.getMessage.contains("MIME type and/or file extension are inconsistent"))
         }
 
         "create an 'incunabula:page' with parameters" in {

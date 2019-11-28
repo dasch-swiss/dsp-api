@@ -71,7 +71,7 @@ case class GetFileMetadataResponseV2(originalFilename: Option[String],
 }
 
 object GetFileMetadataResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-    implicit val getImageMetadataResponseV2Format: RootJsonFormat[GetFileMetadataResponseV2] = jsonFormat6(GetFileMetadataResponseV2)
+    implicit val GetFileMetadataResponseV2Format: RootJsonFormat[GetFileMetadataResponseV2] = jsonFormat6(GetFileMetadataResponseV2)
 }
 
 /**

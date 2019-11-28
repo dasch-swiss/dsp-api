@@ -96,7 +96,7 @@ If it encounters an error, it returns `SipiException`.
    to create or change a file value. The request includes Sipi's internal filename.
 3. During parsing of this JSON-LD request, a `StillImageFileValueContentV2`
    is constructed to represent the file value. During the construction of this
-   object, a `GetImageMetadataRequestV2` is sent to `SipiConnector`, which
+   object, a `GetFileMetadataRequestV2` is sent to `SipiConnector`, which
    uses Sipi's built-in `knora.json` route to get the rest of the file's
    metadata.
 4. A responder (`ResourcesResponderV2` or `ValuesResponderV2`) validates

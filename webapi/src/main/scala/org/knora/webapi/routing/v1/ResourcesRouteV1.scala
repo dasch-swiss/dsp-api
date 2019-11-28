@@ -38,7 +38,7 @@ import javax.xml.validation.{Schema, SchemaFactory, Validator}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{GetImageMetadataRequest, GetImageMetadataResponseV2}
+import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponseV2}
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -227,17 +227,17 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
 
                         for {
-                            imageMetadataResponse: GetImageMetadataResponseV2 <- (storeManager ? GetImageMetadataRequest(fileUrl = tempFileUrl, requestingUser = userADM)).mapTo[GetImageMetadataResponseV2]
+                            fileMetadataResponse: GetFileMetadataResponseV2 <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = userADM)).mapTo[GetFileMetadataResponseV2]
 
                             // TODO: check that the file stored is an image.
                         } yield Some(StillImageFileValueV1(
                             internalFilename = filename,
-                            internalMimeType = "image/jp2",
-                            originalFilename = imageMetadataResponse.originalFilename,
-                            originalMimeType = Some(imageMetadataResponse.originalMimeType),
+                            internalMimeType = fileMetadataResponse.internalMimeType,
+                            originalFilename = fileMetadataResponse.originalFilename.getOrElse(throw SipiException(s"Sipi did not return the original filename of the image")),
+                            originalMimeType = fileMetadataResponse.originalMimeType,
                             projectShortcode = projectShortcode,
-                            dimX = imageMetadataResponse.width,
-                            dimY = imageMetadataResponse.height
+                            dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the image")),
+                            dimY = fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the image"))
                         ))
 
                     case None => FastFuture.successful(None)
@@ -290,17 +290,17 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                         val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
 
                         for {
-                            imageMetadataResponse: GetImageMetadataResponseV2 <- (storeManager ? GetImageMetadataRequest(fileUrl = tempFileUrl, requestingUser = userProfile)).mapTo[GetImageMetadataResponseV2]
+                            fileMetadataResponse: GetFileMetadataResponseV2 <- (storeManager ? GetFileMetadataRequest(fileUrl = tempFileUrl, requestingUser = userProfile)).mapTo[GetFileMetadataResponseV2]
 
                             // TODO: check that the file stored is an image.
                         } yield Some(StillImageFileValueV1(
                             internalFilename = filename,
-                            internalMimeType = "image/jp2",
-                            originalFilename = imageMetadataResponse.originalFilename,
-                            originalMimeType = Some(imageMetadataResponse.originalMimeType),
+                            internalMimeType = fileMetadataResponse.internalMimeType,
+                            originalFilename = fileMetadataResponse.originalFilename.getOrElse(throw SipiException(s"Sipi did not return the original filename of the image")),
+                            originalMimeType = fileMetadataResponse.originalMimeType,
                             projectShortcode = projectShortcode,
-                            dimX = imageMetadataResponse.width,
-                            dimY = imageMetadataResponse.height
+                            dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the image")),
+                            dimY = fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the image"))
                         ))
 
                     case None => FastFuture.successful(None)

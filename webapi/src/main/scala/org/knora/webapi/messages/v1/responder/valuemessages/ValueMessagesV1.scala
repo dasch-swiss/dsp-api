@@ -1449,8 +1449,8 @@ case class StillImageFileValueV1(internalMimeType: String,
             fileValue = FileValueV2(
                 internalFilename = internalFilename,
                 internalMimeType = internalMimeType,
-                originalFilename = originalFilename,
-                originalMimeType = internalMimeType
+                originalFilename = Some(originalFilename),
+                originalMimeType = Some(internalMimeType)
             ),
             dimX = dimX,
             dimY = dimY
