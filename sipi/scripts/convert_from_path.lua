@@ -139,20 +139,19 @@ if media_type == IMAGE then
         return
     end
 
-    -- Commented out because of issue #1531.
-    --local check
-    --success, check = fullImg:mimetype_consistency(submitted_mimetype.mimetype, originalFilename)
-    --
-    --if not success then
-    --    send_error(500, "convert_from_path.lua: fullImg:mimetype_consistency() failed: " .. check)
-    --    return
-    --end
-    --
+    local check
+    success, check = fullImg:mimetype_consistency(submitted_mimetype.mimetype, originalFilename)
+
+    if not success then
+        send_error(500, "convert_from_path.lua: fullImg:mimetype_consistency() failed: " .. check)
+        return
+    end
+
     -- if check returns false, the user's input is invalid
-    --if not check then
-    --    send_error(400, MIMETYPES_INCONSISTENCY)
-    --    return
-    --end
+    if not check then
+        send_error(400, MIMETYPES_INCONSISTENCY)
+        return
+    end
 
     local fullDims
     success, fullDims = fullImg:dims()
