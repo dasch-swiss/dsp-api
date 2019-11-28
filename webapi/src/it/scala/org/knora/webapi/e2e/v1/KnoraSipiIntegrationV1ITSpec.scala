@@ -265,7 +265,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             checkResponseOK(knoraPutRequest)
         }
 
-        "reject an 'incunabula:page' with binary data if the file extension is incorrect" in {
+        "reject an 'incunabula:page' with binary data if the file extension is incorrect" ignore { // Ignored because of issue #1531.
             // The image to be uploaded.
             val fileToSend = new File(pathToMarblesWithWrongExtension)
             assert(fileToSend.exists(), s"File $pathToMarblesWithWrongExtension does not exist")
