@@ -12,7 +12,7 @@
         knora-admin:projectShortname "parole-religieuse"^^xsd:string ;
         knora-admin:projectShortcode "0106"^^xsd:string ;
         knora-admin:projectLongname "parole-religieuse"^^xsd:string ;
-        knora-admin:projectDescription "parole-religieuse"^^xsd:string ;
+        knora-admin:projectDescription "parole-religieuse"@fr ;
         knora-admin:projectKeywords "gods, collection"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
         knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .

@@ -61,6 +61,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val password = "test"
     private val pathToChlaus = "_test_data/test_route/images/Chlaus.jpg"
     private val pathToMarbles = "_test_data/test_route/images/marbles.tif"
+    private val pathToMarblesWithWrongExtension = "_test_data/test_route/images/marbles_with_wrong_extension.jpg"
     private val pathToXSLTransformation = "_test_data/test_route/texts/letterToHtml.xsl"
     private val pathToMappingWithXSLT = "_test_data/test_route/texts/mappingForLetterWithXSLTransformation.xml"
     private val firstPageIri = new MutableTestIri
@@ -264,6 +265,30 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             checkResponseOK(knoraPutRequest)
         }
 
+        "reject an 'incunabula:page' with binary data if the file extension is incorrect" ignore { // Ignored because of issue #1531.
+            // The image to be uploaded.
+            val fileToSend = new File(pathToMarblesWithWrongExtension)
+            assert(fileToSend.exists(), s"File $pathToMarblesWithWrongExtension does not exist")
+
+            // A multipart/form-data request containing the image.
+            val formData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            // Send the image in a PUT request to the Knora API server.
+            val knoraPutRequest = Put(baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(firstPageIri.get, "UTF-8"), formData) ~> addCredentials(BasicHttpCredentials(username, password))
+
+            val exception = intercept[AssertionException] {
+                checkResponseOK(knoraPutRequest)
+            }
+
+            assert(exception.getMessage.contains("MIME type and/or file extension are inconsistent"))
+        }
+
         "create an 'incunabula:page' with parameters" in {
             // The image to be uploaded.
             val fileToSend = new File(pathToChlaus)
@@ -420,7 +445,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             // To be able to run packaged tests inside Docker, we need to copy
             // the file first to a place which is shared with sipi
-            val dest = FileUtil.createTempFile(settings)
+            val dest = FileUtil.createTempFile(settings, Some("jpg"))
             new FileOutputStream(dest)
               .getChannel
               .transferFrom(
@@ -808,7 +833,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             xmlDiff.hasDifferences should be(false)
 
         }
-
     }
 }
 

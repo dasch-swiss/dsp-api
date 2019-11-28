@@ -317,6 +317,31 @@
     salsah-gui:guiElement salsah-gui:Searchbox .
 
 
+:hasThingDocument rdf:type owl:ObjectProperty ;
+
+    rdfs:subPropertyOf knora-base:hasRepresentation ;
+
+    rdfs:label "document about a thing"@en ;
+
+    knora-base:subjectClassConstraint :Thing ;
+
+    knora-base:objectClassConstraint :ThingDocument ;
+
+    salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+:hasThingDocumentValue rdf:type owl:ObjectProperty ;
+
+    rdfs:subPropertyOf knora-base:hasRepresentationValue ;
+
+    rdfs:label "document about a thing"@en ;
+
+    knora-base:subjectClassConstraint :Thing ;
+
+    knora-base:objectClassConstraint knora-base:LinkValue ;
+
+    salsah-gui:guiElement salsah-gui:Searchbox .
+
 
 :isPartOfOtherThing rdf:type owl:ObjectProperty ;
 
@@ -512,6 +537,18 @@
                       ] ,
                       [
                          rdf:type owl:Restriction ;
+                         owl:onProperty :hasThingDocument ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "13"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasThingDocumentValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "13"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
                          owl:onProperty :hasText ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
@@ -654,7 +691,15 @@
 
        salsah-gui:guiAttribute "size=80" ,
                                "maxlength=255" .
-
+                               
+:hasDocumentTitle rdf:type owl:ObjectProperty ;
+      rdfs:subPropertyOf knora-base:hasValue ;
+      rdfs:label "document title"@en ;
+      knora-base:subjectClassConstraint :ThingDocument ;
+      knora-base:objectClassConstraint knora-base:TextValue ;
+      salsah-gui:guiElement salsah-gui:SimpleText ;
+      salsah-gui:guiAttribute "size=80" ,
+                              "maxlength=255" .
 
 :ThingWithSeqnum rdf:type owl:Class ;
 
@@ -705,6 +750,18 @@
                "Trivial thing"@en ;
 
     rdfs:comment """Diese Resource-Klasse beschreibt ein unbedeutendes Ding"""@de .
+
+
+:ThingDocument rdf:type owl:Class ;
+    rdfs:subClassOf knora-base:DocumentRepresentation ,
+                    [
+                       rdf:type owl:Restriction ;
+                       owl:onProperty :hasDocumentTitle ;
+                       owl:minCardinality "0"^^xsd:nonNegativeInteger
+                    ] ;
+    knora-base:resourceIcon "thing.png" ;
+    rdfs:label "Document"@en ;
+    rdfs:comment """A document about a thing"""@en .
 
 
 :ThingWithRepresentation rdf:type owl:Class ;

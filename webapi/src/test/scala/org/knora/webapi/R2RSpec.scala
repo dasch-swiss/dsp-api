@@ -103,10 +103,10 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
       */
     protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
         if (writeFile) {
-            FileUtil.writeTextFile(file, responseAsString)
+            FileUtil.writeTextFile(file, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
             responseAsString
         } else {
-            FileUtil.readTextFile(file)
+            FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
         }
     }
 }
