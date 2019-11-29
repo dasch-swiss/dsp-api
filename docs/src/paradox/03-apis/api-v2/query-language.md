@@ -184,13 +184,10 @@ that refer to events that took place within a certain date range.
 ## Permission Checking
 
 Each matching resource is returned with the values that the user has
-permission to see. only if the client has permission to
-see all the values of that resource that matched the criteria given in
-the WHERE clause. If a matching resource contains a value that was
-mentioned in the WHERE clause, but the client does not have permission
-to see that value, the resource is not returned in the results, and is
-instead replaced by a proxy resource called
-`knora-api:ForbiddenResource`.
+permission to see. If the user does not have permission to see a matching
+main resource, it is replaced by a proxy resource called
+`knora-api:ForbiddenResource`. If a user does not have permission to see
+a matching dependent resource, only its IRI is returned.
 
 ## Inference
 
