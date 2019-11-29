@@ -38,6 +38,7 @@ import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
+import org.scalatest.Assertion
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import resource._
@@ -249,7 +250,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
       * @param search : search query as a string
       * @return : nothing, assert is called within this function
       */
-    private def checkSearchWithDifferentNumberOfProperties(search: String) = {
+    private def checkSearchWithDifferentNumberOfProperties(search: String): Assertion = {
 
         Get(search) ~> resourcesPathV1 ~> check {
 
@@ -263,7 +264,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             // println(resources)
 
-            assert(resources.length == expectedNumber, s"expected $expectedNumber results, but ${resources.length} given: $resources")
+            assert(resources.length == expectedNumber)
 
         }
     }
@@ -277,7 +278,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             Get("/v1/resources.html/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a?noresedit=true&reqtype=properties") ~> resourcesPathV1 ~> check {
                 //log.debug("==>> " + responseAs[String])
                 assert(status === StatusCodes.OK)
-                assert(responseAs[String] contains "Phyiscal description")
+                assert(responseAs[String] contains "Physical description")
                 assert(responseAs[String] contains "Location")
                 assert(responseAs[String] contains "Publication location")
                 assert(responseAs[String] contains "URI")

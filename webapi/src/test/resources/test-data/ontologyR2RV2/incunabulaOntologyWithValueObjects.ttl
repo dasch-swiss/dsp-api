@@ -350,7 +350,7 @@ incunabula:physical_desc a owl:ObjectProperty;
   salsah-gui:guiAttribute "cols=60", "rows=3", "wrap=soft";
   salsah-gui:guiElement salsah-gui:Textarea;
   rdfs:comment "Generelle physische Beschreibung des Objektes wie Material, Grösse etc.";
-  rdfs:label "Phyiscal description";
+  rdfs:label "Physical description";
   rdfs:subPropertyOf knora-api:hasValue .
 
 incunabula:note a owl:ObjectProperty;
