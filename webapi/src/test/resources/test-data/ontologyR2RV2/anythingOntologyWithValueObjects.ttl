@@ -160,14 +160,6 @@ anything:BlueThing a owl:Class;
       owl:minCardinality 0;
       owl:onProperty anything:hasBlueThingValue
     ], [ a owl:Restriction;
-      salsah-gui:guiOrder 20;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasRedThing
-    ], [ a owl:Restriction;
-      salsah-gui:guiOrder 20;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasRedThingValue
-    ], [ a owl:Restriction;
       salsah-gui:guiOrder 63;
       owl:minCardinality 0;
       owl:onProperty anything:hasBlueThing
@@ -204,6 +196,14 @@ anything:Thing a owl:Class;
   rdfs:comment "'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking";
   rdfs:label "Thing";
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:attachedToUser
@@ -347,14 +347,6 @@ anything:Thing a owl:Class;
       salsah-gui:guiOrder 15;
       owl:minCardinality 0;
       owl:onProperty anything:isPartOfOtherThingValue
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:attachedToProject
     ] .
 
 anything:hasListItem a owl:ObjectProperty;
@@ -549,25 +541,6 @@ anything:hasBlueThingValue a owl:ObjectProperty;
   rdfs:label "A blue thing";
   rdfs:subPropertyOf anything:hasOtherThingValue .
 
-anything:hasRedThing a owl:ObjectProperty;
-  knora-api:isEditable true;
-  knora-api:isLinkProperty true;
-  knora-api:isResourceProperty true;
-  knora-api:objectType anything:RedThing;
-  knora-api:subjectType anything:Thing;
-  salsah-gui:guiElement salsah-gui:Searchbox;
-  rdfs:label "A red thing";
-  rdfs:subPropertyOf anything:hasOtherThing .
-
-anything:hasRedThingValue a owl:ObjectProperty;
-  knora-api:isEditable true;
-  knora-api:isLinkValueProperty true;
-  knora-api:isResourceProperty true;
-  knora-api:objectType knora-api:LinkValue;
-  knora-api:subjectType anything:Thing;
-  rdfs:label "A red thing";
-  rdfs:subPropertyOf anything:hasOtherThingValue .
-
 anything:hasBlueThing a owl:ObjectProperty;
   knora-api:isEditable true;
   knora-api:isLinkProperty true;
@@ -577,206 +550,6 @@ anything:hasBlueThing a owl:ObjectProperty;
   salsah-gui:guiElement salsah-gui:Searchbox;
   rdfs:label "A blue thing";
   rdfs:subPropertyOf anything:hasOtherThing .
-
-anything:RedThing a owl:Class;
-  knora-api:canBeInstantiated true;
-  knora-api:isResourceClass true;
-  rdfs:comment "Diese Resource-Klasse beschreibt ein rotes Ding";
-  rdfs:label "Red thing";
-  rdfs:subClassOf anything:Thing, [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:attachedToProject
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:attachedToUser
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:creationDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:deleteComment
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:deleteDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:deletedBy
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLinkValue
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasPermissions
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkToValue
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:isDeleted
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:lastModificationDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:userHasPermission
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:versionDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 0;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasListItem
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 0;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasOtherListItem
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 1;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasOtherThing
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 1;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasOtherThingValue
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 2;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasRichtext
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 2;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasText
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 3;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 4;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasInteger
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 5;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasDecimal
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 6;
-      owl:maxCardinality 1;
-      owl:onProperty anything:hasBoolean
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 7;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasUri
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 9;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasInterval
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 10;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasColor
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 11;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasGeometry
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 12;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasGeoname
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 13;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasThingDocument
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 13;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasThingDocumentValue
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 13;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasThingPicture
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 13;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasThingPictureValue
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 15;
-      owl:minCardinality 0;
-      owl:onProperty anything:isPartOfOtherThing
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      salsah-gui:guiOrder 15;
-      owl:minCardinality 0;
-      owl:onProperty anything:isPartOfOtherThingValue
-    ] .
-
-anything:hasOtherThing a owl:ObjectProperty;
-  knora-api:isEditable true;
-  knora-api:isLinkProperty true;
-  knora-api:isResourceProperty true;
-  knora-api:objectType anything:Thing;
-  knora-api:subjectType anything:Thing;
-  salsah-gui:guiElement salsah-gui:Searchbox;
-  rdfs:label "Another thing";
-  rdfs:subPropertyOf knora-api:hasLinkTo .
-
-anything:hasOtherThingValue a owl:ObjectProperty;
-  knora-api:isEditable true;
-  knora-api:isLinkValueProperty true;
-  knora-api:isResourceProperty true;
-  knora-api:objectType knora-api:LinkValue;
-  knora-api:subjectType anything:Thing;
-  salsah-gui:guiElement salsah-gui:Searchbox;
-  rdfs:label "Another thing";
-  rdfs:subPropertyOf knora-api:hasLinkToValue .
 
 anything:StandoffEventTag a owl:Class;
   knora-api:isStandoffClass true;
@@ -867,6 +640,26 @@ anything:standoffEventTagHasDescription a owl:DatatypeProperty;
   knora-api:objectType xsd:string;
   knora-api:subjectType anything:StandoffEventTag .
 
+anything:hasOtherThing a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isLinkProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType anything:Thing;
+  knora-api:subjectType anything:Thing;
+  salsah-gui:guiElement salsah-gui:Searchbox;
+  rdfs:label "Another thing";
+  rdfs:subPropertyOf knora-api:hasLinkTo .
+
+anything:hasOtherThingValue a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isLinkValueProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:LinkValue;
+  knora-api:subjectType anything:Thing;
+  salsah-gui:guiElement salsah-gui:Searchbox;
+  rdfs:label "Another thing";
+  rdfs:subPropertyOf knora-api:hasLinkToValue .
+
 anything:ThingDocument a owl:Class;
   knora-api:canBeInstantiated true;
   knora-api:isResourceClass true;
@@ -874,21 +667,6 @@ anything:ThingDocument a owl:Class;
   rdfs:comment "A document about a thing";
   rdfs:label "Document";
   rdfs:subClassOf knora-api:DocumentRepresentation, [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty anything:hasDocumentTitle
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:attachedToProject
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:attachedToUser
-    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:creationDate
@@ -948,6 +726,21 @@ anything:ThingDocument a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty rdfs:label
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasDocumentTitle
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
     ] .
 
 anything:hasDocumentTitle a owl:ObjectProperty;

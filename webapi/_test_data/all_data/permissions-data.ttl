@@ -241,24 +241,6 @@
 
                       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"^^xsd:string .
 
-### Default Object Access Permissions on a resource class : only visible by project members and higher
-<http://rdfh.ch/permissions/0001/005-o011> rdf:type knora-admin:DefaultObjectAccessPermission ;
-     knora-admin:forProject <http://rdfh.ch/projects/0001> ;
-     knora-admin:forResourceClass anything:RedThing ;
-     knora-base:hasPermissions "CR knora-admin:ProjectAdmin|M knora-admin:ProjectMember"^^xsd:string .
-
-### Default Object Access Permissions on (link) properties : visible by everyone
-<http://rdfh.ch/permissions/0001/005-o012> rdf:type knora-admin:DefaultObjectAccessPermission ;
-     knora-admin:forProject <http://rdfh.ch/projects/0001> ;
-     knora-admin:forProperty anything:hasRedThing ;
-     knora-base:hasPermissions "CR knora-admin:ProjectAdmin|M knora-admin:ProjectMember|V knora-admin:KnownUser, knora-admin:UnknownUser"^^xsd:string .
-
-<http://rdfh.ch/permissions/0001/005-o013> rdf:type knora-admin:DefaultObjectAccessPermission ;
-     knora-admin:forProject <http://rdfh.ch/projects/0001> ;
-     knora-admin:forProperty anything:hasRedThingValue ;
-     knora-base:hasPermissions "CR knora-admin:ProjectAdmin|M knora-admin:ProjectMember|V knora-admin:KnownUser, knora-admin:UnknownUser"^^xsd:string .
-
-
 
 ##########################################################
 #

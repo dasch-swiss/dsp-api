@@ -408,34 +408,6 @@
 
                knora-base:objectClassConstraint knora-base:LinkValue .
 
-:hasRedThing rdf:type owl:ObjectProperty ;
-
-               rdfs:subPropertyOf :hasOtherThing ;
-
-               rdfs:label "Ein rotes Ding"@de ,
-                          "Une chose rouge"@fr ,
-                          "Una cosa rossa"@it ,
-                          "A red thing"@en ;
-
-               knora-base:subjectClassConstraint :Thing ;
-
-               knora-base:objectClassConstraint :RedThing ;
-
-               salsah-gui:guiElement salsah-gui:Searchbox .
-
-
-:hasRedThingValue rdf:type owl:ObjectProperty ;
-
-               rdfs:label "Ein rotes Ding"@de ,
-                          "Une chose rouge"@fr ,
-                          "Una cosa rossa"@it ,
-                          "A red thing"@en ;
-
-               rdfs:subPropertyOf :hasOtherThingValue ;
-
-               knora-base:subjectClassConstraint :Thing ;
-
-               knora-base:objectClassConstraint knora-base:LinkValue .
 
 :thingHasRegion rdf:type owl:ObjectProperty ;
 
@@ -640,18 +612,6 @@
          owl:onProperty :hasBlueThingValue ;
          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
          salsah-gui:guiOrder "16"^^xsd:nonNegativeInteger
-      ] ,
-            [
-         rdf:type owl:Restriction ;
-         owl:onProperty :hasRedThing ;
-         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-         salsah-gui:guiOrder "20"^^xsd:nonNegativeInteger
-      ] ,
-      [
-         rdf:type owl:Restriction ;
-         owl:onProperty :hasRedThingValue ;
-         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-         salsah-gui:guiOrder "20"^^xsd:nonNegativeInteger
       ] ;
 
       rdfs:comment """Diese Resource-Klasse beschreibt ein blaues Ding"""@de ;
@@ -660,19 +620,6 @@
                  "Chose bleue"@fr ,
                  "Cosa azzurra"@it ,
                  "Blue thing"@en .
-
-:RedThing rdf:type owl:Class ;
-
-      rdfs:subClassOf :Thing ;
-
-      rdfs:comment """Diese Resource-Klasse beschreibt ein rotes Ding"""@de ;
-      rdfs:comment """Cette classe de ressource décrit une chose rouge, à laquelle les utilisateurs non identifiés n'ont pas accès"""@fr ;
-
-      rdfs:label "Rotes Ding"@de ,
-                 "Chose rouge"@fr ,
-                 "Cosa rossa"@it ,
-                 "Red thing"@en .
-
 
 :hasPictureTitle rdf:type owl:ObjectProperty ;
 
