@@ -207,13 +207,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |   OPTIONAL {
-                  |
+                  |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
                   |    anything:hasDate knora-api:objectType knora-api:Date .
                   |    ?date a knora-api:Date .
+                  |  }
                   |
-                  |    }
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    anything:hasInteger knora-api:objectType xsd:integer .
+                  |    ?intVal a xsd:integer .
+                  |    FILTER(?intVal = 123454321)
+                  |  }
                   |}
                   |ORDER BY DESC(?date)
                 """.stripMargin
@@ -240,17 +245,21 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing knora-api:isMainResource true .
                   |  ?thing anything:hasDate ?date .
                   |} WHERE {
-                  |
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |   OPTIONAL {
-                  |
+                  |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
                   |    anything:hasDate knora-api:objectType knora-api:Date .
                   |    ?date a knora-api:Date .
+                  |  }
                   |
-                  |    }
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    anything:hasInteger knora-api:objectType xsd:integer .
+                  |    ?intVal a xsd:integer .
+                  |    FILTER(?intVal = 123454321)
+                  |  }
                   |}
                   |ORDER BY DESC(?date)
                 """.stripMargin
@@ -259,7 +268,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountResponse(responseAs[String], 45)
+                checkCountResponse(responseAs[String], 43)
 
             }
 
@@ -1718,9 +1727,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |         FILTER(?boolean = true)
                   |     }
-                  |} OFFSET 0
                   |
-                """.stripMargin
+                  |     MINUS {
+                  |         ?thing anything:hasInteger ?intVal .
+                  |         anything:hasInteger knora-api:objectType xsd:integer .
+                  |         ?intVal a xsd:integer .
+                  |         FILTER(?intVal = 123454321)
+                  |     }
+                  |} OFFSET 0""".stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
@@ -1761,6 +1775,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |         FILTER(?boolean = true)
                   |     }
+                  |
+                  |     MINUS {
+                  |         ?thing anything:hasInteger ?intVal .
+                  |         anything:hasInteger knora-api:objectType xsd:integer .
+                  |         ?intVal a xsd:integer .
+                  |         FILTER(?intVal = 123454321)
+                  |     }
                   |} OFFSET 1
                   |
                 """.stripMargin
@@ -1773,7 +1794,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 20)
+                checkSearchResponseNumberOfResults(responseAs[String], 18)
             }
 
         }
@@ -4411,8 +4432,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that may have a Boolean value that is true (with type inference)" in {
             // set OFFSET to 1 to get "Testding for extended search"
             val gravsearchQuery =
-                """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -4425,14 +4445,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?thing a knora-api:Resource .
                   |
                   |     OPTIONAL {
-                  |
                   |         ?thing anything:hasBoolean ?boolean .
-                  |
                   |         FILTER(?boolean = true)
                   |     }
-                  |} OFFSET 1
                   |
-                """.stripMargin
+                  |     MINUS {
+                  |         ?thing anything:hasInteger ?intVal .
+                  |         FILTER(?intVal = 123454321)
+                  |     }
+                  |} OFFSET 1""".stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
@@ -4443,7 +4464,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 20)
+                checkSearchResponseNumberOfResults(responseAs[String], 18)
             }
 
         }
@@ -5315,11 +5336,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |   OPTIONAL {
-                  |
+                  |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
+                  |  }
                   |
-                  |    }
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    ?intVal knora-api:intValueAsInt 123454321 .
+                  |  }
                   |}
                   |ORDER BY DESC(?date)
                 """.stripMargin
@@ -5328,7 +5352,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"), false)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -5350,11 +5374,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |   OPTIONAL {
-                  |
+                  |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
+                  |  }
                   |
-                  |    }
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    ?intVal knora-api:intValueAsInt 123454321 .
+                  |  }
                   |}
                   |ORDER BY DESC(?date)
                 """.stripMargin
@@ -5363,7 +5390,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountResponse(responseAs[String], 45)
+                checkCountResponse(responseAs[String], 43)
 
             }
 
@@ -5387,10 +5414,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     OPTIONAL {
                   |        ?thing anything:hasDecimal ?decimal .
-                  |
                   |        ?decimal knora-api:decimalValueAsDecimal ?decimalVal .
+                  |        FILTER(?decimalVal > "1"^^xsd:decimal)
+                  |     }
                   |
-                  |       FILTER(?decimalVal > "1"^^xsd:decimal)
+                  |     MINUS {
+                  |        ?thing anything:hasInteger ?intVal .
+                  |        ?intVal knora-api:intValueAsInt 123454321 .
                   |     }
                   |} ORDER BY DESC(?decimal)
                 """.stripMargin
@@ -6515,14 +6545,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?thing a anything:Thing .
                   |
                   |     OPTIONAL {
-                  |
                   |         ?thing anything:hasBoolean ?boolean .
-                  |
                   |         ?boolean knora-api:booleanValueAsBoolean true .
                   |     }
-                  |} OFFSET 1
                   |
-                """.stripMargin
+                  |     MINUS {
+                  |         ?thing anything:hasInteger ?intVal .
+                  |         ?intVal knora-api:intValueAsInt 123454321 .
+                  |     }
+                  |} OFFSET 1""".stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
@@ -6533,7 +6564,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 20)
+                checkSearchResponseNumberOfResults(responseAs[String], 18)
             }
 
         }
@@ -8013,14 +8044,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                    |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
                    |
                    |CONSTRUCT {
-                   |    ?visibleThing knora-api:isMainResource true .
-                   |    ?visibleThing anything:hasOtherThing ?hiddenThing .
-                   |    ?hiddenThing anything:hasInteger ?intVal .
+                   |    ?mainThing knora-api:isMainResource true .
+                   |    ?mainThing anything:hasOtherThing ?hiddenThing .
+                   |    ?hiddenThing anything:hasInteger ?intValInHiddenThing .
+                   |    ?mainThing anything:hasOtherThing ?visibleThing .
+                   |    ?visibleThing anything:hasInteger ?intValInVisibleThing .
                    |} WHERE {
-                   |    ?visibleThing a anything:Thing .
-                   |    ?visibleThing anything:hasOtherThing ?hiddenThing .
-                   |    ?hiddenThing anything:hasInteger ?intVal .
-                   |    ?intVal knora-api:intValueAsInt 123454321 .
+                   |    ?mainThing a anything:Thing .
+                   |    ?mainThing anything:hasOtherThing ?hiddenThing .
+                   |    ?hiddenThing anything:hasInteger ?intValInHiddenThing .
+                   |    ?intValInHiddenThing knora-api:intValueAsInt 123454321 .
+                   |    ?mainThing anything:hasOtherThing ?visibleThing .
+                   |    ?visibleThing anything:hasInteger ?intValInVisibleThing .
+                   |    ?intValInVisibleThing knora-api:intValueAsInt 543212345 .
                    |}""".stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {

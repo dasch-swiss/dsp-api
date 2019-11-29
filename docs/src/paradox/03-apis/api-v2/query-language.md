@@ -183,7 +183,8 @@ that refer to events that took place within a certain date range.
 
 ## Permission Checking
 
-Each matching resource is returned only if the client has permission to
+Each matching resource is returned with the values that the user has
+permission to see. only if the client has permission to
 see all the values of that resource that matched the criteria given in
 the WHERE clause. If a matching resource contains a value that was
 mentioned in the WHERE clause, but the client does not have permission
