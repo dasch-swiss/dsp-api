@@ -25,5 +25,5 @@ curl -F filedata=@../_test_data/all_data/biblio-data.ttl http://localhost:8080/f
 curl -F filedata=@../_test_data/all_data/beol-data.ttl http://localhost:8080/fuseki/knora-test/data?graph=http://www.knora.org/data/0801/beol > /dev/null
 curl -F filedata=@../_test_data/ontologies/webern-onto.ttl http://localhost:8080/fuseki/knora-test/data?graph=http://www.knora.org/ontology/08AE/webern > /dev/null
 curl -F filedata=@../_test_data/all_data/webern-data.ttl http://localhost:8080/fuseki/knora-test/data?graph=http://www.knora.org/data/08AE/webern > /dev/null
-curl -F filedata=@../_test_data/ontologies/newton-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/0801/newton > /dev/null
-curl -F filedata=@../_test_data/ontologies/leibniz-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/0801/leibniz > /dev/null
+curl -F filedata=@../_test_data/ontologies/newton-onto.ttl http://localhost:8080/knora-test/data?graph=http://www.knora.org/ontology/0801/newton > /dev/null
+curl -F filedata=@../_test_data/ontologies/leibniz-onto.ttl http://localhost:8080/knora-test/data?graph=http://www.knora.org/ontology/0801/leibniz > /dev/null
