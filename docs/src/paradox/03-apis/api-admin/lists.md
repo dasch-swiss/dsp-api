@@ -23,30 +23,23 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 **List Operations:**
 
-- `GET: /admin/lists[?projectIri=<projectIri>]` : return all lists optionally filtered by project
-- `GET: /admin/lists/<listIri>` : return complete list with children
+- `GET: /admin/lists[?projectIRI=<projectIRI>]` : return all lists optionally filtered by project
+- `GET: /admin/lists/<listIRI>` : return complete list with children
 - `POST: /admin/lists` : create new list
-- `POST: /admin/lists/<nodeIri>` : create new child node under the supplied parent node IRI
-- NOT IMPLEMENTED: `DELETE: /admin/lists/<listIri>` : delete list including children if not used
-- `GET: /admin/lists/<listIri>/Info` : return list information (without children)
-- NOT IMPLEMENTED: `PUT: /admin/lists/<listIri>/ListInfoName` : update list information
-- NOT IMPLEMENTED: `PUT: /admin/lists/<listIri>/ListInfoLabel` : update list information
-- NOT IMPLEMENTED: `PUT: /admin/lists/<listIri>/ListInfoComment` : update list information
-- NOT IMPLEMENTED: `DELETE: /admin/lists/<listIri>/ListInfoComment` : update list information
+- NOT IMPLEMENTED: `PUT: /admin/lists/<listIRI>` : create new list with given IRI
+- NOT IMPLEMENTED: `DELETE: /admin/lists/<listIRI>` : delete list including children if not used
+- `GET: /admin/lists/<listIRI>/Info` : return list information (without children)
+- NOT IMPLEMENTED: `PUT: /admin/lists/<listIRI>/<attribute>` : update list information
+- NOT IMPLEMENTED: `DELETE: /admin/lists/<listIRI>/ListInfoComment` : delete a lists comments
 
 **List Node operations**
 
-- `GET: /admin/nodes/<nodeIri>` : return list node information (with children)
-- `GET: /admin/nodes/<nodeIri>/Info` : return list node information (without children)
-- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIri>/NodeInfoName` : update list node information
-- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIri>/NodeInfoLabel` : update list node information
-- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIri>/NodeInfoComment` : update list node information
-- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIri>/NodeInfoPosition` : update list node information
-- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIri>/MoveToNewParent`: move node (append to new parent's children)
-    - ```
-      {"newParentIri": iri}
-      ```
-- NOT IMPLEMENTED: `DELETE: /admin/nodes/<nodeIri>` : delete list node including children if not used
+- NOT IMPLEMENTED: `GET: /admin/nodes/<nodeIRI>` : return list node information (with children)
+- `GET: /admin/nodes/<nodeIRI>/Info` : return list node information (without children)
+- `POST: /admin/nodes` : create new child node under the supplied parent node IRI
+- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIRI>` : create child node with given IRI und the supplied parent node IRI
+- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIRI>/<attribute>` : update list node information
+- NOT IMPLEMENTED: `DELETE: /admin/nodes/<nodeIRI>` : delete list node including children if not used
 
 ## List Operations
 
@@ -54,18 +47,18 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
  - Required permission: none
  - Return all lists optionally filtered by project
- - GET: `/admin/lists[?projectIri=<projectIri>]`
+ - GET: `/admin/lists[?projectIRI=<projectIRI>]`
 
 ### Get list
 
  - Required permission: none
  - Return complete list with children
- - GET: `/admin/lists/<listIri>`
+ - GET: `/admin/lists/<listIRI>`
 
 
 ### Create new list
 
-  - Required permission: SystemAdmin / ProjectAdmin
+  - Required permission: SystemAdmin or ProjectAdmin
   - POST: `/admin/lists`
   - BODY:
     ```
@@ -75,14 +68,89 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
         "comments": []
     } 
     ```
+    
+
+### Create new list with given IRI
+
+  - Required permission: SystemAdmin or ProjectAdmin
+  - PUT: `/admin/lists`
+  - BODY:
+    ```
+    {
+        
+    } 
+    ```
+    
+
+### Get list's information
+
+ - Required permission: none
+ - Return list information (without children)
+ - GET: `/admin/lists/<listIRI>/Info`
+ 
+### Update list's information
+
+ - Required permission: SystemAdmin or ProjectAdmin
+ - Update list information
+ - PUT: `/admin/lists/<listIRI>/<attribute>`
+ - attribute:
+   - ListInfoName  
+     BODY:
+     ```
+     {
+         "name": "newName"
+     }
+     ```
+   - ListInfoLabel  
+     BODY:
+     ```
+     {
+         
+     }
+     ```
+   - ListInfoComment  
+     BODY:
+     ```
+     {
+         
+     }
+     ```
+
+   
+### Update lists's information: Delete all comments
+
+ - Required permission: SystemAdmin or ProjectAdmin
+ - Delete all comments to given List
+ - DELETE: `/admin/lists/<listIRI>/ListInfoComment`
+
+### Delete list
+
+ - Required permission: SystemAdmin or ProjectAdmin
+ - Delete List including children if not used
+ - DELETE: `/admin/lists/<listIRI>`
+
+
+## List Node Operations
+
+### Get List Node
+
+ - Required permission: none
+ - Return list node with children
+ - GET: `/admin/nodes/<nodeIRI>`
+ 
+### Get node's information
+
+ - Required permission: none
+ - Return node information (without children)
+ - GET: `/admin/node/<nodeIRI>/Info`
 
 ### Create new child node
 
-  - Required permission: SystemAdmin / ProjectAdmin
+  - Required permission: SystemAdmin or ProjectAdmin
   - Appends a new child node under the supplied nodeIri. If the supplied nodeIri
     is the listIri, then a new child node is appended to the top level. Children
     are currently only appended.
-  - POST: `/admin/lists/<nodeIri>`
+  - POST: `/admin/nodes`
   - BODY:
     ```
     {
@@ -93,32 +161,65 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
         "comments": [{ "value": "New First Child List Node Comment", "language": "en"}]
     }
     ```
+    
+### Create new child node with given IRI
 
-### Get list's information
+  - Required permission: SystemAdmin or ProjectAdmin
+  - Appends a new child node under the supplied nodeIri. If the supplied nodeIri
+    is the listIri, then a new child node is appended to the top level. Children
+    are currently only appended.
+  - PUT: `/admin/nodes/<nodeIRI>`
+  - BODY:
+    ```
+    {
+        
+    }
+    ```
+    
+### Delete List node
 
- - Required permission: none
- - Return list information (without children)
- - GET: `/admin/lists/infos/<listIri>`
+ - Required permission: SystemAdmin or ProjectAdmin
+ - Delete node including children if not used
+ - DELETE: `/admin/nodes/<nodeIRI>`
  
-### Update list's information
+### Update node's information
 
- - Required permission: none
+ - Required permission: SystemAdmin or ProjectAdmin
  - Update list information
- - PUT: `/admin/lists/infos/<listIri>`
- - BODY:
-   ```
-   {
-       "listIri": "listIri",
-       "projectIri": "someprojectiri",
-       "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-       "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-   }
-   ```
-
-## List Node Operations
-
-### Get List Node Information
-
- - Required permission: none
- - Return list node information (without children)
- - GET: `/admin/lists/nodes/<nodeIri>`
+ - PUT: `/admin/nodes/<nodeIRI>/<attribute>`
+ - attribute:
+   - NodeInfoName  
+     BODY:
+     ```
+     {
+         "name": "newName"
+     }
+     ```
+   - NodeInfoLabel  
+     BODY:
+     ```
+     {
+         
+     }
+     ```
+   - NodeInfoComment  
+     BODY:
+     ```
+     {
+         
+     }
+     ```
+   - NodeInfoPosition  
+     BODY:
+     ```
+     {
+         
+     }
+     ```
+   - MoveToNewParent  
+     BODY:
+     ```
+     {
+         "newParentIRI": "parentIRI"
+     }
+     ```

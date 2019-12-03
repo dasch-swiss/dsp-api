@@ -40,8 +40,12 @@ import scala.concurrent.Future
 class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ListADMJsonProtocol {
 
     /* concatenate paths in the CORRECT order and return */
-    override def knoraApiPath: Route = getLists ~ postList ~ getList ~ postListChildNode ~ deleteList ~
-    getListInfo ~ putListInfo ~ getListNode ~ deleteListNode ~ putNodeInfo
+    override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putListWithIRI ~ deleteList ~ getListInfo ~
+        putListInfo ~ postListChildNode ~ getListNode ~ putNodeWithIRI ~ deleteListNode ~ getListNodeInfo ~ putNodeInfo
+
+    // -------------------------------------
+    // --------------- LISTS ---------------
+    // -------------------------------------
 
     @ApiOperation(
         value = "Get all lists optionally filtered by project",
@@ -141,47 +145,19 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    /** create new list (root node) with given IRI */
+    def putListWithIRI: Route = path("admin" / "lists" / Segment) { iri =>
+        put {
+            throw NotImplementedException("Method not implemented.")
+            ???
+        }
+    }
 
-
-    @Path("/{IRI}")
-    @ApiOperation(
-        value = "Add new child node",
-        nickname = "addListChildNode",
-        httpMethod = "POST",
-        response = classOf[ListNodeInfoGetResponseADM]
-    )
-    @ApiImplicitParams(Array(
-        new ApiImplicitParam(name = "body", value = "\"node\" to create", required = true,
-            dataTypeClass = classOf[CreateChildNodeApiRequestADM], paramType = "body")
-    ))
-    @ApiResponses(Array(
-        new ApiResponse(code = 500, message = "Internal server error")
-    ))
-    /** create a new child node */
-    def postListChildNode: Route = path("admin" / "lists" / Segment) { iri =>
-        post {
-            /* add node to existing list node. the existing list node can be either the root or a child */
-            entity(as[CreateChildNodeApiRequestADM]) { apiRequest =>
-                requestContext =>
-                    val parentNodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
-                    val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield ListChildNodeCreateRequestADM(
-                        parentNodeIri = parentNodeIri,
-                        createChildNodeRequest = apiRequest,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
+    /** delete list/node which should also delete all children */
+    def deleteList: Route = path("admin" / "lists" / Segment) { iri =>
+        delete {
+            throw NotImplementedException("Method not implemented.")
+            ???
         }
     }
 
@@ -256,8 +232,79 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    // -------------------------------------
+    // --------------- NODES ---------------
+    // -------------------------------------
+
+    @Path("/{IRI}")
+    @ApiOperation(
+        value = "Add new child node",
+        nickname = "addListChildNode",
+        httpMethod = "POST",
+        response = classOf[ListNodeInfoGetResponseADM]
+    )
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "body", value = "\"node\" to create", required = true,
+            dataTypeClass = classOf[CreateChildNodeApiRequestADM], paramType = "body")
+    ))
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
+    /** create a new child node */
+    def postListChildNode: Route = path("admin" / "nodes") {
+        post {
+            /* add node to existing list node. the existing list node can be either the root or a child */
+            entity(as[CreateChildNodeApiRequestADM]) { apiRequest =>
+                requestContext =>
+                    val iri = apiRequest.parentNodeIri
+                    val parentNodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+
+                    val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ListChildNodeCreateRequestADM(
+                        parentNodeIri = parentNodeIri,
+                        createChildNodeRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        }
+    }
+
+    /** return node with children */
+    def getListNode: Route = path("admin" / "nodes" / Segment) { iri =>
+        get {
+            throw NotImplementedException("Method not implemented.")
+            ???
+        }
+    }
+
+    /** create new child node with given IRI */
+    def putNodeWithIRI: Route = path("admin" / "nodes" / Segment) { iri =>
+        put {
+            throw NotImplementedException("Method not implemented.")
+            ???
+        }
+    }
+
+    /** delete list node with children if not used */
+    def deleteListNode: Route = path("admin" / "nodes" / Segment) { iri =>
+        delete {
+            throw NotImplementedException("Method not implemented.")
+            ???
+        }
+    }
+
     /** return information about a single node (without children) */
-    def getListNode: Route = path("admin" / "lists" / "nodes" / Segment) { iri =>
+    def getListNodeInfo: Route = path("admin" / "nodes" / Segment / "Info") { iri =>
         get {
             requestContext =>
                 val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
@@ -277,29 +324,10 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /** update list node */
-    def putNodeInfo: Route = path("admin" / "lists" / "nodes" / Segment) { iri =>
+    def putNodeInfo: Route = path("admin" / "nodes" / Segment / Segment) { (iri, attribute) =>
         put {
-
             throw NotImplementedException("Method not implemented.")
             ???
         }
     }
-
-    /** delete list/node which should also delete all children */
-    def deleteList: Route = path("admin" / "lists" / Segment) { iri =>
-        delete {
-            throw NotImplementedException("Method not implemented.")
-            ???
-        }
-    }
-
-    def deleteListNode: Route = path("admin" / "lists" / "nodes" / Segment) { iri =>
-        delete {
-            /* update list node */
-            throw NotImplementedException("Method not implemented.")
-            ???
-        }
-    }
-
-
 }
