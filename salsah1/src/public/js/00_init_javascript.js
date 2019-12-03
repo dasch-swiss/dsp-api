@@ -33,6 +33,7 @@ function getUrlVars()
 
 
 var API_URL = 'http://0.0.0.0:3333';
+var API_VERSION = 'v1';
 var SIPI_URL = 'http://0.0.0.0:1024';
 
 /*
