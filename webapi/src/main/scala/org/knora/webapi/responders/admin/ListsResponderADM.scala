@@ -586,7 +586,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                         case None => acc
                     }
             }
-        } yield NodePathGetResponseADM(elements = makePath(queryNodeIri, nodeMap, parentMap, Nil))
+        } yield NodePathGetResponseADM(nodeList = makePath(queryNodeIri, nodeMap, parentMap, Nil))
     }
 
 

@@ -155,28 +155,29 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
     def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
 
+/*
 /**
   * Represents an API request payload that asks the Knora API server to update
-  * an existing list's basic information.
+  * an existing list nodes's basic information.
   *
   * @param nodeIri    the IRI of the list node to change.
   * @param projectIri the IRI of the project the list belongs to.
   * @param labels     the labels.
   * @param comments   the comments.
   */
-case class ChangeListNodeApiRequestADM(nodeIri: IRI,
+case class ChangeListNodeInfoApiRequestADM(nodeIri: IRI,
                                        projectIri: IRI,
                                        labels: Seq[StringLiteralV2],
                                        comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
 
-    if (listIri.isEmpty) {
-        throw BadRequestException(LIST_IRI_MISSING_ERROR)
+    if (nodeIri.isEmpty) {
+        throw BadRequestException(LIST_NODE_IRI_MISSING_ERROR)
     }
 
-    if (!stringFormatter.isKnoraListIriStr(listIri)) {
-        throw BadRequestException(LIST_IRI_INVALID_ERROR)
+    if (!stringFormatter.isKnoraListIriStr(nodeIri)) {
+        throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
     }
 
     if (projectIri.isEmpty) {
@@ -191,8 +192,9 @@ case class ChangeListNodeApiRequestADM(nodeIri: IRI,
         throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR)
     }
 
-    def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
+    def toJsValue: JsValue = changeListNodeInfoApiRequestADMFormat.write(this)
 }
+*/
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -337,9 +339,9 @@ case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfoADM) extends KnoraRe
 /**
   * Responds to a [[NodePathGetRequestADM]] by providing the path to a particular hierarchical list node.
   *
-  * @param nodelist a list of the nodes composing the path from the list's root node up to and including the specified node.
+  * @param nodeList a list of the nodes composing the path from the list's root node up to and including the specified node.
   */
-case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends KnoraResponseADM with ListADMJsonProtocol {
+case class NodePathGetResponseADM(nodeList: Seq[NodePathElementADM]) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue = nodePathGetResponseADMFormat.write(this)
 }
@@ -369,8 +371,6 @@ case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM
   * @param name        the name of the list node.
   * @param labels      the labels of the node in all available languages.
   * @param comments    the comments attached to the node in all available languages.
-  * @param position    the position of the node among its siblings (optional).
-  * @param hasRootNode the Iri of the root node, if this is not the root node.
   */
 abstract class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2) {
 
@@ -442,6 +442,16 @@ case class ListRootNodeInfoADM(id: IRI, projectIri: IRI, name: Option[String], l
 
 }
 
+
+/**
+  *
+  * @param id          the IRI of the list.
+  * @param name        the name of the list node.
+  * @param labels      the labels of the node in all available languages.
+  * @param comments    the comments attached to the node in all available languages.
+  * @param position    the position of the node among its siblings (optional).
+  * @param hasRootNode the Iri of the root node, if this is not the root node.
+  */
 case class ListChildNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Int, hasRootNode: IRI) extends ListNodeInfoADM(id, name, labels, comments) {
 
     /**
@@ -917,13 +927,13 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           * @param nodeInfo a [[NodePathElementADM]].
           * @return a [[JsValue]].
           */
-        def write(element: NodePathElementADM): JsValue = {
+        def write(nodeInfo: NodePathElementADM): JsValue = {
 
             JsObject(
-                "id" -> element.id.toJson,
-                "name" -> element.name.toJson,
-                "labels" -> JsArray(element.labels.stringLiterals.map(_.toJson)),
-                "comments" -> JsArray(element.comments.stringLiterals.map(_.toJson))
+                "id" -> nodeInfo.id.toJson,
+                "name" -> nodeInfo.name.toJson,
+                "labels" -> JsArray(nodeInfo.labels.stringLiterals.map(_.toJson)),
+                "comments" -> JsArray(nodeInfo.comments.stringLiterals.map(_.toJson))
             )
         }
 
