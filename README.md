@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/dasch-swiss/knora-api/workflows/.github/workflows/main.yml/badge.svg?branch=develop)](https://github.com/dasch-swiss/knora-api/actions)
+[![Build Status](https://github.com/dasch-swiss/knora-api/workflows/CI/badge.svg?branch=develop)](https://github.com/dasch-swiss/knora-api/actions)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7e7c734a37ef403a964345e29106b267)](https://app.codacy.com/app/dhlab-basel/Knora?utm_source=github.com&utm_medium=referral&utm_content=dhlab-basel/Knora&utm_campaign=Badge_Grade_Dashboard)
 # Knora
 
