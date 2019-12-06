@@ -41,7 +41,7 @@ import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import scala.concurrent.{ExecutionContext, Future}
 
 object ValuesRouteV2 {
-    val ValuesBasePath = PathMatcher("v2" / "values")
+    val ValuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
     val ValuesBasePathString = "/v2/values"
 }
 
