@@ -101,6 +101,11 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
     private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
     private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
 
+    val newListIri = new MutableTestIri
+    val firstChildIri = new MutableTestIri
+    val secondChildIri = new MutableTestIri
+    val thirdChildIri = new MutableTestIri
+
     "The Lists Route ('/admin/lists')" when {
 
         "used to query information about lists" should {
@@ -176,11 +181,6 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
         }
 
         "used to modify list information" should {
-
-            val newListIri = new MutableTestIri
-            val firstChildIri = new MutableTestIri
-            val secondChildIri = new MutableTestIri
-            val thirdChildIri = new MutableTestIri
 
             "create a list" in {
 
@@ -363,7 +363,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                    |}
                 """.stripMargin
 
-                val request02 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/Info", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request02 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/Info", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response02: HttpResponse = singleAwaitingRequest(request02)
                 // log.debug(s"response: ${response.toString}")
                 response02.status should be(StatusCodes.BadRequest)
@@ -379,12 +379,34 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request03 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/Info", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request03 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/Info", HttpEntity(ContentTypes.`application/json`, params03)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response03: HttpResponse = singleAwaitingRequest(request03)
                 // log.debug(s"response: ${response.toString}")
                 response03.status should be(StatusCodes.BadRequest)
 
             }
+        }
+    }
+
+    "The Nodes Route ('/admin/nodes')" when {
+
+        "used to query information about nodes" should {
+
+            "return a list" ignore {
+
+            }
+
+            "return a sublist" ignore {
+
+            }
+
+            "return basic node information" ignore {
+
+            }
+
+        }
+
+        "used to modify node information" should {
 
             "add child to list - to the root node" in {
 
@@ -534,6 +556,111 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 thirdChildIri.set(childNodeInfo.id)
             }
 
+            "return a 'ForbiddenException' if the user creating the node is not project or system admin" in {
+                val params =
+                    s"""
+                       |{
+                       |    "parentNodeIri": "${secondChildIri.get}",
+                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "name": "first",
+                       |    "labels": [{ "value": "New Child List Node Value", "language": "en"}],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.Forbidden)
+            }
+
+            "return a `BadRequestException` during list creation when payload is not correct" in {
+                // no parentNode IRI
+                val params00 =
+                    s"""
+                       |{
+                       |    "parentNodeIri": "",
+                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "name": "first",
+                       |    "labels": [{ "value": "New Child List Node Value", "language": "en"}],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request00 = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params00)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val response00: HttpResponse = singleAwaitingRequest(request00)
+                response00.status should be(StatusCodes.BadRequest)
+
+
+                // invalid parentNode IRI
+                val params01 =
+                    s"""
+                       |{
+                       |    "parentNodeIri": "invalidIRI",
+                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "name": "first",
+                       |    "labels": [{ "value": "New Child List Node Value", "language": "en"}],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request01 = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val response01: HttpResponse = singleAwaitingRequest(request00)
+                response01.status should be(StatusCodes.BadRequest)
+
+
+                // no project IRI
+                val params02 =
+                    s"""
+                       |{
+                       |    "parentNodeIri": "${secondChildIri.get}",
+                       |    "projectIri": "",
+                       |    "name": "first",
+                       |    "labels": [{ "value": "New Child List Node Value", "language": "en"}],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request02 = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val response02: HttpResponse = singleAwaitingRequest(request01)
+                response02.status should be(StatusCodes.BadRequest)
+
+
+                // invalid project IRI
+                val params03 =
+                s"""
+                   |{
+                   |    "parentNodeIri": "${secondChildIri.get}",
+                   |    "projectIri": "invalidIRI",
+                   |    "name": "first",
+                   |    "labels": [{ "value": "New Child List Node Value", "language": "en"}],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+                val request03 = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params03)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val response03: HttpResponse = singleAwaitingRequest(request03)
+                response03.status should be(StatusCodes.BadRequest)
+
+
+                // missing label
+                val params05 =
+                    s"""
+                       |{
+                       |    "parentNodeIri": "${secondChildIri.get}",
+                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "name": "first",
+                       |    "labels": [],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val request05 = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params05)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val response05: HttpResponse = singleAwaitingRequest(request05)
+                // println(s"response: ${response03.toString}")
+                response05.status should be(StatusCodes.BadRequest)
+
+            }
+
             "add flat nodes" ignore {
 
             }
@@ -549,7 +676,6 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             "delete node if not in use" ignore {
 
             }
-
         }
     }
 }
