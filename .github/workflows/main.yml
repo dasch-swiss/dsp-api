@@ -178,10 +178,10 @@ jobs:
             ${{ runner.OS }}-
       - name: install requirements
         run: sudo apt-get install expect
-      - name: build knora-upgrade images
+      - name: build all docker images
         run: |
           make build-all-scala
-          make build-knora-upgrade-image
+          make build-all-images
       - name: prepare needed graphdb-se files
         run: |
           echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
