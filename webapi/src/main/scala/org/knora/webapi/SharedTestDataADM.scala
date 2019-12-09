@@ -1447,6 +1447,39 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
+    val gravsearchComplexThingSmallerThanDecimal: String =
+        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |     ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |     ?thing a anything:Thing .
+          |     ?thing anything:hasDecimal ?decimal .
+          |     ?decimal knora-api:decimalValueAsDecimal ?decimalDec .
+          |     FILTER(?decimalDec < "3"^^xsd:decimal)
+          |}""".stripMargin
+
+
+    val gravsearchComplexRegionsForPage: String =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?region knora-api:isMainResource true .
+          |    ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+          |    ?region knora-api:hasGeometry ?geom .
+          |    ?region knora-api:hasComment ?comment .
+          |    ?region knora-api:hasColor ?color .
+          |} WHERE {
+          |    ?region a knora-api:Region .
+          |    ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+          |    ?region knora-api:hasGeometry ?geom .
+          |    ?region knora-api:hasComment ?comment .
+          |    ?region knora-api:hasColor ?color .
+          |}""".stripMargin
+
     object AThing {
         val iri: IRI = "http://rdfh.ch/0001/a-thing"
         val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
