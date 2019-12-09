@@ -1524,4 +1524,9 @@ object SharedTestDataADM {
         val linkValueUuid = "uvRVxzL1RD-t9VIQ1TpfUw"
     }
 
+    val treeList: IRI = "http://rdfh.ch/lists/0001/treeList"
+
+    val treeListNode: IRI = "http://rdfh.ch/lists/0001/treeList01"
+
+    val otherTreeList: IRI = "http://rdfh.ch/lists/0001/otherTreeList"
 }

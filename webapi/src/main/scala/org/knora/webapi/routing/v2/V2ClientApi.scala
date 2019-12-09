@@ -48,7 +48,8 @@ class V2ClientApi (routeData: KnoraRouteData) extends ClientApi {
         new OntologiesRouteV2(routeData),
         new ResourcesRouteV2(routeData),
         new ValuesRouteV2(routeData),
-        new SearchRouteV2(routeData)
+        new SearchRouteV2(routeData),
+        new ListsRouteV2(routeData)
     )
 
     /**

@@ -40,6 +40,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * Provides a function for API routes that deal with search.
  */
 class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
+
     // Definitions for ClientEndpoint
     override val name: String = "SearchEndpoint"
     override val directoryName: String = "search"
