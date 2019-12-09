@@ -19,10 +19,12 @@
 
 package org.knora.webapi.routing.v2
 
+import java.net.URLEncoder
 import java.time.Instant
 import java.util.UUID
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import akka.stream.ActorMaterializer
@@ -31,7 +33,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResourcesByProjectAndClassRequestV2
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.clientapi.{ClientEndpoint, ClientFunction, SourceCodeFileContent}
+import org.knora.webapi.util.clientapi.{ClientEndpoint, ClientFunction, SourceCodeFileContent, SourceCodeFilePath}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
@@ -357,6 +359,28 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    // Resources to return in test data.
+    private val testResources: Map[String, IRI] = Map(
+        "testding" -> SharedTestDataADM.TestDing.iri,
+        "page" -> "http://rdfh.ch/0803/7bbb8e59b703"
+    )
+
+    private def getResourceTestResponses: Future[Set[SourceCodeFileContent]] = {
+        val responseFutures: Iterable[Future[SourceCodeFileContent]] = testResources.map {
+            case (filename, resourceIri) =>
+                val encodedResourceIri = URLEncoder.encode(resourceIri, "UTF-8")
+
+                for {
+                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ResourcesBasePathString/$encodedResourceIri"))
+                } yield SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath(filename),
+                    text = responseStr
+                )
+        }
+
+        Future.sequence(responseFutures).map(_.toSet)
+    }
+
     private def getResourcesPreview: Route = path("v2" / "resourcespreview" / Segments) { resIris: Seq[String] =>
         get {
             requestContext => {
@@ -541,9 +565,9 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
-        for {
-            foo <- Future.successful(???)
-        } yield foo
+    override def getTestData(implicit executionContext: ExecutionContext,
+                             actorSystem: ActorSystem,
+                             materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+        getResourceTestResponses
     }
 }

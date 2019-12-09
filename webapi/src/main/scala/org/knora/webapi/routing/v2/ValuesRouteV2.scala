@@ -624,10 +624,10 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
         for {
-            getRequests: Set[SourceCodeFileContent] <- getValueTestResponses
+            getResponses: Set[SourceCodeFileContent] <- getValueTestResponses
             createRequests: Set[SourceCodeFileContent] <- createValueTestRequests
             updateRequests: Set[SourceCodeFileContent] <- updateValueTestRequests
             deleteRequests: Set[SourceCodeFileContent] <- deleteValueTestRequests
-        } yield getRequests ++ createRequests ++ updateRequests ++ deleteRequests
+        } yield getResponses ++ createRequests ++ updateRequests ++ deleteRequests
     }
 }
