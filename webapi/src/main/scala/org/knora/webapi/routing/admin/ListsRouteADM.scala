@@ -39,11 +39,11 @@ import scala.concurrent.Future
 @Path("/admin/lists")
 class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ListADMJsonProtocol {
 
+    /* return all lists optionally filtered by project */
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    /* return all lists optionally filtered by project */
     def getLists: Route = path("admin" / "lists") {
         get {
             /* return all lists */
@@ -66,6 +66,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    /* create a new list (root node) */
     @ApiOperation(value = "Add new list", nickname = "addList", httpMethod = "POST", response = classOf[ListGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"list\" to create", required = true,
@@ -74,7 +75,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    /* create a new list (root node) */
     def postList: Route = path("admin" / "lists") {
         post {
             /* create a list */
@@ -99,12 +99,12 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    /* get a list */
     @Path("/{IRI}")
     @ApiOperation(value = "Get a list", nickname = "getlist", httpMethod = "GET", response = classOf[ListGetResponseADM])
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    /* get a list */
     def getList: Route = path("admin" / "lists" / Segment) { iri =>
         get {
             /* return a list (a graph with all list nodes) */
@@ -125,6 +125,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    /**
+     * update list
+     */
     @Path("/{IRI}")
     @ApiOperation(value = "Update basic list information", nickname = "putList", httpMethod = "PUT", response = classOf[ListInfoGetResponseADM])
     @ApiImplicitParams(Array(
@@ -134,10 +137,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-
-    /**
-     * update list
-     */
     def putList: Route = path("admin" / "lists" / Segment) { iri =>
         put {
             /* update existing list node (either root or child) */
@@ -165,6 +164,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    /**
+     * create a new child node
+     */
     @Path("/{IRI}")
     @ApiOperation(value = "Add new child node", nickname = "addListChildNode", httpMethod = "POST", response = classOf[ListNodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
@@ -174,10 +176,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-
-    /**
-     * create a new child node
-     */
     def postListChildNode: Route = path("admin" / "lists" / Segment) { iri =>
         post {
             /* add node to existing list node. the existing list node can be either the root or a child */
