@@ -1,3 +1,5 @@
 build --strategy=Scalac=worker
 build --worker_sandboxing
 build --workspace_status_command=tools/buildstamp/get_workspace_status --stamp=yes
+startup --host_jvm_args=-Djavax.net.ssl.trustStore=/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/lib/security/cacerts \
+        --host_jvm_args=-Djavax.net.ssl.trustStorePassword=changeit

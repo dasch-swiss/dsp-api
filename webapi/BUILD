@@ -341,7 +341,7 @@ scala_test(
     size = "large", # Expect this test to run slowly
     deps = [
         ":api",
-        ":api_library",
+        ":library",
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_stream_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
@@ -677,7 +677,7 @@ scala_test(
     size = "large", # Expect this test to run slowly
     deps = [
         ":api",
-        ":api_library",
+        ":library",
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_stream_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",

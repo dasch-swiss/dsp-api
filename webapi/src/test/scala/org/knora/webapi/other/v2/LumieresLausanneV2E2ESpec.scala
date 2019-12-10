@@ -25,7 +25,7 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusC
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.testing.tags.E2ETest
+import org.knora.webapi.tags.E2ETest
 
 object LumieresLausanneV2E2ESpec {
     val config: Config = ConfigFactory.parseString(
