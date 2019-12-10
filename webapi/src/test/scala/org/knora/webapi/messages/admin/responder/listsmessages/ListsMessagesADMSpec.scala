@@ -166,6 +166,7 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
                    |{
                    |    "listIri": "",
                    |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "name": "newTestName",
                    |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
                    |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
                    |}
@@ -183,6 +184,7 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
                    |{
                    |    "listIri": "notvalidIRI",
                    |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "name": "newTestName",
                    |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
                    |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
                    |}
@@ -200,6 +202,7 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
                    |{
                    |    "listIri": "$exampleListIri",
                    |    "projectIri": "",
+                   |    "name": "newTestName",
                    |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
                    |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
                    |}
@@ -217,6 +220,7 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
                    |{
                    |    "listIri": "$exampleListIri",
                    |    "projectIri": "notvalidIRI",
+                   |    "name": "newTestName",
                    |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
                    |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
                    |}
@@ -225,24 +229,6 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
 
             thrown.getMessage should equal (PROJECT_IRI_INVALID_ERROR)
-        }
-
-        "throw 'BadRequestException' for `ChangeListInfoApiRequestADM` when labels and comments are empty" in {
-
-            val payload =
-                s"""
-                   |{
-                   |    "listIri": "$exampleListIri",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [],
-                   |    "comments": []
-                   |}
-                """.stripMargin
-
-            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
-
-            thrown.getMessage should equal (REQUEST_NOT_CHANGING_DATA_ERROR)
-
         }
 
         "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when list node iri is empty" in {

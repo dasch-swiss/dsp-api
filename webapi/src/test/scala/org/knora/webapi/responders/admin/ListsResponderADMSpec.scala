@@ -217,17 +217,18 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             "update basic list information" in {
                 responderManager ! ListInfoChangeRequestADM(
                     listIri = newListIri.get,
-                    changeListRequest = ChangeListInfoApiRequestADM(
+                    changeListRequest = ChangeListInfoPayloadADM(
                         listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
-                        labels = Seq(
+                        name = Some(Some("newTestName")),
+                        labels = Some(Seq(
                             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                             StringLiteralV2(value = "Changed list", language = Some("en"))
-                        ),
-                        comments = Seq(
+                        )),
+                        comments = Some(Seq(
                             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                             StringLiteralV2(value = "New comment", language = Some("en"))
-                        )
+                        ))
                     ),
                     requestingUser = SharedTestDataADM.imagesUser01,
                     apiRequestID = UUID.randomUUID
@@ -237,6 +238,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                 val listInfo = received.listinfo
                 listInfo.projectIri should be (IMAGES_PROJECT_IRI)
+
+                val name: String = listInfo.name.get
+                name should be ("newTestName")
 
                 val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
                 labels.size should be (2)
@@ -257,17 +261,18 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             "return a 'ForbiddenException' if the user changing the list is not project or system admin" in {
                 responderManager ! ListInfoChangeRequestADM(
                     listIri = newListIri.get,
-                    changeListRequest = ChangeListInfoApiRequestADM(
+                    changeListRequest = ChangeListInfoPayloadADM(
                         listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
-                        labels = Seq(
+                        name = Some(Some("newTestName")),
+                        labels = Some(Seq(
                             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                             StringLiteralV2(value = "Changed list", language = Some("en"))
-                        ),
-                        comments = Seq(
+                        )),
+                        comments = Some(Seq(
                             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                             StringLiteralV2(value = "New comment", language = Some("en"))
-                        )
+                        ))
                     ),
                     requestingUser = SharedTestDataADM.imagesUser02,
                     apiRequestID = UUID.randomUUID

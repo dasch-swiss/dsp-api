@@ -679,14 +679,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       * @throws BadRequestException         in the case when the project IRI is missing or invalid.
       * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
       */
-    private def listInfoChangeRequest(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = {
+    private def listInfoChangeRequest(listIri: IRI, changeListRequest: ChangeListInfoPayloadADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = {
 
         /**
           * The actual task run with an IRI lock.
           */
-        def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
+        def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoPayloadADM, requestingUser: UserADM, apiRequestID: UUID) = for {
             // check if required information is supplied
-            _ <- Future(if (changeListRequest.labels.isEmpty && changeListRequest.comments.isEmpty) throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR))
+            _ <- Future(if (changeListRequest.name.isEmpty && changeListRequest.labels.isEmpty && changeListRequest.comments.isEmpty) throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR))
             _ = if (!listIri.equals(changeListRequest.listIri)) throw BadRequestException("List IRI in path and payload don't match.")
 
             // check if the requesting user is allowed to perform operation
@@ -722,6 +722,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 listIri = listIri,
                 projectIri = project.id,
                 listClassIri = OntologyConstants.KnoraBase.ListNode,
+                maybeName = changeListRequest.name,
                 maybeLabels = changeListRequest.labels,
                 maybeComments = changeListRequest.comments
             ).toString
@@ -733,13 +734,24 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             maybeListADM <- listGetADM(listIri, KnoraSystemInstances.Users.SystemUser)
             updatedList = maybeListADM.getOrElse(throw UpdateNotPerformedException(s"List $listIri was not updated. Please report this as a possible bug."))
 
+            _ = if (changeListRequest.name.nonEmpty) {
+                if (changeListRequest.name.get.nonEmpty) {
+                    if (updatedList.listinfo.name.nonEmpty) {
+                        if (updatedList.listinfo.name.get != changeListRequest.name.get.get) throw UpdateNotPerformedException("Lists's 'name' was not updated. Please report this as a possible bug.")
+                    }
+                } else {
+                    if (updatedList.listinfo.name.nonEmpty) {
+                        throw UpdateNotPerformedException("Lists's 'name' was not updated. Please report this as a possible bug.")
+                    }
+                }
+            }
 
             _ = if (changeListRequest.labels.nonEmpty) {
-                if (updatedList.listinfo.labels.stringLiterals.sorted != changeListRequest.labels.sorted) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
+                if (updatedList.listinfo.labels.stringLiterals.sorted != changeListRequest.labels.get.sorted) throw UpdateNotPerformedException("Lists's 'labels' was not updated. Please report this as a possible bug.")
             }
 
             _ = if (changeListRequest.comments.nonEmpty) {
-                if (updatedList.listinfo.comments.stringLiterals.sorted != changeListRequest.comments.sorted) throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
+                if (updatedList.listinfo.comments.stringLiterals.sorted != changeListRequest.comments.get.sorted) throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
             }
 
             // _ = log.debug(s"listInfoChangeRequest - updatedList: {}", updatedList)

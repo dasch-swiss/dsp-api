@@ -30,7 +30,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - NOT IMPLEMENTED: `DELETE: /admin/lists/<listIRI>` : delete list including children if not used
 - `GET: /admin/lists/<listIRI>/Info` : return list information (without children)
 - NOT IMPLEMENTED: `PUT: /admin/lists/<listIRI>/<attribute>` : update list information
-- NOT IMPLEMENTED: `DELETE: /admin/lists/<listIRI>/ListInfoComment` : delete a lists comments
 
 **List Node operations**
 
@@ -93,35 +92,22 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  - Required permission: SystemAdmin or ProjectAdmin
  - Update list information
  - PUT: `/admin/lists/<listIRI>/<attribute>`
- - attribute:
-   - ListInfoName  
-     BODY:
-     ```
-     {
-         "name": "newName"
-     }
-     ```
-   - ListInfoLabel  
-     BODY:
-     ```
-     {
-         
-     }
-     ```
-   - ListInfoComment  
-     BODY:
-     ```
-     {
-         
-     }
-     ```
+ - attributes:
+   * ListInfoName
+   * ListInfoLabel
+   * ListInfoComment
+ - BODY:
+    ```
+    {
+        "listIri" = "listIri",
+        "projectIri" = "projectIri",
+        "name" = "name",
+        "labels" = [],
+        "comments" = [] 
+    }
+    ```
+ - Send empty parameters to delete values, except labels, that always need at least one entry
 
-   
-### Update lists's information: Delete all comments
-
- - Required permission: SystemAdmin or ProjectAdmin
- - Delete all comments to given List
- - DELETE: `/admin/lists/<listIRI>/ListInfoComment`
 
 ### Delete list
 
@@ -187,39 +173,22 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  - Required permission: SystemAdmin or ProjectAdmin
  - Update list information
  - PUT: `/admin/nodes/<nodeIRI>/<attribute>`
- - attribute:
-   - NodeInfoName  
-     BODY:
-     ```
-     {
-         "name": "newName"
-     }
-     ```
-   - NodeInfoLabel  
-     BODY:
-     ```
-     {
-         
-     }
-     ```
-   - NodeInfoComment  
-     BODY:
-     ```
-     {
-         
-     }
-     ```
-   - NodeInfoPosition  
-     BODY:
-     ```
-     {
-         
-     }
-     ```
-   - MoveToNewParent  
-     BODY:
-     ```
-     {
-         "newParentIRI": "parentIRI"
-     }
-     ```
+ - attributes:
+   * NodeInfoName
+   * NodeInfoLabel
+   * NodeInfoComment
+   * NodeInfoPosition
+   * NodeInfoParent
+ - BODY
+   ```
+   {
+        "nodeIri": "nodeIri",
+        "projectIri": "projectIri",
+        "name": name,
+        "labels": [],
+        "comments": [],
+        "position": 0,
+        
+   }
+   ```
+ 

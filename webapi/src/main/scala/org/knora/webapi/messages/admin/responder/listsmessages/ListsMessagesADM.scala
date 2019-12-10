@@ -122,11 +122,13 @@ case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
   *
   * @param listIri    the IRI of the list to change.
   * @param projectIri the IRI of the project the list belongs to.
+  * @param name       the name.
   * @param labels     the labels.
   * @param comments   the comments.
   */
 case class ChangeListInfoApiRequestADM(listIri: IRI,
                                        projectIri: IRI,
+                                       name: String,
                                        labels: Seq[StringLiteralV2],
                                        comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
@@ -148,11 +150,48 @@ case class ChangeListInfoApiRequestADM(listIri: IRI,
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
-    if (labels.isEmpty && comments.isEmpty) {
-        throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR)
+    def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
+}
+
+/**
+  * Represents a payload that asks the Knora API server to update
+  * an existing list's basic information.
+  *
+  * @param listIri    the IRI of the list to change.
+  * @param projectIri the IRI of the project the list belongs to.
+  * @param name       the name.
+  * @param labels     the labels.
+  * @param comments   the comments.
+  */
+case class ChangeListInfoPayloadADM(listIri: IRI,
+                                    projectIri: IRI,
+                                    name: Option[Option[String]] = None,
+                                    labels: Option[Seq[StringLiteralV2]] = None,
+                                    comments: Option[Seq[StringLiteralV2]]= None) extends ListADMJsonProtocol {
+
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    if (listIri.isEmpty) {
+        throw BadRequestException(LIST_IRI_MISSING_ERROR)
     }
 
-    def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
+    if (!stringFormatter.isKnoraListIriStr(listIri)) {
+        throw BadRequestException(LIST_IRI_INVALID_ERROR)
+    }
+
+    if (projectIri.isEmpty) {
+        throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+    }
+
+    if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+    }
+
+    if (labels.isDefined && labels.get.isEmpty) {
+        throw BadRequestException("Lists need at least one label.")
+    }
+
+    def toJsValue: JsValue = changeListInfoPayloadADMFormat.write(this)
 }
 
 /*
@@ -274,7 +313,7 @@ case class ListCreateRequestADM(createListRequest: CreateListApiRequestADM,
   * @param apiRequestID      the ID of the API request.
   */
 case class ListInfoChangeRequestADM(listIri: IRI,
-                                    changeListRequest: ChangeListInfoApiRequestADM,
+                                    changeListRequest: ChangeListInfoPayloadADM,
                                     requestingUser: UserADM,
                                     apiRequestID: UUID) extends ListsResponderRequestADM
 
@@ -1012,7 +1051,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "name", "labels", "comments")
     implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "parentNodeIri", "projectIri", "name", "labels", "comments")
-    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "labels", "comments")
+    implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "name", "labels", "comments")
+    implicit val changeListInfoPayloadADMFormat: RootJsonFormat[ChangeListInfoPayloadADM] = jsonFormat(ChangeListInfoPayloadADM, "listIri", "projectIri", "name", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
     implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")

@@ -206,17 +206,39 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /** update existing list info */
-    def putListInfo: Route = path("admin" / "lists" / Segment / "Info") { iri =>
+    def putListInfo: Route = path("admin" / "lists" / Segment / Segment) { (iri, attribute) =>
         put {
             entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
                 requestContext =>
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
+                    val requestPayload = attribute match {
+                        case "ListInfoName" => ChangeListInfoPayloadADM(
+                            listIri = apiRequest.listIri,
+                            projectIri = apiRequest.projectIri,
+                            name = apiRequest.name match {
+                                case "" => Some(None)
+                                case _ => Some(Some(apiRequest.name))
+                            }
+                        )
+                        case "ListInfoLabel" => ChangeListInfoPayloadADM(
+                            listIri = apiRequest.listIri,
+                            projectIri = apiRequest.projectIri,
+                            labels = Some(apiRequest.labels)
+                        )
+                        case "ListInfoComment" => ChangeListInfoPayloadADM(
+                            listIri = apiRequest.listIri,
+                            projectIri = apiRequest.projectIri,
+                            comments = Some(apiRequest.comments)
+                        )
+                        case _ => throw BadRequestException(s"Invalid attribute: $attribute")
+                    }
+
                     val requestMessage: Future[ListInfoChangeRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ListInfoChangeRequestADM(
                         listIri = listIri,
-                        changeListRequest = apiRequest,
+                        changeListRequest = requestPayload,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
                     )
