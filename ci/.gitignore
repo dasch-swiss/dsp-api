@@ -2,4 +2,6 @@
 *
 # Except this file and the encrypted graphdb license
 !.gitignore
-!secrets.tar.enc
+!decrypt_secrets.sh
+!secrets.tar.gpg
+!README.md

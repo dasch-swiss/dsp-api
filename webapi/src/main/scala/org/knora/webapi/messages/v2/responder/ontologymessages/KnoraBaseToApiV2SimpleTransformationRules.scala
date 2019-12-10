@@ -457,9 +457,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
         OntologyConstants.KnoraBase.ExtResAccessInfo,
         OntologyConstants.KnoraBase.ExtResId,
         OntologyConstants.KnoraBase.ExtResProvider,
-        OntologyConstants.KnoraBase.MapEntryKey,
-        OntologyConstants.KnoraBase.MapEntryValue,
-        OntologyConstants.KnoraBase.IsInMap
+        OntologyConstants.KnoraBase.PageCount
     ).map(_.toSmartIri)
 
     /**
@@ -496,8 +494,6 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
         OntologyConstants.KnoraBase.XMLToStandoffMapping,
         OntologyConstants.KnoraBase.ExternalResource,
         OntologyConstants.KnoraBase.ExternalResValue,
-        OntologyConstants.KnoraBase.Map,
-        OntologyConstants.KnoraBase.MapEntry,
         OntologyConstants.KnoraBase.ListNode
     ).map(_.toSmartIri)
 

@@ -27,7 +27,7 @@ require "jwt"
 local success, error_msg = server.setBuffer()
 
 if not success then
-    server.log("server.setBuffer() failed: " .. error_msg, server.loglevel.LOG_ERR)
+    send_error(500, "server.setBuffer() failed: " .. error_msg)
     return
 end
 
@@ -84,18 +84,20 @@ end
 
 -- Check that the file exists in the temp directory.
 
-local success, hashed_filename = helper.filename_hash(filename)
+local hashed_filename
+success, hashed_filename = helper.filename_hash(filename)
 
 if not success then
-    send_error(500, hashed_filename)
+    send_error(500, "helper.filename_hash() failed: " .. hashed_filename)
     return
 end
 
 local temp_file_path = config.imgroot .. '/tmp/' .. hashed_filename
-local success, exists = server.fs.exists(temp_file_path)
 
+local exists
+success, exists = server.fs.exists(temp_file_path)
 if not success then
-    send_error(500, exists)
+    send_error(500, "server.fs.exists() failed: " .. exists)
     return
 end
 
@@ -104,10 +106,10 @@ if not exists then
     return
 end
 
-local success, filetype = server.fs.ftype(temp_file_path)
-
+local filetype
+success, filetype = server.fs.ftype(temp_file_path)
 if not success then
-    send_error(400, filetype)
+    send_error(500, "server.fs.ftype() failed: " .. filetype)
     return
 end
 
@@ -118,10 +120,10 @@ end
 
 -- Delete the file.
 
-local success, errmsg = server.fs.unlink(temp_file_path)
-
+local errmsg
+success, errmsg = server.fs.unlink(temp_file_path)
 if not success then
-    send_error(500, errmsg)
+    send_error(500, "server.fs.unlink() failed: " .. errmsg)
     return
 end
 

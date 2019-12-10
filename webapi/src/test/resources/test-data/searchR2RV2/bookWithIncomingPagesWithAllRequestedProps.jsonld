@@ -149,7 +149,7 @@
         },
         "knora-api:fileValueAsUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:1024/0803/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg"
+          "@value" : "IIIF_BASE_URL/0803/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg"
         },
         "knora-api:fileValueHasFilename" : "incunabula_0000003856.jp2",
         "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
@@ -157,7 +157,7 @@
         "knora-api:stillImageFileValueHasDimY" : 2700,
         "knora-api:stillImageFileValueHasIIIFBaseUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://0.0.0.0:1024/0803"
+          "@value" : "IIIF_BASE_URL/0803"
         },
         "knora-api:userHasPermission" : "RV",
         "knora-api:valueCreationDate" : {

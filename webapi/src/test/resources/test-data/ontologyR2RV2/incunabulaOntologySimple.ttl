@@ -177,7 +177,7 @@ incunabula:physical_desc a owl:DatatypeProperty;
   knora-api:objectType xsd:string;
   knora-api:subjectType incunabula:book;
   rdfs:comment "Generelle physische Beschreibung des Objektes wie Material, Grösse etc.";
-  rdfs:label "Phyiscal description";
+  rdfs:label "Physical description";
   rdfs:subPropertyOf knora-api:hasValue .
 
 incunabula:note a owl:DatatypeProperty;

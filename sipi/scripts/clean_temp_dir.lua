@@ -46,7 +46,8 @@ function clean_dir_entries(dir_path, current_time)
         end
 
         local entry_path = dir_path .. "/" .. entry
-        local success, entry_type = server.fs.ftype(entry_path)
+        local entry_type
+        success, entry_type = server.fs.ftype(entry_path)
 
         if not success then
             server.log(entry_type, server.loglevel.LOG_ERR)
@@ -54,13 +55,13 @@ function clean_dir_entries(dir_path, current_time)
         end
 
         if entry_type == "FILE" then
-            local success = maybe_delete_temp_file(entry_path, current_time)
+            success = maybe_delete_temp_file(entry_path, current_time)
 
             if not success then
                 return false
             end
         elseif entry_type == "DIRECTORY" then
-            local success = clean_dir_entries(entry_path, current_time)
+            success = clean_dir_entries(entry_path, current_time)
 
             if not success then
                 return false
@@ -91,7 +92,8 @@ function maybe_delete_temp_file(file_path, current_time)
 
         if file_age > config.max_temp_file_age then
             server.log("clean_temp_dir: removing " .. file_path, server.loglevel.LOG_DEBUG)
-            local success, error_msg = server.fs.unlink(file_path)
+            local error_msg
+            success, error_msg = server.fs.unlink(file_path)
 
             if not success then
                 -- If we couldn't delete the file, maybe it has already been deleted.
