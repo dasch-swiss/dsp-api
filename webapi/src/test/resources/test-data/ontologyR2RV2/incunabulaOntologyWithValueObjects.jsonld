@@ -1150,7 +1150,7 @@
       "@id" : "salsah-gui:Textarea"
     },
     "rdfs:comment" : "Generelle physische Beschreibung des Objektes wie Material, Grösse etc.",
-    "rdfs:label" : "Phyiscal description",
+    "rdfs:label" : "Physical description",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:hasValue"
     }
