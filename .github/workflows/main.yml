@@ -178,8 +178,10 @@ jobs:
             ${{ runner.OS }}-
       - name: install requirements
         run: sudo apt-get install expect
-      - name: build all images
-        run: make build-all-images
+      - name: build all docker images
+        run: |
+          make build-all-scala
+          make build-all-images
       - name: prepare needed graphdb-se files
         run: |
           echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
@@ -238,7 +240,7 @@ jobs:
     name: Publish to Dockerhub
     needs: [api-unit-tests, api-e2e-tests, api-integration-tests, upgrade-unit-tests, upgrade-integration-tests, docs-build-test]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/tags/*'
+    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v1
         with:

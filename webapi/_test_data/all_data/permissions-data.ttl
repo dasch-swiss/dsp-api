@@ -6,6 +6,7 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 @prefix incunabula: <http://www.knora.org/ontology/0803/incunabula#> .
+@prefix anything: <http://www.knora.org/ontology/0001/anything#> .
 @prefix beol: <http://www.knora.org/ontology/0801/beol#> .
 
 ##########################################################
@@ -239,9 +240,6 @@
                       knora-admin:forGroup knora-admin:ProjectMember ;
 
                       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"^^xsd:string .
-
-
-
 
 
 ##########################################################
