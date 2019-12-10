@@ -293,7 +293,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                     throw ForbiddenException("Permissions can only be queried by system and/or project admin.")
                 }
             }
-
+            // FIXME: Needs implementation
         } yield ???
     }
 
@@ -317,7 +317,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                     throw ForbiddenException("Permissions can only be queried by system and/or project admin.")
                 }
             }
-
+            // FIXME: Needs implementation
         } yield ???
     }
 
@@ -343,6 +343,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 }
             }
 
+            // FIXME: Needs implementation
         } yield ???
     }
 
@@ -653,6 +654,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
             newPermissionIri = stringFormatter.makeRandomPermissionIri(project.shortcode)
 
+            // FIXME: Need to finish implementation
             // Create the administrative permission.
             createAdministrativePermissionSparqlString = queries.sparql.admin.txt.createNewAdministrativePermission(
                 permissionsNamedGraphIri = OntologyConstants.NamedGraphs.PermissionsNamedGraph,
@@ -1318,7 +1320,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     }
 
 
-    private def createDefaultObjectAccessPermissionADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = ???
+    private def createDefaultObjectAccessPermissionADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
+
+        // FIXME: Needs implementation
+        ???
+    }
 
 }
 

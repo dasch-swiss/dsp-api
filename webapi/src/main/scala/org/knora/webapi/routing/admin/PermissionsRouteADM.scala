@@ -81,11 +81,12 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     override def knoraApiPath: Route =
         getPermissionsForProject ~
           getPermission ~
+          deletePermission ~
           createAdministrativePermission ~
-          changeAdministrativePermission ~
-          createDefaultObjectAccessPermission ~
-          changeDefaultObjectAccessPermission ~
-          deletePermission
+          // [NOT IMPLEMENTED!] changeAdministrativePermission ~
+          createDefaultObjectAccessPermission
+          // [NOT IMPLEMENTED!] changeDefaultObjectAccessPermission ~
+
 
     /**
       * Get all permissions for a project.
@@ -183,7 +184,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     }
 
     /**
-      * Change administrative permission
+      * [NOT IMPLEMENTED!] Change administrative permission
       */
     private def changeAdministrativePermission: Route = path(PermissionsBasePath / "ap" / Segment) { permissionIri =>
         put {
@@ -241,7 +242,7 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
     }
 
     /**
-      * Change default object access permission
+      * [NOT IMPLEMENTED!] Change default object access permission
       */
     private def changeDefaultObjectAccessPermission: Route = path(PermissionsBasePath / "doap" / Segment) { permissionIri =>
         put {
