@@ -134,6 +134,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
+
     /**
      * update list
      */
@@ -173,6 +174,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
+
     /**
      * create a new child node
      */
@@ -212,6 +214,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    /**
+     * Returns the route.
+     */
     override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putList ~ postListChildNode ~ deleteListNode ~ {
 
         path("admin" / "lists" / "infos" / Segment) { iri =>

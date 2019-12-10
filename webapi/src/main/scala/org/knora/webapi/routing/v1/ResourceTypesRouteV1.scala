@@ -26,17 +26,20 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
 /**
-  * Provides a spray-routing function for API routes that deal with resource types.
-  */
+ * Provides a spray-routing function for API routes that deal with resource types.
+ */
 class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("v1" / "resourcetypes" / Segment) { iri =>
             get {
                 requestContext =>
 
-                    val requestMessage =  for {
+                    val requestMessage = for {
                         userProfile <- getUserADM(requestContext)
 
                         // TODO: Check that this is the IRI of a resource type and not just any IRI

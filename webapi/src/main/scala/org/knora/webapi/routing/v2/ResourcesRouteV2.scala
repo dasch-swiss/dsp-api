@@ -147,7 +147,10 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    def knoraApiPath: Route = createResource ~ updateResourceMetadata ~ getResourcesInProject ~
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = createResource ~ updateResourceMetadata ~ getResourcesInProject ~
         getResourceHistory ~ getResources ~ getResourcesPreview ~ getResourcesTei ~
         getResourcesGraph ~ deleteResource ~ eraseResource
 

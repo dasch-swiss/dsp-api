@@ -59,7 +59,10 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     private val ALL_LANGUAGES = "allLanguages"
     private val LAST_MODIFICATION_DATE = "lastModificationDate"
 
-    def knoraApiPath: Route = dereferenceOntologyIri ~ getOntologyMetadata ~ updateOntologyMetadata ~ getOntologyMetadataForProjects ~
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = dereferenceOntologyIri ~ getOntologyMetadata ~ updateOntologyMetadata ~ getOntologyMetadataForProjects ~
         getOntology ~ createClass ~ updateClass ~ addCardinalities ~ replaceCardinalities ~ getClasses ~
         deleteClass ~ createProperty ~ updateProperty ~ getProperties ~ deleteProperty ~ createOntology ~
         deleteOntology

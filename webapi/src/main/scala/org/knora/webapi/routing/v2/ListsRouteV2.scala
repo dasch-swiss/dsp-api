@@ -45,7 +45,10 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
     override val description: String = "An endpoint for working with Knora lists."
     override val functions: Seq[ClientFunction] = Seq.empty
 
-    def knoraApiPath: Route = getList ~ getNode
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = getList ~ getNode
 
     private def getList: Route = path("v2" / "lists" / Segment) { lIri: String =>
         get {

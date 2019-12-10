@@ -53,7 +53,10 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val OFFSET = "offset"
     private val LIMIT_TO_STANDOFF_CLASS = "limitToStandoffClass"
 
-    def knoraApiPath: Route = fullTextSearchCount ~ fullTextSearch ~ gravsearchCountGet ~ gravsearchCountPost ~
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = fullTextSearchCount ~ fullTextSearch ~ gravsearchCountGet ~ gravsearchCountPost ~
         gravsearchGet ~ gravsearchPost ~ searchByLabelCount ~ searchByLabel
 
     /**
