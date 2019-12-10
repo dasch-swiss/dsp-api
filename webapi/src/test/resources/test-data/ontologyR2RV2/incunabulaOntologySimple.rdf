@@ -238,7 +238,7 @@
 			<knora-api:objectType rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
 			<knora-api:subjectType rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book"/>
 			<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Generelle physische Beschreibung des Objektes wie Material, Grösse etc.</rdfs:comment>
-			<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Phyiscal description</rdfs:label>
+			<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Physical description</rdfs:label>
 			<rdfs:subPropertyOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#hasValue"/>
 		</owl:DatatypeProperty>
 	</owl:onProperty>
