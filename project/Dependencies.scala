@@ -50,8 +50,8 @@ object Dependencies {
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
         sipiImage := "dhlabbasel/sipi:v2.0.1",
-        gdbSEImage := "ontotext/graphdb:8.10.1-se",
-        gdbFreeImage := "dhlabbasel/graphdb:8.10.0-free"
+        gdbSEImage := "daschswiss/graphdb:9.0.0-se",
+        gdbFreeImage := "daschswiss/graphdb:9.0.0-free"
     )
 
     // the user can change the default 'graphdb-se' value by creating an environment variable containing 'graphdb-free'

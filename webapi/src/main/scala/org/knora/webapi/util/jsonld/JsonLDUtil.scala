@@ -438,16 +438,15 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     /**
       * Validates the `@type` of a JSON-LD object as a Knora type IRI in the API v2 complex schema.
       *
-
       * @return a validated Knora type IRI.
       */
-    def getTypeAsKnoraTypeIri: SmartIri = {
+    def getTypeAsKnoraApiV2ComplexTypeIri: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val typeIri = requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
         if (!(typeIri.isKnoraEntityIri && typeIri.getOntologySchema.contains(ApiV2Complex))) {
-            throw BadRequestException(s"Invalid Knora type IRI: $typeIri")
+            throw BadRequestException(s"Invalid Knora API v2 complex type IRI: $typeIri")
         }
 
         typeIri
@@ -455,11 +454,11 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
 
     /**
       * When called on a JSON-LD object representing a resource, ensures that it contains a single Knora property with
-      * a single value.
+      * a single value in the Knora API v2 complex schema.
       *
       * @return the property IRI and the value.
       */
-    def getResourcePropertyValue: (SmartIri, JsonLDObject) = {
+    def getResourcePropertyApiV2ComplexValue: (SmartIri, JsonLDObject) = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val resourceProps: Map[IRI, JsonLDValue] = value - JsonLDConstants.ID - JsonLDConstants.TYPE
@@ -477,7 +476,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
                 val propertyIri = key.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $key"))
 
                 if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2Complex))) {
-                    throw BadRequestException(s"Invalid property IRI: $propertyIri")
+                    throw BadRequestException(s"Invalid Knora API v2 complex property IRI: $propertyIri")
                 }
 
                 jsonLDValue match {
@@ -627,14 +626,14 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
     def getIDAsKnoraDataIri: SmartIri = body.getIDAsKnoraDataIri
 
     /**
-      * A convenience function that calls `body.getTypeAsKnoraTypeIri`.
+      * A convenience function that calls `body.getTypeAsKnoraApiV2ComplexTypeIri`.
       */
-    def getTypeAsKnoraTypeIri: SmartIri = body.getTypeAsKnoraTypeIri
+    def getTypeAsKnoraTypeIri: SmartIri = body.getTypeAsKnoraApiV2ComplexTypeIri
 
     /**
-      * A convenience function that calls `body.getResourcePropertyValue`.
+      * A convenience function that calls `body.getResourcePropertyApiV2ComplexValue`.
       */
-    def getResourcePropertyValue: (SmartIri, JsonLDObject) = body.getResourcePropertyValue
+    def getResourcePropertyValue: (SmartIri, JsonLDObject) = body.getResourcePropertyApiV2ComplexValue
 
     /**
       * Converts this JSON-LD object to its compacted Java representation.

@@ -23,6 +23,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpRequest
 import akka.stream.ActorMaterializer
+import org.knora.webapi.ClientApiGenerationException
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Cardinality
 import org.knora.webapi.util.SmartIri
 
@@ -48,6 +49,16 @@ case object JsonLD extends ApiSerialisationFormat
   * Represents a client API.
   */
 trait ClientApi {
+    /**
+      * If `true`, generate endpoints for this API.
+      */
+    val generateEndpoints: Boolean = true
+
+    /**
+      * If `true`, generate classes for this API.
+      */
+    val generateClasses: Boolean = true
+
     /**
       * The serialisation format used by the API.
       */
@@ -86,6 +97,12 @@ trait ClientApi {
     val classesWithReadOnlyProperties: Map[SmartIri, Set[SmartIri]]
 
     /**
+      * A map of class IRIs to IRIs of optional set properties. Such properties have cardinality 0-n, and should
+      * be made optional in generated code.
+      */
+    val classesWithOptionalSetProperties: Map[SmartIri, Set[SmartIri]]
+
+    /**
       * A set of IRIs of classes that represent API responses and whose contents are therefore
       * always read-only.
       */
@@ -97,21 +114,27 @@ trait ClientApi {
     val idProperties: Set[SmartIri]
 
     /**
-      * A map of property IRIs to non-standard names that those properties must have.
-      * Needed only if two different properties should have the same name in different classes.
+      * A map of class IRIs to maps of property IRIs to non-standard names that those properties must have
+      * in those classes. Needed only for JSON, and only if two different properties should have the same name in
+      * different classes. `JsonInstanceInspector` also needs to know about these.
       */
-    val propertyNames: Map[SmartIri, String]
+    val propertyNames: Map[SmartIri, Map[SmartIri, String]]
+
+    /**
+      * Class IRIs that are used by this API, other than the ones used in endpoints.
+      */
+    val generalClassIrisUsed: Set[SmartIri] = Set.empty
 
     /**
       * The IRIs of the classes used by this API.
       */
-    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet
+    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet ++ generalClassIrisUsed
 
     /**
-      * Returns test data for this API.
+      * Returns test data for this API and its endpoints.
       *
       * @param testDataDirectoryPath the path of the top-level test data directory.
-      * @return a set of test data files to be used for testing this API.
+      * @return a set of test data files to be used for testing this API and its endpoints.
       */
     def getTestData(testDataDirectoryPath: Seq[String])(implicit executionContext: ExecutionContext,
                                                         actorSystem: ActorSystem,
@@ -196,6 +219,10 @@ trait ClientEndpoint {
         for {
             response <- Http().singleRequest(request)
             responseStr <- response.entity.toStrict(10240.millis).map(_.data.decodeString("UTF-8"))
+
+            _ = if (response.status.isFailure) {
+                throw ClientApiGenerationException(s"Failed to get test data: $responseStr")
+            }
         } yield responseStr
     }
 
@@ -639,6 +666,7 @@ case class ClientClassDefinition(className: String,
   * @param propertyIri         the IRI of the property in the Knora API.
   * @param objectType          the type of object that the property points to.
   * @param cardinality         the cardinality of the property in the class.
+  * @param isOptionalSet       `true` if this property represents an optional set.
   * @param isEditable          `true` if the property's value is editable via the API.
   */
 case class ClientPropertyDefinition(propertyName: String,
@@ -646,6 +674,7 @@ case class ClientPropertyDefinition(propertyName: String,
                                     propertyIri: SmartIri,
                                     objectType: ClientObjectType,
                                     cardinality: Cardinality,
+                                    isOptionalSet: Boolean,
                                     isEditable: Boolean)
 
 /**

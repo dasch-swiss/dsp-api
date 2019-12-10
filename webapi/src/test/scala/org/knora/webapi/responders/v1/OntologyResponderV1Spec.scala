@@ -475,7 +475,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                         id = "http://www.knora.org/ontology/0803/incunabula#pubdate"
                     ),
                     PropertyTypeV1(
-                        label = "Phyiscal description",
+                        label = "Physical description",
                         id = "http://www.knora.org/ontology/0803/incunabula#physical_desc"
                     ),
                     PropertyTypeV1(
@@ -835,7 +835,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
                 vocabulary = "http://www.knora.org/ontology/0803/incunabula",
                 description = Some("Generelle physische Beschreibung des Objektes wie Material, Gr\u00F6sse etc."),
-                label = Some("Phyiscal description"),
+                label = Some("Physical description"),
                 name = "http://www.knora.org/ontology/0803/incunabula#physical_desc",
                 id = "http://www.knora.org/ontology/0803/incunabula#physical_desc"
             ),

@@ -25,13 +25,14 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
+import org.apache.commons.io.FileUtils
 import org.knora.webapi.E2ESpec
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.util.FileUtil
 
 import scala.concurrent.duration._
-import sys.process._
-import org.apache.commons.io.FileUtils
-import org.knora.webapi.tags.E2ETest
+import scala.sys.process._
 
 object ClientApiRouteE2ESpec {
     val config: Config = ConfigFactory.parseString(
@@ -47,6 +48,10 @@ object ClientApiRouteE2ESpec {
 @E2ETest
 class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+
+    override lazy val rdfDataObjects: List[RdfDataObject] = List(
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    )
 
     "The client API route" should {
         "generate a Zip file of TypeScript code that compiles" in {
