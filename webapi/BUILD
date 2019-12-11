@@ -331,7 +331,7 @@ scala_library(
 )
 
 scala_test(
-    name = "api_test",
+    name = "test",
     srcs = [
         "//webapi/src/test:scala",
         "//webapi/src/test:java",
@@ -339,6 +339,7 @@ scala_test(
     resources = [
         "//webapi/src/test:resources",
     ],
+    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     size = "large", # Expect this test to run slowly
     deps = [
         ":api",
@@ -663,12 +664,14 @@ scala_test(
     ],
     data = [
         "//webapi/src/test:resources",
+        "//knora-ontologies:all",
+        "//test-data:all"
     ],
     unused_dependency_checker_mode = "warn",
 )
 
 scala_test(
-    name = "api_it",
+    name = "it",
     srcs = [
         "//webapi/src/it:scala",
     ],
