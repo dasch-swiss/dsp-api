@@ -374,6 +374,15 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private def getResourcesPreviewTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"${baseApiUrl}resourcespreview/${SharedTestDataADM.AThing.iriEncoded}"))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("resource-preview"),
+            text = responseStr
+        )
+    }
+
     private def getResourcesTei: Route = path("v2" / "tei" / Segment) { resIri: String =>
         get {
             requestContext => {
@@ -575,11 +584,13 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         for {
             getResponses <- getResourceTestResponses
             createRequests <- createResourceTestRequests
+            previewResponse <- getResourcesPreviewTestResponse
             graphResponse <- getResourceGraphTestResponse
             metadataRequest <- updateResourceMetadataTestRequest
             deleteRequest <- deleteResourceTestRequest
             eraseRequest <- eraseResourceTestRequest
-        } yield getResponses ++ createRequests + graphResponse + metadataRequest + deleteRequest + eraseRequest
+        } yield getResponses ++ createRequests + previewResponse + graphResponse + metadataRequest +
+            deleteRequest + eraseRequest
     }
 
     /**
