@@ -376,7 +376,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
     private def getResourcesPreviewTestResponse: Future[SourceCodeFileContent] = {
         for {
-            responseStr <- doTestDataRequest(Get(s"${baseApiUrl}resourcespreview/${SharedTestDataADM.AThing.iriEncoded}"))
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl/resourcespreview/${SharedTestDataADM.AThing.iriEncoded}"))
         } yield SourceCodeFileContent(
             filePath = SourceCodeFilePath.makeJsonPath("resource-preview"),
             text = responseStr
