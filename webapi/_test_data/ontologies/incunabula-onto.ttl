@@ -211,7 +211,7 @@
                rdfs:subPropertyOf knora-base:hasValue ;
 
                rdfs:label "Physische Beschreibung"@de ,
-                          "Phyiscal description"@en ;
+                          "Physical description"@en ;
 
                rdfs:comment """Generelle physische Beschreibung des Objektes wie Material, Grösse etc."""@de ;
 

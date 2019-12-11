@@ -158,8 +158,13 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
 
 object AdminClientApi {
     def propertyNames(implicit stringFormatter: StringFormatter): Map[SmartIri, Map[SmartIri, String]] = Map(
-        OntologyConstants.KnoraAdminV2.CreateGroupRequest -> Map(OntologyConstants.KnoraAdminV2.ProjectIri -> "project"),
+        OntologyConstants.KnoraAdminV2.CreateGroupRequest -> Map(
+            OntologyConstants.KnoraAdminV2.ProjectIri -> "project",
+            OntologyConstants.KnoraAdminV2.GroupDescription -> "description"
+        ),
+        OntologyConstants.KnoraAdminV2.UpdateGroupRequest -> Map(OntologyConstants.KnoraAdminV2.GroupDescription -> "description"),
         OntologyConstants.KnoraAdminV2.ProjectClass -> Map(OntologyConstants.KnoraAdminV2.ProjectDescription -> "description"),
+        OntologyConstants.KnoraAdminV2.UpdateProjectRequest -> Map(OntologyConstants.KnoraAdminV2.ProjectDescription -> "description"),
         OntologyConstants.KnoraAdminV2.GroupClass -> Map(OntologyConstants.KnoraAdminV2.GroupDescription -> "description")
     ).map {
         case (classIri, propertyMap) =>
