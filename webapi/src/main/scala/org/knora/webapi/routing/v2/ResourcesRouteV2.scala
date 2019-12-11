@@ -27,6 +27,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -70,84 +71,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     private val Both = "both"
 
     /**
-     * Gets the Iri of the property that represents the text of the resource.
-     *
-     * @param params the GET parameters.
-     * @return the internal resource class, if any.
-     */
-    private def getTextPropertyFromParams(params: Map[String, String]): SmartIri = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val textProperty = params.get(Text_Property)
-
-        textProperty match {
-            case Some(textPropIriStr: String) =>
-                val externalResourceClassIri = textPropIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$textPropIriStr>"))
-
-                if (!externalResourceClassIri.isKnoraApiV2EntityIri) {
-                    throw BadRequestException(s"<$textPropIriStr> is not a valid knora-api property IRI")
-                }
-
-                externalResourceClassIri.toOntologySchema(InternalSchema)
-
-            case None => throw BadRequestException(s"param $Text_Property not set")
-        }
-    }
-
-    /**
-     * Gets the Iri of the mapping to be used to convert standoff to XML.
-     *
-     * @param params the GET parameters.
-     * @return the internal resource class, if any.
-     */
-    private def getMappingIriFromParams(params: Map[String, String]): Option[IRI] = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val mappingIriStr = params.get(Mapping_Iri)
-
-        mappingIriStr match {
-            case Some(mapping: String) =>
-                Some(stringFormatter.validateAndEscapeIri(mapping, throw BadRequestException(s"Invalid mapping IRI: <$mapping>")))
-
-            case None => None
-        }
-    }
-
-    /**
-     * Gets the Iri of Gravsearch template to be used to query for the resource's metadata.
-     *
-     * @param params the GET parameters.
-     * @return the internal resource class, if any.
-     */
-    private def getGravsearchTemplateIriFromParams(params: Map[String, String]): Option[IRI] = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val gravsearchTemplateIriStr = params.get(GravsearchTemplate_Iri)
-
-        gravsearchTemplateIriStr match {
-            case Some(gravsearch: String) =>
-                Some(stringFormatter.validateAndEscapeIri(gravsearch, throw BadRequestException(s"Invalid template IRI: <$gravsearch>")))
-
-            case None => None
-        }
-    }
-
-    /**
-     * Gets the Iri of the XSL transformation to be used to convert the TEI header's metadata.
-     *
-     * @param params the GET parameters.
-     * @return the internal resource class, if any.
-     */
-    private def getHeaderXSLTIriFromParams(params: Map[String, String]): Option[IRI] = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val headerXSLTIriStr = params.get(TEIHeader_XSLT_IRI)
-
-        headerXSLTIriStr match {
-            case Some(xslt: String) =>
-                Some(stringFormatter.validateAndEscapeIri(xslt, throw BadRequestException(s"Invalid XSLT IRI: <$xslt>")))
-
-            case None => None
-        }
-    }
-
-    /**
      * Returns the route.
      */
     override def knoraApiPath: Route = createResource ~ updateResourceMetadata ~ getResourcesInProject ~
@@ -187,6 +110,25 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private def createResourceTestRequests: Future[Set[SourceCodeFileContent]] = {
+        FastFuture.successful(
+            Set(
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-resource-with-values-request"),
+                    text = SharedTestDataADM.createResourceWithValues
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-resource-with-custom-creation-date"),
+                    text = SharedTestDataADM.createResourceWithCustomCreationDate(Instant.parse("2019-01-09T15:45:54.502951Z"))
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-resource-as-user"),
+                    text = SharedTestDataADM.createResourceAsUser(SharedTestDataADM.anythingUser1)
+                )
+            )
+        )
+    }
+
     private def updateResourceMetadata: Route = path(ResourcesBasePath) {
         put {
             entity(as[String]) { jsonRequest =>
@@ -218,6 +160,25 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 }
             }
         }
+    }
+
+    private def updateResourceMetadataTestRequest: Future[SourceCodeFileContent] = {
+        val resourceIri = "http://rdfh.ch/0001/a-thing"
+        val newLabel = "test thing with modified label"
+        val newPermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
+        val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
+
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-resource-metadata-request"),
+                text = SharedTestDataADM.updateResourceMetadata(
+                    resourceIri = resourceIri,
+                    newLabel = newLabel,
+                    newPermissions = newPermissions,
+                    newModificationDate = newModificationDate
+                )
+            )
+        )
     }
 
     private def getResourcesInProject: Route = path(ResourcesBasePath) {
@@ -502,6 +463,16 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private def getResourceGraphTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both"))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("resource-graph"),
+            text = responseStr
+        )
+
+    }
+
     private def deleteResource: Route = path(ResourcesBasePath / "delete") {
         post {
             entity(as[String]) { jsonRequest =>
@@ -533,6 +504,21 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                 }
             }
         }
+    }
+
+    private def deleteResourceTestRequest: Future[SourceCodeFileContent] = {
+        val resourceIri = "http://rdfh.ch/0001/a-thing"
+        val lastModificationDate = Instant.now
+
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("delete-resource-request"),
+                text = SharedTestDataADM.deleteResource(
+                    resourceIri = resourceIri,
+                    lastModificationDate = lastModificationDate
+                )
+            )
+        )
     }
 
     private def eraseResource: Route = path(ResourcesBasePath / "erase") {
@@ -568,9 +554,109 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
+    private def eraseResourceTestRequest: Future[SourceCodeFileContent] = {
+        val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+        val resourceLastModificationDate = Instant.parse("2019-02-13T09:05:10Z")
+
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("erase-resource-request"),
+                text = SharedTestDataADM.eraseResource(
+                    resourceIri = resourceIri,
+                    lastModificationDate = resourceLastModificationDate
+                )
+            )
+        )
+    }
+
     override def getTestData(implicit executionContext: ExecutionContext,
                              actorSystem: ActorSystem,
                              materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
-        getResourceTestResponses
+        for {
+            getResponses <- getResourceTestResponses
+            createRequests <- createResourceTestRequests
+            graphResponse <- getResourceGraphTestResponse
+            metadataRequest <- updateResourceMetadataTestRequest
+            deleteRequest <- deleteResourceTestRequest
+            eraseRequest <- eraseResourceTestRequest
+        } yield getResponses ++ createRequests + graphResponse + metadataRequest + deleteRequest + eraseRequest
+    }
+
+    /**
+     * Gets the Iri of the property that represents the text of the resource.
+     *
+     * @param params the GET parameters.
+     * @return the internal resource class, if any.
+     */
+    private def getTextPropertyFromParams(params: Map[String, String]): SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val textProperty = params.get(Text_Property)
+
+        textProperty match {
+            case Some(textPropIriStr: String) =>
+                val externalResourceClassIri = textPropIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$textPropIriStr>"))
+
+                if (!externalResourceClassIri.isKnoraApiV2EntityIri) {
+                    throw BadRequestException(s"<$textPropIriStr> is not a valid knora-api property IRI")
+                }
+
+                externalResourceClassIri.toOntologySchema(InternalSchema)
+
+            case None => throw BadRequestException(s"param $Text_Property not set")
+        }
+    }
+
+    /**
+     * Gets the Iri of the mapping to be used to convert standoff to XML.
+     *
+     * @param params the GET parameters.
+     * @return the internal resource class, if any.
+     */
+    private def getMappingIriFromParams(params: Map[String, String]): Option[IRI] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val mappingIriStr = params.get(Mapping_Iri)
+
+        mappingIriStr match {
+            case Some(mapping: String) =>
+                Some(stringFormatter.validateAndEscapeIri(mapping, throw BadRequestException(s"Invalid mapping IRI: <$mapping>")))
+
+            case None => None
+        }
+    }
+
+    /**
+     * Gets the Iri of Gravsearch template to be used to query for the resource's metadata.
+     *
+     * @param params the GET parameters.
+     * @return the internal resource class, if any.
+     */
+    private def getGravsearchTemplateIriFromParams(params: Map[String, String]): Option[IRI] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val gravsearchTemplateIriStr = params.get(GravsearchTemplate_Iri)
+
+        gravsearchTemplateIriStr match {
+            case Some(gravsearch: String) =>
+                Some(stringFormatter.validateAndEscapeIri(gravsearch, throw BadRequestException(s"Invalid template IRI: <$gravsearch>")))
+
+            case None => None
+        }
+    }
+
+    /**
+     * Gets the Iri of the XSL transformation to be used to convert the TEI header's metadata.
+     *
+     * @param params the GET parameters.
+     * @return the internal resource class, if any.
+     */
+    private def getHeaderXSLTIriFromParams(params: Map[String, String]): Option[IRI] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val headerXSLTIriStr = params.get(TEIHeader_XSLT_IRI)
+
+        headerXSLTIriStr match {
+            case Some(xslt: String) =>
+                Some(stringFormatter.validateAndEscapeIri(xslt, throw BadRequestException(s"Invalid XSLT IRI: <$xslt>")))
+
+            case None => None
+        }
     }
 }
