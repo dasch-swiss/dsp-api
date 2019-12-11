@@ -86,6 +86,12 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val anythingList = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "UTF-8")
     private val anythingListNode = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList01", "UTF-8")
 
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putList ~ postListChildNode ~ deleteListNode ~
+        getListInfo ~ updateListInfo ~ getListNodeInfo
+
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -462,9 +468,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             text = responseStr
         )
     }
-
-    override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putList ~ postListChildNode ~ deleteListNode ~
-        getListInfo ~ updateListInfo ~ getListNodeInfo
 
     /**
       * The functions defined by this [[ClientEndpoint]].
