@@ -52,8 +52,6 @@ trait VersionCheck {
         createResponse(result)
     }
 
-
-
     protected def createResponse(result: VersionCheckResult): HttpResponse = {
         HttpResponse(
             status = StatusCodes.OK,

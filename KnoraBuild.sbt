@@ -704,7 +704,7 @@ lazy val webapi = knoraModule("webapi")
                 name,
                 version,
                 "akkaHttp" -> Dependencies.akkaHttpVersion.value,
-                "sipi" -> Dependencies.sipiImage.value,
+                "sipiVersion" -> Dependencies.sipiImage.value,
                 "gdbSE" -> Dependencies.gdbSEImage.value,
                 "gdbFree" -> Dependencies.gdbFreeImage.value
             ),
@@ -735,68 +735,68 @@ lazy val webapiJavaTestOptions = Seq(
     //"-XX:MaxMetaspaceSize=4096m"
 )
 
-// packaging for running normal tests (usage: webapi_test/stage)
-lazy val webapi_test = project
-  // we put the results  in a build folder
-  .in(file("webapi-test"))
-  .enablePlugins(JavaAppPackaging)
-  .settings(
-      Dependencies.webapiTestAndITLibraryDependencies,
-      // Skip packageDoc and packageSrc task on stage
-      Compile / packageDoc / mappings := Seq(),
-      Compile / packageSrc / mappings := Seq(),
-      publishArtifact in (Test, packageBin) := true,
-      Compile / mainClass := Some("org.scalatest.tools.Runner"),
-      // adds the test jar to mappings
-      mappings in Universal ++= {
-          // generates the test package
-          val testjar = (packageBin in Test).value
-          // maps this file to your lib folder in your output package
-          testjar -> s"lib/${testjar.getName}"
-          // copy the scripts folder
-          directory("webapi/scripts") ++
-            // add knora-ontologies
-            directory("knora-ontologies") ++
-            // add test-data directory
-            directory("webapi/_test_data") ++
-            // copy the configuration files to config directory
-            contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
-            // copy configuration files to config directory
-            contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
-      },
-      scriptClasspath += (packageBin in Test).value.getName
-  )
-  .dependsOn(webapi)
-
-// packaging for running IT tests (usage: webapi_it/stage)
-lazy val webapi_it = project
-  // we put the results in a build folder
-  .in(file("webapi-it"))
-  .enablePlugins(JavaAppPackaging)
-  .configs(
-      IntegrationTest
-  )
-  .settings(
-      inConfig(IntegrationTest)(Defaults.testSettings),
-  )
-  .settings(
-      Dependencies.webapiTestAndITLibraryDependencies,
-      // Skip packageDoc and packageSrc task on stage
-      Compile / packageDoc / mappings := Seq(),
-      Compile / packageSrc / mappings := Seq(),
-      IntegrationTest / packageBin / publishArtifact := true,
-      addArtifact(artifact in (IntegrationTest, packageBin), packageBin in IntegrationTest),
-      Compile / mainClass := Some("org.scalatest.run"),
-      // adds the test jar to mappings
-      mappings in Universal += {
-          // generates the test package
-          val testjar = (packageBin in IntegrationTest).value
-          // maps this file to your lib folder in your output package
-          testjar -> s"lib/${testjar.getName}"
-      },
-      scriptClasspath += (packageBin in Test).value.getName
-  )
-  .dependsOn(webapi)
+//// packaging for running normal tests (usage: webapi_test/stage)
+//lazy val webapi_test = project
+//  // we put the results  in a build folder
+//  .in(file("webapi-test"))
+//  .enablePlugins(JavaAppPackaging)
+//  .settings(
+//      Dependencies.webapiTestAndITLibraryDependencies,
+//      // Skip packageDoc and packageSrc task on stage
+//      Compile / packageDoc / mappings := Seq(),
+//      Compile / packageSrc / mappings := Seq(),
+//      publishArtifact in (Test, packageBin) := true,
+//      Compile / mainClass := Some("org.scalatest.tools.Runner"),
+//      // adds the test jar to mappings
+//      mappings in Universal ++= {
+//          // generates the test package
+//          val testjar = (packageBin in Test).value
+//          // maps this file to your lib folder in your output package
+//          testjar -> s"lib/${testjar.getName}"
+//          // copy the scripts folder
+//          directory("webapi/scripts") ++
+//            // add knora-ontologies
+//            directory("knora-ontologies") ++
+//            // add test-data directory
+//            directory("webapi/_test_data") ++
+//            // copy the configuration files to config directory
+//            contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
+//            // copy configuration files to config directory
+//            contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
+//      },
+//      scriptClasspath += (packageBin in Test).value.getName
+//  )
+//  .dependsOn(webapi)
+//
+//// packaging for running IT tests (usage: webapi_it/stage)
+//lazy val webapi_it = project
+//  // we put the results in a build folder
+//  .in(file("webapi-it"))
+//  .enablePlugins(JavaAppPackaging)
+//  .configs(
+//      IntegrationTest
+//  )
+//  .settings(
+//      inConfig(IntegrationTest)(Defaults.testSettings),
+//  )
+//  .settings(
+//      Dependencies.webapiTestAndITLibraryDependencies,
+//      // Skip packageDoc and packageSrc task on stage
+//      Compile / packageDoc / mappings := Seq(),
+//      Compile / packageSrc / mappings := Seq(),
+//      IntegrationTest / packageBin / publishArtifact := true,
+//      addArtifact(artifact in (IntegrationTest, packageBin), packageBin in IntegrationTest),
+//      Compile / mainClass := Some("org.scalatest.run"),
+//      // adds the test jar to mappings
+//      mappings in Universal += {
+//          // generates the test package
+//          val testjar = (packageBin in IntegrationTest).value
+//          // maps this file to your lib folder in your output package
+//          testjar -> s"lib/${testjar.getName}"
+//      },
+//      scriptClasspath += (packageBin in Test).value.getName
+//  )
+//  .dependsOn(webapi)
 
 def knoraModule(name: String): Project =
     Project(id = name, base = file(name))

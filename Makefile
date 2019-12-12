@@ -22,7 +22,7 @@ docs-build: ## build the docs
 
 .PHONY: build-all-scala
 build-all-scala: ## build all scala projects
-	sbt webapi/universal:stage knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage upgrade/universal:stage knora-assets/universal:stage webapi_test/universal:stage webapi_it/universal:stage
+	sbt webapi/universal:stage knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage upgrade/universal:stage knora-assets/universal:stage
 
 ## knora-api
 .PHONY: build-knora-api-image
@@ -294,7 +294,6 @@ it-tests-with-coverage: stack-without-api ## runs the integration tests (equival
 
 .PHONY: normal-tests
 normal-tests: stack-without-api init-db-test-unit ## runs the normal tests (equivalent to 'sbt webapi/test').
-	# docker build -t webapi-test -f docker/knora-api-test.dockerfile webapi-test/target/universal
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
