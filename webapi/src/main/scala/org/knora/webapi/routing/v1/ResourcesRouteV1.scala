@@ -34,7 +34,6 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
@@ -64,13 +63,16 @@ import scala.util.{Failure, Success, Try}
 import scala.xml._
 
 /**
-  * Provides API routes that deal with resources.
-  */
+ * Provides API routes that deal with resources.
+ */
 class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
     // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
     private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         def makeResourceRequestMessage(resIri: String,
                                        resinfo: Boolean,
@@ -359,29 +361,29 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Given the IRI the main internal ontology to be used in an XML import, recursively gets instances of
-          * [[NamedGraphEntityInfoV1]] for that ontology, for `knora-base`, and for any other ontologies containing
-          * classes used in object class constraints in the main ontology.
-          *
-          * @param mainOntologyIri the IRI of the main ontology used in the XML import.
-          * @param userProfile     the profile of the user making the request.
-          * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
-          */
+         * Given the IRI the main internal ontology to be used in an XML import, recursively gets instances of
+         * [[NamedGraphEntityInfoV1]] for that ontology, for `knora-base`, and for any other ontologies containing
+         * classes used in object class constraints in the main ontology.
+         *
+         * @param mainOntologyIri the IRI of the main ontology used in the XML import.
+         * @param userProfile     the profile of the user making the request.
+         * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
+         */
         def getNamedGraphInfos(mainOntologyIri: IRI, userProfile: UserADM): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
             /**
-              * Does the actual recursion for `getNamedGraphInfos`, loading only information about project-specific
-              * ontologies (i.e. ontologies other than `knora-base`).
-              *
-              * @param initialOntologyIri  the IRI of the internal project-specific ontology to start with.
-              * @param intermediateResults the intermediate results collected so far (a map of internal ontology IRIs to
-              *                            [[NamedGraphEntityInfoV1]] objects). When this method is first called, this
-              *                            collection must already contain a [[NamedGraphEntityInfoV1]] for
-              *                            the `knora-base` ontology. This is an optimisation to avoid getting
-              *                            information about `knora-base` repeatedly, since every project-specific
-              *                            ontology depends on `knora-base`.
-              * @param userProfile         the profile of the user making the request.
-              * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
-              */
+             * Does the actual recursion for `getNamedGraphInfos`, loading only information about project-specific
+             * ontologies (i.e. ontologies other than `knora-base`).
+             *
+             * @param initialOntologyIri  the IRI of the internal project-specific ontology to start with.
+             * @param intermediateResults the intermediate results collected so far (a map of internal ontology IRIs to
+             *                            [[NamedGraphEntityInfoV1]] objects). When this method is first called, this
+             *                            collection must already contain a [[NamedGraphEntityInfoV1]] for
+             *                            the `knora-base` ontology. This is an optimisation to avoid getting
+             *                            information about `knora-base` repeatedly, since every project-specific
+             *                            ontology depends on `knora-base`.
+             * @param userProfile         the profile of the user making the request.
+             * @return a map of internal ontology IRIs to [[NamedGraphEntityInfoV1]] objects.
+             */
             def getNamedGraphInfosRec(initialOntologyIri: IRI, intermediateResults: Map[IRI, NamedGraphEntityInfoV1], userProfile: UserADM): Future[Map[IRI, NamedGraphEntityInfoV1]] = {
                 assert(intermediateResults.contains(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))
 
@@ -469,22 +471,22 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Given the IRI of an internal project-specific ontology, generates an [[XmlImportSchemaBundleV1]] for validating
-          * XML imports for that ontology and any other ontologies it depends on.
-          *
-          * @param internalOntologyIri the IRI of the main internal project-specific ontology to be used in the XML import.
-          * @param userProfile         the profile of the user making the request.
-          * @return an [[XmlImportSchemaBundleV1]] for validating the import.
-          */
+         * Given the IRI of an internal project-specific ontology, generates an [[XmlImportSchemaBundleV1]] for validating
+         * XML imports for that ontology and any other ontologies it depends on.
+         *
+         * @param internalOntologyIri the IRI of the main internal project-specific ontology to be used in the XML import.
+         * @param userProfile         the profile of the user making the request.
+         * @return an [[XmlImportSchemaBundleV1]] for validating the import.
+         */
         def generateSchemasFromOntologies(internalOntologyIri: IRI, userProfile: UserADM): Future[XmlImportSchemaBundleV1] = {
             /**
-              * Called by the schema generation template to get the prefix label for an internal ontology
-              * entity IRI. The schema generation template gets these IRIs from resource cardinalities
-              * and property object class constraints, which we get from the ontology responder.
-              *
-              * @param internalEntityIri an internal ontology entity IRI.
-              * @return the prefix label that Knora uses to refer to the ontology.
-              */
+             * Called by the schema generation template to get the prefix label for an internal ontology
+             * entity IRI. The schema generation template gets these IRIs from resource cardinalities
+             * and property object class constraints, which we get from the ontology responder.
+             *
+             * @param internalEntityIri an internal ontology entity IRI.
+             * @return the prefix label that Knora uses to refer to the ontology.
+             */
             def getNamespacePrefixLabel(internalEntityIri: IRI): String = {
                 val prefixLabel = internalEntityIri.toSmartIri.getLongPrefixLabel
 
@@ -498,13 +500,13 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             }
 
             /**
-              * Called by the schema generation template to get the entity name (i.e. the local name part) of an
-              * internal ontology entity IRI. The schema generation template gets these IRIs from resource cardinalities
-              * and property object class constraints, which we get from the ontology responder.
-              *
-              * @param internalEntityIri an internal ontology entity IRI.
-              * @return the local name of the entity.
-              */
+             * Called by the schema generation template to get the entity name (i.e. the local name part) of an
+             * internal ontology entity IRI. The schema generation template gets these IRIs from resource cardinalities
+             * and property object class constraints, which we get from the ontology responder.
+             *
+             * @param internalEntityIri an internal ontology entity IRI.
+             * @return the local name of the entity.
+             */
             def getEntityName(internalEntityIri: IRI): String = {
                 internalEntityIri.toSmartIri.getEntityName
             }
@@ -605,12 +607,12 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Generates a byte array representing a Zip file containing XML schemas for validating XML import data.
-          *
-          * @param internalOntologyIri the IRI of the main internal ontology for which data will be imported.
-          * @param userProfile         the profile of the user making the request.
-          * @return a byte array representing a Zip file containing XML schemas.
-          */
+         * Generates a byte array representing a Zip file containing XML schemas for validating XML import data.
+         *
+         * @param internalOntologyIri the IRI of the main internal ontology for which data will be imported.
+         * @param userProfile         the profile of the user making the request.
+         * @return a byte array representing a Zip file containing XML schemas.
+         */
         def generateSchemaZipFile(internalOntologyIri: IRI, userProfile: UserADM): Future[Array[Byte]] = {
             for {
                 // Generate a bundle of XML schemas.
@@ -630,14 +632,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Validates bulk import XML using project-specific XML schemas and the Knora XML import schema v1.
-          *
-          * @param xml              the XML to be validated.
-          * @param defaultNamespace the default namespace of the submitted XML. This should be the Knora XML import
-          *                         namespace corresponding to the main internal ontology used in the import.
-          * @param userADM          the profile of the user making the request.
-          * @return a `Future` containing `()` if successful, otherwise a failed future.
-          */
+         * Validates bulk import XML using project-specific XML schemas and the Knora XML import schema v1.
+         *
+         * @param xml              the XML to be validated.
+         * @param defaultNamespace the default namespace of the submitted XML. This should be the Knora XML import
+         *                         namespace corresponding to the main internal ontology used in the import.
+         * @param userADM          the profile of the user making the request.
+         * @return a `Future` containing `()` if successful, otherwise a failed future.
+         */
         def validateImportXml(xml: String, defaultNamespace: IRI, userADM: UserADM): Future[Unit] = {
             // Convert the default namespace of the submitted XML to an internal ontology IRI. This should be the
             // IRI of the main ontology used in the import.
@@ -675,12 +677,12 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Converts parsed import XML into a sequence of [[CreateResourceFromXmlImportRequestV1]] for each resource
-          * described in the XML.
-          *
-          * @param rootElement the root element of an XML document describing multiple resources to be created.
-          * @return Seq[CreateResourceFromXmlImportRequestV1] a collection of resource creation requests.
-          */
+         * Converts parsed import XML into a sequence of [[CreateResourceFromXmlImportRequestV1]] for each resource
+         * described in the XML.
+         *
+         * @param rootElement the root element of an XML document describing multiple resources to be created.
+         * @return Seq[CreateResourceFromXmlImportRequestV1] a collection of resource creation requests.
+         */
         def importXmlToCreateResourceRequests(rootElement: Elem): Seq[CreateResourceFromXmlImportRequestV1] = {
             rootElement.head.child
                 .filter(node => node.label != "#PCDATA")
@@ -796,12 +798,12 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
 
         /**
-          * Given an XML element representing a property value in an XML import, returns a [[CreateResourceValueV1]]
-          * describing the value to be created.
-          *
-          * @param node the XML element.
-          * @return a [[CreateResourceValueV1]] requesting the creation of the value described by the element.
-          */
+         * Given an XML element representing a property value in an XML import, returns a [[CreateResourceValueV1]]
+         * describing the value to be created.
+         *
+         * @param node the XML element.
+         * @return a [[CreateResourceValueV1]] requesting the creation of the value described by the element.
+         */
         def knoraDataTypeXml(node: Node): CreateResourceValueV1 = {
             val knoraType: Seq[Node] = node.attribute("knoraType").getOrElse(throw BadRequestException(s"Attribute 'knoraType' missing in element '${node.label}'"))
             val elementValue = node.text
@@ -1287,27 +1289,27 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
     /**
-      * Represents an XML import schema corresponding to an ontology.
-      *
-      * @param namespaceInfo information about the schema's namespace.
-      * @param schemaXml     the XML text of the schema.
-      */
+     * Represents an XML import schema corresponding to an ontology.
+     *
+     * @param namespaceInfo information about the schema's namespace.
+     * @param schemaXml     the XML text of the schema.
+     */
     case class XmlImportSchemaV1(namespaceInfo: XmlImportNamespaceInfoV1, schemaXml: String)
 
     /**
-      * Represents a bundle of XML import schemas corresponding to ontologies.
-      *
-      * @param mainNamespace the XML namespace corresponding to the main ontology to be used in the XML import.
-      * @param schemas       a map of XML namespaces to schemas.
-      */
+     * Represents a bundle of XML import schemas corresponding to ontologies.
+     *
+     * @param mainNamespace the XML namespace corresponding to the main ontology to be used in the XML import.
+     * @param schemas       a map of XML namespaces to schemas.
+     */
     case class XmlImportSchemaBundleV1(mainNamespace: IRI, schemas: Map[IRI, XmlImportSchemaV1])
 
     /**
-      * An implementation of [[LSResourceResolver]] that resolves resources from a [[XmlImportSchemaBundleV1]].
-      * This is used to allow the XML schema validator to load additional schemas during XML import data validation.
-      *
-      * @param schemaBundle an [[XmlImportSchemaBundleV1]].
-      */
+     * An implementation of [[LSResourceResolver]] that resolves resources from a [[XmlImportSchemaBundleV1]].
+     * This is used to allow the XML schema validator to load additional schemas during XML import data validation.
+     *
+     * @param schemaBundle an [[XmlImportSchemaBundleV1]].
+     */
     class SchemaBundleResolver(schemaBundle: XmlImportSchemaBundleV1) extends LSResourceResolver {
         private val contents: Map[IRI, Array[Byte]] = schemaBundle.schemas.map {
             case (namespace, schema) => namespace -> schema.schemaXml.getBytes(StandardCharsets.UTF_8)
