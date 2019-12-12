@@ -121,7 +121,6 @@ scala_test(
     data = [
         "//knora-ontologies:all",
         "//test-data:all",
-        "//webapi/src/test:resources",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     resources = [
@@ -129,7 +128,6 @@ scala_test(
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
-        ":api",
         ":library",
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_stream_testkit_2_12",

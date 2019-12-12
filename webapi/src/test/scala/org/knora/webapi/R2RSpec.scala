@@ -65,11 +65,13 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll {
+        println("beforeAll")
         CacheUtil.createCaches(settings.caches)
         loadTestData(rdfDataObjects)
     }
 
     override def afterAll {
+        println("afterAll")
         CacheUtil.removeAllCaches()
     }
 
