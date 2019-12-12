@@ -62,8 +62,8 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val writeGetTestResponses = false
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
-        RdfDataObject(path = "_test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
+        RdfDataObject(path = "test-data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
+        RdfDataObject(path = "test-data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
     )
 
     /**

@@ -34,7 +34,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     // The directory where TypeScript compilation stubs are located.
-    private val mockCodeDir: Path = Paths.get("_test_data/typescript-client-mock-src").toAbsolutePath
+    private val mockCodeDir: Path = Paths.get("test-data/typescript-client-mock-src").toAbsolutePath
 
     /**
       * Represents information about an endpoint and its source code.

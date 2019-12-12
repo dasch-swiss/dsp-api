@@ -102,7 +102,7 @@ TEI header:
 The Gravsearch template is expected to be of type `knora-base:TextRepresentation` and to contain a placeholder `$resourceIri` that is to be replaced by the actual resource Iri.
 The Gravsearch template is expected to contain a query involving the text property (URL parameter `textProperty`) and more properties that are going to be mapped to the TEI header. The Gravsearch template is a simple text file with the files extension `.txt`.
 
-A Gravsearch template may look like this (see `webapi/_test_data/test_route/texts/beol/gravsearch.txt`):
+A Gravsearch template may look like this (see `test-data/test_route/texts/beol/gravsearch.txt`):
 
 ```
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
@@ -265,7 +265,7 @@ The Gravsearch query's result may look like this (`RDF/XML`):
 </rdf:RDF>
 ```
 
-In order to convert the metadata (not the actual standoff markup), a `knora-base:knora-base:XSLTransformation` has to be provided. For our example, it looks like this (see `webapi/_test_data/test_route/texts/beol/header.xsl`):
+In order to convert the metadata (not the actual standoff markup), a `knora-base:knora-base:XSLTransformation` has to be provided. For our example, it looks like this (see `test-data/test_route/texts/beol/header.xsl`):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>

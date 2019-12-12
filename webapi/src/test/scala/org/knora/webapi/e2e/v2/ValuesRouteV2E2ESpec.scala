@@ -64,7 +64,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test-data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     private def getResourceWithValues(resourceIri: IRI,
@@ -906,7 +906,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         "create a text value with standoff containing escaped text" in {
             val resourceIri = SharedTestDataADM.AThing.iri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-            val jsonLDEntity = FileUtil.readTextFile(new File("src/test/resources/test-data/valuesE2EV2/CreateValueWithEscape.jsonld"))
+            val jsonLDEntity = FileUtil.readTextFile(new File("test-data/valuesE2EV2/CreateValueWithEscape.jsonld"))
             val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
@@ -936,7 +936,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         "create a TextValue from XML representing HTML with an attribute containing escaped quotes" in {
             // Create the mapping.
 
-            val xmlFileToSend = new File("_test_data/test_route/texts/mappingForHTML.xml")
+            val xmlFileToSend = new File("test-data/test_route/texts/mappingForHTML.xml")
 
             val mappingParams =
                 s"""{
@@ -1933,7 +1933,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         "update a text value with standoff containing escaped text" in {
             val resourceIri = SharedTestDataADM.AThing.iri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-            val jsonLDEntity = FileUtil.readTextFile(new File("src/test/resources/test-data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
+            val jsonLDEntity = FileUtil.readTextFile(new File("test-data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
             val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
             val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)

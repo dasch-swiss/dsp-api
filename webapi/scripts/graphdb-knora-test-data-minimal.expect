@@ -16,11 +16,11 @@ send "load ../../knora-ontologies/standoff-data.ttl into http://www.knora.org/da
 expect $prompt
 send "load ../../knora-ontologies/salsah-gui.ttl into http://www.knora.org/ontology/salsah-gui .\r"
 expect $prompt
-send "load ../_test_data/all_data/admin-data.ttl into http://www.knora.org/data/admin .\r"
+send "load ../../test-data/all_data/admin-data.ttl into http://www.knora.org/data/admin .\r"
 expect $prompt
-send "load ../_test_data/all_data/permissions-data.ttl into http://www.knora.org/data/permissions .\r"
+send "load ../../test-data/all_data/permissions-data.ttl into http://www.knora.org/data/permissions .\r"
 expect $prompt
-send "load ../_test_data/all_data/system-data.ttl into http://www.knora.org/data/0000/SystemProject .\r"
+send "load ../../test-data/all_data/system-data.ttl into http://www.knora.org/data/0000/SystemProject .\r"
 expect $prompt
 
 send "close .\r"

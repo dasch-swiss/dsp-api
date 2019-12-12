@@ -56,7 +56,7 @@ class ValuesV1R2RSpec extends R2RSpec {
     private val boringComment = "This is a boring comment."
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test-data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     private val anythingUser = SharedTestDataV1.anythingUser1

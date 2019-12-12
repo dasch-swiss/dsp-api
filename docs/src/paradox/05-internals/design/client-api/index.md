@@ -184,7 +184,7 @@ in the target language.
 The generated code depends on handwritten library code to work, but stubs can
 be provided to test for compile errors in the generated code.
 
-The directory `webapi/_test_data/typescript-client-mock-src` in the Knora source
+The directory `test-data/typescript-client-mock-src` in the Knora source
 tree contains test stubs for the TypeScript client library.
 
 ### Test Requests and Responses

@@ -48,19 +48,19 @@ object FusekiTriplestoreSpec {
 
                 rdf-data = [
                         {
-                            path = "_test_data/ontologies/knora-base.ttl"
+                            path = "test-data/ontologies/knora-base.ttl"
                             name = "http://www.knora.org/ontology/knora-base"
                         }
                         {
-                            path = "_test_data/ontologies/salsah-gui.ttl"
+                            path = "test-data/ontologies/salsah-gui.ttl"
                             name = "http://www.knora.org/ontology/salsah-gui"
                         }
                         {
-                            path = "_test_data/ontologies/incunabula-onto.ttl"
+                            path = "test-data/ontologies/incunabula-onto.ttl"
                             name = "http://www.knora.org/ontology/0803/incunabula"
                         }
                         {
-                            path = "_test_data/ontologies/dokubib-onto.ttl"
+                            path = "test-data/ontologies/dokubib-onto.ttl"
                             name = "http://www.knora.org/ontology/0804/dokubib"
                         }
                     ]
@@ -83,10 +83,10 @@ class FusekiTriplestoreSpec extends CoreSpec("FusekiTriplestoreTestSystem", Fuse
 
     val rdfDataObjects = List (
 
-        RdfDataObject(path = "_test_data/ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
-        RdfDataObject(path = "_test_data/ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
-        RdfDataObject(path = "_test_data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/0803/incunabula"),
-        RdfDataObject(path = "_test_data/ontologies/dokubib-onto.ttl", name = "http://www.knora.org/ontology/0804/dokubib")
+        RdfDataObject(path = "test-data/ontologies/knora-base.ttl", name = "http://www.knora.org/ontology/knora-base"),
+        RdfDataObject(path = "test-data/ontologies/salsah-gui.ttl", name = "http://www.knora.org/ontology/salsah-gui"),
+        RdfDataObject(path = "test-data/ontologies/incunabula-onto.ttl", name = "http://www.knora.org/ontology/0803/incunabula"),
+        RdfDataObject(path = "test-data/ontologies/dokubib-onto.ttl", name = "http://www.knora.org/ontology/0804/dokubib")
 
     )
 

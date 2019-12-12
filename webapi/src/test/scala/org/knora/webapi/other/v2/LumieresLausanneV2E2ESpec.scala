@@ -42,10 +42,10 @@ object LumieresLausanneV2E2ESpec {
 class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config) with TriplestoreJsonProtocol {
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_admin.ttl", name = "http://www.knora.org/data/admin"),
-        RdfDataObject(path = "_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_permissions.ttl", name = "http://www.knora.org/data/permissions"),
-        RdfDataObject(path = "_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-onto.ttl", name = "http://www.knora.org/ontology/0113/lumieres-lausanne"),
-        RdfDataObject(path = "_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-data-lists.ttl", name = "http://www.knora.org/data/0113/lumieres-lausanne")
+        RdfDataObject(path = "test-data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_admin.ttl", name = "http://www.knora.org/data/admin"),
+        RdfDataObject(path = "test-data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_permissions.ttl", name = "http://www.knora.org/data/permissions"),
+        RdfDataObject(path = "test-data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-onto.ttl", name = "http://www.knora.org/ontology/0113/lumieres-lausanne"),
+        RdfDataObject(path = "test-data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-data-lists.ttl", name = "http://www.knora.org/data/0113/lumieres-lausanne")
     )
 
     "For project Lumieres Lausanne" should {

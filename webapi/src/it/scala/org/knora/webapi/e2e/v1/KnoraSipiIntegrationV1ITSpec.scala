@@ -53,26 +53,26 @@ object KnoraSipiIntegrationV1ITSpec {
 class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol {
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test-data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test-data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     private val username = "root@example.com"
     private val password = "test"
-    private val pathToChlaus = "_test_data/test_route/images/Chlaus.jpg"
-    private val pathToMarbles = "_test_data/test_route/images/marbles.tif"
-    private val pathToMarblesWithWrongExtension = "_test_data/test_route/images/marbles_with_wrong_extension.jpg"
-    private val pathToXSLTransformation = "_test_data/test_route/texts/letterToHtml.xsl"
-    private val pathToMappingWithXSLT = "_test_data/test_route/texts/mappingForLetterWithXSLTransformation.xml"
+    private val pathToChlaus = "test-data/test_route/images/Chlaus.jpg"
+    private val pathToMarbles = "test-data/test_route/images/marbles.tif"
+    private val pathToMarblesWithWrongExtension = "test-data/test_route/images/marbles_with_wrong_extension.jpg"
+    private val pathToXSLTransformation = "test-data/test_route/texts/letterToHtml.xsl"
+    private val pathToMappingWithXSLT = "test-data/test_route/texts/mappingForLetterWithXSLTransformation.xml"
     private val firstPageIri = new MutableTestIri
     private val secondPageIri = new MutableTestIri
 
-    private val pathToBEOLBodyXSLTransformation = "_test_data/test_route/texts/beol/standoffToTEI.xsl"
-    private val pathToBEOLStandoffTEIMapping = "_test_data/test_route/texts/beol/BEOLTEIMapping.xml"
-    private val pathToBEOLHeaderXSLTransformation = "_test_data/test_route/texts/beol/header.xsl"
-    private val pathToBEOLGravsearchTemplate = "_test_data/test_route/texts/beol/gravsearch.txt"
-    private val pathToBEOLLetterMapping = "_test_data/test_route/texts/beol/testLetter/beolMapping.xml"
-    private val pathToBEOLBulkXML = "_test_data/test_route/texts/beol/testLetter/bulk.xml"
+    private val pathToBEOLBodyXSLTransformation = "test-data/test_route/texts/beol/standoffToTEI.xsl"
+    private val pathToBEOLStandoffTEIMapping = "test-data/test_route/texts/beol/BEOLTEIMapping.xml"
+    private val pathToBEOLHeaderXSLTransformation = "test-data/test_route/texts/beol/header.xsl"
+    private val pathToBEOLGravsearchTemplate = "test-data/test_route/texts/beol/gravsearch.txt"
+    private val pathToBEOLLetterMapping = "test-data/test_route/texts/beol/testLetter/beolMapping.xml"
+    private val pathToBEOLBulkXML = "test-data/test_route/texts/beol/testLetter/bulk.xml"
     private val letterIri = new MutableTestIri
 
     /**

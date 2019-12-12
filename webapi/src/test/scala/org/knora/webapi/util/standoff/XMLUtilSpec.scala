@@ -94,9 +94,9 @@ class XMLUtilSpec extends CoreSpec {
         }
 
         "demonstrate how to handle resources that may or may not be embedded" in {
-            val xmlWithNestedResource = FileUtil.readTextFile(new File("_test_data/test_route/texts/beol/xml-with-nested-resources.xml"))
-            val xmlWithNonNestedResource = FileUtil.readTextFile(new File("_test_data/test_route/texts/beol/xml-with-non-nested-resources.xml"))
-            val xslt = FileUtil.readTextFile(new File("_test_data/test_route/texts/beol/header.xsl"))
+            val xmlWithNestedResource = FileUtil.readTextFile(new File("test-data/test_route/texts/beol/xml-with-nested-resources.xml"))
+            val xmlWithNonNestedResource = FileUtil.readTextFile(new File("test-data/test_route/texts/beol/xml-with-non-nested-resources.xml"))
+            val xslt = FileUtil.readTextFile(new File("test-data/test_route/texts/beol/header.xsl"))
 
             val transformedXmlWithNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNestedResource, xslt)
             val transformedXmlWithNonNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNonNestedResource, xslt)

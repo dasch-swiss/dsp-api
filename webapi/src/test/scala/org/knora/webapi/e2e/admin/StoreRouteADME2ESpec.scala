@@ -54,16 +54,16 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
       * The Json which spray generates looks like this:
       *
       *  [
-      *     {"path": "_test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/0803/incunabula"},
-      *     {"path": "_test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/00FF/images"}
+      *     {"path": "test-data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/0803/incunabula"},
+      *     {"path": "test-data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/00FF/images"}
       *  ]
       *
       * and could have been supplied to the post request instead of the scala object.
       */
     /*
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
+        RdfDataObject(path = "test-data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test-data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
     */
 

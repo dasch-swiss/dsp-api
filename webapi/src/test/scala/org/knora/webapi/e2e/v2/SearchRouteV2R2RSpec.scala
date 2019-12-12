@@ -83,13 +83,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val writeTestDataFiles = false
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
-        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl", name = "http://www.knora.org/data/admin"),
-        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl", name = "http://www.knora.org/ontology/0666/gravsearchtest1"),
-        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl", name = "http://www.knora.org/data/0666/gravsearchtest1")
+        RdfDataObject(path = "test-data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test-data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+        RdfDataObject(path = "test-data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test-data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
+        RdfDataObject(path = "test-data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl", name = "http://www.knora.org/data/admin"),
+        RdfDataObject(path = "test-data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl", name = "http://www.knora.org/ontology/0666/gravsearchtest1"),
+        RdfDataObject(path = "test-data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl", name = "http://www.knora.org/data/0666/gravsearchtest1")
     )
 
     "The Search v2 Endpoint" should {
@@ -7702,7 +7702,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for a standoff date tag indicating a date in a particular range (submitting the complex schema)" in {
             // First, create a standoff-to-XML mapping that can handle standoff date tags.
 
-            val mappingFileToSend = new File("_test_data/test_route/texts/mappingForHTML.xml")
+            val mappingFileToSend = new File("test-data/test_route/texts/mappingForHTML.xml")
 
             val paramsCreateHTMLMappingFromXML =
                 s"""
@@ -7741,7 +7741,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             // Next, create a resource with a text value containing a standoff date tag. TODO: Use API v2.
 
-            val xmlFileToSend = new File("_test_data/test_route/texts/HTML.xml")
+            val xmlFileToSend = new File("test-data/test_route/texts/HTML.xml")
 
             val newValueParams =
                 s"""

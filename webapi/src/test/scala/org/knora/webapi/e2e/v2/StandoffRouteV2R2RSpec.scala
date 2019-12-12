@@ -63,28 +63,28 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
 
     object RequestParams {
 
-        val pathToLetterMapping = "_test_data/test_route/texts/mappingForLetter.xml"
+        val pathToLetterMapping = "test-data/test_route/texts/mappingForLetter.xml"
 
-        val pathToLetterXML = "_test_data/test_route/texts/letter.xml"
+        val pathToLetterXML = "test-data/test_route/texts/letter.xml"
 
-        val pathToLetter2XML = "_test_data/test_route/texts/letter2.xml"
+        val pathToLetter2XML = "test-data/test_route/texts/letter2.xml"
 
-        val pathToLetter3XML = "_test_data/test_route/texts/letter3.xml"
+        val pathToLetter3XML = "test-data/test_route/texts/letter3.xml"
 
         // Standard HTML is the html code that can be translated into Standoff markup with the OntologyConstants.KnoraBase.StandardMapping
-        val pathToStandardHTML = "_test_data/test_route/texts/StandardHTML.xml"
+        val pathToStandardHTML = "test-data/test_route/texts/StandardHTML.xml"
 
-        val pathToHTMLMapping = "_test_data/test_route/texts/mappingForHTML.xml"
+        val pathToHTMLMapping = "test-data/test_route/texts/mappingForHTML.xml"
 
-        val pathToHTML = "_test_data/test_route/texts/HTML.xml"
+        val pathToHTML = "test-data/test_route/texts/HTML.xml"
 
     }
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
 
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "test-data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "test-data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test-data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
 
     )
 
