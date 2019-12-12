@@ -67,7 +67,7 @@ jobs:
 
   api-unit-tests:
     name: API Unit Tests
-    needs: [compile, bazel-build]
+    needs: [bazel-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
