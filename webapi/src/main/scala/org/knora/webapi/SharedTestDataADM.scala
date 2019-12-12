@@ -1628,27 +1628,63 @@ object SharedTestDataADM {
     }
 
     def updateResourceMetadata(resourceIri: IRI,
+                               lastModificationDate: Option[Instant],
                                newLabel: String,
                                newPermissions: String,
                                newModificationDate: Instant): String = {
-        s"""|{
-            |  "@id" : "$resourceIri",
-            |  "@type" : "anything:Thing",
-            |  "rdfs:label" : "$newLabel",
-            |  "knora-api:hasPermissions" : "$newPermissions",
-            |  "knora-api:newModificationDate" : {
-            |    "@type" : "xsd:dateTimeStamp",
-            |    "@value" : "$newModificationDate"
-            |  },
-            |  "@context" : {
-            |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-            |  }
-            |}""".stripMargin
+        lastModificationDate match {
+            case Some(definedLastModificationDate) =>
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "rdfs:label" : "$newLabel",
+                    |  "knora-api:hasPermissions" : "$newPermissions",
+                    |  "knora-api:lastModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$definedLastModificationDate"
+                    |  },
+                    |  "knora-api:newModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$newModificationDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
+
+            case None =>
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "rdfs:label" : "$newLabel",
+                    |  "knora-api:hasPermissions" : "$newPermissions",
+                    |  "knora-api:newModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$newModificationDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
+
+        }
     }
+
+    def successResponse(message: String): String =
+        s"""{
+          |  "knora-api:result" : "$message",
+          |  "@context" : {
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+          |  }
+          |}""".stripMargin
 
     def deleteResource(resourceIri: IRI,
                        lastModificationDate: Instant): String = {

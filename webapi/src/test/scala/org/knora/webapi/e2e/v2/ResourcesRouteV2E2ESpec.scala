@@ -629,6 +629,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
             val jsonLDEntity = SharedTestDataADM.updateResourceMetadata(
                 resourceIri = resourceIri,
+                lastModificationDate = None,
                 newLabel = newLabel,
                 newPermissions = newPermissions,
                 newModificationDate = newModificationDate
@@ -636,8 +637,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
             val updateRequest = Put(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
-            val updateResponseAsString = responseToString(updateResponse)
+            val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+            assert(updateResponseAsString == SharedTestDataADM.successResponse("Resource metadata updated"))
 
             val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
@@ -670,8 +672,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
             val updateRequest = Post(s"$baseApiUrl/v2/resources/delete", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
-            val updateResponseAsString = responseToString(updateResponse)
+            val updateResponseAsString: String = responseToString(updateResponse)
             assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
+            assert(updateResponseAsString == SharedTestDataADM.successResponse("Resource marked as deleted"))
 
             val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)

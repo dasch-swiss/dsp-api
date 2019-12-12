@@ -162,20 +162,37 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def updateResourceMetadataTestRequest: Future[SourceCodeFileContent] = {
+    private def updateResourceMetadataTestRequestsAndResponse: Future[Set[SourceCodeFileContent]] = {
         val resourceIri = "http://rdfh.ch/0001/a-thing"
         val newLabel = "test thing with modified label"
         val newPermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
         val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
 
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("update-resource-metadata-request"),
-                text = SharedTestDataADM.updateResourceMetadata(
-                    resourceIri = resourceIri,
-                    newLabel = newLabel,
-                    newPermissions = newPermissions,
-                    newModificationDate = newModificationDate
+            Set(
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("update-resource-metadata-request"),
+                    text = SharedTestDataADM.updateResourceMetadata(
+                        resourceIri = resourceIri,
+                        lastModificationDate = None,
+                        newLabel = newLabel,
+                        newPermissions = newPermissions,
+                        newModificationDate = newModificationDate
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("update-resource-metadata-request-with-last-mod-date"),
+                    text = SharedTestDataADM.updateResourceMetadata(
+                        resourceIri = resourceIri,
+                        lastModificationDate = Some(Instant.parse("2019-02-13T09:05:10Z")),
+                        newLabel = newLabel,
+                        newPermissions = newPermissions,
+                        newModificationDate = newModificationDate
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("update-resource-metadata-response"),
+                    text = SharedTestDataADM.successResponse("Resource metadata updated")
                 )
             )
         )
@@ -376,7 +393,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
     private def getResourcesPreviewTestResponse: Future[SourceCodeFileContent] = {
         for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl/resourcespreview/${SharedTestDataADM.AThing.iriEncoded}"))
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl/v2/resourcespreview/${SharedTestDataADM.AThing.iriEncoded}"))
         } yield SourceCodeFileContent(
             filePath = SourceCodeFilePath.makeJsonPath("resource-preview"),
             text = responseStr
@@ -515,17 +532,22 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         }
     }
 
-    private def deleteResourceTestRequest: Future[SourceCodeFileContent] = {
+    private def deleteResourceTestRequestAndResponse: Future[Set[SourceCodeFileContent]] = {
         val resourceIri = "http://rdfh.ch/0001/a-thing"
         val lastModificationDate = Instant.now
 
         FastFuture.successful(
-            SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("delete-resource-request"),
-                text = SharedTestDataADM.deleteResource(
-                    resourceIri = resourceIri,
-                    lastModificationDate = lastModificationDate
-                )
+            Set(
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("delete-resource-request"),
+                    text = SharedTestDataADM.deleteResource(
+                        resourceIri = resourceIri,
+                        lastModificationDate = lastModificationDate
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("delete-resource-response"),
+                    text = SharedTestDataADM.successResponse("Resource marked as deleted"))
             )
         )
     }
@@ -586,11 +608,11 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             createRequests <- createResourceTestRequests
             previewResponse <- getResourcesPreviewTestResponse
             graphResponse <- getResourceGraphTestResponse
-            metadataRequest <- updateResourceMetadataTestRequest
-            deleteRequest <- deleteResourceTestRequest
+            metadataRequestsAndResponse <- updateResourceMetadataTestRequestsAndResponse
+            deleteRequestAndResponse <- deleteResourceTestRequestAndResponse
             eraseRequest <- eraseResourceTestRequest
-        } yield getResponses ++ createRequests + previewResponse + graphResponse + metadataRequest +
-            deleteRequest + eraseRequest
+        } yield getResponses ++ createRequests ++ metadataRequestsAndResponse ++ deleteRequestAndResponse +
+            previewResponse + graphResponse + eraseRequest
     }
 
     /**
