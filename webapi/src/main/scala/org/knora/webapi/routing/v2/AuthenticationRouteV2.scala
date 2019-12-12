@@ -26,11 +26,14 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.{Authenticati
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData}
 
 /**
-  * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
-  */
+ * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
+ */
 class AuthenticationRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with AuthenticationV2JsonProtocol {
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("v2" / "authentication") {
             get { // authenticate credentials
@@ -40,67 +43,67 @@ class AuthenticationRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeD
                     }
                 }
             } ~
-            post { // login
-                /* send iri, email, or username, and password in body as:
-                 * {
-                 *   "iri|username|email": "value_of_iri_username_or_email",
-                 *   "password": "userspassword"
-                 * }, e.g., for email:
-                 * {
-                 *   "email": "email@example.com",
-                 *   "password": "userspassword"
-                 * }
-                 *
-                 * Returns a JWT token (and session cookie), which can be supplied with every request thereafter in
-                 * the authorization header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
-                 */
-                entity(as[LoginApiRequestPayloadV2]) { apiRequest =>
+                post { // login
+                    /* send iri, email, or username, and password in body as:
+                     * {
+                     *   "iri|username|email": "value_of_iri_username_or_email",
+                     *   "password": "userspassword"
+                     * }, e.g., for email:
+                     * {
+                     *   "email": "email@example.com",
+                     *   "password": "userspassword"
+                     * }
+                     *
+                     * Returns a JWT token (and session cookie), which can be supplied with every request thereafter in
+                     * the authorization header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
+                     */
+                    entity(as[LoginApiRequestPayloadV2]) { apiRequest =>
+                        requestContext =>
+                            requestContext.complete {
+                                doLoginV2(
+                                    KnoraPasswordCredentialsV2(
+                                        UserIdentifierADM(
+                                            maybeIri = apiRequest.iri,
+                                            maybeEmail = apiRequest.email,
+                                            maybeUsername = apiRequest.username
+                                        ),
+                                        password = apiRequest.password
+                                    )
+                                )
+                            }
+                    }
+                } ~
+                delete { // logout
                     requestContext =>
                         requestContext.complete {
-                            doLoginV2(
-                                KnoraPasswordCredentialsV2(
-                                    UserIdentifierADM(
-                                        maybeIri = apiRequest.iri,
-                                        maybeEmail = apiRequest.email,
-                                        maybeUsername = apiRequest.username
-                                    ),
-                                    password = apiRequest.password
-                                )
-                            )
+                            doLogoutV2(requestContext)
                         }
                 }
-            } ~
-            delete { // logout
-                requestContext =>
-                    requestContext.complete {
-                        doLogoutV2(requestContext)
-                    }
-            }
         } ~
-        path("v2" / "login") {
-            get { // html login interface (necessary for IIIF Authentication API support)
-                requestContext => {
-                    requestContext.complete {
-                        presentLoginFormV2(requestContext)
-                    }
-                }
-            } ~
-            post { // called by html login interface (necessary for IIIF Authentication API support)
-                formFields('username, 'password) { (username, password) =>
+            path("v2" / "login") {
+                get { // html login interface (necessary for IIIF Authentication API support)
                     requestContext => {
                         requestContext.complete {
-                            doLoginV2(
-                                KnoraPasswordCredentialsV2(
-                                    UserIdentifierADM(
-                                    maybeUsername = Some(username)
-                                ),
-                                password = password
-                            )
-                            )
+                            presentLoginFormV2(requestContext)
                         }
                     }
-                }
+                } ~
+                    post { // called by html login interface (necessary for IIIF Authentication API support)
+                        formFields('username, 'password) { (username, password) =>
+                            requestContext => {
+                                requestContext.complete {
+                                    doLoginV2(
+                                        KnoraPasswordCredentialsV2(
+                                            UserIdentifierADM(
+                                                maybeUsername = Some(username)
+                                            ),
+                                            password = password
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
             }
-        }
     }
 }

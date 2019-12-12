@@ -4092,7 +4092,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/RegionsForPage.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/RegionsForPage.jsonld"), false)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4354,7 +4354,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), false)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6215,40 +6215,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "get the regions belonging to a page (submitting the complex schema)" in {
-            val gravsearchQuery =
-                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
-                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-                  |
-                  |    CONSTRUCT {
-                  |        ?region knora-api:isMainResource true .
-                  |
-                  |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
-                  |
-                  |        ?region knora-api:hasGeometry ?geom .
-                  |
-                  |        ?region knora-api:hasComment ?comment .
-                  |
-                  |        ?region knora-api:hasColor ?color .
-                  |    } WHERE {
-                  |
-                  |        ?region a knora-api:Region .
-                  |
-                  |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
-                  |
-                  |        ?region knora-api:hasGeometry ?geom .
-                  |
-                  |        ?region knora-api:hasComment ?comment .
-                  |
-                  |        ?region knora-api:hasColor ?color .
-                  |
-                  |    }
-                """.stripMargin
-
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, SharedTestDataADM.gravsearchComplexRegionsForPage)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/RegionsForPage.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/RegionsForPage.jsonld"), false)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -6458,33 +6429,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "search for an anything:Thing that has a decimal value smaller than 3.0 (submitting the complex schema)" in {
-            val gravsearchQuery =
-                """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-                  |
-                  |CONSTRUCT {
-                  |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing anything:hasDecimal ?decimal .
-                  |} WHERE {
-                  |
-                  |     ?thing a anything:Thing .
-                  |
-                  |     ?thing anything:hasDecimal ?decimal .
-                  |
-                  |     ?decimal knora-api:decimalValueAsDecimal ?decimalDec .
-                  |
-                  |     FILTER(?decimalDec < "3"^^xsd:decimal)
-                  |}
-                  |
-                """.stripMargin
-
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, SharedTestDataADM.gravsearchComplexThingSmallerThanDecimal)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), writeTestDataFiles)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), false)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
