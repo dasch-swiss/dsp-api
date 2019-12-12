@@ -166,7 +166,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         val resourceIri = "http://rdfh.ch/0001/a-thing"
         val newLabel = "test thing with modified label"
         val newPermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
-        val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
+        val newModificationDate = Instant.parse("2019-12-12T10:23:25.836924Z")
 
         FastFuture.successful(
             Set(
@@ -534,7 +534,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
     private def deleteResourceTestRequestAndResponse: Future[Set[SourceCodeFileContent]] = {
         val resourceIri = "http://rdfh.ch/0001/a-thing"
-        val lastModificationDate = Instant.now
+        val lastModificationDate = Instant.parse("2019-12-12T10:23:25.836924Z")
 
         FastFuture.successful(
             Set(
