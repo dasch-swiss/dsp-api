@@ -29,8 +29,8 @@ import scala.util.{Failure, Success}
 
 
 /**
-  * Provides AppState actor access logic
-  */
+ * Provides AppState actor access logic
+ */
 trait AppStateAccess {
     this: RejectingRoute =>
 
@@ -45,15 +45,18 @@ trait AppStateAccess {
 }
 
 /**
-  * A route used for rejecting requests to certain paths depending on the state of the app or the configuration.
-  *
-  * If the current state of the application is anything other then [[AppState.Running]], then return [[StatusCodes.ServiceUnavailable]].
-  * If the current state of the application is [[AppState.Running]], then reject requests to paths as defined
-  * in 'application.conf'.
-  */
+ * A route used for rejecting requests to certain paths depending on the state of the app or the configuration.
+ *
+ * If the current state of the application is anything other then [[AppState.Running]], then return [[StatusCodes.ServiceUnavailable]].
+ * If the current state of the application is [[AppState.Running]], then reject requests to paths as defined
+ * in 'application.conf'.
+ */
 class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with AppStateAccess {
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path(Remaining) { wholepath =>
 

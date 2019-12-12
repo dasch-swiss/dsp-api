@@ -93,6 +93,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     private val imagesProjectIriEnc = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
     private val incunabulaIriEnc = URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
 
+    /**
+     * Returns the route.
+     */
     override def knoraApiPath: Route =
         getProjects ~
             addProject ~
@@ -397,10 +400,10 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
     private val updateProjectFunction: ClientFunction =
-        "updateProject" description "Updates a project." params (
+        "updateProject" description "Updates a project." params(
             "iri" description "The IRI of the project to be updated." paramType UriDatatype,
             "projectInfo" description "The project info to be updated." paramType UpdateProjectRequest
-            ) doThis {
+        ) doThis {
             httpPut(
                 path = str("iri") / arg("iri"),
                 body = Some(arg("projectInfo"))

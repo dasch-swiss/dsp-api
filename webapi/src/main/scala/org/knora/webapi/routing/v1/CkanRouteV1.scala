@@ -25,11 +25,14 @@ import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
 /**
-  * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
-  */
+ * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
+ */
 class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("v1" / "ckan") {
             get {

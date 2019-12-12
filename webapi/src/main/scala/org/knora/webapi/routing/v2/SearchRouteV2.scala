@@ -19,32 +19,52 @@
 
 package org.knora.webapi.routing.v2
 
+import akka.actor.ActorSystem
+import akka.http.scaladsl.client.RequestBuilding._
+import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.responders.v2.search.SparqlQueryConstants
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.clientapi.{ClientEndpoint, ClientFunction, SourceCodeFileContent, SourceCodeFilePath}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Provides a function for API routes that deal with search.
-  */
-class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+ * Provides a function for API routes that deal with search.
+ */
+class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
+
+    // Definitions for ClientEndpoint
+    override val name: String = "SearchEndpoint"
+    override val directoryName: String = "search"
+    override val urlPath: String = "search"
+    override val description: String = "An endpoint for searching data in Knora."
+    override val functions: Seq[ClientFunction] = Seq.empty
+
     private val LIMIT_TO_PROJECT = "limitToProject"
     private val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
     private val OFFSET = "offset"
     private val LIMIT_TO_STANDOFF_CLASS = "limitToStandoffClass"
 
     /**
-      * Gets the requested offset. Returns zero if no offset is indicated.
-      *
-      * @param params the GET parameters.
-      * @return the offset to be used for paging.
-      */
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = fullTextSearchCount ~ fullTextSearch ~ gravsearchCountGet ~ gravsearchCountPost ~
+        gravsearchGet ~ gravsearchPost ~ searchByLabelCount ~ searchByLabel
+
+    /**
+     * Gets the requested offset. Returns zero if no offset is indicated.
+     *
+     * @param params the GET parameters.
+     * @return the offset to be used for paging.
+     */
     private def getOffsetFromParams(params: Map[String, String]): Int = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val offsetStr = params.get(OFFSET)
@@ -64,11 +84,11 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /**
-      * Gets the the project the search should be restricted to, if any.
-      *
-      * @param params the GET parameters.
-      * @return the project Iri, if any.
-      */
+     * Gets the the project the search should be restricted to, if any.
+     *
+     * @param params the GET parameters.
+     * @return the project Iri, if any.
+     */
     private def getProjectFromParams(params: Map[String, String]): Option[IRI] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val limitToProjectIriStr = params.get(LIMIT_TO_PROJECT)
@@ -89,11 +109,11 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /**
-      * Gets the resource class the search should be restricted to, if any.
-      *
-      * @param params the GET parameters.
-      * @return the internal resource class, if any.
-      */
+     * Gets the resource class the search should be restricted to, if any.
+     *
+     * @param params the GET parameters.
+     * @return the internal resource class, if any.
+     */
     private def getResourceClassFromParams(params: Map[String, String]): Option[SmartIri] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val limitToResourceClassIriStr = params.get(LIMIT_TO_RESOURCE_CLASS)
@@ -113,11 +133,11 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /**
-      * Gets the standoff class the search should be restricted to.
-      *
-      * @param params the GET parameters.
-      * @return the internal standoff class, if any.
-      */
+     * Gets the standoff class the search should be restricted to.
+     *
+     * @param params the GET parameters.
+     * @return the internal standoff class, if any.
+     */
     private def getStandoffClass(params: Map[String, String]): Option[SmartIri] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val limitToStandoffClassIriStr: Option[String] = params.get(LIMIT_TO_STANDOFF_CLASS)
@@ -136,120 +156,120 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    def knoraApiPath: Route = {
+    private def fullTextSearchCount: Route = path("v2" / "search" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+        get {
+            requestContext =>
+                val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
-        path("v2" / "search" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
-            get {
-                requestContext =>
-
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
-
-                    if (searchString.length < settings.searchValueMinLength) {
-                        throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
-                    }
-
-                    val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-                    val limitToProject: Option[IRI] = getProjectFromParams(params)
-
-                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
-
-                    val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
-
-                    val requestMessage: Future[FullTextSearchCountRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield FullTextSearchCountRequestV2(
-                        searchValue = searchString,
-                        limitToProject = limitToProject,
-                        limitToResourceClass = limitToResourceClass,
-                        limitToStandoffClass = limitToStandoffClass,
-                        requestingUser = requestingUser
-                    )
-
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log,
-                        targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-                    )
-            }
-        } ~ path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
-            get {
-                requestContext => {
-
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
-
-                    if (searchString.length < settings.searchValueMinLength) {
-                        throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
-                    }
-
-                    val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-                    val offset = getOffsetFromParams(params)
-
-                    val limitToProject: Option[IRI] = getProjectFromParams(params)
-
-                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
-
-                    val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
-
-                    val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
-                    val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
-
-                    val requestMessage: Future[FulltextSearchRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield FulltextSearchRequestV2(
-                        searchValue = searchString,
-                        offset = offset,
-                        limitToProject = limitToProject,
-                        limitToResourceClass = limitToResourceClass,
-                        limitToStandoffClass,
-                        requestingUser = requestingUser,
-                        targetSchema = targetSchema,
-                        schemaOptions = schemaOptions
-                    )
-
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log,
-                        targetSchema = targetSchema,
-                        schemaOptions = schemaOptions
-                    )
+                if (searchString.length < settings.searchValueMinLength) {
+                    throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
                 }
-            }
-        } ~ path("v2" / "searchextended" / "count") {
-            post {
-                entity(as[String]) { gravsearchQuery =>
-                    requestContext => {
-                        val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-                        val requestMessage: Future[GravsearchCountRequestV2] = for {
-                            requestingUser <- getUserADM(requestContext)
-                        } yield GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
-                        RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageF = requestMessage,
-                            requestContext = requestContext,
-                            settings = settings,
-                            responderManager = responderManager,
-                            log = log,
-                            targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-                            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-                        )
-                    }
+                val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+                val limitToProject: Option[IRI] = getProjectFromParams(params)
+
+                val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
+
+                val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
+
+                val requestMessage: Future[FullTextSearchCountRequestV2] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield FullTextSearchCountRequestV2(
+                    searchValue = searchString,
+                    limitToProject = limitToProject,
+                    limitToResourceClass = limitToResourceClass,
+                    limitToStandoffClass = limitToStandoffClass,
+                    requestingUser = requestingUser
+                )
+
+                RouteUtilV2.runRdfRouteWithFuture(
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log,
+                    targetSchema = RouteUtilV2.getOntologySchema(requestContext),
+                    schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                )
+        }
+    }
+
+    private def fullTextSearch: Route = path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+        get {
+            requestContext => {
+                val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
+
+                if (searchString.length < settings.searchValueMinLength) {
+                    throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
                 }
-            }
-        } ~ path("v2" / "searchextended" / "count" / Segment) { gravsearchQuery => // Segment is a URL encoded string representing a Gravsearch query
-            get {
 
+                val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+                val offset = getOffsetFromParams(params)
+
+                val limitToProject: Option[IRI] = getProjectFromParams(params)
+
+                val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
+
+                val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
+
+                val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+                val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
+                val requestMessage: Future[FulltextSearchRequestV2] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield FulltextSearchRequestV2(
+                    searchValue = searchString,
+                    offset = offset,
+                    limitToProject = limitToProject,
+                    limitToResourceClass = limitToResourceClass,
+                    limitToStandoffClass,
+                    requestingUser = requestingUser,
+                    targetSchema = targetSchema,
+                    schemaOptions = schemaOptions
+                )
+
+                RouteUtilV2.runRdfRouteWithFuture(
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log,
+                    targetSchema = targetSchema,
+                    schemaOptions = schemaOptions
+                )
+            }
+        }
+    }
+
+    private def gravsearchCountGet: Route = path("v2" / "searchextended" / "count" / Segment) { gravsearchQuery => // Segment is a URL encoded string representing a Gravsearch query
+        get {
+            requestContext => {
+                val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
+
+                val requestMessage: Future[GravsearchCountRequestV2] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
+
+                RouteUtilV2.runRdfRouteWithFuture(
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log,
+                    targetSchema = RouteUtilV2.getOntologySchema(requestContext),
+                    schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                )
+            }
+        }
+    }
+
+    private def gravsearchCountPost: Route = path("v2" / "searchextended" / "count") {
+        post {
+            entity(as[String]) { gravsearchQuery =>
                 requestContext => {
                     val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-
                     val requestMessage: Future[GravsearchCountRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
@@ -265,40 +285,43 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
                 }
             }
-        } ~ path("v2" / "searchextended") {
-            post {
-                entity(as[String]) { gravsearchQuery =>
-                    requestContext => {
-                        val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-                        val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
-                        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+        }
+    }
 
-                        val requestMessage: Future[GravsearchRequestV2] = for {
-                            requestingUser <- getUserADM(requestContext)
-                        } yield GravsearchRequestV2(
-                            constructQuery = constructQuery,
-                            targetSchema = targetSchema,
-                            schemaOptions = schemaOptions,
-                            requestingUser = requestingUser
-                        )
+    private def gravsearchGet: Route = path("v2" / "searchextended" / Segment) { sparql => // Segment is a URL encoded string representing a Gravsearch query
+        get {
+            requestContext => {
+                val constructQuery = GravsearchParser.parseQuery(sparql)
+                val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+                val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
-                        RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageF = requestMessage,
-                            requestContext = requestContext,
-                            settings = settings,
-                            responderManager = responderManager,
-                            log = log,
-                            targetSchema = targetSchema,
-                            schemaOptions = schemaOptions
-                        )
-                    }
-                }
+                val requestMessage: Future[GravsearchRequestV2] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield GravsearchRequestV2(
+                    constructQuery = constructQuery,
+                    targetSchema = targetSchema,
+                    schemaOptions = schemaOptions,
+                    requestingUser = requestingUser
+                )
+
+                RouteUtilV2.runRdfRouteWithFuture(
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log,
+                    targetSchema = targetSchema,
+                    schemaOptions = schemaOptions
+                )
             }
-        } ~ path("v2" / "searchextended" / Segment) { sparql => // Segment is a URL encoded string representing a Gravsearch query
-            get {
+        }
+    }
 
+    private def gravsearchPost: Route = path("v2" / "searchextended") {
+        post {
+            entity(as[String]) { gravsearchQuery =>
                 requestContext => {
-                    val constructQuery = GravsearchParser.parseQuery(sparql)
+                    val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
                     val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
                     val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
@@ -321,91 +344,114 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         schemaOptions = schemaOptions
                     )
                 }
-
             }
-
-
-        } ~ path("v2" / "searchbylabel" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
-            get {
-                requestContext => {
-
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
-
-                    if (searchString.length < settings.searchValueMinLength) {
-                        throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
-                    }
-
-                    val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-                    val limitToProject: Option[IRI] = getProjectFromParams(params)
-
-                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
-
-                    val requestMessage: Future[SearchResourceByLabelCountRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield SearchResourceByLabelCountRequestV2(
-                        searchValue = searchString,
-                        limitToProject = limitToProject,
-                        limitToResourceClass = limitToResourceClass,
-                        requestingUser = requestingUser
-                    )
-
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log,
-                        targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-                    )
-                }
-            }
-        } ~ path("v2" / "searchbylabel" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
-            get {
-                requestContext => {
-
-                    val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
-
-                    if (searchString.length < settings.searchValueMinLength) {
-                        throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
-                    }
-
-                    val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-                    val offset = getOffsetFromParams(params)
-
-                    val limitToProject: Option[IRI] = getProjectFromParams(params)
-
-                    val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
-
-                    val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
-
-                    val requestMessage: Future[SearchResourceByLabelRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield SearchResourceByLabelRequestV2(
-                        searchValue = searchString,
-                        offset = offset,
-                        limitToProject = limitToProject,
-                        limitToResourceClass = limitToResourceClass,
-                        targetSchema = targetSchema,
-                        requestingUser = requestingUser
-                    )
-
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log,
-                        targetSchema = RouteUtilV2.getOntologySchema(requestContext),
-                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-                    )
-                }
-            }
-
         }
     }
 
+    // Search results to return in test data.
+    private val testSearches: Map[String, IRI] = Map(
+        "things" -> SharedTestDataADM.gravsearchComplexThingSmallerThanDecimal,
+        "regions" -> SharedTestDataADM.gravsearchComplexRegionsForPage
+    )
 
+    private def getSearchTestResponses: Future[Set[SourceCodeFileContent]] = {
+        val responseFutures: Iterable[Future[SourceCodeFileContent]] = testSearches.map {
+            case (filename, search) =>
+                for {
+                    responseStr <- doTestDataRequest(Post(s"$baseApiUrl/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, search)))
+                } yield SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath(filename),
+                    text = responseStr
+                )
+        }
+
+        Future.sequence(responseFutures).map(_.toSet)
+    }
+
+    private def searchByLabelCount: Route = path("v2" / "searchbylabel" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+        get {
+            requestContext => {
+
+                val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
+
+                if (searchString.length < settings.searchValueMinLength) {
+                    throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
+                }
+
+                val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+                val limitToProject: Option[IRI] = getProjectFromParams(params)
+
+                val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
+
+                val requestMessage: Future[SearchResourceByLabelCountRequestV2] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield SearchResourceByLabelCountRequestV2(
+                    searchValue = searchString,
+                    limitToProject = limitToProject,
+                    limitToResourceClass = limitToResourceClass,
+                    requestingUser = requestingUser
+                )
+
+                RouteUtilV2.runRdfRouteWithFuture(
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log,
+                    targetSchema = RouteUtilV2.getOntologySchema(requestContext),
+                    schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                )
+            }
+        }
+    }
+
+    private def searchByLabel: Route = path("v2" / "searchbylabel" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+        get {
+            requestContext => {
+                val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
+
+                if (searchString.length < settings.searchValueMinLength) {
+                    throw BadRequestException(s"A search value is expected to have at least length of ${settings.searchValueMinLength}, but '$searchString' given of length ${searchString.length}.")
+                }
+
+                val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+                val offset = getOffsetFromParams(params)
+
+                val limitToProject: Option[IRI] = getProjectFromParams(params)
+
+                val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
+
+                val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+
+                val requestMessage: Future[SearchResourceByLabelRequestV2] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield SearchResourceByLabelRequestV2(
+                    searchValue = searchString,
+                    offset = offset,
+                    limitToProject = limitToProject,
+                    limitToResourceClass = limitToResourceClass,
+                    targetSchema = targetSchema,
+                    requestingUser = requestingUser
+                )
+
+                RouteUtilV2.runRdfRouteWithFuture(
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log,
+                    targetSchema = RouteUtilV2.getOntologySchema(requestContext),
+                    schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                )
+            }
+        }
+    }
+
+    override def getTestData(implicit executionContext: ExecutionContext,
+                             actorSystem: ActorSystem,
+                             materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+        getSearchTestResponses
+    }
 }

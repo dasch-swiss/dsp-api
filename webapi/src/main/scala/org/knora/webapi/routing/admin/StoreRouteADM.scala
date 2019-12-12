@@ -38,6 +38,9 @@ import scala.concurrent.duration._
 @Path("/admin/store")
 class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with StoresADMJsonProtocol {
 
+    /**
+     * Returns the route.
+     */
     override def knoraApiPath = Route {
         path("admin" / "store") {
             get {

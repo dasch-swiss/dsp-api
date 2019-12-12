@@ -32,7 +32,10 @@ class ProjectsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("v1" / "projects") {
             get {
