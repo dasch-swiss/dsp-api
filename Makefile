@@ -23,6 +23,7 @@ docs-build: ## build the docs
 .PHONY: build-all-scala
 build-all-scala: ## build all scala projects
 	sbt webapi/universal:stage knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage upgrade/universal:stage knora-assets/universal:stage
+	bazel build //...
 
 ## knora-api
 .PHONY: build-knora-api-image
@@ -292,20 +293,51 @@ it-tests-with-coverage: stack-without-api ## runs the integration tests (equival
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt coverage webapi/it:test webapi/coverageReport
 
-.PHONY: normal-tests
-normal-tests: stack-without-api init-db-test-unit ## runs the normal tests (equivalent to 'sbt webapi/test').
-	docker run 	--rm \
-				-v /tmp:/tmp \
-				-v $(PWD):/src \
-				-v $(HOME)/.ivy2:/root/.ivy2 \
-				--name=api \
-				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
-				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
-				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt webapi/test
+.PHONY: test
+test: stack-without-api init-db-test-unit ## runs the normal tests (equivalent to 'sbt webapi/test').
+#	docker run 	--rm \
+#				-v $(PWD):/src/workspace \
+#				-v $(PWD)/bazel_build_output:/tmp/build_output \
+#				-w /src/workspace \
+#				-v /tmp:/tmp \
+#				--name=api \
+#				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
+#				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
+#				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
+#				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
+#				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
+#				--network=docker_knora-net \
+#				l.gcr.io/google/bazel:1.2.1 \
+#				--output_user_root=/tmp/build_output \
+#				test //webapi:test
+	bazel test //webapi:test
+
+.PHONY: it
+it: stack-without-api init-db-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it:test').
+#	docker run 	--rm \
+#				-v $(PWD):/src/workspace \
+#				-v $(PWD)/bazel_build_output:/tmp/build_output \
+#				-w /src/workspace \
+#				-v /tmp:/tmp \
+#				--name=api \
+#				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
+#				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
+#				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
+#				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
+#				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
+#				--network=docker_knora-net \
+#				l.gcr.io/google/bazel:1.2.1 \
+#				--output_user_root=/tmp/build_output \
+#				test //webapi:test
+	bazel test //webapi:it
+
+.PHONY: UsersResponderADMSpec
+UsersResponderADMSpec: ## runs only the UsersResponderADMSpec rest
+	bazel test --test_filter=org.knora.webapi.responders.admin.UsersResponderADMSpec //webapi:test
+
+#################################
+## Database Management
+#################################
 
 .PHONY: init-db-test
 init-db-test: ## initializes the knora-test repository
@@ -335,6 +367,7 @@ clean: ## clean build artifacts
 	@rm -rf .docker
 	@rm -rf .env
 	@sbt clean
+	@bazel clean
 
 clean-docker: ## cleans the docker installation
 	docker system prune -af
