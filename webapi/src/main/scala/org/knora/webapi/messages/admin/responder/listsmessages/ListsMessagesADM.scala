@@ -194,20 +194,21 @@ case class ChangeListInfoPayloadADM(listIri: IRI,
     def toJsValue: JsValue = changeListInfoPayloadADMFormat.write(this)
 }
 
-/*
 /**
   * Represents an API request payload that asks the Knora API server to update
   * an existing list nodes's basic information.
   *
   * @param nodeIri    the IRI of the list node to change.
   * @param projectIri the IRI of the project the list belongs to.
+  * @param name       the name.
   * @param labels     the labels.
   * @param comments   the comments.
   */
 case class ChangeListNodeInfoApiRequestADM(nodeIri: IRI,
-                                       projectIri: IRI,
-                                       labels: Seq[StringLiteralV2],
-                                       comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+                                           projectIri: IRI,
+                                           name: String,
+                                           labels: Seq[StringLiteralV2],
+                                           comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
 
@@ -227,13 +228,49 @@ case class ChangeListNodeInfoApiRequestADM(nodeIri: IRI,
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
     }
 
-    if (labels.isEmpty && comments.isEmpty) {
-        throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR)
-    }
-
     def toJsValue: JsValue = changeListNodeInfoApiRequestADMFormat.write(this)
 }
-*/
+
+/**
+  * Represents a payload that asks the Knora API server to update
+  * an existing list nodes's basic information.
+  *
+  * @param nodeIri    the IRI of the list node to change.
+  * @param projectIri the IRI of the project the list belongs to.
+  * @param name       the name.
+  * @param labels     the labels.
+  * @param comments   the comments.
+  */
+case class ChangeListNodeInfoPayloadADM(nodeIri: IRI,
+                                        projectIri: IRI,
+                                        name: Option[Option[String]] = None,
+                                        labels: Option[Seq[StringLiteralV2]] = None,
+                                        comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
+
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    if (nodeIri.isEmpty) {
+        throw BadRequestException(LIST_NODE_IRI_MISSING_ERROR)
+    }
+
+    if (!stringFormatter.isKnoraListIriStr(nodeIri)) {
+        throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
+    }
+
+    if (projectIri.isEmpty) {
+        throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+    }
+
+    if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+    }
+
+    if (labels.isDefined && labels.get.isEmpty) {
+        throw BadRequestException("Listnodes need at least one label.")
+    }
+
+    def toJsValue: JsValue = changeListNodeInfoPayloadADMFormat.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -314,6 +351,19 @@ case class ListCreateRequestADM(createListRequest: CreateListApiRequestADM,
   */
 case class ListInfoChangeRequestADM(listIri: IRI,
                                     changeListRequest: ChangeListInfoPayloadADM,
+                                    requestingUser: UserADM,
+                                    apiRequestID: UUID) extends ListsResponderRequestADM
+
+/**
+  * Request updating basic information of an existing node.
+  *
+  * @param nodeIri           the IRI of the node to be updated.
+  * @param changeNodeRequest the data which needs to be update.
+  * @param requestingUser    the user initiating the request.
+  * @param apiRequestID      the ID of the API request.
+  */
+case class ListNodeInfoChangeRequestADM(nodeIri: IRI,
+                                    changeNodeRequest: ChangeListNodeInfoPayloadADM,
                                     requestingUser: UserADM,
                                     apiRequestID: UUID) extends ListsResponderRequestADM
 
@@ -579,7 +629,7 @@ abstract class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralS
   * @param comments   the comment(s) attached to the list in a specific language (if language tags are used) .
   * @param children   the list node's child nodes.
   */
-case class ListRootNodeADM(id: IRI, projectIri: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, children: Seq[ListChildNodeADM]) extends ListNodeADM(id, name, labels, comments, children) {
+case class  ListRootNodeADM(id: IRI, projectIri: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, children: Seq[ListChildNodeADM]) extends ListNodeADM(id, name, labels, comments, children) {
 
     /**
       * Sorts the whole hierarchy.
@@ -1053,6 +1103,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "parentNodeIri", "projectIri", "name", "labels", "comments")
     implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "name", "labels", "comments")
     implicit val changeListInfoPayloadADMFormat: RootJsonFormat[ChangeListInfoPayloadADM] = jsonFormat(ChangeListInfoPayloadADM, "listIri", "projectIri", "name", "labels", "comments")
+    implicit val changeListNodeInfoApiRequestADMFormat: RootJsonFormat[ChangeListNodeInfoApiRequestADM] = jsonFormat(ChangeListNodeInfoApiRequestADM, "nodeIri", "projectIri", "name", "labels", "comments")
+    implicit val changeListNodeInfoPayloadADMFormat: RootJsonFormat[ChangeListNodeInfoPayloadADM] = jsonFormat(ChangeListNodeInfoPayloadADM, "nodeIri", "projectIri", "name", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
     implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")

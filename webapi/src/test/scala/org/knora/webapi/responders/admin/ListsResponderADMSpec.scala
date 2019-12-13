@@ -415,6 +415,31 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                thirdChildIri.set(childNodeInfo.id)
            }
 
+            "update basic list node information" ignore {
+
+            }
+
+            "return a 'ForbiddenException' if the user changing the list node is not project or system admin" in {
+                responderManager ! ListNodeInfoChangeRequestADM(
+                    nodeIri = firstChildIri.get,
+                    changeNodeRequest = ChangeListNodeInfoPayloadADM(
+                        nodeIri = firstChildIri.get,
+                        projectIri = IMAGES_PROJECT_IRI,
+                        name = Some(Some("newTestName")),
+                        labels = Some(Seq(
+                            StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                            StringLiteralV2(value = "Changed list", language = Some("en"))
+                        )),
+                        comments = Some(Seq(
+                            StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                            StringLiteralV2(value = "New comment", language = Some("en"))
+                        ))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser02,
+                    apiRequestID = UUID.randomUUID
+                )
+                expectMsg(Failure(ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)))
+            }
 
            "change node order" ignore {
 

@@ -348,8 +348,51 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /** update list node */
     def putNodeInfo: Route = path("admin" / "nodes" / Segment / Segment) { (iri, attribute) =>
         put {
-            throw NotImplementedException("Method not implemented.")
-            ???
+            entity(as[ChangeListNodeInfoApiRequestADM]) { apiRequest =>
+                requestContext =>
+                    val nodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
+
+                    val requestPayload = attribute match {
+                        case "NodeInfoName" => ChangeListNodeInfoPayloadADM(
+                            nodeIri = apiRequest.nodeIri,
+                            projectIri = apiRequest.projectIri,
+                            name = apiRequest.name match {
+                                case "" => Some(None)
+                                case _ => Some(Some(apiRequest.name))
+                            }
+                        )
+                        case "NodeInfoLabel" => ChangeListNodeInfoPayloadADM(
+                            nodeIri = apiRequest.nodeIri,
+                            projectIri = apiRequest.projectIri,
+                            labels = Some(apiRequest.labels)
+                        )
+                        case "NodeInfoComment" => ChangeListNodeInfoPayloadADM(
+                            nodeIri = apiRequest.nodeIri,
+                            projectIri = apiRequest.projectIri,
+                            comments = Some(apiRequest.comments)
+                        )
+                        case "NodeInfoPosition" => throw NotImplementedException("Move listnode to new position is not implemented.")
+                        case "NodeInfoParent" => throw NotImplementedException("Move listnode to new parent is not implemented.")
+                        case _ => throw BadRequestException(s"Invalid attribute: $attribute")
+                    }
+
+                    val requestMessage: Future[ListNodeInfoChangeRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ListNodeInfoChangeRequestADM(
+                        nodeIri = nodeIri,
+                        changeNodeRequest = requestPayload,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
         }
     }
 }

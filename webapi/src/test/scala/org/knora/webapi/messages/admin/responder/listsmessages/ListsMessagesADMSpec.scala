@@ -321,5 +321,76 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
 
         }
 
+        "throw 'BadRequestException' for `ChangeListNodeInfoApiRequestADM` when node IRI is empty" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "nodeIri": "",
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "name": "newTestName",
+                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListNodeInfoApiRequestADM]
+
+            thrown.getMessage should equal (LIST_NODE_IRI_MISSING_ERROR)
+        }
+
+        "throw 'BadRequestException' for `ChangeListNodeInfoApiRequestADM` when node IRI is invalid" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "nodeIri": "notvalidIRI",
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "name": "newTestName",
+                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListNodeInfoApiRequestADM]
+
+            thrown.getMessage should equal (LIST_NODE_IRI_INVALID_ERROR)
+        }
+
+        "throw 'BadRequestException' for `ChangeListNodeInfoApiRequestADM` when project IRI is empty" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "nodeIri": "$exampleListIri",
+                   |    "projectIri": "",
+                   |    "name": "newTestName",
+                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListNodeInfoApiRequestADM]
+
+            thrown.getMessage should equal (PROJECT_IRI_MISSING_ERROR)
+        }
+
+        "throw 'BadRequestException' for `ChangeListNodeInfoApiRequestADM` when project IRI is invalid" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "nodeIri": "$exampleListIri",
+                   |    "projectIri": "notvalidIRI",
+                   |    "name": "newTestName",
+                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListNodeInfoApiRequestADM]
+
+            thrown.getMessage should equal (PROJECT_IRI_INVALID_ERROR)
+        }
     }
 }
