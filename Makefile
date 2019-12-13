@@ -363,6 +363,14 @@ init-db-test-minimal-free: ## initializes the knora-test repository with minimal
 init-db-test-unit-free: ## initializes the knora-test-unit repository (for GraphDB-Free)
 	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-unit
 
+.PHONY: init-db-test-local
+init-db-test-local: ## initializes the knora-test-unit repository (for a local GraphDB-SE)
+	$(MAKE) -C webapi/scripts graphdb-se-local-init-knora-test
+
+.PHONY: init-db-test-unit-local
+init-db-test-unit-local: ## initializes the knora-test-unit repository (for a local GraphDB-SE)
+	$(MAKE) -C webapi/scripts graphdb-se-local-init-knora-test-unit
+
 clean: ## clean build artifacts
 	@rm -rf .docker
 	@rm -rf .env

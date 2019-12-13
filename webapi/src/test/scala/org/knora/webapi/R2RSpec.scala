@@ -64,15 +64,19 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 
+    val log = akka.event.Logging(system, this.getClass)
+
     override def beforeAll {
-        println("beforeAll")
+        log.debug("beforeAll ...")
         CacheUtil.createCaches(settings.caches)
         loadTestData(rdfDataObjects)
+        log.debug("... beforeAll")
     }
 
     override def afterAll {
-        println("afterAll")
+        log.debug("afterAll ...")
         CacheUtil.removeAllCaches()
+        log.debug(("... afterAll"))
     }
 
     protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {

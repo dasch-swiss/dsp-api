@@ -38,10 +38,10 @@ def dependencies():
             "org.apache.jena:jena-text:%s" % (JENA_VERSION),
 
             # Logging
-            # "commons-logging:commons-logging:1.2",
             "com.typesafe.scala-logging:scala-logging_2.12:3.8.0",
             "ch.qos.logback:logback-classic:1.2.3",
-            # "org.slf4j:log4j-over-slf4j:1.7.29",
+            "ch.qos.logback:logback-core:1.2.3",
+            "org.slf4j:slf4j-api:1.7.29",
 
             # metrics
             "io.kamon:kamon-core_2.12:2.0.0-RC1",

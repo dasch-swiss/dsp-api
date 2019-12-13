@@ -27,13 +27,16 @@
     <logger name="akka" level="ERROR"/>
     <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
     <logger name="net.sf.ehcache.config" level="ERROR"/>
+    <logger name="net.sf.ehcache.cache" level="ERROR"/>
     <logger name="kamon.metric" level="ERROR"/>
+    <logger name="org.apache.http" level="INFO"/>
+    <logger name="org.apache.http.wire" level="INFO"/>
 
     <!-- V1 -->
 
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
-    <logger name="org.knora.webapi.util.cache" level="INFO"/>
+    <logger name="org.knora.webapi.util.cache" level="ERROR"/>
     <logger name="org.knora.webapi.util.PermissionUtilADM" level="INFO"/>
     <logger name="org.knora.webapi.update.UpdateRepository" level="INFO"/>
     <logger name="org.knora.webapi.routing.Authenticator" level="INFO"/>
@@ -65,7 +68,7 @@
 
     <!-- for logging during tests, please see/use logback-test.xml under test/resources -->
 
-    <root level="ERROR">
+    <root level="DEBUG">
         <appender-ref ref="stdout"/>
     </root>
 </configuration>
