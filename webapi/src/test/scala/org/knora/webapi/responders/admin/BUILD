@@ -91,7 +91,7 @@ scala_test(
 
 scala_test(
     name = "ProjectsResponderADMSpec",
-    size = "medium",  # 300s
+    size = "small",  # 60s
     srcs = [
         "ProjectsResponderADMSpec.scala",
     ],
@@ -151,7 +151,7 @@ scala_test(
 
 scala_test(
     name = "UsersResponderADMSpec",
-    size = "medium",  # 300s
+    size = "small",  # 60s
     srcs = [
         "UsersResponderADMSpec.scala",
     ],
