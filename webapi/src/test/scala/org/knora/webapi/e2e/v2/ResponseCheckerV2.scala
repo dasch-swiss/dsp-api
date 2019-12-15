@@ -22,7 +22,7 @@ package org.knora.webapi.e2e.v2
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.{AssertionException, IRI, OntologyConstants}
 
-object ResponseCheckerR2RV2 {
+object ResponseCheckerV2 {
 
     private val numberOfItemsMember: IRI = "http://schema.org/numberOfItems"
 

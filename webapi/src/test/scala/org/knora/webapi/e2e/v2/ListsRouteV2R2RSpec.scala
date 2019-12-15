@@ -41,7 +41,7 @@ import scala.concurrent.ExecutionContextExecutor
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
 @E2ETest
-class ListsRouteV2R2Spec extends R2RSpec {
+class ListsRouteV2R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =
         """

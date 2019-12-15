@@ -25,15 +25,15 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.util.FileUtil
 
 /**
-  * Tests [[ResponseCheckerR2RV2]].
+  * Tests [[ResponseCheckerV2]].
   */
-class ResponseCheckerR2RV2Spec extends CoreSpec() {
+class ResponseCheckerV2Spec extends CoreSpec() {
 
     "ResponseCheckerR2RV2" should {
         "not throw an exception if received and expected resource responses are the same" in {
             val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithLinkComplex.jsonld"))
 
-            ResponseCheckerR2RV2.compareJSONLDForResourcesResponse(
+            ResponseCheckerV2.compareJSONLDForResourcesResponse(
                 expectedJSONLD = expectedAnswerJSONLD,
                 receivedJSONLD = expectedAnswerJSONLD
             )
@@ -42,7 +42,7 @@ class ResponseCheckerR2RV2Spec extends CoreSpec() {
         "not throw an exception if received and expected mapping responses are the same" in {
             val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/standoffR2RV2/mappingCreationResponse.jsonld"))
 
-            ResponseCheckerR2RV2.compareJSONLDForMappingCreationResponse(
+            ResponseCheckerV2.compareJSONLDForMappingCreationResponse(
                 expectedJSONLD = expectedAnswerJSONLD,
                 receivedJSONLD = expectedAnswerJSONLD
             )
@@ -53,7 +53,7 @@ class ResponseCheckerR2RV2Spec extends CoreSpec() {
             val receivedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithListValue.jsonld"))
 
             assertThrows[AssertionError] {
-                 ResponseCheckerR2RV2.compareJSONLDForResourcesResponse(
+                 ResponseCheckerV2.compareJSONLDForResourcesResponse(
                      expectedJSONLD = expectedAnswerJSONLD,
                      receivedJSONLD = receivedAnswerJSONLD
                  )
@@ -65,7 +65,7 @@ class ResponseCheckerR2RV2Spec extends CoreSpec() {
             val receivedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandPreview.jsonld"))
 
             assertThrows[AssertionError] {
-                ResponseCheckerR2RV2.compareJSONLDForResourcesResponse(
+                ResponseCheckerV2.compareJSONLDForResourcesResponse(
                     expectedJSONLD = expectedAnswerJSONLD,
                     receivedJSONLD = receivedAnswerJSONLD
                 )
@@ -78,7 +78,7 @@ class ResponseCheckerR2RV2Spec extends CoreSpec() {
             val receivedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/responseCheckerR2RV2/NarrenschiffFirstPageWrong.jsonld"))
 
             assertThrows[AssertionError] {
-                ResponseCheckerR2RV2.compareJSONLDForResourcesResponse(
+                ResponseCheckerV2.compareJSONLDForResourcesResponse(
                     expectedJSONLD = expectedAnswerJSONLD,
                     receivedJSONLD = receivedAnswerJSONLD
                 )
@@ -90,7 +90,7 @@ class ResponseCheckerR2RV2Spec extends CoreSpec() {
             val receivedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/standoffR2RV2/mappingCreationResponseWithDifferentLabel.jsonld"))
 
             assertThrows[AssertionError] {
-                ResponseCheckerR2RV2.compareJSONLDForMappingCreationResponse(
+                ResponseCheckerV2.compareJSONLDForMappingCreationResponse(
                     expectedJSONLD = expectedAnswerJSONLD,
                     receivedJSONLD = receivedAnswerJSONLD
                 )

@@ -28,7 +28,7 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi.SharedTestDataV1.ANYTHING_PROJECT_IRI
 import org.knora.webapi._
-import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLDForMappingCreationResponse
+import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v2.StandoffRouteV2
 import org.knora.webapi.tags.E2ETest
@@ -126,7 +126,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, "creation of a mapping returned a non successful HTTP status code: " + responseAs[String])
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/standoffR2RV2/mappingCreationResponse.jsonld"))
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("test-data/standoffR2RV2/mappingCreationResponse.jsonld"))
 
                 compareJSONLDForMappingCreationResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }

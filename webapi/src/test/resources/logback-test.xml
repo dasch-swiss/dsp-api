@@ -60,7 +60,7 @@
     <logger name="org.knora.webapi" level="INFO"/>
     <logger name="org.knora.webapi.KnoraExceptionHandler" level="INFO"/>
     <logger name="org.knora.webapi.app.ApplicationActor" level="INFO"/>
-    <logger name="org.knora.webapi.util.cache" level="INFO"/>
+    <logger name="org.knora.webapi.util.cache" level="ERROR"/>
     <logger name="org.knora.webapi.util.PermissionUtilADM" level="INFO"/>
     <logger name="org.knora.webapi.update.UpdateRepository" level="INFO"/>
     <logger name="org.knora.webapi.routing.Authenticator" level="INFO"/>
@@ -106,7 +106,7 @@
     <!-- Spec Logging -->
     <logger name="org.knora.webapi.CoreSpec" level="INFO"/>
     <logger name="org.knora.webapi.E2ESpec" level="INFO"/>
-    <logger name="org.knora.webapi.R2RSpec" level="DEBUG"/>
+    <logger name="org.knora.webapi.R2RSpec" level="INFO"/>
 
     <!-- E2E -->
     <logger name="org.knora.webapi.e2e.InstanceCheckerSpec" level="INFO"/>
@@ -133,7 +133,7 @@
     <logger name="org.knora.webapi.e2e.HealthRouteE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.ListsADME2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.ProjectsADME2ESpec" level="INFO"/>
-    <logger name="org.knora.webapi.e2e.admin.StoreRouteADME2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.admin.StoreADME2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="INFO"/>
 
     <!-- metrics logging (info level turns them on, error level turns them off -->

@@ -31,7 +31,7 @@ import spray.json._
 
 import scala.concurrent.duration._
 
-object StoreRouteADME2ESpec {
+object StoreADME2ESpec {
     val config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
@@ -45,7 +45,7 @@ object StoreRouteADME2ESpec {
   * This spec tests the 'v1/store' route.
   */
 @E2ETest
-class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with TriplestoreJsonProtocol {
+class StoreADME2ESpec extends E2ESpec(StoreADME2ESpec.config) with TriplestoreJsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(120.seconds)
 

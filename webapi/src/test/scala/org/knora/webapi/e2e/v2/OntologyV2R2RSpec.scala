@@ -77,7 +77,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     private case class HttpGetTest(urlPath: String, fileBasename: String, disableWrite: Boolean = false) {
         def makeFile(mediaType: MediaType.NonBinary): File = {
             val fileSuffix = mediaType.fileExtensions.head
-            new File(s"src/test/resources/test-data/ontologyR2RV2/$fileBasename.$fileSuffix")
+            new File(s"test-data/ontologyR2RV2/$fileBasename.$fileSuffix")
         }
 
         /**
