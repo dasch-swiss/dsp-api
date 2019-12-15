@@ -196,7 +196,7 @@ jobs:
   # publish only for develop and tags
   publish:
     name: Publish to Dockerhub
-    needs: [api-unit-tests]
+    needs: [bazel-test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags')
     steps:
