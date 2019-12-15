@@ -7,7 +7,7 @@ env:
 
 jobs:
   compile:
-    name: Build Everything
+    name: Dump all Contexts
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -37,17 +37,6 @@ jobs:
         env:
           MATRIX_CONTEXT: ${{ toJson(matrix) }}
         run: echo "$MATRIX_CONTEXT"
-      - name: cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
-      - name: Run build everything
-        run: sbt clean test:compile it:compile stage
 
   bazel-build:
     name: Bazel Build
@@ -92,7 +81,7 @@ jobs:
       - name: Print env file
         run: make print-env-file
       - name: Run all tests
-        run: make all_tests
+        run: make all-tests
 
 #  upgrade-unit-tests:
 #    name: Upgrade Unit Tests
