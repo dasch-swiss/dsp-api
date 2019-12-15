@@ -22,7 +22,7 @@ docs-build: ## build the docs
 
 .PHONY: build-all-scala
 build-all-scala: ## build all scala projects
-	sbt webapi/universal:stage knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage upgrade/universal:stage knora-assets/universal:stage
+	knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage knora-assets/universal:stage
 	bazel build //...
 
 ## knora-api
@@ -96,7 +96,7 @@ publish-knora-assets-image: build-knora-assets-image ## publish knora-assets ima
 
 ## all images
 .PHONY: build-all-images
-build-all-images: build-knora-api-image build-knora-graphdb-se-image build-knora-graphdb-free-image build-knora-sipi-image build-knora-salsah1-image build-knora-upgrade-image build-knora-assets-image  ## build all Docker images
+build-all-images: build-knora-graphdb-se-image build-knora-graphdb-free-image build-knora-sipi-image build-knora-salsah1-image build-knora-upgrade-image build-knora-assets-image  ## build all Docker images
 
 .PHONY: publish-all-images
 publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publish-knora-graphdb-free-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-upgrade-image publish-knora-assets-image ## publish all Docker images
@@ -216,7 +216,8 @@ unit-tests-with-coverage: stack-without-api ## runs the unit tests (equivalent t
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(PWD):/src/workspace \
+				-w /src/workspace \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
@@ -225,7 +226,8 @@ unit-tests-with-coverage: stack-without-api ## runs the unit tests (equivalent t
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
 				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
+				l.gcr.io/google/bazel:1.2.1 \
+				test //webapi:unit_tests
 
 .PHONY: e2e-tests
 e2e-tests: stack-without-api init-db-test-unit ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
@@ -249,7 +251,8 @@ e2e-tests-with-coverage: stack-without-api ## runs the e2e tests (equivalent to 
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(PWD):/src/workspace \
+				-w /src/workspace \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
@@ -258,7 +261,8 @@ e2e-tests-with-coverage: stack-without-api ## runs the e2e tests (equivalent to 
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
 				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
+				l.gcr.io/google/bazel:1.2.1 \
+				test //webapi:e2e_tests
 
 .PHONY: it-tests
 it-tests: stack-without-api init-db-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it').
@@ -275,14 +279,15 @@ it-tests: stack-without-api init-db-test-unit ## runs the integration tests (equ
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt 'webapi/it:test'
 
-.PHONY: it-tests-with-coverage
-it-tests-with-coverage: stack-without-api ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.
+.PHONY: all-tests
+all-tests: stack-without-api ## runs all.
 	@echo $@  # print target name
 	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(PWD):/src/workspace \
+				-w /src/workspace \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
@@ -291,49 +296,8 @@ it-tests-with-coverage: stack-without-api ## runs the integration tests (equival
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
 				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt coverage webapi/it:test webapi/coverageReport
-
-.PHONY: test
-test: stack-without-api init-db-test-unit ## runs the normal tests (equivalent to 'sbt webapi/test').
-#	docker run 	--rm \
-#				-v $(PWD):/src/workspace \
-#				-v $(PWD)/bazel_build_output:/tmp/build_output \
-#				-w /src/workspace \
-#				-v /tmp:/tmp \
-#				--name=api \
-#				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
-#				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
-#				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
-#				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-#				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
-#				--network=docker_knora-net \
-#				l.gcr.io/google/bazel:1.2.1 \
-#				--output_user_root=/tmp/build_output \
-#				test //webapi:test
-	bazel test //webapi:test
-
-.PHONY: it
-it: stack-without-api init-db-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it:test').
-#	docker run 	--rm \
-#				-v $(PWD):/src/workspace \
-#				-v $(PWD)/bazel_build_output:/tmp/build_output \
-#				-w /src/workspace \
-#				-v /tmp:/tmp \
-#				--name=api \
-#				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
-#				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
-#				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
-#				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-#				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
-#				--network=docker_knora-net \
-#				l.gcr.io/google/bazel:1.2.1 \
-#				--output_user_root=/tmp/build_output \
-#				test //webapi:test
-	bazel test //webapi:it
-
-.PHONY: UsersResponderADMSpec
-UsersResponderADMSpec: ## runs only the UsersResponderADMSpec rest
-	bazel test --test_filter=org.knora.webapi.responders.admin.UsersResponderADMSpec //webapi:test
+				l.gcr.io/google/bazel:1.2.1 \
+				test //webapi:all_tests
 
 #################################
 ## Database Management

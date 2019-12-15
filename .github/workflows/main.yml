@@ -65,20 +65,14 @@ jobs:
       - name: run bazel build
         run: bazel build //...
 
-  api-unit-tests:
-    name: API Unit Tests
+  bazel-test:
+    name: Bazel Test
     needs: [bazel-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: install requirements
-        run: sudo apt-get install ca-certificates-java
-      - name: install bazel
-        run: |
-          wget https://github.com/bazelbuild/bazel/releases/download/1.2.1/bazel_1.2.1-linux-x86_64.deb
-          sudo dpkg -i bazel_1.2.1-linux-x86_64.deb
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -97,66 +91,8 @@ jobs:
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
       - name: Print env file
         run: make print-env-file
-      - name: Run API unit tests
-        run: make test
-
-#  api-e2e-tests:
-#    name: API E2E Tests
-#    needs: [compile, bazel-build]
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v1
-#        with:
-#          fetch-depth: 1
-#      - name: cache maven artifacts
-#        uses: actions/cache@v1
-#        with:
-#          path: ~/.ivy2
-#          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-#          restore-keys: |
-#            ${{ runner.OS }}-build-${{ env.cache-name }}-
-#            ${{ runner.OS }}-build-
-#            ${{ runner.OS }}-
-#      - name: prepare needed graphdb-se files
-#        run: |
-#          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
-#          tar -C ci -xvf ci/secrets.tar
-#          mkdir -p $GITHUB_WORKSPACE/graphdb
-#          cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
-#          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-#      - name: print env file
-#        run: make print-env-file
-#      - name: run API E2E tests
-#        run: make e2e-tests-with-coverage
-
-#  api-integration-tests:
-#    name: API Integration Tests
-#    needs: [compile, bazel-build]
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v1
-#        with:
-#          fetch-depth: 1
-#      - name: cache maven artifacts
-#        uses: actions/cache@v1
-#        with:
-#          path: ~/.ivy2
-#          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-#          restore-keys: |
-#            ${{ runner.OS }}-build-${{ env.cache-name }}-
-#            ${{ runner.OS }}-build-
-#            ${{ runner.OS }}-
-#      - name: prepare needed graphdb-se files
-#        run: |
-#          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
-#          tar -C ci -xvf ci/secrets.tar
-#          mkdir -p $GITHUB_WORKSPACE/graphdb
-#          cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
-#          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
-#      - name: print env file
-#        run: make print-env-file
-#      - name: run API integration tests
-#        run: make it-tests-with-coverage
+      - name: Run all tests
+        run: make all_tests
 
 #  upgrade-unit-tests:
 #    name: Upgrade Unit Tests
@@ -256,7 +192,6 @@ jobs:
 #          mkdir -p $GITHUB_WORKSPACE/docs/target
 #          chmod 777 $GITHUB_WORKSPACE/docs/target
 #          make docs-build
-
 
   # publish only for develop and tags
   publish:
