@@ -188,6 +188,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                     s"""
                        |{
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "name": "newList",
                        |    "labels": [{ "value": "Neue Liste", "language": "de"}],
                        |    "comments": []
                        |}
@@ -202,6 +203,9 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val listInfo = receivedList.listinfo
                 listInfo.projectIri should be (IMAGES_PROJECT_IRI)
+
+                val name = listInfo.name
+                name should be (Some("newList"))
 
                 val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
                 labels.size should be (1)
@@ -282,6 +286,25 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // println(s"response: ${response03.toString}")
                 response03.status should be(StatusCodes.BadRequest)
 
+            }
+
+            "return a `BadRequestException` during list change when the provided name is already in use" in {
+                val params =
+                    s"""
+                       |{
+                       |    "listIri": "${newListIri.get}",
+                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "name": "newList",
+                       |    "labels": [],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/ListInfoName", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
             }
 
             "update basic list information: name" in {
@@ -482,7 +505,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "listIri": "${newListIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "",
+                       |    "name": "newTestName",
                        |    "labels": [],
                        |    "comments": []
                        |}
@@ -964,18 +987,6 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val response03Label: HttpResponse = singleAwaitingRequest(request03Label)
                 response03Label.status should be(StatusCodes.BadRequest)
             }
-
-
-
-
-
-
-
-
-
-
-
-
 
             "add flat nodes" ignore {
 

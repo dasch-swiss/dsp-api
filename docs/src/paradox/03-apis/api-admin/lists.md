@@ -29,7 +29,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - NOT IMPLEMENTED: `PUT: /admin/lists/<listIRI>` : create new list with given IRI
 - NOT IMPLEMENTED: `DELETE: /admin/lists/<listIRI>` : delete list including children if not used
 - `GET: /admin/lists/<listIRI>/Info` : return list information (without children)
-- NOT IMPLEMENTED: `PUT: /admin/lists/<listIRI>/<attribute>` : update list information
+- `PUT: /admin/lists/<listIRI>/<attribute>` : update list information
 
 **List Node operations**
 
@@ -37,7 +37,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - `GET: /admin/nodes/<nodeIRI>/Info` : return list node information (without children)
 - `POST: /admin/nodes` : create new child node under the supplied parent node IRI
 - NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIRI>` : create child node with given IRI und the supplied parent node IRI
-- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIRI>/<attribute>` : update list node information
+- `PUT: /admin/nodes/<nodeIRI>/<attribute>` : update list node information
 - NOT IMPLEMENTED: `DELETE: /admin/nodes/<nodeIRI>` : delete list node including children if not used
 
 ## List Operations
@@ -106,7 +106,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
         "comments" = [] 
     }
     ```
- - Send empty parameters to delete values, except labels, that always need at least one entry
+ - Submit empty parameters to delete values, except `labels`, that always need at least one entry
+ - `name` must be unique inside project
 
 
 ### Delete list
@@ -191,4 +192,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
         
    }
    ```
+ - Submit empty parameters to delete values, except `labels`, that always need at least one entry
+ - `name` must be unique inside list
  

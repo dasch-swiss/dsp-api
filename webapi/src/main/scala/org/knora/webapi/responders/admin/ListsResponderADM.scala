@@ -36,7 +36,7 @@ import org.knora.webapi.util.SmartIri
 
 import scala.annotation.tailrec
 import scala.collection.breakOut
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 
 object ListsResponderADM {
 
@@ -711,6 +711,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             project: ProjectADM = maybeProject match {
                 case Some(project: ProjectADM) => project
                 case None => throw BadRequestException(s"Project '${list.listinfo.projectIri}' not found.")
+            }
+
+            /* verify that the list node name is unique for the project */
+            projectUniqueNodeName <- listNodeNameIsProjectUnique(changeListRequest.projectIri, changeListRequest.name.getOrElse(Some("")))
+            _ = if (changeListRequest.name.nonEmpty && !projectUniqueNodeName) {
+                throw BadRequestException(s"The node name ${changeListRequest.name.get} is already used by a list inside the project ${changeListRequest.projectIri}.")
             }
 
             // get the data graph of the project.
