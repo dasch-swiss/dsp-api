@@ -211,7 +211,8 @@ object GravsearchMainQueryGenerator {
 
             val mainAndDependentResourcesValueObjectsValuePattern = ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri)))
 
-            // WHERE patterns for statements about the main and dependent resources' values
+            // WHERE patterns for statements about the main and dependent resources' values,
+            // not including standoff markup in text values
             val wherePatternsForMainAndDependentResourcesValues = Seq(
                 mainAndDependentResourcesValueObjectsValuePattern,
                 StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri), obj = mainAndDependentResourceValueObject),
