@@ -53,9 +53,11 @@ jobs:
           sudo dpkg -i bazel_1.2.1-linux-x86_64.deb
       - name: add buildcache
         run: |
-          echo ${{ secrets.buildcache_authorization_key }} > ${{ github.workspace }}/buildcache_authorization_key.json
+          echo "${{ secrets.buildcache_authorization_key }}" > ${{ github.workspace }}/buildcache_authorization_key.json
           echo "build --remote_http_cache=https://buildcache.dasch.dev" >> ${{ github.workspace }}/.bazelrc
           echo "build --google_credentials=${{ github.workspace }}/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
+      - name: dump .bazelrc
+        run: cat ${{ github.workspace }}/.bazelrc
       - name: run bazel build
         run: bazel build //...
 
