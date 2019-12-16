@@ -4,6 +4,7 @@ on: [push]
 
 env:
   KNORA_GDB_LICENSE: ${{ github.workspace }}/ci/graphdb.license
+  BUILDCACHE_KEY_JSON: ${{ github.workspace }}/buildcache_authorization_key.json
 
 jobs:
   compile:
@@ -53,9 +54,9 @@ jobs:
           sudo dpkg -i bazel_1.2.1-linux-x86_64.deb
       - name: add buildcache
         run: |
-          echo ${{ secrets.buildcache_authorization_key }} > ~/buildcache_authorization_key.json
+          echo ${{ secrets.buildcache_authorization_key }} > $BUILDCACHE_KEY_JSON
           echo "build --remote_http_cache=https://buildcache.dasch.dev" >> ${{ github.workspace }}/.bazelrc
-          echo "build --google_credentials=~/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
+          echo "build --google_credentials=$BUILDCACHE_KEY_JSON" >> ${{ github.workspace }}/.bazelrc
       - name: run bazel build
         run: bazel build //...
 
