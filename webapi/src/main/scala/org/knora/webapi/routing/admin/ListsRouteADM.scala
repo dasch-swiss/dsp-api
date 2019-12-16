@@ -126,6 +126,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         } returns ListsResponse
 
 
+    // #getListsInProjectFunction
     private val getListsInProjectFunction: ClientFunction =
         "getListsInProject" description "Returns a list of lists in a project." params (
             "projectIri" description "The IRI of the project." paramType UriDatatype
@@ -135,6 +136,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 params = Seq("projectIri" -> arg("projectIri"))
             )
         } returns ListsResponse
+    // #getListsInProjectFunction
 
     private def getListsTestResponse: Future[SourceCodeFileContent] = {
         for {

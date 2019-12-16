@@ -86,7 +86,7 @@ argument.
 
 URL parameters can be added like this:
 
-@@snip [PermissionsRouteADM.scala]($src$/org/knora/webapi/routing/admin/PermissionsRouteADM.scala) { #getAdministrativePermissionByTypeFunction }
+@@snip [PermissionsRouteADM.scala]($src$/org/knora/webapi/routing/admin/ListsRouteADM.scala) { #getListsInProjectFunction }
 
 Here is an example with a request body:
 
