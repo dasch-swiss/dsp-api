@@ -23,7 +23,7 @@ import java.net.URLEncoder
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.client.RequestBuilding.{Get, addCredentials, _}
+import akka.http.scaladsl.client.RequestBuilding._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
@@ -41,7 +41,7 @@ import org.knora.webapi.util.clientapi._
 import scala.concurrent.{ExecutionContext, Future}
 
 object ListsRouteADM {
-    val ListsBasePath = PathMatcher("admin" / "lists")
+    val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
     val ListsBasePathString: String = "/admin/lists"
 }
 
@@ -55,23 +55,23 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     import ListsRouteADM._
 
     /**
-      * The name of this [[ClientEndpoint]].
-      */
+     * The name of this [[ClientEndpoint]].
+     */
     override val name: String = "ListsEndpoint"
 
     /**
-      * The directory name to be used for this endpoint's code.
-      */
+     * The directory name to be used for this endpoint's code.
+     */
     override val directoryName: String = "lists"
 
     /**
-      * The URL path of this [[ClientEndpoint]].
-      */
+     * The URL path of this [[ClientEndpoint]].
+     */
     override val urlPath: String = "/lists"
 
     /**
-      * A description of this [[ClientEndpoint]].
-      */
+     * A description of this [[ClientEndpoint]].
+     */
     override val description: String = "An endpoint for working with Knora lists."
 
     // Classes used in client function definitions.
@@ -92,6 +92,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putList ~ postListChildNode ~ deleteListNode ~
         getListInfo ~ updateListInfo ~ getListNodeInfo
 
+    /* return all lists optionally filtered by project */
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -126,7 +127,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
 
     private val getListsInProjectFunction: ClientFunction =
-        "getListsInProject" description "Returns a list of lists in a project." params(
+        "getListsInProject" description "Returns a list of lists in a project." params (
             "projectIri" description "The IRI of the project." paramType UriDatatype
             ) doThis {
             httpGet(
@@ -144,6 +145,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         )
     }
 
+    /* create a new list (root node) */
     @ApiOperation(value = "Add new list", nickname = "addList", httpMethod = "POST", response = classOf[ListGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"list\" to create", required = true,
@@ -152,7 +154,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    /* create a new list (root node) */
     def postList: Route = path(ListsBasePath) {
         post {
             /* create a list */
@@ -178,7 +179,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private val createListFunction: ClientFunction =
-        "createList" description "Creates a list." params(
+        "createList" description "Creates a list." params (
             "listInfo" description "Information about the list to be created." paramType CreateListRequest
             ) doThis {
             httpPost(
@@ -196,12 +197,12 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         )
     }
 
+    /* get a list */
     @Path("/{IRI}")
     @ApiOperation(value = "Get a list", nickname = "getlist", httpMethod = "GET", response = classOf[ListGetResponseADM])
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    /* get a list */
     def getList: Route = path(ListsBasePath / Segment) { iri =>
         get {
             /* return a list (a graph with all list nodes) */
@@ -223,7 +224,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private val getListFunction: ClientFunction =
-        "getList" description "Gets a list." params(
+        "getList" description "Gets a list." params (
             "iri" description "The IRI of the list." paramType UriDatatype
             ) doThis {
             httpGet(
@@ -240,6 +241,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         )
     }
 
+    /**
+     * update list
+     */
     @Path("/{IRI}")
     @ApiOperation(value = "Update basic list information", nickname = "putList", httpMethod = "PUT", response = classOf[ListInfoGetResponseADM])
     @ApiImplicitParams(Array(
@@ -249,9 +253,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    /**
-     * update list
-     */
     def putList: Route = path(ListsBasePath / Segment) { iri =>
         put {
             /* update existing list node (either root or child) */
@@ -280,7 +281,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private val updateListInfoFunction: ClientFunction =
-        "updateListInfo" description "Updates information about a list." params(
+        "updateListInfo" description "Updates information about a list." params (
             "listInfo" description "Information about the list to be created." paramType UpdateListInfoRequest
             ) doThis {
             httpPut(
@@ -298,6 +299,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         )
     }
 
+    /**
+     * create a new child node
+     */
     @Path("/{IRI}")
     @ApiOperation(value = "Add new child node", nickname = "addListChildNode", httpMethod = "POST", response = classOf[ListNodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
@@ -307,9 +311,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    /**
-     * create a new child node
-     */
     def postListChildNode: Route = path(ListsBasePath / Segment) { iri =>
         post {
             /* add node to existing list node. the existing list node can be either the root or a child */
@@ -338,7 +339,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private val createChildNodeFunction: ClientFunction =
-        "createChildNode" description "Creates a child node in a list." params(
+        "createChildNode" description "Creates a child node in a list." params (
             "node" description "The node to be created." paramType CreateChildNodeRequest
             ) doThis {
             httpPut(
@@ -377,7 +378,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private val getListInfoFunction: ClientFunction =
-        "getListInfo" description "Returns information about a list." params(
+        "getListInfo" description "Returns information about a list." params (
             "iri" description "The IRI of the list." paramType UriDatatype
             ) doThis {
             httpGet(
@@ -452,7 +453,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private val getListNodeInfoFunction: ClientFunction =
-        "getListNodeInfo" description "Returns information about a list node." params(
+        "getListNodeInfo" description "Returns information about a list node." params (
             "iri" description "The IRI of the node." paramType UriDatatype
             ) doThis {
             httpGet(
@@ -470,8 +471,8 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /**
-      * The functions defined by this [[ClientEndpoint]].
-      */
+     * The functions defined by this [[ClientEndpoint]].
+     */
     override val functions: Seq[ClientFunction] = Seq(
         getListsFunction,
         getListsInProjectFunction,
@@ -484,10 +485,10 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     )
 
     /**
-      * Returns test data for this endpoint.
-      *
-      * @return a set of test data files to be used for testing this endpoint.
-      */
+     * Returns test data for this endpoint.
+     *
+     * @return a set of test data files to be used for testing this endpoint.
+     */
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
         Future.sequence {
             Set(

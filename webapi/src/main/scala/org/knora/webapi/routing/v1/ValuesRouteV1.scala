@@ -22,14 +22,13 @@ package org.knora.webapi.routing.v1
 import java.io.File
 import java.util.UUID
 
-import akka.pattern._
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.http.scaladsl.util.FastFuture
-import akka.stream.ActorMaterializer
+import akka.pattern._
 import akka.stream.scaladsl.FileIO
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -44,11 +43,14 @@ import org.knora.webapi.util.{DateUtilV1, FileUtil}
 import scala.concurrent.{Future, Promise}
 
 /**
-  * Provides a spray-routing function for API routes that deal with values.
-  */
+ * Provides a spray-routing function for API routes that deal with values.
+ */
 class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         def makeVersionHistoryRequestMessage(iris: Seq[IRI], userADM: UserADM): ValueVersionHistoryGetRequestV1 = {
             if (iris.length != 3) throw BadRequestException("Version history request requires resource IRI, property IRI, and current value IRI")
@@ -501,7 +503,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     requestContext =>
 
                         log.debug("/v1/filevalue - PUT - Multipart.FormData - Route")
-
 
 
                         val FILE_PART = "file"

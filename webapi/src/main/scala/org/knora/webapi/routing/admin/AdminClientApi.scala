@@ -33,8 +33,8 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
-      * The serialisation format used by this [[ClientApi]].
-      */
+     * The serialisation format used by this [[ClientApi]].
+     */
     override val serialisationFormat: ApiSerialisationFormat = Json
 
     /**
@@ -69,8 +69,8 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     override val description: String = "A client API for administering Knora."
 
     /**
-      * A map of class IRIs to their read-only properties.
-      */
+     * A map of class IRIs to their read-only properties.
+     */
     override val classesWithReadOnlyProperties: Map[SmartIri, Set[SmartIri]] = Map(
         OntologyConstants.KnoraAdminV2.UserClass -> Set(
             OntologyConstants.KnoraAdminV2.Token,
@@ -79,10 +79,10 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
             OntologyConstants.KnoraAdminV2.Projects,
             OntologyConstants.KnoraAdminV2.Permissions
         ),
-        OntologyConstants.KnoraAdminV2.GroupClass ->  Set(
+        OntologyConstants.KnoraAdminV2.GroupClass -> Set(
             OntologyConstants.KnoraAdminV2.ProjectProperty
         ),
-        OntologyConstants.KnoraAdminV2.ProjectClass ->  Set(
+        OntologyConstants.KnoraAdminV2.ProjectClass -> Set(
             OntologyConstants.KnoraAdminV2.Ontologies
         )
     ).map {
@@ -91,9 +91,9 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     }
 
     /**
-      * A map of class IRIs to IRIs of optional set properties. Such properties have cardinality 0-n, and should
-      * be made optional in generated code.
-      */
+     * A map of class IRIs to IRIs of optional set properties. Such properties have cardinality 0-n, and should
+     * be made optional in generated code.
+     */
     override val classesWithOptionalSetProperties: Map[SmartIri, Set[SmartIri]] = Map(
         OntologyConstants.KnoraAdminV2.UpdateProjectRequest -> Set(
             OntologyConstants.KnoraAdminV2.KeywordsProperty,
@@ -149,17 +149,17 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     ).map(_.toSmartIri)
 
     /**
-      * A map of class IRIs to maps of property IRIs to non-standard names that those properties must have
-      * in those classes. Needed only for JSON, and only if two different properties should have the same name in
-      * different classes. `JsonInstanceInspector` also needs to know about these.
-      */
+     * A map of class IRIs to maps of property IRIs to non-standard names that those properties must have
+     * in those classes. Needed only for JSON, and only if two different properties should have the same name in
+     * different classes. `JsonInstanceInspector` also needs to know about these.
+     */
     override lazy val propertyNames: Map[SmartIri, Map[SmartIri, String]] = AdminClientApi.propertyNames
 }
 
 object AdminClientApi {
     def propertyNames(implicit stringFormatter: StringFormatter): Map[SmartIri, Map[SmartIri, String]] = Map(
         OntologyConstants.KnoraAdminV2.CreateGroupRequest -> Map(
-            OntologyConstants.KnoraAdminV2.ProjectIri -> "project",
+            OntologyConstants.KnoraAdminV2.ProjectWithIriObj -> "project",
             OntologyConstants.KnoraAdminV2.GroupDescription -> "description"
         ),
         OntologyConstants.KnoraAdminV2.UpdateGroupRequest -> Map(OntologyConstants.KnoraAdminV2.GroupDescription -> "description"),

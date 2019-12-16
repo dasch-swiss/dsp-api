@@ -90,7 +90,9 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val anythingUser1IriEnc = URLEncoder.encode(SharedTestDataADM.anythingUser1.id, "UTF-8")
     private val multiUserIriEnc = URLEncoder.encode(SharedTestDataADM.multiuserUser.id, "UTF-8")
 
-    /* concatenate paths in the CORRECT order and return */
+    /**
+     * Returns the route.
+     */
     override def knoraApiPath: Route =
         getUsers ~
             addUser ~ getUserByIri ~ getUserByEmail ~ getUserByUsername ~
@@ -331,10 +333,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private val updateUserBasicInformationFunction: ClientFunction =
-        "updateUserBasicInformation" description "Updates an existing user's basic information." params (
+        "updateUserBasicInformation" description "Updates an existing user's basic information." params(
             "iri" description "The IRI of the user to be updated." paramType UriDatatype,
             "userInfo" description "The user information to be updated." paramType UpdateUserRequest
-            ) doThis {
+        ) doThis {
             httpPut(
                 path = str("iri") / arg("iri") / str("BasicUserInformation"),
                 body = Some(arg("userInfo"))
@@ -451,10 +453,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private val updateUserStatusFunction: ClientFunction =
-        "updateUserStatus" description "Updates a user's status." params (
+        "updateUserStatus" description "Updates a user's status." params(
             "iri" description "The user's IRI." paramType UriDatatype,
             "status" description "The user's new status." paramType BooleanDatatype
-            ) doThis {
+        ) doThis {
             httpPut(
                 path = str("iri") / arg("iri") / str("Status"),
                 body = Some(json("status" -> arg("status")))

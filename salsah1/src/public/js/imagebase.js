@@ -54,7 +54,7 @@ $(function() {
 					arkdiv.append(
 								$('<em>')
 									.addClass('propedit label')
-									.append('Presistent ID (')
+									.append('Persistent ID (')
 									.append(
 										$('<a>').attr({href: 'https://en.wikipedia.org/wiki/Archival_Resource_Key'}).append('ARK'))
 									.append('): ')
