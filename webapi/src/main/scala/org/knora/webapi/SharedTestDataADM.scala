@@ -631,7 +631,7 @@ object SharedTestDataADM {
 
     val createListRequest: String =
         s"""{
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
            |    "labels": [{ "value": "Neue Liste", "language": "de"}],
            |    "comments": []
            |}""".stripMargin
@@ -639,9 +639,22 @@ object SharedTestDataADM {
     def updateListInfoRequest(listIri: IRI): String = {
         s"""{
            |    "listIri": "$listIri",
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
            |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
            |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+           |}""".stripMargin
+    }
+
+    def addChildListNodeRequest(parentNodeIri: IRI,
+                                name: String,
+                                label: String,
+                                comment: String): String = {
+        s"""{
+           |    "parentNodeIri": "$parentNodeIri",
+           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "name": "$name",
+           |    "labels": [{ "value": "$label", "language": "en"}],
+           |    "comments": [{ "value": "$comment", "language": "en"}]
            |}""".stripMargin
     }
 
@@ -1696,11 +1709,11 @@ object SharedTestDataADM {
 
     def successResponse(message: String): String =
         s"""{
-          |  "knora-api:result" : "$message",
-          |  "@context" : {
-          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
-          |  }
-          |}""".stripMargin
+           |  "knora-api:result" : "$message",
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+           |  }
+           |}""".stripMargin
 
     def deleteResource(resourceIri: IRI,
                        lastModificationDate: Instant): String = {

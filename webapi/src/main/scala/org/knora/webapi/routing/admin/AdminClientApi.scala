@@ -105,9 +105,9 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     }
 
     /**
-      * A set of IRIs of classes that represent API requests and that therefore do not need `Stored*`
-      * subclasses.
-      */
+     * A set of IRIs of classes that represent API requests and that therefore do not need `Stored*`
+     * subclasses.
+     */
     override val requestClasses: Set[SmartIri] = Set(
         OntologyConstants.KnoraAdminV2.UpdateUserRequest,
         OntologyConstants.KnoraAdminV2.CreateGroupRequest,
@@ -119,8 +119,18 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     ).map(_.toSmartIri)
 
     /**
-      * A set of IRIs of classes that represent API responses.
-      */
+     * A set of IRIs of classes that are always read-only and that therefore do not need `Stored*`
+     * or `Read*` subclasses.
+     */
+    override val readOnlyClasses: Set[SmartIri] = Set(
+        OntologyConstants.KnoraAdminV2.ListClass,
+        OntologyConstants.KnoraAdminV2.ListNodeInfo,
+        OntologyConstants.KnoraAdminV2.ListNode
+    ).map(_.toSmartIri)
+
+    /**
+     * A set of IRIs of classes that represent API responses.
+     */
     override val responseClasses: Set[SmartIri] = Set(
         OntologyConstants.KnoraAdminV2.UserResponse,
         OntologyConstants.KnoraAdminV2.UsersResponse,

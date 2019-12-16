@@ -350,6 +350,20 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
         } returns ListInfoResponse
 
+    private def createChildNodeTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("create-child-node-request"),
+                text = SharedTestDataADM.addChildListNodeRequest(
+                    parentNodeIri = "http://rdfh.ch/lists/0001/treeList01",
+                    name = "abc123",
+                    label = "test node",
+                    comment = "a node for testing"
+                )
+            )
+        )
+    }
+
     /* delete list node which should also delete its children */
     def deleteListNode: Route = path(ListsBasePath / Segment) { iri =>
         delete {
@@ -498,6 +512,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 createListTestRequest,
                 getListTestResponse,
                 updateListInfoTestRequest,
+                createChildNodeTestRequest,
                 getListInfoTestResponse,
                 getListNodeInfoTestResponse
             )
