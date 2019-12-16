@@ -218,7 +218,9 @@ test_suite(
 test_suite(
     name = "e2e_tests",
     tests = [
-        "//webapi/src/test/scala/org/knora/webapi/e2e/admin:GroupsADME2ESpec",
+        "//webapi/src/test/scala/org/knora/webapi/e2e:all_tests",
+        "//webapi/src/test/scala/org/knora/webapi/http:all_tests",
+        "//webapi/src/test/scala/org/knora/webapi/messages:all_tests",
     ],
 )
 

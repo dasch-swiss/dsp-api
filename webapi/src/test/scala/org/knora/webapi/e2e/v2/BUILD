@@ -6,14 +6,14 @@ test_suite(
     name = "all_tests",
     tests = [
         ":AuthenticationV2E2ESpec",
-        ":JSONHandlingV2R2RSpec",
+        ":JSONLDHandlingV2R2RSpec",
         ":ListsRouteV2R2RSpec",
         ":OntologyV2R2RSpec",
-        ":ResponseCheckerR2RV2Spec",
+        ":ResponseCheckerV2R2RSpec",
         ":SearchRouteV2R2RSpec",
         ":StandoffRouteV2R2RSpec",
         ":ValuesRouteV2E2ESpec",
-        ":ValuesV2R2RSpec"
+        ":ValuesV2R2RSpec",
     ],
 )
 
@@ -35,13 +35,8 @@ scala_test(
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
-        # CORS
-        "@maven//:ch_megard_akka_http_cors_2_12",
-        "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
@@ -49,16 +44,15 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
-        "@maven//:org_xmlunit_xmlunit_core",
     ],
 )
 
 scala_test(
     name = "JSONLDHandlingV2R2RSpec",
-    size = "small",  # 60s
+    size = "medium",
     srcs = [
         "JSONLDHandlingV2R2RSpec.scala",
+        "ResponseCheckerV2.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -71,23 +65,15 @@ scala_test(
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
-        # CORS
-        "@maven//:ch_megard_akka_http_cors_2_12",
-        "@maven//:com_jsuereth_scala_arm_2_12",
+        "@maven//:com_fasterxml_jackson_core_jackson_core",
+        "@maven//:com_github_jsonld_java_jsonld_java",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
-        "@maven//:org_xmlunit_xmlunit_core",
     ],
 )
 
@@ -108,24 +94,15 @@ scala_test(
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
-        # CORS
-        "@maven//:ch_megard_akka_http_cors_2_12",
-        "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
-        "@maven//:org_xmlunit_xmlunit_core",
     ],
 )
 
@@ -146,24 +123,15 @@ scala_test(
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
-        # CORS
-        "@maven//:ch_megard_akka_http_cors_2_12",
-        "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
-        "@maven//:org_xmlunit_xmlunit_core",
     ],
 )
 
@@ -171,8 +139,8 @@ scala_test(
     name = "ResponseCheckerV2R2RSpec",
     size = "small",  # 60s
     srcs = [
-        "ResponseCheckerV2R2RSpec.scala",
         "ResponseCheckerV2.scala",
+        "ResponseCheckerV2Spec.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -185,23 +153,12 @@ scala_test(
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
         # Test Libs
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
-        # CORS
-        "@maven//:ch_megard_akka_http_cors_2_12",
-        "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
-        "@maven//:org_xmlunit_xmlunit_core",
     ],
 )
 
@@ -209,9 +166,9 @@ scala_test(
     name = "SearchRouteV2R2RSpec",
     size = "medium",
     srcs = [
-        "SearchRouteV2R2RSpec.scala",
         "ResponseCheckerV2.scala",
-        "SchemaHeader.scala"
+        "SchemaHeader.scala",
+        "SearchRouteV2R2RSpec.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -224,22 +181,14 @@ scala_test(
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
-        # CORS
-        "@maven//:ch_megard_akka_http_cors_2_12",
-        "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_xmlunit_xmlunit_core",
     ],
 )
@@ -248,8 +197,8 @@ scala_test(
     name = "StandoffRouteV2R2RSpec",
     size = "medium",  # 300s
     srcs = [
+        "ResponseCheckerV2.scala",
         "StandoffRouteV2R2RSpec.scala",
-        "ResponseCheckerV2.scala"
     ],
     data = [
         "//knora-ontologies:all",
@@ -262,23 +211,13 @@ scala_test(
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
-        # CORS
-        "@maven//:ch_megard_akka_http_cors_2_12",
-        "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
-        "@maven//:org_xmlunit_xmlunit_core",
     ],
 )
 
@@ -302,13 +241,8 @@ scala_test(
         "@maven//:com_typesafe_play_twirl_api_2_12",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
-        # CORS
-        "@maven//:ch_megard_akka_http_cors_2_12",
         "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -341,22 +275,12 @@ scala_test(
         "@maven//:com_typesafe_play_twirl_api_2_12",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
-        # CORS
-        "@maven//:ch_megard_akka_http_cors_2_12",
-        "@maven//:com_jsuereth_scala_arm_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
-        "@maven//:org_xmlunit_xmlunit_core",
     ],
 )

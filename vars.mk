@@ -68,3 +68,10 @@ ifeq ($(GDB_HEAP_SIZE),)
 else
   KNORA_GDB_HEAP_SIZE := $(GDB_HEAP_SIZE)
 endif
+
+ifeq ($(OS),OSX)
+  DOCKERHOST := host.docker.internal
+endif
+ifeq ($(DOCKERHOST),)
+  DOCKERHOST := $(shell ip route get 8.8.8.8 | awk '{print $NF; exit}')
+endif

@@ -1,0 +1,69 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+
+test_suite(
+    name = "all_tests",
+    tests = [
+        ":CORSSupportV1R2RSpec",
+        ":ServerVersionE2ESpec",
+    ],
+)
+
+scala_test(
+    name = "CORSSupportV1R2RSpec",
+    size = "small",  # 60s
+    srcs = [
+        "CORSSupportV1R2RSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies:all",
+        "//test-data:all",
+    ],
+    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:library",
+        "//webapi:test_library",
+        # Logging
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        # Other
+        "@maven//:ch_megard_akka_http_cors_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+    ],
+)
+
+scala_test(
+    name = "ServerVersionE2ESpec",
+    size = "small",  # 60s
+    srcs = [
+        "ServerVersionE2ESpec.scala",
+    ],
+    data = [
+        "//knora-ontologies:all",
+        "//test-data:all",
+    ],
+    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:library",
+        "//webapi:test_library",
+        # Logging
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:io_spray_spray_json_2_12",
+    ],
+)

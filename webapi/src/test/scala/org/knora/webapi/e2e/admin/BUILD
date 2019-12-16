@@ -19,6 +19,7 @@ scala_test(
     size = "small",  # 60s
     srcs = [
         "GroupsADME2ESpec.scala",
+        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
     ],
     data = [
         "//knora-ontologies:all",
@@ -32,8 +33,6 @@ scala_test(
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
@@ -51,6 +50,7 @@ scala_test(
     size = "small",  # 60s
     srcs = [
         "ListsADME2ESpec.scala",
+        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
     ],
     data = [
         "//knora-ontologies:all",
@@ -63,9 +63,6 @@ scala_test(
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
@@ -96,9 +93,6 @@ scala_test(
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -115,6 +109,7 @@ scala_test(
     size = "small",  # 60s
     srcs = [
         "ProjectsADME2ESpec.scala",
+        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
     ],
     data = [
         "//knora-ontologies:all",
@@ -128,8 +123,6 @@ scala_test(
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
@@ -139,6 +132,7 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_eclipse_rdf4j_rdf4j_client",
     ],
 )
 
@@ -160,9 +154,6 @@ scala_test(
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -192,8 +183,6 @@ scala_test(
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
@@ -211,6 +200,7 @@ scala_test(
     size = "small",  # 60s
     srcs = [
         "UsersADME2ESpec.scala",
+        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
     ],
     data = [
         "//knora-ontologies:all",
@@ -224,8 +214,6 @@ scala_test(
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
-        # Test Libs
-        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",

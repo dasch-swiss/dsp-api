@@ -137,6 +137,7 @@ endif
 	@echo KNORA_SIPI_IMAGE=$(KNORA_SIPI_IMAGE) >> .env
 	@echo KNORA_API_IMAGE=$(KNORA_API_IMAGE) >> .env
 	@echo KNORA_SALSAH1_IMAGE=$(KNORA_SALSAH1_IMAGE) >> .env
+	@echo DOCKERHOST=$(DOCKERHOST) >> .env
 
 ## knora stack
 .PHONY: stack-up
@@ -279,25 +280,12 @@ it-tests: stack-without-api init-db-test-unit ## runs the integration tests (equ
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt 'webapi/it:test'
 
-.PHONY: all-tests
-all-tests: stack-without-api ## runs all.
+.PHONY: test
+test: stack-without-api ## runs all tests.
 	@echo $@  # print target name
 	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
-	docker run 	--rm \
-				-v /tmp:/tmp \
-				-v $(PWD):/src/workspace \
-				-w /src/workspace \
-				-v $(HOME)/.ivy2:/root/.ivy2 \
-				--name=api \
-				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
-				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi \
-				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
-				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
-				--network=docker_knora-net \
-				l.gcr.io/google/bazel:1.2.1 \
-				test //webapi:all_tests
+	bazel test //...
 
 #################################
 ## Database Management

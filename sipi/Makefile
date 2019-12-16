@@ -1,13 +1,24 @@
+include ../vars.mk
+
+.PHONY: print-env-file
+print-env-file: env-file ## prints the env file used by sipi
+	@cat .env
+
+.PHONY: env-file
+env-file: ## write the env file used by knora-stack.
+	@echo SIPI_VERSION=$(SIPI_VERSION) > .env
+	@echo DOCKERHOST=$(DOCKERHOST) >> .env
+
 .PHONY: up
-up: ## start sipi
+up: env-file ## start sipi
 	docker-compose up -d sipi
 
 .PHONY: logs
-logs: ## follow logs
+logs: env-file ## follow logs
 	docker-compose logs -f sipi
 
 .PHONY: down
-down: ## stop sipi
+down: env-file ## stop sipi
 	docker-compose down
 
 .PHONY: help

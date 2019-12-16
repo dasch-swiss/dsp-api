@@ -28,6 +28,8 @@ services:
       - ${PWD}/sipi/server:/sipi/server:delegated
     networks:
       - knora-net
+    extra_hosts:
+      - api:host.docker.internal
     restart: unless-stopped
     environment:
       - SIPI_EXTERNAL_PROTOCOL=http

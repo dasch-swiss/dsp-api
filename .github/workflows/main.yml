@@ -51,6 +51,11 @@ jobs:
         run: |
           wget https://github.com/bazelbuild/bazel/releases/download/1.2.1/bazel_1.2.1-linux-x86_64.deb
           sudo dpkg -i bazel_1.2.1-linux-x86_64.deb
+      - name: add buildcache
+        run: |
+          echo ${{ secrets.buildcache_authorization_key }} > ~/buildcache_authorization_key.json
+          echo build --remote_http_cache=https://buildcache.dasch.dev >> ${{ github.workspace }}/.bazelrc
+          echo build --google_credentials=~/buildcache_authorization_key.json >> ${{ github.workspace }}/.bazelrc
       - name: run bazel build
         run: bazel build //...
 
@@ -62,15 +67,17 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
+      - name: install requirements
+        run: sudo apt-get install ca-certificates-java
+      - name: install bazel
+        run: |
+          wget https://github.com/bazelbuild/bazel/releases/download/1.2.1/bazel_1.2.1-linux-x86_64.deb
+          sudo dpkg -i bazel_1.2.1-linux-x86_64.deb
+      - name: add buildcache
+        run: |
+          echo ${{ secrets.buildcache_authorization_key }} > ~/buildcache_authorization_key.json
+          echo build --remote_http_cache=https://buildcache.dasch.dev >> ${{ github.workspace }}/.bazelrc
+          echo build --google_credentials=~/buildcache_authorization_key.json >> ${{ github.workspace }}/.bazelrc
       - name: prepare needed graphdb-se files
         run: |
           echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
