@@ -32,13 +32,13 @@ import scala.language.postfixOps
 // slash after path without following segment
 
 /**
-  * Provides a spray-routing function for API routes that deal with search.
-  */
+ * Provides a spray-routing function for API routes that deal with search.
+ */
 class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
     /**
-      * The default number of rows to show in search results.
-      */
+     * The default number of rows to show in search results.
+     */
     private val defaultShowNRows = 25
 
     def makeExtendedSearchRequestMessage(userADM: UserADM, reverseParams: Map[String, Seq[String]]): ExtendedSearchGetRequestV1 = {
@@ -180,7 +180,10 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         )
     }
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("v1" / "search" /) {
             // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
@@ -201,23 +204,23 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 }
             }
         } ~
-        path("v1" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
-            get {
-                requestContext => {
-                    val requestMessage = for {
-                        userADM <- getUserADM(requestContext)
-                        params: Map[String, String] = requestContext.request.uri.query().toMap
-                    } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
+            path("v1" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+                get {
+                    requestContext => {
+                        val requestMessage = for {
+                            userADM <- getUserADM(requestContext)
+                            params: Map[String, String] = requestContext.request.uri.query().toMap
+                        } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
 
-                    RouteUtilV1.runJsonRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        RouteUtilV1.runJsonRouteWithFuture(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                    }
                 }
             }
-        }
     }
 }

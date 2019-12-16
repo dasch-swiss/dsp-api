@@ -24,11 +24,14 @@ import akka.http.scaladsl.server.Route
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData}
 
 /**
-  * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
-  */
+ * A route providing authentication support. It allows the creation of "sessions", which is used in the SALSAH app.
+ */
 class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("v1" / "authenticate") {
             get {
