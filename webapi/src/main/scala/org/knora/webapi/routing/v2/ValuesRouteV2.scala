@@ -312,6 +312,13 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
                 ),
                 SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-time-value-request"),
+                    text = SharedTestDataADM.createTimeValueRequest(
+                        resourceIri = SharedTestDataADM.AThing.iri,
+                        timeStamp = Instant.parse("2019-08-28T15:59:12.725007Z")
+                    )
+                ),
+                SourceCodeFileContent(
                     filePath = SourceCodeFilePath.makeJsonPath("create-list-value-request"),
                     text = SharedTestDataADM.createListValueRequest(
                         resourceIri = SharedTestDataADM.AThing.iri,
@@ -513,6 +520,14 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         valueIri = SharedTestDataADM.TestDing.intervalValueIri,
                         intervalStart = BigDecimal("5.6"),
                         intervalEnd = BigDecimal("7.8")
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("update-time-value-request"),
+                    text = SharedTestDataADM.updateTimeValueRequest(
+                        resourceIri = SharedTestDataADM.TestDing.iri,
+                        valueIri = SharedTestDataADM.TestDing.timeValueIri,
+                        timeStamp = Instant.parse("2019-12-16T09:33:22.082549Z")
                     )
                 ),
                 SourceCodeFileContent(

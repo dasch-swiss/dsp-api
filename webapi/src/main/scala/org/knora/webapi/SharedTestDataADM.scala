@@ -882,6 +882,26 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
+    def createTimeValueRequest(resourceIri: IRI,
+                               timeStamp: Instant): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasTimeStamp" : {
+           |    "@type" : "knora-api:TimeValue",
+           |    "knora-api:timeValueAsTimeStamp" : {
+           |      "@type" : "xsd:dateTimeStamp",
+           |      "@value" : "$timeStamp"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
     def createListValueRequest(resourceIri: IRI,
                                listNode: String): String = {
         s"""{
@@ -1266,6 +1286,28 @@ object SharedTestDataADM {
            |    "knora-api:intervalValueHasEnd" : {
            |      "@type" : "xsd:decimal",
            |      "@value" : "$intervalEnd"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def updateTimeValueRequest(resourceIri: IRI,
+                               valueIri: IRI,
+                               timeStamp: Instant): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasTimeStamp" : {
+           |    "@id" : "$valueIri",
+           |    "@type" : "knora-api:TimeValue",
+           |    "knora-api:timeValueAsTimeStamp" : {
+           |      "@type" : "xsd:dateTimeStamp",
+           |      "@value" : "$timeStamp"
            |    }
            |  },
            |  "@context" : {
@@ -1746,6 +1788,7 @@ object SharedTestDataADM {
         val booleanValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ"
         val uriValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uBAmWuRhR-eo1u1eP7qqNg"
         val intervalValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/RbDKPKHWTC-0lkRKae-E6A"
+        val timeValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/l6DhS5SCT9WhXSoYEZRTRw"
         val colorValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/TAziKNP8QxuyhC4Qf9-b6w"
         val geomValueIri: IRI = "http://rdfh.ch/0001/http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/we-ybmj-SRen-91n4RaDOQ"
         val geonameValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/hty-ONF8SwKN2RKU7rLKDg"
