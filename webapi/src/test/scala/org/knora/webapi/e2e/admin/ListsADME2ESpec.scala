@@ -791,6 +791,25 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
             }
 
+            "return a `BadRequestException` during list node change when the provided name is already in use" in {
+                val params =
+                    s"""
+                       |{
+                       |    "nodeIri": "${firstChildIri.get}",
+                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "name": "first",
+                       |    "labels": [],
+                       |    "comments": []
+                       |}
+                """.stripMargin
+
+                val encodedListUrl = java.net.URLEncoder.encode(firstChildIri.get, "utf-8")
+
+                val request = Put(baseApiUrl + s"/admin/nodes/" + encodedListUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+            }
+
             "update basic list node information: name" in {
                 val paramsUpdate =
                     s"""

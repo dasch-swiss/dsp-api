@@ -719,6 +719,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 throw BadRequestException(s"The node name ${changeListRequest.name.get} is already used by a list inside the project ${changeListRequest.projectIri}.")
             }
 
+            /*_ = if (changeListRequest.name.nonEmpty) {
+                listNodeNameIsProjectUnique(changeListRequest.projectIri, changeListRequest.name.get).map(result =>
+                    if (!result) throw DuplicateValueException(s"The node name ${changeListRequest.name.get} is already used by a list inside the project ${changeListRequest.projectIri}.")
+                )
+            }*/
+
             // get the data graph of the project.
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
@@ -911,9 +917,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
             /* Verify that the node exists. */
             maybeListNode <- listNodeGetADM(nodeIri = nodeIri, shallow = false, requestingUser = KnoraSystemInstances.Users.SystemUser)
-            _ = maybeListNode match {
-                case Some(root: ListRootNodeADM) => root.asInstanceOf[ListRootNodeADM]
-                case Some(child: ListChildNodeADM) => child.asInstanceOf[ListChildNodeADM]
+            rootNodeIri = maybeListNode match {
+                case Some(root: ListRootNodeADM) => root.asInstanceOf[ListRootNodeADM].id
+                case Some(child: ListChildNodeADM) => child.asInstanceOf[ListChildNodeADM].hasRootNode
                 case _ => throw BadRequestException(s"Node '$nodeIri' not found.")
             }
 
@@ -922,6 +928,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             project: ProjectADM = maybeProject match {
                 case Some(project: ProjectADM) => project
                 case _ => throw BadRequestException(s"Project '${changeNodeRequest.projectIri}' not found.")
+            }
+
+            /* verify that the list node name is unique for the project */
+            projectUniqueNodeName <- listNodeNameIsProjectUnique(changeNodeRequest.projectIri, changeNodeRequest.name.getOrElse(Some("")))
+            _ = if (changeNodeRequest.name.nonEmpty && !projectUniqueNodeName) {
+                throw BadRequestException(s"The node name ${changeNodeRequest.name.get} is already used by a list inside the project ${changeNodeRequest.projectIri}.")
             }
 
             // get the data graph of the project.
