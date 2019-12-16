@@ -363,9 +363,9 @@ case class ListInfoChangeRequestADM(listIri: IRI,
   * @param apiRequestID      the ID of the API request.
   */
 case class ListNodeInfoChangeRequestADM(nodeIri: IRI,
-                                    changeNodeRequest: ChangeListNodeInfoPayloadADM,
-                                    requestingUser: UserADM,
-                                    apiRequestID: UUID) extends ListsResponderRequestADM
+                                        changeNodeRequest: ChangeListNodeInfoPayloadADM,
+                                        requestingUser: UserADM,
+                                        apiRequestID: UUID) extends ListsResponderRequestADM
 
 /**
   * Request the creation of a new list (child) node.

@@ -27,7 +27,6 @@
  * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
                              results from the WHERE clause of the update.
  * @param nodeIri            the IRI of the listnode we want to update.
- * @param projectIri         the IRI of the listnode's project.
  * @param nodeClassIri       the IRI of the OWL class that the node should belong to.
  * @param maybeName          the new optional name value
  * @param maybelabels        the new optional label values.
@@ -36,7 +35,6 @@
 @(dataNamedGraph: IRI,
   triplestore: String,
   nodeIri: IRI,
-  projectIri: IRI,
   nodeClassIri: IRI,
   maybeName: Option[Option[String]],
   maybeLabels: Option[Seq[StringLiteralV2]],
@@ -113,13 +111,10 @@ explicit statements in the WHERE clause here.
 
 WHERE {
     BIND(IRI("@nodeIri") AS ?nodeIri)
-    BIND(IRI("@projectIri") AS ?projectIri)
 
     @* Get all current defined values. *@
 
     ?nodeIri rdf:type knora-base:ListNode .
-
-    ?nodeIri knora-base:attachedToProject ?projectIri .
 
     optional {?nodeIri knora-base:listNodeName ?currentListNodeName .}
 

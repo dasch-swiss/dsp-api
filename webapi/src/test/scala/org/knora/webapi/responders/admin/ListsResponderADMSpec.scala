@@ -415,8 +415,50 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                thirdChildIri.set(childNodeInfo.id)
            }
 
-            "update basic list node information" ignore {
+            "update basic list node information" in {
+                responderManager ! ListNodeInfoChangeRequestADM(
+                    nodeIri = firstChildIri.get,
+                    changeNodeRequest = ChangeListNodeInfoPayloadADM(
+                        nodeIri = firstChildIri.get,
+                        projectIri = IMAGES_PROJECT_IRI,
+                        name = Some(Some("newTestName")),
+                        labels = Some(Seq(StringLiteralV2(value = "New Test List Node Value", language = Some("en")))),
+                        comments = Some(Seq(StringLiteralV2(value = "New Test List Node Comment", language = Some("en"))))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
+                )
 
+                val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
+                val nodeInfo = received.nodeinfo
+
+                // check correct node info
+                val childNodeInfo = nodeInfo match {
+                    case info: ListChildNodeInfoADM => info
+                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+                }
+
+                // check name
+                val name = childNodeInfo.name
+                name should be (Some("newTestName"))
+
+                // check labels
+                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.sorted should be (Seq(StringLiteralV2(value = "New Test List Node Value", language = Some("en"))))
+
+                // check comments
+                val comments = childNodeInfo.comments.stringLiterals
+                comments.size should be (1)
+                comments.sorted should be (Seq(StringLiteralV2(value = "New Test List Node Comment", language = Some("en"))))
+
+                // check position
+                val position = childNodeInfo.position
+                position should be (0)
+
+                // check has root node
+                val rootNode = childNodeInfo.hasRootNode
+                rootNode should be (newListIri.get)
             }
 
             "return a 'ForbiddenException' if the user changing the list node is not project or system admin" in {

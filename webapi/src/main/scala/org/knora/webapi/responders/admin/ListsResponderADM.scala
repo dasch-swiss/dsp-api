@@ -926,19 +926,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
                 nodeIri = nodeIri,
-                projectIri = project.id,
                 nodeClassIri = OntologyConstants.KnoraBase.ListNode,
                 maybeName = changeNodeRequest.name,
                 maybeLabels = changeNodeRequest.labels,
                 maybeComments = changeNodeRequest.comments
             ).toString
             result <- (storeManager ? SparqlUpdateRequest(changeListNodeInfoSparqlString)).mapTo[SparqlUpdateResponse]
-
-            _ = if (true) {
-                println("--------------reeeeeeee------------")
-                println(changeListNodeInfoSparqlString)
-                println("--------------reeeeeeee------------")
-            }
 
             /* Verify that the list was updated */
             maybeListNodeInfoADM <- listNodeInfoGetADM(nodeIri = nodeIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
@@ -951,11 +944,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             _ = if (changeNodeRequest.name.nonEmpty) {
                 if (changeNodeRequest.name.get.nonEmpty) {
                     if (name.nonEmpty) {
-                        println("--------------------------------------")
-                        println(changeNodeRequest)
-                        println("----------")
-                        println(updatedNode)
-                        println("--------------------------------------")
                         if (name.get != changeNodeRequest.name.get.get) throw UpdateNotPerformedException(s"Node $nodeIri's 'name' was not updated. Please report this as a possible bug.")
                     }
                 } else {

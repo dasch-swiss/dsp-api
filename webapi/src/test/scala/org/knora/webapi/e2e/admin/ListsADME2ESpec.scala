@@ -786,8 +786,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val responseUpdate: HttpResponse = singleAwaitingRequest(requestUpdate)
                 responseUpdate.status should be(StatusCodes.OK)
 
-                val receivedListNodeInfoUpdate: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(responseUpdate).fields("nodeinfo").convertTo[ListRootNodeInfoADM]
-                receivedListNodeInfoUpdate.projectIri should be (IMAGES_PROJECT_IRI)
+                val receivedListNodeInfoUpdate: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(responseUpdate).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
                 receivedListNodeInfoUpdate.name should be (Some("newTestName"))
 
                 val paramsDelete =
@@ -805,8 +804,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val responseDelete: HttpResponse = singleAwaitingRequest(requestDelete)
                 responseDelete.status should be(StatusCodes.OK)
 
-                val receivedListNodeInfoDelete: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(responseDelete).fields("nodeinfo").convertTo[ListRootNodeInfoADM]
-                receivedListNodeInfoDelete.projectIri should be (IMAGES_PROJECT_IRI)
+                val receivedListNodeInfoDelete: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(responseDelete).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
                 receivedListNodeInfoDelete.name.isEmpty should be (true)
             }
 
@@ -852,7 +850,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val responseUpdate: HttpResponse = singleAwaitingRequest(requestUpdate)
                 responseUpdate.status should be(StatusCodes.OK)
 
-                val receivedListInfoComment: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(responseUpdate).fields("nodeinfo").convertTo[ListRootNodeInfoADM]
+                val receivedListInfoComment: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(responseUpdate).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
                 val commentsUpdate = receivedListInfoComment.comments.stringLiterals
                 commentsUpdate.size should be (2)
 
@@ -871,7 +869,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val responseDelete: HttpResponse = singleAwaitingRequest(requestDelete)
                 responseDelete.status should be(StatusCodes.OK)
 
-                val receivedListInfoDelete: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(responseDelete).fields("nodeinfo").convertTo[ListRootNodeInfoADM]
+                val receivedListInfoDelete: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(responseDelete).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
                 val commentsDelete = receivedListInfoDelete.comments.stringLiterals
                 commentsDelete.size should be (0)
             }
