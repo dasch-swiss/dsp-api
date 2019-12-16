@@ -357,8 +357,7 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
             OntologyConstants.KnoraAdminV2.Comments -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraAdminV2.Position -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraAdminV2.IsRootNode -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraAdminV2.HasRootNode -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraAdminV2.Children -> Cardinality.MayHaveMany
+            OntologyConstants.KnoraAdminV2.HasRootNode -> Cardinality.MayHaveOne
         )
     )
 
