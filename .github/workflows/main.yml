@@ -54,8 +54,8 @@ jobs:
       - name: add buildcache
         run: |
           echo ${{ secrets.buildcache_authorization_key }} > ~/buildcache_authorization_key.json
-          echo build --remote_http_cache=https://buildcache.dasch.dev >> ${{ github.workspace }}/.bazelrc
-          echo build --google_credentials=~/buildcache_authorization_key.json >> ${{ github.workspace }}/.bazelrc
+          echo "build --remote_http_cache=https://buildcache.dasch.dev" >> ${{ github.workspace }}/.bazelrc
+          echo "build --google_credentials=~/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
       - name: run bazel build
         run: bazel build //...
 
@@ -76,8 +76,8 @@ jobs:
       - name: add buildcache
         run: |
           echo ${{ secrets.buildcache_authorization_key }} > ~/buildcache_authorization_key.json
-          echo build --remote_http_cache=https://buildcache.dasch.dev >> ${{ github.workspace }}/.bazelrc
-          echo build --google_credentials=~/buildcache_authorization_key.json >> ${{ github.workspace }}/.bazelrc
+          echo "build --remote_http_cache=https://buildcache.dasch.dev" >> ${{ github.workspace }}/.bazelrc
+          echo "build --google_credentials=~/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
       - name: prepare needed graphdb-se files
         run: |
           echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
