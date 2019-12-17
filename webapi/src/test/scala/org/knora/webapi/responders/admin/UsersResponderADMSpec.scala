@@ -333,6 +333,30 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 response3.user.familyName should equal (SharedTestDataADM.normalUser.familyName)
 
             }
+         
+            "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        username = Some("root")
+                    ),
+                    SharedTestDataADM.superUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
+            }
+
+            "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        email = Some("root@example.com")
+                    ),
+                    SharedTestDataADM.superUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
+            }
 
             "UPDATE the user's password (by himself)" in {
                 responderManager ! UserChangePasswordRequestADM(
