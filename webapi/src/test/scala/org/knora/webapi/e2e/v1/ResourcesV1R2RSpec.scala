@@ -19,15 +19,10 @@
 
 package org.knora.webapi.e2e.v1
 
-import java.io.ByteArrayInputStream
-import java.net.URLEncoder
-import java.util.zip.{ZipEntry, ZipInputStream}
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.pattern._
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
@@ -41,13 +36,9 @@ import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.scalatest.Assertion
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-import resource._
 import spray.json._
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
-import scala.util.Random
-import scala.xml.{Node, NodeSeq, XML}
+import scala.concurrent.ExecutionContextExecutor
 
 /**
   * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
@@ -264,7 +255,12 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 element => element.asJsObject.fields("value").asInstanceOf[JsArray].elements.head.asInstanceOf[JsString].value
             }.toSet
 
-            val expectedLabels = Set("Sierra", "Hotel", "Delta", "Victor", "testding")
+            val expectedLabels = Set(
+                "A thing that has a BCE date value",
+                "A thing that has a list value",
+                "A thing that has two list values",
+                "visible thing with hidden int values"
+            )
 
             assert(expectedLabels.subsetOf(labels))
         }
