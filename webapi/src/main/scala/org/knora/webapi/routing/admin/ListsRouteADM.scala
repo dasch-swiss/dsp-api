@@ -348,7 +348,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 path = argMember("node", "parentNodeIri"),
                 body = Some(arg("node"))
             )
-        } returns ListInfoResponse
+        } returns ListNodeInfoResponse
 
     private def createChildNodeTestRequest: Future[SourceCodeFileContent] = {
         FastFuture.successful(
