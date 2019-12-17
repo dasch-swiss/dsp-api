@@ -25,7 +25,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponseV2}
@@ -39,11 +38,14 @@ import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import scala.concurrent.Future
 
 /**
-  * Provides a spray-routing function for API routes that deal with values.
-  */
+ * Provides a spray-routing function for API routes that deal with values.
+ */
 class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         def makeVersionHistoryRequestMessage(iris: Seq[IRI], userADM: UserADM): ValueVersionHistoryGetRequestV1 = {
             if (iris.length != 3) throw BadRequestException("Version history request requires resource IRI, property IRI, and current value IRI")
@@ -462,6 +464,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
                             resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(resourceIri, userADM)).mapTo[ResourceInfoResponseV1]
                             projectShortcode = resourceInfoResponse.resource_info.getOrElse(throw NotFoundException(s"Resource not found: $resourceIri")).project_shortcode
+
                             request <- makeChangeFileValueRequest(
                                 resIriStr = resIriStr,
                                 projectShortcode = projectShortcode,

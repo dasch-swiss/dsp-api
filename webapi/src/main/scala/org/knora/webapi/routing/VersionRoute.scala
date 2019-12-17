@@ -23,11 +23,10 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import org.knora.webapi.BuildInfo
 import spray.json.{JsObject, JsString}
 
 import scala.concurrent.duration._
-
-import org.knora.webapi.BuildInfo
 
 
 case class VersionCheckResult(name: String,
@@ -40,8 +39,8 @@ case class VersionCheckResult(name: String,
                               gdbFree: String)
 
 /**
-  * Provides version check logic
-  */
+ * Provides version check logic
+ */
 trait VersionCheck {
     this: VersionRoute =>
 
@@ -51,7 +50,6 @@ trait VersionCheck {
         val result = getVersion()
         createResponse(result)
     }
-
 
 
     protected def createResponse(result: VersionCheckResult): HttpResponse = {
@@ -76,15 +74,15 @@ trait VersionCheck {
     private def getVersion() = {
         var sipiVersion = BuildInfo.sipi
         val sipiIndex = sipiVersion.indexOf(':')
-        sipiVersion = if (sipiIndex > 0) sipiVersion.substring(sipiIndex+1) else sipiVersion
+        sipiVersion = if (sipiIndex > 0) sipiVersion.substring(sipiIndex + 1) else sipiVersion
 
         var gdbSEVersion = BuildInfo.gdbSE
         val gdbSEIndex = gdbSEVersion.indexOf(':')
-        gdbSEVersion = if (gdbSEIndex > 0) gdbSEVersion.substring(gdbSEIndex+1) else gdbSEVersion
+        gdbSEVersion = if (gdbSEIndex > 0) gdbSEVersion.substring(gdbSEIndex + 1) else gdbSEVersion
 
         var gdbFreeVersion = BuildInfo.gdbFree
         val gdbFreeIndex = gdbFreeVersion.indexOf(':')
-        gdbFreeVersion = if (gdbFreeIndex > 0) gdbFreeVersion.substring(gdbFreeIndex+1) else gdbFreeVersion
+        gdbFreeVersion = if (gdbFreeIndex > 0) gdbFreeVersion.substring(gdbFreeIndex + 1) else gdbFreeVersion
 
         VersionCheckResult(
             name = "version",
@@ -100,10 +98,13 @@ trait VersionCheck {
 }
 
 /**
-  * Provides the '/version' endpoint serving the components versions.
-  */
+ * Provides the '/version' endpoint serving the components versions.
+ */
 class VersionRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with VersionCheck {
 
+    /**
+     * Returns the route.
+     */
     override def knoraApiPath: Route = {
         path("version") {
             get {

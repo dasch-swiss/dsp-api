@@ -27,11 +27,14 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import org.knora.webapi.util.StringFormatter
 
 /**
-  * Provides API routes that deal with lists.
-  */
+ * Provides API routes that deal with lists.
+ */
 class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         val stringFormatter = StringFormatter.getGeneralInstance
 
@@ -40,15 +43,15 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                 requestContext =>
 
                     val requestMessageFuture = for {
-                            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-                            listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+                        listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                            requestMessage = requestContext.request.uri.query().get("reqtype") match {
-                              case Some("node") => NodePathGetRequestV1(listIri, userProfile)
-                              case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
-                              case None => HListGetRequestV1(listIri, userProfile)
-                          }
-                        } yield requestMessage
+                        requestMessage = requestContext.request.uri.query().get("reqtype") match {
+                            case Some("node") => NodePathGetRequestV1(listIri, userProfile)
+                            case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
+                            case None => HListGetRequestV1(listIri, userProfile)
+                        }
+                    } yield requestMessage
 
 
                     RouteUtilV1.runJsonRouteWithFuture(
@@ -60,28 +63,28 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                     )
             }
         } ~
-        path("v1" / "selections" / Segment) { iri =>
-            get {
-                requestContext =>
-                    val requestMessageFuture = for {
+            path("v1" / "selections" / Segment) { iri =>
+                get {
+                    requestContext =>
+                        val requestMessageFuture = for {
                             userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                             selIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                             requestMessage = requestContext.request.uri.query().get("reqtype") match {
-                            case Some("node") => NodePathGetRequestV1(selIri, userProfile)
-                            case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
-                            case None => SelectionGetRequestV1(selIri, userProfile)
-                        }
-                    } yield requestMessage
+                                case Some("node") => NodePathGetRequestV1(selIri, userProfile)
+                                case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
+                                case None => SelectionGetRequestV1(selIri, userProfile)
+                            }
+                        } yield requestMessage
 
-                    RouteUtilV1.runJsonRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        RouteUtilV1.runJsonRouteWithFuture(
+                            requestMessageFuture,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             }
-        }
     }
 }
