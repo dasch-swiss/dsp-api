@@ -211,13 +211,21 @@ object GravsearchMainQueryGenerator {
 
             val mainAndDependentResourcesValueObjectsValuePattern = ValuesPattern(mainAndDependentResourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri)))
 
-            // WHERE patterns for statements about the main and dependent resources' values
+            // WHERE patterns for statements about the main and dependent resources' values,
+            // not including standoff markup in text values
             val wherePatternsForMainAndDependentResourcesValues = Seq(
                 mainAndDependentResourcesValueObjectsValuePattern,
                 StatementPattern.makeInferred(subj = mainAndDependentResourceVar, pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri), obj = mainAndDependentResourceValueObject),
                 StatementPattern.makeExplicit(subj = mainAndDependentResourceVar, pred = mainAndDependentResourceValueProp, obj = mainAndDependentResourceValueObject),
                 StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
-                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj)
+                StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject, pred = mainAndDependentResourceValueObjectProp, obj = mainAndDependentResourceValueObjectObj),
+                FilterPattern(
+                    CompareExpression(
+                        leftArg = mainAndDependentResourceValueObjectProp,
+                        operator = CompareExpressionOperator.NOT_EQUALS,
+                        rightArg = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri)
+                    )
+                )
             )
 
             // return assertions about the main and dependent resources' values in CONSTRUCT clause

@@ -702,7 +702,7 @@ object GravsearchParser {
                     }
 
                     RegexFunction(
-                        textVar = textValueVar,
+                        textExpr = textValueVar,
                         pattern = pattern,
                         modifier = modifier
                     )

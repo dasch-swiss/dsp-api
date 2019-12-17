@@ -38,8 +38,8 @@ case class HealthCheckResult(name: String,
                              message: String)
 
 /**
-  * Provides health check logic
-  */
+ * Provides health check logic
+ */
 trait HealthCheck {
     this: HealthRoute =>
 
@@ -106,10 +106,13 @@ trait HealthCheck {
 }
 
 /**
-  * Provides the '/health' endpoint serving the health status.
-  */
+ * Provides the '/health' endpoint serving the health status.
+ */
 class HealthRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with HealthCheck {
 
+    /**
+     * Returns the route.
+     */
     override def knoraApiPath: Route = {
         path("health") {
             get {
