@@ -220,7 +220,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     changeListRequest = ChangeListInfoPayloadADM(
                         listIri = newListIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
-                        name = Some(Some("newTestName")),
+                        name = Some(Some("new test name")),
                         labels = Some(Seq(
                             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                             StringLiteralV2(value = "Changed list", language = Some("en"))
@@ -240,7 +240,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 listInfo.projectIri should be (IMAGES_PROJECT_IRI)
 
                 val name: String = listInfo.name.get
-                name should be ("newTestName")
+                name should be ("new test name")
 
                 val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
                 labels.size should be (2)
@@ -421,7 +421,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                     changeNodeRequest = ChangeListNodeInfoPayloadADM(
                         nodeIri = firstChildIri.get,
                         projectIri = IMAGES_PROJECT_IRI,
-                        name = Some(Some("newTestName")),
+                        name = Some(Some("new TestName")),
                         labels = Some(Seq(StringLiteralV2(value = "New Test List Node Value", language = Some("en")))),
                         comments = Some(Seq(StringLiteralV2(value = "New Test List Node Comment", language = Some("en"))))
                     ),
@@ -440,7 +440,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
                 // check name
                 val name = childNodeInfo.name
-                name should be (Some("newTestName"))
+                name should be (Some("new TestName"))
 
                 // check labels
                 val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
