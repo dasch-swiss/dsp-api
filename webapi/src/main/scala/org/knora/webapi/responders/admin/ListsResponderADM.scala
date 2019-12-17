@@ -931,7 +931,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             /* verify that the list node name is unique for the project */
-            projectUniqueNodeName <- listNodeNameIsProjectUnique(changeNodeRequest.projectIri, changeNodeRequest.name.getOrElse(Some("")))
+            projectUniqueNodeName <- listNodeNameIsProjectUnique(changeNodeRequest.projectIri, changeNodeRequest.name.flatten)
             _ = if (changeNodeRequest.name.nonEmpty && !projectUniqueNodeName) {
                 throw BadRequestException(s"The node name ${changeNodeRequest.name.get} is already used by a list inside the project ${changeNodeRequest.projectIri}.")
             }
