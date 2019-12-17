@@ -44,7 +44,8 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
         new UsersRouteADM(routeData),
         new GroupsRouteADM(routeData),
         new ProjectsRouteADM(routeData),
-        new PermissionsRouteADM(routeData)
+        new PermissionsRouteADM(routeData),
+        new ListsRouteADM(routeData)
     )
 
     /**
@@ -104,6 +105,30 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
     }
 
     /**
+     * A set of IRIs of classes that represent API requests and that therefore do not need `Stored*`
+     * subclasses.
+     */
+    override val requestClasses: Set[SmartIri] = Set(
+        OntologyConstants.KnoraAdminV2.UpdateUserRequest,
+        OntologyConstants.KnoraAdminV2.CreateGroupRequest,
+        OntologyConstants.KnoraAdminV2.UpdateProjectRequest,
+        OntologyConstants.KnoraAdminV2.UpdateGroupRequest,
+        OntologyConstants.KnoraAdminV2.CreateChildNodeRequest,
+        OntologyConstants.KnoraAdminV2.CreateListRequest,
+        OntologyConstants.KnoraAdminV2.UpdateListInfoRequest
+    ).map(_.toSmartIri)
+
+    /**
+     * A set of IRIs of classes that are always read-only and that therefore do not need `Stored*`
+     * or `Read*` subclasses.
+     */
+    override val readOnlyClasses: Set[SmartIri] = Set(
+        OntologyConstants.KnoraAdminV2.ListClass,
+        OntologyConstants.KnoraAdminV2.ListNodeInfo,
+        OntologyConstants.KnoraAdminV2.ListNode
+    ).map(_.toSmartIri)
+
+    /**
      * A set of IRIs of classes that represent API responses.
      */
     override val responseClasses: Set[SmartIri] = Set(
@@ -118,6 +143,10 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
         OntologyConstants.KnoraAdminV2.AdministrativePermissionResponse,
         OntologyConstants.KnoraAdminV2.AdministrativePermissionsResponse,
         OntologyConstants.KnoraAdminV2.ProjectRestrictedViewSettingsResponse,
+        OntologyConstants.KnoraAdminV2.ListsResponse,
+        OntologyConstants.KnoraAdminV2.ListResponse,
+        OntologyConstants.KnoraAdminV2.ListInfoResponse,
+        OntologyConstants.KnoraAdminV2.ListNodeInfoResponse
     ).map(_.toSmartIri)
 
     /**
@@ -125,7 +154,8 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
      */
     override val idProperties: Set[SmartIri] = Set(
         OntologyConstants.KnoraAdminV2.ID,
-        OntologyConstants.KnoraAdminV2.Iri
+        OntologyConstants.KnoraAdminV2.Iri,
+        OntologyConstants.KnoraAdminV2.ListIri
     ).map(_.toSmartIri)
 
     /**
@@ -139,7 +169,7 @@ class AdminClientApi(routeData: KnoraRouteData) extends ClientApi {
 object AdminClientApi {
     def propertyNames(implicit stringFormatter: StringFormatter): Map[SmartIri, Map[SmartIri, String]] = Map(
         OntologyConstants.KnoraAdminV2.CreateGroupRequest -> Map(
-            OntologyConstants.KnoraAdminV2.ProjectIri -> "project",
+            OntologyConstants.KnoraAdminV2.ProjectWithIriObj -> "project",
             OntologyConstants.KnoraAdminV2.GroupDescription -> "description"
         ),
         OntologyConstants.KnoraAdminV2.UpdateGroupRequest -> Map(OntologyConstants.KnoraAdminV2.GroupDescription -> "description"),

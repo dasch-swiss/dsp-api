@@ -70,7 +70,6 @@ The `description` keyword specifies a documentation comment describing the funct
 A function has `params`, each of which also has a `description`, as well as a `paramType`.
 Built-in types are defined in `ClientApi.scala` and extend `ClientObjectType`.
 Class types can be constructed using the `classRef` function, as shown above.
-If a parameter is optional, use `paramOptionType` instead of `paramType`.
 
 The `doThis` keyword introduces the body of a function, which can be either
 an HTTP operation or a function call. After the `doThis` block, `returns`
@@ -87,7 +86,7 @@ argument.
 
 URL parameters can be added like this:
 
-@@snip [PermissionsRouteADM.scala]($src$/org/knora/webapi/routing/admin/PermissionsRouteADM.scala) { #getAdministrativePermissionFunction }
+@@snip [PermissionsRouteADM.scala]($src$/org/knora/webapi/routing/admin/ListsRouteADM.scala) { #getListsInProjectFunction }
 
 Here is an example with a request body:
 

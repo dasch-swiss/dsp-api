@@ -101,19 +101,31 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
         }
     }
 
-    // #getAdministrativePermissionFunction
     private val getAdministrativePermissionFunction: ClientFunction =
         "getAdministrativePermission" description "Gets the administrative permission for a project and group." params(
             "projectIri" description "The project IRI." paramType UriDatatype,
             "groupIri" description "The group IRI." paramType UriDatatype,
-            "permissionType" description "The permission type." paramOptionType StringDatatype
+        ) doThis {
+            httpGet(
+                path = arg("projectIri") / arg("groupIri")
+            )
+        } returns AdministrativePermissionResponse
+
+    /*
+    // Commented out because the 'projectType' parameter is ignored.
+
+    private val getAdministrativePermissionByTypeFunction: ClientFunction =
+        "getAdministrativePermissionByType" description "Gets the administrative permission for a project and group, specifying a permission type." params(
+            "projectIri" description "The project IRI." paramType UriDatatype,
+            "groupIri" description "The group IRI." paramType UriDatatype,
+            "permissionType" description "The permission type." paramType StringDatatype
         ) doThis {
             httpGet(
                 path = arg("projectIri") / arg("groupIri"),
                 params = Seq("permissionType" -> arg("permissionType"))
             )
         } returns AdministrativePermissionResponse
-    // #getAdministrativePermissionFunction
+     */
 
     private def getAdministrativePermissionTestResponse: Future[SourceCodeFileContent] = {
         for {
