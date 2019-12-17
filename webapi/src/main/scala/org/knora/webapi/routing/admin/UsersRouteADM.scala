@@ -51,7 +51,6 @@ object UsersRouteADM {
 /**
  * Provides an akka-http-routing function for API routes that deal with users.
  */
-
 @Api(value = "users", produces = "application/json")
 @Path("/admin/users")
 class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {

@@ -80,7 +80,6 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     private val GroupsResponse = classRef(OntologyConstants.KnoraAdminV2.GroupsResponse.toSmartIri)
     private val GroupResponse = classRef(OntologyConstants.KnoraAdminV2.GroupResponse.toSmartIri)
     private val MembersResponse = classRef(OntologyConstants.KnoraAdminV2.MembersResponse.toSmartIri)
-    private val StoredGroup = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri).toStoredClassRef
     private val CreateGroupRequest = classRef(OntologyConstants.KnoraAdminV2.CreateGroupRequest.toSmartIri)
     private val UpdateGroupRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateGroupRequest.toSmartIri)
 
