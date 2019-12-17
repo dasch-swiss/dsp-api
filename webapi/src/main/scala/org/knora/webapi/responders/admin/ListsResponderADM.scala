@@ -775,7 +775,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             // run list info update with an local IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
-                listIri,
+                LISTS_GLOBAL_LOCK_IRI,
                 () => listInfoChangeTask(listIri, changeListRequest, requestingUser, apiRequestID)
             )
         } yield taskResult
@@ -987,7 +987,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             // run list info update with an local IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
-                nodeIri,
+                LISTS_GLOBAL_LOCK_IRI,
                 () => listNodeInfoChangeTask(nodeIri, changeNodeRequest, requestingUser, apiRequestID)
             )
         } yield taskResult
