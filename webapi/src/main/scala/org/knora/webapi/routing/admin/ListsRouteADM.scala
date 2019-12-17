@@ -57,7 +57,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    
     def getLists: Route = path("admin" / "lists") {
         get {
             parameters("projectIri".?) { maybeProjectIri: Option[IRI] =>
@@ -94,7 +93,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-
     /** create a new list (root node) **/
     def postList: Route = path("admin" / "lists") {
         post {
