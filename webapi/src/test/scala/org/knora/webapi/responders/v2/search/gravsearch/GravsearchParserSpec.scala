@@ -1719,7 +1719,7 @@ class GravsearchParserSpec extends CoreSpec() {
                     namedGraph = None
                 ),
                 FilterPattern(expression = RegexFunction(
-                    textVar = QueryVariable(variableName = "propVal0"),
+                    textExpr = QueryVariable(variableName = "propVal0"),
                     pattern = "Zeit",
                     modifier = Some("i")
                 ))
