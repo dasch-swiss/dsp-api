@@ -25,7 +25,6 @@ import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
 import org.knora.webapi.BadRequestException
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
@@ -37,11 +36,14 @@ import scala.concurrent.duration._
 
 
 /**
-  * A route used to convert XML to standoff.
-  */
+ * A route used to convert XML to standoff.
+ */
 class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("v1" / "mapping") {
             post {
@@ -95,7 +97,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                             }
 
                             xml: String = allParts.getOrElse(XML_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")).toString
-                            
+
                         } yield CreateMappingRequestV1(
                             projectIri = stringFormatter.validateAndEscapeIri(standoffApiJSONRequest.project_id, throw BadRequestException("invalid project IRI")),
                             xml = xml,

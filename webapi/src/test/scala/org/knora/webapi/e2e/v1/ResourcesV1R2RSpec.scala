@@ -260,12 +260,13 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val resources = responseJson.fields("resources")
                 .asInstanceOf[JsArray].elements
 
-            val expectedNumber = 4
+            val labels: Set[String] = resources.map {
+                element => element.asJsObject.fields("value").asInstanceOf[JsArray].elements.head.asInstanceOf[JsString].value
+            }.toSet
 
-            // println(resources)
+            val expectedLabels = Set("Sierra", "Hotel", "Delta", "Victor", "testding")
 
-            assert(resources.length == expectedNumber, s"expected $expectedNumber results, but ${resources.length} given: $resources")
-
+            assert(expectedLabels.subsetOf(labels))
         }
     }
 
