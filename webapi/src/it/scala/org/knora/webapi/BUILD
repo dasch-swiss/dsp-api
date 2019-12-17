@@ -2,12 +2,24 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
+test_suite(
+    name = "all_tests",
+    tests = [
+        ":VersionRouteITSpec",
+        ":ErrorV1ITSpec",
+        ":KnoraSipiIntegrationV1ITSpec",
+        ":KnoraSipiPermissionsV1ITSpec",
+        ":KnoraSipiScriptsV1ITSpec",
+        ":KnoraSipiIntegrationV2ITSpec",
+        ":DrawingsGodsV1ITSpec",
+    ],
+)
+
 scala_test(
-    name = "GroupsADME2ESpec",
+    name = "VersionRouteITSpec",
     size = "small",  # 60s
     srcs = [
-        "GroupsADME2ESpec.scala",
-        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
+        "e2e/VersionRouteITSpec.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -17,11 +29,9 @@ scala_test(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:library",
-        "//webapi:test_library",
+        "//webapi:it_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -34,11 +44,10 @@ scala_test(
 )
 
 scala_test(
-    name = "ListsADME2ESpec",
+    name = "ErrorV1ITSpec",
     size = "small",  # 60s
     srcs = [
-        "ListsADME2ESpec.scala",
-        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
+        "e2e/v1/ErrorV1ITSpec.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -48,10 +57,9 @@ scala_test(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:library",
-        "//webapi:test_library",
+        "//webapi:it_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -64,10 +72,10 @@ scala_test(
 )
 
 scala_test(
-    name = "PermissionsADME2ESpec",
+    name = "KnoraSipiIntegrationV1ITSpec",
     size = "small",  # 60s
     srcs = [
-        "PermissionsADME2ESpec.scala",
+        "e2e/v1/KnoraSipiIntegrationV1ITSpec.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -77,10 +85,9 @@ scala_test(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:library",
-        "//webapi:test_library",
+        "//webapi:it_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -93,11 +100,10 @@ scala_test(
 )
 
 scala_test(
-    name = "ProjectsADME2ESpec",
+    name = "KnoraSipiPermissionsV1ITSpec",
     size = "small",  # 60s
     srcs = [
-        "ProjectsADME2ESpec.scala",
-        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
+        "e2e/v1/KnoraSipiPermissionsV1ITSpec.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -107,41 +113,9 @@ scala_test(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:library",
-        "//webapi:test_library",
+        "//webapi:it_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_eclipse_rdf4j_rdf4j_client",
-    ],
-)
-
-scala_test(
-    name = "SipiADME2ESpec",
-    size = "small",  # 60s
-    srcs = [
-        "PermissionsADME2ESpec.scala",
-    ],
-    data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
-    ],
-    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
-    unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:library",
-        "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -154,10 +128,10 @@ scala_test(
 )
 
 scala_test(
-    name = "StoreADME2ESpec",
+    name = "KnoraSipiScriptsV1ITSpec",
     size = "small",  # 60s
     srcs = [
-        "StoreADME2ESpec.scala",
+        "e2e/v1/KnoraSipiScriptsV1ITSpec.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -167,11 +141,9 @@ scala_test(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:library",
-        "//webapi:test_library",
+        "//webapi:it_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -184,11 +156,10 @@ scala_test(
 )
 
 scala_test(
-    name = "UsersADME2ESpec",
+    name = "KnoraSipiIntegrationV2ITSpec",
     size = "small",  # 60s
     srcs = [
-        "UsersADME2ESpec.scala",
-        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
+        "e2e/v2/KnoraSipiIntegrationV2ITSpec.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -198,11 +169,37 @@ scala_test(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:library",
-        "//webapi:test_library",
+        "//webapi:it_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:io_spray_spray_json_2_12",
+    ],
+)
+
+scala_test(
+    name = "DrawingsGodsV1ITSpec",
+    size = "small",  # 60s
+    srcs = [
+        "other/v1/DrawingsGodsV1ITSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies:all",
+        "//test-data:all",
+    ],
+    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:library",
+        "//webapi:it_library",
+        # Logging
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",

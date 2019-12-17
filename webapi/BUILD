@@ -49,15 +49,12 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
         "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_parsing_2_12",
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         # Templates
         "@maven//:com_typesafe_play_twirl_api_2_12",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:ch_qos_logback_logback_classic",
-        "@maven//:ch_qos_logback_logback_core",
         "@maven//:org_slf4j_slf4j_api",
         #
         "@maven//:commons_cli_commons_cli",
@@ -191,42 +188,5 @@ scala_library(
         "@maven//:org_scala_lang_scala_reflect",
         "@maven//:org_scalactic_scalactic_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
-    ],
-)
-
-test_suite(
-    name = "all_tests",
-    tests = [
-        ":e2e_tests",
-        ":integration_tests",
-        ":unit_tests",
-    ],
-)
-
-test_suite(
-    name = "unit_tests",
-    tests = [
-        "//webapi/src/test/scala/org/knora/webapi/responders/admin:GroupsResponderADMSpec",
-        "//webapi/src/test/scala/org/knora/webapi/responders/admin:ListsResponderADMSpec",
-        "//webapi/src/test/scala/org/knora/webapi/responders/admin:PermissionsResponderADMSpec",
-        "//webapi/src/test/scala/org/knora/webapi/responders/admin:ProjectsResponderADMSpec",
-        "//webapi/src/test/scala/org/knora/webapi/responders/admin:SipiResponderADMSpec",
-        "//webapi/src/test/scala/org/knora/webapi/responders/admin:UsersResponderADMSpec",
-    ],
-)
-
-test_suite(
-    name = "e2e_tests",
-    tests = [
-        "//webapi/src/test/scala/org/knora/webapi/e2e:all_tests",
-        "//webapi/src/test/scala/org/knora/webapi/http:all_tests",
-        "//webapi/src/test/scala/org/knora/webapi/messages:all_tests",
-    ],
-)
-
-test_suite(
-    name = "integration_tests",
-    tests = [
-        "//webapi/src/it/scala/org/knora/webapi/e2e:VersionRouteITSpec",
     ],
 )

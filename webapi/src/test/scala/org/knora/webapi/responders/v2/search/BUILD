@@ -2,12 +2,22 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
+test_suite(
+    name = "all_tests",
+    tests = [
+        ":SparqlTransformerSpec",
+        ":NonTriplestoreSpecificGravsearchToCountPrequeryGeneratorSpec",
+        ":NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec",
+        ":GravsearchTypeInspectorSpec",
+        ":GravsearchParserSpec",
+    ],
+)
+
 scala_test(
-    name = "GroupsADME2ESpec",
+    name = "SparqlTransformerSpec",
     size = "small",  # 60s
     srcs = [
-        "GroupsADME2ESpec.scala",
-        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
+        "SparqlTransformerSpec.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -20,8 +30,64 @@ scala_test(
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        # Test Libs
+        "@maven//:com_typesafe_akka_akka_testkit_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:io_spray_spray_json_2_12",
+    ],
+)
+
+scala_test(
+    name = "NonTriplestoreSpecificGravsearchToCountPrequeryGeneratorSpec",
+    size = "small",  # 60s
+    srcs = [
+        "gravsearch/prequery/NonTriplestoreSpecificGravsearchToCountPrequeryGeneratorSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies:all",
+        "//test-data:all",
+    ],
+    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:library",
+        "//webapi:test_library",
+        # Logging
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        # Test Libs
+        "@maven//:com_typesafe_akka_akka_testkit_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:io_spray_spray_json_2_12",
+    ],
+)
+
+scala_test(
+    name = "NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec",
+    size = "small",
+    srcs = [
+        "gravsearch/prequery/NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies:all",
+        "//test-data:all",
+    ],
+    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:library",
+        "//webapi:test_library",
+        # Logging
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        # Test Libs
+        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -34,11 +100,10 @@ scala_test(
 )
 
 scala_test(
-    name = "ListsADME2ESpec",
+    name = "GravsearchTypeInspectorSpec",
     size = "small",  # 60s
     srcs = [
-        "ListsADME2ESpec.scala",
-        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
+        "gravsearch/types/GravsearchTypeInspectorSpec.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -51,11 +116,10 @@ scala_test(
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        # Test Libs
+        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
         "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
@@ -64,10 +128,10 @@ scala_test(
 )
 
 scala_test(
-    name = "PermissionsADME2ESpec",
-    size = "small",  # 60s
+    name = "GravsearchParserSpec",
+    size = "small",  # 300s
     srcs = [
-        "PermissionsADME2ESpec.scala",
+        "gravsearch/GravsearchParserSpec.scala",
     ],
     data = [
         "//knora-ontologies:all",
@@ -80,136 +144,11 @@ scala_test(
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
+        # Test Libs
+        "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
-    ],
-)
-
-scala_test(
-    name = "ProjectsADME2ESpec",
-    size = "small",  # 60s
-    srcs = [
-        "ProjectsADME2ESpec.scala",
-        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
-    ],
-    data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
-    ],
-    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
-    unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:library",
-        "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
-        "@maven//:org_eclipse_rdf4j_rdf4j_client",
-    ],
-)
-
-scala_test(
-    name = "SipiADME2ESpec",
-    size = "small",  # 60s
-    srcs = [
-        "PermissionsADME2ESpec.scala",
-    ],
-    data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
-    ],
-    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
-    unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:library",
-        "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
-    ],
-)
-
-scala_test(
-    name = "StoreADME2ESpec",
-    size = "small",  # 60s
-    srcs = [
-        "StoreADME2ESpec.scala",
-    ],
-    data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
-    ],
-    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
-    unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:library",
-        "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
-    ],
-)
-
-scala_test(
-    name = "UsersADME2ESpec",
-    size = "small",  # 60s
-    srcs = [
-        "UsersADME2ESpec.scala",
-        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
-    ],
-    data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
-    ],
-    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
-    unused_dependency_checker_mode = "warn",
-    deps = [
-        "//webapi:library",
-        "//webapi:test_library",
-        # Logging
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
-        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
-        "@maven//:org_scalatest_scalatest_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
-        "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
     ],
 )

@@ -2,15 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
-test_suite(
-    name = "all_tests",
-    tests = [
-        ":DrawingsGodsV1E2ESpec",
-        ":DrawingsGodsV1Spec",
-        ":LumieresLausanneV2E2ESpec",
-    ],
-)
-
 scala_test(
     name = "DrawingsGodsV1E2ESpec",
     size = "small",  # 60s

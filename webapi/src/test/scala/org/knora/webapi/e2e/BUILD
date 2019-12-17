@@ -2,20 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
-test_suite(
-    name = "all_tests",
-    tests = [
-        ":ClientApiRouteE2ESpec",
-        ":ExceptionHandlerR2RSpec",
-        ":HealthRouteE2ESpec",
-        ":InstanceCheckerSpec",
-        ":RejectingRouteE2ESpec",
-        "//webapi/src/test/scala/org/knora/webapi/e2e/admin:all_tests",
-        "//webapi/src/test/scala/org/knora/webapi/e2e/v1:all_tests",
-        "//webapi/src/test/scala/org/knora/webapi/e2e/v2:all_tests",
-    ],
-)
-
 scala_test(
     name = "ClientApiRouteE2ESpec",
     size = "small",  # 60s

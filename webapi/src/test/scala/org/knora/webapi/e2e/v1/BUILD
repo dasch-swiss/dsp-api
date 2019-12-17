@@ -2,24 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
-test_suite(
-    name = "all_tests",
-    tests = [
-        ":AuthenticationV1E2ESpec",
-        ":CORSSupportV1E2ESpec",
-        ":ErrorV1E2ESpec",
-        ":ListsV1E2ESpec",
-        ":PermissionsHandlingV1E2ESpec",
-        ":ProjectsV1E2ESpec",
-        ":ResourcesV1R2RSpec",
-        ":SearchV1R2RSpec",
-        ":SipiV1R2RSpec",
-        ":StandoffV1R2RSpec",
-        ":UsersV1E2ESpec",
-        ":ValuesV1R2RSpec",
-    ],
-)
-
 scala_test(
     name = "AuthenticationV1E2ESpec",
     size = "small",  # 60s

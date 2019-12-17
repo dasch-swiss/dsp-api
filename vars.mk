@@ -70,7 +70,7 @@ else
 endif
 
 ifeq ($(OS),OSX)
-  DOCKERHOST := host.docker.internal
+  DOCKERHOST :=  $(shell ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2)
 endif
 ifeq ($(DOCKERHOST),)
   DOCKERHOST := $(shell ip route get 8.8.8.8 | awk '{print $NF; exit}')

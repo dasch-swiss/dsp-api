@@ -9,20 +9,6 @@ filegroup(
     ],
 )
 
-test_suite(
-    name = "all_tests",
-    tests = [
-        ":InputOntologyV2Spec",
-        ":ListsMessagesADMSpec",
-        ":PermissionMessagesV1Spec",
-        ":PermissionsMessagesADMSpec",
-        ":ProjectsMessagesADMSpec",
-        ":TriplestoreMessagesSpec",
-        ":UserMessagesV1Spec",
-        ":UsersMessagesADMSpec",
-    ],
-)
-
 scala_test(
     name = "ListsMessagesADMSpec",
     size = "small",  # 60s

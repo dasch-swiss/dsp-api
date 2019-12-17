@@ -16,7 +16,7 @@ services:
       - $PWD/images:/sipi/images
       - $PWD/server:/sipi/server
     extra_hosts:
-      - api:host.docker.internal
+      - api:${DOCKERHOST}
     restart: unless-stopped
     environment:
       - SIPI_EXTERNAL_PROTOCOL=http
@@ -38,7 +38,7 @@ services:
       - $PWD/images:/sipi/images
       - $PWD/server:/sipi/server
     extra_hosts:
-      - api:host.docker.internal
+      - api:${DOCKERHOST}
     restart: unless-stopped
     environment:
       - SIPI_EXTERNAL_PROTOCOL=http
