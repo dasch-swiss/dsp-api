@@ -7,6 +7,6 @@ filegroup(
 
 filegroup(
     name = "scala",
-    srcs = glob(["scala/org/knora/webapi/**/*.scala"])
+    srcs = ["//webapi/src/it/scala/org/knora/webapi:src"]
 )
 

@@ -54,6 +54,7 @@ scala_library(
         # Templates
         "@maven//:com_typesafe_play_twirl_api_2_12",
         # Logging
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
         #
@@ -115,6 +116,7 @@ scala_library(
     deps = [
         ":library",
         # Logging
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
@@ -160,6 +162,10 @@ scala_library(
     unused_dependency_checker_mode = "warn",
     deps = [
         ":library",
+        # Logging
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:org_slf4j_slf4j_api",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
@@ -172,7 +178,6 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_parsing_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:commons_cli_commons_cli",
         "@maven//:commons_codec_commons_codec",
         "@maven//:commons_io_commons_io",
@@ -184,9 +189,11 @@ scala_library(
         "@maven//:org_apache_httpcomponents_httpclient_cache",
         "@maven//:org_apache_httpcomponents_httpcore",
         "@maven//:org_apache_jena_apache_jena_libs",
+        "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_scala_lang_scala_library",
         "@maven//:org_scala_lang_scala_reflect",
         "@maven//:org_scalactic_scalactic_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_xmlunit_xmlunit_core",
     ],
 )

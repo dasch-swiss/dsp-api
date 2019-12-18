@@ -2,9 +2,15 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
+filegroup(
+    name = "srcs",
+    srcs = ["//webapi/src/test/scala/org/knora/webapi/responders/v2/search:srcs"]
+         + glob(["*.scala"]),
+)
+
 scala_test(
     name = "ListsResponderV2Spec",
-    size = "small",  # 60s
+    size = "medium",
     srcs = [
         "ListsResponderV2Spec.scala",
         "ListsResponderV2SpecFullData.scala",
@@ -33,7 +39,7 @@ scala_test(
 
 scala_test(
     name = "OntologyResponderV2Spec",
-    size = "small",  # 60s
+    size = "medium",
     srcs = [
         "OntologyResponderV2Spec.scala",
     ],
@@ -61,11 +67,10 @@ scala_test(
 
 scala_test(
     name = "ResourcesResponderV2Spec",
-    size = "small",  # 60s
+    size = "medium",
     srcs = [
         "ResourcesResponderV2Spec.scala",
-        "ResourcesResponderV2SpecFullData.scala",
-        "//webapi/src/test/scala/org/knora/webapi/responders/MockableResponderManager.scala",
+        "ResourcesResponderV2SpecFullData.scala"
     ],
     data = [
         "//knora-ontologies:all",
@@ -78,14 +83,19 @@ scala_test(
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        # Templates
+        "@maven//:com_typesafe_play_twirl_api_2_12",
         # Test Libs
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
         "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_xmlunit_xmlunit_core",
     ],
 )
 
@@ -123,7 +133,7 @@ scala_test(
 
 scala_test(
     name = "SearchResponderV2Spec",
-    size = "small",
+    size = "medium",
     srcs = [
         "SearchResponderV2Spec.scala",
         "SearchResponderV2SpecFullData.scala",
@@ -163,12 +173,16 @@ scala_test(
     deps = [
         "//webapi:library",
         "//webapi:test_library",
+        # Templates
+        "@maven//:com_typesafe_play_twirl_api_2_12",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         # Test Libs
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
     ],

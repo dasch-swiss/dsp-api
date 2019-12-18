@@ -4,17 +4,14 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
 filegroup(
     name = "srcs",
-    srcs = ["//webapi/src/test/scala/org/knora/webapi/responders/admin:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/responders/v1:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/responders/v2:srcs"]
-         + glob(["*.scala"]),
+    srcs = glob(["*.scala"]),
 )
 
 scala_test(
-    name = "IriLockerSpec",
-    size = "small",  # 60s
+    name = "JsonLDUtilSpec",
+    size = "small",
     srcs = [
-        "IriLockerSpec.scala",
+        "JsonLDUtilSpec.scala",
     ],
     data = [
         "//knora-ontologies:all",
