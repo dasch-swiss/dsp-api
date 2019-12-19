@@ -20,7 +20,7 @@ scala_test(
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi:library",
+        "//webapi:main_library",
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
@@ -48,7 +48,7 @@ scala_test(
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi:library",
+        "//webapi:main_library",
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
@@ -77,7 +77,7 @@ scala_test(
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi:library",
+        "//webapi:main_library",
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
@@ -89,5 +89,6 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_xmlunit_xmlunit_core",
     ],
 )

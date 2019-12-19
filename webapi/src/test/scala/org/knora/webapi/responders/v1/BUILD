@@ -20,7 +20,7 @@ scala_test(
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi:library",
+        "//webapi:main_library",
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
@@ -48,7 +48,7 @@ scala_test(
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi:library",
+        "//webapi:main_library",
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
@@ -76,7 +76,7 @@ scala_test(
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi:library",
+        "//webapi:main_library",
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
@@ -108,7 +108,7 @@ scala_test(
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi:library",
+        "//webapi:main_library",
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
@@ -140,7 +140,7 @@ scala_test(
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi:library",
+        "//webapi:main_library",
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
@@ -166,7 +166,7 @@ scala_test(
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi:library",
+        "//webapi:main_library",
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
@@ -196,7 +196,7 @@ scala_test(
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
     deps = [
-        "//webapi:library",
+        "//webapi:main_library",
         "//webapi:test_library",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",

@@ -41,7 +41,7 @@ container_image(
 # uses scala_binary underneath
 scala_image(
     name = "knora-api",
-    deps = ["//webapi:library"],
+    deps = ["//webapi:main_library"],
     main_class = "org.knora.webapi.Main",
     base = ":knora-api-image",
 )

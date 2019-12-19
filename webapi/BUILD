@@ -12,12 +12,12 @@ scala_binary(
         "//webapi/src/main/resources",
     ],
     deps = [
-        ":library",
+        ":main_library",
     ],
 )
 
 scala_library(
-    name = "library",
+    name = "main_library",
     srcs = [
         "//webapi/src/main:scala",
         "//webapi/src/main:twirl-templates",
@@ -114,7 +114,7 @@ scala_library(
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
-        ":library",
+        ":main_library",
         # Logging
         "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
@@ -161,7 +161,7 @@ scala_library(
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
-        ":library",
+        ":main_library",
         # Logging
         "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
