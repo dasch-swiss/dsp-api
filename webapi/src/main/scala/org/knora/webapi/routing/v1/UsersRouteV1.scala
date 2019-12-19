@@ -29,14 +29,17 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
 /**
-  * Provides a spray-routing function for API routes that deal with lists.
-  */
+ * Provides a spray-routing function for API routes that deal with lists.
+ */
 class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("v1" / "users") {
             get {
@@ -55,11 +58,11 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                     )
             }
         } ~
-        path("v1" / "users" / Segment) { value =>
-            get {
-                /* return a single user identified by iri or email */
-                parameters("identifier" ? "iri") { (identifier: String) =>
-                    requestContext =>
+            path("v1" / "users" / Segment) { value =>
+                get {
+                    /* return a single user identified by iri or email */
+                    parameters("identifier" ? "iri") { (identifier: String) =>
+                        requestContext =>
 
                             /* check if email or iri was supplied */
                             val requestMessage = if (identifier == "email") {
@@ -80,77 +83,77 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                                 responderManager,
                                 log
                             )
+                    }
+                }
+            } ~
+            path("v1" / "users" / "projects" / Segment) { userIri =>
+                get {
+                    /* get user's project memberships */
+                    requestContext =>
+
+                        val requestMessage = for {
+                            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+                            checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+                        } yield UserProjectMembershipsGetRequestV1(
+                            userIri = checkedUserIri,
+                            userProfileV1 = userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilV1.runJsonRouteWithFuture(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+            } ~
+            path("v1" / "users" / "projects-admin" / Segment) { userIri =>
+                get {
+                    /* get user's project admin memberships */
+                    requestContext =>
+
+                        val requestMessage = for {
+                            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+                            checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+                        } yield UserProjectAdminMembershipsGetRequestV1(
+                            userIri = checkedUserIri,
+                            userProfileV1 = userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilV1.runJsonRouteWithFuture(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+            } ~
+            path("v1" / "users" / "groups" / Segment) { userIri =>
+                get {
+                    /* get user's group memberships */
+                    requestContext =>
+
+                        val requestMessage = for {
+                            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+                            checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+                        } yield UserGroupMembershipsGetRequestV1(
+                            userIri = checkedUserIri,
+                            userProfileV1 = userProfile,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilV1.runJsonRouteWithFuture(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
                 }
             }
-        } ~
-        path("v1" / "users" / "projects" / Segment) { userIri =>
-            get {
-                /* get user's project memberships */
-                requestContext =>
-
-                    val requestMessage = for {
-                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-                        checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                    } yield UserProjectMembershipsGetRequestV1(
-                        userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~
-        path("v1" / "users" / "projects-admin" / Segment) { userIri =>
-            get {
-                /* get user's project admin memberships */
-                requestContext =>
-
-                    val requestMessage = for {
-                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-                        checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                    } yield UserProjectAdminMembershipsGetRequestV1(
-                        userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~
-        path("v1" / "users" / "groups" / Segment) { userIri =>
-            get {
-                /* get user's group memberships */
-                requestContext =>
-
-                    val requestMessage = for {
-                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
-                        checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                    } yield UserGroupMembershipsGetRequestV1(
-                        userIri = checkedUserIri,
-                        userProfileV1 = userProfile,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilV1.runJsonRouteWithFuture(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        }
     }
 }

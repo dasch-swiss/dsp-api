@@ -80,7 +80,6 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     private val GroupsResponse = classRef(OntologyConstants.KnoraAdminV2.GroupsResponse.toSmartIri)
     private val GroupResponse = classRef(OntologyConstants.KnoraAdminV2.GroupResponse.toSmartIri)
     private val MembersResponse = classRef(OntologyConstants.KnoraAdminV2.MembersResponse.toSmartIri)
-    private val StoredGroup = classRef(OntologyConstants.KnoraAdminV2.GroupClass.toSmartIri).toStoredClassRef
     private val CreateGroupRequest = classRef(OntologyConstants.KnoraAdminV2.CreateGroupRequest.toSmartIri)
     private val UpdateGroupRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateGroupRequest.toSmartIri)
 
@@ -247,10 +246,10 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     }
 
     private val updateGroupFunction: ClientFunction =
-        "updateGroup" description "Updates a group." params (
+        "updateGroup" description "Updates a group." params(
             "iri" description "The IRI of the group to be updated." paramType UriDatatype,
             "groupInfo" description "The group information to be updated." paramType UpdateGroupRequest
-            ) doThis {
+        ) doThis {
             httpPut(
                 path = arg("iri"),
                 body = Some(arg("groupInfo"))
@@ -309,10 +308,10 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     }
 
     private val changeGroupStatusFunction: ClientFunction =
-        "updateGroupStatus" description "Updates the status of a group." params (
+        "updateGroupStatus" description "Updates the status of a group." params(
             "iri" description "The IRI of the group to be updated." paramType UriDatatype,
             "status" description "The new status of the group." paramType BooleanDatatype
-            ) doThis {
+        ) doThis {
             httpPut(
                 path = arg("iri") / str("status"),
                 body = Some(json(
@@ -408,7 +407,7 @@ class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     }
 
     /**
-     * All defined routes need to be combined here.
+     * Returns the route.
      */
     override def knoraApiPath: Route = getGroups ~ createGroup ~ getGroupByIri ~
         updateGroup ~ changeGroupStatus ~ deleteGroup ~ getGroupMembers

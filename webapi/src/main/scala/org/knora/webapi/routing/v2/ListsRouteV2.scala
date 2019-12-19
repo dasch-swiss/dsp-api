@@ -19,64 +19,117 @@
 
 package org.knora.webapi.routing.v2
 
-import akka.http.scaladsl.server.Directives.{get, path, _}
+import java.net.URLEncoder
+
+import akka.actor.ActorSystem
+import akka.http.scaladsl.client.RequestBuilding.Get
+import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.listsmessages.{ListGetRequestV2, NodeGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
+import org.knora.webapi.util.clientapi.{ClientEndpoint, ClientFunction, SourceCodeFileContent, SourceCodeFilePath}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Provides a function for API routes that deal with lists and nodes.
-  */
-class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+ * Provides a function for API routes that deal with lists and nodes.
+ */
+class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
 
-    def knoraApiPath: Route = {
+    // Definitions for ClientEndpoint
+    override val name: String = "ListsEndpoint"
+    override val directoryName: String = "lists"
+    override val urlPath: String = "lists"
+    override val description: String = "An endpoint for working with Knora lists."
+    override val functions: Seq[ClientFunction] = Seq.empty
 
-        path("v2" / "lists" / Segment) { lIri: String =>
-            get {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = getList ~ getNode
 
-                /* return a list (a graph with all list nodes) */
-                requestContext =>
-                    val requestMessage: Future[ListGetRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
-                        listIri: IRI = stringFormatter.validateAndEscapeIri(lIri, throw BadRequestException(s"Invalid list IRI: '$lIri'"))
-                    } yield ListGetRequestV2(listIri, requestingUser)
+    private def getList: Route = path("v2" / "lists" / Segment) { lIri: String =>
+        get {
+            /* return a list (a graph with all list nodes) */
+            requestContext =>
+                val requestMessage: Future[ListGetRequestV2] = for {
+                    requestingUser <- getUserADM(requestContext)
+                    listIri: IRI = stringFormatter.validateAndEscapeIri(lIri, throw BadRequestException(s"Invalid list IRI: '$lIri'"))
+                } yield ListGetRequestV2(listIri, requestingUser)
 
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log,
-                        targetSchema = ApiV2Complex,
-                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-                    )
+                RouteUtilV2.runRdfRouteWithFuture(
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log,
+                    targetSchema = ApiV2Complex,
+                    schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                )
+        }
+    }
 
-            }
-        } ~
-        path("v2" / "node" / Segment) { nIri: String =>
-            get {
+    // Lists to return in test data.
+    private val testLists: Map[String, IRI] = Map(
+        "treelist" -> SharedTestDataADM.treeList,
+        "othertreelist" -> SharedTestDataADM.otherTreeList
+    )
 
-                /* return a list (a graph with all list nodes) */
-                requestContext =>
-                    val requestMessage: Future[NodeGetRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
-                        nodeIri: IRI = stringFormatter.validateAndEscapeIri(nIri, throw BadRequestException(s"Invalid list IRI: '$nIri'"))
-                    } yield NodeGetRequestV2(nodeIri, requestingUser)
+    private def getListTestResponses: Future[Set[SourceCodeFileContent]] = {
+        val responseFutures: Iterable[Future[SourceCodeFileContent]] = testLists.map {
+            case (filename, listIri) =>
+                val encodedListIri = URLEncoder.encode(listIri, "UTF-8")
 
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log,
-                        targetSchema = ApiV2Complex,
-                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-                    )
-            }
+                for {
+                    responseStr <- doTestDataRequest(Get(s"$baseApiUrl/v2/lists/$encodedListIri"))
+                } yield SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath(filename),
+                    text = responseStr
+                )
         }
 
+        Future.sequence(responseFutures).map(_.toSet)
+    }
+
+    private def getNode: Route = path("v2" / "node" / Segment) { nIri: String =>
+        get {
+            /* return a list node */
+            requestContext =>
+                val requestMessage: Future[NodeGetRequestV2] = for {
+                    requestingUser <- getUserADM(requestContext)
+                    nodeIri: IRI = stringFormatter.validateAndEscapeIri(nIri, throw BadRequestException(s"Invalid list IRI: '$nIri'"))
+                } yield NodeGetRequestV2(nodeIri, requestingUser)
+
+                RouteUtilV2.runRdfRouteWithFuture(
+                    requestMessageF = requestMessage,
+                    requestContext = requestContext,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log,
+                    targetSchema = ApiV2Complex,
+                    schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                )
+        }
+    }
+
+    private def getNodeTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl/v2/node/${URLEncoder.encode(SharedTestDataADM.treeListNode, "UTF-8")}"))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("listnode"),
+            text = responseStr
+        )
+    }
+
+
+    override def getTestData(implicit executionContext: ExecutionContext,
+                             actorSystem: ActorSystem,
+                             materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
+        for {
+            testLists <- getListTestResponses
+            testNode <- getNodeTestResponse
+        } yield testLists + testNode
     }
 }

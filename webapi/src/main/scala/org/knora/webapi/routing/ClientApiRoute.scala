@@ -45,7 +45,10 @@ class ClientApiRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
         new V2ClientApi(routeData)
     )
 
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("clientapi" / Segment) { target: String =>
             get {
@@ -101,11 +104,11 @@ class ClientApiRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
     }
 
     /**
-      * Generates a ZIP file containing generated client API source code.
-      *
-      * @param sourceCode the generated source code.
-      * @return a byte array representing the ZIP file.
-      */
+     * Generates a ZIP file containing generated client API source code.
+     *
+     * @param sourceCode the generated source code.
+     * @return a byte array representing the ZIP file.
+     */
     private def generateZipFile(sourceCode: Set[SourceCodeFileContent]): Array[Byte] = {
         val zipFileContents: Map[String, Array[Byte]] = sourceCode.map {
             fileContent: SourceCodeFileContent =>

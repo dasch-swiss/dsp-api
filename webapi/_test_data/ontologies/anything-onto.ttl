@@ -408,6 +408,7 @@
 
                knora-base:objectClassConstraint knora-base:LinkValue .
 
+
 :thingHasRegion rdf:type owl:ObjectProperty ;
 
                rdfs:subPropertyOf knora-base:hasLinkTo ;
@@ -619,7 +620,6 @@
                  "Chose bleue"@fr ,
                  "Cosa azzurra"@it ,
                  "Blue thing"@en .
-
 
 :hasPictureTitle rdf:type owl:ObjectProperty ;
 
