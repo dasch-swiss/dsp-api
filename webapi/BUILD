@@ -106,7 +106,6 @@ scala_library(
 scala_library(
     name = "test_library",
     srcs = [
-        "//webapi/src/test:java",
         "//webapi/src/test:scala",
     ],
     resources = [

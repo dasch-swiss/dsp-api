@@ -19,7 +19,7 @@
 
 package org.knora.upgrade.plugins
 
-import java.io.{BufferedReader, FileReader}
+import java.io.{BufferedReader, File, FileReader}
 
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.model.impl.LinkedHashModel
@@ -47,7 +47,7 @@ abstract class UpgradePluginSpec extends WordSpecLike with Matchers {
       */
     def trigFileToModel(path: String): Model = {
         val trigParser: RDFParser = Rio.createParser(RDFFormat.TRIG)
-        val fileReader = new BufferedReader(new FileReader(path))
+        val fileReader = new BufferedReader(new FileReader(new File(path)))
         val model = new LinkedHashModel()
         trigParser.setRDFHandler(new StatementCollector(model))
         trigParser.parse(fileReader, "")

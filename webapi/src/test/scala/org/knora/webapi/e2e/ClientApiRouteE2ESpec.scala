@@ -28,7 +28,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.io.FileUtils
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.util.FileUtil
 
 import scala.concurrent.duration._
@@ -45,7 +44,6 @@ object ClientApiRouteE2ESpec {
 /**
  * Tests client code generation.
  */
-@E2ETest
 class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 

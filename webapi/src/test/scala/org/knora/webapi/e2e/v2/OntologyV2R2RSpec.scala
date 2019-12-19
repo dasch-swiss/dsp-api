@@ -13,7 +13,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
 import org.knora.webapi.routing.v2.OntologiesRouteV2
-import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
@@ -38,7 +37,6 @@ object OntologyV2R2RSpec {
 /**
   * End-to-end test specification for API v2 ontology routes.
   */
-@E2ETest
 class OntologyV2R2RSpec extends R2RSpec {
 
     import OntologyV2R2RSpec._

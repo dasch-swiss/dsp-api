@@ -1,0 +1,91 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+
+scala_test(
+    name = "UpgradePluginPR1307Spec",
+    size = "small",
+    srcs = [
+        "UpgradePluginPR1307Spec.scala",
+        "UpgradePluginSpec.scala"
+    ],
+    data = [
+        "//upgrade/test-data",
+    ],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:main_library",
+        "//upgrade:main_library",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_eclipse_rdf4j_rdf4j_client",
+        "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory"
+    ],
+)
+
+scala_test(
+    name = "UpgradePluginPR1322Spec",
+    size = "small",
+    srcs = [
+        "UpgradePluginPR1322Spec.scala",
+        "UpgradePluginSpec.scala"
+    ],
+    data = [
+        "//upgrade/test-data",
+    ],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:main_library",
+        "//upgrade:main_library",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_eclipse_rdf4j_rdf4j_client",
+        "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory"
+    ],
+)
+
+scala_test(
+    name = "UpgradePluginPR1367Spec",
+    size = "small",
+    srcs = [
+        "UpgradePluginPR1367Spec.scala",
+        "UpgradePluginSpec.scala"
+    ],
+    data = [
+        "//upgrade/test-data",
+    ],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:main_library",
+        "//upgrade:main_library",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_eclipse_rdf4j_rdf4j_client",
+        "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory"
+    ],
+)
+
+scala_test(
+    name = "UpgradePluginPR1372Spec",
+    size = "small",
+    srcs = [
+        "UpgradePluginPR1372Spec.scala",
+        "UpgradePluginSpec.scala"
+    ],
+    data = [
+        "//upgrade/test-data",
+    ],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:main_library",
+        "//upgrade:main_library",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_eclipse_rdf4j_rdf4j_client",
+        "@maven//:org_eclipse_rdf4j_rdf4j_repository_sail",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_api",
+        "@maven//:org_eclipse_rdf4j_rdf4j_sail_memory"
+    ],
+)

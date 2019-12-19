@@ -30,14 +30,12 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.responders.v2.search.SparqlQueryConstants
-import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
-@E2ETest
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
     private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)

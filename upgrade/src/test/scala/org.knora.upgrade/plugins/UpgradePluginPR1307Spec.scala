@@ -27,7 +27,7 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
     "Upgrade plugin PR1307" should {
         "update text values with standoff" in {
             // Parse the input file.
-            val model: Model = trigFileToModel("src/test/resources/test-data/pr1307.trig")
+            val model: Model = trigFileToModel("test-data/pr1307.trig")
 
             // Use the plugin to transform the input.
             val plugin = new UpgradePluginPR1307

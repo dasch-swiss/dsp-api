@@ -33,7 +33,6 @@ import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util._
@@ -46,7 +45,6 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Tests the API v2 resources route.
   */
-@E2ETest
 class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

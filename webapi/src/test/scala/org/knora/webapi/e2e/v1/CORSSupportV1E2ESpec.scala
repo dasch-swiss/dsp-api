@@ -29,7 +29,6 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.http.CORSSupport
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.tags.E2ETest
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -45,7 +44,6 @@ object CORSSupportV1E2ESpec {
 /**
   * End-to-end test specification for testing [[CORSSupport]].
   */
-@E2ETest
 class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with TriplestoreJsonProtocol {
 
     /* set the timeout for the route test */

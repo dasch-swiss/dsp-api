@@ -26,7 +26,6 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
-import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.{E2ESpec, SharedTestDataV1}
 
 import scala.concurrent.duration._
@@ -42,7 +41,6 @@ object ListsV1E2ESpec {
 /**
   * End-to-End (E2E) test specification for testing users endpoint.
   */
-@E2ETest
 class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListV1JsonProtocol {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)

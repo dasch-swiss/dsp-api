@@ -34,7 +34,6 @@ import scala.concurrent.duration._
   * This simulation scenario accesses the users endpoint with
   * 1000 users concurrently.
   */
-@E2ETest
 class ExampleE2ESimSpec extends E2ESimSpec {
 
     override lazy val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]

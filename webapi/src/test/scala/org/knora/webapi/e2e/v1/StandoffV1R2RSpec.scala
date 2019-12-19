@@ -30,7 +30,6 @@ import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.routing.v1.{StandoffRouteV1, ValuesRouteV1}
-import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.util.{AkkaHttpUtils, FileUtil, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
@@ -45,7 +44,6 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
   * End-to-end test specification for the standoff endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-@E2ETest
 class StandoffV1R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =

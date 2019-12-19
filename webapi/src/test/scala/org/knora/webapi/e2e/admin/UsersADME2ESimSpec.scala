@@ -5,7 +5,6 @@ import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import org.knora.webapi.E2ESimSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.tags.E2ETest
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -18,7 +17,6 @@ import scala.util.Random
   * while additional 20 users register themselves. The mean response time should be less
   * then 300 ms (according to a quick google search, 200 ms are standard).
   */
-@E2ETest
 class UsersADME2ESimSpec extends E2ESimSpec {
 
     // need to override this. before each test, the triplestore is automatically reloaded.

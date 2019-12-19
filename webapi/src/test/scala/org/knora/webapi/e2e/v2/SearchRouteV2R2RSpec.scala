@@ -34,7 +34,6 @@ import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.routing.v2.{ResourcesRouteV2, SearchRouteV2, StandoffRouteV2}
-import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.util.{FileUtil, MutableTestIri, StringFormatter}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument, JsonLDUtil}
@@ -49,7 +48,6 @@ import scala.concurrent.ExecutionContextExecutor
   * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-@E2ETest
 class SearchRouteV2R2RSpec extends R2RSpec {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -4092,7 +4090,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/RegionsForPage.jsonld"), false)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test-data/searchR2RV2/RegionsForPage.jsonld"), false)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -4354,7 +4352,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), false)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("test-data/searchR2RV2/ThingSmallerThanDecimal.jsonld"), false)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 

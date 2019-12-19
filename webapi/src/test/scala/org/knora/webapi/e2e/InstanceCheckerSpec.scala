@@ -24,7 +24,6 @@ import java.io.File
 import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{FileUtil, StringFormatter}
 import org.knora.webapi.{AssertionException, E2ESpec}
@@ -34,7 +33,6 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Tests [[InstanceChecker]].
   */
-@E2ETest
 class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
