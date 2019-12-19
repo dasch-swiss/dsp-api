@@ -41,13 +41,13 @@ import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import scala.concurrent.{ExecutionContext, Future}
 
 object ValuesRouteV2 {
-    val ValuesBasePath = PathMatcher("v2" / "values")
+    val ValuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
     val ValuesBasePathString = "/v2/values"
 }
 
 /**
-  * Provides a routing function for API v2 routes that deal with values.
-  */
+ * Provides a routing function for API v2 routes that deal with values.
+ */
 class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ClientEndpoint {
 
     import ValuesRouteV2._
@@ -59,6 +59,9 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     override val description: String = "An endpoint for working with Knora values."
     override val functions: Seq[ClientFunction] = Seq.empty
 
+    /**
+     * Returns the route.
+     */
     override def knoraApiPath: Route = getValue ~ createValue ~ updateValue ~ deleteValue
 
     private def getValue: Route = path(ValuesBasePath / Segment / Segment) { (resourceIriStr: IRI, valueUuidStr: String) =>
@@ -132,8 +135,8 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     )
 
     /**
-      * Provides JSON-LD responses to requests for values, for use in tests of generated client code.
-      */
+     * Provides JSON-LD responses to requests for values, for use in tests of generated client code.
+     */
     private def getValueTestResponses: Future[Set[SourceCodeFileContent]] = {
         val responseFutures: Iterable[Future[SourceCodeFileContent]] = testDingValues.map {
             case (valueTypeName, valueUuid) =>
@@ -197,8 +200,8 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /**
-      * Returns JSON-LD requests for creating values in tests of generated client code.
-      */
+     * Returns JSON-LD requests for creating values in tests of generated client code.
+     */
     private def createValueTestRequests: Future[Set[SourceCodeFileContent]] = {
         FastFuture.successful(
             Set(
@@ -381,8 +384,8 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /**
-      * Returns JSON-LD requests for updating values in tests of generated client code.
-      */
+     * Returns JSON-LD requests for updating values in tests of generated client code.
+     */
     private def updateValueTestRequests: Future[Set[SourceCodeFileContent]] = {
         FastFuture.successful(
             Set(
@@ -598,8 +601,8 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /**
-      * Returns JSON-LD requests for deleting values in tests of generated client code.
-      */
+     * Returns JSON-LD requests for deleting values in tests of generated client code.
+     */
     private def deleteValueTestRequests: Future[Set[SourceCodeFileContent]] = {
         FastFuture.successful(
             Set(
@@ -624,10 +627,10 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     override def getTestData(implicit executionContext: ExecutionContext, actorSystem: ActorSystem, materializer: ActorMaterializer): Future[Set[SourceCodeFileContent]] = {
         for {
-            getRequests: Set[SourceCodeFileContent] <- getValueTestResponses
+            getResponses: Set[SourceCodeFileContent] <- getValueTestResponses
             createRequests: Set[SourceCodeFileContent] <- createValueTestRequests
             updateRequests: Set[SourceCodeFileContent] <- updateValueTestRequests
             deleteRequests: Set[SourceCodeFileContent] <- deleteValueTestRequests
-        } yield getRequests ++ createRequests ++ updateRequests ++ deleteRequests
+        } yield getResponses ++ createRequests ++ updateRequests ++ deleteRequests
     }
 }

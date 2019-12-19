@@ -20,6 +20,7 @@
 package org.knora.webapi
 
 import java.net.URLEncoder
+import java.time.Instant
 
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
@@ -30,9 +31,9 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.util.StringFormatter
 
 /**
-  * This object holds the same user which are loaded with 'test-data/all_data/admin-data.ttl'. Using this object
-  * in tests, allows easier updating of details as they change over time.
-  */
+ * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object
+ * in tests, allows easier updating of details as they change over time.
+ */
 object SharedTestDataADM {
 
     /** ***********************************/
@@ -627,6 +628,35 @@ object SharedTestDataADM {
         s"""{
            |    "systemAdmin": true
            |}""".stripMargin
+
+    val createListRequest: String =
+        s"""{
+           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+           |    "comments": []
+           |}""".stripMargin
+
+    def updateListInfoRequest(listIri: IRI): String = {
+        s"""{
+           |    "listIri": "$listIri",
+           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+           |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+           |}""".stripMargin
+    }
+
+    def addChildListNodeRequest(parentNodeIri: IRI,
+                                name: String,
+                                label: String,
+                                comment: String): String = {
+        s"""{
+           |    "parentNodeIri": "$parentNodeIri",
+           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "name": "$name",
+           |    "labels": [{ "value": "$label", "language": "en"}],
+           |    "comments": [{ "value": "$comment", "language": "en"}]
+           |}""".stripMargin
+    }
 
     def createIntValueRequest(resourceIri: IRI, intValue: Int): String = {
         s"""{
@@ -1447,6 +1477,283 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
+    val gravsearchComplexThingSmallerThanDecimal: String =
+        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |     ?thing knora-api:isMainResource true .
+          |     ?thing anything:hasDecimal ?decimal .
+          |} WHERE {
+          |     ?thing a anything:Thing .
+          |     ?thing anything:hasDecimal ?decimal .
+          |     ?decimal knora-api:decimalValueAsDecimal ?decimalDec .
+          |     FILTER(?decimalDec < "3"^^xsd:decimal)
+          |}""".stripMargin
+
+
+    val gravsearchComplexRegionsForPage: String =
+        """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?region knora-api:isMainResource true .
+          |    ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+          |    ?region knora-api:hasGeometry ?geom .
+          |    ?region knora-api:hasComment ?comment .
+          |    ?region knora-api:hasColor ?color .
+          |} WHERE {
+          |    ?region a knora-api:Region .
+          |    ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+          |    ?region knora-api:hasGeometry ?geom .
+          |    ?region knora-api:hasComment ?comment .
+          |    ?region knora-api:hasColor ?color .
+          |}""".stripMargin
+
+    val createResourceWithValues: String =
+        """{
+          |  "@type" : "anything:Thing",
+          |  "anything:hasBoolean" : {
+          |    "@type" : "knora-api:BooleanValue",
+          |    "knora-api:booleanValueAsBoolean" : true
+          |  },
+          |  "anything:hasColor" : {
+          |    "@type" : "knora-api:ColorValue",
+          |    "knora-api:colorValueAsColor" : "#ff3333"
+          |  },
+          |  "anything:hasDate" : {
+          |    "@type" : "knora-api:DateValue",
+          |    "knora-api:dateValueHasCalendar" : "GREGORIAN",
+          |    "knora-api:dateValueHasEndEra" : "CE",
+          |    "knora-api:dateValueHasEndYear" : 1489,
+          |    "knora-api:dateValueHasStartEra" : "CE",
+          |    "knora-api:dateValueHasStartYear" : 1489
+          |  },
+          |  "anything:hasDecimal" : {
+          |    "@type" : "knora-api:DecimalValue",
+          |    "knora-api:decimalValueAsDecimal" : {
+          |      "@type" : "xsd:decimal",
+          |      "@value" : "100000000000000.000000000000001"
+          |    }
+          |  },
+          |  "anything:hasGeometry" : {
+          |    "@type" : "knora-api:GeomValue",
+          |    "knora-api:geometryValueAsGeometry" : "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}"
+          |  },
+          |  "anything:hasGeoname" : {
+          |    "@type" : "knora-api:GeonameValue",
+          |    "knora-api:geonameValueAsGeonameCode" : "2661604"
+          |  },
+          |  "anything:hasInteger" : [ {
+          |    "@type" : "knora-api:IntValue",
+          |    "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
+          |    "knora-api:intValueAsInt" : 5,
+          |    "knora-api:valueHasComment" : "this is the number five"
+          |  }, {
+          |    "@type" : "knora-api:IntValue",
+          |    "knora-api:intValueAsInt" : 6
+          |  } ],
+          |  "anything:hasInterval" : {
+          |    "@type" : "knora-api:IntervalValue",
+          |    "knora-api:intervalValueHasEnd" : {
+          |      "@type" : "xsd:decimal",
+          |      "@value" : "3.4"
+          |    },
+          |    "knora-api:intervalValueHasStart" : {
+          |      "@type" : "xsd:decimal",
+          |      "@value" : "1.2"
+          |    }
+          |  },
+          |  "anything:hasListItem" : {
+          |    "@type" : "knora-api:ListValue",
+          |    "knora-api:listValueAsListNode" : {
+          |      "@id" : "http://rdfh.ch/lists/0001/treeList03"
+          |    }
+          |  },
+          |  "anything:hasOtherThingValue" : {
+          |    "@type" : "knora-api:LinkValue",
+          |    "knora-api:linkValueHasTargetIri" : {
+          |      "@id" : "http://rdfh.ch/0001/a-thing"
+          |    }
+          |  },
+          |  "anything:hasRichtext" : {
+          |    "@type" : "knora-api:TextValue",
+          |    "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p><strong>this is</strong> text</p> with standoff</text>",
+          |    "knora-api:textValueHasMapping" : {
+          |      "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+          |    }
+          |  },
+          |  "anything:hasText" : {
+          |    "@type" : "knora-api:TextValue",
+          |    "knora-api:valueAsString" : "this is text without standoff"
+          |  },
+          |  "anything:hasUri" : {
+          |    "@type" : "knora-api:UriValue",
+          |    "knora-api:uriValueAsUri" : {
+          |      "@type" : "xsd:anyURI",
+          |      "@value" : "https://www.knora.org"
+          |    }
+          |  },
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "http://rdfh.ch/projects/0001"
+          |  },
+          |  "rdfs:label" : "test thing",
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+          |  }
+          |}""".stripMargin
+
+    def createResourceWithCustomCreationDate(creationDate: Instant): String = {
+        s"""{
+           |  "@type" : "anything:Thing",
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "anything:hasBoolean" : {
+           |    "@type" : "knora-api:BooleanValue",
+           |    "knora-api:booleanValueAsBoolean" : true
+           |  },
+           |  "rdfs:label" : "test thing",
+           |  "knora-api:creationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$creationDate"
+           |  },
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def createResourceAsUser(userADM: UserADM): String = {
+        s"""{
+           |  "@type" : "anything:Thing",
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "anything:hasBoolean" : {
+           |    "@type" : "knora-api:BooleanValue",
+           |    "knora-api:booleanValueAsBoolean" : true
+           |  },
+           |  "rdfs:label" : "test thing",
+           |  "knora-api:attachedToUser" : {
+           |    "@id" : "${userADM.id}"
+           |  },
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+    def updateResourceMetadata(resourceIri: IRI,
+                               lastModificationDate: Option[Instant],
+                               newLabel: String,
+                               newPermissions: String,
+                               newModificationDate: Instant): String = {
+        lastModificationDate match {
+            case Some(definedLastModificationDate) =>
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "rdfs:label" : "$newLabel",
+                    |  "knora-api:hasPermissions" : "$newPermissions",
+                    |  "knora-api:lastModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$definedLastModificationDate"
+                    |  },
+                    |  "knora-api:newModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$newModificationDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
+
+            case None =>
+                s"""|{
+                    |  "@id" : "$resourceIri",
+                    |  "@type" : "anything:Thing",
+                    |  "rdfs:label" : "$newLabel",
+                    |  "knora-api:hasPermissions" : "$newPermissions",
+                    |  "knora-api:newModificationDate" : {
+                    |    "@type" : "xsd:dateTimeStamp",
+                    |    "@value" : "$newModificationDate"
+                    |  },
+                    |  "@context" : {
+                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                    |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                    |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                    |  }
+                    |}""".stripMargin
+
+        }
+    }
+
+    def successResponse(message: String): String =
+        s"""{
+           |  "knora-api:result" : "$message",
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+           |  }
+           |}""".stripMargin
+
+    def deleteResource(resourceIri: IRI,
+                       lastModificationDate: Instant): String = {
+        s"""|{
+            |  "@id" : "$resourceIri",
+            |  "@type" : "anything:Thing",
+            |  "knora-api:lastModificationDate" : {
+            |    "@type" : "xsd:dateTimeStamp",
+            |    "@value" : "$lastModificationDate"
+            |  },
+            |  "knora-api:deleteComment" : "This resource is too boring.",
+            |  "@context" : {
+            |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+            |  }
+            |}""".stripMargin
+    }
+
+    def eraseResource(resourceIri: IRI,
+                      lastModificationDate: Instant): String = {
+        s"""|{
+            |  "@id" : "$resourceIri",
+            |  "@type" : "anything:Thing",
+            |  "knora-api:lastModificationDate" : {
+            |    "@type" : "xsd:dateTimeStamp",
+            |    "@value" : "$lastModificationDate"
+            |  },
+            |  "@context" : {
+            |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+            |  }
+            |}""".stripMargin
+    }
+
     object AThing {
         val iri: IRI = "http://rdfh.ch/0001/a-thing"
         val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
@@ -1491,4 +1798,9 @@ object SharedTestDataADM {
         val linkValueUuid = "uvRVxzL1RD-t9VIQ1TpfUw"
     }
 
+    val treeList: IRI = "http://rdfh.ch/lists/0001/treeList"
+
+    val treeListNode: IRI = "http://rdfh.ch/lists/0001/treeList01"
+
+    val otherTreeList: IRI = "http://rdfh.ch/lists/0001/otherTreeList"
 }

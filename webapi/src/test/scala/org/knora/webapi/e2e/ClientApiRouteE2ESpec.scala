@@ -50,14 +50,16 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "test-data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+        RdfDataObject(path = "test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
     )
 
     // FIXME: Ignored Test!
     "The client API route" should {
         "generate a Zip file of TypeScript code that compiles" ignore {
             val request = Get(baseApiUrl + s"/clientapi/typescript?mock=true")
-            val response: HttpResponse = singleAwaitingRequest(request = request, duration = 20480.millis)
+            val response: HttpResponse = singleAwaitingRequest(request = request, duration = 40960.millis)
             val responseBytes: Array[Byte] = getResponseEntityBytes(response)
             val filenames: Set[String] = getZipContents(responseBytes)
 
@@ -71,6 +73,10 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
                 "./api/endpoint.ts",
                 "./api/admin/admin-endpoint.ts",
                 "./api/admin/users/users-endpoint.ts",
+                "./api/admin/groups/groups-endpoint.ts",
+                "./api/admin/projects/projects-endpoint.ts",
+                "./api/admin/permissions/permissions-endpoint.ts",
+                "./api/admin/lists/lists-endpoint.ts",
                 "./models/admin/user.ts"
             )
 

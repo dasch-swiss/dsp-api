@@ -20,6 +20,7 @@
 package org.knora.webapi.routing
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
@@ -30,17 +31,17 @@ import scala.concurrent.ExecutionContext
 
 
 /**
-  * Data needed to be passed to each route.
-  *
-  * @param system the actor system.
-  * @param appActor the main application actor ActorRef.
-  */
+ * Data needed to be passed to each route.
+ *
+ * @param system   the actor system.
+ * @param appActor the main application actor ActorRef.
+ */
 case class KnoraRouteData(system: ActorSystem, appActor: ActorRef)
 
 
 /**
-  * An abstract class providing values that are commonly used in Knora responders.
-  */
+ * An abstract class providing values that are commonly used in Knora responders.
+ */
 abstract class KnoraRoute(routeData: KnoraRouteData) {
 
     implicit protected val system: ActorSystem = routeData.system
@@ -53,12 +54,13 @@ abstract class KnoraRoute(routeData: KnoraRouteData) {
 
     protected val applicationStateActor: ActorRef = routeData.appActor
     protected val storeManager: ActorRef = routeData.appActor
-    protected val log = akka.event.Logging(system, this.getClass)
+    protected val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
     /**
-      * Returns the route. Needs to be implemented in each subclass.
-      * @return [[Route]]
-      */
+     * Returns the route. Needs to be implemented in each subclass.
+     *
+     * @return [[Route]]
+     */
     def knoraApiPath: Route
 }
