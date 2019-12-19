@@ -344,11 +344,11 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         "createChildNode" description "Creates a child node in a list." params (
             "node" description "The node to be created." paramType CreateChildNodeRequest
             ) doThis {
-            httpPut(
+            httpPost(
                 path = argMember("node", "parentNodeIri"),
                 body = Some(arg("node"))
             )
-        } returns ListInfoResponse
+        } returns ListNodeInfoResponse
 
     private def createChildNodeTestRequest: Future[SourceCodeFileContent] = {
         FastFuture.successful(
