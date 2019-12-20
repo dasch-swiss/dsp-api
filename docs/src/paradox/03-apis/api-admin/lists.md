@@ -29,7 +29,11 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - NOT IMPLEMENTED: `PUT: /admin/lists/<listIRI>` : create new list with given IRI
 - NOT IMPLEMENTED: `DELETE: /admin/lists/<listIRI>` : delete list including children if not used
 - `GET: /admin/lists/<listIRI>/Info` : return list information (without children)
-- `PUT: /admin/lists/<listIRI>/<attribute>` : update list information
+- `PUT: /admin/lists/<listIRI>/ListInfoName` : update list name information
+- `PUT: /admin/lists/<listIRI>/ListInfoLabel` : update list label information
+- `PUT: /admin/lists/<listIRI>/ListInfoComment` : update list comment information
+
+
 
 **List Node operations**
 
@@ -37,7 +41,11 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - `GET: /admin/nodes/<nodeIRI>/Info` : return list node information (without children)
 - `POST: /admin/nodes` : create new child node under the supplied parent node IRI
 - NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIRI>` : create child node with given IRI und the supplied parent node IRI
-- `PUT: /admin/nodes/<nodeIRI>/<attribute>` : update list node information
+- `PUT: /admin/nodes/<nodeIRI>/NodeInfoName` : update list node name information
+- `PUT: /admin/nodes/<nodeIRI>/NodeInfoLabel` : update list node label information
+- `PUT: /admin/nodes/<nodeIRI>/NodeInfoComment` : update list node comment information
+- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIRI>/NodeInfoPosition` : update list node position information
+- NOT IMPLEMENTED: `PUT: /admin/nodes/<nodeIRI>/NodeInfoParent` : update list node parent information
 - NOT IMPLEMENTED: `DELETE: /admin/nodes/<nodeIRI>` : delete list node including children if not used
 
 ## List Operations
@@ -67,19 +75,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
         "comments": []
     } 
     ```
-    
-
-### Create new list with given IRI
-
-  - Required permission: SystemAdmin or ProjectAdmin
-  - PUT: `/admin/lists`
-  - BODY:
-    ```
-    {
-        
-    } 
-    ```
-    
 
 ### Get list's information
 
@@ -87,27 +82,52 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  - Return list information (without children)
  - GET: `/admin/lists/<listIRI>/Info`
  
-### Update list's information
+### Update lists's name information
 
  - Required permission: SystemAdmin or ProjectAdmin
- - Update list information
- - PUT: `/admin/lists/<listIRI>/<attribute>`
- - attributes:
-   * ListInfoName
-   * ListInfoLabel
-   * ListInfoComment
- - BODY:
-    ```
-    {
-        "listIri" = "listIri",
-        "projectIri" = "projectIri",
-        "name" = "name",
-        "labels" = [],
-        "comments" = [] 
-    }
-    ```
- - Submit empty parameters to delete values, except `labels`, that always need at least one entry
+ - Update list name information
+ - PUT: `/admin/lists/<listIri>/ListInfoName`
+ - BODY
+   ```
+   {
+        "listIri": "listIri",
+        "projectIri": "projectIri",
+        "name": "name"
+   }
+   ```
+ - Submit empty parameter (`"name": ""`) to delete name
  - `name` must be unique inside project
+ 
+### Update list's label information
+
+ - Required permission: SystemAdmin or ProjectAdmin
+ - Update list label information
+ - PUT: `/admin/lists/<listIri>/ListInfoLabel`
+ - BODY
+   ```
+   {
+        "listIri": "listIri",
+        "projectIri": "projectIri",
+        "labels": [{"value": "New label", "language": "en"}]
+   }
+   ```
+ - At least one label must be submitted
+ 
+### Update list's comment information
+
+ - Required permission: SystemAdmin or ProjectAdmin
+ - Update list comment information
+ - PUT: `/admin/lists/<listIri>/ListInfoName`
+ - BODY
+   ```
+   {
+        "listIri": "listIri",
+        "projectIri": "projectIri",
+        "comment": [{"value": "New Comment", "language": "en"}]
+   }
+   ```
+ - Submit empty parameter (`"comment": []`) to delete comments
+ 
 
 
 ### Delete list
@@ -149,49 +169,55 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
     }
     ```
     
-### Create new child node with given IRI
-
-  - Required permission: SystemAdmin or ProjectAdmin
-  - Appends a new child node under the supplied nodeIri. If the supplied nodeIri
-    is the listIri, then a new child node is appended to the top level. Children
-    are currently only appended.
-  - PUT: `/admin/nodes/<nodeIRI>`
-  - BODY:
-    ```
-    {
-        
-    }
-    ```
-    
 ### Delete List node
 
  - Required permission: SystemAdmin or ProjectAdmin
  - Delete node including children if not used
  - DELETE: `/admin/nodes/<nodeIRI>`
  
-### Update node's information
+### Update node's name information
 
  - Required permission: SystemAdmin or ProjectAdmin
- - Update list information
- - PUT: `/admin/nodes/<nodeIRI>/<attribute>`
- - attributes:
-   * NodeInfoName
-   * NodeInfoLabel
-   * NodeInfoComment
-   * NodeInfoPosition
-   * NodeInfoParent
+ - Update list node name information
+ - PUT: `/admin/nodes/<nodeIRI>/NodeInfoName`
  - BODY
    ```
    {
         "nodeIri": "nodeIri",
         "projectIri": "projectIri",
-        "name": name,
-        "labels": [],
-        "comments": [],
-        "position": 0,
-        
+        "name": "name"
    }
    ```
- - Submit empty parameters to delete values, except `labels`, that always need at least one entry
- - `name` must be unique inside list
+ - Submit empty parameter (`"name": ""`) to delete name
+ - `name` must be unique inside project
+ 
+### Update node's label information
+
+ - Required permission: SystemAdmin or ProjectAdmin
+ - Update list node label information
+ - PUT: `/admin/nodes/<nodeIRI>/NodeInfoLabel`
+ - BODY
+   ```
+   {
+        "nodeIri": "nodeIri",
+        "projectIri": "projectIri",
+        "labels": [{"value": "New label", "language": "en"}]
+   }
+   ```
+ - At least one label must be submitted
+ 
+### Update node's comment information
+
+ - Required permission: SystemAdmin or ProjectAdmin
+ - Update list node comment information
+ - PUT: `/admin/nodes/<nodeIRI>/NodeInfoName`
+ - BODY
+   ```
+   {
+        "nodeIri": "nodeIri",
+        "projectIri": "projectIri",
+        "comment": [{"value": "New Comment", "language": "en"}]
+   }
+   ```
+ - Submit empty parameter (`"comment": []`) to delete comments
  

@@ -218,20 +218,20 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         case "ListInfoName" => ChangeListInfoPayloadADM(
                             listIri = apiRequest.listIri,
                             projectIri = apiRequest.projectIri,
-                            name = apiRequest.name match {
+                            name = apiRequest.name.getOrElse(throw BadRequestException("Missing parameter for name")) match {
                                 case "" => Some(None)
-                                case _ => Some(Some(apiRequest.name))
+                                case _ => Some(apiRequest.name)
                             }
                         )
                         case "ListInfoLabel" => ChangeListInfoPayloadADM(
                             listIri = apiRequest.listIri,
                             projectIri = apiRequest.projectIri,
-                            labels = Some(apiRequest.labels)
+                            labels = apiRequest.labels
                         )
                         case "ListInfoComment" => ChangeListInfoPayloadADM(
                             listIri = apiRequest.listIri,
                             projectIri = apiRequest.projectIri,
-                            comments = Some(apiRequest.comments)
+                            comments = apiRequest.comments
                         )
                         case _ => throw BadRequestException(s"Invalid attribute: $attribute")
                     }
@@ -360,20 +360,20 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         case "NodeInfoName" => ChangeListNodeInfoPayloadADM(
                             nodeIri = apiRequest.nodeIri,
                             projectIri = apiRequest.projectIri,
-                            name = apiRequest.name match {
+                            name = apiRequest.name.getOrElse(throw BadRequestException("Missing parameter for name")) match {
                                 case "" => Some(None)
-                                case _ => Some(Some(apiRequest.name))
+                                case _ => Some(apiRequest.name)
                             }
                         )
                         case "NodeInfoLabel" => ChangeListNodeInfoPayloadADM(
                             nodeIri = apiRequest.nodeIri,
                             projectIri = apiRequest.projectIri,
-                            labels = Some(apiRequest.labels)
+                            labels = apiRequest.labels
                         )
                         case "NodeInfoComment" => ChangeListNodeInfoPayloadADM(
                             nodeIri = apiRequest.nodeIri,
                             projectIri = apiRequest.projectIri,
-                            comments = Some(apiRequest.comments)
+                            comments = apiRequest.comments
                         )
                         case "NodeInfoPosition" => throw NotImplementedException("Move listnode to new position is not implemented.")
                         case "NodeInfoParent" => throw NotImplementedException("Move listnode to new parent is not implemented.")

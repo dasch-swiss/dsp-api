@@ -128,9 +128,9 @@ case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
   */
 case class ChangeListInfoApiRequestADM(listIri: IRI,
                                        projectIri: IRI,
-                                       name: String,
-                                       labels: Seq[StringLiteralV2],
-                                       comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+                                       name: Option[String] = None,
+                                       labels: Option[Seq[StringLiteralV2]] = None,
+                                       comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
 
@@ -206,9 +206,9 @@ case class ChangeListInfoPayloadADM(listIri: IRI,
   */
 case class ChangeListNodeInfoApiRequestADM(nodeIri: IRI,
                                            projectIri: IRI,
-                                           name: String,
-                                           labels: Seq[StringLiteralV2],
-                                           comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+                                           name: Option[String] = None,
+                                           labels: Option[Seq[StringLiteralV2]] = None,
+                                           comments: Option[Seq[StringLiteralV2]] = None) extends ListADMJsonProtocol {
 
     private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
 

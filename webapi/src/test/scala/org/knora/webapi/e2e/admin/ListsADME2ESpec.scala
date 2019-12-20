@@ -294,9 +294,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "listIri": "${newListIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "newList",
-                       |    "labels": [],
-                       |    "comments": []
+                       |    "name": "newList"
                        |}
                 """.stripMargin
 
@@ -313,9 +311,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "listIri": "${newListIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "newTestName",
-                       |    "labels": [],
-                       |    "comments": []
+                       |    "name": "newTestName"
                        |}
                 """.stripMargin
 
@@ -334,9 +330,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "listIri": "${newListIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "",
-                       |    "labels": [],
-                       |    "comments": []
+                       |    "name": ""
                        |}
                 """.stripMargin
 
@@ -355,9 +349,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "listIri": "${newListIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "",
-                       |    "labels": [{"value": "Neue geönderte Liste", "language": "de"}, {"value": "Changed list", "language": "en"}],
-                       |    "comments": []
+                       |    "labels": [{"value": "Neue geönderte Liste", "language": "de"}, {"value": "Changed list", "language": "en"}]
                        |}
                 """.stripMargin
 
@@ -381,8 +373,6 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "listIri": "${newListIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "",
-                       |    "labels": [],
                        |    "comments": [{"value": "Neuer Kommentar", "language": "de"}, {"value": "New comment", "language": "en"}]
                        |}
                 """.stripMargin
@@ -404,8 +394,6 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "listIri": "${newListIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "",
-                       |    "labels": [],
                        |    "comments": []
                        |}
                 """.stripMargin
@@ -797,9 +785,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "nodeIri": "${firstChildIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "first",
-                       |    "labels": [],
-                       |    "comments": []
+                       |    "name": "first"
                        |}
                 """.stripMargin
 
@@ -816,9 +802,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "nodeIri": "${firstChildIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "newTestName",
-                       |    "labels": [],
-                       |    "comments": []
+                       |    "name": "newTestName"
                        |}
                 """.stripMargin
 
@@ -836,9 +820,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "nodeIri": "${firstChildIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "",
-                       |    "labels": [],
-                       |    "comments": []
+                       |    "name": ""
                        |}
                 """.stripMargin
 
@@ -856,9 +838,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "nodeIri": "${firstChildIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "",
-                       |    "labels": [{"value": "Neue geönderte Liste", "language": "de"}, {"value": "Changed list", "language": "en"}],
-                       |    "comments": []
+                       |    "labels": [{"value": "Neue geönderte Liste", "language": "de"}, {"value": "Changed list", "language": "en"}]
                        |}
                 """.stripMargin
 
@@ -880,8 +860,6 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "nodeIri": "${firstChildIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "",
-                       |    "labels": [],
                        |    "comments": [{"value": "Neuer Kommentar", "language": "de"}, {"value": "New comment", "language": "en"}]
                        |}
                 """.stripMargin
@@ -901,8 +879,6 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |{
                        |    "nodeIri": "${firstChildIri.get}",
                        |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "",
-                       |    "labels": [],
                        |    "comments": []
                        |}
                 """.stripMargin
