@@ -685,7 +685,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         /**
           * The actual task run with an IRI lock.
           */
-        def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoPayloadADM, requestingUser: UserADM, apiRequestID: UUID) = for {
+        def listInfoChangeTask(listIri: IRI, changeListRequest: ChangeListInfoPayloadADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = for {
             // check if required information is supplied
             _ <- Future(if (changeListRequest.name.isEmpty && changeListRequest.labels.isEmpty && changeListRequest.comments.isEmpty) throw BadRequestException(REQUEST_NOT_CHANGING_DATA_ERROR))
             _ = if (!listIri.equals(changeListRequest.listIri)) throw BadRequestException("List IRI in path and payload don't match.")

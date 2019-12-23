@@ -78,8 +78,20 @@ class V2ClientApi(routeData: KnoraRouteData) extends ClientApi {
     override val classesWithReadOnlyProperties: Map[SmartIri, Set[SmartIri]] = Map.empty
 
     /**
-     * A set of IRIs of classes that represent API responses.
+      * A set of IRIs of classes that represent API requests and that therefore do not need `Stored*`
+      * subclasses.
+      */
+    override val requestClasses: Set[SmartIri] = Set.empty
+
+    /**
+     * A set of IRIs of classes that are always read-only and that therefore do not need `Stored*`
+     * or `Read*` subclasses.
      */
+    override val readOnlyClasses: Set[SmartIri] = Set.empty
+
+    /**
+      * A set of IRIs of classes that represent API responses.
+      */
     override val responseClasses: Set[SmartIri] = Set.empty
 
     /**

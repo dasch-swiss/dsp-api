@@ -44,7 +44,7 @@ export class @{classDef.className}@{
     }
 } {
 @for(property <- classDef.properties) {
-@defining(makePropertyObjectType(property.objectType)) { propertyObjectType => @property.propertyDescription match {
+@property.propertyDescription match {
     case Some(propDescStr) => {   /**
      * @propDescStr
      */}
@@ -52,6 +52,6 @@ export class @{classDef.className}@{
     case None => {}
     }
     @@JsonProperty("@{property.propertyName}", @makeJson2TypeScriptType(property)@if(property.cardinality == MayHaveOne || property.isOptionalSet) {, true})
-    @{property.propertyName}@handleOption(property): @addBracketsForCardinality(propertyObjectType, property.cardinality) = @makeDefaultValue(property);
-}}
+    @{property.propertyName}@handleOptionalProperty(property): @typeWithBracketsForCardinality(property) = @makeDefaultValue(property);
+}
 }

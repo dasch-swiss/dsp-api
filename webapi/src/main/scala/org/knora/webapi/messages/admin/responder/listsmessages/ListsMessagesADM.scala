@@ -1013,7 +1013,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         /**
           * Converts a [[NodePathElementADM]] to a [[JsValue]].
           *
-          * @param nodeInfo a [[NodePathElementADM]].
+          * @param element a [[NodePathElementADM]].
           * @return a [[JsValue]].
           */
         def write(nodeInfo: NodePathElementADM): JsValue = {

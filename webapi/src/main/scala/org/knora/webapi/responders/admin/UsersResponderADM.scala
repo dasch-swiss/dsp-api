@@ -302,7 +302,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             // run the user update with an global IRI lock
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
-                userIri,
+                USERS_GLOBAL_LOCK_IRI,
                 () => changeBasicUserDataTask(userIri, changeUserRequest, requestingUser, apiRequestID)
             )
         } yield taskResult

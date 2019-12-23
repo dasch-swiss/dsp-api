@@ -23,8 +23,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.ConfigFactory
-import org.knora.webapi.SharedTestDataV1.IMAGES_PROJECT_IRI
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
@@ -36,7 +35,7 @@ import org.knora.webapi.{E2ESpec, SharedListsTestDataADM, SharedTestDataADM, Sha
 import scala.concurrent.duration._
 
 object ListsADME2ESpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -49,54 +48,32 @@ object ListsADME2ESpec {
 @E2ETest
 class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
-    val rootCreds = CredentialsADM(
+    val rootCreds: CredentialsADM = CredentialsADM(
         SharedTestDataADM.rootUser,
         "test"
     )
 
-    val normalUserCreds = CredentialsADM(
+    val normalUserCreds: CredentialsADM = CredentialsADM(
         SharedTestDataADM.normalUser,
         "test"
     )
 
-    val images01UserCreds = CredentialsADM(
-        SharedTestDataADM.imagesUser01,
+    val anythingUserCreds: CredentialsADM = CredentialsADM(
+        SharedTestDataADM.anythingUser1,
         "test"
     )
 
-    val images02UserCreds = CredentialsADM(
-        SharedTestDataADM.imagesUser02,
+    val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
+        SharedTestDataADM.anythingAdminUser,
         "test"
     )
-
-    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
-
-
-    private val normalUserIri = SharedTestDataADM.normalUser.id
-    private val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
-
-    private val multiUserIri = SharedTestDataADM.multiuserUser.id
-    private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
-
-    private val wrongEmail = "wrong@example.com"
-    private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
-
-    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
-    private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
-
-    private val imagesProjectIri = SharedTestDataADM.imagesProject.id
-    private val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
-
-    private val imagesReviewerGroupIri = SharedTestDataADM.imagesReviewerGroup.id
-    private val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
-
 
     private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
     private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
@@ -202,7 +179,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
 
                 val listInfo = receivedList.listinfo
-                listInfo.projectIri should be (IMAGES_PROJECT_IRI)
+                listInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
 
                 val name = listInfo.name
                 name should be (Some("newList"))
@@ -221,23 +198,23 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 newListIri.set(listInfo.id)
             }
 
-            "return a 'ForbiddenException' if the user creating the list is not project or system admin" in {
+            "return a ForbiddenException if the user creating the list is not project or system admin" in {
                 val params =
                     s"""
                        |{
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [{ "value": "Neue Liste", "language": "de"}],
                        |    "comments": []
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.Forbidden)
             }
 
-            "return a `BadRequestException` during list creation when payload is not correct" in {
+            "return a BadRequestException during list creation when payload is not correct" in {
 
                 // no project IRI
                 val params01 =
@@ -275,7 +252,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val params03 =
                     s"""
                        |{
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [],
                        |    "comments": []
                        |}
@@ -361,7 +338,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-                receivedListInfo.projectIri should be (IMAGES_PROJECT_IRI)
+                receivedListInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
 
                 val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
                 labels.size should be (2)
@@ -409,7 +386,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 commentsDelete.size should be (0)
             }
 
-            "return a 'ForbiddenException' if the user updating the list is not project or system admin" in {
+            "return a ForbiddenException if the user updating the list is not project or system admin" in {
                 val params =
                     s"""
                        |{
@@ -439,7 +416,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 responseComment.status should be(StatusCodes.Forbidden)
             }
 
-            "return a `BadRequestException` during list change when payload is not correct" in {
+            "return a BadRequestException during list change when payload is not correct" in {
 
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
@@ -530,17 +507,17 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val params =
-                    s"""
-                       |{
-                       |    "parentNodeIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "first",
-                       |    "labels": [{ "value": "New First Child List Node Value", "language": "en"}],
-                       |    "comments": [{ "value": "New First Child List Node Comment", "language": "en"}]
-                       |}
-                """.stripMargin
+                val name = "first"
+                val label = "New First Child List Node Value"
+                val comment = "New First Child List Node Comment"
 
+                val params = SharedTestDataADM.addChildListNodeRequest(
+                    parentNodeIri = newListIri.get,
+                    name = name,
+                    label = label,
+                    comment = comment
+                )
+              
                 val request = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
@@ -557,12 +534,12 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // check labels
                 val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
                 labels.size should be (1)
-                labels.sorted should be (Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+                labels.sorted should be (Seq(StringLiteralV2(value = label, language = Some("en"))))
 
                 // check comments
                 val comments = childNodeInfo.comments.stringLiterals
                 comments.size should be (1)
-                comments.sorted should be (Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
+                comments.sorted should be (Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
                 // check position
                 val position = childNodeInfo.position
@@ -579,16 +556,16 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val params =
-                    s"""
-                       |{
-                       |    "parentNodeIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "second",
-                       |    "labels": [{ "value": "New Second Child List Node Value", "language": "en"}],
-                       |    "comments": [{ "value": "New Second Child List Node Comment", "language": "en"}]
-                       |}
-                """.stripMargin
+                val name = "second"
+                val label = "New Second Child List Node Value"
+                val comment = "New Second Child List Node Comment"
+
+                val params = SharedTestDataADM.addChildListNodeRequest(
+                    parentNodeIri = newListIri.get,
+                    name = name,
+                    label = label,
+                    comment = comment
+                )
 
                 val request = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
@@ -606,12 +583,12 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // check labels
                 val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
                 labels.size should be (1)
-                labels.sorted should be (Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+                labels.sorted should be (Seq(StringLiteralV2(value = label, language = Some("en"))))
 
                 // check comments
                 val comments = childNodeInfo.comments.stringLiterals
                 comments.size should be (1)
-                comments.sorted should be (Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
+                comments.sorted should be (Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
                 // check position
                 val position = childNodeInfo.position
@@ -629,16 +606,16 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListUrl = java.net.URLEncoder.encode(secondChildIri.get, "utf-8")
 
-                val params =
-                    s"""
-                       |{
-                       |    "parentNodeIri": "${secondChildIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "name": "third",
-                       |    "labels": [{ "value": "New Third Child List Node Value", "language": "en"}],
-                       |    "comments": [{ "value": "New Third Child List Node Comment", "language": "en"}]
-                       |}
-                """.stripMargin
+                val name = "third"
+                val label = "New Third Child List Node Value"
+                val comment = "New Third Child List Node Comment"
+
+                val params = SharedTestDataADM.addChildListNodeRequest(
+                    parentNodeIri = secondChildIri.get,
+                    name = name,
+                    label = label,
+                    comment = comment
+                )
 
                 val request = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
@@ -656,12 +633,12 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // check labels
                 val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
                 labels.size should be (1)
-                labels.sorted should be (Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+                labels.sorted should be (Seq(StringLiteralV2(value = label, language = Some("en"))))
 
                 // check comments
                 val comments = childNodeInfo.comments.stringLiterals
                 comments.size should be (1)
-                comments.sorted should be (Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+                comments.sorted should be (Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
                 // check position
                 val position = childNodeInfo.position
