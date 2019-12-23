@@ -39,7 +39,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{InstrumentationSupport, SmartIri}
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 
 /**
   * Provides information about Knora users to other responders.
@@ -261,28 +261,19 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             // check if we want to change the email
             _ = if (changeUserRequest.email.isDefined) {
-                currentUserInformation.map { user =>
-                    // check if current email differs from the one in the change request
-                    if (!user.email.equals(changeUserRequest.email.get)) {
-                        // check if new email is free
-                        userByEmailExists(changeUserRequest.email.get).map(result =>
-                            if (result) throw DuplicateValueException("A user with this email exists already. Cannot change")
-                        )
-                    }
+                val email = currentUserInformation.get.email
+                if (!email.equals(changeUserRequest.email.get)) {
+                    val result = userByEmailExists(changeUserRequest.email.get)
+                    if (Await.result(result, timeout.duration)) throw DuplicateValueException(s"User with the email: '${changeUserRequest.email.get}' already exists")
                 }
             }
 
             // check if we want to change the username
             _ = if (changeUserRequest.username.isDefined) {
-                currentUserInformation.map { user =>
-                    // check if the current username differs from the one in the change request
-                    if (!user.username.equals(changeUserRequest.username.get)) {
-                        // check if new username is free
-                        userByUsernameExists(changeUserRequest.email.get).map(result =>
-                            if (result) throw DuplicateValueException("A user with this username exists already. Cannot change")
-                        )
-                    }
-
+                val user = currentUserInformation.get.username
+                if (!user.equals(changeUserRequest.username.get)) {
+                    val result = userByUsernameExists(changeUserRequest.username.get)
+                    if (Await.result(result, timeout.duration)) throw DuplicateValueException(s"User with the username: '${changeUserRequest.username.get}' already exists")
                 }
             }
 
