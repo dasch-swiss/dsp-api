@@ -89,9 +89,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     /**
      * Returns the route.
      */
-    override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putList ~ postListChildNode ~ deleteListNode ~
-        getListInfo ~ updateListInfo ~ getListNodeInfo
-
     /* concatenate paths in the CORRECT order and return */
     override def knoraApiPath: Route = getLists ~ postList ~ getList ~ putListWithIRI ~ deleteList ~ getListInfo ~
         putListInfo ~ postListChildNode ~ getListNode ~ putNodeWithIRI ~ deleteListNode ~ getListNodeInfo ~ putNodeInfo
