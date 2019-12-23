@@ -714,16 +714,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             /* verify that the list node name is unique for the project */
-            projectUniqueNodeName <- listNodeNameIsProjectUnique(changeListRequest.projectIri, changeListRequest.name.getOrElse(Some("")))
-            _ = if (changeListRequest.name.nonEmpty && !projectUniqueNodeName) {
-                throw BadRequestException(s"The node name ${changeListRequest.name.get} is already used by a list inside the project ${changeListRequest.projectIri}.")
+            _ = if (changeListRequest.name.nonEmpty) {
+                val result = listNodeNameIsProjectUnique(changeListRequest.projectIri, changeListRequest.name.get)
+                if (!Await.result(result, timeout.duration)) throw DuplicateValueException(s"The node name ${changeListRequest.name.get} is already used by a list inside the project ${changeListRequest.projectIri}.")
             }
-
-            /*_ = if (changeListRequest.name.nonEmpty) {
-                listNodeNameIsProjectUnique(changeListRequest.projectIri, changeListRequest.name.get).map(result =>
-                    if (!result) throw DuplicateValueException(s"The node name ${changeListRequest.name.get} is already used by a list inside the project ${changeListRequest.projectIri}.")
-                )
-            }*/
 
             // get the data graph of the project.
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
@@ -739,14 +733,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 maybeLabels = changeListRequest.labels,
                 maybeComments = changeListRequest.comments
             ).toString
-            // _ = log.debug("listCreateRequestADM - createNewListSparqlString: {}", createNewListSparqlString)
-            changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeListInfoSparqlString)).mapTo[SparqlUpdateResponse]
+            _ <- (storeManager ? SparqlUpdateRequest(changeListInfoSparqlString)).mapTo[SparqlUpdateResponse]
 
 
             /* Verify that the list was updated */
             maybeListADM <- listGetADM(listIri, KnoraSystemInstances.Users.SystemUser)
             updatedList = maybeListADM.getOrElse(throw UpdateNotPerformedException(s"List $listIri was not updated. Please report this as a possible bug."))
-
+            /* verify name update */
             _ = if (changeListRequest.name.nonEmpty) {
                 if (changeListRequest.name.get.nonEmpty) {
                     if (updatedList.listinfo.name.nonEmpty) {
@@ -758,17 +751,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     }
                 }
             }
-
+            /* verify label update */
             _ = if (changeListRequest.labels.nonEmpty) {
                 if (updatedList.listinfo.labels.stringLiterals.sorted != changeListRequest.labels.get.sorted) throw UpdateNotPerformedException("Lists's 'labels' was not updated. Please report this as a possible bug.")
             }
-
+            /* verify comment update */
             _ = if (changeListRequest.comments.nonEmpty) {
                 if (updatedList.listinfo.comments.stringLiterals.sorted != changeListRequest.comments.get.sorted) throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
             }
-
-            // _ = log.debug(s"listInfoChangeRequest - updatedList: {}", updatedList)
-
         } yield ListInfoGetResponseADM(listinfo = updatedList.listinfo)
 
         for {
@@ -905,7 +895,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           * The actual task run with an IRI lock.
           */
         def listNodeInfoChangeTask(nodeIri: IRI, changeNodeRequest: ChangeListNodeInfoPayloadADM, requestingUser: UserADM, apiRequestID: UUID) = for {
-            // check if required information is supplied
             // check if the requesting user is allowed to perform operation
             _ <- Future(
                 if (!requestingUser.permissions.isProjectAdmin(changeNodeRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
@@ -913,6 +902,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
                 }
             )
+            // check if required information is supplied
             _ = if (!nodeIri.equals(changeNodeRequest.nodeIri)) throw BadRequestException("Node IRI in path and payload don't match.")
 
             /* Verify that the node exists. */
@@ -931,9 +921,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             /* verify that the list node name is unique for the project */
-            projectUniqueNodeName <- listNodeNameIsProjectUnique(changeNodeRequest.projectIri, changeNodeRequest.name.flatten)
-            _ = if (changeNodeRequest.name.nonEmpty && !projectUniqueNodeName) {
-                throw BadRequestException(s"The node name ${changeNodeRequest.name.get} is already used by a list inside the project ${changeNodeRequest.projectIri}.")
+            _ = if (changeNodeRequest.name.nonEmpty) {
+                val result = listNodeNameIsProjectUnique(changeNodeRequest.projectIri, changeNodeRequest.name.get)
+                if (!Await.result(result, timeout.duration)) throw DuplicateValueException(s"The node name ${changeNodeRequest.name.get} is already used by a list inside the project ${changeNodeRequest.projectIri}.")
             }
 
             // get the data graph of the project.
@@ -949,7 +939,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 maybeLabels = changeNodeRequest.labels,
                 maybeComments = changeNodeRequest.comments
             ).toString
-            result <- (storeManager ? SparqlUpdateRequest(changeListNodeInfoSparqlString)).mapTo[SparqlUpdateResponse]
+            _ <- (storeManager ? SparqlUpdateRequest(changeListNodeInfoSparqlString)).mapTo[SparqlUpdateResponse]
 
             /* Verify that the list was updated */
             maybeListNodeInfoADM <- listNodeInfoGetADM(nodeIri = nodeIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
@@ -958,7 +948,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 case Some(child: ListChildNodeInfoADM) => (child.asInstanceOf[ListChildNodeInfoADM], child.name, child.labels, child.comments)
                 case _ => throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
             }
-
+            /* verify name update */
             _ = if (changeNodeRequest.name.nonEmpty) {
                 if (changeNodeRequest.name.get.nonEmpty) {
                     if (name.nonEmpty) {
@@ -970,17 +960,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     }
                 }
             }
-
+            /* verify label update */
             _ = if (changeNodeRequest.labels.nonEmpty) {
                 if (labels.stringLiterals.sorted != changeNodeRequest.labels.get.sorted) throw UpdateNotPerformedException(s"Node $nodeIri's 'labels' was not updated. Please report this as a possible bug.")
             }
-
+            /* verify comment update */
             _ = if (changeNodeRequest.comments.nonEmpty) {
                 if (comments.stringLiterals.sorted != changeNodeRequest.comments.get.sorted) throw UpdateNotPerformedException(s"Node $nodeIri's 'comments' was not updated. Please report this as a possible bug.")
             }
-
-            // _ = log.debug(s"listInfoChangeRequest - updatedList: {}", updatedList)
-
         } yield ListNodeInfoGetResponseADM(nodeinfo = updatedNode)
 
         for {
