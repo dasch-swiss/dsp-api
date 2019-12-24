@@ -10,7 +10,7 @@ scala_test(
         "UpgradePluginSpec.scala"
     ],
     data = [
-        "//upgrade/test-data",
+        "//upgrade/test_data",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
@@ -32,7 +32,7 @@ scala_test(
         "UpgradePluginSpec.scala"
     ],
     data = [
-        "//upgrade/test-data",
+        "//upgrade/test_data",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
@@ -54,7 +54,7 @@ scala_test(
         "UpgradePluginSpec.scala"
     ],
     data = [
-        "//upgrade/test-data",
+        "//upgrade/test_data",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
@@ -76,7 +76,7 @@ scala_test(
         "UpgradePluginSpec.scala"
     ],
     data = [
-        "//upgrade/test-data",
+        "//upgrade/test_data",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [

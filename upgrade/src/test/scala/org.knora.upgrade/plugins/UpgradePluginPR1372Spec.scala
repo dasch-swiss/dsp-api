@@ -27,7 +27,7 @@ class UpgradePluginPR1372Spec extends UpgradePluginSpec {
     "Upgrade plugin PR1372" should {
         "remove permissions from past versions of values" in {
             // Parse the input file.
-            val model: Model = trigFileToModel("test-data/pr1372.trig")
+            val model: Model = trigFileToModel("test_data/pr1372.trig")
 
             // Use the plugin to transform the input.
             val plugin = new UpgradePluginPR1372

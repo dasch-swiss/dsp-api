@@ -10,11 +10,11 @@ filegroup(
 test_suite(
     name = "all_tests",
     tests = [
-        ":SparqlTransformerSpec",
+        ":GravsearchParserSpec",
+        ":GravsearchTypeInspectorSpec",
         ":NonTriplestoreSpecificGravsearchToCountPrequeryGeneratorSpec",
         ":NonTriplestoreSpecificGravsearchToPrequeryGeneratorSpec",
-        ":GravsearchTypeInspectorSpec",
-        ":GravsearchParserSpec",
+        ":SparqlTransformerSpec",
     ],
 )
 
@@ -41,7 +41,6 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
     ],
 )
 

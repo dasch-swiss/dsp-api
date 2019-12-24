@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
 filegroup(
-    name = "test-data",
+    name = "test_data",
     srcs = glob(["*.trig"]),
 )

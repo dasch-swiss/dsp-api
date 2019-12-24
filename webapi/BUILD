@@ -3,11 +3,9 @@ package(default_visibility = ["//visibility:public"])
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library", "scala_test")
 
 scala_binary(
-    name = "api",
-    data = [
-        "//webapi/src/main/resources",
-    ],
+    name = "webapi",
     main_class = "org.knora.webapi.Main",
+    jvm_flags = ["-Dconfig.resource=application.conf"],
     resources = [
         "//webapi/src/main/resources",
     ],
