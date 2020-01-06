@@ -1,6 +1,12 @@
 package(default_visibility = ["//visibility:public"])
 
 filegroup(
-    name = "all",
-    srcs = glob(["*.ttl"]),
+    name = "knora-ontologies",
+    srcs = [
+        "knora-admin.ttl",
+        "knora-base.ttl",
+        "salsah-gui.ttl",
+        "standoff-data.ttl",
+        "standoff-onto.ttl",
+    ],
 )

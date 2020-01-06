@@ -49,8 +49,8 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
 
     private val username = "root@example.com"
     private val password = "test"
-    private val pathToChlaus = "test-data/test_route/images/Chlaus.jpg"
-    private val pathToMarbles = "test-data/test_route/images/marbles.tif"
+    private val pathToChlaus = "test_data/test_route/images/Chlaus.jpg"
+    private val pathToMarbles = "test_data/test_route/images/marbles.tif"
     private val firstPageIri = new MutableTestIri
     private val secondPageIri = new MutableTestIri
 

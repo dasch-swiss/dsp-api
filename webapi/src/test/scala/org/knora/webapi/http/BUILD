@@ -14,8 +14,8 @@ scala_test(
         "CORSSupportV1R2RSpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -43,8 +43,8 @@ scala_test(
         "ServerVersionE2ESpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",

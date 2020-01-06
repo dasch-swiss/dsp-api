@@ -53,9 +53,9 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "test-data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-        RdfDataObject(path = "test-data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "test-data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     "The JSONLD processor" should {
@@ -63,13 +63,13 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
         "expand prefixes (on the client side)" in {
 
             // JSONLD with prefixes and context object
-            val jsonldWithPrefixes = readOrWriteTextFile("", new File("test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false)
+            val jsonldWithPrefixes = readOrWriteTextFile("", new File("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false)
 
             // expand JSONLD with JSONLD processor
             val jsonldParsedExpanded = JsonLDUtil.parseJsonLD(jsonldWithPrefixes)
 
             // expected result after expansion
-            val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(readOrWriteTextFile("", new File("test-data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"), writeFile = false))
+            val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(readOrWriteTextFile("", new File("test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"), writeFile = false))
 
             compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonldExpandedParsed, receivedResponse = jsonldParsedExpanded)
 
@@ -83,7 +83,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
                 val receivedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavaToScala(JsonUtils.fromString(responseAs[String])).asInstanceOf[Map[IRI, Any]]
 
-                val expectedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavaToScala(JsonUtils.fromString(readOrWriteTextFile("", new File("test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false))).asInstanceOf[Map[String, Any]]
+                val expectedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavaToScala(JsonUtils.fromString(readOrWriteTextFile("", new File("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false))).asInstanceOf[Map[String, Any]]
 
                 assert(receivedJSONLDAsScala("@context") == expectedJSONLDAsScala("@context"), "@context incorrect")
 

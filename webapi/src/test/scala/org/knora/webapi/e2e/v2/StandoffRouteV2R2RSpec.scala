@@ -61,28 +61,28 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
 
     object RequestParams {
 
-        val pathToLetterMapping = "test-data/test_route/texts/mappingForLetter.xml"
+        val pathToLetterMapping = "test_data/test_route/texts/mappingForLetter.xml"
 
-        val pathToLetterXML = "test-data/test_route/texts/letter.xml"
+        val pathToLetterXML = "test_data/test_route/texts/letter.xml"
 
-        val pathToLetter2XML = "test-data/test_route/texts/letter2.xml"
+        val pathToLetter2XML = "test_data/test_route/texts/letter2.xml"
 
-        val pathToLetter3XML = "test-data/test_route/texts/letter3.xml"
+        val pathToLetter3XML = "test_data/test_route/texts/letter3.xml"
 
         // Standard HTML is the html code that can be translated into Standoff markup with the OntologyConstants.KnoraBase.StandardMapping
-        val pathToStandardHTML = "test-data/test_route/texts/StandardHTML.xml"
+        val pathToStandardHTML = "test_data/test_route/texts/StandardHTML.xml"
 
-        val pathToHTMLMapping = "test-data/test_route/texts/mappingForHTML.xml"
+        val pathToHTMLMapping = "test_data/test_route/texts/mappingForHTML.xml"
 
-        val pathToHTML = "test-data/test_route/texts/HTML.xml"
+        val pathToHTML = "test_data/test_route/texts/HTML.xml"
 
     }
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
 
-        RdfDataObject(path = "test-data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "test-data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "test-data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
 
     )
 
@@ -124,7 +124,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, "creation of a mapping returned a non successful HTTP status code: " + responseAs[String])
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("test-data/standoffR2RV2/mappingCreationResponse.jsonld"))
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
 
                 compareJSONLDForMappingCreationResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }

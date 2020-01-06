@@ -58,8 +58,8 @@ class SipiV1R2RSpec extends R2RSpec {
     private val testPass = "test"
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "test-data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "test-data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
     /* we need to run our app with the mocked sipi actor */
@@ -91,7 +91,7 @@ class SipiV1R2RSpec extends R2RSpec {
             project_id = "http://rdfh.ch/projects/0803"
         )
 
-        val pathToFile = "test-data/test_route/images/Chlaus.jpg"
+        val pathToFile = "test_data/test_route/images/Chlaus.jpg"
 
         def createTmpFileDir(): Unit = {
             // check if tmp datadir exists and create it if not

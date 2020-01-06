@@ -79,7 +79,7 @@ strict XML notation.
 ### Maintenance
 
 The standard mapping definition can be found at
-`test-data/test_route/texts/mappingForStandardHTML.xml`. It was
+`test_data/test_route/texts/mappingForStandardHTML.xml`. It was
 used to generate the default mapping, distributed as
 `knora-ontologies/standoff-data.ttl` and that is loaded at a Knora
 installation. It should be used to re-generate it, whenever we want to
@@ -387,8 +387,8 @@ comma).
 
 You will find a sample mapping with all the data types and a sample XML
 file in the the test data:
-`test-data/test_route/texts/mappingForHTML.xml` and
-`test-data/test_route/texts/HTML.xml`.
+`test_data/test_route/texts/mappingForHTML.xml` and
+`test_data/test_route/texts/HTML.xml`.
 
 #### Internal References in an XML Document
 

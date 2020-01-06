@@ -5,7 +5,10 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library", 
 scala_binary(
     name = "webapi",
     main_class = "org.knora.webapi.Main",
-    jvm_flags = ["-Dconfig.resource=application.conf"],
+    jvm_flags = [
+        "-Dconfig.resource=application.conf",
+        "-Dlogging.config=logback.xml"
+    ],
     resources = [
         "//webapi/src/main/resources",
     ],
@@ -104,10 +107,10 @@ scala_library(
 scala_library(
     name = "test_library",
     srcs = [
-        "//webapi/src/test:scala",
+        "//webapi/src/test/scala",
     ],
     resources = [
-        "//webapi/src/test:resources",
+        "//webapi/src/test/resources",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
@@ -151,10 +154,10 @@ scala_library(
 scala_library(
     name = "it_library",
     srcs = [
-        "//webapi/src/it:scala",
+        "//webapi/src/it/scala",
     ],
     resources = [
-        "//webapi/src/it:resources",
+        "//webapi/src/it/resources",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [

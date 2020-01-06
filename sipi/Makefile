@@ -5,7 +5,7 @@ print-env-file: env-file ## prints the env file used by sipi
 	@cat .env
 
 .PHONY: env-file
-env-file: ## write the env file used by knora-stack.
+env-file: ## write the env file used by sipi
 	@echo SIPI_VERSION=$(SIPI_VERSION) > .env
 	@echo DOCKERHOST=$(DOCKERHOST) >> .env
 

@@ -60,8 +60,8 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val writeGetTestResponses = false
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "test-data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
-        RdfDataObject(path = "test-data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
+        RdfDataObject(path = "test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
+        RdfDataObject(path = "test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
     )
 
     /**
@@ -75,7 +75,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     private case class HttpGetTest(urlPath: String, fileBasename: String, disableWrite: Boolean = false) {
         def makeFile(mediaType: MediaType.NonBinary): File = {
             val fileSuffix = mediaType.fileExtensions.head
-            new File(s"test-data/ontologyR2RV2/$fileBasename.$fileSuffix")
+            new File(s"test_data/ontologyR2RV2/$fileBasename.$fileSuffix")
         }
 
         /**
@@ -86,6 +86,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           */
         def writeFile(responseStr: String, mediaType: MediaType.NonBinary): Unit = {
             if (!disableWrite) {
+                // FIXME: Write to allowed place: SO post describes a possible way so save output: https://stackoverflow.com/a/47883878
                 FileUtil.writeTextFile(makeFile(mediaType), responseStr)
             }
         }

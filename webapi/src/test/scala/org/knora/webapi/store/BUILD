@@ -14,8 +14,8 @@ scala_test(
         "cacheservice/CacheSerializationSpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -42,8 +42,8 @@ scala_test(
         "cacheservice/CacheServiceManagerSpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -70,8 +70,8 @@ scala_test(
         "triplestore/AllTriplestoreSpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -98,8 +98,8 @@ scala_test(
         "triplestore/GraphDBConsistencyCheckingSpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",

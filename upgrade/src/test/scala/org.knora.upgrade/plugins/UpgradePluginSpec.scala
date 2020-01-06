@@ -47,6 +47,7 @@ abstract class UpgradePluginSpec extends WordSpecLike with Matchers {
       */
     def trigFileToModel(path: String): Model = {
         val trigParser: RDFParser = Rio.createParser(RDFFormat.TRIG)
+        println("trigFileToModel - file path: {}", path)
         val fileReader = new BufferedReader(new FileReader(new File(path)))
         val model = new LinkedHashModel()
         trigParser.setRDFHandler(new StatementCollector(model))

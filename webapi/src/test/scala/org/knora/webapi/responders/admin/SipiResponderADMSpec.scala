@@ -42,7 +42,7 @@ object SipiResponderADMSpec {
 class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with ImplicitSender {
 
     override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "test-data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     // The default timeout for receiving reply messages from actors.

@@ -16,8 +16,8 @@ scala_test(
         "ListsResponderV2SpecFullData.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -44,8 +44,8 @@ scala_test(
         "OntologyResponderV2Spec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -73,8 +73,8 @@ scala_test(
         "ResourcesResponderV2SpecFullData.scala"
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -108,8 +108,8 @@ scala_test(
         "ResourcesResponseCheckerV2SpecFullData.scala"
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -139,8 +139,8 @@ scala_test(
         "SearchResponderV2SpecFullData.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -165,8 +165,8 @@ scala_test(
         "ValuesResponderV2Spec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",

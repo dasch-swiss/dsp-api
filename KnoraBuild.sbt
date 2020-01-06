@@ -623,7 +623,7 @@ docs / buildPrequisites := {
 //                directory("webapi/scripts") ++
 //                  // add knora-ontologies
 //                  directory("knora-ontologies") ++
-//                  // add test-data directory
+//                  // add test_data directory
 //                  directory("webapi/_test_data") ++
 //                  // copy the configuration files to config directory
 //                  contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
@@ -719,7 +719,7 @@ docs / buildPrequisites := {
 //          directory("webapi/scripts") ++
 //            // add knora-ontologies
 //            directory("knora-ontologies") ++
-//            // add test-data directory
+//            // add test_data directory
 //            directory("webapi/_test_data") ++
 //            // copy the configuration files to config directory
 //            contentOf("webapi/configs").toMap.mapValues("config/" + _) ++

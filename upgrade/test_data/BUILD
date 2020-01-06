@@ -2,5 +2,10 @@ package(default_visibility = ["//visibility:public"])
 
 filegroup(
     name = "test_data",
-    srcs = glob(["*.trig"]),
+    srcs = [
+        "pr1307.trig",
+        "pr1322.trig",
+        "pr1367.trig",
+        "pr1372.trig"
+    ],
 )

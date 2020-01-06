@@ -14,8 +14,8 @@ scala_test(
         "ListsResponderV1Spec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -42,8 +42,8 @@ scala_test(
         "OntologyResponderV1Spec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -70,8 +70,8 @@ scala_test(
         "ProjectsResponderV1Spec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -102,8 +102,8 @@ scala_test(
         "ResourcesResponderV1SpecFullData.scala"
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -134,8 +134,8 @@ scala_test(
         "SearchResponderV1Spec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -160,8 +160,8 @@ scala_test(
         "UsersResponderV1Spec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -190,8 +190,8 @@ scala_test(
         "ValuesResponderV1Spec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",

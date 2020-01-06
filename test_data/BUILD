@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
 filegroup(
-    name = "all",
+    name = "test_data",
     srcs = glob(["**/*.*"]),
 )

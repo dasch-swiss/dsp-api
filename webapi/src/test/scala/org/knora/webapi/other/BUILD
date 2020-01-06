@@ -14,8 +14,8 @@ scala_test(
         "v1/DrawingsGodsV1E2ESpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -43,8 +43,8 @@ scala_test(
         "v1/DrawingsGodsV1Spec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -73,8 +73,8 @@ scala_test(
         "v2/LumieresLausanneV2E2ESpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",

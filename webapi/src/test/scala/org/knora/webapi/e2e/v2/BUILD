@@ -14,8 +14,8 @@ scala_test(
         "AuthenticationV2E2ESpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -45,8 +45,8 @@ scala_test(
         "ResponseCheckerV2.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -74,8 +74,8 @@ scala_test(
         "ListsRouteV2R2RSpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -103,8 +103,8 @@ scala_test(
         "OntologyV2R2RSpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -125,6 +125,39 @@ scala_test(
     ],
 )
 
+##
+## //webapi/src/test/scala/org/knora/webapi/e2e/v2:RessourcesRouteV2E2ESpec
+scala_test(
+    name = "RessourcesRouteV2E2ESpec",
+    size = "small",  # 60s
+    srcs = [
+        "ResourcesRouteV2E2ESpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:main_library",
+        "//webapi:test_library",
+        # Logging
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:io_spray_spray_json_2_12",
+        "@maven//:org_eclipse_rdf4j_rdf4j_client",
+        "@maven//:org_scala_lang_modules_scala_xml_2_12",
+        "@maven//:org_xmlunit_xmlunit_core",
+    ],
+)
+
 scala_test(
     name = "ResponseCheckerV2R2RSpec",
     size = "small",  # 60s
@@ -133,8 +166,8 @@ scala_test(
         "ResponseCheckerV2Spec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -161,8 +194,8 @@ scala_test(
         "SearchRouteV2R2RSpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -191,8 +224,8 @@ scala_test(
         "StandoffRouteV2R2RSpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -219,8 +252,8 @@ scala_test(
         "//webapi/src/main:twirl-templates",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
@@ -253,8 +286,8 @@ scala_test(
         "ValuesV2R2RSpec.scala",
     ],
     data = [
-        "//knora-ontologies:all",
-        "//test-data:all",
+        "//knora-ontologies",
+        "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=graphdb-se.conf"],
     unused_dependency_checker_mode = "warn",
