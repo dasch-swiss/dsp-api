@@ -261,13 +261,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             // check if we want to change the email
             emailTaken: Boolean <- userByEmailExists(changeUserRequest.email.getOrElse(""))
-            _ = if (emailTaken && changeUserRequest.email.isDefined) {
+            _ = if (emailTaken) {
                 throw DuplicateValueException(s"User with the email: '${changeUserRequest.email.get}' already exists")
             }
 
             // check if we want to change the username
             usernameTaken: Boolean <- userByUsernameExists(changeUserRequest.username.getOrElse(""))
-            _ = if (usernameTaken && changeUserRequest.username.isDefined) {
+            _ = if (usernameTaken) {
                 throw DuplicateValueException(s"User with the username: '${changeUserRequest.username.get}' already exists")
             }
 
