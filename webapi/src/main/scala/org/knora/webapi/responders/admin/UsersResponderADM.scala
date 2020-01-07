@@ -39,7 +39,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{InstrumentationSupport, SmartIri}
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 /**
   * Provides information about Knora users to other responders.
