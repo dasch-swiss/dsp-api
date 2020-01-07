@@ -260,21 +260,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             )
 
             // check if we want to change the email
-            _ = if (changeUserRequest.email.isDefined) {
-                val email = currentUserInformation.get.email
-                if (!email.equals(changeUserRequest.email.get)) {
-                    val result = userByEmailExists(changeUserRequest.email.get)
-                    if (Await.result(result, timeout.duration)) throw DuplicateValueException(s"User with the email: '${changeUserRequest.email.get}' already exists")
-                }
+            emailTaken: Boolean <- userByEmailExists(changeUserRequest.email.getOrElse(""))
+            _ = if (emailTaken && changeUserRequest.email.isDefined) {
+                throw DuplicateValueException(s"User with the email: '${changeUserRequest.email.get}' already exists")
             }
 
             // check if we want to change the username
-            _ = if (changeUserRequest.username.isDefined) {
-                val user = currentUserInformation.get.username
-                if (!user.equals(changeUserRequest.username.get)) {
-                    val result = userByUsernameExists(changeUserRequest.username.get)
-                    if (Await.result(result, timeout.duration)) throw DuplicateValueException(s"User with the username: '${changeUserRequest.username.get}' already exists")
-                }
+            usernameTaken: Boolean <- userByUsernameExists(changeUserRequest.username.getOrElse(""))
+            _ = if (usernameTaken && changeUserRequest.username.isDefined) {
+                throw DuplicateValueException(s"User with the username: '${changeUserRequest.username.get}' already exists")
             }
 
             userUpdatePayload = UserUpdatePayloadADM(
@@ -1401,14 +1395,19 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @return a [[Boolean]].
       */
     private def userByUsernameExists(username: String): Future[Boolean] = {
-        for {
-            askString <- Future(queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
-            // _ = log.debug("userExists - query: {}", askString)
+        username match {
+            case "" => FastFuture.successful(false)
+            case _ => {
+                for {
+                    askString <- Future(queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
+                    // _ = log.debug("userExists - query: {}", askString)
 
-            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-            result = checkUserExistsResponse.result
+                    checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+                    result = checkUserExistsResponse.result
 
-        } yield result
+                } yield result
+            }
+        }
     }
 
     /**
@@ -1418,14 +1417,19 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       * @return a [[Boolean]].
       */
     private def userByEmailExists(email: String): Future[Boolean] = {
-        for {
-            askString <- Future(queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
-            // _ = log.debug("userExists - query: {}", askString)
+        email match {
+            case "" => FastFuture.successful(false)
+            case _ => {
+                for {
+                    askString <- Future(queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
+                    // _ = log.debug("userExists - query: {}", askString)
 
-            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-            result = checkUserExistsResponse.result
+                    checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+                    result = checkUserExistsResponse.result
 
-        } yield result
+                } yield result
+            }
+        }
     }
 
     /**
