@@ -9,7 +9,7 @@ filegroup(
 
 scala_binary(
     name = "upgrade",
-    main_class = "org.knora.upgrage.Main",
+    main_class = "org.knora.upgrade.Main",
     deps = [
         ":main_library",
     ],

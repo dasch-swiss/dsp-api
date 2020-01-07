@@ -55,9 +55,4 @@ bazel-*
 
 **/venv
 **/__pycache__
-knora-assets
-knora-graphdb-free
-knora-graphdb-se
-knora-sipi
-knora-upgrade
 dump.rdb

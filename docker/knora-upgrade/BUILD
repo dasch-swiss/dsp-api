@@ -12,11 +12,11 @@ container_layer(
 )
 
 container_image(
-    name = "knora_app1_base_image",
+    name = "knora_upgrade_base_image",
     base = "@openjdk11//image",
     # cmd = [""],
     entrypoint = [
-        "/salsah1/app1",
+        "/upgrade/upgrade",
     ],
     env = {
 #        "LANG": "en_US.UTF-8",
@@ -24,9 +24,9 @@ container_image(
 #        "KNORA_SALSAH1_DEPLOYED": "true",
 #        "KNORA_SALSAH1_WORKDIR": "/salsah1"
     },
-    directory = "salsah1",
+    directory = "upgrade",
     files = [
-        "//salsah1:public_folder",
+        "//upgrade/graphdb-se",
     ],
     labels = {
         "MAINTAINER": "400790+subotic@users.noreply.github.com",
@@ -40,10 +40,10 @@ container_image(
 # create language specific image
 # uses scala_binary underneath
 scala_image(
-    name = "knora-app1",
-    deps = ["//salsah1:library"],
-    main_class = "org.knora.salsah.Main",
-    base = ":knora_app1_base_image",
+    name = "knora-upgrade",
+    deps = ["//upgrade:main_library"],
+    main_class = "org.knora.upgrade.Main",
+    base = ":knora_upgrade_base_image",
 )
 
 

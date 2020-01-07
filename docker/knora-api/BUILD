@@ -12,7 +12,7 @@ container_layer(
 )
 
 container_image(
-    name = "knora-api-image",
+    name = "knora_api_base_image",
     base = "@openjdk11//image",
     # cmd = [""],
     entrypoint = [
@@ -43,5 +43,5 @@ scala_image(
     name = "knora-api",
     deps = ["//webapi:main_library"],
     main_class = "org.knora.webapi.Main",
-    base = ":knora-api-image",
+    base = ":knora_api_base_image",
 )

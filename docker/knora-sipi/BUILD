@@ -11,6 +11,7 @@ container_layer(
     ]
 )
 
+# FIXME: Use correct base image for Sipi
 container_image(
     name = "knora_app1_base_image",
     base = "@openjdk11//image",

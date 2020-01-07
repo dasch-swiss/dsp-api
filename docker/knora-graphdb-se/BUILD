@@ -11,8 +11,9 @@ container_layer(
     ]
 )
 
+# FIXME: Use correct base image for graphdb-se and add KnoraRules.pie
 container_image(
-    name = "knora_app1_base_image",
+    name = "knora-graphdb-se",
     base = "@openjdk11//image",
     # cmd = [""],
     entrypoint = [
@@ -36,14 +37,3 @@ container_image(
     ],
     layers = [":bash_layer"]
 )
-
-# create language specific image
-# uses scala_binary underneath
-scala_image(
-    name = "knora-app1",
-    deps = ["//salsah1:library"],
-    main_class = "org.knora.salsah.Main",
-    base = ":knora_app1_base_image",
-)
-
-
