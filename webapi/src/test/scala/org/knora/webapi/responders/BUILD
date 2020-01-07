@@ -4,10 +4,10 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
 filegroup(
     name = "srcs",
-    srcs = ["//webapi/src/test/scala/org/knora/webapi/responders/admin:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/responders/v1:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/responders/v2:srcs"]
-         + glob(["*.scala"]),
+    srcs = [
+        "//webapi/src/test/scala/org/knora/webapi/responders/v2:srcs",
+        "MockableResponderManager.scala"
+    ],
 )
 
 scala_test(

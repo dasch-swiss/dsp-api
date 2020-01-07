@@ -11,7 +11,7 @@ const mappingCreation: AddMappingRequest = {
     "http://www.w3.org/2000/01/rdf-schema#label": "letter mapping"
 };
 
-// see webapi/src/test/resources/test_data/standoffR2RV2/mappingCreationResponse.jsonld
+// see test_data/standoffR2RV2/mappingCreationResponse.jsonld
 const mappingCreationResponse: AddMappingResponse = {
     "@id": "http://rdfh.ch/projects/0001/mappings/LetterMapping",
     "@type": "http://api.knora.org/ontology/knora-api/v2#XMLToStandoffMapping",

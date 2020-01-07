@@ -4,15 +4,14 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
 filegroup(
     name = "srcs",
-    srcs = ["//webapi/src/test/scala/org/knora/webapi/util/clientapi:srcs"] + [
-        "//webapi/src/test/scala/org/knora/webapi/util/date:srcs",
-    ] + [
-        "//webapi/src/test/scala/org/knora/webapi/util/jsonld:srcs",
-    ] + [
-        "//webapi/src/test/scala/org/knora/webapi/util/standoff:srcs",
-    ] + glob([
-        "*.scala",
-    ]),
+    srcs = [
+        "AkkaHttpUtils.scala",
+        "MutableTestIri.scala",
+        "MutableTestString.scala",
+        "MutableUserADM.scala",
+        "StartupUtils.scala",
+        "TestExtractorMethods.scala"
+    ],
 )
 
 scala_test(
@@ -110,6 +109,7 @@ scala_test(
     size = "small",
     srcs = [
         "ConstructResponseUtilV2Spec.scala",
+        "//webapi/src/test/scala/org/knora/webapi/responders/v2:ResourcesResponderV2SpecFullData.scala"
     ],
     data = [
         "//knora-ontologies",

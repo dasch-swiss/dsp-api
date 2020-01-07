@@ -4,10 +4,10 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
 filegroup(
     name = "srcs",
-    srcs = ["//webapi/src/test/scala/org/knora/webapi/e2e/admin:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/e2e/v1:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/e2e/v2:srcs"]
-         + glob(["*.scala"]),
+    srcs = [
+        "//webapi/src/test/scala/org/knora/webapi/e2e/v2:srcs",
+        "InstanceChecker.scala"
+    ],
 )
 
 scala_test(

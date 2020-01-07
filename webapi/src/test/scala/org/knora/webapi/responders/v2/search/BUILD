@@ -2,11 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
-filegroup(
-    name = "srcs",
-    srcs = glob(["**/*.scala"]),
-)
-
 test_suite(
     name = "all_tests",
     tests = [
@@ -107,6 +102,7 @@ scala_test(
     size = "small",  # 60s
     srcs = [
         "gravsearch/types/GravsearchTypeInspectorSpec.scala",
+        "gravsearch/GravsearchParserSpec.scala"
     ],
     data = [
         "//knora-ontologies",
@@ -132,7 +128,7 @@ scala_test(
 
 scala_test(
     name = "GravsearchParserSpec",
-    size = "small",  # 300s
+    size = "small",  # 60s
     srcs = [
         "gravsearch/GravsearchParserSpec.scala",
     ],

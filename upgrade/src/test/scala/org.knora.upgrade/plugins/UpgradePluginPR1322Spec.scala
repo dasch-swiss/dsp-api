@@ -27,7 +27,7 @@ class UpgradePluginPR1322Spec extends UpgradePluginSpec {
     "Upgrade plugin PR1322" should {
         "add UUIDs to values" in {
             // Parse the input file.
-            val model: Model = trigFileToModel("test_data/pr1322.trig")
+            val model: Model = trigFileToModel("upgrade/test_data/pr1322.trig")
 
             // Use the plugin to transform the input.
             val plugin = new UpgradePluginPR1322

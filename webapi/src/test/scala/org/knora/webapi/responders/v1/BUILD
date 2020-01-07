@@ -2,11 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
-filegroup(
-    name = "srcs",
-    srcs = glob(["*.scala"]),
-)
-
 scala_test(
     name = "ListsResponderV1Spec",
     size = "small",  # 60s
@@ -188,6 +183,7 @@ scala_test(
     size = "medium",  # 300s
     srcs = [
         "ValuesResponderV1Spec.scala",
+        "ResourcesResponderV1SpecFullData.scala",
     ],
     data = [
         "//knora-ontologies",

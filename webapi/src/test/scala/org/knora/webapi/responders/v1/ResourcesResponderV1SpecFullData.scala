@@ -25,7 +25,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, XMLTag}
 
-
+// FIXME: Rename to something more generic and without spec in the name since it is not a spec and is used in more then one spec
 object ResourcesResponderV1SpecFullData {
 
     implicit lazy val system: ActorSystem = ActorSystem("webapi")

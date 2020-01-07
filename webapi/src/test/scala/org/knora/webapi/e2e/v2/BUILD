@@ -4,7 +4,12 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
 filegroup(
     name = "srcs",
-    srcs = glob(["*.scala"]),
+    srcs = [
+        "MarkupHeader.scala",
+        "ProjectHeader.scala",
+        "ResponseCheckerV2.scala",
+        "SchemaHeader.scala",
+    ],
 )
 
 scala_test(
@@ -129,7 +134,7 @@ scala_test(
 ## //webapi/src/test/scala/org/knora/webapi/e2e/v2:RessourcesRouteV2E2ESpec
 scala_test(
     name = "RessourcesRouteV2E2ESpec",
-    size = "small",  # 60s
+    size = "medium",  # 300s
     srcs = [
         "ResourcesRouteV2E2ESpec.scala",
     ],
@@ -149,11 +154,11 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
         "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_xmlunit_xmlunit_core",
     ],
 )
@@ -187,7 +192,7 @@ scala_test(
 
 scala_test(
     name = "SearchRouteV2R2RSpec",
-    size = "medium",
+    size = "medium", # 300s
     srcs = [
         "ResponseCheckerV2.scala",
         "SchemaHeader.scala",

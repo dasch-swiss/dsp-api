@@ -4,16 +4,21 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
 filegroup(
     name = "srcs",
-    srcs = ["//webapi/src/test/scala/org/knora/webapi/e2e:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/http:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/messages:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/other:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/responders:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/routing:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/store:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/testing:srcs"]
-         + ["//webapi/src/test/scala/org/knora/webapi/util:srcs"]
-         + glob(["*.scala"])
+    srcs = [
+        "//webapi/src/test/scala/org/knora/webapi/e2e:srcs",
+        "//webapi/src/test/scala/org/knora/webapi/responders:srcs",
+        "//webapi/src/test/scala/org/knora/webapi/store:srcs",
+        "//webapi/src/test/scala/org/knora/webapi/util:srcs",
+        "CoreSpec.scala",
+        "E2ESimSpec.scala",
+        "E2ESpec.scala",
+        "ManagersWithMockedSipi.scala",
+        "R2RSpec.scala",
+        "SharedListsTestDataADM.scala",
+        "SharedPermissionsTestData.scala",
+        "SharedTestDataV1.scala",
+        "TestProbeMaker.scala"
+    ]
 )
 
 scala_test(

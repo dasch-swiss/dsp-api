@@ -2,11 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
-filegroup(
-    name = "srcs",
-    srcs = glob(["*.scala"]),
-)
-
 scala_test(
     name = "AuthenticatorSpec",
     size = "small",

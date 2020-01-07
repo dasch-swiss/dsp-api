@@ -22,12 +22,14 @@ package org.knora.webapi.responders.v2.search.gravsearch
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{ApiV2Simple, ApiV2Complex, CoreSpec, GravsearchException}
+import org.knora.webapi.{ApiV2Complex, ApiV2Simple, GravsearchException}
+import org.scalatest.{Matchers, WordSpecLike}
 
 /**
   * Tests [[GravsearchParser]].
   */
-class GravsearchParserSpec extends CoreSpec() {
+class GravsearchParserSpec extends WordSpecLike with Matchers {
+    StringFormatter.initForTest()
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     "The GravsearchParser object" should {

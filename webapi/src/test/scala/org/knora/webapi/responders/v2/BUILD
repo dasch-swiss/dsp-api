@@ -4,8 +4,9 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 
 filegroup(
     name = "srcs",
-    srcs = ["//webapi/src/test/scala/org/knora/webapi/responders/v2/search:srcs"]
-         + glob(["*.scala"]),
+    srcs = [
+        "ResourcesResponseCheckerV2.scala"
+    ],
 )
 
 scala_test(
@@ -104,8 +105,8 @@ scala_test(
     size = "small",
     srcs = [
         "ResourcesResponseCheckerV2Spec.scala",
-        "ResourcesResponseCheckerV2.scala",
-        "ResourcesResponseCheckerV2SpecFullData.scala"
+        "ResourcesResponseCheckerV2SpecFullData.scala",
+        "ResourcesResponderV2SpecFullData.scala"
     ],
     data = [
         "//knora-ontologies",
