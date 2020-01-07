@@ -714,9 +714,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
 
             /* verify that the list node name is unique for the project */
-            _ = if (changeListRequest.name.nonEmpty) {
-                val result = listNodeNameIsProjectUnique(changeListRequest.projectIri, changeListRequest.name.get)
-                if (!Await.result(result, timeout.duration)) throw DuplicateValueException(s"The node name ${changeListRequest.name.get} is already used by a list inside the project ${changeListRequest.projectIri}.")
+            nodeNameUnique: Boolean <- listNodeNameIsProjectUnique(changeListRequest.projectIri, changeListRequest.name.flatten)
+            _ = if (!nodeNameUnique) {
+                throw DuplicateValueException(s"The node name ${changeListRequest.name.get} is already used by a list inside the project ${changeListRequest.projectIri}.")
             }
 
             // get the data graph of the project.
@@ -924,6 +924,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             _ = if (changeNodeRequest.name.nonEmpty) {
                 val result = listNodeNameIsProjectUnique(changeNodeRequest.projectIri, changeNodeRequest.name.get)
                 if (!Await.result(result, timeout.duration)) throw DuplicateValueException(s"The node name ${changeNodeRequest.name.get} is already used by a list inside the project ${changeNodeRequest.projectIri}.")
+            }
+
+            nodeNameUnique: Boolean <- listNodeNameIsProjectUnique(changeNodeRequest.projectIri, changeNodeRequest.name.flatten)
+            _ = if (!nodeNameUnique) {
+                throw DuplicateValueException(s"The node name ${changeNodeRequest.name.get} is already used by a list inside the project ${changeNodeRequest.projectIri}.")
             }
 
             // get the data graph of the project.
