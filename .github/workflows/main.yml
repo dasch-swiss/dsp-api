@@ -53,9 +53,11 @@ jobs:
           sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
       - name: add buildcache
         run: |
-          echo "${{ secrets.buildcache_authorization_key }}" > ${{ github.workspace }}/buildcache_authorization_key.json
+          echo "$buildcache_authorization_key" > ${{ github.workspace }}/buildcache_authorization_key.json
           echo "build --remote_http_cache=https://buildcache.dasch.dev" >> ${{ github.workspace }}/.bazelrc
           echo "build --google_credentials=${{ github.workspace }}/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
+        env:
+          buildcache_authorization_key: ${{ secrets.buildcache_authorization_key }}
       - name: dump .bazelrc
         run: cat ${{ github.workspace }}/.bazelrc
       - name: run bazel build
@@ -77,9 +79,11 @@ jobs:
           sudo dpkg -i bazel_2.0.0-linux-x86_64.deb
       - name: add buildcache
         run: |
-          echo ${{ secrets.buildcache_authorization_key }} > ~/buildcache_authorization_key.json
+          echo "$buildcache_authorization_key" > ${{ github.workspace }}/buildcache_authorization_key.json
           echo "build --remote_http_cache=https://buildcache.dasch.dev" >> ${{ github.workspace }}/.bazelrc
-          echo "build --google_credentials=~/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
+          echo "build --google_credentials=${{ github.workspace }}/buildcache_authorization_key.json" >> ${{ github.workspace }}/.bazelrc
+        env:
+          buildcache_authorization_key: ${{ secrets.buildcache_authorization_key }}
       - name: prepare needed graphdb-se files
         run: |
           echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
@@ -212,5 +216,8 @@ jobs:
             ${{ runner.OS }}-
       - name: build and publish all images to Dockerhub
         run: |
-          echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+          echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_USER --password-stdin
           make publish-all-images
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
