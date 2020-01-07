@@ -94,7 +94,7 @@ jobs:
       - name: Print env file
         run: make print-env-file
       - name: Run all tests
-        run: make all-tests
+        run: make test
 
 #  upgrade-unit-tests:
 #    name: Upgrade Unit Tests

@@ -71,7 +71,6 @@ endif
 
 ifeq ($(OS),OSX)
   DOCKERHOST :=  $(shell ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2)
-endif
-ifeq ($(DOCKERHOST),)
+else
   DOCKERHOST := $(shell ip route get 8.8.8.8 | awk '{print $NF; exit}')
 endif
