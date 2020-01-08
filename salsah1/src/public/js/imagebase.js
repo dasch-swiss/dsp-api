@@ -48,10 +48,9 @@ $(function() {
 			propedit.append(arkdiv);
 			SALSAH.ApiGet('resourcesv2', resource.resdata.res_id, {resinfo: true, reqtype: 'context'}, function(datav2) {
 				if (datav2['knora-api:arkUrl'] && datav2['knora-api:arkUrl']['@value']) {
-					var now = new Date();
 					// toISOString() returns a string like: 2020-01-06T14:40:16.187Z
 					// removing seperators: -:.
-					var nowstr = now.toISOString().replace(/-|:|\./gi,'');
+					var nowstr = (new Date()).toISOString().replace(/-|:|\./gi,'');
 
 					arkdiv.append(
 								$('<em>')
