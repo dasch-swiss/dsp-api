@@ -47,11 +47,7 @@ $(function() {
 			arkdiv = $('<div>');
 			propedit.append(arkdiv);
 			SALSAH.ApiGet('resourcesv2', resource.resdata.res_id, {resinfo: true, reqtype: 'context'}, function(datav2) {
-				if (datav2['knora-api:arkUrl'] && datav2['knora-api:arkUrl']['@value']) {
-					// toISOString() returns a string like: 2020-01-06T14:40:16.187Z
-					// removing seperators: -:.
-					var nowstr = (new Date()).toISOString().replace(/-|:|\./gi,'');
-
+				if (datav2['knora-api:versionArkUrl'] && datav2['knora-api:versionArkUrl']['@value']) {
 					arkdiv.append(
 								$('<em>')
 									.addClass('propedit label')
@@ -63,10 +59,10 @@ $(function() {
 								$(this).next('.clipit').select();
 								document.execCommand('copy');
 							})
-							.dragndrop('makeDraggable', 'HANDLE_ID', {handle_id: datav2['knora-api:arkUrl']['@value'] + '.' + nowstr}))
+							.dragndrop('makeDraggable', 'HANDLE_ID', {handle_id: datav2['knora-api:versionArkUrl']['@value']}))
 							.append($('<input>')
 								.attr({type:'text', readOnly: true, size: '64'})
-								.addClass('clipit').val(datav2['knora-api:arkUrl']['@value'] + '.' + nowstr)));
+								.addClass('clipit').val(datav2['knora-api:versionArkUrl']['@value'])));
 				}
 			});
 
