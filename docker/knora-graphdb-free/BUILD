@@ -1,38 +1,26 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_docker//container:container.bzl", "container_layer", "container_image")
-load("@io_bazel_rules_docker//scala:image.bzl", "scala_image")
-load("@debian_jessie_amd64_security//debs:deb_packages.bzl", "debian_jessie_amd64_security")
+load("@io_bazel_rules_docker//container:container.bzl", "container_pull", "container_image", "container_push")
 
-container_layer(
-    name = "bash_layer",
-    debs = [
-        debian_jessie_amd64_security["bash"],
-    ]
-)
-# FIXME: Use correct base image for graphdb-free and add KnoraRules.pie
 container_image(
-    name = "knora_graphdb_free",
-    base = "@openjdk11//image",
-    # cmd = [""],
-    entrypoint = [
-        "/salsah1/app1",
-    ],
-    env = {
-#        "LANG": "en_US.UTF-8",
-#        "JAVA_OPTS": "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8",
-#        "KNORA_SALSAH1_DEPLOYED": "true",
-#        "KNORA_SALSAH1_WORKDIR": "/salsah1"
-    },
-    directory = "salsah1",
+    name = "knora-graphdb-free",
+    base = "@graphdbfree//image",
+    env = {},
+    directory = "/graphdb",
     files = [
-        "//salsah1:public_folder",
+        "//webapi:knora_rules_pie",
     ],
     labels = {
         "MAINTAINER": "400790+subotic@users.noreply.github.com",
     },
-    ports = [
-        "3335/tcp",
-    ],
-    layers = [":bash_layer"]
+    ports = ["7200/tcp"],
+)
+
+container_push(
+   name = "push",
+   image = ":knora-graphdb-free",
+   format = "Docker",
+   registry = "index.docker.io",
+   repository = "dasch-swiss/knora-graphdb-free",
+   tag = "{BUILD_SCM_TAG}"
 )

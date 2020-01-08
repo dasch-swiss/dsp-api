@@ -22,84 +22,68 @@ docs-build: ## build the docs
 
 .PHONY: build-all-scala
 build-all-scala: ## build all scala projects
-	# knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage knora-assets/universal:stage
 	bazel build //...
 
 ## knora-api
 .PHONY: build-knora-api-image
-build-knora-api-image: build-all-scala ## build and publish knora-api docker image locally
-	docker build -t $(KNORA_API_IMAGE) -f docker/knora-api.dockerfile  webapi/target/universal
+build-knora-api-image: ## build and publish knora-api docker image locally
+	bazel run //docker/knora-api -- --norun
 
 .PHONY: publish-knora-api
-publish-knora-api-image: build-knora-api-image ## publish knora-api image to Dockerhub
-	docker push $(KNORA_API_IMAGE)
+publish-knora-api-image: ## publish knora-api image to Dockerhub
+	docker run //docker/knora-api:push
 
 ## knora-graphdb-se
 .PHONY: build-knora-graphdb-se-image
-build-knora-graphdb-se-image: build-all-scala ## build and publish knora-graphdb-se docker image locally
-	@mkdir -p .docker
-	@sed -e "s/@GRAPHDB_IMAGE@/daschswiss\/graphdb\:$(GRAPHDB_SE_VERSION)-se/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-se.dockerfile
-	docker build -t $(KNORA_GRAPHDB_SE_IMAGE) -t $(REPO_PREFIX)/$(KNORA_GRAPHDB_SE_REPO):latest -f .docker/knora-graphdb-se.dockerfile  knora-graphdb-se/target/universal
+build-knora-graphdb-se-image: ## build and publish knora-graphdb-se docker image locally
+	bazel run //docker/knora-graphdb-se
 
 .PHONY: publish-knora-graphdb-se-image
-publish-knora-graphdb-se-image: build-knora-graphdb-se-image ## publish knora-graphdb-se image to Dockerhub
-	docker push $(KNORA_GRAPHDB_SE_IMAGE)
+publish-knora-graphdb-se-image: ## publish knora-graphdb-se image to Dockerhub
+	bazel run //docker/knora-graphdb-se:push
 
 ## knora-graphdb-free
 .PHONY: build-knora-graphdb-free-image
-build-knora-graphdb-free-image: build-all-scala ## build and publish knora-graphdb-free docker image locally
-	@mkdir -p .docker
-	@sed -e "s/@GRAPHDB_IMAGE@/daschswiss\/graphdb\:$(GRAPHDB_FREE_VERSION)-free/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-free.dockerfile
-	docker build -t $(KNORA_GRAPHDB_FREE_IMAGE) -f .docker/knora-graphdb-free.dockerfile  knora-graphdb-free/target/universal
+build-knora-graphdb-free-image: ## build and publish knora-graphdb-free docker image locally
+	bazel run //docker/knora-graphdb-free
 
 .PHONY: publish-knora-graphdb-free-image
-publish-knora-graphdb-free-image: build-knora-graphdb-free-image ## publish knora-graphdb-se image to Dockerhub
-	docker push $(KNORA_GRAPHDB_FREE_IMAGE)
+publish-knora-graphdb-free-image: ## publish knora-graphdb-se image to Dockerhub
+	bazel run //docker/knora-graphdb-free:push
 
 ## knora-sipi
 .PHONY: build-knora-sipi-image
-build-knora-sipi-image: build-all-scala ## build and publish knora-sipi docker image locally
-	@mkdir -p .docker
-	@sed -e "s/@SIPI_VERSION@/$(SIPI_VERSION)/" docker/knora-sipi.template.dockerfile > .docker/knora-sipi.dockerfile
-	docker build -t $(KNORA_SIPI_IMAGE) -f .docker/knora-sipi.dockerfile  knora-sipi/target/universal
+build-knora-sipi-image: ## build and publish knora-sipi docker image locally
+	bazel run //docker/knora-sipi
 
 .PHONY: publish-knora-sipi-image
-publish-knora-sipi-image: build-knora-sipi-image ## publish knora-sipi image to Dockerhub
-	docker push $(KNORA_SIPI_IMAGE)
+publish-knora-sipi-image: ## publish knora-sipi image to Dockerhub
+	bazel run //docker/knora-sipi:push
 
 ## knora-salsah1
 .PHONY: build-knora-salsah1-image
-build-knora-salsah1-image: build-all-scala ## build and publish knora-salsah1 docker image locally
-	docker build -t $(KNORA_SALSAH1_IMAGE) -f docker/knora-salsah1.dockerfile  salsah1/target/universal
+build-knora-salsah1-image: ## build and publish knora-salsah1 docker image locally
+	bazel run //docker/knora-salsah1 -- --norun
 
 .PHONY: publish-knora-salsah1-image
 publish-knora-salsah1-image: build-knora-salsah1-image ## publish knora-salsah1 image to Dockerhub
-	docker push $(KNORA_SALSAH1_IMAGE)
+	bazel run //docker/knora-salsah1:push
 
 ## knora-upgrade
 .PHONY: build-knora-upgrade-image
 build-knora-upgrade-image: build-all-scala ## build and publish knora-upgrade docker image locally
-	docker build -t $(KNORA_UPGRADE_IMAGE) -t $(REPO_PREFIX)/$(KNORA_UPGRADE_REPO):latest -f docker/knora-upgrade.dockerfile  upgrade/target/universal
+	bazel run //docker/knora-upgrade
 
 .PHONY: publish-knora-upgrade-image
 publish-knora-upgrade-image: build-knora-upgrade-image ## publish knora-upgrade image to Dockerhub
-	docker push $(KNORA_UPGRADE_IMAGE)
-
-## knora-assets
-.PHONY: build-knora-assets-image
-build-knora-assets-image: build-all-scala ## build and publish knora-assets docker image locally
-	docker build -t $(KNORA_ASSETS_IMAGE) -f docker/knora-assets.dockerfile  knora-assets/target/universal
-
-.PHONY: publish-knora-assets-image
-publish-knora-assets-image: build-knora-assets-image ## publish knora-assets image to Dockerhub
-	docker push $(KNORA_ASSETS_IMAGE)
+	bazel run //docker/knora-upgrade:push
 
 ## all images
 .PHONY: build-all-images
-build-all-images: build-knora-graphdb-se-image build-knora-graphdb-free-image build-knora-sipi-image build-knora-salsah1-image build-knora-upgrade-image build-knora-assets-image  ## build all Docker images
+build-all-images: build-knora-graphdb-se-image build-knora-graphdb-free-image build-knora-sipi-image build-knora-salsah1-image build-knora-upgrade-image  ## build all Docker images
 
 .PHONY: publish-all-images
-publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publish-knora-graphdb-free-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-upgrade-image publish-knora-assets-image ## publish all Docker images
+publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publish-knora-graphdb-free-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-upgrade-image ## publish all Docker images
 
 #################################
 ## Docker-Compose targets
@@ -334,15 +318,11 @@ clean-docker: ## cleans the docker installation
 
 .PHONY: info
 info: ## print out all variables
-	@echo "BUILD_TAG: \t\t\t $(BUILD_TAG)"
 	@echo "GIT_EMAIL: \t\t\t $(GIT_EMAIL)"
-	@echo "SIPI_VERSION: \t\t\t $(SIPI_VERSION)"
-	@echo "GRAPHDB_SE_VERSION: \t\t $(GRAPHDB_SE_VERSION)"
 	@echo "KNORA_API_IMAGE: \t\t $(KNORA_API_IMAGE)"
 	@echo "KNORA_GRAPHDB_SE_IMAGE: \t $(KNORA_GRAPHDB_SE_IMAGE)"
 	@echo "KNORA_GRAPHDB_FREE_IMAGE: \t $(KNORA_GRAPHDB_FREE_IMAGE)"
 	@echo "KNORA_SIPI_IMAGE: \t\t $(KNORA_SIPI_IMAGE)"
-	@echo "KNORA_ASSETS_IMAGE: \t\t $(KNORA_ASSETS_IMAGE)"
 	@echo "KNORA_UPGRADE_IMAGE: \t\t $(KNORA_UPGRADE_IMAGE)"
 	@echo "KNORA_SALSAH1_IMAGE: \t\t $(KNORA_SALSAH1_IMAGE)"
 	@echo "KNORA_GDB_LICENSE: \t\t $(KNORA_GDB_LICENSE)"

@@ -2,13 +2,18 @@ package(default_visibility = ["//visibility:public"])
 
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library", "scala_test")
 
+filegroup(
+    name = "knora_rules_pie",
+    srcs = ["scripts/KnoraRules.pie"]
+)
+
 scala_binary(
     name = "webapi",
-    main_class = "org.knora.webapi.Main",
     jvm_flags = [
         "-Dconfig.resource=application.conf",
-        "-Dlogging.config=logback.xml"
+        "-Dlogging.config=logback.xml",
     ],
+    main_class = "org.knora.webapi.Main",
     resources = [
         "//webapi/src/main/resources",
     ],
@@ -54,8 +59,6 @@ scala_library(
         "@maven//:com_typesafe_config",
         # Templates
         "@maven//:com_typesafe_play_twirl_api_2_12",
-        # Logging
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
         #
@@ -115,18 +118,12 @@ scala_library(
     unused_dependency_checker_mode = "warn",
     deps = [
         ":main_library",
-        # Logging
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:ch_qos_logback_logback_classic",
-        "@maven//:ch_qos_logback_logback_core",
         "@maven//:org_slf4j_slf4j_api",
         # Test Libs
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
-        # CORS
-        "@maven//:ch_megard_akka_http_cors_2_12",
         "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_github_jsonld_java_jsonld_java",
         "@maven//:com_jsuereth_scala_arm_2_12",
@@ -136,18 +133,9 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:com_typesafe_play_twirl_api_2_12",
-        "@maven//:commons_io_commons_io",
-        "@maven//:commons_validator_commons_validator",
         "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
-        "@maven//:org_eclipse_rdf4j_rdf4j_model",
-        "@maven//:org_eclipse_rdf4j_rdf4j_rio_api",
-        "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_scalactic_scalactic_2_12",
-        "@maven//:org_springframework_security_spring_security_core",
-        "@maven//:org_xmlunit_xmlunit_core",
-        "@maven//:xml_apis_xml_apis",
     ],
 )
 
@@ -162,10 +150,6 @@ scala_library(
     unused_dependency_checker_mode = "warn",
     deps = [
         ":main_library",
-        # Logging
-        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
-        "@maven//:org_slf4j_slf4j_api",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_core",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
@@ -178,6 +162,7 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_parsing_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:commons_cli_commons_cli",
         "@maven//:commons_codec_commons_codec",
         "@maven//:commons_io_commons_io",
@@ -194,6 +179,7 @@ scala_library(
         "@maven//:org_scala_lang_scala_reflect",
         "@maven//:org_scalactic_scalactic_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_xmlunit_xmlunit_core",
     ],
 )

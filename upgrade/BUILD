@@ -4,7 +4,7 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library")
 
 filegroup(
     name = "main_srcs",
-    srcs = glob(["src/main/**/*.scala"])
+    srcs = glob(["src/main/**/*.scala"]),
 )
 
 scala_binary(
@@ -26,8 +26,7 @@ scala_library(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi:main_library",
-        "@maven//:org_rogach_scallop_2_12",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
-        "@maven//:org_eclipse_rdf4j_rdf4j_model",
+        "@maven//:org_rogach_scallop_2_12",
     ],
 )

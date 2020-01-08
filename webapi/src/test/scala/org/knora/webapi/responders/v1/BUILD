@@ -51,10 +51,8 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
     ],
 )
 
@@ -79,8 +77,6 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
         "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
@@ -94,7 +90,7 @@ scala_test(
     srcs = [
         "ResourcesResponderV1Spec.scala",
         "ResourcesResponderV1SpecContextData.scala",
-        "ResourcesResponderV1SpecFullData.scala"
+        "ResourcesResponderV1SpecFullData.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -169,12 +165,8 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
     ],
 )
 
@@ -182,8 +174,8 @@ scala_test(
     name = "ValuesResponderV1Spec",
     size = "medium",  # 300s
     srcs = [
-        "ValuesResponderV1Spec.scala",
         "ResourcesResponderV1SpecFullData.scala",
+        "ValuesResponderV1Spec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -202,7 +194,6 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",

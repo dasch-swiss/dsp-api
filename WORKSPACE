@@ -165,8 +165,36 @@ load(
 container_pull(
     name = "openjdk11",
     registry = "index.docker.io",
-    repository = "adoptopenjdk/openjdk11",
-    tag = "alpine-jre",
+    repository = "adoptopenjdk",
+    tag = "11-hotspot",
+    digest = "sha256:755c2308a261ce0aa29cbc511e8292914057163826004b3ccc0681a7fc28b860",
+)
+
+load("//third_party:versions.bzl", "SIPI_REPOSITORY", "SIPI_TAG")
+container_pull(
+    name = "sipi",
+    registry = "index.docker.io",
+    repository = SIPI_REPOSITORY,
+    tag = SIPI_TAG,
+    digest = "sha256:4b4266da659f30f27722d52e55066937de3ef8828f2a86fafcc75b72cc979b28",
+)
+
+load("//third_party:versions.bzl", "GDB_SE_REPOSITORY", "GDB_SE_TAG")
+container_pull(
+    name = "graphdbse",
+    registry = "index.docker.io",
+    repository = GDB_SE_REPOSITORY,
+    tag = GDB_SE_TAG,
+    digest = "sha256:a8a5d5dce1de8855ffa2a327b98e0b1ea59b81683d0d02ec8dbbc90838691c65",
+)
+
+load("//third_party:versions.bzl", "GDB_FREE_REPOSITORY", "GDB_FREE_TAG")
+container_pull(
+    name = "graphdbfree",
+    registry = "index.docker.io",
+    repository = GDB_FREE_REPOSITORY,
+    tag = GDB_FREE_TAG,
+    digest = "sha256:9ee53dbedea3b7f365702c198da3e64c6d0a460397152fd9aee0ed0ac624067d",
 )
 
 #
@@ -183,94 +211,3 @@ http_archive(
 # load further dependencies of this rule
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 rules_pkg_dependencies()
-
-# Get complete rules_pkg rule repository because of the deb_packages subdirectory
-http_archive(
-   name = "deb_packages",
-   strip_prefix = "rules_pkg-master",
-   url = "https://github.com/bazelbuild/rules_pkg/archive/master.zip",
-)
-
-# load rule for downloading debian packages
-load("@deb_packages//deb_packages:deb_packages.bzl", "deb_packages")
-
-# Not all of the following keys are actually used...
-
-# The Debian jessie archive signing key
-# Source: https://ftp-master.debian.org/keys.html
-# Full fingerprint: 126C 0D24 BD8A 2942 CC7D F8AC 7638 D044 2B90 D010
-http_file(
-    name = "jessie_archive_key",
-    # It is highly recommended to use the sha256 hash of the key file to make sure it is untampered
-    sha256 = "e42141a829b9fde8392ea2c0e329321bb29e5c0453b0b48e33c9f88bdc4873c5",
-    urls = ["https://ftp-master.debian.org/keys/archive-key-8.asc"],
-)
-
-# The Debian jessie security archive signing key
-# Source: https://ftp-master.debian.org/keys.html
-# Full fingerprint: D211 6914 1CEC D440 F2EB 8DDA 9D6D 8F6B C857 C906
-http_file(
-    name = "jessie_security_archive_key",
-    # It is highly recommended to use the sha256 hash of the key file to make sure it is untampered
-    sha256 = "d05815c66deb71a595279b750aaf06370b6ad8c3b373651473c1c4b3d7da8f3c",
-    urls = ["https://ftp-master.debian.org/keys/archive-key-8-security.asc"],
-)
-
-# The Debian stretch archive signing key
-# Source: https://ftp-master.debian.org/keys.html
-# Full fingerprint: E1CF 20DD FFE4 B89E 8026 58F1 E0B1 1894 F66A EC98
-http_file(
-    name = "stretch_archive_key",
-    # It is highly recommended to use the sha256 hash of the key file to make sure it is untampered
-    sha256 = "33b6a997460e177804cc44c7049a19350c11034719219390b22887471f0a2b5e",
-    urls = ["https://ftp-master.debian.org/keys/archive-key-9.asc"],
-)
-
-# The Debian stretch security archive signing key
-# Source: https://ftp-master.debian.org/keys.html
-# Full fingerprint: 6ED6 F5CB 5FA6 FB2F 460A E88E EDA0 D238 8AE2 2BA9
-http_file(
-    name = "stretch_security_archive_key",
-    # It is highly recommended to use the sha256 hash of the key file to make sure it is untampered
-    sha256 = "4adecda0885f192b82c19fde129ca9d991f937437835a058da355b352a97e7dc",
-    urls = ["https://ftp-master.debian.org/keys/archive-key-9-security.asc"],
-)
-
-# pulls in deb packages
-deb_packages(
-    name = "debian_jessie_amd64",
-    arch = "amd64",
-    distro = "jessie",
-    distro_type = "debian",
-    mirrors = [
-        "http://deb.debian.org/debian",
-        # This ensures old states of this repository will build as long as the snapshot mirror works:
-        "http://snapshot.debian.org/archive/debian/20171219T131415Z",
-        "http://security.debian.org/debian-security",
-    ],
-    packages = {
-        "bash": "pool/updates/main/b/bash/bash_4.3-11+deb8u2_amd64.deb",
-    },
-    packages_sha256 = {
-        "bash": "9ef1f539367912045a85269b583b28d2a5b4f48e70a0457017a520d9c83992bf",
-    },
-    pgp_key = "jessie_archive_key",
-)
-
-# pulls in deb packages
-deb_packages(
-    name = "debian_jessie_amd64_security",
-    arch = "amd64",
-    distro = "jessie",
-    distro_type = "debian",
-    mirrors = [
-        "http://security.debian.org/debian-security",
-    ],
-    packages = {
-        "bash": "pool/updates/main/b/bash/bash_4.3-11+deb8u2_amd64.deb",
-    },
-    packages_sha256 = {
-        "bash": "9ef1f539367912045a85269b583b28d2a5b4f48e70a0457017a520d9c83992bf",
-    },
-    pgp_key = "jessie_security_archive_key",
-)

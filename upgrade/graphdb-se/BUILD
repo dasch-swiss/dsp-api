@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
+
 filegroup(
     name = "graphdb-se",
     srcs = [
@@ -8,4 +10,10 @@ filegroup(
         "empty-repository.sh",
         "upload-repository.sh"
     ]
+)
+
+pkg_tar(
+    name = "graphdb-se-scripts",
+    package_dir = "/upgrade/graphdb-se",
+    srcs = [":graphdb-se"]
 )

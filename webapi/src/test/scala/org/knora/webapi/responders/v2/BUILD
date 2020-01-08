@@ -5,7 +5,7 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 filegroup(
     name = "srcs",
     srcs = [
-        "ResourcesResponseCheckerV2.scala"
+        "ResourcesResponseCheckerV2.scala",
     ],
 )
 
@@ -31,10 +31,8 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
     ],
 )
 
@@ -59,10 +57,8 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
     ],
 )
 
@@ -71,7 +67,7 @@ scala_test(
     size = "medium",
     srcs = [
         "ResourcesResponderV2Spec.scala",
-        "ResourcesResponderV2SpecFullData.scala"
+        "ResourcesResponderV2SpecFullData.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -91,11 +87,8 @@ scala_test(
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
         "@maven//:org_xmlunit_xmlunit_core",
     ],
 )
@@ -104,9 +97,9 @@ scala_test(
     name = "ResourcesResponseCheckerV2Spec",
     size = "small",
     srcs = [
+        "ResourcesResponderV2SpecFullData.scala",
         "ResourcesResponseCheckerV2Spec.scala",
         "ResourcesResponseCheckerV2SpecFullData.scala",
-        "ResourcesResponderV2SpecFullData.scala"
     ],
     data = [
         "//knora-ontologies",
@@ -123,12 +116,8 @@ scala_test(
         "@maven//:com_typesafe_akka_akka_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
-        "@maven//:com_typesafe_akka_akka_http_spray_json_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
-        "@maven//:io_spray_spray_json_2_12",
     ],
 )
 
@@ -183,7 +172,6 @@ scala_test(
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_akka_akka_http_core_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
     ],

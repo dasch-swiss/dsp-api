@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
+# bring our version constants in
+load("//third_party:versions.bzl", "AKKA_VERSION", "AKKA_HTTP_VERSION", "SIPI_VERSION", "GDB_SE_VERSION", "GDB_FREE_VERSION")
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
 
 filegroup(
@@ -13,9 +15,6 @@ filegroup(
     name = "srcs",
     srcs = glob(["**"]),
 )
-
-# bring our version constants in
-load("//third_party:versions.bzl", "AKKA_VERSION", "AKKA_HTTP_VERSION", "SIPI_VERSION", "GDB_SE_VERSION", "GDB_FREE_VERSION")
 
 # Generates a scala source file that includes version information
 load("//tools/buildstamp:gen_build_info.bzl", "gen_build_info")

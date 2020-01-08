@@ -1,32 +1,15 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_docker//container:container.bzl", "container_layer", "container_image")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
 load("@io_bazel_rules_docker//scala:image.bzl", "scala_image")
-load("@debian_jessie_amd64_security//debs:deb_packages.bzl", "debian_jessie_amd64_security")
-
-container_layer(
-    name = "bash_layer",
-    debs = [
-        debian_jessie_amd64_security["bash"],
-    ]
-)
 
 container_image(
-    name = "knora_api_base_image",
+    name = "knora-api",
     base = "@openjdk11//image",
-    # cmd = [""],
-    entrypoint = [
-        "/webapi/api",
-    ],
-    env = {
-#        "LANG": "en_US.UTF-8",
-#        "JAVA_OPTS": "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8",
-#        "KNORA_SALSAH1_DEPLOYED": "true",
-#        "KNORA_SALSAH1_WORKDIR": "/salsah1"
-    },
-    directory = "webapi",
+    # cmd = ["java", "-jar", "webapi_deploy.jar"],
+    entrypoint = ["java", "-jar", "webapi_deploy.jar"],
     files = [
-        # "//salsah1:public_folder",
+        "//webapi:webapi_deploy.jar"
     ],
     labels = {
         "MAINTAINER": "400790+subotic@users.noreply.github.com",
@@ -34,14 +17,13 @@ container_image(
     ports = [
         "3333/tcp",
     ],
-    layers = [":bash_layer"]
 )
 
-# create language specific image
-# uses scala_binary underneath
-scala_image(
-    name = "knora-api",
-    deps = ["//webapi:main_library"],
-    main_class = "org.knora.webapi.Main",
-    base = ":knora_api_base_image",
+container_push(
+   name = "push",
+   image = ":knora-api",
+   format = "Docker",
+   registry = "index.docker.io",
+   repository = "dasch-swiss/knora-api",
+   tag = "{BUILD_SCM_TAG}"
 )
