@@ -29,7 +29,8 @@ else
   KNORA_GDB_HEAP_SIZE := $(GDB_HEAP_SIZE)
 endif
 
-ifeq ($(OS),OSX)
+UNAME := $(shell uname)
+ifeq ($(UNAME),Darwin)
   DOCKERHOST :=  $(shell ifconfig en0 | grep inet | grep -v inet6 | cut -d ' ' -f2)
 else
   DOCKERHOST := $(shell ip route get 8.8.8.8 | awk '{print $NF; exit}')

@@ -9,10 +9,10 @@ container_image(
     # cmd = [""],
     # entrypoint = ["/salsah1/app1"],
     env = {
-#        "LANG": "en_US.UTF-8",
-#        "JAVA_OPTS": "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8",
-#        "KNORA_SALSAH1_DEPLOYED": "true",
-#        "KNORA_SALSAH1_WORKDIR": "/salsah1"
+        "LANG": "en_US.UTF-8",
+        "JAVA_OPTS": "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8",
+        "KNORA_SALSAH1_DEPLOYED": "true",
+        "KNORA_SALSAH1_WORKDIR": "/salsah1"
     },
     directory = "salsah1",
     files = [

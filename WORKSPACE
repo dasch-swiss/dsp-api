@@ -137,8 +137,8 @@ go_register_toolchains()
 #
 # Download the rules_docker repository at release v0.12.0
 #
-rules_docker_version="0.12.0"
-rules_docker_version_sha256="413bb1ec0895a8d3249a01edf24b82fd06af3c8633c9fb833a0cb1d4b234d46d"
+rules_docker_version="0.13.0"
+rules_docker_version_sha256="df13123c44b4a4ff2c2f337b906763879d94871d16411bf82dcfeba892b58607"
 http_archive(
     name = "io_bazel_rules_docker",
     sha256 = rules_docker_version_sha256,
@@ -164,7 +164,7 @@ load(
 )
 container_pull(
     name = "openjdk11",
-    registry = "index.docker.io",
+    registry = "docker.io",
     repository = "adoptopenjdk",
     tag = "11-hotspot",
     digest = "sha256:755c2308a261ce0aa29cbc511e8292914057163826004b3ccc0681a7fc28b860",
@@ -173,7 +173,7 @@ container_pull(
 load("//third_party:versions.bzl", "SIPI_REPOSITORY", "SIPI_TAG")
 container_pull(
     name = "sipi",
-    registry = "index.docker.io",
+    registry = "docker.io",
     repository = SIPI_REPOSITORY,
     tag = SIPI_TAG,
     digest = "sha256:4b4266da659f30f27722d52e55066937de3ef8828f2a86fafcc75b72cc979b28",
@@ -182,7 +182,7 @@ container_pull(
 load("//third_party:versions.bzl", "GDB_SE_REPOSITORY", "GDB_SE_TAG")
 container_pull(
     name = "graphdbse",
-    registry = "index.docker.io",
+    registry = "docker.io",
     repository = GDB_SE_REPOSITORY,
     tag = GDB_SE_TAG,
     digest = "sha256:a8a5d5dce1de8855ffa2a327b98e0b1ea59b81683d0d02ec8dbbc90838691c65",
@@ -191,7 +191,7 @@ container_pull(
 load("//third_party:versions.bzl", "GDB_FREE_REPOSITORY", "GDB_FREE_TAG")
 container_pull(
     name = "graphdbfree",
-    registry = "index.docker.io",
+    registry = "docker.io",
     repository = GDB_FREE_REPOSITORY,
     tag = GDB_FREE_TAG,
     digest = "sha256:9ee53dbedea3b7f365702c198da3e64c6d0a460397152fd9aee0ed0ac624067d",

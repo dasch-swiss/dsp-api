@@ -95,6 +95,7 @@ print-env-file: env-file ## prints the env file used by knora-stack
 
 .PHONY: env-file
 env-file: ## write the env file used by knora-stack.
+# FIXME: Generate .env file though bazel
 ifeq ($(KNORA_GDB_LICENSE), unknown)
 	$(warning No GraphDB-SE license set. Using GraphDB-Free.)
 	@echo KNORA_GRAPHDB_IMAGE=$(KNORA_GRAPHDB_FREE_IMAGE) > .env
@@ -126,58 +127,58 @@ endif
 ## knora stack
 .PHONY: stack-up
 stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, redis, api, salsah1.
-	docker-compose -f docker/knora.docker-compose.yml up -d
+	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-restart
 stack-restart: stack-up ## re-starts the knora-stack: graphdb, sipi, redis, api, salsah1.
-	docker-compose -f docker/knora.docker-compose.yml restart
+	docker-compose -f docker-compose.yml restart
 
 .PHONY: stack-restart-api
 stack-restart-api: ## re-starts the api. Usually used after loading data into GraphDB.
-	docker-compose -f docker/knora.docker-compose.yml restart api
+	docker-compose -f docker-compose.yml restart api
 
 .PHONY: stack-logs
 stack-logs: ## prints out and follows the logs of the running knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f
+	docker-compose -f docker-compose.yml logs -f
 
 .PHONY: stack-logs-db
 stack-logs-db: ## prints out and follows the logs of the 'db' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f db
+	docker-compose -f docker-compose.yml logs -f db
 
 .PHONY: stack-logs-sipi
 stack-logs-sipi: ## prints out and follows the logs of the 'sipi' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f sipi
+	docker-compose -f docker-compose.yml logs -f sipi
 
 .PHONY: stack-logs-sipi-no-follow
 stack-logs-sipi-no-follow: ## prints out the logs of the 'sipi' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs sipi
+	docker-compose -f docker-compose.yml logs sipi
 
 .PHONY: stack-logs-redis
 stack-logs-redis: ## prints out and follows the logs of the 'redis' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f redis
+	docker-compose -f docker-compose.yml logs -f redis
 
 .PHONY: stack-logs-api
 stack-logs-api: ## prints out and follows the logs of the 'api' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f api
+	docker-compose -f docker-compose.yml logs -f api
 
 .PHONY: stack-logs-salsah1
 stack-logs-salsah1: ## prints out and follows the logs of the 'salsah1' container running in knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml logs -f salsah1
+	docker-compose -f docker-compose.yml logs -f salsah1
 
 .PHONY: stack-down
 stack-down: ## stops the knora-stack.
-	docker-compose -f docker/knora.docker-compose.yml down
+	docker-compose -f docker-compose.yml down
 
 ## stack without api
 .PHONY: stack-without-api
 stack-without-api: stack-up ## starts the knora-stack without knora-api: graphdb, sipi, redis, salsah1.
-	docker-compose -f docker/knora.docker-compose.yml stop api
+	docker-compose -f docker-compose.yml stop api
 
 ## stack without api and sipi
 .PHONY: stack-without-api-and-sipi
 stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api and sipi: graphdb, redis, salsah1.
-	docker-compose -f docker/knora.docker-compose.yml stop api
-	docker-compose -f docker/knora.docker-compose.yml stop sipi
+	docker-compose -f docker-compose.yml stop api
+	docker-compose -f docker-compose.yml stop sipi
 
 .PHONY: unit-tests
 unit-tests: stack-without-api init-db-test-unit ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest').
@@ -308,10 +309,9 @@ init-db-test-unit-local: ## initializes the knora-test-unit repository (for a lo
 	$(MAKE) -C webapi/scripts graphdb-se-local-init-knora-test-unit
 
 clean: ## clean build artifacts
-	@rm -rf .docker
 	@rm -rf .env
-	@sbt clean
 	@bazel clean
+	@sbt clean
 
 clean-docker: ## cleans the docker installation
 	docker system prune -af
@@ -328,6 +328,7 @@ info: ## print out all variables
 	@echo "KNORA_GDB_LICENSE: \t\t $(KNORA_GDB_LICENSE)"
 	@echo "KNORA_GDB_IMPORT: \t\t $(KNORA_GDB_IMPORT)"
 	@echo "KNORA_GDB_HOME: \t\t $(KNORA_GDB_HOME)"
+	@echo "DOCKERHOST: \t\t\t $(DOCKERHOST)"
 
 .PHONY: help
 help: ## this help

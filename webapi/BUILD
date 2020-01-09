@@ -4,7 +4,7 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library", 
 
 filegroup(
     name = "knora_rules_pie",
-    srcs = ["scripts/KnoraRules.pie"]
+    srcs = ["scripts/KnoraRules.pie"],
 )
 
 scala_binary(
@@ -173,7 +173,6 @@ scala_library(
         "@maven//:org_apache_httpcomponents_httpclient",
         "@maven//:org_apache_httpcomponents_httpclient_cache",
         "@maven//:org_apache_httpcomponents_httpcore",
-        "@maven//:org_apache_jena_apache_jena_libs",
         "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_scala_lang_scala_library",
         "@maven//:org_scala_lang_scala_reflect",
