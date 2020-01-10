@@ -494,7 +494,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
         }
     }
 
-    "The Nodes Route ('/admin/nodes')" when {
+    "The Nodes Route ('/admin/lists/nodes')" when {
 
         "used to query information about nodes" should {
 
@@ -529,7 +529,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
               
-                val request = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 //println(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -578,7 +578,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -628,7 +628,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // println(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
@@ -674,7 +674,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
+                val request = Post(baseApiUrl + s"/admin/lists/nodes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 response.status should be(StatusCodes.Forbidden)
             }
@@ -692,7 +692,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request00 = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params00)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request00 = Post(baseApiUrl + s"/admin/lists/nodes", HttpEntity(ContentTypes.`application/json`, params00)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response00: HttpResponse = singleAwaitingRequest(request00)
                 response00.status should be(StatusCodes.BadRequest)
 
@@ -709,7 +709,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request01 = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request01 = Post(baseApiUrl + s"/admin/lists/nodes", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response01: HttpResponse = singleAwaitingRequest(request01)
                 response01.status should be(StatusCodes.BadRequest)
 
@@ -726,7 +726,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request02 = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request02 = Post(baseApiUrl + s"/admin/lists/nodes", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response02: HttpResponse = singleAwaitingRequest(request02)
                 response02.status should be(StatusCodes.BadRequest)
 
@@ -743,7 +743,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                    |}
                 """.stripMargin
 
-                val request03 = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params03)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request03 = Post(baseApiUrl + s"/admin/lists/nodes", HttpEntity(ContentTypes.`application/json`, params03)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response03: HttpResponse = singleAwaitingRequest(request03)
                 response03.status should be(StatusCodes.BadRequest)
 
@@ -760,7 +760,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request05 = Post(baseApiUrl + s"/admin/nodes", HttpEntity(ContentTypes.`application/json`, params05)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request05 = Post(baseApiUrl + s"/admin/lists/nodes", HttpEntity(ContentTypes.`application/json`, params05)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response05: HttpResponse = singleAwaitingRequest(request05)
                 // println(s"response: ${response03.toString}")
                 response05.status should be(StatusCodes.BadRequest)
@@ -779,7 +779,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListUrl = java.net.URLEncoder.encode(firstChildIri.get, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/nodes/" + encodedListUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 response.status should be(StatusCodes.BadRequest)
             }
@@ -796,7 +796,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListNodeUrl = java.net.URLEncoder.encode(firstChildIri.get, "utf-8")
 
-                val requestUpdate = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, paramsUpdate)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val requestUpdate = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, paramsUpdate)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val responseUpdate: HttpResponse = singleAwaitingRequest(requestUpdate)
                 responseUpdate.status should be(StatusCodes.OK)
 
@@ -812,7 +812,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val requestDelete = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, paramsDelete)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val requestDelete = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, paramsDelete)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val responseDelete: HttpResponse = singleAwaitingRequest(requestDelete)
                 responseDelete.status should be(StatusCodes.OK)
 
@@ -832,7 +832,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListNodeUrl = java.net.URLEncoder.encode(firstChildIri.get, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoLabel", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoLabel", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 response.status should be(StatusCodes.OK)
 
@@ -854,7 +854,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListNodeUrl = java.net.URLEncoder.encode(firstChildIri.get, "utf-8")
 
-                val requestUpdate = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoComment", HttpEntity(ContentTypes.`application/json`, paramsUpdate)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val requestUpdate = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoComment", HttpEntity(ContentTypes.`application/json`, paramsUpdate)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val responseUpdate: HttpResponse = singleAwaitingRequest(requestUpdate)
                 responseUpdate.status should be(StatusCodes.OK)
 
@@ -871,7 +871,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val requestDelete = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoComment", HttpEntity(ContentTypes.`application/json`, paramsDelete)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val requestDelete = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoComment", HttpEntity(ContentTypes.`application/json`, paramsDelete)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val responseDelete: HttpResponse = singleAwaitingRequest(requestDelete)
                 responseDelete.status should be(StatusCodes.OK)
 
@@ -894,15 +894,15 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 val encodedListNodeUrl = java.net.URLEncoder.encode(firstChildIri.get, "utf-8")
 
-                val requestName = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
+                val requestName = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
                 val responseName: HttpResponse = singleAwaitingRequest(requestName)
                 responseName.status should be(StatusCodes.Forbidden)
 
-                val requestLabel = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoLabel", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
+                val requestLabel = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoLabel", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
                 val responseLabel: HttpResponse = singleAwaitingRequest(requestLabel)
                 responseLabel.status should be(StatusCodes.Forbidden)
 
-                val requestComment = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoComment", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
+                val requestComment = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoComment", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images02UserCreds.basicHttpCredentials)
                 val responseComment: HttpResponse = singleAwaitingRequest(requestComment)
                 responseComment.status should be(StatusCodes.Forbidden)
             }
@@ -922,13 +922,13 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request01Name = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request01Name = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response01Name: HttpResponse = singleAwaitingRequest(request01Name)
                 response01Name.status should be(StatusCodes.BadRequest)
-                val request01Label = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoLabel", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request01Label = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoLabel", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response01Label: HttpResponse = singleAwaitingRequest(request01Label)
                 response01Label.status should be(StatusCodes.BadRequest)
-                val request01Comment = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoComment", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request01Comment = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoComment", HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response01Comment: HttpResponse = singleAwaitingRequest(request01Comment)
                 response01Comment.status should be(StatusCodes.BadRequest)
 
@@ -944,13 +944,13 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request02Name = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request02Name = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoName", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response02Name: HttpResponse = singleAwaitingRequest(request02Name)
                 response02Name.status should be(StatusCodes.BadRequest)
-                val request02Label = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoLabel", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request02Label = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoLabel", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response02Label: HttpResponse = singleAwaitingRequest(request02Label)
                 response02Label.status should be(StatusCodes.BadRequest)
-                val request02Comment = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoComment", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request02Comment = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoComment", HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response02Comment: HttpResponse = singleAwaitingRequest(request02Comment)
                 response02Comment.status should be(StatusCodes.BadRequest)
 
@@ -966,7 +966,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                        |}
                 """.stripMargin
 
-                val request03Label = Put(baseApiUrl + s"/admin/nodes/" + encodedListNodeUrl + "/NodeInfoLabel", HttpEntity(ContentTypes.`application/json`, params03)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val request03Label = Put(baseApiUrl + s"/admin/lists/nodes/" + encodedListNodeUrl + "/NodeInfoLabel", HttpEntity(ContentTypes.`application/json`, params03)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
                 val response03Label: HttpResponse = singleAwaitingRequest(request03Label)
                 response03Label.status should be(StatusCodes.BadRequest)
             }

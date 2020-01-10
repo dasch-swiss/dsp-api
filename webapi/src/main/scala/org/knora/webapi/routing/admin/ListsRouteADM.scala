@@ -409,7 +409,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    def postListChildNode: Route = path("admin" / "nodes") {
+    def postListChildNode: Route = path(ListsBasePath / "nodes") {
         post {
             /* add node to existing list node. the existing list node can be either the root or a child */
             entity(as[CreateChildNodeApiRequestADM]) { apiRequest =>
@@ -438,7 +438,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /** return node with children */
-    def getListNode: Route = path("admin" / "nodes" / Segment) { iri =>
+    def getListNode: Route = path(ListsBasePath / "nodes" / Segment) { iri =>
         get {
             throw NotImplementedException("Method not implemented.")
             ???
@@ -446,7 +446,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /** create new child node with given IRI */
-    def putNodeWithIRI: Route = path("admin" / "nodes" / Segment) { iri =>
+    def putNodeWithIRI: Route = path(ListsBasePath / "nodes" / Segment) { iri =>
         put {
             throw NotImplementedException("Method not implemented.")
             ???
@@ -454,7 +454,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /** delete list node with children if not used */
-    def deleteListNode: Route = path("admin" / "nodes" / Segment) { iri =>
+    def deleteListNode: Route = path(ListsBasePath / "nodes" / Segment) { iri =>
         delete {
             throw NotImplementedException("Method not implemented.")
             ???
@@ -486,7 +486,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
         
     /** return information about a single node (without children) */
-    def getListNodeInfo: Route = path("admin" / "nodes" / Segment / "Info") { iri =>
+    def getListNodeInfo: Route = path(ListsBasePath / "nodes" / Segment / "Info") { iri =>
         get {
             requestContext =>
                 val nodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list node IRI: $iri"))
@@ -524,7 +524,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /** update list node */
-    def putNodeInfo: Route = path("admin" / "nodes" / Segment / Segment) { (iri, attribute) =>
+    def putNodeInfo: Route = path(ListsBasePath / "nodes" / Segment / Segment) { (iri, attribute) =>
         put {
             entity(as[ChangeListNodeInfoApiRequestADM]) { apiRequest =>
                 requestContext =>
