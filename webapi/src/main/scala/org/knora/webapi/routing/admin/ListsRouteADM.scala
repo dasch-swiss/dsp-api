@@ -242,8 +242,26 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    private val getListFunction: ClientFunction =
+        "getList" description "Gets a list." params (
+            "iri" description "The IRI of the list." paramType UriDatatype
+            ) doThis {
+            httpGet(
+                path = arg("iri")
+            )
+        } returns ListResponse
+
+    private def getListTestResponse: Future[SourceCodeFileContent] = {
+        for {
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/$anythingList") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+        } yield SourceCodeFileContent(
+            filePath = SourceCodeFilePath.makeJsonPath("get-list-response"),
+            text = responseStr
+        )
+    }
+
     /** create new list (root node) with given IRI */
-    def putListWithIRI: Route = path("admin" / "lists" / Segment) { iri =>
+    def putListWithIRI: Route = path(ListsBasePath / Segment) { iri =>
         put {
             throw NotImplementedException("Method not implemented.")
             ???
@@ -251,7 +269,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     /** delete list/node which should also delete all children */
-    def deleteList: Route = path("admin" / "lists" / Segment) { iri =>
+    def deleteList: Route = path(ListsBasePath / Segment) { iri =>
         delete {
             throw NotImplementedException("Method not implemented.")
             ???
@@ -269,7 +287,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /** return basic information about a list (without children) */
-    def getListInfo: Route = path("admin" / "lists" / Segment / "Info") { iri =>
+    def getListInfo: Route = path(ListsBasePath / Segment / "Info") { iri =>
         get {
             requestContext =>
                 val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
@@ -288,20 +306,20 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val getListFunction: ClientFunction =
-        "getList" description "Gets a list." params (
+    private val getListInfoFunction: ClientFunction =
+        "getListInfo" description "Returns information about a list." params (
             "iri" description "The IRI of the list." paramType UriDatatype
             ) doThis {
             httpGet(
-                path = arg("iri")
+                path = str("infos") / arg("iri")
             )
-        } returns ListResponse
+        } returns ListInfoResponse
 
-    private def getListTestResponse: Future[SourceCodeFileContent] = {
+    private def getListInfoTestResponse: Future[SourceCodeFileContent] = {
         for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/$anythingList") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/$anythingList/Info") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
         } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-list-response"),
+            filePath = SourceCodeFilePath.makeJsonPath("get-list-info-response"),
             text = responseStr
         )
     }
@@ -321,7 +339,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    def putListInfo: Route = path("admin" / "lists" / Segment / Segment) { (iri, attribute) =>
+    def putListInfo: Route = path(ListsBasePath / Segment / Segment) { (iri, attribute) =>
         put {
             entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
                 requestContext =>
@@ -437,30 +455,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    /** return node with children */
-    def getListNode: Route = path(ListsBasePath / "nodes" / Segment) { iri =>
-        get {
-            throw NotImplementedException("Method not implemented.")
-            ???
-        }
-    }
-
-    /** create new child node with given IRI */
-    def putNodeWithIRI: Route = path(ListsBasePath / "nodes" / Segment) { iri =>
-        put {
-            throw NotImplementedException("Method not implemented.")
-            ???
-        }
-    }
-
-    /** delete list node with children if not used */
-    def deleteListNode: Route = path(ListsBasePath / "nodes" / Segment) { iri =>
-        delete {
-            throw NotImplementedException("Method not implemented.")
-            ???
-        }
-    }
-
     private val createChildNodeFunction: ClientFunction =
         "createChildNode" description "Creates a child node in a list." params (
             "node" description "The node to be created." paramType CreateChildNodeRequest
@@ -484,6 +478,30 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
         )
     }
+
+    /** return node with children */
+    def getListNode: Route = path(ListsBasePath / "nodes" / Segment) { iri =>
+        get {
+            throw NotImplementedException("Method not implemented.")
+            ???
+        }
+    }
+
+    /** create new child node with given IRI */
+    def putNodeWithIRI: Route = path(ListsBasePath / "nodes" / Segment) { iri =>
+        put {
+            throw NotImplementedException("Method not implemented.")
+            ???
+        }
+    }
+
+    /** delete list node with children if not used */
+    def deleteListNode: Route = path(ListsBasePath / "nodes" / Segment) { iri =>
+        delete {
+            throw NotImplementedException("Method not implemented.")
+            ???
+        }
+    }
         
     /** return information about a single node (without children) */
     def getListNodeInfo: Route = path(ListsBasePath / "nodes" / Segment / "Info") { iri =>
@@ -505,20 +523,20 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    private val getListInfoFunction: ClientFunction =
-        "getListInfo" description "Returns information about a list." params (
-            "iri" description "The IRI of the list." paramType UriDatatype
+    private val getListNodeInfoFunction: ClientFunction =
+        "getListNodeInfo" description "Returns information about a list node." params (
+            "iri" description "The IRI of the node." paramType UriDatatype
             ) doThis {
             httpGet(
-                path = str("infos") / arg("iri")
+                path = str("nodes") / arg("iri")
             )
-        } returns ListInfoResponse
+        } returns ListNodeInfoResponse
 
-    private def getListInfoTestResponse: Future[SourceCodeFileContent] = {
+    private def getListNodeInfoTestResponse: Future[SourceCodeFileContent] = {
         for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/infos/$anythingList") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/nodes/$anythingListNode/Info") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
         } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-list-info-response"),
+            filePath = SourceCodeFilePath.makeJsonPath("get-list-node-info-response"),
             text = responseStr
         )
     }
@@ -572,24 +590,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     )
             }
         }
-    }
-
-    private val getListNodeInfoFunction: ClientFunction =
-        "getListNodeInfo" description "Returns information about a list node." params (
-            "iri" description "The IRI of the node." paramType UriDatatype
-            ) doThis {
-            httpGet(
-                path = str("nodes") / arg("iri")
-            )
-        } returns ListNodeInfoResponse
-
-    private def getListNodeInfoTestResponse: Future[SourceCodeFileContent] = {
-        for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ListsBasePathString/nodes/$anythingListNode") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
-        } yield SourceCodeFileContent(
-            filePath = SourceCodeFilePath.makeJsonPath("get-list-node-info-response"),
-            text = responseStr
-        )
     }
 
     /**
