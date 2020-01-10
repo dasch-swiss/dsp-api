@@ -6,8 +6,8 @@ load("@io_bazel_rules_docker//scala:image.bzl", "scala_image")
 container_image(
     name = "knora-api",
     base = "@openjdk11//image",
-    # cmd = ["java", "-jar", "webapi_deploy.jar"],
-    entrypoint = ["java", "-jar", "webapi_deploy.jar"],
+    cmd = ["java", "-jar", "webapi_deploy.jar"],
+    # entrypoint = ["java", "-jar", "webapi_deploy.jar"],
     files = [
         "//webapi:webapi_deploy.jar"
     ],

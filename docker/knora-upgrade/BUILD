@@ -6,9 +6,16 @@ load("@io_bazel_rules_docker//scala:image.bzl", "scala_image")
 container_image(
     name = "knora-upgrade",
     base = "@openjdk11//image",
-    # cmd = ["/bin/bash",],
-    # entrypoint = ["/upgrade/upgrade"],
-    env = {},
+    cmd = ["java -jar /upgrade/upgrade_deploy.jar"],
+    # entrypoint = ["java -jar /upgrade/upgrade_deploy.jar"],
+    env = {
+        "LANG": "en_US.UTF-8",
+        "JAVA_OPTS": "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8 -Dlogging.config=logback.xml",
+    },
+    directory = "upgrade",
+    files = [
+        "//upgrade:upgrade_deploy.jar"
+    ],
     tars = [
         "//upgrade/graphdb-se:graphdb-se-scripts",
     ],

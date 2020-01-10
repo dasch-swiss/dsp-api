@@ -14,6 +14,6 @@ filegroup(
 
 pkg_tar(
     name = "graphdb-se-scripts",
-    package_dir = "/upgrade/graphdb-se",
+    package_dir = "graphdb-se",
     srcs = [":graphdb-se"]
 )

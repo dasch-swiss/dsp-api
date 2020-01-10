@@ -73,13 +73,8 @@ curl -X GET -H "Accept: application/trig" -u "${USERNAME}:${PASSWORD}" "http://$
 # Transform the downloaded file.
 echo "Checking for needed transformations..."
 
-if [[ -z "${KNORA_UPGRADE_DOCKER}" ]]; then
-    # Run the upgrade program using SBT.
-    (cd ../.. && sbt "upgrade/run ${INPUT_FILE} ${OUTPUT_FILE}")
-else
-    # Run the upgrade program using Docker.
-    /upgrade/bin/upgrade "${INPUT_FILE}" "${OUTPUT_FILE}"
-fi
+# Run the upgrade program using Docker.
+java -jar /upgrade/upgrade_deploy.jar "${INPUT_FILE}" "${OUTPUT_FILE}"
 
 # If a transformed file was produced, empty the repository and upload the transformed file.
 if [[ -f "${OUTPUT_FILE}" ]]; then

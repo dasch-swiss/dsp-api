@@ -9,9 +9,19 @@ filegroup(
 
 scala_binary(
     name = "upgrade",
+    jvm_flags = [
+        "-Dlogging.config=logback.xml",
+    ],
     main_class = "org.knora.upgrade.Main",
+    resources = [
+        "//upgrade/src/main/resources",
+    ],
     deps = [
         ":main_library",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
     ],
 )
 
@@ -21,7 +31,7 @@ scala_library(
         "main_srcs",
     ],
     resources = [
-        "//webapi/src/main/resources",
+        "//upgrade/src/main/resources",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [

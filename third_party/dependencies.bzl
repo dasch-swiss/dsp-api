@@ -2,6 +2,7 @@
 
 # docs for rules_jvm_external: https://github.com/bazelbuild/rules_jvm_external
 load("@rules_jvm_external//:defs.bzl", "maven_install")
+load("@rules_jvm_external//:specs.bzl", "maven")
 
 load("@io_bazel_rules_webtesting//web:java_repositories.bzl", "RULES_WEBTESTING_ARTIFACTS")
 
@@ -35,12 +36,21 @@ def dependencies():
 
             # Jena
             "org.apache.jena:apache-jena-libs:%s" % (JENA_VERSION),
-            "org.apache.jena:jena-text:%s" % (JENA_VERSION),
+            maven.artifact(
+                group = "org.apache.jena",
+                artifact = "jena-text",
+                version = JENA_VERSION,
+                exclusions = [
+                    "org.slf4j:slf4j-log4j12"
+                ]
+            ),
 
             # Logging
             "com.typesafe.scala-logging:scala-logging_2.12:3.8.0",
             "ch.qos.logback:logback-classic:1.2.3",
             "ch.qos.logback:logback-core:1.2.3",
+            "org.slf4j:log4j-over-slf4j:1.7.29",
+            "org.slf4j:jcl-over-slf4j:1.7.29",
             "org.slf4j:slf4j-api:1.7.29",
 
             # metrics
