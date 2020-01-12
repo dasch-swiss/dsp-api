@@ -135,7 +135,7 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
     private var appState: AppState = AppState.Stopped
     private var allowReloadOverHTTPState = false
-    private var printConfigState = false
+    private var printExtendedConfigState = false
     private var skipOntologies = true
     private var withIIIFService = true
     private val withCacheService = settings.cacheServiceEnabled
@@ -249,11 +249,11 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
         case SetPrintConfigExtendedState(value) => {
             logger.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
-            printConfigState = value
+            printExtendedConfigState = value
         }
         case GetPrintConfigExtendedState() => {
-            logger.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
-            sender ! (printConfigState | settings.printExtendedConfig)
+            logger.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printExtendedConfigState)
+            sender ! (printExtendedConfigState | settings.printExtendedConfig)
         }
 
         /* check repository request */
@@ -459,10 +459,10 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
         msg += s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}\n"
 
 
-        if (printConfigState) {
+        if (printExtendedConfigState | settings.printExtendedConfig) {
 
-            msg += s"DB User: ${settings.triplestoreUsername}\n"
-            msg += s"DB Password: ${settings.triplestorePassword}\n"
+            // msg += s"DB User: ${settings.triplestoreUsername}\n"
+            // msg += s"DB Password: ${settings.triplestorePassword}\n"
 
             msg += s"Swagger Json: ${settings.externalKnoraApiBaseUrl}/api-docs/swagger.json\n"
             msg += s"Webapi internal URL: ${settings.internalKnoraApiBaseUrl}\n"
