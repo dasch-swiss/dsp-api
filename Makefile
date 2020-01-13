@@ -80,7 +80,7 @@ publish-knora-upgrade-image: build-knora-upgrade-image ## publish knora-upgrade 
 
 ## all images
 .PHONY: build-all-images
-build-all-images: build-knora-graphdb-se-image build-knora-graphdb-free-image build-knora-sipi-image build-knora-salsah1-image build-knora-upgrade-image  ## build all Docker images
+build-all-images: build-knora-api-image build-knora-graphdb-se-image build-knora-graphdb-free-image build-knora-sipi-image build-knora-salsah1-image build-knora-upgrade-image  ## build all Docker images
 
 .PHONY: publish-all-images
 publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publish-knora-graphdb-free-image publish-knora-sipi-image publish-knora-salsah1-image publish-knora-upgrade-image ## publish all Docker images
