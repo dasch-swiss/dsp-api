@@ -361,30 +361,6 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         )
     )
 
-    private val UpdateListInfoRequest = makeClass(
-        classIri = OntologyConstants.KnoraAdminV2.UpdateListInfoRequest,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "update list info request"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "A request to update information about a list."
-                )
-            )
-        ),
-        directCardinalities = Map(
-            OntologyConstants.KnoraAdminV2.ListIri -> Cardinality.MustHaveOne,
-            OntologyConstants.KnoraAdminV2.ProjectIri -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraAdminV2.Labels -> Cardinality.MustHaveSome,
-            OntologyConstants.KnoraAdminV2.Comments -> Cardinality.MayHaveMany
-        )
-    )
-
     private val CreateListRequest = makeClass(
         classIri = OntologyConstants.KnoraAdminV2.CreateListRequest,
         predicates = Seq(
@@ -1721,7 +1697,6 @@ object KnoraAdminToApiV2ComplexTransformationRules extends OntologyTransformatio
         ListClass,
         CreateListRequest,
         CreateChildNodeRequest,
-        UpdateListInfoRequest,
         ListInfoResponse,
         ListNodeInfoResponse,
         CreateGroupRequest,

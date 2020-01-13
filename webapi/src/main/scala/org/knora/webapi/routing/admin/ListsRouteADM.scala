@@ -81,7 +81,6 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val ListResponse = classRef(OntologyConstants.KnoraAdminV2.ListResponse.toSmartIri)
     private val ListInfoResponse = classRef(OntologyConstants.KnoraAdminV2.ListInfoResponse.toSmartIri)
     private val ListNodeInfoResponse = classRef(OntologyConstants.KnoraAdminV2.ListNodeInfoResponse.toSmartIri)
-    private val UpdateListInfoRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateListInfoRequest.toSmartIri)
     private val CreateChildNodeRequest = classRef(OntologyConstants.KnoraAdminV2.CreateChildNodeRequest.toSmartIri)
     private val anythingList = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "UTF-8")
     private val anythingListNode = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList01", "UTF-8")
@@ -311,7 +310,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             "iri" description "The IRI of the list." paramType UriDatatype
             ) doThis {
             httpGet(
-                path = str("infos") / arg("iri")
+                path = arg("iri") / str("Info")
             )
         } returns ListInfoResponse
 
@@ -387,25 +386,89 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
   
-    private val updateListInfoFunction: ClientFunction =
-        "updateListInfo" description "Updates information about a list." params (
-            "listInfo" description "Information about the list to be created." paramType UpdateListInfoRequest
+    private val updateListNameFunction: ClientFunction =
+        "updateListName" description "Updates the name of a list." params (
+            "listIri" description "The IRI of the list." paramType UriDatatype,
+            "projectIri" description "The IRI of the project that the list belongs to." paramType UriDatatype,
+            "name" description "The new name of the list." paramType StringDatatype
             ) doThis {
             httpPut(
-                path = argMember("listInfo", "listIri"),
-                body = Some(arg("listInfo"))
+                path = arg("listIri") / str("ListInfoName"),
+                body = Some(json(
+                    "listIri" -> arg("listIri"),
+                    "projectIri" -> arg("projectIri"),
+                    "name" -> arg("name")
+                ))
             )
         } returns ListInfoResponse
 
-    private def updateListInfoTestRequest: Future[SourceCodeFileContent] = {
+    private def updateListNameTestRequest: Future[SourceCodeFileContent] = {
         FastFuture.successful(
             SourceCodeFileContent(
-                filePath = SourceCodeFilePath.makeJsonPath("update-list-info-request"),
-                text = SharedTestDataADM.updateListInfoRequest("http://rdfh.ch/lists/0001/treeList01")
+                filePath = SourceCodeFilePath.makeJsonPath("update-list-name-request"),
+                text = SharedTestDataADM.updateListNameRequest(
+                    listIri = "http://rdfh.ch/lists/0001/treeList01",
+                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI
+                )
             )
         )
     }
 
+    private val updateListLabelsFunction: ClientFunction =
+        "updateListLabels" description "Updates the name of a list." params (
+            "listIri" description "The IRI of the list." paramType UriDatatype,
+            "projectIri" description "The IRI of the project that the list belongs to." paramType UriDatatype,
+            "labels" description "The new labels of the list." paramType ArrayType(StringDatatype)
+        ) doThis {
+            httpPut(
+                path = arg("listIri") / str("ListInfoLabel"),
+                body = Some(json(
+                    "listIri" -> arg("listIri"),
+                    "projectIri" -> arg("projectIri"),
+                    "labels" -> arg("labels")
+                ))
+            )
+        } returns ListInfoResponse
+
+    private def updateListLabelsTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-list-labels-request"),
+                text = SharedTestDataADM.updateListLabelsRequest(
+                    listIri = "http://rdfh.ch/lists/0001/treeList01",
+                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI
+                )
+            )
+        )
+    }
+
+    private val updateListCommentsFunction: ClientFunction =
+        "updateListComments" description "Updates the name of a list." params (
+            "listIri" description "The IRI of the list." paramType UriDatatype,
+            "projectIri" description "The IRI of the project that the list belongs to." paramType UriDatatype,
+            "comments" description "The new comments of the list." paramType ArrayType(StringDatatype)
+        ) doThis {
+            httpPut(
+                path = arg("listIri") / str("ListInfoComment"),
+                body = Some(json(
+                    "listIri" -> arg("listIri"),
+                    "projectIri" -> arg("projectIri"),
+                    "comments" -> arg("comments")
+                ))
+            )
+        } returns ListInfoResponse
+
+    private def updateListCommentsTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-list-comments-request"),
+                text = SharedTestDataADM.updateListCommentsRequest(
+                    listIri = "http://rdfh.ch/lists/0001/treeList01",
+                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI
+                )
+            )
+        )
+    }
       
     // -------------------------------------
     // --------------- NODES ---------------
@@ -460,7 +523,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             "node" description "The node to be created." paramType CreateChildNodeRequest
             ) doThis {
             httpPost(
-                path = argMember("node", "parentNodeIri"),
+                path = str("nodes"),
                 body = Some(arg("node"))
             )
         } returns ListNodeInfoResponse
@@ -528,7 +591,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             "iri" description "The IRI of the node." paramType UriDatatype
             ) doThis {
             httpGet(
-                path = str("nodes") / arg("iri")
+                path = str("nodes") / arg("iri") / str("Info")
             )
         } returns ListNodeInfoResponse
 
@@ -592,6 +655,8 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
+    // TODO: client API functions and test data for putNodeInfo
+
     /**
      * The functions defined by this [[ClientEndpoint]].
      */
@@ -600,7 +665,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         getListsInProjectFunction,
         createListFunction,
         getListFunction,
-        updateListInfoFunction,
+        updateListNameFunction,
+        updateListLabelsFunction,
+        updateListCommentsFunction,
         createChildNodeFunction,
         getListInfoFunction,
         getListNodeInfoFunction
@@ -617,7 +684,9 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 getListsTestResponse,
                 createListTestRequest,
                 getListTestResponse,
-                updateListInfoTestRequest,
+                updateListNameTestRequest,
+                updateListLabelsTestRequest,
+                updateListCommentsTestRequest,
                 createChildNodeTestRequest,
                 getListInfoTestResponse,
                 getListNodeInfoTestResponse

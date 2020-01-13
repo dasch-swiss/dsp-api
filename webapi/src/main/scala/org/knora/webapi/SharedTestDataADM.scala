@@ -636,12 +636,27 @@ object SharedTestDataADM {
            |    "comments": []
            |}""".stripMargin
 
-    def updateListInfoRequest(listIri: IRI): String = {
+    def updateListNameRequest(listIri: IRI, projectIri: IRI): String = {
         s"""{
            |    "listIri": "$listIri",
-           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-           |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-           |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+           |    "projectIri": "$projectIri",
+           |    "name": "newTestName"
+           |}""".stripMargin
+    }
+
+    def updateListLabelsRequest(listIri: IRI, projectIri: IRI): String = {
+        s"""{
+           |    "listIri": "$listIri",
+           |    "projectIri": "$projectIri",
+           |    "labels": [{"value": "Neue geänderte Liste", "language": "de"}, {"value": "Changed list", "language": "en"}]
+           |}""".stripMargin
+    }
+
+    def updateListCommentsRequest(listIri: IRI, projectIri: IRI): String = {
+        s"""{
+           |    "listIri": "$listIri",
+           |    "projectIri": "$projectIri",
+           |    "comments": [{"value": "Neuer Kommentar", "language": "de"}, {"value": "New comment", "language": "en"}]
            |}""".stripMargin
     }
 
