@@ -213,8 +213,8 @@ trait ClientEndpoint {
             val paramClasses: Set[SmartIri] = function.params.map {
                 param => param.objectType
             }.collect {
-                case classRef: ClassRef => classRef.classIri
-            }.toSet
+                case typeWithClassIri: TypeWithClassIri => typeWithClassIri.getClassIri
+            }.flatten.toSet
 
             paramClasses ++ maybeReturnedClass
     }.toSet
@@ -337,7 +337,7 @@ object EndpointFunctionDSL {
      * @param name the name of the argument.
      * @return an [[ArgValue]].
      */
-    def arg(name: String) = ArgValue(name)
+    def arg(name: String): ArgValue = ArgValue(name)
 
     /**
      * Constructs an [[ArgValue]] referring to a member of a function argument.
@@ -346,7 +346,7 @@ object EndpointFunctionDSL {
      * @param member the name of the member of the argument.
      * @return an [[ArgValue]].
      */
-    def argMember(name: String, member: String) = ArgValue(name = name, memberVariableName = Some(member))
+    def argMember(name: String, member: String): ArgValue = ArgValue(name = name, memberVariableName = Some(member))
 
     /**
      * A URL path representing the base path of an endpoint.

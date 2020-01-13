@@ -70,12 +70,9 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
         def getClassDefsRec(classIri: SmartIri, definitionAcc: ClientDefsWithOntologies): Future[ClientDefsWithOntologies] = {
             val className = classIri.getEntityName
 
-            if (classIri.isClientCollectionTypeIri) {
-                // This is a client API collection type. Nothing to do here.
-                FastFuture.successful(definitionAcc)
-            } else if (ClassRef.isGeneratedDerivedClassName(className)) {
-                // This is the IRI of a derived class that hasn't been generated yet.
-                // Do we already have the definition of the base class?
+            // Is this is the IRI of a derived class that hasn't been generated yet?
+            if (ClassRef.isGeneratedDerivedClassName(className)) {
+                // Yes. Do we already have the definition of the base class?
 
                 val baseClassIri: SmartIri = classIri.getOntologyFromEntity.makeEntityIri(ClassRef.toBaseClassName(className))
 
@@ -87,7 +84,7 @@ class GeneratorFrontEnd(routeData: KnoraRouteData, requestingUser: UserADM) {
                     getClassDefsRec(baseClassIri, definitionAcc)
                 }
             } else {
-                // This is the IRI of a class defined in an ontology. Get the IRI of the ontology containing the class.
+                // No, this is the IRI of a class defined in an ontology. Get the IRI of the ontology containing the class.
                 val classOntologyIri: SmartIri = classIri.getOntologyFromEntity
 
                 for {

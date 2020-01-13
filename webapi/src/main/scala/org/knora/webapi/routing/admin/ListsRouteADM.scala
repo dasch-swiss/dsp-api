@@ -82,6 +82,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val ListInfoResponse = classRef(OntologyConstants.KnoraAdminV2.ListInfoResponse.toSmartIri)
     private val ListNodeInfoResponse = classRef(OntologyConstants.KnoraAdminV2.ListNodeInfoResponse.toSmartIri)
     private val CreateChildNodeRequest = classRef(OntologyConstants.KnoraAdminV2.CreateChildNodeRequest.toSmartIri)
+    private val StringLiteral = classRef(OntologyConstants.KnoraAdminV2.StringLiteral.toSmartIri)
     private val anythingList = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "UTF-8")
     private val anythingListNode = URLEncoder.encode("http://rdfh.ch/lists/0001/treeList01", "UTF-8")
 
@@ -345,24 +346,30 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                     val requestPayload = attribute match {
-                        case "ListInfoName" => ChangeListInfoPayloadADM(
-                            listIri = apiRequest.listIri,
-                            projectIri = apiRequest.projectIri,
-                            name = apiRequest.name.getOrElse(throw BadRequestException("Missing parameter for name")) match {
-                                case "" => Some(None)
-                                case _ => Some(apiRequest.name)
-                            }
-                        )
-                        case "ListInfoLabel" => ChangeListInfoPayloadADM(
-                            listIri = apiRequest.listIri,
-                            projectIri = apiRequest.projectIri,
-                            labels = apiRequest.labels
-                        )
-                        case "ListInfoComment" => ChangeListInfoPayloadADM(
-                            listIri = apiRequest.listIri,
-                            projectIri = apiRequest.projectIri,
-                            comments = apiRequest.comments
-                        )
+                        case "ListInfoName" =>
+                            ChangeListInfoPayloadADM(
+                                listIri = apiRequest.listIri,
+                                projectIri = apiRequest.projectIri,
+                                name = apiRequest.name.getOrElse(throw BadRequestException("Missing parameter for name")) match {
+                                    case "" => Some(None)
+                                    case _ => Some(apiRequest.name)
+                                }
+                            )
+
+                        case "ListInfoLabel" =>
+                            ChangeListInfoPayloadADM(
+                                listIri = apiRequest.listIri,
+                                projectIri = apiRequest.projectIri,
+                                labels = apiRequest.labels
+                            )
+
+                        case "ListInfoComment" =>
+                            ChangeListInfoPayloadADM(
+                                listIri = apiRequest.listIri,
+                                projectIri = apiRequest.projectIri,
+                                comments = apiRequest.comments
+                            )
+
                         case _ => throw BadRequestException(s"Invalid attribute: $attribute")
                     }
 
@@ -385,13 +392,13 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             }
         }
     }
-  
+
     private val updateListNameFunction: ClientFunction =
-        "updateListName" description "Updates the name of a list." params (
+        "updateListName" description "Updates the name of a list." params(
             "listIri" description "The IRI of the list." paramType UriDatatype,
             "projectIri" description "The IRI of the project that the list belongs to." paramType UriDatatype,
             "name" description "The new name of the list." paramType StringDatatype
-            ) doThis {
+        ) doThis {
             httpPut(
                 path = arg("listIri") / str("ListInfoName"),
                 body = Some(json(
@@ -407,18 +414,19 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             SourceCodeFileContent(
                 filePath = SourceCodeFilePath.makeJsonPath("update-list-name-request"),
                 text = SharedTestDataADM.updateListNameRequest(
-                    listIri = "http://rdfh.ch/lists/0001/treeList01",
-                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI
+                    listIri = "http://rdfh.ch/lists/0001/treeList",
+                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+                    name = "newTestName"
                 )
             )
         )
     }
 
     private val updateListLabelsFunction: ClientFunction =
-        "updateListLabels" description "Updates the name of a list." params (
+        "updateListLabels" description "Updates the labels of a list." params(
             "listIri" description "The IRI of the list." paramType UriDatatype,
             "projectIri" description "The IRI of the project that the list belongs to." paramType UriDatatype,
-            "labels" description "The new labels of the list." paramType ArrayType(StringDatatype)
+            "labels" description "The new labels of the list." paramType ArrayType(StringLiteral)
         ) doThis {
             httpPut(
                 path = arg("listIri") / str("ListInfoLabel"),
@@ -435,18 +443,19 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             SourceCodeFileContent(
                 filePath = SourceCodeFilePath.makeJsonPath("update-list-labels-request"),
                 text = SharedTestDataADM.updateListLabelsRequest(
-                    listIri = "http://rdfh.ch/lists/0001/treeList01",
-                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI
+                    listIri = "http://rdfh.ch/lists/0001/treeList",
+                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+                    labels = SharedTestDataADM.updatedLabels
                 )
             )
         )
     }
 
     private val updateListCommentsFunction: ClientFunction =
-        "updateListComments" description "Updates the name of a list." params (
+        "updateListComments" description "Updates the comments of a list." params(
             "listIri" description "The IRI of the list." paramType UriDatatype,
             "projectIri" description "The IRI of the project that the list belongs to." paramType UriDatatype,
-            "comments" description "The new comments of the list." paramType ArrayType(StringDatatype)
+            "comments" description "The new comments of the list." paramType ArrayType(StringLiteral)
         ) doThis {
             httpPut(
                 path = arg("listIri") / str("ListInfoComment"),
@@ -463,18 +472,19 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             SourceCodeFileContent(
                 filePath = SourceCodeFilePath.makeJsonPath("update-list-comments-request"),
                 text = SharedTestDataADM.updateListCommentsRequest(
-                    listIri = "http://rdfh.ch/lists/0001/treeList01",
-                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI
+                    listIri = "http://rdfh.ch/lists/0001/treeList",
+                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+                    comments = SharedTestDataADM.updatedComments
                 )
             )
         )
     }
-      
+
     // -------------------------------------
     // --------------- NODES ---------------
     // -------------------------------------
 
-      
+
     /** create a new child node */
     @Path("/{IRI}")
     @ApiOperation(
@@ -565,7 +575,7 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             ???
         }
     }
-        
+
     /** return information about a single node (without children) */
     def getListNodeInfo: Route = path(ListsBasePath / "nodes" / Segment / "Info") { iri =>
         get {
@@ -612,24 +622,28 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                     val nodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
                     val requestPayload = attribute match {
-                        case "NodeInfoName" => ChangeListNodeInfoPayloadADM(
-                            nodeIri = apiRequest.nodeIri,
-                            projectIri = apiRequest.projectIri,
-                            name = apiRequest.name.getOrElse(throw BadRequestException("Missing parameter for name")) match {
-                                case "" => Some(None)
-                                case _ => Some(apiRequest.name)
-                            }
-                        )
+                        case "NodeInfoName" =>
+                            ChangeListNodeInfoPayloadADM(
+                                nodeIri = apiRequest.nodeIri,
+                                projectIri = apiRequest.projectIri,
+                                name = apiRequest.name.getOrElse(throw BadRequestException("Missing parameter for name")) match {
+                                    case "" => Some(None)
+                                    case _ => Some(apiRequest.name)
+                                }
+                            )
+
                         case "NodeInfoLabel" => ChangeListNodeInfoPayloadADM(
                             nodeIri = apiRequest.nodeIri,
                             projectIri = apiRequest.projectIri,
                             labels = apiRequest.labels
                         )
-                        case "NodeInfoComment" => ChangeListNodeInfoPayloadADM(
-                            nodeIri = apiRequest.nodeIri,
-                            projectIri = apiRequest.projectIri,
-                            comments = apiRequest.comments
-                        )
+                        case "NodeInfoComment" =>
+                            ChangeListNodeInfoPayloadADM(
+                                nodeIri = apiRequest.nodeIri,
+                                projectIri = apiRequest.projectIri,
+                                comments = apiRequest.comments
+                            )
+
                         case "NodeInfoPosition" => throw NotImplementedException("Move listnode to new position is not implemented.")
                         case "NodeInfoParent" => throw NotImplementedException("Move listnode to new parent is not implemented.")
                         case _ => throw BadRequestException(s"Invalid attribute: $attribute")
@@ -655,7 +669,92 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
     }
 
-    // TODO: client API functions and test data for putNodeInfo
+    private val updateListNodeNameFunction: ClientFunction =
+        "updateListNodeName" description "Updates the name of a list node." params(
+            "nodeIri" description "The IRI of the list node." paramType UriDatatype,
+            "projectIri" description "The IRI of the project that the list belongs to." paramType UriDatatype,
+            "name" description "The new name of the list node." paramType StringDatatype
+        ) doThis {
+            httpPut(
+                path = str("nodes") / arg("nodeIri") / str("NodeInfoName"),
+                body = Some(json(
+                    "nodeIri" -> arg("nodeIri"),
+                    "projectIri" -> arg("projectIri"),
+                    "name" -> arg("name")
+                ))
+            )
+        } returns ListInfoResponse
+
+    private def updateListNodeNameTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-list-node-name-request"),
+                text = SharedTestDataADM.updateListNodeNameRequest(
+                    nodeIri = "http://rdfh.ch/lists/0001/treeList01",
+                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+                    name = "newTestName"
+                )
+            )
+        )
+    }
+
+    private val updateListNodeLabelsFunction: ClientFunction =
+        "updateListNodeLabels" description "Updates the labels of a list node." params(
+            "nodeIri" description "The IRI of the list node." paramType UriDatatype,
+            "projectIri" description "The IRI of the project that the list belongs to." paramType UriDatatype,
+            "labels" description "The new labels of the list node." paramType ArrayType(StringLiteral)
+        ) doThis {
+            httpPut(
+                path = str("nodes") / arg("nodeIri") / str("NodeInfoLabel"),
+                body = Some(json(
+                    "nodeIri" -> arg("nodeIri"),
+                    "projectIri" -> arg("projectIri"),
+                    "labels" -> arg("labels")
+                ))
+            )
+        } returns ListInfoResponse
+
+    private def updateListNodeLabelsTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-list-node-labels-request"),
+                text = SharedTestDataADM.updateListNodeLabelsRequest(
+                    nodeIri = "http://rdfh.ch/lists/0001/treeList01",
+                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+                    labels = SharedTestDataADM.updatedLabels
+                )
+            )
+        )
+    }
+
+    private val updateListNodeCommentsFunction: ClientFunction =
+        "updateListNodeComments" description "Updates the comments of a list node." params(
+            "nodeIri" description "The IRI of the list node." paramType UriDatatype,
+            "projectIri" description "The IRI of the project that the list belongs to." paramType UriDatatype,
+            "comments" description "The new comments of the list node." paramType ArrayType(StringLiteral)
+        ) doThis {
+            httpPut(
+                path = str("nodes") / arg("nodeIri") / str("NodeInfoComment"),
+                body = Some(json(
+                    "nodeIri" -> arg("nodeIri"),
+                    "projectIri" -> arg("projectIri"),
+                    "comments" -> arg("comments")
+                ))
+            )
+        } returns ListInfoResponse
+
+    private def updateListNodeCommentsTestRequest: Future[SourceCodeFileContent] = {
+        FastFuture.successful(
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-list-node-comments-request"),
+                text = SharedTestDataADM.updateListNodeCommentsRequest(
+                    nodeIri = "http://rdfh.ch/lists/0001/treeList01",
+                    projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+                    comments = SharedTestDataADM.updatedComments
+                )
+            )
+        )
+    }
 
     /**
      * The functions defined by this [[ClientEndpoint]].
@@ -670,7 +769,10 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         updateListCommentsFunction,
         createChildNodeFunction,
         getListInfoFunction,
-        getListNodeInfoFunction
+        getListNodeInfoFunction,
+        updateListNodeNameFunction,
+        updateListNodeLabelsFunction,
+        updateListNodeCommentsFunction
     )
 
     /**
@@ -689,7 +791,10 @@ class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 updateListCommentsTestRequest,
                 createChildNodeTestRequest,
                 getListInfoTestResponse,
-                getListNodeInfoTestResponse
+                getListNodeInfoTestResponse,
+                updateListNodeNameTestRequest,
+                updateListNodeLabelsTestRequest,
+                updateListNodeCommentsTestRequest
             )
         }
     }

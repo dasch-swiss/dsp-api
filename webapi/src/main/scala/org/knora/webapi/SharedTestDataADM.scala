@@ -29,6 +29,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.util.StringFormatter
+import spray.json.{JsArray, JsObject, JsString}
 
 /**
  * This object holds the same user which are loaded with '_test_data/all_data/admin-data.ttl'. Using this object
@@ -632,33 +633,124 @@ object SharedTestDataADM {
     val createListRequest: String =
         s"""{
            |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "name": "newList",
            |    "labels": [{ "value": "Neue Liste", "language": "de"}],
            |    "comments": []
            |}""".stripMargin
 
-    def updateListNameRequest(listIri: IRI, projectIri: IRI): String = {
+    def updateListNameRequest(listIri: IRI, projectIri: IRI, name: String): String = {
         s"""{
            |    "listIri": "$listIri",
            |    "projectIri": "$projectIri",
-           |    "name": "newTestName"
+           |    "name": "$name"
            |}""".stripMargin
     }
 
-    def updateListLabelsRequest(listIri: IRI, projectIri: IRI): String = {
+    def updateListLabelsRequest(listIri: IRI, projectIri: IRI, labels: Vector[Map[String, String]]): String = {
+        JsObject(
+            Map(
+                "listIri" -> JsString(listIri),
+                "projectIri" -> JsString(projectIri),
+                "labels" -> JsArray(
+                    labels.map {
+                        labelMap =>
+                            JsObject(
+                                labelMap.map {
+                                    case (key, value) => key -> JsString(value)
+                                }
+                            )
+                    }
+                )
+            )
+        ).prettyPrint
+    }
+
+    def updateListCommentsRequest(listIri: IRI, projectIri: IRI, comments: Vector[Map[String, String]]): String = {
+        JsObject(
+            Map(
+                "listIri" -> JsString(listIri),
+                "projectIri" -> JsString(projectIri),
+                "comments" -> JsArray(
+                    comments.map {
+                        labelMap =>
+                            JsObject(
+                                labelMap.map {
+                                    case (key, value) => key -> JsString(value)
+                                }
+                            )
+                    }
+                )
+            )
+        ).prettyPrint
+    }
+
+    def updateListNodeNameRequest(nodeIri: IRI, projectIri: IRI, name: String): String = {
         s"""{
-           |    "listIri": "$listIri",
+           |    "nodeIri": "$nodeIri",
            |    "projectIri": "$projectIri",
-           |    "labels": [{"value": "Neue geänderte Liste", "language": "de"}, {"value": "Changed list", "language": "en"}]
+           |    "name": "$name"
            |}""".stripMargin
     }
 
-    def updateListCommentsRequest(listIri: IRI, projectIri: IRI): String = {
-        s"""{
-           |    "listIri": "$listIri",
-           |    "projectIri": "$projectIri",
-           |    "comments": [{"value": "Neuer Kommentar", "language": "de"}, {"value": "New comment", "language": "en"}]
-           |}""".stripMargin
+    def updateListNodeLabelsRequest(nodeIri: IRI, projectIri: IRI, labels: Vector[Map[String, String]]): String = {
+        JsObject(
+            Map(
+                "nodeIri" -> JsString(nodeIri),
+                "projectIri" -> JsString(projectIri),
+                "labels" -> JsArray(
+                    labels.map {
+                        labelMap =>
+                            JsObject(
+                                labelMap.map {
+                                    case (key, value) => key -> JsString(value)
+                                }
+                            )
+                    }
+                )
+            )
+        ).prettyPrint
     }
+
+    def updateListNodeCommentsRequest(nodeIri: IRI, projectIri: IRI, comments: Vector[Map[String, String]]): String = {
+        JsObject(
+            Map(
+                "nodeIri" -> JsString(nodeIri),
+                "projectIri" -> JsString(projectIri),
+                "comments" -> JsArray(
+                    comments.map {
+                        labelMap =>
+                            JsObject(
+                                labelMap.map {
+                                    case (key, value) => key -> JsString(value)
+                                }
+                            )
+                    }
+                )
+            )
+        ).prettyPrint
+    }
+
+    val updatedLabels: Vector[Map[String, String]] = Vector(
+        Map(
+            "value" -> "Geändertes Etikett",
+            "language" -> "de"
+        ),
+        Map(
+            "value" -> "Changed label",
+            "language" -> "en"
+        )
+    )
+
+    val updatedComments: Vector[Map[String, String]] = Vector(
+        Map(
+            "value" -> "Geänderter Kommentar",
+            "language" -> "de"
+        ),
+        Map(
+            "value" -> "Changed comment",
+            "language" -> "en"
+        )
+    )
 
     def addChildListNodeRequest(parentNodeIri: IRI,
                                 name: String,
