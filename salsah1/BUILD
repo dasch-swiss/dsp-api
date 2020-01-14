@@ -64,3 +64,32 @@ scala_library(
         "@maven//:org_scala_lang_scala_reflect",
     ],
 )
+
+scala_library(
+    name = "test_library",
+    testonly = True,
+    srcs = [
+        "//salsah1/src/test/scala/org/knora/salsah:test_srcs",
+    ],
+    unused_dependency_checker_mode = "warn",
+    runtime_deps = [
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
+    ],
+    deps = [
+        "//salsah1:main_library",
+        "@io_bazel_rules_webtesting//java/com/google/testing/web",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
+        # Selenium
+        "@maven//:org_seleniumhq_selenium_selenium_support",
+        "@org_seleniumhq_selenium_selenium_api",  # pulled in by io_bazel_rules_webtesting
+    ],
+)

@@ -86,7 +86,6 @@ class SearchAndEditSpec extends SalsahSpec {
         "have the correct title" in {
             page.open()
             page.getPageTitle should be ("System for Annotation and Linkage of Sources in Arts and Humanities")
-
         }
 
         "log in as an Incunabula project user" in {

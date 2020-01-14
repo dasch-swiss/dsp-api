@@ -1,4 +1,16 @@
+package(default_visibility = ["//visibility:public"])
 load("@io_bazel_rules_webtesting//web:scala.bzl", "scala_web_test_suite")
+
+filegroup(
+    name = "test_srcs",
+    srcs = glob([
+        "InternationalizationSpec.scala",
+        "ResourceCreationSpec.scala",
+        "SalsahPage.scala",
+        "SalsahSpec.scala",
+        "SearchAndEditSpec.scala",
+    ]),
+)
 
 scala_web_test_suite(
     name = "InternationalizationSpec",
@@ -23,12 +35,13 @@ scala_web_test_suite(
     deps = [
         "//salsah1:main_library",
         "@io_bazel_rules_webtesting//java/com/google/testing/web",
-        "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
         # Selenium
         "@maven//:org_seleniumhq_selenium_selenium_support",
         "@org_seleniumhq_selenium_selenium_api",  # pulled in by io_bazel_rules_webtesting
@@ -58,12 +71,13 @@ scala_web_test_suite(
     deps = [
         "//salsah1:main_library",
         "@io_bazel_rules_webtesting//java/com/google/testing/web",
-        "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
         # Selenium
         "@maven//:org_seleniumhq_selenium_selenium_support",
         "@org_seleniumhq_selenium_selenium_api",  # pulled in by io_bazel_rules_webtesting
@@ -93,12 +107,13 @@ scala_web_test_suite(
     deps = [
         "//salsah1:main_library",
         "@io_bazel_rules_webtesting//java/com/google/testing/web",
-        "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
         "@maven//:com_typesafe_akka_akka_http_core_2_12",
         "@maven//:com_typesafe_akka_akka_stream_2_12",
         "@maven//:com_typesafe_config",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalactic_scalactic_2_12",
         # Selenium
         "@maven//:org_seleniumhq_selenium_selenium_support",
         "@org_seleniumhq_selenium_selenium_api",  # pulled in by io_bazel_rules_webtesting

@@ -121,6 +121,7 @@ scala_library(
 
 scala_library(
     name = "test_library",
+    testonly = True,
     srcs = [
         "//webapi/src/test/scala",
     ],
@@ -161,6 +162,7 @@ scala_library(
 
 scala_library(
     name = "it_library",
+    testonly = True,
     srcs = [
         "//webapi/src/it/scala",
     ],

@@ -19,8 +19,7 @@
 
 package org.knora.salsah
 
-import java.io.{File, FileNotFoundException}
-
+import com.google.testing.web.WebTest
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.Select
 import org.openqa.selenium.{By, WebDriver, WebElement}
@@ -28,8 +27,6 @@ import org.scalatest.concurrent.Eventually._
 
 import scala.collection.JavaConversions._
 import scala.concurrent.duration._
-
-import com.google.testing.web.WebTest
 
 
 /**
