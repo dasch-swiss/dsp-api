@@ -63,8 +63,8 @@ jobs:
       - name: run bazel build
         run: bazel build //...
 
-  test-webapi:
-    name: Test Webapi
+  webapi-test:
+    name: Webapi Test
     needs: [build]
     runs-on: ubuntu-latest
     steps:
@@ -96,8 +96,8 @@ jobs:
       - name: Run webapi tests
         run: make test-webapi
 
-  upgrade-unit-tests:
-    name: Upgrade Unit Tests
+  upgrade-unit-test:
+    name: Upgrade Unit Test
     needs: [build]
     runs-on: ubuntu-latest
     steps:
@@ -129,8 +129,8 @@ jobs:
       - name: Run upgrade tests
         run: make test-upgrade
 
-  upgrade-integration-tests:
-    name: Upgrade Integration Tests
+  upgrade-integration-test:
+    name: Upgrade Integration Test
     needs: [build]
     runs-on: ubuntu-latest
     steps:
@@ -180,8 +180,8 @@ jobs:
       - name: load upgraded data
         run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgraded/out/dump-upgraded.trig
 
-  salsah1-tests:
-    name: Salsah1 Tests
+  salsah1-test:
+    name: Salsah1 Test
     needs: [build]
     runs-on: ubuntu-latest
     steps:
@@ -215,7 +215,7 @@ jobs:
 
   docs-build-test:
     name: Docs Build Test
-    needs: [compile, bazel-build]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -239,7 +239,7 @@ jobs:
   # publish only for develop and tags
   publish:
     name: Publish to Dockerhub
-    needs: [bazel-test]
+    needs: [webapi-test, upgrade-unit-test, upgrade-integration-test, salsah1-test, docs-build-test]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags')
     steps:
