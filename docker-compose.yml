@@ -53,6 +53,8 @@ services:
       - "10001:10001"
     volumes:
       - /tmp:/tmp
+      - ${PWD}/knora-ontologies:/knora-ontologies
+      - ${PWD}/test_data:/test_data
     networks:
       - knora-net
     environment:

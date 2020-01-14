@@ -69,10 +69,13 @@ load("@io_bazel_rules_webtesting//web:repositories.bzl", "web_test_repositories"
 
 web_test_repositories()
 
-
 load("@io_bazel_rules_webtesting//web/versioned:browsers-0.3.2.bzl", "browser_repositories")
 
 browser_repositories(chromium=True, firefox=True)
+
+load("@io_bazel_rules_webtesting//web:java_repositories.bzl", "java_repositories")
+
+java_repositories()
 
 #
 # download rules_jvm_external used for maven dependency resolution

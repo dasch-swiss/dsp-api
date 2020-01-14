@@ -1,0 +1,106 @@
+load("@io_bazel_rules_webtesting//web:scala.bzl", "scala_web_test_suite")
+
+scala_web_test_suite(
+    name = "InternationalizationSpec",
+    size = "small",
+    srcs = [
+        "InternationalizationSpec.scala",
+        "SalsahPage.scala",
+        "SalsahSpec.scala",
+    ],
+    browsers = [
+        "@io_bazel_rules_webtesting//browsers:chromium-local",
+        "@io_bazel_rules_webtesting//browsers:firefox-local",
+    ],
+    local = True,
+    unused_dependency_checker_mode = "warn",
+    runtime_deps = [
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
+    ],
+    deps = [
+        "//salsah1:main_library",
+        "@io_bazel_rules_webtesting//java/com/google/testing/web",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        # Selenium
+        "@maven//:org_seleniumhq_selenium_selenium_support",
+        "@org_seleniumhq_selenium_selenium_api",  # pulled in by io_bazel_rules_webtesting
+    ],
+)
+
+scala_web_test_suite(
+    name = "ResourceCreationSpec",
+    size = "medium",
+    srcs = [
+        "ResourceCreationSpec.scala",
+        "SalsahPage.scala",
+        "SalsahSpec.scala",
+    ],
+    browsers = [
+        "@io_bazel_rules_webtesting//browsers:chromium-local",
+        "@io_bazel_rules_webtesting//browsers:firefox-local",
+    ],
+    local = True,
+    unused_dependency_checker_mode = "warn",
+    runtime_deps = [
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
+    ],
+    deps = [
+        "//salsah1:main_library",
+        "@io_bazel_rules_webtesting//java/com/google/testing/web",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        # Selenium
+        "@maven//:org_seleniumhq_selenium_selenium_support",
+        "@org_seleniumhq_selenium_selenium_api",  # pulled in by io_bazel_rules_webtesting
+    ],
+)
+
+scala_web_test_suite(
+    name = "SearchAndEditSpec",
+    size = "medium",
+    srcs = [
+        "SearchAndEditSpec.scala",
+        "SalsahPage.scala",
+        "SalsahSpec.scala",
+    ],
+    browsers = [
+        "@io_bazel_rules_webtesting//browsers:chromium-local",
+        "@io_bazel_rules_webtesting//browsers:firefox-local",
+    ],
+    local = True,
+    unused_dependency_checker_mode = "warn",
+    runtime_deps = [
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
+    ],
+    deps = [
+        "//salsah1:main_library",
+        "@io_bazel_rules_webtesting//java/com/google/testing/web",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_12",
+        "@maven//:com_typesafe_akka_akka_http_2_12",
+        "@maven//:com_typesafe_akka_akka_http_core_2_12",
+        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_config",
+        # Selenium
+        "@maven//:org_seleniumhq_selenium_selenium_support",
+        "@org_seleniumhq_selenium_selenium_api",  # pulled in by io_bazel_rules_webtesting
+    ],
+)

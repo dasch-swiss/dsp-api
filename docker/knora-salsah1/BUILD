@@ -1,9 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-
-load("@io_bazel_rules_docker//container:container.bzl", "container_push", "container_image")
-
-
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
 
 container_image(
     name = "knora-salsah1",
@@ -12,7 +9,7 @@ container_image(
     # entrypoint = ["java", "-jar", "webapi_deploy.jar"],
     env = {
         "LANG": "en_US.UTF-8",
-        "JAVA_OPTS": "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8",
+        "JAVA_OPTS": "-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8 -Dconfig.file=salsah.conf",
         "KNORA_SALSAH1_DEPLOYED": "true",
         "KNORA_SALSAH1_WORKDIR": "/salsah1"
     },

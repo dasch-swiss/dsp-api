@@ -27,7 +27,7 @@ build-all-scala: ## build all scala projects
 ## knora-api
 .PHONY: build-knora-api-image
 build-knora-api-image: ## build and publish knora-api docker image locally
-	bazel run //docker/knora-api -- --norun
+	bazel run //docker/knora-api
 
 .PHONY: publish-knora-api
 publish-knora-api-image: ## publish knora-api image to Dockerhub
@@ -63,7 +63,7 @@ publish-knora-sipi-image: ## publish knora-sipi image to Dockerhub
 ## knora-salsah1
 .PHONY: build-knora-salsah1-image
 build-knora-salsah1-image: ## build and publish knora-salsah1 docker image locally
-	bazel run //docker/knora-salsah1 -- --norun
+	bazel run //docker/knora-salsah1
 
 .PHONY: publish-knora-salsah1-image
 publish-knora-salsah1-image: build-knora-salsah1-image ## publish knora-salsah1 image to Dockerhub
@@ -124,7 +124,10 @@ endif
 	@echo KNORA_SALSAH1_IMAGE=$(KNORA_SALSAH1_IMAGE) >> .env
 	@echo DOCKERHOST=$(DOCKERHOST) >> .env
 
-## knora stack
+#################################
+## Knora Stack Targets
+#################################
+
 .PHONY: stack-up
 stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, redis, api, salsah1.
 	docker-compose -f docker-compose.yml up -d
@@ -169,16 +172,30 @@ stack-logs-salsah1: ## prints out and follows the logs of the 'salsah1' containe
 stack-down: ## stops the knora-stack.
 	docker-compose -f docker-compose.yml down
 
-## stack without api
 .PHONY: stack-without-api
 stack-without-api: stack-up ## starts the knora-stack without knora-api: graphdb, sipi, redis, salsah1.
 	docker-compose -f docker-compose.yml stop api
 
-## stack without api and sipi
 .PHONY: stack-without-api-and-sipi
 stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api and sipi: graphdb, redis, salsah1.
 	docker-compose -f docker-compose.yml stop api
 	docker-compose -f docker-compose.yml stop sipi
+
+.PHONY: stack-without-api-and-salsah1
+stack-without-api-and-salsah1: stack-up ## starts the knora-stack without knora-api and salsah1: graphdb, redis, sipi.
+	docker-compose -f docker-compose.yml stop api
+	docker-compose -f docker-compose.yml stop salsah1
+
+.PHONY: graphdb-up
+sipi-up: stack-up ## starts only GraphDB.
+	docker-compose -f docker-compose.yml stop api
+	docker-compose -f docker-compose.yml stop salsah1
+	docker-compose -f docker-compose.yml stop sipi
+	docker-compose -f docker-compose.yml stop redis
+
+#################################
+## Test Targets
+#################################
 
 .PHONY: unit-tests
 unit-tests: stack-without-api init-db-test-unit ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest').
@@ -265,12 +282,30 @@ it-tests: stack-without-api init-db-test-unit ## runs the integration tests (equ
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt 'webapi/it:test'
 
-.PHONY: test
-test: stack-without-api ## runs all tests.
+.PHONY: test-salsah1
+test-salsah1: stack-up ## runs salsah1 headless browser tests
+	@echo $@  # print target name
+	@sleep 5
+	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
+	bazel test //salsah1/...
+
+.PHONY: test-upgrade
+test-upgrade: stack-down ## runs upgrade tests
+	@echo $@  # print target name
+	bazel test //upgrade/...
+
+.PHONY: test-webapi
+test-webapi: stack-without-api ## runs webapi tests
 	@echo $@  # print target name
 	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
-	bazel test //...
+	bazel test //webapi/...
+
+.PHONY: test
+test:  ## runs all tests.
+	@$(MAKE) -f $(THIS_FILE) test-webapi
+	@$(MAKE) -f $(THIS_FILE) test-upgrade
+	@$(MAKE) -f $(THIS_FILE) test-salsah1
 
 #################################
 ## Database Management

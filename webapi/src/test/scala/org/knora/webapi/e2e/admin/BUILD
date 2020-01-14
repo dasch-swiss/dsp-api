@@ -128,7 +128,8 @@ scala_test(
     name = "SipiADME2ESpec",
     size = "small",  # 60s
     srcs = [
-        "PermissionsADME2ESpec.scala",
+        "SipiADME2ESpec.scala",
+        "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
     ],
     data = [
         "//knora-ontologies",
@@ -142,6 +143,7 @@ scala_test(
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_slf4j_slf4j_api",
+        "@maven//:com_typesafe_akka_akka_http_testkit_2_12",
         "@maven//:org_scalatest_scalatest_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",

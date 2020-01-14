@@ -16,7 +16,7 @@ lazy val GDB = config("gdb") extend Default
 
 lazy val GDBSIPI = config("gdbsipi") extend Default
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs, salsah1, webapi, knoraGraphDbSe, knoraGraphdbFree, knoraSipi, knoraAssets)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs)
 
 lazy val buildSettings = Dependencies.Versions ++ Seq(
     organization := "org.knora",
