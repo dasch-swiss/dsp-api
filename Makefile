@@ -308,6 +308,15 @@ normal-tests: stack-without-api ## runs the normal tests (equivalent to 'sbt web
 				--network=docker_knora-net \
 				daschswiss/scala-sbt sbt webapi/test
 
+.PHONY: js-lib-tests
+js-lib-tests: clean stack-up ## run knora-api-js-lib tests against the knora-stack
+	@echo $@  # print target name
+	@sleep 5
+	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
+	@$(MAKE) -f $(THIS_FILE) stack-restart-api
+	@git clone -b wip/it-test https://github.com/dasch-swiss/knora-api-js-lib.git /tmp/js-lib-tests
+	$(MAKE) -C /tmp/js-lib-tests test
+
 .PHONY: init-db-test
 init-db-test: ## initializes the knora-test repository
 	$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test
@@ -336,6 +345,7 @@ clean: ## clean build artifacts
 	@rm -rf .docker
 	@rm -rf .env
 	@sbt clean
+	@rm -rf /tmp/js-lib-tests
 
 clean-docker: ## cleans the docker installation
 	docker system prune -af
