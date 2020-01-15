@@ -144,8 +144,6 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: install requirements
-          run: sudo apt-get install expect
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
@@ -155,6 +153,8 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
+      - name: install requirements
+        run: sudo apt-get install expect
       - name: prepare needed graphdb-se files
         run: |
           echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
@@ -198,8 +198,6 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: '11.x.x'
-      - name: install requirements
-          run: sudo apt-get install expect
       - name: cache maven artifacts
         uses: actions/cache@v1
         with:
