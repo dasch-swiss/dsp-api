@@ -109,6 +109,11 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
       */
     protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
         if (writeFile) {
+            // Per default only read access is allowed in the bazel sandbox.
+            // This workaround allows to save test output.
+            val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
+            val newOutputFile = new File(testOutputDir, file.getPath)
+            newOutputFile.getParentFile.mkdirs()
             FileUtil.writeTextFile(file, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
             responseAsString
         } else {

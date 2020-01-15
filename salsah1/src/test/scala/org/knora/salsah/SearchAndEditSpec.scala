@@ -96,6 +96,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "do a simple search for 'Zeitglöcklein' and open a search result row representing a page" ignore {
 
             page.open()
@@ -119,6 +120,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" ignore {
 
             page.open()
@@ -149,6 +151,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "do an extended search for restype book containing 'Zeitglöcklein in the title'" ignore {
 
             page.open()
@@ -177,7 +180,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-
+        // FIXME: Ignored Test!
         "do an extended search for restype region and open a region" ignore {
 
             page.open()
@@ -205,6 +208,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "do an extended search for restype page with seqnum 1 belonging to a book containing 'Narrenschiff' in its title" ignore {
 
             page.open()
@@ -241,6 +245,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
+        // FIXME: Ignored Test!
         "do an extended search for images:bild involving a hierarchical list selection for its title" ignore {
 
             page.open()
@@ -284,6 +289,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "do an extended search for a book with the exact publication date Julian 1497-08-01" ignore {
             page.open()
 
@@ -328,6 +334,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "do an extended search for a book with the period Julian 1495 as publication date" ignore {
 
             page.open()
@@ -398,6 +405,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "change the publication date of a book" ignore {
 
             page.open()
@@ -468,6 +476,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "edit the seqnum and the pagenumber of a page" ignore {
 
             page.open()
@@ -540,6 +549,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "add a new creator to a book" ignore {
 
             page.open()
@@ -627,6 +637,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
+        // FIXME: Ignored Test!
         "change the partof property of a page" ignore {
 
             page.open()
@@ -676,6 +687,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
+        // FIXME: Ignored Test!
         "change the season property of a image:bild to summer" ignore {
 
             page.open()
@@ -724,6 +736,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "add a season to a image:bild" ignore {
 
             page.open()
@@ -772,6 +785,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "display a compound resource without images" ignore {
 
             page.open()

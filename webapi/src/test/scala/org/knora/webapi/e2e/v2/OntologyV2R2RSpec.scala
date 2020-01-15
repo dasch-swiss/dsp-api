@@ -86,8 +86,13 @@ class OntologyV2R2RSpec extends R2RSpec {
           */
         def writeFile(responseStr: String, mediaType: MediaType.NonBinary): Unit = {
             if (!disableWrite) {
-                // FIXME: Write to allowed place: SO post describes a possible way so save output: https://stackoverflow.com/a/47883878
-                FileUtil.writeTextFile(makeFile(mediaType), responseStr)
+                // Per default only read access is allowed in the bazel sandbox.
+                // This workaround allows to save test output.
+                val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
+                val file = makeFile(mediaType)
+                val newOutputFile = new File(testOutputDir, file.getPath)
+                newOutputFile.getParentFile.mkdirs()
+                FileUtil.writeTextFile(newOutputFile, responseStr)
             }
         }
 

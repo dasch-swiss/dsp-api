@@ -185,6 +185,8 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
 
     /**
      * Reads or writes a test data file.
+     * The written test data files can be found under:
+     * ./bazel-out/darwin-fastbuild/testlogs/<package-name>/<target-name>/test.outputs/outputs.zip
      *
      * @param responseAsString the API response received from Knora.
      * @param file             the file in which the expected API response is stored.
@@ -193,7 +195,12 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
      */
     protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
         if (writeFile) {
-            FileUtil.writeTextFile(file, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
+            // Per default only read access is allowed in the bazel sandbox.
+            // This workaround allows to save test output.
+            val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
+            val newOutputFile = new File(testOutputDir, file.getPath)
+            newOutputFile.getParentFile.mkdirs()
+            FileUtil.writeTextFile(newOutputFile, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
             responseAsString
         } else {
             FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)

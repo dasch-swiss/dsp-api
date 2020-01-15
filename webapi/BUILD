@@ -8,6 +8,18 @@ filegroup(
 )
 
 scala_binary(
+    name = "GenerateContributorsFile",
+    main_class = "org.knora.webapi.util.GenerateContributorsFile",
+    deps = [
+        ":main_library",
+        "@maven//:com_typesafe_akka_akka_slf4j_2_12",
+        "@maven//:org_slf4j_log4j_over_slf4j",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+    ],
+)
+
+scala_binary(
     name = "webapi",
     jvm_flags = [
         "-Dconfig.resource=application.conf",

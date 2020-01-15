@@ -87,6 +87,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "create a resource of type images:person" ignore {
 
             page.open()
@@ -121,6 +122,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
+        // FIXME: Ignored Test!
         "create a resource of type anything:thing" ignore {
 
             page.open()
