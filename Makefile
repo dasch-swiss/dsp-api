@@ -310,13 +310,14 @@ normal-tests: stack-without-api ## runs the normal tests (equivalent to 'sbt web
 				daschswiss/scala-sbt sbt webapi/test
 
 .PHONY: js-lib-tests
-js-lib-tests: clean stack-up ## run knora-api-js-lib tests against the knora-stack
-	@echo $@  # print target name
+js-lib-tests: clean-loacal-tmp stack-up ## run knora-api-js-lib tests against the knora-stack
 	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) init-db-test
+	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
-	@git clone -b wip/it-test https://github.com/dasch-swiss/knora-api-js-lib.git /tmp/js-lib-tests
-	$(MAKE) -C /tmp/js-lib-tests test
+	@git clone -b wip/it-test https://github.com/dasch-swiss/knora-api-js-lib.git .tmp/js-lib-tests
+	(cd .tmp/js-lib-tests && npm install)
+	$(MAKE) -C .tmp/js-lib-tests test
 
 .PHONY: init-db-test
 init-db-test: ## initializes the knora-test repository
@@ -342,11 +343,16 @@ init-db-test-minimal-free: ## initializes the knora-test repository with minimal
 init-db-test-unit-free: ## initializes the knora-test-unit repository (for GraphDB-Free)
 	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-unit
 
+.PHONY: clean-loacal-tmp
+clean-loacal-tmp:
+	@mkdir -p .tmp/js-lib-tests
+	@rm -rf .tmp/js-lib-tests
+
 clean: ## clean build artifacts
 	@rm -rf .docker
 	@rm -rf .env
 	@sbt clean
-	@rm -rf /tmp/js-lib-tests
+	@rm -rf .tmp
 
 clean-docker: ## cleans the docker installation
 	docker system prune -af
