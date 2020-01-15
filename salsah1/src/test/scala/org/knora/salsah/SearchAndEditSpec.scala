@@ -96,7 +96,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "do a simple search for 'Zeitglöcklein' and open a search result row representing a page" in {
+        "do a simple search for 'Zeitglöcklein' and open a search result row representing a page" ignore {
 
             page.open()
 
@@ -119,7 +119,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" in {
+        "do a simple search for 'Zeitglöcklein' and open a search result row representing a book" ignore {
 
             page.open()
 
@@ -149,7 +149,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "do an extended search for restype book containing 'Zeitglöcklein in the title'" in {
+        "do an extended search for restype book containing 'Zeitglöcklein in the title'" ignore {
 
             page.open()
 
@@ -178,7 +178,7 @@ class SearchAndEditSpec extends SalsahSpec {
         }
 
 
-        "do an extended search for restype region and open a region" in {
+        "do an extended search for restype region and open a region" ignore {
 
             page.open()
 
@@ -205,7 +205,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "do an extended search for restype page with seqnum 1 belonging to a book containing 'Narrenschiff' in its title" in {
+        "do an extended search for restype page with seqnum 1 belonging to a book containing 'Narrenschiff' in its title" ignore {
 
             page.open()
 
@@ -241,7 +241,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
-        "do an extended search for images:bild involving a hierarchical list selection for its title" in {
+        "do an extended search for images:bild involving a hierarchical list selection for its title" ignore {
 
             page.open()
 
@@ -284,7 +284,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "do an extended search for a book with the exact publication date Julian 1497-08-01" in {
+        "do an extended search for a book with the exact publication date Julian 1497-08-01" ignore {
             page.open()
 
             page.doLogin(email = userEmail, password = testPassword, fullName = userFullName)
@@ -328,7 +328,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "do an extended search for a book with the period Julian 1495 as publication date" in {
+        "do an extended search for a book with the period Julian 1495 as publication date" ignore {
 
             page.open()
 
@@ -398,7 +398,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "change the publication date of a book" in {
+        "change the publication date of a book" ignore {
 
             page.open()
 
@@ -468,7 +468,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "edit the seqnum and the pagenumber of a page" in {
+        "edit the seqnum and the pagenumber of a page" ignore {
 
             page.open()
 
@@ -540,7 +540,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "add a new creator to a book" in {
+        "add a new creator to a book" ignore {
 
             page.open()
 
@@ -627,7 +627,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
-        "change the partof property of a page" in {
+        "change the partof property of a page" ignore {
 
             page.open()
 
@@ -676,7 +676,7 @@ class SearchAndEditSpec extends SalsahSpec {
             page.doLogout()
         }
 
-        "change the season property of a image:bild to summer" in {
+        "change the season property of a image:bild to summer" ignore {
 
             page.open()
 
@@ -724,7 +724,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "add a season to a image:bild" in {
+        "add a season to a image:bild" ignore {
 
             page.open()
 
@@ -772,7 +772,7 @@ class SearchAndEditSpec extends SalsahSpec {
 
         }
 
-        "display a compound resource without images" in {
+        "display a compound resource without images" ignore {
 
             page.open()
 

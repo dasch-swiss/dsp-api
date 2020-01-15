@@ -87,7 +87,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
-        "create a resource of type images:person" in {
+        "create a resource of type images:person" ignore {
 
             page.open()
 
@@ -121,7 +121,7 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
-        "create a resource of type anything:thing" in {
+        "create a resource of type anything:thing" ignore {
 
             page.open()
 

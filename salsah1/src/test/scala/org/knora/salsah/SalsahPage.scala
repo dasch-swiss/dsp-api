@@ -43,7 +43,7 @@ import scala.concurrent.duration._
 class SalsahPage(pageUrl: String, headless: Boolean) {
 
     // How long to wait for results obtained using the 'eventually' function
-    implicit val patienceConfig = PatienceConfig(timeout = scaled(15.seconds), interval = scaled(20.millis))
+    implicit val patienceConfig = PatienceConfig(timeout = scaled(5.seconds), interval = scaled(20.millis))
 
     implicit val driver: WebDriver = new WebTest().newWebDriverSession()
 
@@ -383,6 +383,8 @@ class SalsahPage(pageUrl: String, headless: Boolean) {
             val table = driver.findElement(By.name("result")).findElement(By.xpath("//table"))
 
             val rows = table.findElements(By.xpath("//tr[@class='result_row']"))
+
+             driver.wait(200).ensuring(rows.get(0).isDisplayed)
 
             // make sure that rows are loaded
             if (rows.length < 1) throw new Exception
