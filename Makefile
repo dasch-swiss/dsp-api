@@ -313,7 +313,7 @@ normal-tests: stack-without-api ## runs the normal tests (equivalent to 'sbt web
 js-lib-tests: clean stack-up ## run knora-api-js-lib tests against the knora-stack
 	@echo $@  # print target name
 	@sleep 5
-	@$(MAKE) -f $(THIS_FILE) init-db-test-minimal
+	@$(MAKE) -f $(THIS_FILE) init-db-test
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
 	@git clone -b wip/it-test https://github.com/dasch-swiss/knora-api-js-lib.git /tmp/js-lib-tests
 	$(MAKE) -C /tmp/js-lib-tests test
