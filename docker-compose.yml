@@ -84,6 +84,7 @@ services:
 
 networks:
   knora-net:
+    name: knora-net
 
 volumes:
   db-home:

@@ -161,7 +161,7 @@ jobs:
         run: make print-env-file
       - name: Start only GraphDB
         run: |
-          make graphdb-up
+          make stack-db-only
           make init-db-test-minimal
       - name: unzip test data
         run: unzip $GITHUB_WORKSPACE/test_data/v7.0.0/v7.0.0-knora-test.trig.zip -d $GITHUB_WORKSPACE/test_data/v7.0.0/
@@ -174,11 +174,11 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/upgrade/out
           $GITHUB_WORKSPACE/upgrade/graphdb-se/dump-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgrade/out/dump.trig
       - name: run upgrade from inside docker
-        run: docker run --rm --network=knora-net -v $GITHUB_WORKSPACE/upgrade/out:/upgrade/out bazel/knora-upgrade:knora-upgrade /upgrade/out/dump.trig /upgrade/out/dump-upgraded.trig
+        run: docker run --rm --network=knora-net -v $GITHUB_WORKSPACE/upgrade/out:/upgrade/out bazel/docker/knora-upgrade:knora-upgrade /upgrade/out/dump.trig /upgrade/out/dump-upgraded.trig
       - name: empty repository
         run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
       - name: load upgraded data
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgraded/out/dump-upgraded.trig
+        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgrade/out/dump-upgraded.trig
 
   salsah1-test:
     name: Salsah1 Test
