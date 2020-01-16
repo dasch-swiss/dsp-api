@@ -15,6 +15,7 @@ scala_binary(
     main_class = "org.knora.upgrade.Main",
     resources = [
         "//upgrade/src/main/resources",
+        "//knora-ontologies"
     ],
     deps = [
         ":main_library",

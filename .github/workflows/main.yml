@@ -159,26 +159,8 @@ jobs:
           cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
       - name: Print env file
         run: make print-env-file
-      - name: Start only GraphDB
-        run: |
-          make stack-db-only
-          make init-db-test-minimal
-      - name: unzip test data
-        run: unzip $GITHUB_WORKSPACE/test_data/v7.0.0/v7.0.0-knora-test.trig.zip -d $GITHUB_WORKSPACE/test_data/v7.0.0/
-      - name: empty repository
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-      - name: load v7.0.0 data
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/test_data/v7.0.0/v7.0.0-knora-test.trig
-      - name: dump repository data
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/upgrade/out
-          $GITHUB_WORKSPACE/upgrade/graphdb-se/dump-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgrade/out/dump.trig
-      - name: run upgrade from inside docker
-        run: docker run --rm --network=knora-net -v $GITHUB_WORKSPACE/upgrade/out:/upgrade/out bazel/docker/knora-upgrade:knora-upgrade /upgrade/out/dump.trig /upgrade/out/dump-upgraded.trig
-      - name: empty repository
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
-      - name: load upgraded data
-        run: $GITHUB_WORKSPACE/upgrade/graphdb-se/upload-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $GITHUB_WORKSPACE/upgrade/out/dump-upgraded.trig
+      - name: Run upgrade integration test
+        run: make test-upgrade-integration
 
   salsah1-test:
     name: Salsah1 Test
@@ -258,7 +240,7 @@ jobs:
       - name: build and publish all images to Dockerhub
         run: |
           echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_USER --password-stdin
-          make publish-all-images
+          make docker-publish
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}

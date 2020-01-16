@@ -322,7 +322,7 @@ test-upgrade-integration: stack-db-only clean-local-tmp ## runs upgrade integrat
 	@mkdir -p $(PWD)/.tmp/upgrade/out
 	@$(PWD)/upgrade/graphdb-se/dump-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200 $(PWD)/.tmp/upgrade/out/dump.trig
 	# run upgrade from inside docker
-	@docker run --rm --network=knora-net -v $(PWD)/.tmp/upgrade/out:/out bazel/docker/knora-upgrade:knora-upgrade /out/dump.trig /out/dump-upgraded.trig
+	@docker run --rm --network=knora-net -v $(PWD)/.tmp/upgrade/out:/upgrade/out bazel/docker/knora-upgrade:knora-upgrade /upgrade/out/dump.trig /upgrade/out/dump-upgraded.trig
 	# empty repository
 	@$(PWD)/upgrade/graphdb-se/empty-repository.sh -r knora-test -u gaga -p gaga -h localhost:7200
 	# load upgraded data

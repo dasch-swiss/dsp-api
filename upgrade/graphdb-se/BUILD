@@ -13,7 +13,7 @@ filegroup(
 )
 
 pkg_tar(
-    name = "graphdb-se-scripts",
+    name = "tar",
     package_dir = "graphdb-se",
     srcs = [":graphdb-se"]
 )
