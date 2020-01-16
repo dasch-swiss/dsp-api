@@ -6,6 +6,7 @@ KNORA_GRAPHDB_FREE_IMAGE := bazel/docker/knora-graphdb-free:knora-graphdb-free
 KNORA_SIPI_IMAGE := bazel/docker/knora-sipi:knora-sipi
 KNORA_UPGRADE_IMAGE := bazel/docker/knora-upgrade:knora-upgrade
 KNORA_SALSAH1_IMAGE := bazel/docker/knora-salsah1:knora-salsah1
+KNORA_WEBAPI_DB_CONNECTIONS := 2
 
 ifeq ($(GIT_EMAIL),)
   GIT_EMAIL := $(shell git config user.email)
