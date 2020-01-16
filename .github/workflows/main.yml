@@ -165,7 +165,7 @@ jobs:
       - name: print env file
         run: make print-env-file
       - name: run JS lib tests
-        run: make js-lib-tests
+        run: make test-js-lib-integration
 
   upgrade-unit-tests:
     name: Upgrade Unit Tests
