@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/dasch-swiss/knora-api.svg?branch=develop)](https://travis-ci.com/dasch-swiss/knora-api)
+[![Build Status](https://github.com/dasch-swiss/knora-api/workflows/CI/badge.svg?branch=develop)](https://github.com/dasch-swiss/knora-api/actions)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7e7c734a37ef403a964345e29106b267)](https://app.codacy.com/app/dhlab-basel/Knora?utm_source=github.com&utm_medium=referral&utm_content=dhlab-basel/Knora&utm_campaign=Badge_Grade_Dashboard)
 # Knora
 
@@ -140,7 +140,7 @@ A pull request should include tests and documentation for the changes that were 
 
 ### Technical
 
-Please use the [knora-user](https://www.maillist.unibas.ch/mailman/listinfo/knora-user) mailing list for technical questions.
+Please use the [discuss.dasch.swiss](https://discuss.dasch.swiss) forum for technical questions.
 
 ### Administrative
 

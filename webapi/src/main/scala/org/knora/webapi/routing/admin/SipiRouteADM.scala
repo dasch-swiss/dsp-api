@@ -33,7 +33,10 @@ class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
     /**
      * A routing function for the API that Sipi connects to.
      */
-    def knoraApiPath: Route = {
+    /**
+     * Returns the route.
+     */
+    override def knoraApiPath: Route = {
 
         path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
             get {

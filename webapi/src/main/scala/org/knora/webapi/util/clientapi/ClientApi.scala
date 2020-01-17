@@ -23,6 +23,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpRequest
 import akka.stream.ActorMaterializer
+import org.knora.webapi.ClientApiGenerationException
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Cardinality
 import org.knora.webapi.util.SmartIri
 
@@ -48,6 +49,16 @@ case object JsonLD extends ApiSerialisationFormat
  * Represents a client API.
  */
 trait ClientApi {
+    /**
+     * If `true`, generate endpoints for this API.
+     */
+    val generateEndpoints: Boolean = true
+
+    /**
+     * If `true`, generate classes for this API.
+     */
+    val generateClasses: Boolean = true
+
     /**
      * The serialisation format used by the API.
      */
@@ -86,6 +97,24 @@ trait ClientApi {
     val classesWithReadOnlyProperties: Map[SmartIri, Set[SmartIri]]
 
     /**
+     * A map of class IRIs to IRIs of optional set properties. Such properties have cardinality 0-n, and should
+     * be made optional in generated code.
+     */
+    val classesWithOptionalSetProperties: Map[SmartIri, Set[SmartIri]]
+
+    /**
+     * A set of IRIs of classes that represent API requests and that therefore do not need `Stored*`
+     * subclasses.
+     */
+    val requestClasses: Set[SmartIri]
+
+    /**
+     * A set of IRIs of classes that are always read-only and that therefore do not need `Stored*`
+     * or `Read*` subclasses.
+     */
+    val readOnlyClasses: Set[SmartIri]
+
+    /**
      * A set of IRIs of classes that represent API responses and whose contents are therefore
      * always read-only.
      */
@@ -97,21 +126,27 @@ trait ClientApi {
     val idProperties: Set[SmartIri]
 
     /**
-     * A map of property IRIs to non-standard names that those properties must have.
-     * Needed only if two different properties should have the same name in different classes.
+     * A map of class IRIs to maps of property IRIs to non-standard names that those properties must have
+     * in those classes. Needed only for JSON, and only if two different properties should have the same name in
+     * different classes. `JsonInstanceInspector` also needs to know about these.
      */
-    val propertyNames: Map[SmartIri, String]
+    val propertyNames: Map[SmartIri, Map[SmartIri, String]]
+
+    /**
+     * Class IRIs that are used by this API, other than the ones used in endpoints.
+     */
+    val generalClassIrisUsed: Set[SmartIri] = Set.empty
 
     /**
      * The IRIs of the classes used by this API.
      */
-    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet
+    lazy val classIrisUsed: Set[SmartIri] = endpoints.flatMap(_.classIrisUsed).toSet ++ generalClassIrisUsed
 
     /**
-     * Returns test data for this API.
+     * Returns test data for this API and its endpoints.
      *
      * @param testDataDirectoryPath the path of the top-level test data directory.
-     * @return a set of test data files to be used for testing this API.
+     * @return a set of test data files to be used for testing this API and its endpoints.
      */
     def getTestData(testDataDirectoryPath: Seq[String])(implicit executionContext: ExecutionContext,
                                                         actorSystem: ActorSystem,
@@ -196,6 +231,10 @@ trait ClientEndpoint {
         for {
             response <- Http().singleRequest(request)
             responseStr <- response.entity.toStrict(10240.millis).map(_.data.decodeString("UTF-8"))
+
+            _ = if (response.status.isFailure) {
+                throw ClientApiGenerationException(s"Failed to get test data: $responseStr")
+            }
         } yield responseStr
     }
 
@@ -376,14 +415,6 @@ object EndpointFunctionDSL {
         def paramType(objectType: ClientObjectType): FunctionParam = FunctionParam(
             name = name,
             objectType = objectType,
-            isOptional = false,
-            description = description
-        )
-
-        def paramOptionType(objectType: ClientObjectType): FunctionParam = FunctionParam(
-            name = name,
-            objectType = objectType,
-            isOptional = true,
             description = description
         )
     }
@@ -431,12 +462,10 @@ case class ClientFunction(name: String,
  *
  * @param name        the name of the parameter.
  * @param objectType  the type of the parameter.
- * @param isOptional  `true` if the parameter is optional.
  * @param description a human-readable description of the parameter.
  */
 case class FunctionParam(name: String,
                          objectType: ClientObjectType,
-                         isOptional: Boolean,
                          description: String)
 
 /**
@@ -625,7 +654,18 @@ case class ClientClassDefinition(className: String,
     lazy val classObjectTypesUsed: Set[ClassRef] = properties.foldLeft(Set.empty[ClassRef]) {
         (acc, property) =>
             property.objectType match {
-                case classRef: ClassRef => acc + classRef
+                case typeWithClassIri: TypeWithClassIri =>
+                    typeWithClassIri.getClassRef match {
+                        case Some(classRef) =>
+                            if (classRef.classIri == classIri) {
+                                acc
+                            } else {
+                                acc + classRef
+                            }
+
+                        case None => acc
+                    }
+
                 case _ => acc
             }
     }
@@ -639,6 +679,7 @@ case class ClientClassDefinition(className: String,
  * @param propertyIri         the IRI of the property in the Knora API.
  * @param objectType          the type of object that the property points to.
  * @param cardinality         the cardinality of the property in the class.
+ * @param isOptionalSet       `true` if this property represents an optional set.
  * @param isEditable          `true` if the property's value is editable via the API.
  */
 case class ClientPropertyDefinition(propertyName: String,
@@ -646,6 +687,7 @@ case class ClientPropertyDefinition(propertyName: String,
                                     propertyIri: SmartIri,
                                     objectType: ClientObjectType,
                                     cardinality: Cardinality,
+                                    isOptionalSet: Boolean,
                                     isEditable: Boolean)
 
 /**
@@ -656,12 +698,12 @@ sealed trait ClientObjectType
 /**
  * A trait for datatypes.
  */
-sealed trait ClientDatatype extends ClientObjectType
+sealed trait ClientDatatype extends MapValueType with ArrayElementType
 
 /**
  * The type of string datatype values.
  */
-case object StringDatatype extends ClientDatatype
+case object StringDatatype extends ClientDatatype with MapKeyDatatype
 
 /**
  * The type of boolean datatype values.
@@ -681,12 +723,77 @@ case object DecimalDatatype extends ClientDatatype
 /**
  * The type of URI datatype values.
  */
-case object UriDatatype extends ClientDatatype
+case object UriDatatype extends ClientDatatype with MapKeyDatatype
 
 /**
  * The type of timestamp datatype values.
  */
 case object DateTimeStampDatatype extends ClientDatatype
+
+/**
+ * A trait for types that may refer to a class IRI, either because the type represents that class,
+ * or because it is a collection type with a type variable referring to that class.
+ */
+sealed trait TypeWithClassIri {
+    /**
+     * Returns the class IRI, if any, that the type refers to.
+     */
+    def getClassIri: Option[SmartIri]
+
+    /**
+     * Returns a [[ClassRef]] representing the class IRI, if any, that the type refers to.
+     */
+    def getClassRef: Option[ClassRef] = {
+        getClassIri.map {
+            classIri => ClassRef(className = classIri.getEntityName.capitalize, classIri = classIri)
+        }
+    }
+}
+
+/**
+ * A trait for types representing collections in the target language.
+ */
+sealed trait CollectionType extends ClientObjectType with TypeWithClassIri
+
+/**
+ * A trait for types that can be keys in [[MapType]] data structures.
+ */
+sealed trait MapKeyDatatype extends ClientObjectType
+
+/**
+ * A trait for types that can be values in [[MapType]] data structures.
+ */
+sealed trait MapValueType extends ClientObjectType
+
+/**
+ * Represents a map-like data structure in the target language.
+ *
+ * @param keyType   the type of the keys of the map.
+ * @param valueType the type of the values of the map.
+ */
+case class MapType(keyType: MapKeyDatatype, valueType: MapValueType) extends ClientObjectType with CollectionType with MapValueType with ArrayElementType {
+    override def getClassIri: Option[SmartIri] = valueType match {
+        case typeWithClassIri: TypeWithClassIri => typeWithClassIri.getClassIri
+        case _ => None
+    }
+}
+
+/**
+ * A trait for types that can be elements in an [[ArrayType]] data structure.
+ */
+sealed trait ArrayElementType extends ClientObjectType
+
+/**
+ * Represents an array-like data structure in the target language.
+ *
+ * @param elementType the type of the elements of the array.
+ */
+case class ArrayType(elementType: ArrayElementType) extends ClientObjectType with CollectionType with MapValueType with ArrayElementType {
+    override def getClassIri: Option[SmartIri] = elementType match {
+        case typeWithClassIri: TypeWithClassIri => typeWithClassIri.getClassIri
+        case _ => None
+    }
+}
 
 /**
  * The type of enums.
@@ -701,7 +808,7 @@ case class EnumDatatype(values: Set[String]) extends ClientDatatype
  * @param className the name of the class.
  * @param classIri  the IRI of the class.
  */
-case class ClassRef(className: String, classIri: SmartIri) extends ClientObjectType {
+case class ClassRef(className: String, classIri: SmartIri) extends ClientObjectType with TypeWithClassIri with MapValueType with ArrayElementType {
     /**
      * Converts this [[ClassRef]] to one that represents a `Stored*` derived class.
      */
@@ -719,6 +826,8 @@ case class ClassRef(className: String, classIri: SmartIri) extends ClientObjectT
         val readClassIri = classIri.getOntologyFromEntity.makeEntityIri(readClassName)
         ClassRef(className = readClassName, classIri = readClassIri)
     }
+
+    override def getClassIri: Option[SmartIri] = Some(classIri)
 }
 
 object ClassRef {

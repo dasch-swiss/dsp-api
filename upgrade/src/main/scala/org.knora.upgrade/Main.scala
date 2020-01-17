@@ -27,13 +27,12 @@ import org.eclipse.rdf4j.model.{Model, Statement}
 import org.eclipse.rdf4j.rio.helpers.StatementCollector
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
 import org.knora.upgrade.plugins._
-import org.knora.webapi.util.{Debug, FileUtil}
+import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.JavaUtil._
 import org.knora.webapi.{InconsistentTriplestoreDataException, OntologyConstants}
 import org.rogach.scallop._
 
 import scala.collection.JavaConverters._
-import scala.io.{BufferedSource, Codec, Source}
 
 
 /**
@@ -50,7 +49,8 @@ object Main extends App {
         PluginForKnoraBaseVersion(versionNumber = 2, plugin = new UpgradePluginPR1322, prBasedVersionString = Some("PR 1322")),
         PluginForKnoraBaseVersion(versionNumber = 3, plugin = new UpgradePluginPR1367, prBasedVersionString = Some("PR 1367")),
         PluginForKnoraBaseVersion(versionNumber = 4, plugin = new UpgradePluginPR1372, prBasedVersionString = Some("PR 1372")),
-        PluginForKnoraBaseVersion(versionNumber = 5, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1440"))
+        PluginForKnoraBaseVersion(versionNumber = 5, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1440")),
+        PluginForKnoraBaseVersion(versionNumber = 6, plugin = new NoopPlugin) // PR 1206
     )
 
     /**

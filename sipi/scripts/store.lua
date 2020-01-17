@@ -27,7 +27,7 @@ require "jwt"
 local success, error_msg = server.setBuffer()
 
 if not success then
-    server.log("server.setBuffer() failed: " .. error_msg, server.loglevel.LOG_ERR)
+    send_error(500, "server.setBuffer() failed: " .. error_msg)
     return
 end
 
@@ -76,16 +76,21 @@ if prefix ~= token_prefix then
 end
 
 local storage_dir = config.imgroot .. "/" .. prefix .. "/"
-local success, exists = server.fs.exists(storage_dir)
 
+local exists
+success, exists = server.fs.exists(storage_dir)
 if not success then
-    send_error(500, exists)
+    send_error(500, "server.fs.exists() failed: " .. exists)
     return
 end
 
 if not exists then
-    send_error(500, "Directory " .. storage_dir .. " not found (it must exist when Sipi starts)")
-    return
+    success, error_msg = server.fs.mkdir(storage_dir, 511)
+
+    if not success then
+        send_error(500, "server.fs.mkdir() failed: " .. error_msg)
+        return
+    end
 end
 
 -- Get the submitted filename.
@@ -109,10 +114,10 @@ end
 
 -- Construct the path of that file under the temp directory.
 
-local success, hashed_filename = helper.filename_hash(filename)
-
+local hashed_filename
+success, hashed_filename = helper.filename_hash(filename)
 if not success then
-    send_error(500, hashed_source_filename)
+    send_error(500, "helper.filename_hash() failed: " .. hashed_filename)
     return
 end
 
@@ -120,25 +125,24 @@ local source_path = config.imgroot .. "/tmp/" .. hashed_filename
 
 -- Make sure the source file is readable.
 
-local success, readable = server.fs.is_readable(source_path)
-
+local readable
+success, readable = server.fs.is_readable(source_path)
 if not success then
-    send_error(500, readable)
+    send_error(500, "server.fs.is_readable() failed: " .. readable)
     return
 end
 
 if not readable then
-    send_error(500, source_path .. " not readable")
+    send_error(400, source_path .. " not readable")
     return
 end
 
 -- Move the temporary file to the permanent storage directory.
 
 local destination_path = storage_dir .. hashed_filename
-local success, error_msg = server.fs.moveFile(source_path, destination_path)
-
+success, error_msg = server.fs.moveFile(source_path, destination_path)
 if not success then
-    send_error(500, error_msg)
+    send_error(500, "server.fs.moveFile() failed: " .. error_msg)
     return
 end
 

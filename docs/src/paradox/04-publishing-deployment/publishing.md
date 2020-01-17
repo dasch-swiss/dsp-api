@@ -25,53 +25,39 @@ Knora is published as a set of [Docker](https://www.docker.com) images under the
 The following Docker images are published:
 
 - Knora-API:
-  - https://hub.docker.com/r/dhlabbasel/webapi
+  - https://hub.docker.com/r/daschswiss/knora-api
 - GraphDB-SE (includes `KnoraRules.pie`):
-  - https://hub.docker.com/r/dhlabbasel/knora-graphdb-se
+  - https://hub.docker.com/r/daschswiss/knora-graphdb-se
 - GraphDB-Free (includes `KnoraRules.pie`):
-  - https://hub.docker.com/r/dhlabbasel/knora-graphdb-free
+  - https://hub.docker.com/r/daschswiss/knora-graphdb-free
 - Sipi (includes Knora's Sipi scripts):
-  - https://hub.docker.com/r/dhlabbasel/knora-sipi
+  - https://hub.docker.com/r/daschswiss/knora-sipi
 - Knora-Assets (Knora-Base ontologies, test data, and scripts):
-  - https://hub.docker.com/r/dhlabbasel/knora-assets
+  - https://hub.docker.com/r/daschswiss/knora-assets
 - Knora-Upgrade (Knora upgrade tool):
-  - https://hub.docker.com/r/dhlabbasel/knora-upgrade
+  - https://hub.docker.com/r/daschswiss/knora-upgrade
 - Salsah 1:
-  - https://hub.docker.com/r/dhlabbasel/salsah1
+  - https://hub.docker.com/r/daschswiss/knora-salsah1
 - Salsah 2:
   - https://hub.docker.com/r/daschswiss/knora-app-web
 
-Knora's Docker images are published automatically through Travis each time a pull-request
+Knora's Docker images are published automatically through Github CI each time a pull-request
 is merged into the `develop` branch.
 
 Each image is tagged with a version number, where the version is derived by using the result
 of `git describe`. The describe version is built from the
 `last tag + number of commits since tag + short hash`, e.g., `8.0.0-7-ga7827e9`.
 
-### Using SBT for publishing
-
 The images can be published locally by running:
 
 ```bash
-$ - sbt webapi/docker:publishLocal
-$ sbt salsah1/docker:publishLocal
-$ sbt knora-sipi/docker:publishLocal
-$ sbt knora-graphdb-se/docker:publishLocal
-$ sbt knora-graphdb-free/docker:publishLocal
-$ sbt knora-upgrade/docker:publishLocal
-$ sbt knora-assets/docker:publishLocal
+$ make build-all-images
 ```
 
 or to Dockerhub:
 
 ```bash
-$ sbt webapi/docker:publish
-$ sbt salsah1/docker:publish
-$ sbt knora-sipi/docker:publish
-$ sbt knora-graphdb-se/docker:publish
-$ sbt knora-graphdb-free/docker:publish
-$ sbt knora-upgrade/docker:publish
-$ sbt knora-assets/docker:publish
+$ make publish-all-images
 ```
 
 ## GraphDB Licensing

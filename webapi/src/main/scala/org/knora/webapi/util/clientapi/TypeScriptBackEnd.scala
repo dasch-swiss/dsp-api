@@ -23,12 +23,13 @@ import java.io.File
 import java.nio.file.{Path, Paths}
 
 import org.knora.webapi.ClientApiGenerationException
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 import org.knora.webapi.util.clientapi.TypeScriptBackEnd.ImportInfo
 import org.knora.webapi.util.{FileUtil, SmartIri, StringFormatter}
 
 /**
- * Generates client API source code in TypeScript.
- */
+  * Generates client API source code in TypeScript.
+  */
 class TypeScriptBackEnd extends GeneratorBackEnd {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -36,26 +37,26 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     private val mockCodeDir: Path = Paths.get("_test_data/typescript-client-mock-src").toAbsolutePath
 
     /**
-     * Represents information about an endpoint and its source code.
-     *
-     * @param className    the name of the endpoint class.
-     * @param description  a description of the endpoint.
-     * @param variableName a variable name that can be used for an instance of the endpoint class.
-     * @param urlPath      the URL path of the endpoint, relative to the API path.
-     * @param fileContent  the endpoint's source code.
-     */
+      * Represents information about an endpoint and its source code.
+      *
+      * @param className    the name of the endpoint class.
+      * @param description  a description of the endpoint.
+      * @param variableName a variable name that can be used for an instance of the endpoint class.
+      * @param urlPath      the URL path of the endpoint, relative to the API path.
+      * @param fileContent  the endpoint's source code.
+      */
     private case class EndpointInfo(className: String,
                                     description: String,
                                     variableName: String,
                                     urlPath: String,
                                     fileContent: SourceCodeFileContent) {
         /**
-         * Converts this [[EndpointInfo]] to an [[ImportInfo]] so the endpoint can be imported in another class.
-         *
-         * @param importedIn           the path of the class in which the endpoint is to be imported.
-         * @param includeFileExtension if `true`, include the file extension in the import.
-         * @return an [[ImportInfo]] referring to this endpoint.
-         */
+          * Converts this [[EndpointInfo]] to an [[ImportInfo]] so the endpoint can be imported in another class.
+          *
+          * @param importedIn           the path of the class in which the endpoint is to be imported.
+          * @param includeFileExtension if `true`, include the file extension in the import.
+          * @return an [[ImportInfo]] referring to this endpoint.
+          */
         def toImportInfo(importedIn: SourceCodeFilePath, includeFileExtension: Boolean = true): ImportInfo = {
             val importPath: String = importedIn.makeImportPath(thatSourceCodeFilePath = fileContent.filePath, includeFileExtension = includeFileExtension)
 
@@ -70,16 +71,16 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     /**
-     * Generates client API source code.
-     *
-     * @param apis the APIs from which source code is to be generated.
-     * @return the generated source code.
-     */
+      * Generates client API source code.
+      *
+      * @param apis the APIs from which source code is to be generated.
+      * @return the generated source code.
+      */
     override def generateClientSourceCode(apis: Set[ClientApiBackendInput], params: Map[String, String]): Set[SourceCodeFileContent] = {
         /**
           * Returns the files containing mock knora-api-js-lib code, used for testing the generated code.
           *
-          * @param startDir the directory to look for mock code in.
+          * @param startDir       the directory to look for mock code in.
           * @param fileContentAcc the mock code collected so far.
           * @return the collected mock code.
           */
@@ -142,11 +143,11 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     /**
-     * Generates TypeScript source code for an API.
-     *
-     * @param api the API for which source code is to be generated.
-     * @return a set of [[SourceCodeFileContent]] objects containing the generated source code.
-     */
+      * Generates TypeScript source code for an API.
+      *
+      * @param api the API for which source code is to be generated.
+      * @return a set of [[SourceCodeFileContent]] objects containing the generated source code.
+      */
     private def generateApiSourceCode(api: ClientApiBackendInput): Set[SourceCodeFileContent] = {
         // Generate file paths for class definitions.
         val clientClassCodePaths: Map[String, SourceCodeFilePath] = api.clientClassDefs.map {
@@ -156,37 +157,48 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
         }.toMap
 
         // Generate source code for class definitions.
-        val classSourceCode: Set[SourceCodeFileContent] = generateClassSourceCode(
-            clientClassDefs = api.clientClassDefs,
-            clientClassCodePaths = clientClassCodePaths
-        )
-
-        // Generate source code for endpoints.
-        val endpointInfos: Seq[EndpointInfo] = api.apiDef.endpoints.map {
-            endpoint =>
-                generateEndpointInfo(
-                    apiDef = api.apiDef,
-                    endpoint = endpoint,
-                    clientClassDefs = api.clientClassDefs,
-                    clientClassCodePaths = clientClassCodePaths
-                )
+        val classSourceCode: Set[SourceCodeFileContent] = if (api.apiDef.generateClasses) {
+            generateClassSourceCode(
+                apiDef = api.apiDef,
+                clientClassDefs = api.clientClassDefs,
+                clientClassCodePaths = clientClassCodePaths
+            )
+        } else {
+            Set.empty
         }
 
-        // Generate source code for the main endpoint.
-        val mainEndpointSourceCode = generateMainEndpointSourceCode(
-            apiDef = api.apiDef,
-            endpointInfos = endpointInfos
-        )
+        // Generate source code for endpoints.
+        val endpointSourceCode: Seq[SourceCodeFileContent] = if (api.apiDef.generateEndpoints) {
+            val endpointInfos: Seq[EndpointInfo] = api.apiDef.endpoints.map {
+                endpoint =>
+                    generateEndpointInfo(
+                        apiDef = api.apiDef,
+                        endpoint = endpoint,
+                        clientClassDefs = api.clientClassDefs,
+                        clientClassCodePaths = clientClassCodePaths
+                    )
+            }
 
-        classSourceCode ++ endpointInfos.map(_.fileContent) + mainEndpointSourceCode
+            // Generate source code for the main endpoint.
+            val mainEndpointSourceCode = generateMainEndpointSourceCode(
+                apiDef = api.apiDef,
+                endpointInfos = endpointInfos
+            )
+
+            endpointInfos.map(_.fileContent) :+ mainEndpointSourceCode
+        } else {
+            Seq.empty
+        }
+
+        classSourceCode ++ endpointSourceCode
     }
 
     /**
-     * Generates knora-api-connection.ts.
-     *
-     * @param apiDefs the API definitions to be used.
-     * @return the source code of knora-api-connection.ts.
-     */
+      * Generates knora-api-connection.ts.
+      *
+      * @param apiDefs the API definitions to be used.
+      * @return the source code of knora-api-connection.ts.
+      */
     private def generateKnoraApiConnectionSourceCode(apiDefs: Set[ClientApi]): SourceCodeFileContent = {
         val knoraApiConnectionFilePath = SourceCodeFilePath(
             directoryPath = Seq.empty,
@@ -194,7 +206,7 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
             fileExtension = "ts"
         )
 
-        val importInfos: Set[ImportInfo] = apiDefs.map {
+        val importInfos: Set[ImportInfo] = apiDefs.filter(_.generateEndpoints).map {
             apiDef =>
                 val mainEndpointFilePath: SourceCodeFilePath = makeMainEndpointFilePath(apiDef)
 
@@ -223,12 +235,12 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     /**
-     * Generates source code for the main endpoint of an API.
-     *
-     * @param apiDef        the API definition.
-     * @param endpointInfos information about the endpoints that belong to the API.
-     * @return the source code for the main endpoint.
-     */
+      * Generates source code for the main endpoint of an API.
+      *
+      * @param apiDef        the API definition.
+      * @param endpointInfos information about the endpoints that belong to the API.
+      * @return the source code for the main endpoint.
+      */
     private def generateMainEndpointSourceCode(apiDef: ClientApi,
                                                endpointInfos: Seq[EndpointInfo]): SourceCodeFileContent = {
         // Generate the main endpoint's file path.
@@ -245,14 +257,14 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     /**
-     * Generates source code for an API endpoint.
-     *
-     * @param apiDef               the API definition.
-     * @param endpoint             the endpoint definition.
-     * @param clientClassDefs      the definitions of the classes used in the API.
-     * @param clientClassCodePaths the file paths of generated class definitions.
-     * @return the source code of the endpoint.
-     */
+      * Generates source code for an API endpoint.
+      *
+      * @param apiDef               the API definition.
+      * @param endpoint             the endpoint definition.
+      * @param clientClassDefs      the definitions of the classes used in the API.
+      * @param clientClassCodePaths the file paths of generated class definitions.
+      * @return the source code of the endpoint.
+      */
     private def generateEndpointInfo(apiDef: ClientApi,
                                      endpoint: ClientEndpoint,
                                      clientClassDefs: Set[ClientClassDefinition],
@@ -295,13 +307,15 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     /**
-     * Generates source code for classes.
-     *
-     * @param clientClassDefs          the definitions of the classes for which source code is to be generated.
-     * @param clientClassCodePaths     the file paths to be used for the generated classes.
-     * @return the generated source code.
-     */
-    private def generateClassSourceCode(clientClassDefs: Set[ClientClassDefinition],
+      * Generates source code for classes.
+      *
+      * @param apiDef               the API definition.
+      * @param clientClassDefs      the definitions of the classes for which source code is to be generated.
+      * @param clientClassCodePaths the file paths to be used for the generated classes.
+      * @return the generated source code.
+      */
+    private def generateClassSourceCode(apiDef: ClientApi,
+                                        clientClassDefs: Set[ClientClassDefinition],
                                         clientClassCodePaths: Map[String, SourceCodeFilePath]): Set[SourceCodeFileContent] = {
         clientClassDefs.map {
             clientClassDef =>
@@ -311,17 +325,48 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
                     subClassOfIri: SmartIri => ClassRef(className = subClassOfIri.getEntityName.capitalize, classIri = subClassOfIri)
                 }
 
+                val propertiesNeedingCustomConverters: Vector[ClientPropertyDefinition] = clientClassDef.properties.filter {
+                    propertyDef => propertyDef.objectType match {
+                        case _: CollectionType => true
+                        case _ => false
+                    }
+                }
+
+                val customConverterImports: Vector[ImportInfo] = propertiesNeedingCustomConverters.map {
+                    propertyDef =>
+                        val converterName: String = TypeScriptBackEnd.makeConverterName(propertyDef)
+
+                        val converterPath: SourceCodeFilePath = makeCustomConverterFilePath(
+                            apiDef = apiDef,
+                            propertyDefinition = propertyDef,
+                            converterClassName = converterName
+                        )
+
+                        val convertImportPath = classFilePath.makeImportPath(
+                            thatSourceCodeFilePath = converterPath,
+                            includeFileExtension = false
+                        )
+
+                        ImportInfo(
+                            className = converterName,
+                            importPath = convertImportPath
+                        )
+                }
+
                 val importsWithBaseClass: Set[ClassRef] = clientClassDef.classObjectTypesUsed ++ subClassOf
 
                 val importInfos: Vector[ImportInfo] = importsWithBaseClass.toVector.sortBy(_.classIri).map {
                     classRef =>
-                        val classImportPath: String = classFilePath.makeImportPath(clientClassCodePaths(classRef.className), includeFileExtension = false)
+                        val classImportPath: String = classFilePath.makeImportPath(
+                            thatSourceCodeFilePath = clientClassCodePaths(classRef.className),
+                            includeFileExtension = false
+                        )
 
                         ImportInfo(
                             className = classRef.className,
                             importPath = classImportPath
                         )
-                }
+                } ++ customConverterImports
 
                 val classText: String = clientapi.typescript.txt.generateTypeScriptClass(
                     classDef = clientClassDef,
@@ -334,11 +379,11 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     /**
-     * Generates the file path of an API's main endpoint.
-     *
-     * @param apiDef the API definition.
-     * @return the file path of the API's main endpoint.
-     */
+      * Generates the file path of an API's main endpoint.
+      *
+      * @param apiDef the API definition.
+      * @return the file path of the API's main endpoint.
+      */
     private def makeMainEndpointFilePath(apiDef: ClientApi): SourceCodeFilePath = {
         val apiLocalName: String = stringFormatter.camelCaseToSeparatedLowerCase(apiDef.name)
 
@@ -350,12 +395,12 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     /**
-     * Generates the file path of an endpoint.
-     *
-     * @param apiDef   the API definition.
-     * @param endpoint the definition of the endpoint.
-     * @return the file path of the endpoint.
-     */
+      * Generates the file path of an endpoint.
+      *
+      * @param apiDef   the API definition.
+      * @param endpoint the definition of the endpoint.
+      * @return the file path of the endpoint.
+      */
     private def makeEndpointFilePath(apiDef: ClientApi, endpoint: ClientEndpoint): SourceCodeFilePath = {
         val endpointLocalName: String = stringFormatter.camelCaseToSeparatedLowerCase(endpoint.name)
 
@@ -367,12 +412,12 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     /**
-     * Generates the file path of a class.
-     *
-     * @param apiDef    the API definition.
-     * @param className the name of the class.
-     * @return the file path of the generated class.
-     */
+      * Generates the file path of a class.
+      *
+      * @param apiDef    the API definition.
+      * @param className the name of the class.
+      * @return the file path of the generated class.
+      */
     private def makeClassFilePath(apiDef: ClientApi, className: String): SourceCodeFilePath = {
         val classLocalName: String = stringFormatter.camelCaseToSeparatedLowerCase(className)
 
@@ -384,34 +429,256 @@ class TypeScriptBackEnd extends GeneratorBackEnd {
     }
 
     /**
-     * Generates a variable name that can be used for an instance of a class.
-     *
-     * @param className the name of the class.
-     * @return a variable name that can be used for an instance of the class.
-     */
+      * Generates the file path of a custom converter that is expected to exist.
+      *
+      * @param apiDef             the API definition.
+      * @param propertyDefinition the definition of the property that needs a custom converter.
+      * @return the file path of the custom converter.
+      */
+    private def makeCustomConverterFilePath(apiDef: ClientApi,
+                                            propertyDefinition: ClientPropertyDefinition,
+                                            converterClassName: String): SourceCodeFilePath = {
+        val converterLocalName: String = stringFormatter.camelCaseToSeparatedLowerCase(converterClassName)
+
+        SourceCodeFilePath(
+            directoryPath = Seq("models", apiDef.directoryName, "custom-converters"),
+            filename = converterLocalName,
+            fileExtension = "ts"
+        )
+    }
+
+    /**
+      * Generates a variable name that can be used for an instance of a class.
+      *
+      * @param className the name of the class.
+      * @return a variable name that can be used for an instance of the class.
+      */
     private def makeVariableName(className: String): String = {
         className.substring(0, 1).toLowerCase + className.substring(1)
     }
 }
 
 /**
- * Classes used by Twirl templates.
- */
+  * Classes and functions used by Twirl templates.
+  */
 object TypeScriptBackEnd {
 
     /**
-     * Represents information about an imported class or interface.
-     *
-     * @param className    the name of the class.
-     * @param importPath   the file path to be used for importing the class.
-     * @param description  a description of the class.
-     * @param variableName a variable name that can be used for an instance of the class.
-     * @param urlPath      if this class represents an endpoint, the URL path of the endpoint.
-     */
+      * Represents information about an imported class or interface.
+      *
+      * @param className    the name of the class.
+      * @param importPath   the file path to be used for importing the class.
+      * @param description  a description of the class.
+      * @param variableName a variable name that can be used for an instance of the class.
+      * @param urlPath      if this class represents an endpoint, the URL path of the endpoint.
+      */
     case class ImportInfo(className: String,
                           importPath: String,
                           description: Option[String] = None,
                           variableName: Option[String] = None,
                           urlPath: Option[String] = None)
 
+    /**
+      * Generates the name of a custom converter for a property whose object type is a collection.
+      *
+      * @param propertyDefinition the property definition.
+      * @return the name of the custom converter.
+      */
+    def makeConverterName(propertyDefinition: ClientPropertyDefinition): String = {
+        s"${propertyDefinition.propertyName.capitalize}Converter"
+    }
+
+    /**
+      * Generates the type name used for a property's object type in json2typescript's `@JsonProperty` annotation.
+      *
+      * @param propertyDefinition the property definition.
+      * @return the type name.
+      */
+    def makeJson2TypeScriptType(propertyDefinition: ClientPropertyDefinition): String = {
+        propertyDefinition.objectType match {
+            case _: CollectionType =>
+                // json2typescript can't handle arbitrary collection signatures, so we assume there's a custom
+                // converter for each collection type.
+                makeConverterName(propertyDefinition)
+
+            case other =>
+                val propertyObjectType: String = makePropertyObjectType(other)
+
+                // Capitalise TypeScript datatype names. (Class references are already capitalised.)
+                val capitalisedType = propertyDefinition.objectType match {
+                    case _: ClientDatatype => propertyObjectType.capitalize
+                    case _ => propertyObjectType
+                }
+
+                // If the property can have multiple values, wrap the type in brackets.
+                if (propertyDefinition.cardinality == MayHaveMany || propertyDefinition.cardinality == MustHaveSome) {
+                    s"[$capitalisedType]"
+                } else {
+                    capitalisedType
+                }
+        }
+    }
+
+    /**
+      * Generates a type annotation for a property object type.
+      *
+      * @param objectType the object type.
+      * @return the corresponding type annotation.
+      */
+    def makePropertyObjectType(objectType: ClientObjectType): String = {
+        objectType match {
+            case StringDatatype => "string"
+            case BooleanDatatype => "boolean"
+            case IntegerDatatype => "number"
+            case DecimalDatatype => "number"
+            case UriDatatype => "string"
+            case DateTimeStampDatatype => "string"
+            case classRef: ClassRef => classRef.className
+            case enum: EnumDatatype => enum.values.map(value => "\"" + value + "\"").mkString(" | ")
+            case arrayType: ArrayType => s"${makePropertyObjectType(arrayType.elementType)}[]"
+            case mapType: MapType => s"{ [key: ${makePropertyObjectType(mapType.keyType)}]: ${makePropertyObjectType(mapType.valueType)} }"
+            case _ => throw ClientApiGenerationException(s"Type $objectType not yet supported")
+        }
+    }
+
+    /**
+      * Generates the default value for a property object type.
+      *
+      * @param propertyDefinition the property definition.
+      * @return the default value.
+      */
+    def makeDefaultValue(propertyDefinition: ClientPropertyDefinition): String = {
+        propertyDefinition.cardinality match {
+            case MayHaveMany =>
+                if (propertyDefinition.isOptionalSet) {
+                    "undefined"
+                } else {
+                    "[]"
+                }
+
+            case MustHaveSome => "[]"
+
+            case MayHaveOne => "undefined"
+
+            case MustHaveOne =>
+                propertyDefinition.objectType match {
+                    case StringDatatype => "\"\""
+                    case BooleanDatatype => "false"
+                    case IntegerDatatype => "0"
+                    case DecimalDatatype => "0"
+                    case UriDatatype => "\"\""
+                    case DateTimeStampDatatype => "\"\""
+                    case classRef: ClassRef => s"new ${classRef.className}()"
+                    case _: ArrayType => "[]"
+                    case _: MapType => "{}"
+                    case other => throw ClientApiGenerationException(s"Type $other not supported in this template")
+                }
+        }
+    }
+
+    /**
+      * Adds `[]` to the end of a type if the cardinality allows it to be an array.
+      *
+      * @param propertyDefinition the property definition.
+      * @return the type, followed by `[]` if necessary.
+      */
+    def typeWithBracketsForCardinality(propertyDefinition: ClientPropertyDefinition): String = {
+        val typeScriptType: String = makePropertyObjectType(propertyDefinition.objectType)
+
+        if (propertyDefinition.cardinality == MayHaveMany || propertyDefinition.cardinality == MustHaveSome) {
+            s"$typeScriptType[]"
+        } else {
+            typeScriptType
+        }
+    }
+
+    /**
+      * Returns `?` if a property's cardinality represents an optional value.
+      *
+      * @param propertyDefinition the property definition.
+      * @return `?` if the cardinality represents an optional value, otherwise the empty string.
+      */
+    def handleOptionalProperty(propertyDefinition: ClientPropertyDefinition): String = {
+        if (propertyDefinition.cardinality == MayHaveOne || propertyDefinition.isOptionalSet) {
+            "?"
+        } else {
+            ""
+        }
+    }
+
+    /**
+      * Generates the name of the function for the specified HTTP method.
+      *
+      * @param httpMethod the HTTP method.
+      * @return the name of the corresponding function.
+      */
+    def makeHttpMethod(httpMethod: ClientHttpMethod): String = {
+        httpMethod match {
+            case GET => "httpGet"
+            case POST => "httpPost"
+            case PUT => "httpPut"
+            case DELETE => "httpDelete"
+        }
+    }
+
+    /**
+      * Generates the TypeScript representation of a value (a literal or variable) used in a function.
+      *
+      * @param value the value.
+      * @return the TypeScript representation of the value.
+      */
+    def makeValue(value: Value): String = {
+        value match {
+            case stringLiteral: StringLiteralValue => "\"" + stringLiteral + "\""
+            case booleanLiteral: BooleanLiteralValue => "\"" + booleanLiteral + "\""
+            case integerLiteral: IntegerLiteralValue => integerLiteral.toString
+            case arg: ArgValue => arg.name + arg.memberVariableName.map(varName => "." + varName).getOrElse("")
+        }
+    }
+
+    /**
+      * Generates the TypeScript representation of the URL of a Knora route.
+      *
+      * @param urlElementsAsValues the URL elements represented as a sequence of [[Value]] objects.
+      * @return the TypeScript representation of the URL.
+      */
+    def makeUrl(urlElementsAsValues: Seq[Value]): String = {
+        if (urlElementsAsValues.isEmpty) {
+            "\"\""
+        } else {
+            urlElementsAsValues.map {
+                value: Value =>
+                    value match {
+                        case arg: ArgValue => "encodeURIComponent(" + makeValue(arg) + ")"
+                        case _ => makeValue(value)
+                    }
+            }.mkString(" + ")
+        }
+    }
+
+    /**
+      * Generates the TypeScript representation of the body of an HTTP request.
+      *
+      * @param maybeRequestBody the request body, or `None` if there is none.
+      * @return the TypeScript representation of the HTTP request.
+      */
+    def makeHttpRequestBody(maybeRequestBody: Option[HttpRequestBody]): String = {
+        maybeRequestBody match {
+            case Some(requestBody) =>
+                val requestBodyContent = requestBody match {
+                    case jsonRequestBody: JsonRequestBody =>
+                        "{ " +
+                            jsonRequestBody.jsonObject.map {
+                                case (key, value) => key + ": " + makeValue(value)
+                            }.mkString(", ") +
+                            " }"
+
+                    case arg: ArgValue => s"this.jsonConvert.serializeObject(${makeValue(arg)})"
+                }
+
+                ", " + requestBodyContent
+
+            case None => ""
+        }
+    }
 }

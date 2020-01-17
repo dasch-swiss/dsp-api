@@ -105,6 +105,52 @@
       "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/bXMwnrHvQH2DMjOFrGmNzgz.20180528T155203897Z"
     }
   },
+  "anything:hasGeometry" : {
+    "@id" : "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/we-ybmj-SRen-91n4RaDOQ",
+    "@type" : "knora-api:GeomValue",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/we=ybmj=SRen=91n4RaDOQB"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+    },
+    "knora-api:geometryValueAsGeometry" : "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "RV",
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2018-05-28T15:52:03.897Z"
+    },
+    "knora-api:valueHasUUID" : "we-ybmj-SRen-91n4RaDOQ",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/we=ybmj=SRen=91n4RaDOQB.20180528T155203897Z"
+    }
+  },
+  "anything:hasGeoname" : {
+    "@id" : "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/hty-ONF8SwKN2RKU7rLKDg",
+    "@type" : "knora-api:GeonameValue",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/hty=ONF8SwKN2RKU7rLKDgn"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+    },
+    "knora-api:geonameValueAsGeonameCode" : "2661604",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "knora-api:userHasPermission" : "RV",
+    "knora-api:valueCreationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2018-05-28T15:52:03.897Z"
+    },
+    "knora-api:valueHasUUID" : "hty-ONF8SwKN2RKU7rLKDg",
+    "knora-api:versionArkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/hty=ONF8SwKN2RKU7rLKDgn.20180528T155203897Z"
+    }
+  },
   "anything:hasInteger" : {
     "@id" : "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg",
     "@type" : "knora-api:IntValue",

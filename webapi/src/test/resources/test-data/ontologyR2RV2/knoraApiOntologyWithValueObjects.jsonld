@@ -1273,6 +1273,24 @@
       }
     }, {
       "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:documentFileValueHasDimX"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:documentFileValueHasDimY"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:documentFileValueHasPageCount"
+      }
+    }, {
+      "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
@@ -5486,6 +5504,48 @@
       "@id" : "knora-admin:User"
     },
     "rdfs:comment" : "Indicates who deleted a resource or value"
+  }, {
+    "@id" : "knora-api:documentFileValueHasDimX",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:integer"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:DocumentFileValue"
+    },
+    "rdfs:comment" : "The horizontal dimension of a document file value.",
+    "rdfs:label" : "Document file value has X dimension",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
+    }
+  }, {
+    "@id" : "knora-api:documentFileValueHasDimY",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:integer"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:DocumentFileValue"
+    },
+    "rdfs:comment" : "The vertical dimension of a document file value.",
+    "rdfs:label" : "Document file value has Y dimension",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
+    }
+  }, {
+    "@id" : "knora-api:documentFileValueHasPageCount",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:integer"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:DocumentFileValue"
+    },
+    "rdfs:comment" : "The page count of a document file value.",
+    "rdfs:label" : "Document file value has page count",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
+    }
   }, {
     "@id" : "knora-api:error",
     "@type" : "owl:DatatypeProperty",

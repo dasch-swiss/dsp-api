@@ -789,8 +789,8 @@ object ConstructResponseUtilV2 {
         val fileValue = FileValueV2(
             internalMimeType = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalMimeType.toSmartIri),
             internalFilename = valueObject.requireStringObject(OntologyConstants.KnoraBase.InternalFilename.toSmartIri),
-            originalFilename = valueObject.requireStringObject(OntologyConstants.KnoraBase.OriginalFilename.toSmartIri),
-            originalMimeType = valueObject.requireStringObject(OntologyConstants.KnoraBase.OriginalMimeType.toSmartIri)
+            originalFilename = valueObject.maybeStringObject(OntologyConstants.KnoraBase.OriginalFilename.toSmartIri),
+            originalMimeType = valueObject.maybeStringObject(OntologyConstants.KnoraBase.OriginalMimeType.toSmartIri)
         )
 
         valueType match {
@@ -803,8 +803,17 @@ object ConstructResponseUtilV2 {
                     comment = valueCommentOption
                 ))
 
-            case OntologyConstants.KnoraBase.TextFileValue =>
+            case OntologyConstants.KnoraBase.DocumentFileValue =>
+                FastFuture.successful(DocumentFileValueContentV2(
+                    ontologySchema = InternalSchema,
+                    fileValue = fileValue,
+                    pageCount = valueObject.requireIntObject(OntologyConstants.KnoraBase.PageCount.toSmartIri),
+                    dimX = valueObject.maybeIntObject(OntologyConstants.KnoraBase.DimX.toSmartIri),
+                    dimY = valueObject.maybeIntObject(OntologyConstants.KnoraBase.DimY.toSmartIri),
+                    comment = valueCommentOption
+                ))
 
+            case OntologyConstants.KnoraBase.TextFileValue =>
                 FastFuture.successful(TextFileValueContentV2(
                     ontologySchema = InternalSchema,
                     fileValue = fileValue,
@@ -1077,12 +1086,12 @@ object ConstructResponseUtilV2 {
 
             if (isDeleted) {
                 val deleteDate = rdfData.requireDateTimeObject(OntologyConstants.KnoraBase.DeleteDate.toSmartIri)
-                val deleteComment = rdfData.requireStringObject(OntologyConstants.KnoraBase.DeleteComment.toSmartIri)
+                val maybeDeleteComment = rdfData.maybeStringObject(OntologyConstants.KnoraBase.DeleteComment.toSmartIri)
 
                 Some(
                     DeletionInfo(
                         deleteDate = deleteDate,
-                        deleteComment = deleteComment
+                        maybeDeleteComment = maybeDeleteComment
                     )
                 )
             } else {

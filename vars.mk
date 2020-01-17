@@ -1,7 +1,7 @@
 SIPI_VERSION := 2.0.1
-GRAPHDB_SE_VERSION := 8.5.0
-GRAPHDB_FREE_VERSION := 8.10.0
-GRAPHDB_HEAP_SIZE := 4G
+GRAPHDB_SE_VERSION := 9.0.0
+GRAPHDB_FREE_VERSION := 9.0.0
+GRAPHDB_HEAP_SIZE := 5G
 
 REPO_PREFIX := daschswiss
 KNORA_API_REPO := knora-api
@@ -11,6 +11,7 @@ KNORA_SIPI_REPO := knora-sipi
 KNORA_ASSETS_REPO := knora-assets
 KNORA_UPGRADE_REPO := knora-upgrade
 KNORA_SALSAH1_REPO := knora-salsah1
+KNORA_WEBAPI_DB_CONNECTIONS := 2
 
 ifeq ($(BUILD_TAG),)
   BUILD_TAG := $(shell git describe --tag --dirty --abbrev=7)

@@ -112,7 +112,7 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
     }
 
     // duration is intentionally like this, so that it could be found with search if seen in a stack trace
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 5999.milliseconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }
@@ -193,10 +193,10 @@ class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with Triplest
      */
     protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
         if (writeFile) {
-            FileUtil.writeTextFile(file, responseAsString)
+            FileUtil.writeTextFile(file, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
             responseAsString
         } else {
-            FileUtil.readTextFile(file)
+            FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
         }
     }
 }

@@ -534,17 +534,15 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 for {
                     mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlExtendedConstructResponse]
 
-                    // for each main resource, check if all dependent resources and value objects are still present after permission checking
-                    // this ensures that the user has sufficient permissions on the whole graph pattern
-                    queryResultsWithFullGraphPattern: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = MainQueryResultProcessor.getMainQueryResultsWithFullGraphPattern(
-                        mainQueryResponse = mainQueryResponse,
-                        dependentResourceIrisPerMainResource = dependentResourceIrisPerMainResource,
-                        valueObjectVarsAndIrisPerMainResource = valueObjectVarsAndIrisPerMainResource,
-                        requestingUser = requestingUser)
+                    // Filter out values that the user doesn't have permission to see.
+                    queryResultsFilteredForPermissions: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
+                        constructQueryResults = mainQueryResponse,
+                        requestingUser = requestingUser
+                    )
 
                     // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
                     queryResWithFullGraphPatternOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = MainQueryResultProcessor.getRequestedValuesFromResultsWithFullGraphPattern(
-                        queryResultsWithFullGraphPattern,
+                        queryResultsFilteredForPermissions,
                         valueObjectVarsAndIrisPerMainResource,
                         allResourceVariablesFromTypeInspection,
                         dependentResourceIrisFromTypeInspection,

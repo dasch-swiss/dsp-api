@@ -14,7 +14,7 @@ docs-publish: ## build and publish docs
 
 .PHONY: docs-build
 docs-build: ## build the docs
-	docker run --rm -it -v $(PWD):/knora -v $(HOME)/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
+	docker run --rm -v $(PWD):/knora -v $(HOME)/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
 
 #################################
 # Docker targets
@@ -37,7 +37,7 @@ publish-knora-api-image: build-knora-api-image ## publish knora-api image to Doc
 .PHONY: build-knora-graphdb-se-image
 build-knora-graphdb-se-image: build-all-scala ## build and publish knora-graphdb-se docker image locally
 	@mkdir -p .docker
-	@sed -e "s/@GRAPHDB_IMAGE@/ontotext\/graphdb\:$(GRAPHDB_SE_VERSION)-se/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-se.dockerfile
+	@sed -e "s/@GRAPHDB_IMAGE@/daschswiss\/graphdb\:$(GRAPHDB_SE_VERSION)-se/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-se.dockerfile
 	docker build -t $(KNORA_GRAPHDB_SE_IMAGE) -t $(REPO_PREFIX)/$(KNORA_GRAPHDB_SE_REPO):latest -f .docker/knora-graphdb-se.dockerfile  knora-graphdb-se/target/universal
 
 .PHONY: publish-knora-graphdb-se-image
@@ -48,7 +48,7 @@ publish-knora-graphdb-se-image: build-knora-graphdb-se-image ## publish knora-gr
 .PHONY: build-knora-graphdb-free-image
 build-knora-graphdb-free-image: build-all-scala ## build and publish knora-graphdb-free docker image locally
 	@mkdir -p .docker
-	@sed -e "s/@GRAPHDB_IMAGE@/dhlabbasel\/graphdb\:$(GRAPHDB_FREE_VERSION)-free/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-free.dockerfile
+	@sed -e "s/@GRAPHDB_IMAGE@/daschswiss\/graphdb\:$(GRAPHDB_FREE_VERSION)-free/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-free.dockerfile
 	docker build -t $(KNORA_GRAPHDB_FREE_IMAGE) -f .docker/knora-graphdb-free.dockerfile  knora-graphdb-free/target/universal
 
 .PHONY: publish-knora-graphdb-free-image
@@ -136,6 +136,7 @@ endif
 	@echo KNORA_SIPI_IMAGE=$(KNORA_SIPI_IMAGE) >> .env
 	@echo KNORA_API_IMAGE=$(KNORA_API_IMAGE) >> .env
 	@echo KNORA_SALSAH1_IMAGE=$(KNORA_SALSAH1_IMAGE) >> .env
+	@echo KNORA_WEBAPI_DB_CONNECTIONS=$(KNORA_WEBAPI_DB_CONNECTIONS) >> .env
 
 ## knora stack
 .PHONY: stack-up
@@ -194,7 +195,7 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 	docker-compose -f docker/knora.docker-compose.yml stop sipi
 
 .PHONY: unit-tests
-unit-tests: stack-without-api init-knora-test-unit ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest').
+unit-tests: stack-without-api init-db-test-unit ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest').
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -227,7 +228,7 @@ unit-tests-with-coverage: stack-without-api ## runs the unit tests (equivalent t
 				daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
 
 .PHONY: e2e-tests
-e2e-tests: stack-without-api init-knora-test-unit ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
+e2e-tests: stack-without-api init-db-test-unit ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -257,10 +258,10 @@ e2e-tests-with-coverage: stack-without-api ## runs the e2e tests (equivalent to 
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
 				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
+				daschswiss/scala-sbt sbt coverage 'webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest' webapi/coverageReport
 
 .PHONY: it-tests
-it-tests: stack-without-api init-knora-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it').
+it-tests: stack-without-api init-db-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it').
 	docker run 	--rm \
 				-v /tmp:/tmp \
 				-v $(PWD):/src \
@@ -272,7 +273,7 @@ it-tests: stack-without-api init-knora-test-unit ## runs the integration tests (
 				-e KNORA_WEBAPI_CACHE_SERVICE_REDIS_HOST=redis \
 				-e SBT_OPTS="-Xms2048M -Xmx2048M -Xss6M" \
 				--network=docker_knora-net \
-				daschswiss/scala-sbt sbt "webapi/it:test"
+				daschswiss/scala-sbt sbt 'webapi/it:test'
 
 .PHONY: it-tests-with-coverage
 it-tests-with-coverage: stack-without-api ## runs the integration tests (equivalent to 'sbt webapi/it:test') with code-coverage reporting.

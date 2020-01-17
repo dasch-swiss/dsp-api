@@ -248,6 +248,7 @@ object OntologyConstants {
         val OriginalMimeType: IRI = KnoraBasePrefixExpansion + "originalMimeType"
         val DimX: IRI = KnoraBasePrefixExpansion + "dimX"
         val DimY: IRI = KnoraBasePrefixExpansion + "dimY"
+        val PageCount: IRI = KnoraBasePrefixExpansion + "pageCount"
         val Fps: IRI = KnoraBasePrefixExpansion + "fps"
 
         val ValueBase: IRI = KnoraBasePrefixExpansion + "ValueBase"
@@ -384,12 +385,6 @@ object OntologyConstants {
 
         val CreationDate: IRI = KnoraBasePrefixExpansion + "creationDate"
         val ValueCreationDate: IRI = KnoraBasePrefixExpansion + "valueCreationDate"
-
-        val Map: IRI = KnoraBasePrefixExpansion + "Map"
-        val MapEntry: IRI = KnoraBasePrefixExpansion + "MapEntry"
-        val MapEntryKey: IRI = KnoraBasePrefixExpansion + "mapEntryKey"
-        val MapEntryValue: IRI = KnoraBasePrefixExpansion + "mapEntryValue"
-        val IsInMap: IRI = KnoraBasePrefixExpansion + "isInMap"
 
         val LastModificationDate: IRI = KnoraBasePrefixExpansion + "lastModificationDate"
 
@@ -549,6 +544,26 @@ object OntologyConstants {
         val ProjectsResponse: IRI = KnoraAdminPrefixExpansion + "ProjectsResponse"
         val GroupResponse: IRI = KnoraAdminPrefixExpansion + "GroupResponse"
         val GroupsResponse: IRI = KnoraAdminPrefixExpansion + "GroupsResponse"
+        val Lists: IRI = KnoraAdminPrefixExpansion + "lists"
+        val ListsResponse: IRI = KnoraAdminPrefixExpansion + "ListsResponse"
+        val NodeInfo: IRI = KnoraAdminPrefixExpansion + "nodeinfo"
+        val ListNodeInfo: IRI = KnoraAdminPrefixExpansion + "ListNodeInfo"
+        val ListNode: IRI = KnoraAdminPrefixExpansion + "ListNode"
+        val CreateListRequest: IRI = KnoraAdminPrefixExpansion + "CreateListRequest"
+        val CreateChildNodeRequest: IRI = KnoraAdminPrefixExpansion + "CreateChildNodeRequest"
+        val ListResponse: IRI = KnoraAdminPrefixExpansion + "ListResponse"
+        val UpdateListInfoRequest: IRI = KnoraAdminPrefixExpansion + "UpdateListInfoRequest"
+        val ListNodeInfoResponse: IRI = KnoraAdminPrefixExpansion + "ListNodeInfoResponse"
+        val ListInfoResponse: IRI = KnoraAdminPrefixExpansion + "ListInfoResponse"
+        val ListClass: IRI = KnoraAdminPrefixExpansion + "List"
+        val ListIri: IRI = KnoraAdminPrefixExpansion + "listIri"
+        val ParentNodeIri: IRI = KnoraAdminPrefixExpansion + "parentNodeIri"
+        val Labels: IRI = KnoraAdminPrefixExpansion + "labels"
+        val Comments: IRI = KnoraAdminPrefixExpansion + "comments"
+        val Position: IRI = KnoraAdminPrefixExpansion + "position"
+        val IsRootNode: IRI = KnoraAdminPrefixExpansion + "isRootNode"
+        val HasRootNode: IRI = KnoraAdminPrefixExpansion + "hasRootNode"
+        val Children: IRI = KnoraAdminPrefixExpansion + "children"
         val Members: IRI = KnoraAdminPrefixExpansion + "members"
         val MembersResponse: IRI = KnoraAdminPrefixExpansion + "MembersResponse"
         val AdministrativePermissionResponse: IRI = KnoraAdminPrefixExpansion + "AdministrativePermissionResponse"
@@ -585,6 +600,7 @@ object OntologyConstants {
         val GroupProperty: IRI = KnoraAdminPrefixExpansion + "group"
         val ProjectProperty: IRI = KnoraAdminPrefixExpansion + "project"
         val ProjectIri: IRI = KnoraAdminPrefixExpansion + "projectIri"
+        val ProjectWithIriObj: IRI = KnoraAdminPrefixExpansion + "projectWithIriObj"
         val AdministrativePermissionProperty: IRI = KnoraAdminPrefixExpansion + "administrative_permission"
         val AdministrativePermissions: IRI = KnoraAdminPrefixExpansion + "administrative_permissions"
         val AdministrativePermissionClass: IRI = KnoraAdminPrefixExpansion + "AdministrativePermission"
@@ -603,6 +619,8 @@ object OntologyConstants {
         val PermissionCode: IRI = KnoraAdminPrefixExpansion + "permissionCode"
         val Iri: IRI = KnoraAdminPrefixExpansion + "iri"
         val Name: IRI = KnoraAdminPrefixExpansion + "name"
+        val ListProperty: IRI = KnoraAdminPrefixExpansion + "list"
+        val ListInfoProperty: IRI = KnoraAdminPrefixExpansion + "listinfo"
         val KeywordsProperty: IRI = KnoraAdminPrefixExpansion + "keywords"
         val KeywordsResponse: IRI = KnoraAdminPrefixExpansion + "KeywordsResponse"
         val CreateGroupRequest: IRI = KnoraAdminPrefixExpansion + "CreateGroupRequest"
@@ -611,6 +629,12 @@ object OntologyConstants {
         val StringLiteral: IRI = KnoraAdminPrefixExpansion + "StringLiteral"
         val Value: IRI = KnoraAdminPrefixExpansion + "value"
         val Language: IRI = KnoraAdminPrefixExpansion + "language"
+        val Permissions: IRI = KnoraAdminPrefixExpansion + "permissions"
+        val PermissionsData: IRI = KnoraAdminPrefixExpansion + "PermissionsData"
+        val GroupsPerProject: IRI = KnoraAdminPrefixExpansion + "groupsPerProject"
+        val AdministrativePermissionsPerProject: IRI = KnoraAdminPrefixExpansion + "administrativePermissionsPerProject"
+        val AdministrativePermissionsPerProjectCollectionType: IRI = KnoraAdminPrefixExpansion + "collection: Map[URI, Array[Permission]]"
+        val GroupsPerProjectCollectionType: IRI = KnoraAdminPrefixExpansion + "collection: Map[URI, Array[URI]]"
     }
 
     object Standoff {
@@ -952,6 +976,10 @@ object OntologyConstants {
         val StillImageFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimY"
         val StillImageFileValueHasIIIFBaseUrl: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasIIIFBaseUrl"
 
+        val DocumentFileValueHasPageCount: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasPageCount"
+        val DocumentFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasDimX"
+        val DocumentFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasDimY"
+
         val MovingImageFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimX"
         val MovingImageFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimY"
         val MovingImageFileValueHasFps: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasFps"
@@ -1137,6 +1165,7 @@ object OntologyConstants {
             KnoraBase.ValueHasGeonameCode -> KnoraApiV2Complex.GeonameValueAsGeonameCode,
             KnoraBase.ValueHasColor -> KnoraApiV2Complex.ColorValueAsColor,
             KnoraBase.ValueHasStandoff -> KnoraApiV2Complex.TextValueHasStandoff,
+            KnoraBase.PageCount -> KnoraApiV2Complex.DocumentFileValueHasPageCount,
             KnoraAdmin.PreferredLanguage -> KnoraAdminV2.Lang,
             KnoraAdmin.IsInProject -> KnoraAdminV2.Projects,
             KnoraAdmin.IsInSystemAdminGroup -> KnoraAdminV2.SystemAdmin,
@@ -1187,6 +1216,7 @@ object OntologyConstants {
             KnoraApiV2Complex.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
             KnoraApiV2Complex.ColorValueAsColor -> KnoraBase.ValueHasColor,
             KnoraApiV2Complex.TextValueHasStandoff -> KnoraBase.ValueHasStandoff,
+            KnoraApiV2Complex.DocumentFileValueHasPageCount -> KnoraBase.PageCount,
             KnoraAdminV2.Lang -> KnoraAdmin.PreferredLanguage,
             KnoraAdminV2.Projects -> KnoraAdmin.IsInProject,
             KnoraAdminV2.SystemAdmin -> KnoraAdmin.IsInSystemAdminGroup,
