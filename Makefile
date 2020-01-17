@@ -178,9 +178,17 @@ stack-logs-redis: ## prints out and follows the logs of the 'redis' container ru
 stack-logs-api: ## prints out and follows the logs of the 'api' container running in knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml logs -f api
 
+.PHONY: stack-logs-api-no-follow
+stack-logs-api-no-follow: ## prints out the logs of the 'api' container running in knora-stack.
+	docker-compose -f docker/knora.docker-compose.yml logs api
+
 .PHONY: stack-logs-salsah1
 stack-logs-salsah1: ## prints out and follows the logs of the 'salsah1' container running in knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml logs -f salsah1
+
+.PHONY: stack-health
+stack-health:
+	curl 0.0.0.0:3333/health
 
 .PHONY: stack-down
 stack-down: ## stops the knora-stack.
@@ -318,7 +326,9 @@ test-js-lib-integration: clean-local-tmp stack-up ## run knora-api-js-lib tests 
 	@$(MAKE) -f $(THIS_FILE) init-db-test
 	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
+	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 	@$(MAKE) -f $(THIS_FILE) stack-logs-sipi-no-follow
+	@$(MAKE) -f $(THIS_FILE) stack-health
 	@git clone -b wip/add-integration-test-2 --single-branch --depth 1 https://github.com/dasch-swiss/knora-api-js-lib.git $(CURRENT_DIR)/.tmp/js-lib
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib npm-install
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib test
