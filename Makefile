@@ -137,6 +137,7 @@ endif
 	@echo KNORA_API_IMAGE=$(KNORA_API_IMAGE) >> .env
 	@echo KNORA_SALSAH1_IMAGE=$(KNORA_SALSAH1_IMAGE) >> .env
 	@echo KNORA_WEBAPI_DB_CONNECTIONS=$(KNORA_WEBAPI_DB_CONNECTIONS) >> .env
+	@echo LOCAL_HOME=$(PWD) >> .env
 
 ## knora stack
 .PHONY: stack-up
@@ -315,9 +316,9 @@ test-js-lib-integration: clean-local-tmp stack-up ## run knora-api-js-lib tests 
 	@$(MAKE) -f $(THIS_FILE) init-db-test
 	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
-	@git clone https://github.com/dasch-swiss/knora-api-js-lib.git $(PWD)/.tmp/test-js-lib-integration
-	(cd $(PWD)/.tmp/test-js-lib-integration && npm install)
-	$(MAKE) -C $(PWD)/.tmp/test-js-lib-integration test
+	@git clone --single-branch --depth 1 https://github.com/dasch-swiss/knora-api-js-lib.git $(PWD)/.tmp/js-lib
+	$(MAKE) -C $(PWD)/.tmp/js-lib npm-install
+	$(MAKE) -C $(PWD)/.tmp/js-lib test
 
 .PHONY: init-db-test
 init-db-test: ## initializes the knora-test repository
@@ -345,8 +346,8 @@ init-db-test-unit-free: ## initializes the knora-test-unit repository (for Graph
 
 .PHONY: clean-local-tmp
 clean-local-tmp:
-	@mkdir -p .tmp/js-lib-tests
-	@rm -rf .tmp/js-lib-tests
+	@rm -rf $(PWD)/.tmp
+	@mkdir $(PWD)/.tmp
 
 clean: ## clean build artifacts
 	@rm -rf .docker

@@ -12,7 +12,7 @@
 .ensime
 .ensime_cache
 .env
-.tmp
+/.tmp/
 native
 **/.DS_Store
 docs/env

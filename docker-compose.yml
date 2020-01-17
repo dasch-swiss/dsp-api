@@ -30,9 +30,9 @@ services:
       - "1024:1024"
     volumes:
       - /tmp:/tmp
-      - ${PWD}/sipi/config:/sipi/config
-      - ${PWD}/sipi/images:/sipi/images:delegated
-      - ${PWD}/sipi/server:/sipi/server:delegated
+      - ${LOCAL_HOME}/sipi/config:/sipi/config
+      - ${LOCAL_HOME}/sipi/images:/sipi/images:delegated
+      - ${LOCAL_HOME}/sipi/server:/sipi/server:delegated
     networks:
       - knora-net
     restart: unless-stopped
