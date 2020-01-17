@@ -12,11 +12,11 @@ include vars.mk
 
 .PHONY: docs-publish
 docs-publish: ## build and publish docs
-	docker run --rm -it -v $(PWD):/knora -v $(HOME)/.ivy2:/root/.ivy2 -v $(HOME)/.ssh:/root/.ssh daschswiss/sbt-paradox /bin/sh -c "cd /knora && git config --global user.email $(GIT_EMAIL) && sbt docs/ghpagesPushSite"
+	docker run --rm -it -v $(CURRENT_DIR):/knora -v $(HOME)/.ivy2:/root/.ivy2 -v $(HOME)/.ssh:/root/.ssh daschswiss/sbt-paradox /bin/sh -c "cd /knora && git config --global user.email $(GIT_EMAIL) && sbt docs/ghpagesPushSite"
 
 .PHONY: docs-build
 docs-build: ## build the docs
-	docker run --rm -v $(PWD):/knora -v $(HOME)/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
+	docker run --rm -v $(CURRENT_DIR):/knora -v $(HOME)/.ivy2:/root/.ivy2 daschswiss/sbt-paradox /bin/sh -c "cd /knora && sbt docs/makeSite"
 
 #################################
 # Docker targets
@@ -201,7 +201,7 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 unit-tests: stack-without-api init-db-test-unit ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest').
 	docker run 	--rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(CURRENT_DIR):/src \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
@@ -219,7 +219,7 @@ unit-tests-with-coverage: stack-without-api ## runs the unit tests (equivalent t
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(CURRENT_DIR):/src \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
@@ -234,7 +234,7 @@ unit-tests-with-coverage: stack-without-api ## runs the unit tests (equivalent t
 e2e-tests: stack-without-api init-db-test-unit ## runs the e2e tests (equivalent to 'sbt webapi/testOnly -- -n org.knora.webapi.testing.tags.E2ETest').
 	docker run 	--rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(CURRENT_DIR):/src \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
@@ -252,7 +252,7 @@ e2e-tests-with-coverage: stack-without-api ## runs the e2e tests (equivalent to 
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(CURRENT_DIR):/src \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
@@ -267,7 +267,7 @@ e2e-tests-with-coverage: stack-without-api ## runs the e2e tests (equivalent to 
 it-tests: stack-without-api init-db-test-unit ## runs the integration tests (equivalent to 'sbt webapi/it').
 	docker run 	--rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(CURRENT_DIR):/src \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
@@ -285,7 +285,7 @@ it-tests-with-coverage: stack-without-api ## runs the integration tests (equival
 	@$(MAKE) -f $(THIS_FILE) init-db-test-unit
 	docker run 	--rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(CURRENT_DIR):/src \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
@@ -301,7 +301,7 @@ normal-tests: stack-without-api ## runs the normal tests (equivalent to 'sbt web
 	# docker build -t webapi-test -f docker/knora-api-test.dockerfile  webapi/build/test/target/universal
 	docker run 	--rm \
 				-v /tmp:/tmp \
-				-v $(PWD):/src \
+				-v $(CURRENT_DIR):/src \
 				-v $(HOME)/.ivy2:/root/.ivy2 \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
@@ -318,9 +318,9 @@ test-js-lib-integration: clean-local-tmp stack-up ## run knora-api-js-lib tests 
 	@$(MAKE) -f $(THIS_FILE) init-db-test
 	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
-	@git clone --single-branch --depth 1 https://github.com/dasch-swiss/knora-api-js-lib.git $(PWD)/.tmp/js-lib
-	$(MAKE) -C $(PWD)/.tmp/js-lib npm-install
-	$(MAKE) -C $(PWD)/.tmp/js-lib test
+	@git clone --single-branch --depth 1 https://github.com/dasch-swiss/knora-api-js-lib.git $(CURRENT_DIR)/.tmp/js-lib
+	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib npm-install
+	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib test
 
 .PHONY: init-db-test
 init-db-test: ## initializes the knora-test repository
@@ -348,8 +348,8 @@ init-db-test-unit-free: ## initializes the knora-test-unit repository (for Graph
 
 .PHONY: clean-local-tmp
 clean-local-tmp:
-	@rm -rf $(PWD)/.tmp
-	@mkdir $(PWD)/.tmp
+	@rm -rf $(CURRENT_DIR)/.tmp
+	@mkdir $(CURRENT_DIR)/.tmp
 
 clean: ## clean build artifacts
 	@rm -rf .docker
