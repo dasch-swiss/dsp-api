@@ -318,6 +318,7 @@ test-js-lib-integration: clean-local-tmp stack-up ## run knora-api-js-lib tests 
 	@$(MAKE) -f $(THIS_FILE) init-db-test
 	@sleep 5
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
+	@$(MAKE) -f $(THIS_FILE) stack-logs-sipi-no-follow
 	@git clone -b wip/add-integration-test-2 --single-branch --depth 1 https://github.com/dasch-swiss/knora-api-js-lib.git $(CURRENT_DIR)/.tmp/js-lib
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib npm-install
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib test
