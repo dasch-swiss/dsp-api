@@ -193,7 +193,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Queries without type inference
 
-        "perform a Gravsearch query for an anything:Thing with an optional date and sort by date" in {
+        "perform a Gravsearch query for an anything:Thing with an optional date and sort by date t1" in {
 
             val gravsearchQuery =
                 """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -207,10 +207,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |  FILTER NOT EXISTS {
-                  |      ?thing anything:hasTimeStamp ?timeStamp .
-                  |  }
-                  |
                   |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
                   |    anything:hasDate knora-api:objectType knora-api:Date .
@@ -221,7 +217,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    ?thing anything:hasInteger ?intVal .
                   |    anything:hasInteger knora-api:objectType xsd:integer .
                   |    ?intVal a xsd:integer .
-                  |    FILTER(?intVal = 123454321)
+                  |    FILTER(?intVal = 123454321 || ?intVal = 999999999)
                   |  }
                   |}
                   |ORDER BY DESC(?date)
@@ -229,10 +225,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
-
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"), writeTestDataFiles)
-
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseStr, new File("src/test/resources/test-data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"), writeTestDataFiles)
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
@@ -252,10 +247,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |  FILTER NOT EXISTS {
-                  |      ?thing anything:hasTimeStamp ?timeStamp .
-                  |  }
-                  |
                   |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
                   |    anything:hasDate knora-api:objectType knora-api:Date .
@@ -266,7 +257,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    ?thing anything:hasInteger ?intVal .
                   |    anything:hasInteger knora-api:objectType xsd:integer .
                   |    ?intVal a xsd:integer .
-                  |    FILTER(?intVal = 123454321)
+                  |    FILTER(?intVal = 123454321 || ?intVal = 999999999)
                   |  }
                   |}
                   |ORDER BY DESC(?date)
@@ -1726,10 +1717,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?thing a anything:Thing .
                   |     ?thing a knora-api:Resource .
                   |
-                  |     FILTER NOT EXISTS {
-                  |         ?thing anything:hasTimeStamp ?timeStamp .
-                  |     }
-                  |
                   |     OPTIONAL {
                   |
                   |         ?thing anything:hasBoolean ?boolean .
@@ -1744,7 +1731,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |         ?thing anything:hasInteger ?intVal .
                   |         anything:hasInteger knora-api:objectType xsd:integer .
                   |         ?intVal a xsd:integer .
-                  |         FILTER(?intVal = 123454321)
+                  |         FILTER(?intVal = 123454321 || ?intVal = 999999999)
                   |     }
                   |} OFFSET 0""".stripMargin
 
@@ -1778,10 +1765,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?thing a anything:Thing .
                   |     ?thing a knora-api:Resource .
                   |
-                  |     FILTER NOT EXISTS {
-                  |         ?thing anything:hasTimeStamp ?timeStamp .
-                  |     }
-                  |
                   |     OPTIONAL {
                   |
                   |         ?thing anything:hasBoolean ?boolean .
@@ -1796,7 +1779,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |         ?thing anything:hasInteger ?intVal .
                   |         anything:hasInteger knora-api:objectType xsd:integer .
                   |         ?intVal a xsd:integer .
-                  |         FILTER(?intVal = 123454321)
+                  |         FILTER(?intVal = 123454321 || ?intVal = 999999999)
                   |     }
                   |} OFFSET 1
                   |
@@ -4460,10 +4443,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?thing a anything:Thing .
                   |     ?thing a knora-api:Resource .
                   |
-                  |     FILTER NOT EXISTS {
-                  |         ?thing anything:hasTimeStamp ?timeStamp .
-                  |     }
-                  |
                   |     OPTIONAL {
                   |         ?thing anything:hasBoolean ?boolean .
                   |         FILTER(?boolean = true)
@@ -4471,7 +4450,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     MINUS {
                   |         ?thing anything:hasInteger ?intVal .
-                  |         FILTER(?intVal = 123454321)
+                  |         FILTER(?intVal = 123454321 || ?intVal = 999999999)
                   |     }
                   |} OFFSET 1""".stripMargin
 
@@ -5356,10 +5335,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |  FILTER NOT EXISTS {
-                  |      ?thing anything:hasTimeStamp ?timeStamp .
-                  |  }
-                  |
                   |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
                   |  }
@@ -5367,6 +5342,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  MINUS {
                   |    ?thing anything:hasInteger ?intVal .
                   |    ?intVal knora-api:intValueAsInt 123454321 .
+                  |  }
+                  |
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    ?intVal knora-api:intValueAsInt 999999999 .
                   |  }
                   |}
                   |ORDER BY DESC(?date)
@@ -5398,10 +5378,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?thing a knora-api:Resource .
                   |  ?thing a anything:Thing .
                   |
-                  |  FILTER NOT EXISTS {
-                  |      ?thing anything:hasTimeStamp ?timeStamp .
-                  |  }
-                  |
                   |  OPTIONAL {
                   |    ?thing anything:hasDate ?date .
                   |  }
@@ -5409,6 +5385,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  MINUS {
                   |    ?thing anything:hasInteger ?intVal .
                   |    ?intVal knora-api:intValueAsInt 123454321 .
+                  |  }
+                  |
+                  |  MINUS {
+                  |    ?thing anything:hasInteger ?intVal .
+                  |    ?intVal knora-api:intValueAsInt 999999999 .
                   |  }
                   |}
                   |ORDER BY DESC(?date)
@@ -5440,10 +5421,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?thing a anything:Thing .
                   |     ?thing a knora-api:Resource .
                   |
-                  |     FILTER NOT EXISTS {
-                  |         ?thing anything:hasTimeStamp ?timeStamp .
-                  |     }
-                  |
                   |     OPTIONAL {
                   |        ?thing anything:hasDecimal ?decimal .
                   |        ?decimal knora-api:decimalValueAsDecimal ?decimalVal .
@@ -5453,6 +5430,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     MINUS {
                   |        ?thing anything:hasInteger ?intVal .
                   |        ?intVal knora-api:intValueAsInt 123454321 .
+                  |     }
+                  |
+                  |     MINUS {
+                  |       ?thing anything:hasInteger ?intVal .
+                  |       ?intVal knora-api:intValueAsInt 999999999 .
                   |     }
                   |} ORDER BY DESC(?decimal)
                 """.stripMargin
@@ -6525,10 +6507,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?thing a anything:Thing .
                   |
-                  |     FILTER NOT EXISTS {
-                  |         ?thing anything:hasTimeStamp ?timeStamp .
-                  |     }
-                  |
                   |     OPTIONAL {
                   |         ?thing anything:hasBoolean ?boolean .
                   |         ?boolean knora-api:booleanValueAsBoolean true .
@@ -6538,6 +6516,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |         ?thing anything:hasInteger ?intVal .
                   |         ?intVal knora-api:intValueAsInt 123454321 .
                   |     }
+                  |
+                  |     MINUS {
+                  |         ?thing anything:hasInteger ?intVal .
+                  |         ?intVal knora-api:intValueAsInt 999999999 .
+                  |     }
+                  |
                   |} OFFSET 1""".stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
