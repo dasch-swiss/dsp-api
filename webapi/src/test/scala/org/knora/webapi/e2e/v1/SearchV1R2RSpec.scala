@@ -286,7 +286,7 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfHits(responseAs[String], 2)
+                checkNumberOfHits(responseAs[String], 1)
 
             }
 
