@@ -160,7 +160,10 @@
     "@id" : "http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject"
   },
   "knora-api:isShared" : true,
-  "knora-api:lastModificationDate" : "2018-09-10T14:53:00Z",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "2018-09-10T14:53:00Z"
+  },
   "rdfs:label" : "An example of a shared ontology",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
