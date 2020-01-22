@@ -125,6 +125,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         "boolean-value" -> SharedTestDataADM.TestDing.booleanValueUuid,
         "uri-value" -> SharedTestDataADM.TestDing.uriValueUuid,
         "interval-value" -> SharedTestDataADM.TestDing.intervalValueUuid,
+        "time-value" -> SharedTestDataADM.TestDing.timeValueUuid,
         "color-value" -> SharedTestDataADM.TestDing.colorValueUuid,
         "geom-value" -> SharedTestDataADM.TestDing.geomValueUuid,
         "geoname-value" -> SharedTestDataADM.TestDing.geonameValueUuid,

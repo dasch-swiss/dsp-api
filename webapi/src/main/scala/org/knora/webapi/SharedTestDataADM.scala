@@ -1832,6 +1832,7 @@ object SharedTestDataADM {
         val booleanValueUuid = "IN4R19yYR0ygi3K2VEHpUQ"
         val uriValueUuid = "uBAmWuRhR-eo1u1eP7qqNg"
         val intervalValueUuid = "RbDKPKHWTC-0lkRKae-E6A"
+        val timeValueUuid = "l6DhS5SCT9WhXSoYEZRTRw"
         val colorValueUuid = "TAziKNP8QxuyhC4Qf9-b6w"
         val geomValueUuid = "we-ybmj-SRen-91n4RaDOQ"
         val geonameValueUuid = "hty-ONF8SwKN2RKU7rLKDg"
