@@ -3,7 +3,7 @@ name: CI
 on: [push]
 
 env:
-  KNORA_GDB_LICENSE: ${{ github.workspace }}/ci/graphdb.license
+  KNORA_GDB_LICENSE: ${{ github.workspace }}/graphdb/graphdb.license
 
 jobs:
   compile:

@@ -364,11 +364,13 @@ init-db-test-unit-free: ## initializes the knora-test-unit repository (for Graph
 
 .PHONY: ci-prepare-graphdb
 ci-prepare-graphdb:
+	@echo $@
+	echo "CURRENT_DIR: $(CURRENT_DIR)"
 	echo $(LICENSE_ENCRYPTION_KEY) | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $(CURRENT_DIR)/ci/secrets.tar $(CURRENT_DIR)/ci/secrets.tar.gpg
 	tar -C $(CURRENT_DIR)/ci -xvf ci/secrets.tar
 	mkdir -p $(CURRENT_DIR)/graphdb
 	cp $(CURRENT_DIR)/ci/graphdb.license $(CURRENT_DIR)/graphdb/graphdb.license
-	cp $(CURRENT_DIR)/webapi/scripts/KnoraRules.pie $(CURRENT_DIR)/graphdb
+	cp $(CURRENT_DIR)/webapi/scripts/KnoraRules.pie $(CURRENT_DIR)/graphdb/KnoraRules.pie
 
 .PHONY: clean-local-tmp
 clean-local-tmp:
