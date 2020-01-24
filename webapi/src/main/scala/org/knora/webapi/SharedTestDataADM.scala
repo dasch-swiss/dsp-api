@@ -1606,6 +1606,13 @@ object SharedTestDataADM {
           |      "@value" : "1.2"
           |    }
           |  },
+          |  "anything:hasTimeStamp" : {
+          |    "@type" : "knora-api:TimeValue",
+          |    "knora-api:timeValueAsTimeStamp" : {
+          |      "@type" : "xsd:dateTimeStamp",
+          |      "@value" : "2020-01-24T08:47:10.307068Z"
+          |    }
+          |  },
           |  "anything:hasListItem" : {
           |    "@type" : "knora-api:ListValue",
           |    "knora-api:listValueAsListNode" : {
