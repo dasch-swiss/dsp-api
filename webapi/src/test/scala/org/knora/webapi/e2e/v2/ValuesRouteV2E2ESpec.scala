@@ -2623,6 +2623,44 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedTargetIri should ===(linkTargetIri)
         }
 
+        "update a link between two resources, changing only the comment" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
+            val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
+            val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+            val comment = "changing only the comment"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity = SharedTestDataADM.updateLinkValueRequest(
+                resourceIri = resourceIri,
+                valueIri = linkValueIri.get,
+                targetResourceIri = linkTargetIri,
+                comment = Some(comment)
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            linkValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = linkPropertyIri,
+                propertyIriInResult = linkValuePropertyIri,
+                expectedValueIri = linkValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
+            savedComment should ===(comment)
+        }
+
         "delete an integer value" in {
             val jsonLdEntity = SharedTestDataADM.deleteIntValueRequest(
                 resourceIri = SharedTestDataADM.AThing.iri,

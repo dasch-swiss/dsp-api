@@ -3243,9 +3243,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not update a link without changing it" in {
+        "update a link between two resources, changing only the comment" in {
             val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
+            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val comment = "a comment on this link"
 
             val updateValueRequest = UpdateValueRequestV2(
                 UpdateValueContentV2(
@@ -3255,7 +3258,54 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueIri = linkValueIri.get,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2Complex,
-                        referredResourceIri = generationeIri
+                        referredResourceIri = generationeIri,
+                        comment = Some(comment)
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            responderManager ! updateValueRequest
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => linkValueIri.set(updateValueResponse.valueIri)
+            }
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = linkPropertyIri,
+                propertyIriInResult = linkValuePropertyIri,
+                expectedValueIri = linkValueIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore match {
+                case readLinkValueV2: ReadLinkValueV2 =>
+                    readLinkValueV2.valueContent.referredResourceIri should ===(generationeIri)
+                    readLinkValueV2.valueHasRefCount should ===(1)
+                    assert(readLinkValueV2.valueContent.comment.contains(comment))
+
+                case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update a link without changing it" in {
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
+            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
+            val comment = "a comment on this link"
+
+            val updateValueRequest = UpdateValueRequestV2(
+                UpdateValueContentV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
+                    propertyIri = linkValuePropertyIri,
+                    valueIri = linkValueIri.get,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2Complex,
+                        referredResourceIri = generationeIri,
+                        comment = Some(comment)
                     )
                 ),
                 requestingUser = incunabulaUser,

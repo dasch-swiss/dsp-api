@@ -1388,23 +1388,46 @@ object SharedTestDataADM {
 
     def updateLinkValueRequest(resourceIri: IRI,
                                valueIri: IRI,
-                               targetResourceIri: IRI): String = {
-        s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasOtherThingValue" : {
-           |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:LinkValue",
-           |    "knora-api:linkValueHasTargetIri" : {
-           |      "@id" : "$targetResourceIri"
-           |    }
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
+                               targetResourceIri: IRI,
+                               comment: Option[String] = None): String = {
+        comment match {
+            case Some(definedComment) =>
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasOtherThingValue" : {
+                   |    "@id" : "$valueIri",
+                   |    "@type" : "knora-api:LinkValue",
+                   |    "knora-api:linkValueHasTargetIri" : {
+                   |      "@id" : "$targetResourceIri"
+                   |    },
+                   |    "knora-api:valueHasComment" : "$definedComment"
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            case None =>
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasOtherThingValue" : {
+                   |    "@id" : "$valueIri",
+                   |    "@type" : "knora-api:LinkValue",
+                   |    "knora-api:linkValueHasTargetIri" : {
+                   |      "@id" : "$targetResourceIri"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+        }
     }
 
     def updateStillImageFileValueRequest(resourceIri: IRI,
