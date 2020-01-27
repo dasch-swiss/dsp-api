@@ -71,6 +71,16 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       */
     private val OntologyCacheKey = "ontologyCacheData"
 
+    /**
+     * The in-memory cache of ontologies.
+     *
+     * @param ontologies a map of ontology IRIs to ontologies.
+     * @param subClassOfRelations a map of subclasses to their base classes.
+     * @param superClassOfRelations a map of base classes to their subclasses.
+     * @param subPropertyOfRelations a map of subproperties to their base proeprties.
+     * @param guiAttributeDefinitions a map of salsah-gui:Guielement individuals to their GUI attribute definitions.
+     * @param standoffProperties a set of standoff properties.
+     */
     private case class OntologyCacheData(ontologies: Map[SmartIri, ReadOntologyV2],
                                          subClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                          superClassOfRelations: Map[SmartIri, Set[SmartIri]],
@@ -2618,7 +2628,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     classes = ontology.classes - internalClassIri
                 )
 
-                updatedSubClassOfRelations = cacheData.subClassOfRelations - internalClassIri
+                updatedSubClassOfRelations = (cacheData.subClassOfRelations - internalClassIri).map {
+                    case (subClass, baseClasses) => subClass -> (baseClasses - internalClassIri)
+                }
+
                 updatedSuperClassOfRelations = calculateSuperClassOfRelations(updatedSubClassOfRelations)
 
                 _ = storeCacheData(cacheData.copy(
@@ -2736,7 +2749,9 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     properties = ontology.properties -- propertiesToRemoveFromCache
                 )
 
-                updatedSubPropertyOfRelations = cacheData.subPropertyOfRelations -- propertiesToRemoveFromCache
+                updatedSubPropertyOfRelations = (cacheData.subPropertyOfRelations -- propertiesToRemoveFromCache).map {
+                    case (subProperty, baseProperties) => subProperty -> (baseProperties -- propertiesToRemoveFromCache)
+                }
 
                 _ = storeCacheData(cacheData.copy(
                     ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology),
@@ -2789,7 +2804,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     expectedLastModificationDate = deleteOntologyRequest.lastModificationDate
                 )
 
-                // Check that none of the entities in the ontology are used in data.
+                // Check that none of the entities in the ontology are used in data or in other ontologies.
 
                 ontology = cacheData.ontologies(internalOntologyIri)
 
@@ -2827,6 +2842,33 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     throw UpdateNotPerformedException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not deleted. Please report this as a possible bug.")
                 }
 
+                // Remove the ontology from the cache.
+
+                updatedSubClassOfRelations = cacheData.subClassOfRelations.filterNot {
+                    case (subClass, _) => subClass.getOntologyFromEntity == internalOntologyIri
+                }.map {
+                    case (subClass, baseClasses) => subClass -> baseClasses.filterNot(_.getOntologyFromEntity == internalOntologyIri)
+                }
+
+                updatedSuperClassOfRelations = calculateSuperClassOfRelations(updatedSubClassOfRelations)
+
+                updatedSubPropertyOfRelations = cacheData.subPropertyOfRelations.filterNot {
+                    case (subProperty, _) => subProperty.getOntologyFromEntity == internalOntologyIri
+                }.map {
+                    case (subProperty, baseProperties) => subProperty -> baseProperties.filterNot(_.getOntologyFromEntity == internalOntologyIri)
+                }
+
+                updatedStandoffProperties = cacheData.standoffProperties.filterNot(_.getOntologyFromEntity == internalOntologyIri)
+
+                updatedCacheData = cacheData.copy(
+                    ontologies = cacheData.ontologies - internalOntologyIri,
+                    subClassOfRelations = updatedSubClassOfRelations,
+                    superClassOfRelations = updatedSuperClassOfRelations,
+                    subPropertyOfRelations = updatedSubPropertyOfRelations,
+                    standoffProperties = updatedStandoffProperties
+                )
+
+                _ = storeCacheData(updatedCacheData)
             } yield SuccessResponseV2(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been deleted")
         }
 

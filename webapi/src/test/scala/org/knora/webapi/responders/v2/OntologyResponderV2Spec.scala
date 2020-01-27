@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{MessageUtil, MutableTestIri, SmartIri, StringFormatter}
+import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
