@@ -842,7 +842,7 @@ object StandoffTagUtilV2 {
                                     case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Boolean))) =>
                                         StandoffTagBooleanAttributeV2(standoffPropertyIri = propSmartIri, value = value.toBoolean)
 
-                                    case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime))) =>
+                                    case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime))) | Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTimeStamp))) =>
                                         val timeStamp = stringFormatter.xsdDateTimeStampToInstant(value, throw DataConversionException(s"Couldn't parse timestamp: $value"))
                                         StandoffTagTimeAttributeV2(standoffPropertyIri = propSmartIri, value = timeStamp)
 

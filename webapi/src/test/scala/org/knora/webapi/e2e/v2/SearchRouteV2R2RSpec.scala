@@ -78,9 +78,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val password = "test"
 
     private val hamletResourceIri = new MutableTestIri
+    private val timeTagResourceIri = new MutableTestIri
 
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
-    private val writeTestDataFiles = true
+    private val writeTestDataFiles = false
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -8096,6 +8097,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Post(s"/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcePath ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
+                val resourceCreateResponseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
+                val resourceIri: IRI = resourceCreateResponseAsJsonLD.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+                assert(resourceIri.toSmartIri.isKnoraDataIri)
+                timeTagResourceIri.set(resourceIri)
             }
 
             // Search for the resource.
@@ -8114,16 +8119,25 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    ?text knora-api:textValueHasStandoff ?standoffTag .
                   |    ?standoffTag a knora-api:StandoffTimeTag .
                   |    ?standoffTag knora-api:timeValueAsTimeStamp ?timeStamp .
-                  |    FILTER(?timeStamp > "2020-01-27T08:31:51.503187Z"^^xsd:dateTimeStamp)
+                  |    FILTER(?timeStamp > "2020-01-27T08:31:51Z"^^xsd:dateTimeStamp && ?timeStamp < "2020-01-27T08:31:52Z"^^xsd:dateTimeStamp)
                   |}
                 """.stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-                assert(status == StatusCodes.OK, response.toString)
-                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingWithTimeTag.jsonld"), writeTestDataFiles)
-                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-            }
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
 
+                val responseAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
+                val resourceIri: IRI = responseAsJsonLD.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+                assert(resourceIri == timeTagResourceIri.get)
+
+                val xmlFromResponse: String = responseAsJsonLD.body.requireObject("http://0.0.0.0:3333/ontology/0001/anything/v2#hasText").
+                    requireString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
+
+                // Compare it to the original XML.
+                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlStr)).withTest(Input.fromString(xmlFromResponse)).build()
+                xmlDiff.hasDifferences should be(false)
+            }
         }
     }
 }

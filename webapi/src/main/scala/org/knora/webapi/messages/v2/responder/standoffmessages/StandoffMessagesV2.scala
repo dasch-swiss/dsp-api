@@ -394,7 +394,8 @@ object StandoffProperties {
     // represents the standoff properties defined on the internal reference standoff tag
     val internalReferenceProperties: Set[IRI] = Set(OntologyConstants.KnoraBase.StandoffTagHasInternalReference)
 
-    val dataTypeProperties: Set[IRI] = dateProperties ++ intervalProperties ++ booleanProperties ++ decimalProperties ++ integerProperties ++ uriProperties ++ colorProperties ++ linkProperties ++ internalReferenceProperties
+    val dataTypeProperties: Set[IRI] = dateProperties ++ intervalProperties ++ timeProperties ++ booleanProperties ++ decimalProperties ++
+        integerProperties ++ uriProperties ++ colorProperties ++ linkProperties ++ internalReferenceProperties
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -580,7 +581,7 @@ case class StandoffTagTimeAttributeV2(standoffPropertyIri: SmartIri, value: Inst
 
     def stringValue: String = value.toString
 
-    def rdfValue: String = value.toString
+    def rdfValue: String = s""""${value.toString}"^^xsd:dateTime"""
 
     override def toOntologySchema(targetSchema: OntologySchema): StandoffTagAttributeV2 = {
         copy(standoffPropertyIri = standoffPropertyIri.toOntologySchema(targetSchema))

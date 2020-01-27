@@ -702,15 +702,8 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
             Seq.empty[StatementPattern]
         }
 
-        // We use xsd:dateTimeStamp in Gravsearch, but xsd:dateTime in the triplestore.
-        val transformedXsdLiteral = if (literal.datatype.toString == OntologyConstants.Xsd.DateTimeStamp) {
-            literal.copy(datatype = OntologyConstants.Xsd.DateTime.toSmartIri)
-        } else {
-            literal
-        }
-
         TransformedFilterPattern(
-            Some(CompareExpression(valueObjectLiteralVar, comparisonOperator, transformedXsdLiteral)), // compares the provided literal to the value object's literal value
+            Some(CompareExpression(valueObjectLiteralVar, comparisonOperator, literal)), // compares the provided literal to the value object's literal value
             statementToAddForValueHas
         )
 

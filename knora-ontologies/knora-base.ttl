@@ -1535,7 +1535,7 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#valueHasIntervalStart
+###  http://www.knora.org/ontology/knora-base#valueHasTimeStamp
 
 :valueHasTimeStamp rdf:type owl:DatatypeProperty ;
 
