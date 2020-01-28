@@ -373,7 +373,7 @@ ci-prepare-graphdb:
 	echo $(LICENSE_ENCRYPTION_KEY) | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $(CURRENT_DIR)/ci/secrets.tar $(CURRENT_DIR)/ci/secrets.tar.gpg
 	tar -C $(CURRENT_DIR)/ci -xvf ci/secrets.tar
 	mkdir -p $(CURRENT_DIR)/graphdb
-	chmod 777 $(CURRENT_DIR)/ci/graphdb.license
+	file $(CURRENT_DIR)/ci/graphdb.license
 	cp $(CURRENT_DIR)/ci/graphdb.license $(CURRENT_DIR)/graphdb/graphdb.license
 	cp $(CURRENT_DIR)/webapi/scripts/KnoraRules.pie $(CURRENT_DIR)/graphdb/KnoraRules.pie
 
