@@ -1197,9 +1197,7 @@ case class TimeValueV1(timeStamp: Instant) extends UpdateValueV1 with ApiValueV1
 
     def valueTypeIri: IRI = OntologyConstants.KnoraBase.TimeValue
 
-    def toJsValue: JsValue = JsObject(
-        "timestamp" -> JsString(timeStamp.toString)
-    )
+    def toJsValue: JsValue = JsString(timeStamp.toString)
 
     override def toString: String = s"$timeStamp"
 
