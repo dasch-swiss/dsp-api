@@ -2682,12 +2682,27 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that the string represents a valid username.
+     * Check that the string represents a valid username.
+     *
+     * @param value    the string to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+     *                 username.
+     * @return the same string.
+     */
+    def validateUsername(value: String, errorFun: => Nothing): String = {
+        UsernameRegex.findFirstIn(value) match {
+            case Some(username) => username
+            case None => errorFun
+        }
+    }
+
+    /**
+      * Check that the string represents a valid username and escape any special characters.
       *
       * @param value    the string to be checked.
       * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
       *                 username.
-      * @return the same string.
+      * @return the same string with escaped special characters.
       */
     def validateAndEscapeUsername(value: String, errorFun: => Nothing): String = {
         UsernameRegex.findFirstIn(value) match {

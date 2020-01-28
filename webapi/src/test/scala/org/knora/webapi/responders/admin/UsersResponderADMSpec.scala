@@ -277,6 +277,43 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 )
                 expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
             }
+
+            "return a 'BadRequestException' if the supplied 'username' contains invalid characters" in {
+                responderManager ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
+                        username = "root2@example.com",
+                        email = "root2@example.com",
+                        givenName = "Donal",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
+                        lang = "en",
+                        systemAdmin = false
+                    ),
+                    SharedTestDataADM.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"The username: 'root2@example.com' contains invalid characters")))
+            }
+
+            "return a 'BadRequestException' if the supplied 'email' is invalid" in {
+                responderManager ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
+                        username = "root3",
+                        email = "root3",
+                        givenName = "Donal",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
+                        lang = "en",
+                        systemAdmin = false
+                    ),
+                    SharedTestDataADM.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"The email: 'root3' is invalid")))
+            }
+
         }
 
         "asked to update a user" should {

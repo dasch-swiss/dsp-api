@@ -1167,9 +1167,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           * The actual task run with an IRI lock.
           */
         def createNewUserTask(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
-            // check if required information is supplied
+            // check username
             _ <- Future(if (createRequest.username.isEmpty) throw BadRequestException("Username cannot be empty"))
+            _ = stringFormatter.validateUsername(createRequest.username, throw BadRequestException(s"The username: '${createRequest.username}' contains invalid characters"))
+
+            // check email
             _ = if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty")
+            _ = stringFormatter.validateEmailAndThrow(createRequest.email, throw BadRequestException(s"The email: '${createRequest.email}' is invalid"))
+
+            // check other
             _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
             _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
             _ = if (createRequest.familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
@@ -1195,7 +1201,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 userClassIri = OntologyConstants.KnoraAdmin.User,
-                username = createRequest.username,
+                username = stringFormatter.validateAndEscapeUsername(createRequest.username, throw BadRequestException(s"The username: '${createRequest.username}' contains invalid characters")),
                 email = createRequest.email,
                 password = hashedPassword,
                 givenName = createRequest.givenName,
