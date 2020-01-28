@@ -378,6 +378,7 @@ ci-prepare-graphdb:
 	stat $(KNORA_GDB_LICENSE)
 	stat $(CURRENT_DIR)/graphdb/graphdb.license
 	stat $(CURRENT_DIR)/graphdb/KnoraRules.pie
+	sestatus
 
 .PHONY: clean-local-tmp
 clean-local-tmp:
