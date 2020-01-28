@@ -195,6 +195,10 @@ stack-health:
 stack-down: ## stops the knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml down
 
+.PHONY: stack-config
+stack-config:
+	docker-compose -f docker/knora.docker-compose.yml config
+
 ## stack without api
 .PHONY: stack-without-api
 stack-without-api: stack-up ## starts the knora-stack without knora-api: graphdb, sipi, redis, salsah1.

@@ -7,9 +7,9 @@ services:
     ports:
       - "7200:7200"
     volumes:
-      - ${KNORA_GDB_LICENSE_FILE}:/graphdb/graphdb.license
-      - ${KNORA_GDB_IMPORT_DIR}:/root/graphdb-import
-      - ${KNORA_GDB_HOME_DIR}:/opt/graphdb/home
+      - ${KNORA_GDB_LICENSE_FILE}:/graphdb/graphdb.license:delegated
+      - ${KNORA_GDB_IMPORT_DIR}:/root/graphdb-import:delegated
+      - ${KNORA_GDB_HOME_DIR}:/opt/graphdb/home:delegated
     networks:
       - knora-net
     environment:
@@ -23,9 +23,9 @@ services:
       - "1024:1024"
     volumes:
       - /tmp:/tmp
-      - ${LOCAL_HOME}/sipi/config:/sipi/config
-      - ${LOCAL_HOME}/sipi/images:/sipi/images
-      - ${LOCAL_HOME}/sipi/server:/sipi/server
+      - ${LOCAL_HOME}/sipi/config:/sipi/config:delegated
+      - ${LOCAL_HOME}/sipi/images:/sipi/images:delegated
+      - ${LOCAL_HOME}/sipi/server:/sipi/server:delegated
     networks:
       - knora-net
     restart: unless-stopped
