@@ -196,7 +196,7 @@ stack-down: ## stops the knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml down
 
 .PHONY: stack-config
-stack-config:
+stack-config: env-file
 	docker-compose -f docker/knora.docker-compose.yml config
 
 ## stack without api
