@@ -109,7 +109,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             assert(response.ontologies.size == 1)
             val metadata = response.ontologies.head
             assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
-            fooIri.set(metadata.ontologyIri.toOntologySchema(ApiV2Complex).toString)
+            fooIri.set(metadata.ontologyIri.toString)
             fooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
         }
 
@@ -117,7 +117,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val newLabel = "The modified foo ontology"
 
             responderManager ! ChangeOntologyMetadataRequestV2(
-                ontologyIri = fooIri.get.toSmartIri,
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
                 label = newLabel,
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -127,7 +127,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val response = expectMsgType[ReadOntologyMetadataV2](timeout)
             assert(response.ontologies.size == 1)
             val metadata = response.ontologies.head
-            assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
+            assert(metadata.ontologyIri == fooIri.get.toSmartIri)
             assert(metadata.label.contains(newLabel))
             val newFooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
             assert(newFooLastModDate.isAfter(fooLastModDate))
@@ -167,7 +167,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not allow a user to delete an ontology if they are not a sysadmin or an admin in the ontology's project" in {
             responderManager ! DeleteOntologyRequestV2(
-                ontologyIri = fooIri.get.toSmartIri,
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
                 requestingUser = SharedTestDataADM.imagesUser02
@@ -182,7 +182,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "delete the 'foo' ontology" in {
             responderManager ! DeleteOntologyRequestV2(
-                ontologyIri = fooIri.get.toSmartIri,
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
                 requestingUser = imagesUser
