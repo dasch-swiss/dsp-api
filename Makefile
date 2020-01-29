@@ -35,12 +35,16 @@ build-knora-api-image: build-all-scala ## build and publish knora-api docker ima
 publish-knora-api-image: build-knora-api-image ## publish knora-api image to Dockerhub
 	docker push $(KNORA_API_IMAGE)
 
-## knora-graphdb-se
+# knora-graphdb-se
 .PHONY: build-knora-graphdb-se-image
 build-knora-graphdb-se-image: build-all-scala ## build and publish knora-graphdb-se docker image locally
 	@mkdir -p .docker
 	@sed -e "s/@GRAPHDB_IMAGE@/daschswiss\/graphdb\:$(GRAPHDB_SE_VERSION)-se/" docker/knora-graphdb.template.dockerfile > .docker/knora-graphdb-se.dockerfile
+ifeq ($(KNORA_GDB_LICENSE), unknown)
+	touch $(CURRENT_DIR)/knora-graphdb-se/target/universal/stage/scripts/graphdb.license
+else
 	cp $(KNORA_GDB_LICENSE) $(CURRENT_DIR)/knora-graphdb-se/target/universal/stage/scripts/graphdb.license
+endif
 	docker build -t $(KNORA_GRAPHDB_SE_IMAGE) -t $(REPO_PREFIX)/$(KNORA_GRAPHDB_SE_REPO):latest -f .docker/knora-graphdb-se.dockerfile  knora-graphdb-se/target/universal
 
 .PHONY: publish-knora-graphdb-se-image
@@ -117,11 +121,9 @@ env-file: ## write the env file used by knora-stack.
 ifeq ($(KNORA_GDB_LICENSE), unknown)
 	$(warning No GraphDB-SE license set. Using GraphDB-Free.)
 	@echo KNORA_GRAPHDB_IMAGE=$(KNORA_GRAPHDB_FREE_IMAGE) > .env
-#	@echo KNORA_GDB_LICENSE_FILE=no-license >> .env
 	@echo KNORA_GDB_TYPE=graphdb-free >> .env
 else
 	@echo KNORA_GRAPHDB_IMAGE=$(KNORA_GRAPHDB_SE_IMAGE) > .env
-#	@echo KNORA_GDB_LICENSE_FILE=$(KNORA_GDB_LICENSE) >> .env
 	@echo KNORA_GDB_TYPE=graphdb-se >> .env
 endif
 ifeq ($(KNORA_GDB_IMPORT), unknown)
@@ -368,19 +370,14 @@ init-db-test-unit-free: ## initializes the knora-test-unit repository (for Graph
 # Github CI targets
 #################################
 
+# use only on Github CI to decrypt the license, which is then backed into the Docker image
 .PHONY: ci-prepare-graphdb
 ci-prepare-graphdb:
 	@echo $@
 	@echo "CURRENT_DIR: $(CURRENT_DIR)"
 	echo $(LICENSE_ENCRYPTION_KEY) | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $(CURRENT_DIR)/ci/secrets.tar $(CURRENT_DIR)/ci/secrets.tar.gpg
 	tar -C $(CURRENT_DIR)/ci -xvf ci/secrets.tar
-	mkdir -p $(CURRENT_DIR)/graphdb
-	cp $(CURRENT_DIR)/ci/graphdb.license $(CURRENT_DIR)/graphdb/graphdb.license
-	cp $(CURRENT_DIR)/webapi/scripts/KnoraRules.pie $(CURRENT_DIR)/graphdb/KnoraRules.pie
-	stat $(KNORA_GDB_LICENSE)
-	stat $(CURRENT_DIR)/graphdb/graphdb.license
-	stat $(CURRENT_DIR)/graphdb/KnoraRules.pie
-	sestatus
+	stat $(CURRENT_DIR)/ci/graphdb.license
 
 .PHONY: clean-local-tmp
 clean-local-tmp:
