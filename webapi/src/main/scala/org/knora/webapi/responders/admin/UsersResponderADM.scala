@@ -259,8 +259,14 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 KnoraSystemInstances.Users.SystemUser
             )
 
+            // check if user exists
+            _ = if (currentUserInformation.isEmpty) {
+                throw BadRequestException(s"User ${userIri} does not exist")
+            }
+
             // check if we want to change the email
             _ = if (changeUserRequest.email.isDefined) {
+                stringFormatter.validateEmailAndThrow(changeUserRequest.email.get, throw BadRequestException(s"The email: '${changeUserRequest.email.get}' is invalid"))
                 currentUserInformation.map { user =>
                     // check if current email differs from the one in the change request
                     if (!user.email.equals(changeUserRequest.email.get)) {
@@ -274,6 +280,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
             // check if we want to change the username
             _ = if (changeUserRequest.username.isDefined) {
+                stringFormatter.validateUsername(changeUserRequest.username.get, throw BadRequestException(s"The username: '${changeUserRequest.username.get}' contains invalid characters"))
                 currentUserInformation.map { user =>
                     // check if the current username differs from the one in the change request
                     if (!user.username.equals(changeUserRequest.username.get)) {

@@ -278,11 +278,11 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
             }
 
-            "return a 'BadRequestException' if the supplied 'username' contains invalid characters" in {
+            "return a 'BadRequestException' if the supplied 'username' contains invalid characters (@)" in {
                 responderManager ! UserCreateRequestADM(
                     createRequest = CreateUserApiRequestADM(
-                        username = "root2@example.com",
-                        email = "root2@example.com",
+                        username = "donald.duck2@example.com",
+                        email = "donald.duck2@example.com",
                         givenName = "Donal",
                         familyName = "Duck",
                         password = "test",
@@ -293,7 +293,25 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(BadRequestException(s"The username: 'root2@example.com' contains invalid characters")))
+                expectMsg(Failure(BadRequestException(s"The username: 'donald.duck2@example.com' contains invalid characters")))
+            }
+
+            "return a 'BadRequestException' if the supplied 'username' contains invalid characters (-)" in {
+                responderManager ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
+                        username = "donald-duck",
+                        email = "donald.duck2@example.com",
+                        givenName = "Donal",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
+                        lang = "en",
+                        systemAdmin = false
+                    ),
+                    SharedTestDataADM.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"The username: 'donald-duck' contains invalid characters")))
             }
 
             "return a 'BadRequestException' if the supplied 'email' is invalid" in {
@@ -369,6 +387,49 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 response3.user.givenName should equal (SharedTestDataADM.normalUser.givenName)
                 response3.user.familyName should equal (SharedTestDataADM.normalUser.familyName)
 
+            }
+
+            "return 'BadRequest' if the new 'username' contains invalid characters (@)" in {
+
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        username = Some("donald.duck2@example.com")
+                    ),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(timeout, Failure(BadRequestException(s"The username: 'donald.duck2@example.com' contains invalid characters")))
+            }
+
+            "return 'BadRequest' if the new 'username' contains invalid characters (-)" in {
+
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        username = Some("donald-duck")
+                    ),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(timeout, Failure(BadRequestException(s"The username: 'donald-duck' contains invalid characters")))
+            }
+
+
+            "return 'BadRequest' if the new 'email' is invalid" in {
+
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        email = Some("root3")
+                    ),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(timeout, Failure(BadRequestException(s"The email: 'root3' is invalid")))
             }
 
             "UPDATE the user's password (by himself)" in {
