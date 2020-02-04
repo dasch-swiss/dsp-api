@@ -973,12 +973,16 @@ HTTP PUT to http://host/v2/ontologies/metadata
 
 ```jsonld
 {
-  "@id": "ONTOLOGY_IRI",
-  "rdfs:label": "NEW_ONTOLOGY_LABEL",
-  "knora-api:lastModificationDate": "ONTOLOGY_LAST_MODIFICATION_DATE",
-  "@context": {
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+  "@id" : "ONTOLOGY_IRI",
+  "rdfs:label" : "NEW_ONTOLOGY_LABEL",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
+  "@context" : {
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
   }
 }
 ```
@@ -1010,7 +1014,10 @@ HTTP POST to http://host/v2/ontologies/classes
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
-  "knora-api:lastModificationDate" : "ONTOLOGY_LAST_MODIFICATION_DATE",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
   "@graph" : [ {
     "CLASS_IRI" : {
       "@id" : "CLASS_IRI",
@@ -1060,7 +1067,10 @@ HTTP POST to http://host/v2/ontologies/classes
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
-  "knora-api:lastModificationDate" : "ONTOLOGY_LAST_MODIFICATION_DATE",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
   "@graph" : [ {
     "CLASS_IRI" : {
       "@id" : "CLASS_IRI",
@@ -1123,7 +1133,10 @@ HTTP PUT to http://host/v2/ontologies/classes
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
-  "knora-api:lastModificationDate" : "ONTOLOGY_LAST_MODIFICATION_DATE",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
   "@graph" : [ {
     "CLASS_IRI" : {
       "@id" : "CLASS_IRI",
@@ -1159,7 +1172,10 @@ HTTP PUT to http://host/v2/ontologies/classes
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
-  "knora-api:lastModificationDate" : "ONTOLOGY_LAST_MODIFICATION_DATE",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
   "@graph" : [ {
     "CLASS_IRI" : {
       "@id" : "CLASS_IRI",
@@ -1194,7 +1210,10 @@ HTTP POST to http://host/v2/ontologies/properties
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
-  "knora-api:lastModificationDate" : "ONTOLOGY_LAST_MODIFICATION_DATE",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
   "@graph" : [ {
     "PROPERTY_IRI" : {
       "@id" : "PROPERTY_IRI",
@@ -1280,7 +1299,10 @@ HTTP PUT to http://host/v2/ontologies/properties
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
-  "knora-api:lastModificationDate" : "ONTOLOGY_LAST_MODIFICATION_DATE",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
   "@graph" : [ {
     "PROPERTY_IRI" : {
       "@id" : "PROPERTY_IRI",
@@ -1315,7 +1337,10 @@ HTTP PUT to http://host/v2/ontologies/properties
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
-  "knora-api:lastModificationDate" : "ONTOLOGY_LAST_MODIFICATION_DATE",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
   "@graph" : [ {
     "PROPERTY_IRI" : {
       "@id" : "PROPERTY_IRI",
@@ -1351,7 +1376,10 @@ HTTP POST to http://host/v2/ontologies/cardinalities
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
-  "knora-api:lastModificationDate" : "ONTOLOGY_LAST_MODIFICATION_DATE",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
   "@graph" : [ {
     "CLASS_IRI" : {
       "@id" : "CLASS_IRI",
@@ -1407,7 +1435,10 @@ HTTP PUT to http://host/v2/ontologies/cardinalities
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
-  "knora-api:lastModificationDate" : "ONTOLOGY_LAST_MODIFICATION_DATE",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
   "@graph" : [ {
     "CLASS_IRI" : {
       "@id" : "CLASS_IRI",
