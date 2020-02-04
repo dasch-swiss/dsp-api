@@ -725,7 +725,7 @@
 							var ele;
 							var vv;
 
-							// fake a click to show up the model dialog
+							// fake a click to show up the modal dialog
 							$('#hiddenaddrespending').click();
 
 							for (var pinfo in rtinfo.properties) {
@@ -1180,6 +1180,11 @@
 									}
 								}
 							}).fail(function() {
+								// the above code `localdata.settings.on_submit_cb(data);` and `on_error_cb(data)` delete the edition window
+								// here it remains, so we have to re-enable the click on button save
+								// in case it is a recoverable error (login or missing required property)
+								submit_button.one('click', submit_button_callback);
+
 								// release the modal when the async method failed
 								$('#hiddenaddrespending').simpledialog('processpendingbox', 'close');
 							});

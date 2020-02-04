@@ -9,7 +9,7 @@
 <http://api.knora.org/ontology/shared/example-box/v2> a owl:Ontology;
   knora-api:attachedToProject <http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject>;
   knora-api:isShared true;
-  knora-api:lastModificationDate "2018-09-10T14:53:00Z";
+  knora-api:lastModificationDate "2018-09-10T14:53:00Z"^^xsd:dateTimeStamp;
   rdfs:label "An example of a shared ontology" .
 
 example-box:Box a owl:Class;
