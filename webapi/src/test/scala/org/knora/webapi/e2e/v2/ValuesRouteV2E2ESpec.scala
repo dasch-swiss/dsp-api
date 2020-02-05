@@ -56,6 +56,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     private val booleanValueIri = new MutableTestIri
     private val geometryValueIri = new MutableTestIri
     private val intervalValueIri = new MutableTestIri
+    private val timeValueIri = new MutableTestIri
     private val listValueIri = new MutableTestIri
     private val colorValueIri = new MutableTestIri
     private val uriValueIri = new MutableTestIri
@@ -1524,6 +1525,44 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedIntervalValueHasEnd should ===(intervalEnd)
         }
 
+        "create a time value" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
+            val timeStamp = Instant.parse("2019-08-28T15:59:12.725007Z")
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity = SharedTestDataADM.createTimeValueRequest(
+                resourceIri = resourceIri,
+                timeStamp = timeStamp
+            )
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            timeValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.TimeValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = timeValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+
+            savedTimeStamp should ===(timeStamp)
+        }
+
         "create a list value" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
@@ -2449,6 +2488,45 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             )
 
             savedIntervalValueHasEnd should ===(intervalEnd)
+        }
+
+        "update a time value" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
+            val timeStamp = Instant.parse("2019-12-16T09:14:56.409249Z")
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity = SharedTestDataADM.updateTimeValueRequest(
+                resourceIri = resourceIri,
+                valueIri = timeValueIri.get,
+                timeStamp = timeStamp
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            timeValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.TimeValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = timeValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+
+            savedTimeStamp should ===(timeStamp)
         }
 
         "update a list value" in {

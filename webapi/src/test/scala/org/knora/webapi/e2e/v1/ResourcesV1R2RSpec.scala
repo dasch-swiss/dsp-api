@@ -464,6 +464,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasTimeStamp": [{"time_value": "2019-08-28T15:13:10.968318Z"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasBoolean": [{"boolean_value":true}]
                    |    }
                    |}
@@ -1734,6 +1735,13 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     value =
                         s"""
                            |<p0001-anything:hasText knoraType="richtext_value">This is a test in thing $i.</p0001-anything:hasText>
+                        """.stripMargin)
+
+                maybeAppendValue(random = random,
+                    xmlStringBuilder = xmlStringBuilder,
+                    value =
+                        s"""
+                           |<p0001-anything:hasTimeStamp knoraType="time_value">2019-08-28T15:13:10.968318Z</p0001-anything:hasTimeStamp>
                         """.stripMargin)
 
                 maybeAppendValue(random = random,

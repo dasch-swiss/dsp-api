@@ -33,7 +33,7 @@
 
     :attachedToProject knora-admin:SystemProject ;
 
-    :ontologyVersion "knora-base v7" .
+    :ontologyVersion "PR XXXX" .
 
 
 
@@ -456,6 +456,8 @@
                            "has Link to"@en ,
                            "a lien vers"@fr ,
                            "ha Link verso"@it ;
+
+                rdfs:comment "Represents a direct connection between two resources"@en ;
 
                 :isEditable true ;
 
@@ -1113,18 +1115,6 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#pageCount
-
-:pageCount rdf:type owl:DatatypeProperty ;
-
-      :subjectClassConstraint :FileValue ;
-
-      rdfs:subPropertyOf :valueHas ;
-
-      :objectDatatypeConstraint xsd:integer .
-
-
-
 ###  http://www.knora.org/ontology/knora-base#duration
 
 :duration rdf:type owl:DatatypeProperty ;
@@ -1533,7 +1523,7 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#valueHasTimeStamp
+###  http://www.knora.org/ontology/knora-base#valueHasIntervalStart
 
 :valueHasTimeStamp rdf:type owl:DatatypeProperty ;
 
@@ -1789,19 +1779,8 @@
 
 :DocumentFileValue rdf:type owl:Class ;
 
-                   rdfs:subClassOf :FileValue ,
-                   [ rdf:type owl:Restriction ;
-                     owl:onProperty :pageCount ;
-                     owl:cardinality "1"^^xsd:nonNegativeInteger
-                   ] ,
-                   [ rdf:type owl:Restriction ;
-                     owl:onProperty :dimX ;
-                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                   ] ,
-                   [ rdf:type owl:Restriction ;
-                     owl:onProperty :dimY ;
-                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                   ] .
+                   rdfs:subClassOf :FileValue .
+
 
 
 ###  http://www.knora.org/ontology/knora-base#DocumentRepresentation
@@ -1866,6 +1845,10 @@
 
            rdfs:subClassOf :Value ,
                            [ rdf:type owl:Restriction ;
+                             owl:onProperty :originalMimeType ;
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
+                           ] ,
+                           [ rdf:type owl:Restriction ;
                              owl:onProperty :internalFilename ;
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
@@ -1875,11 +1858,7 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :originalFilename ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                           ] ,
-                           [ rdf:type owl:Restriction ;
-                             owl:onProperty :originalMimeType ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 

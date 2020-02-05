@@ -124,6 +124,13 @@
       "@id" : "owl:NamedIndividual"
     } ]
   }, {
+    "@id" : "salsah-gui:TimeStamp",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
     "@id" : "salsah-gui:guiAttribute",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {

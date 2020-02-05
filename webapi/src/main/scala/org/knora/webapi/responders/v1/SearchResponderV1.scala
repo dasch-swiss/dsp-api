@@ -100,6 +100,15 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
             SearchComparisonOperatorV1.EQ,
             SearchComparisonOperatorV1.NOT_EQ,
             SearchComparisonOperatorV1.EXISTS
+        ),
+        OntologyConstants.KnoraBase.TimeValue -> Set(
+            SearchComparisonOperatorV1.EQ,
+            SearchComparisonOperatorV1.NOT_EQ,
+            SearchComparisonOperatorV1.GT,
+            SearchComparisonOperatorV1.GT_EQ,
+            SearchComparisonOperatorV1.LT,
+            SearchComparisonOperatorV1.LT_EQ,
+            SearchComparisonOperatorV1.EXISTS
         )
     )
 
@@ -445,6 +454,11 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                             case OntologyConstants.KnoraBase.DecimalValue =>
                                 // check if string is a decimal number
                                 val searchString = stringFormatter.validateBigDecimal(searchval, throw BadRequestException(s"Given searchval is not a decimal number: $searchval")).toString
+                                searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+                            case OntologyConstants.KnoraBase.TimeValue =>
+                                // check if string is an integer
+                                val searchString = stringFormatter.xsdDateTimeStampToInstant(searchval, throw BadRequestException(s"Given searchval is not a timestamp: $searchval")).toString
                                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
                             case OntologyConstants.KnoraBase.Resource =>

@@ -366,6 +366,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       * @return a [[SparqlExtendedConstructResponse]]
       */
     private def sparqlHttpExtendedConstruct(sparql: String): Try[SparqlExtendedConstructResponse] = {
+        // println(sparql)
+
         val parseTry = for {
             turtleStr <- getSparqlHttpResponse(sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
             response <- SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, log)
