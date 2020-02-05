@@ -44,7 +44,7 @@ import org.knora.webapi.{BadRequestException, KnoraDispatchers, NotImplementedEx
 import spray.json._
 
 import scala.concurrent.ExecutionContext
-import scala.util.Try
+import scala.util.{Success, Try}
 
 /**
   * Makes requests to Sipi.
@@ -321,9 +321,14 @@ class SipiConnector extends Actor with ActorLogging {
         // ask Sipi to return the XSL transformation
         val request = new HttpGet(xsltFileUrl)
 
-        for {
+        val sipiResponseTry: Try[SipiGetTextFileResponse] = for {
             responseStr <- doSipiRequest(request)
         } yield SipiGetTextFileResponse(responseStr)
+
+        sipiResponseTry.recover {
+            case badRequestException: BadRequestException => throw BadRequestException(s"Unable to get XSL transformation file $xsltFileUrl from Sipi: ${badRequestException.message}")
+            case sipiException: SipiException => throw SipiException(s"Unable to get XSL transformation file $xsltFileUrl from Sipi: ${sipiException.message}")
+        }
     }
 
     /**
