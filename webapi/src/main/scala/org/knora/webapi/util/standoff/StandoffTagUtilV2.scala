@@ -19,6 +19,7 @@
 
 package org.knora.webapi.util.standoff
 
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.ActorRef
@@ -131,6 +132,9 @@ object StandoffTagUtilV2 {
 
                             case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Boolean))) =>
                                 StandoffTagBooleanAttributeV2(standoffPropertyIri = standoffTagPropIri, value = stringFormatter.validateBoolean(attr.value, throw BadRequestException(s"Invalid boolean attribute: '${attr.value}'")))
+
+                            case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime)))  =>
+                                StandoffTagTimeAttributeV2(standoffPropertyIri = standoffTagPropIri, value = stringFormatter.xsdDateTimeStampToInstant(attr.value, throw BadRequestException(s"Invalid timestamp attribute: '${attr.value}'")))
 
                             case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $standoffTagPropIri")
 
@@ -578,6 +582,30 @@ object StandoffTagUtilV2 {
                             attributes = attributesV2 ++ List(intervalStart, intervalEnd)
                         )
 
+                    case Some(StandoffDataTypeClasses.StandoffTimeTag) =>
+
+                        val timeStampString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffTimeTag, standoffNodeFromXML)
+                        val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(timeStampString, throw BadRequestException(s"Invalid timestamp: $timeStampString"))
+                        val timeStampAttr = StandoffTagTimeAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.ValueHasTimeStamp.toSmartIri, value = timeStamp)
+
+                        val classSpecificProps = cardinalities -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.timeProperties.map(_.toSmartIri)
+
+                        val attributesV2: Seq[StandoffTagAttributeV2] = createAttributes(standoffDefFromMapping, classSpecificProps, existingXMLIDs, standoffNodeFromXML, standoffEntities.standoffPropertyInfoMap)
+
+                        StandoffTagV2(
+                            dataType = Some(StandoffDataTypeClasses.StandoffTimeTag),
+                            standoffTagClassIri = standoffBaseTagV2.standoffTagClassIri,
+                            startPosition = standoffBaseTagV2.startPosition,
+                            endPosition = standoffBaseTagV2.endPosition,
+                            uuid = standoffBaseTagV2.uuid,
+                            originalXMLID = standoffBaseTagV2.originalXMLID,
+                            startIndex = standoffBaseTagV2.startIndex,
+                            endIndex = standoffBaseTagV2.endIndex,
+                            startParentIndex = standoffBaseTagV2.startParentIndex,
+                            endParentIndex = standoffBaseTagV2.endParentIndex,
+                            attributes = attributesV2 :+ timeStampAttr
+                        )
+
                     case Some(StandoffDataTypeClasses.StandoffDateTag) =>
 
                         val dateString: String = getDataTypeAttribute(standoffDefFromMapping, StandoffDataTypeClasses.StandoffDateTag, standoffNodeFromXML)
@@ -814,6 +842,10 @@ object StandoffTagUtilV2 {
                                     case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Boolean))) =>
                                         StandoffTagBooleanAttributeV2(standoffPropertyIri = propSmartIri, value = value.toBoolean)
 
+                                    case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime))) | Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTimeStamp))) =>
+                                        val timeStamp = stringFormatter.xsdDateTimeStampToInstant(value, throw DataConversionException(s"Couldn't parse timestamp: $value"))
+                                        StandoffTagTimeAttributeV2(standoffPropertyIri = propSmartIri, value = timeStamp)
+
                                     case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Uri))) =>
                                         StandoffTagUriAttributeV2(standoffPropertyIri = propSmartIri, value = value)
 
@@ -964,6 +996,15 @@ object StandoffTagUtilV2 {
                         val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.intervalProperties.contains(attr.standoffPropertyIri.toString))
 
                         convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = intervalString, xmlNamespace = None)
+
+                    case Some(StandoffDataTypeClasses.StandoffTimeTag) =>
+                        val dataTypeAttrName = xmlItemForStandoffClass.tagItem.mapping.dataType.getOrElse(throw NotFoundException(s"data type attribute not found in mapping for ${xmlItemForStandoffClass.tagname}")).dataTypeXMLAttribute
+
+                        val timeString = standoffTagV2.attributes.find(_.standoffPropertyIri.toString == OntologyConstants.KnoraBase.ValueHasTimeStamp).get.stringValue
+
+                        val conventionalAttributes = standoffTagV2.attributes.filterNot(attr => StandoffProperties.timeProperties.contains(attr.standoffPropertyIri.toString))
+
+                        convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, conventionalAttributes) :+ StandoffTagAttribute(key = dataTypeAttrName, value = timeString, xmlNamespace = None)
 
                     case Some(StandoffDataTypeClasses.StandoffDateTag) =>
                         // create one attribute from date properties

@@ -147,6 +147,11 @@ anything:BlueThing a owl:Class;
       owl:onProperty anything:hasThingPictureValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      salsah-gui:guiOrder 13;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasTimeStamp
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       salsah-gui:guiOrder 15;
       owl:minCardinality 0;
       owl:onProperty anything:isPartOfOtherThing
@@ -340,6 +345,10 @@ anything:Thing a owl:Class;
       owl:minCardinality 0;
       owl:onProperty anything:hasThingPictureValue
     ], [ a owl:Restriction;
+      salsah-gui:guiOrder 13;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasTimeStamp
+    ], [ a owl:Restriction;
       salsah-gui:guiOrder 15;
       owl:minCardinality 0;
       owl:onProperty anything:isPartOfOtherThing
@@ -512,6 +521,15 @@ anything:hasThingPictureValue a owl:ObjectProperty;
   rdfs:label "Picture of a thing";
   rdfs:subPropertyOf knora-api:hasRepresentationValue .
 
+anything:hasTimeStamp a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:TimeValue;
+  knora-api:subjectType anything:Thing;
+  salsah-gui:guiElement salsah-gui:TimeStamp;
+  rdfs:label "Timestamp";
+  rdfs:subPropertyOf knora-api:hasValue .
+
 anything:isPartOfOtherThing a owl:ObjectProperty;
   knora-api:isEditable true;
   knora-api:isLinkProperty true;
@@ -669,6 +687,14 @@ anything:ThingDocument a owl:Class;
   rdfs:subClassOf knora-api:DocumentRepresentation, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:creationDate
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -733,14 +759,6 @@ anything:ThingDocument a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:attachedToProject
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:attachedToUser
     ] .
 
 anything:hasDocumentTitle a owl:ObjectProperty;
@@ -1195,6 +1213,11 @@ anything:ThingWithSeqnum a owl:Class;
       salsah-gui:guiOrder 13;
       owl:minCardinality 0;
       owl:onProperty anything:hasThingPictureValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      salsah-gui:guiOrder 13;
+      owl:minCardinality 0;
+      owl:onProperty anything:hasTimeStamp
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       salsah-gui:guiOrder 15;
