@@ -44,7 +44,7 @@ import org.knora.webapi.{BadRequestException, KnoraDispatchers, NotImplementedEx
 import spray.json._
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Success, Try}
+import scala.util.Try
 
 /**
   * Makes requests to Sipi.
