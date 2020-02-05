@@ -249,6 +249,12 @@ DELETE {
 
             }
 
+            case timeValue: TimeValueV1 => {
+
+                ?newValue knora-base:valueHasTimeStamp "@timeValue.timeStamp"^^xsd:dateTime  .
+
+            }
+
             case geonameValue: GeonameValueV1 => {
 
                 ?newValue knora-base:valueHasGeonameCode """@geonameValue.geonameCode""" .
