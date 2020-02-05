@@ -529,6 +529,67 @@
 				}
 			};
 
+			postdata[VALTYPE_TIME] = function(value_container, prop, value_index, value, is_new_value) {
+				var data = {};
+				if (is_new_value) {
+					data.time_value = value;
+					data.res_id = res_id;
+					data.prop = prop;
+					data.project_id = project_id;
+					SALSAH.ApiPost('values', data, function(data) {
+						if (data.status == ApiErrors.OK) {
+
+							init_value_structure();
+
+							propinfo[active.prop].values[active.value_index] = data.value;
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+							propinfo[active.prop].value_rights[active.value_index] = data.rights;
+							propinfo[active.prop].value_iconsrcs[active.value_index] = null;
+							propinfo[active.prop].value_firstprops[active.value_index] = null;
+							propinfo[active.prop].value_restype[active.value_index] = null;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				} else {
+					data.time_value = value;
+					data.project_id = project_id;
+					SALSAH.ApiPut('values/' + encodeURIComponent(propinfo[prop].value_ids[value_index]), data, function(data) {
+						if (data.status == ApiErrors.OK) {
+							propinfo[active.prop].values[active.value_index] = data.value;
+							// set new value Iri
+							propinfo[active.prop].value_ids[active.value_index] = data.id;
+
+							active.value_container.empty();
+							reset_value(active.value_container, active.prop, active.value_index);
+							if (active.is_new_value) {
+								var prop_container = active.value_container.parent();
+								make_add_button(prop_container, active.prop);
+							}
+
+
+						}
+						else {
+							alert(status.errormsg);
+						}
+						active = undefined;
+					}).fail(function(){
+						cancel_edit(value_container);
+					});
+				}
+			};
+
 			postdata[VALTYPE_URI] = function(value_container, prop, value_index, value, is_new_value) {
 				var data = {};
 				if (is_new_value) {
@@ -877,77 +938,6 @@
 					});
 				}
 			};
-
-
-			// TIMETIMETIMETIMETIME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-			postdata[VALTYPE_TIME] = function(value_container, prop, value_index, value, is_new_value) {
-				var data = {};
-				if (is_new_value) {
-					data.value = value;
-					data.res_id = res_id;
-					data.prop = prop;
-					SALSAH.ApiPost('values', data, function(data) {
-						if (data.status == ApiErrors.OK) {
-							var tmpobj = {};
-							tmpobj.timeval1 = data.value.timeval1;
-							tmpobj.timeval2 = data.value.timeval2;
-							
-							if (!propinfo[active.prop].values) propinfo[active.prop].values = Array();
-							if (!propinfo[active.prop].value_ids) propinfo[active.prop].value_ids = Array();
-							if (!propinfo[active.prop].value_rights) propinfo[active.prop].value_rights = Array();
-							if (!propinfo[prop].value_iconsrcs) propinfo[prop].value_iconsrcs = Array();
-							if (!propinfo[prop].value_firstprops) propinfo[prop].value_firstprops = Array();
-							if (!propinfo[prop].value_restype) propinfo[prop].value_restype = Array();
-							propinfo[active.prop].values[active.value_index] = tmpobj;
-							propinfo[active.prop].value_ids[active.value_index] = data.id;
-							propinfo[active.prop].value_rights[active.value_index] = data.rights;
-							propinfo[active.prop].value_iconsrcs[active.value_index] = null;
-							propinfo[active.prop].value_firstprops[active.value_index] = null;
-							propinfo[active.prop].value_restype[active.value_index] = null;
-
-							active.value_container.empty();
-							reset_value(active.value_container, active.prop, active.value_index);
-
-							var prop_container = value_container.parent();
-							make_add_button(prop_container, active.prop);
-						}
-						else {
-							alert(status.errormsg);
-							cancel_edit(value_container);
-						}
-						active = undefined;
-					}).fail(function(){
-						cancel_edit(value_container);
-					});
-				}
-				else {
-					data.value = value;
-					SALSAH.ApiPut('values/' + propinfo[prop].value_ids[value_index], data, function(data) {
-						if (data.status == ApiErrors.OK) {
-							var tmpobj = {};
-							tmpobj.timeval1 = data.value.timeval1;
-							tmpobj.timeval2 = data.value.timeval2;
-							
-							propinfo[active.prop].values[active.value_index] = tmpobj; // HIER IST DER FEHLER!!!!!!!!!
-
-							active.value_container.empty();
-							reset_value(active.value_container, active.prop, active.value_index);
-							if (active.is_new_value) {
-								var prop_container = value_container.parent();
-								make_add_button(prop_container, active.prop);
-							}
-						}
-						else {
-							alert(status.errormsg);
-							cancel_edit(value_container);
-						}
-						active = undefined;
-					}).fail(function(){
-						cancel_edit(value_container);
-					});
-				}
-			};
-			// TIMETIMETIMETIMETIME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 			postdata[VALTYPE_INTERVAL] = function(value_container, prop, value_index, value, is_new_value) {
 				var data = {};
@@ -1461,11 +1451,13 @@
 				}
 			}
 			switch (propinfo[prop].guielement) {
-				case 'text': {
+				case 'text':
+				case 'timestamp':
+					{
 					attributes.type = 'text';
 					if (!is_new_value) {
 
-						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT || propinfo[prop].valuetype_id == VALTYPE_URI) {
+						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT || propinfo[prop].valuetype_id == VALTYPE_URI || propinfo[prop].valuetype_id == VALTYPE_TIME) {
 							attributes.value = propinfo[prop].values[value_index];
 						} else if (propinfo[prop].valuetype_id == 'LABEL') {
 							attributes.value = propinfo[prop].values[value_index];
@@ -1484,7 +1476,7 @@
 					tmpele.focus();
 					value_container.append($('<img>', {src: save_icon.src, title: strings._save, 'class': 'propedit'}).click(function(event) {
 
-						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT || propinfo[prop].valuetype_id == VALTYPE_URI) {
+						if (propinfo[prop].valuetype_id == VALTYPE_FLOAT || propinfo[prop].valuetype_id == VALTYPE_URI || propinfo[prop].valuetype_id == VALTYPE_TIME) {
 							postdata[propinfo[prop].valuetype_id](value_container, prop, value_index, value_container.find('input').val(), is_new_value);
 						} else {
 

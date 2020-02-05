@@ -127,6 +127,15 @@ export module changeValueFormats {
 
 
     /**
+     * Represents a request to change a value of type time.
+     *
+     * HTTP PUT to http://host/v1/values/valueIRI
+     *
+     */
+    export interface changeTimeValueRequest extends changeValueRequestBase, basicMessageComponents.timeValue {}
+
+
+    /**
      * Represents a request to change a value of type geoname.
      *
      * HTTP PUT to http://host/v1/values/valueIRI

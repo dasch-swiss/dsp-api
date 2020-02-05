@@ -215,6 +215,12 @@
 
                                                             }
 
+                                                            case OntologyConstants.KnoraBase.TimeValue => {
+
+                                                                type="@{knoraXmlImportNamespacePrefixLabel}:timeValueType"
+
+                                                            }
+
                                                             case OntologyConstants.KnoraBase.GeonameValue => {
 
                                                                 type="@{knoraXmlImportNamespacePrefixLabel}:geonameValueType"

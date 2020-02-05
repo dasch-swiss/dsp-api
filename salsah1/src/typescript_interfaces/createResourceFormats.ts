@@ -170,7 +170,7 @@ export module createResourceFormats {
             [index:string]:Array<basicMessageComponents.richtextValue>|Array<basicMessageComponents.linkValue>|Array<basicMessageComponents.integerValue>
                 |Array<basicMessageComponents.decimalValue>|Array<basicMessageComponents.booleanValue>|Array<basicMessageComponents.uriValue>
                 |Array<basicMessageComponents.dateValue>|Array<basicMessageComponents.colorValue>|Array<basicMessageComponents.geometryValue>
-                |Array<basicMessageComponents.hierarchicalListValue>|Array<basicMessageComponents.intervalValue>|Array<basicMessageComponents.geonameValue>;
+                |Array<basicMessageComponents.hierarchicalListValue>|Array<basicMessageComponents.intervalValue>|Array<basicMessageComponents.timeValue>|Array<basicMessageComponents.geonameValue>;
         }
 
         /**
