@@ -326,7 +326,7 @@ class SipiConnector extends Actor with ActorLogging {
         } yield SipiGetTextFileResponse(responseStr)
 
         sipiResponseTry.recover {
-            case badRequestException: BadRequestException => throw BadRequestException(s"Unable to get XSL transformation file $xsltFileUrl from Sipi: ${badRequestException.message}")
+            case badRequestException: BadRequestException => throw SipiException(s"Unable to get XSL transformation file $xsltFileUrl from Sipi: ${badRequestException.message}")
             case sipiException: SipiException => throw SipiException(s"Unable to get XSL transformation file $xsltFileUrl from Sipi: ${sipiException.message}", sipiException.cause)
         }
     }

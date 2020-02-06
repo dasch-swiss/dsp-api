@@ -27,6 +27,7 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDString}
 import org.knora.webapi.util.{FileUtil, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
@@ -74,6 +75,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val pathToBEOLLetterMapping = "_test_data/test_route/texts/beol/testLetter/beolMapping.xml"
     private val pathToBEOLBulkXML = "_test_data/test_route/texts/beol/testLetter/bulk.xml"
     private val letterIri = new MutableTestIri
+    private val gravsearchTemplateIri = new MutableTestIri
 
     /**
       * Adds the IRI of a XSL transformation to the given mapping.
@@ -725,12 +727,12 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val gravsearchTemplateJSON: JsObject = getResponseJson(gravsearchTemplateRequest)
 
-            val gravsearchTemplateIri: IRI = gravsearchTemplateJSON.fields.get("res_id") match {
+            gravsearchTemplateIri.set(gravsearchTemplateJSON.fields.get("res_id") match {
 
                 case Some(JsString(gravsearchIri)) => gravsearchIri
 
                 case _ => throw InvalidApiJsonException("expected IRI for Gravsearch template")
-            }
+            })
 
             // create an XSL transformation
             val headerParams = JsObject(
@@ -774,7 +776,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val letterTEIRequest: HttpRequest = Get(baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
                 "?textProperty=" + URLEncoder.encode("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText", "UTF-8") +
                 "&mappingIri=" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI", "UTF-8") +
-                "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri, "UTF-8") +
+                "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri.get, "UTF-8") +
                 "&teiHeaderXSLTIri=" + URLEncoder.encode(headerXSLTIri, "UTF-8")
             )
 
@@ -832,6 +834,22 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             xmlDiff.hasDifferences should be(false)
 
+        }
+
+        "provide a helpful error message if an XSLT file is not found" in {
+            val missingHeaderXSLTIri = "http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg"
+
+            val letterTEIRequest: HttpRequest = Get(baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
+                "?textProperty=" + URLEncoder.encode("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText", "UTF-8") +
+                "&mappingIri=" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI", "UTF-8") +
+                "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri.get, "UTF-8") +
+                "&teiHeaderXSLTIri=" + URLEncoder.encode(missingHeaderXSLTIri, "UTF-8")
+            )
+
+            val response: HttpResponse = singleAwaitingRequest(letterTEIRequest)
+            assert(response.status.intValue == 500)
+            val responseBodyStr: String = Await.result(response.entity.toStrict(2.seconds).map(_.data.decodeString("UTF-8")), 2.seconds)
+            assert(responseBodyStr.contains("Unable to get XSL transformation file"))
         }
     }
 }
