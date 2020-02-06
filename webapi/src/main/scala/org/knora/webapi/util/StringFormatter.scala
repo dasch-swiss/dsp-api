@@ -125,6 +125,10 @@ object StringFormatter {
     val CalendarJulian: String = "JULIAN"
 
     /**
+      * String representation of the name of the Islamic calendar.
+      */
+    val CalendarJulian: String = "ISLAMIC"
+    /**
       * String representation of day precision in a date.
       */
     val PrecisionDay: String = "DAY"

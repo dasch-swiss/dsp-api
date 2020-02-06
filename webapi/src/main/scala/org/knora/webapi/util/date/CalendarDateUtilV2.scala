@@ -34,7 +34,7 @@ object DateEraV2 {
     /**
       * Parses a calendar era.
       *
-      * @param eraStr a string representing the era.
+      * @param eraStr   a string representing the era.
       * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
       * @return a [[DateEraV2]] representing the era.
       */
@@ -71,7 +71,7 @@ object DatePrecisionV2 {
       * Parses the name of a date precision.
       *
       * @param precisionStr the string to be parsed.
-      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
+      * @param errorFun     a function that throws an exception. It will be called if the string cannot be parsed.
       * @return a [[DatePrecisionV2]] representing the date precision.
       */
     def parse(precisionStr: String, errorFun: => Nothing): DatePrecisionV2 = {
@@ -115,14 +115,15 @@ object CalendarNameV2 {
       * Parses the name of a calendar.
       *
       * @param calendarNameStr a string representing the name of the calendar.
-      * @param errorFun a function that throws an exception. It will be called if the string cannot
-      *                 be parsed.
+      * @param errorFun        a function that throws an exception. It will be called if the string cannot
+      *                        be parsed.
       * @return a [[CalendarNameV2]] representing the name of the calendar.
       */
     def parse(calendarNameStr: String, errorFun: => Nothing): CalendarNameV2 = {
         calendarNameStr match {
             case StringFormatter.CalendarGregorian => CalendarNameGregorian
             case StringFormatter.CalendarJulian => CalendarNameJulian
+            case StringFormatter.CalenderIslamic => CalendarNameIslamic
             case _ => errorFun
         }
     }
@@ -148,14 +149,20 @@ case object CalendarNameJulian extends CalendarNameGregorianOrJulian {
 }
 
 /**
+  * Represents the name of the Islamic calendar.
+  */
+case object CalendarNameIslamic extends CalendarNameV2 {
+    override def toString: String = StringFormatter.CalendarIslamic
+}
+
+/**
   * Represents a date as values that are suitable for constructing human-readable representations.
   *
   * @param calendarName the name of the calendar.
   * @param year         the date's year.
   * @param maybeMonth   the date's month, if given.
   * @param maybeDay     the date's day, if given.
-  * @param maybeEra     the date's era, if the calendar supports it. An era is required in Gregorian and
-  *                     Julian calendars.
+  * @param maybeEra     the date's era, if the calendar supports it. An era is required in Gregorian and Julian calendars. They can not be handled by Islamic calendars
   */
 case class CalendarDateV2(calendarName: CalendarNameV2, year: Int, maybeMonth: Option[Int], maybeDay: Option[Int], maybeEra: Option[DateEraV2]) {
     if (maybeMonth.isEmpty && maybeDay.isDefined) {
@@ -166,6 +173,11 @@ case class CalendarDateV2(calendarName: CalendarNameV2, year: Int, maybeMonth: O
         case _: CalendarNameGregorianOrJulian =>
             if (maybeEra.isEmpty) {
                 throw AssertionException(s"Era is required in calendar $calendarName")
+            }
+
+        case _: CalendarNameIslamic =>
+            if (!maybeEra.isEmpty) {
+                throw AssertionException(s"Era can not be handled in calendar $calendarName")
             }
 
         case _ => ()
@@ -232,6 +244,12 @@ case class CalendarDateV2(calendarName: CalendarNameV2, year: Int, maybeMonth: O
                 calendar.set(Calendar.SECOND, 0)
 
                 calendar
+
+            case islamicName: CalendarNameIslamic =>
+                val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
+                calendar.setCivil(true) //set the calendar to the civil/deterministic version
+                calendar.setLenient(false) //check for invalid dates
+            //TODO: it seems like the rest that is done for Gregorian/Julian is not necessary for Islamic Calendars. Need to check.
         }
     }
 
@@ -300,8 +318,8 @@ object CalendarDateV2 {
     /**
       * Converts a Julian Day Number to a [[CalendarDateV2]].
       *
-      * @param julianDay the Julian Day Number.
-      * @param precision the desired precision.
+      * @param julianDay    the Julian Day Number.
+      * @param precision    the desired precision.
       * @param calendarName the name of the calendar to be used.
       * @return a [[CalendarDateV2]] with the specified precision and calendar.
       */
@@ -309,7 +327,9 @@ object CalendarDateV2 {
         // Convert the Julian Day Number to a com.ibm.icu.util.Calendar.
         val (calendar: Calendar, maybeEra: Option[DateEraV2]) = calendarName match {
             // TODO: support calendars other than Gregorian and Julian.
-
+            case islamicName: CalendarNameIslamic =>
+                val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
+                calendar.set(Calendar.JULIAN_DAY, julianDay) //TODO check if this works as intended
             case gregorianOrJulianName: CalendarNameGregorianOrJulian =>
                 val calendar: GregorianCalendar = new GregorianCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH)
                 calendar.setGregorianChange(CalendarDateUtilV2.getGregorianCalendarChangeDate(gregorianOrJulianName))
@@ -366,7 +386,7 @@ object CalendarDateV2 {
       * Parses a string representing a single date, without the calendar. This method does does not check that the
       * date is valid in its calendar; to do that, call `toJulianDayRange` on it.
       *
-      * @param dateStr the string to be parsed.
+      * @param dateStr      the string to be parsed.
       * @param calendarName the name of the calendar used.
       * @return a [[CalendarDateV2]] representing the date.
       */
@@ -377,7 +397,7 @@ object CalendarDateV2 {
 
         val maybeEra: Option[DateEraV2] = dateStringSplitByEra.length match {
             case 1 =>
-                // No era given. In the Gregorian or Julian calendar, the era defaults to CE.
+                // No era given. In the Gregorian or Julian calendar, the era defaults to CE. For Islamic this case can be ignored as no eras can be handled
                 calendarName match {
                     case _: CalendarNameGregorianOrJulian => Some(DateEraCE)
                     case _ => None
@@ -437,7 +457,7 @@ object CalendarDateV2 {
   * calendar.
   *
   * @param startCalendarDate the start of the range.
-  * @param endCalendarDate the end of the range.
+  * @param endCalendarDate   the end of the range.
   */
 case class CalendarDateRangeV2(startCalendarDate: CalendarDateV2, endCalendarDate: CalendarDateV2) {
     if (startCalendarDate.calendarName != endCalendarDate.calendarName) {
@@ -542,6 +562,7 @@ object CalendarDateUtilV2 {
             case CalendarNameJulian => new Date(java.lang.Long.MAX_VALUE)
             case CalendarNameGregorian => new Date(java.lang.Long.MIN_VALUE)
             case _ => throw AssertionException(s"Invalid calendar: $calendarName")
+
         }
     }
 }
