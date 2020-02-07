@@ -70,7 +70,6 @@ var VALTYPE_FLOAT = "http://www.knora.org/ontology/knora-base#DecimalValue";
 var VALTYPE_DATE = "http://www.knora.org/ontology/knora-base#DateValue";
 var VALTYPE_PERIOD = 5;
 var VALTYPE_RESPTR = "http://www.knora.org/ontology/knora-base#LinkValue";
-var VALTYPE_TIME = "http://www.knora.org/ontology/knora-base#TimeValue";
 var VALTYPE_INTERVAL = "http://www.knora.org/ontology/knora-base#IntervalValue";
 var VALTYPE_GEOMETRY = "http://www.knora.org/ontology/knora-base#GeomValue";
 var VALTYPE_COLOR = "http://www.knora.org/ontology/knora-base#ColorValue";
@@ -81,6 +80,7 @@ var VALTYPE_RICHTEXT = "http://www.knora.org/ontology/knora-base#TextValue";
 var VALTYPE_GEONAME = 15;
 var VALTYPE_URI = "http://www.knora.org/ontology/knora-base#UriValue";
 var VALTYPE_BOOLEAN = "http://www.knora.org/ontology/knora-base#BooleanValue";
+var VALTYPE_TIME = "http://www.knora.org/ontology/knora-base#TimeValue";
 
 var RESOURCE_TYPE_REGION = "http://www.knora.org/ontology/knora-base#Region";
 

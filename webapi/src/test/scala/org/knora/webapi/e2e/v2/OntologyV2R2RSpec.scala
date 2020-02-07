@@ -250,7 +250,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(ontologyIri == "http://0.0.0.0:3333/ontology/00FF/foo/v2")
                 fooIri.set(ontologyIri)
                 assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
-                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2Complex.LastModificationDate).asInstanceOf[JsonLDString].value)
+
+                val lastModDate = metadata.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 fooLastModDate = lastModDate
             }
         }
@@ -263,10 +269,14 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id": "${fooIri.get}",
                    |  "rdfs:label": "$newLabel",
-                   |  "knora-api:lastModificationDate": "$fooLastModDate",
+                   |  "knora-api:lastModificationDate": {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$fooLastModDate"
+                   |  },
                    |  "@context": {
-                   |    "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |    "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
+                   |    "xsd" : "${OntologyConstants.Xsd.XsdPrefixExpansion}",
+                   |    "rdfs" : "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+                   |    "knora-api" : "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
                    |  }
                    |}
                 """.stripMargin
@@ -278,7 +288,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
                 assert(ontologyIri == fooIri.get)
                 assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(newLabel))
-                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2Complex.LastModificationDate).asInstanceOf[JsonLDString].value)
+
+                val lastModDate = metadata.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 assert(lastModDate.isAfter(fooLastModDate))
                 fooLastModDate = lastModDate
             }
@@ -299,7 +315,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |{
                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                   |  "@type" : "owl:Ontology",
-                  |  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
+                  |  "knora-api:lastModificationDate" : {
+                  |    "@type" : "xsd:dateTimeStamp",
+                  |    "@value" : "2017-12-19T15:23:42.166Z"
+                  |  },
                   |  "@graph" : [ {
                   |      "@id" : "anything:hasName",
                   |      "@type" : "owl:ObjectProperty",
@@ -369,7 +388,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "$AnythingOntologyIri",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:hasName",
                    |    "@type" : "owl:ObjectProperty",
@@ -419,7 +441,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "$AnythingOntologyIri",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:hasName",
                    |    "@type" : "owl:ObjectProperty",
@@ -469,7 +494,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:WildThing",
                    |    "@type" : "owl:Class",
@@ -534,7 +562,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:Nothing",
                    |    "@type" : "owl:Class",
@@ -588,7 +619,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "$AnythingOntologyIri",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:Nothing",
                    |    "@type" : "owl:Class",
@@ -635,7 +669,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "$AnythingOntologyIri",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:Nothing",
                    |    "@type" : "owl:Class",
@@ -682,7 +719,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:hasOtherNothing",
                    |    "@type" : "owl:ObjectProperty",
@@ -739,7 +779,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:Nothing",
                    |    "@type" : "owl:Class",
@@ -802,7 +845,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate" ,
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:Nothing",
                    |    "@type" : "owl:Class"
@@ -844,7 +890,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+
+                val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -856,7 +908,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:hasNothingness",
                    |    "@type" : "owl:ObjectProperty",
@@ -913,7 +968,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:Nothing",
                    |    "@type" : "owl:Class",
@@ -963,7 +1021,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:hasEmptiness",
                    |    "@type" : "owl:ObjectProperty",
@@ -1020,7 +1081,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:Nothing",
                    |    "@type" : "owl:Class",
@@ -1072,7 +1136,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+
+                val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1084,7 +1154,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$anythingLastModDate" ,
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$anythingLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:Nothing",
                    |    "@type" : "owl:Class"
@@ -1126,7 +1199,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+
+                val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1140,7 +1219,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.LastModificationDate, stringFormatter.xsdDateTimeStampToInstant)
+
+                val newAnythingLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1173,7 +1258,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(ontologyIri == "http://api.knora.org/ontology/shared/useless/v2")
                 uselessIri.set(ontologyIri)
                 assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
-                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2Complex.LastModificationDate).asInstanceOf[JsonLDString].value)
+
+                val lastModDate = metadata.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                )
+
                 uselessLastModDate = lastModDate
             }
 
@@ -1182,7 +1273,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |{
                    |  "@id" : "${uselessIri.get}",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "$uselessLastModDate",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$uselessLastModDate"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "useless:hasSharedName",
                    |    "@type" : "owl:ObjectProperty",

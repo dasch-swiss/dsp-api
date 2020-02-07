@@ -125,6 +125,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         "boolean-value" -> SharedTestDataADM.TestDing.booleanValueUuid,
         "uri-value" -> SharedTestDataADM.TestDing.uriValueUuid,
         "interval-value" -> SharedTestDataADM.TestDing.intervalValueUuid,
+        "time-value" -> SharedTestDataADM.TestDing.timeValueUuid,
         "color-value" -> SharedTestDataADM.TestDing.colorValueUuid,
         "geom-value" -> SharedTestDataADM.TestDing.geomValueUuid,
         "geoname-value" -> SharedTestDataADM.TestDing.geonameValueUuid,
@@ -309,6 +310,13 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         resourceIri = SharedTestDataADM.AThing.iri,
                         intervalStart = BigDecimal("1.2"),
                         intervalEnd = BigDecimal("3.4")
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("create-time-value-request"),
+                    text = SharedTestDataADM.createTimeValueRequest(
+                        resourceIri = SharedTestDataADM.AThing.iri,
+                        timeStamp = Instant.parse("2019-08-28T15:59:12.725007Z")
                     )
                 ),
                 SourceCodeFileContent(
@@ -513,6 +521,14 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                         valueIri = SharedTestDataADM.TestDing.intervalValueIri,
                         intervalStart = BigDecimal("5.6"),
                         intervalEnd = BigDecimal("7.8")
+                    )
+                ),
+                SourceCodeFileContent(
+                    filePath = SourceCodeFilePath.makeJsonPath("update-time-value-request"),
+                    text = SharedTestDataADM.updateTimeValueRequest(
+                        resourceIri = SharedTestDataADM.TestDing.iri,
+                        valueIri = SharedTestDataADM.TestDing.timeValueIri,
+                        timeStamp = Instant.parse("2019-12-16T09:33:22.082549Z")
                     )
                 ),
                 SourceCodeFileContent(

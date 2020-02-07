@@ -205,6 +205,12 @@
 
             }
 
+            case timeValue: TimeValueV1 => {
+
+                <@newValueIri> knora-base:valueHasTimeStamp "@timeValue.timeStamp"^^xsd:dateTime  .
+
+            }
+
             case geonameValue: GeonameValueV1 => {
 
                 <@newValueIri> knora-base:valueHasGeonameCode """@geonameValue.geonameCode""" .
