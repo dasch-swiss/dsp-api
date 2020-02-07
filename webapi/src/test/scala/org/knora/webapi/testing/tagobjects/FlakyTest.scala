@@ -17,16 +17,8 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.testing.tags;
+package org.knora.webapi.testing.tagobjects
 
-import org.scalatest.TagAnnotation;
+import org.scalatest.Tag
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-@TagAnnotation
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.TYPE})
-public @interface E2ETest {}
+object FlakyTest extends Tag("org.knora.webapi.testing.tags.FlakyTest")
