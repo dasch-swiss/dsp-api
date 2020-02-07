@@ -30,7 +30,6 @@ import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponseV2JsonProtocol._
 import org.knora.webapi.messages.store.sipimessages.RepresentationV1JsonProtocol._
 import org.knora.webapi.messages.store.sipimessages.SipiConstants.FileType
@@ -76,7 +75,7 @@ class SipiConnector extends Actor with ActorLogging {
         case getFileMetadataRequestV2: GetFileMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
         case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)
         case deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2 => try2Message(sender(), deleteTemporaryFileV2(deleteTemporaryFileRequestV2), log)
-        case SipiGetTextFileRequest(fileUrl, requestingUser) => try2Message(sender(), sipiGetTextFileRequestV2(fileUrl, requestingUser), log)
+        case getTextFileRequest: SipiGetTextFileRequest => try2Message(sender(), sipiGetTextFileRequestV2(getTextFileRequest), log)
         case IIIFServiceGetStatus => try2Message(sender(), iiifGetStatus(), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -315,19 +314,18 @@ class SipiConnector extends Actor with ActorLogging {
     /**
      * Asks Sipi for a text file used internally by Knora.
      *
-     * @param textFileUrl    the file's URL.
-     * @param requestingUser the user making the request.
+     * @param textFileRequest the request message.
      */
-    private def sipiGetTextFileRequestV2(textFileUrl: String, requestingUser: UserADM): Try[SipiGetTextFileResponse] = {
-        val request = new HttpGet(textFileUrl)
+    private def sipiGetTextFileRequestV2(textFileRequest: SipiGetTextFileRequest): Try[SipiGetTextFileResponse] = {
+        val httpRequest = new HttpGet(textFileRequest.fileUrl)
 
         val sipiResponseTry: Try[SipiGetTextFileResponse] = for {
-            responseStr <- doSipiRequest(request)
+            responseStr <- doSipiRequest(httpRequest)
         } yield SipiGetTextFileResponse(responseStr)
 
         sipiResponseTry.recover {
-            case badRequestException: BadRequestException => throw SipiException(s"Unable to get file $textFileUrl from Sipi: ${badRequestException.message}")
-            case sipiException: SipiException => throw SipiException(s"Unable to get file $textFileUrl from Sipi: ${sipiException.message}", sipiException.cause)
+            case badRequestException: BadRequestException => throw SipiException(s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${badRequestException.message}")
+            case sipiException: SipiException => throw SipiException(s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${sipiException.message}", sipiException.cause)
         }
     }
 
