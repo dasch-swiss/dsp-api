@@ -525,6 +525,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         OntologyConstants.KnoraApiV2Complex.TextValue -> OntologyConstants.KnoraBase.ValueHasString,
         OntologyConstants.KnoraApiV2Complex.IntValue -> OntologyConstants.KnoraBase.ValueHasInteger,
         OntologyConstants.KnoraApiV2Complex.DecimalValue -> OntologyConstants.KnoraBase.ValueHasDecimal,
+        OntologyConstants.KnoraApiV2Complex.TimeValue -> OntologyConstants.KnoraBase.ValueHasTimeStamp,
         OntologyConstants.KnoraApiV2Complex.BooleanValue -> OntologyConstants.KnoraBase.ValueHasBoolean,
         OntologyConstants.KnoraApiV2Complex.DateValue -> OntologyConstants.KnoraBase.ValueHasStartJDN,
         OntologyConstants.KnoraApiV2Complex.ColorValue -> OntologyConstants.KnoraBase.ValueHasColor,
@@ -700,7 +701,6 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         } else {
             Seq.empty[StatementPattern]
         }
-
 
         TransformedFilterPattern(
             Some(CompareExpression(valueObjectLiteralVar, comparisonOperator, literal)), // compares the provided literal to the value object's literal value
@@ -915,6 +915,16 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
                                         literalValueExpression = compareExpression.rightArg,
                                         xsdType = Set(OntologyConstants.Xsd.Decimal, OntologyConstants.Xsd.Integer), // an integer literal is also valid
                                         valueHasProperty = OntologyConstants.KnoraBase.ValueHasDecimal
+                                    )
+
+                                case OntologyConstants.Xsd.DateTimeStamp =>
+
+                                    handleLiteralQueryVar(
+                                        queryVar = queryVar,
+                                        comparisonOperator = compareExpression.operator,
+                                        literalValueExpression = compareExpression.rightArg,
+                                        xsdType = Set(OntologyConstants.Xsd.DateTimeStamp),
+                                        valueHasProperty = OntologyConstants.KnoraBase.ValueHasTimeStamp
                                     )
 
                                 case OntologyConstants.Xsd.Boolean =>

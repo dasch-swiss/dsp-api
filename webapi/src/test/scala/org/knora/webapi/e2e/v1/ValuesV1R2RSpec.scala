@@ -50,6 +50,7 @@ class ValuesV1R2RSpec extends R2RSpec {
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     private val integerValueIri = new MutableTestIri
+    private val timeValueIri = new MutableTestIri
     private val textValueIri = new MutableTestIri
     private val linkValueIri = new MutableTestIri
     private val textValueWithLangIri = new MutableTestIri
@@ -108,6 +109,41 @@ class ValuesV1R2RSpec extends R2RSpec {
             }
         }
 
+        "add a time value to a resource" in {
+            val params =
+                """
+                  |{
+                  |    "res_id": "http://rdfh.ch/0001/a-thing",
+                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasTimeStamp",
+                  |    "time_value": "2019-08-28T14:40:17.215927Z"
+                  |}
+                """.stripMargin
+
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+                val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+                timeValueIri.set(valueIri)
+            }
+        }
+
+        "change a time value" in {
+            val params =
+                """
+                  |{
+                  |    "res_id": "http://rdfh.ch/0001/a-thing",
+                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasTimeStamp",
+                  |    "time_value": "2019-08-28T14:45:37.756142Z"
+                  |}
+                """.stripMargin
+
+            Put(s"/v1/values/${URLEncoder.encode(timeValueIri.get, "UTF-8")}", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+                val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+                timeValueIri.set(valueIri)
+            }
+        }
 
         "get a link value" in {
             Get(s"/v1/links/${URLEncoder.encode("http://rdfh.ch/0001/contained-thing-1", "UTF-8")}/${URLEncoder.encode("http://www.knora.org/ontology/0001/anything#isPartOfOtherThing", "UTF-8")}/${URLEncoder.encode("http://rdfh.ch/0001/containing-thing", "UTF-8")}") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
