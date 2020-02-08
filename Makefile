@@ -104,6 +104,10 @@ publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publi
 ## Docker-Compose targets
 #################################
 
+.PHONY: config
+config: env-file ## print the docker-compose config
+	docker-compose -f docker/knora.docker-compose.yml config
+
 .PHONY: print-env-file
 print-env-file: env-file ## prints the env file used by knora-stack
 	@cat .env
@@ -196,10 +200,11 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 
 .PHONY: test-unit
 test-unit: stack-without-api init-db-test-unit ## runs the unit tests (equivalent to 'sbt webapi/testOnly -- -l org.knora.webapi.testing.tags.E2ETest').
+	@sleep 5
 	docker run 	--rm \
-				-v /tmp:/tmp \
-				-v $(PWD):/src \
-				-v $(HOME)/.ivy2:/root/.ivy2 \
+				-v /tmp:/tmp:delegated \
+				-v $(PWD):/src:delegated \
+				-v $(HOME)/.ivy2:/root/.ivy2:delegated \
 				--name=api \
 				-e KNORA_WEBAPI_TRIPLESTORE_HOST=db \
 				-e KNORA_WEBAPI_SIPI_EXTERNAL_HOST=sipi \
@@ -333,12 +338,12 @@ init-db-test-minimal-free: ## initializes the knora-test repository with minimal
 init-db-test-unit-free: ## initializes the knora-test-unit repository (for GraphDB-Free)
 	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-unit
 
-clean: ## clean build artifacts
+clean: stack-down ## clean build artifacts
 	@rm -rf .docker
 	@rm -rf .env
 	@sbt clean
 
-clean-docker: ## cleans the docker installation
+clean-docker: stack-down ## cleans the docker installation
 	docker system prune -af
 
 .PHONY: info
