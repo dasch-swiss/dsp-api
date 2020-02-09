@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.store.iiif.MockSipiConnector
+import org.knora.webapi.testing.tagobjects.Flaky
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
 import org.knora.webapi.util.{MutableTestIri, PermissionUtilADM, SmartIri, StringFormatter}
@@ -3425,7 +3426,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not update a URI value without changing it" in {
+        "not update a URI value without changing it" taggedAs(Flaky) in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
             val valueHasUri = "https://en.wikipedia.org"

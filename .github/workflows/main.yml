@@ -137,7 +137,7 @@ jobs:
         run: make test-it-for-ci
 
   api-flaky-tests:
-    name: API Integration Tests
+    name: API Flaky Tests
     needs: compile
     runs-on: ubuntu-latest
     steps:
