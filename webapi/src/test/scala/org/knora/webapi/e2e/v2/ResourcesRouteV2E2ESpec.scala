@@ -33,6 +33,7 @@ import org.knora.webapi.e2e.InstanceChecker
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.testing.tagobjects.Flaky
 import org.knora.webapi.testing.tags.E2ETest
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
@@ -369,7 +370,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             compareJSONLDForResourceHistoryResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
-        "return each of the versions of a resource listed in its version history" in {
+        "return each of the versions of a resource listed in its version history" taggedAs(Flaky) in {
             val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
             val historyRequest = Get(s"$baseApiUrl/v2/resources/history/$resourceIri")
             val historyResponse: HttpResponse = singleAwaitingRequest(historyRequest)

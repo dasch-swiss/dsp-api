@@ -76,7 +76,7 @@ jobs:
       - name: Print env file
         run: make print-env-file
       - name: Run API unit tests
-        run: make test-unit-with-coverage
+        run: make test-unit-for-ci
 
   api-e2e-tests:
     name: API E2E Tests
@@ -105,7 +105,7 @@ jobs:
       - name: print env file
         run: make print-env-file
       - name: run API E2E tests
-        run: make test-e2e-with-coverage
+        run: make test-e2e-for-ci
 
   api-integration-tests:
     name: API Integration Tests
@@ -134,7 +134,36 @@ jobs:
       - name: print env file
         run: make print-env-file
       - name: run API integration tests
-        run: make test-it-with-coverage
+        run: make test-it-for-ci
+
+  api-flaky-tests:
+    name: API Integration Tests
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: cache maven artifacts
+        uses: actions/cache@v1
+        with:
+          path: ~/.ivy2
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-${{ env.cache-name }}-
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+      - name: prepare needed graphdb-se files
+        run: |
+          echo ${{ secrets.license_encryption_key }} | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $GITHUB_WORKSPACE/ci/secrets.tar $GITHUB_WORKSPACE/ci/secrets.tar.gpg
+          tar -C ci -xvf ci/secrets.tar
+          mkdir -p $GITHUB_WORKSPACE/graphdb
+          cp $GITHUB_WORKSPACE/ci/graphdb.license $GITHUB_WORKSPACE/graphdb/graphdb.license
+          cp $GITHUB_WORKSPACE/webapi/scripts/KnoraRules.pie $GITHUB_WORKSPACE/graphdb
+      - name: print env file
+        run: make print-env-file
+      - name: run API integration tests
+        run: make test-flaky-for-ci
 
   upgrade-unit-tests:
     name: Upgrade Unit Tests

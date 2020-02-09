@@ -21,4 +21,4 @@ package org.knora.webapi.testing.tagobjects
 
 import org.scalatest.Tag
 
-object FlakyTest extends Tag("org.knora.webapi.testing.tags.FlakyTest")
+object Flaky extends Tag("org.knora.webapi.testing.tags.Flaky")
