@@ -24,7 +24,7 @@ docs-build: ## build the docs
 
 .PHONY: build-all-scala
 build-all-scala: ## build all scala projects
-	sbt webapi/universal:stage knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage upgrade/universal:stage knora-assets/universal:stage webapi_test/universal:stage webapi_it/universal:stage
+	@sbt webapi/universal:stage knora-graphdb-se/universal:stage knora-graphdb-free/universal:stage knora-sipi/universal:stage salsah1/universal:stage upgrade/universal:stage knora-assets/universal:stage webapi_test/universal:stage webapi_it/universal:stage
 
 ## knora-api
 .PHONY: build-knora-api-image
@@ -144,11 +144,17 @@ endif
 	@echo KNORA_SALSAH1_IMAGE=$(KNORA_SALSAH1_IMAGE) >> .env
 	@echo DOCKERHOST=$(DOCKERHOST) >> .env
 	@echo KNORA_WEBAPI_DB_CONNECTIONS=$(KNORA_WEBAPI_DB_CONNECTIONS) >> .env
+	@echo KNORA_GRAPHDB_REPOSITORY_NAME=$(KNORA_GRAPHDB_REPOSITORY_NAME) >> .env
 	@echo LOCAL_HOME=$(CURRENT_DIR) >> .env
 
 ## knora stack
 .PHONY: stack-up
 stack-up: build-all-images env-file ## starts the knora-stack: graphdb, sipi, redis, api, salsah1.
+	docker-compose -f docker/knora.docker-compose.yml up -d
+
+.PHONY: stack-up-ci
+stack-up-ci: KNORA_GRAPHDB_REPOSITORY_NAME := knora-test-unit
+stack-up-ci: build-all-images env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: graphdb, sipi, redis, api, salsah1.
 	docker-compose -f docker/knora.docker-compose.yml up -d
 
 .PHONY: stack-restart
@@ -330,41 +336,46 @@ normal-tests: stack-without-api ## runs the normal tests (equivalent to 'sbt web
 				daschswiss/scala-sbt sbt webapi/test
 
 .PHONY: test-js-lib-integration
-test-js-lib-integration: clean-local-tmp stack-up ## run knora-api-js-lib tests against the knora-stack
-	@sleep 5
+test-js-lib-integration: clean-local-tmp stack-without-api ## run knora-api-js-lib tests against the knora-stack
+	@sleep 10
 	@$(MAKE) -f $(THIS_FILE) init-db-test
-	@sleep 5
+	@sleep 10
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
 	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
 	@$(MAKE) -f $(THIS_FILE) stack-logs-sipi-no-follow
-	@$(MAKE) -f $(THIS_FILE) stack-health
 	@git clone -b wip/add-integration-test-2 --single-branch --depth 1 https://github.com/dasch-swiss/knora-api-js-lib.git $(CURRENT_DIR)/.tmp/js-lib
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib npm-install
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib test
 
 .PHONY: init-db-test
 init-db-test: ## initializes the knora-test repository
-	$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test
+	@echo $@
+	@$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test
 
 .PHONY: init-db-test-minimal
 init-db-test-minimal: ## initializes the knora-test repository with minimal data
-	$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-minimal
+	@echo $@
+	@$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-minimal
 
 .PHONY: init-db-test-unit
 init-db-test-unit: ## initializes the knora-test-unit repository
-	$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-unit
+	@echo $@
+	@$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-unit
 
 .PHONY: init-db-test-free
 init-db-test-free: ## initializes the knora-test repository (for GraphDB-Free)
-	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-free
+	@echo $@
+	@$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-free
 
 .PHONY: init-db-test-minimal-free
 init-db-test-minimal-free: ## initializes the knora-test repository with minimal data (for GraphDB-Free)
-	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-minimal
+	@echo $@
+	@$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-minimal
 
 .PHONY: init-db-test-unit-free
 init-db-test-unit-free: ## initializes the knora-test-unit repository (for GraphDB-Free)
-	$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-unit
+	@echo $@
+	@$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-unit
 
 #################################
 # Github CI targets
