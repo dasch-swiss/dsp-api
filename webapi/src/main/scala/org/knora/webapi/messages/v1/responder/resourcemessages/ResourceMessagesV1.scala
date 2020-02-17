@@ -91,6 +91,7 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
                                  geom_value: Option[String] = None,
                                  hlist_value: Option[IRI] = None,
                                  interval_value: Option[Seq[BigDecimal]] = None,
+                                 time_value: Option[String] = None,
                                  geoname_value: Option[String] = None,
                                  comment: Option[String] = None) {
 
@@ -108,6 +109,7 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
         geom_value,
         hlist_value,
         interval_value,
+        time_value,
         geoname_value).flatten.size > 1) {
         throw BadRequestException(s"Different value types were submitted for the same property")
     }
@@ -129,6 +131,7 @@ case class CreateResourceValueV1(richtext_value: Option[CreateRichtextV1] = None
         else if (geom_value.nonEmpty) OntologyConstants.KnoraBase.GeomValue
         else if (hlist_value.nonEmpty) OntologyConstants.KnoraBase.ListValue
         else if (interval_value.nonEmpty) OntologyConstants.KnoraBase.IntervalValue
+        else if (time_value.nonEmpty) OntologyConstants.KnoraBase.TimeValue
         else if (geoname_value.nonEmpty) OntologyConstants.KnoraBase.GeonameValue
         else throw BadRequestException("No value specified")
     }
@@ -460,17 +463,17 @@ object ResourceContextCodeV1 extends Enumeration {
     /**
       * Indicates that a resource has no parts and is not part of another resource.
       */
-    val RESOURCE_CONTEXT_NONE = Value(0)
+    val RESOURCE_CONTEXT_NONE: Value = Value(0)
 
     /**
       * Indicates that a resource is part of another resource.
       */
-    val RESOURCE_CONTEXT_IS_PARTOF = Value(1)
+    val RESOURCE_CONTEXT_IS_PARTOF: Value = Value(1)
 
     /**
       * Indicates that a resource has parts.
       */
-    val RESOURCE_CONTEXT_IS_COMPOUND = Value(2)
+    val RESOURCE_CONTEXT_IS_COMPOUND: Value = Value(2)
 
     object ResourceContextCodeV1Protocol extends DefaultJsonProtocol {
 
@@ -769,6 +772,7 @@ object SalsahGuiConversions {
         OntologyConstants.SalsahGui.Checkbox -> "checkbox",
         OntologyConstants.SalsahGui.Richtext -> "richtext",
         OntologyConstants.SalsahGui.Interval -> "interval",
+        OntologyConstants.SalsahGui.TimeStamp -> "timestamp",
         OntologyConstants.SalsahGui.Geonames -> "geoname",
         OntologyConstants.SalsahGui.Fileupload -> "fileupload"
     )
@@ -821,9 +825,9 @@ case class ResourceCreateValueResponseV1(value: ResourceCreateValueObjectRespons
   */
 object LiteralValueType extends Enumeration {
     type ValueType = Value
-    val StringValue = Value(0, "string")
-    val IntegerValue = Value(1, "integer")
-    val DecimalValue = Value(2, "decimal")
+    val StringValue: Value = Value(0, "string")
+    val IntegerValue: Value = Value(1, "integer")
+    val DecimalValue: Value = Value(2, "decimal")
 
     object LiteralValueTypeV1Protocol extends DefaultJsonProtocol {
 
@@ -935,7 +939,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         /**
           * Not implemented.
           */
-        def read(jsonVal: JsValue) = ???
+        def read(jsonVal: JsValue): PropsV1 = ???
 
         /**
           * Converts a [[PropsV1]] into a [[JsValue]].
@@ -981,7 +985,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         /**
           * Not implemented.
           */
-        def read(jsonVal: JsValue) = ???
+        def read(jsonVal: JsValue): PropsGetV1 = ???
 
         /**
           * Converts a [[PropsGetV1]] into a [[JsValue]].
@@ -1038,7 +1042,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
           * @param jsonVal the [[JsValue]] to be converted.
           * @return a [[PropsGetForRegionV1]].
           */
-        def read(jsonVal: JsValue) = {
+        def read(jsonVal: JsValue): PropsGetForRegionV1 = {
 
             val jsonObj = jsonVal.asJsObject
 
@@ -1105,7 +1109,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         /**
           * Not implemented.
           */
-        def read(jsonVal: JsValue) = ???
+        def read(jsonVal: JsValue): ResourceInfoV1 = ???
 
         /**
           * Converts a [[ResourceInfoV1]] into [[JsValue]] for formatting as JSON.
@@ -1176,7 +1180,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         }
     }
 
-    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat14(CreateResourceValueV1)
+    implicit val createResourceValueV1Format: RootJsonFormat[CreateResourceValueV1] = jsonFormat15(CreateResourceValueV1)
     implicit val createResourceApiRequestV1Format: RootJsonFormat[CreateResourceApiRequestV1] = jsonFormat5(CreateResourceApiRequestV1)
     implicit val ChangeResourceLabelApiRequestV1Format: RootJsonFormat[ChangeResourceLabelApiRequestV1] = jsonFormat1(ChangeResourceLabelApiRequestV1)
     implicit val resourceInfoResponseV1Format: RootJsonFormat[ResourceInfoResponseV1] = jsonFormat2(ResourceInfoResponseV1)

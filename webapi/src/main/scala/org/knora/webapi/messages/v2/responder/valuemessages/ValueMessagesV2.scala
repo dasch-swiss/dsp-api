@@ -843,7 +843,7 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
     def valueHasString: String
 
     /**
-      * A comment on this `ValueContentV2`, if any.
+      * a comment on this [[ValueContentV2]], if any.
       */
     def comment: Option[String]
 
@@ -970,6 +970,9 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                 case OntologyConstants.KnoraApiV2Complex.IntervalValue =>
                     IntervalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
+                case OntologyConstants.KnoraApiV2Complex.TimeValue =>
+                    TimeValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
+
                 case OntologyConstants.KnoraApiV2Complex.LinkValue =>
                     LinkValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
@@ -1006,7 +1009,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
   * @param valueHasStartPrecision the precision of the start date.
   * @param valueHasEndPrecision   the precision of the end date.
   * @param valueHasCalendar       the calendar of the date.
-  * @param comment                a comment on this `DateValueContentV2`, if any.
+  * @param comment                a comment on this [[DateValueContentV2]], if any.
   */
 case class DateValueContentV2(ontologySchema: OntologySchema,
                               valueHasStartJDN: Int,
@@ -1247,7 +1250,7 @@ case class CreateStandoffTagV2InTriplestore(standoffNode: StandoffTagV2, standof
   * @param standoff            the standoff markup attached to the text value, if any.
   * @param mappingIri          the IRI of the [[MappingXMLtoStandoff]] used by default with the text value, if any.
   * @param mapping             the [[MappingXMLtoStandoff]] used by default with the text value, if any.
-  * @param comment             a comment on this `TextValueContentV2`, if any.
+  * @param comment             a comment on this [[TextValueContentV2]], if any.
   */
 case class TextValueContentV2(ontologySchema: OntologySchema,
                               maybeValueHasString: Option[String],
@@ -1579,7 +1582,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
   * Represents a Knora integer value.
   *
   * @param valueHasInteger the integer value.
-  * @param comment         a comment on this `IntegerValueContentV2`, if any.
+  * @param comment         a comment on this [[IntegerValueContentV2]], if any.
   */
 case class IntegerValueContentV2(ontologySchema: OntologySchema,
                                  valueHasInteger: Int,
@@ -1667,7 +1670,7 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
   * Represents a Knora decimal value.
   *
   * @param valueHasDecimal the decimal value.
-  * @param comment         a comment on this `DecimalValueContentV2`, if any.
+  * @param comment         a comment on this [[DecimalValueContentV2]], if any.
   */
 case class DecimalValueContentV2(ontologySchema: OntologySchema,
                                  valueHasDecimal: BigDecimal,
@@ -1763,7 +1766,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
   * Represents a Boolean value.
   *
   * @param valueHasBoolean the Boolean value.
-  * @param comment         a comment on this `BooleanValueContentV2`, if any.
+  * @param comment         a comment on this [[BooleanValueContentV2]], if any.
   */
 case class BooleanValueContentV2(ontologySchema: OntologySchema,
                                  valueHasBoolean: Boolean,
@@ -1848,7 +1851,7 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
   * Represents a Knora geometry value (a 2D-shape).
   *
   * @param valueHasGeometry JSON representing a 2D geometrical shape.
-  * @param comment          a comment on this `GeomValueContentV2`, if any.
+  * @param comment          a comment on this [[GeomValueContentV2]], if any.
   */
 case class GeomValueContentV2(ontologySchema: OntologySchema,
                               valueHasGeometry: String,
@@ -1944,7 +1947,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
   *
   * @param valueHasIntervalStart the start of the time interval.
   * @param valueHasIntervalEnd   the end of the time interval.
-  * @param comment               a comment on this `IntervalValueContentV2`, if any.
+  * @param comment               a comment on this [[IntervalValueContentV2]], if any.
   */
 case class IntervalValueContentV2(ontologySchema: OntologySchema,
                                   valueHasIntervalStart: BigDecimal,
@@ -2038,15 +2041,15 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val intervalValueHasStart: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
-            OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
-            OntologyConstants.Xsd.Decimal.toSmartIri,
-            stringFormatter.validateBigDecimal
+            key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart,
+            expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
+            validationFun = stringFormatter.validateBigDecimal
         )
 
         val intervalValueHasEnd: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
-            OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
-            OntologyConstants.Xsd.Decimal.toSmartIri,
-            stringFormatter.validateBigDecimal
+            key = OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd,
+            expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
+            validationFun = stringFormatter.validateBigDecimal
         )
 
         IntervalValueContentV2(
@@ -2059,11 +2062,115 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
 }
 
 /**
+  * Represents a Knora timestamp value.
+  *
+  * @param valueHasTimeStamp the timestamp.
+  * @param comment           a comment on this [[TimeValueContentV2]], if any.
+  */
+case class TimeValueContentV2(ontologySchema: OntologySchema,
+                              valueHasTimeStamp: Instant,
+                              comment: Option[String] = None) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.TimeValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
+
+    override lazy val valueHasString: String = s"$valueHasTimeStamp"
+
+    override def toOntologySchema(targetSchema: OntologySchema): TimeValueContentV2 = copy(ontologySchema = targetSchema)
+
+    override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDValue = {
+        targetSchema match {
+            case ApiV2Simple =>
+                JsonLDUtil.datatypeValueToJsonLDObject(
+                    value = valueHasTimeStamp.toString,
+                    datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                )
+
+            case ApiV2Complex =>
+                JsonLDObject(
+                    Map(
+                        OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp ->
+                            JsonLDUtil.datatypeValueToJsonLDObject(
+                                value = valueHasTimeStamp.toString,
+                                datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                            )
+                    ))
+        }
+    }
+
+    override def unescape: ValueContentV2 = {
+        copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+    }
+
+    override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = {
+        that match {
+            case thatTimeValueContent: TimeValueContentV2 =>
+                valueHasTimeStamp == thatTimeValueContent.valueHasTimeStamp
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
+        }
+    }
+
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatTimeValueContent: TimeValueContentV2 =>
+                valueHasTimeStamp == thatTimeValueContent.valueHasTimeStamp &&
+                    comment == thatTimeValueContent.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
+}
+
+/**
+  * Constructs [[TimeValueContentV2]] objects based on JSON-LD input.
+  */
+object TimeValueContentV2 extends ValueContentReaderV2[TimeValueContentV2] {
+    /**
+      * Converts a JSON-LD object to a [[TimeValueContentV2]].
+      *
+      * @param jsonLDObject     the JSON-LD object.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return an [[IntervalValueContentV2]].
+      */
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  requestingUser: UserADM,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
+                                  settings: SettingsImpl,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TimeValueContentV2] = {
+        Future(fromJsonLDObjectSync(jsonLDObject))
+    }
+
+    private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): TimeValueContentV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val valueHasTimeStamp: Instant = jsonLDObject.requireDatatypeValueInObject(
+            key = OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp,
+            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+            validationFun = stringFormatter.xsdDateTimeStampToInstant
+        )
+
+        TimeValueContentV2(
+            ontologySchema = ApiV2Complex,
+            valueHasTimeStamp = valueHasTimeStamp,
+            comment = getComment(jsonLDObject)
+        )
+    }
+}
+
+/**
   * Represents a value pointing to a Knora hierarchical list node.
   *
   * @param valueHasListNode the IRI of the hierarchical list node pointed to.
   * @param listNodeLabel    the label of the hierarchical list node pointed to.
-  * @param comment          a comment on this `HierarchicalListValueContentV2`, if any.
+  * @param comment          a comment on this [[HierarchicalListValueContentV2]], if any.
   */
 case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
                                           valueHasListNode: IRI,
@@ -2171,7 +2278,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
   * Represents a Knora color value.
   *
   * @param valueHasColor a hexadecimal string containing the RGB color value
-  * @param comment       a comment on this `ColorValueContentV2`, if any.
+  * @param comment       a comment on this [[ColorValueContentV2]], if any.
   */
 case class ColorValueContentV2(ontologySchema: OntologySchema,
                                valueHasColor: String,
@@ -2265,7 +2372,7 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
   * Represents a Knora URI value.
   *
   * @param valueHasUri the URI value.
-  * @param comment     a comment on this `UriValueContentV2`, if any.
+  * @param comment     a comment on this [[UriValueContentV2]], if any.
   */
 case class UriValueContentV2(ontologySchema: OntologySchema,
                              valueHasUri: String,
@@ -2365,7 +2472,7 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
   * Represents a Knora geoname value.
   *
   * @param valueHasGeonameCode the geoname code.
-  * @param comment             a comment on this `GeonameValueContentV2`, if any.
+  * @param comment             a comment on this [[GeonameValueContentV2]], if any.
   */
 case class GeonameValueContentV2(ontologySchema: OntologySchema,
                                  valueHasGeonameCode: String,
@@ -2730,7 +2837,7 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
   * Represents text file metadata.
   *
   * @param fileValue the basic metadata about the file value.
-  * @param comment   a comment on this `TextFileValueContentV2`, if any.
+  * @param comment   a comment on this [[TextFileValueContentV2]], if any.
   */
 case class TextFileValueContentV2(ontologySchema: OntologySchema,
                                   fileValue: FileValueV2,

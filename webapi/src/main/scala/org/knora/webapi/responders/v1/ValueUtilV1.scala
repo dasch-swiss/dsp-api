@@ -65,6 +65,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
             case OntologyConstants.KnoraBase.GeonameValue => makeGeonameValue(valueProps, responderManager, userProfile)
             case OntologyConstants.KnoraBase.ListValue => makeListValue(valueProps, responderManager, userProfile)
             case OntologyConstants.KnoraBase.IntervalValue => makeIntervalValue(valueProps, responderManager, userProfile)
+            case OntologyConstants.KnoraBase.TimeValue => makeTimeValue(valueProps, responderManager, userProfile)
             case OntologyConstants.KnoraBase.StillImageFileValue => makeStillImageValue(valueProps, projectShortcode, responderManager, userProfile)
             case OntologyConstants.KnoraBase.TextFileValue => makeTextFileValue(valueProps, projectShortcode, responderManager, userProfile)
             case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
@@ -305,19 +306,19 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                     calendar = Some(Map(LiteralValueType.StringValue -> julianDayCountValue.calendar))
                 )
 
-            case textValue: TextValueV1 => basicObjectResponse
+            case _: TextValueV1 => basicObjectResponse
 
-            case linkValue: LinkV1 => basicObjectResponse
+            case _: LinkV1 => basicObjectResponse
 
-            case stillImageFileValue: StillImageFileValueV1 => basicObjectResponse // TODO: implement this.
+            case _: StillImageFileValueV1 => basicObjectResponse // TODO: implement this.
 
-            case textFileValue: TextFileValueV1 => basicObjectResponse
+            case _: TextFileValueV1 => basicObjectResponse
 
-            case hlistValue: HierarchicalListValueV1 => basicObjectResponse
+            case _: HierarchicalListValueV1 => basicObjectResponse
 
-            case colorValue: ColorValueV1 => basicObjectResponse
+            case _: ColorValueV1 => basicObjectResponse
 
-            case geomValue: GeomValueV1 => basicObjectResponse
+            case _: GeomValueV1 => basicObjectResponse
 
             case intervalValue: IntervalValueV1 =>
                 basicObjectResponse.copy(
@@ -325,11 +326,13 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                     timeval2 = Some(Map(LiteralValueType.DecimalValue -> intervalValue.timeval2))
                 )
 
-            case geonameValue: GeonameValueV1 => basicObjectResponse
+            case _: TimeValueV1 => basicObjectResponse
 
-            case booleanValue: BooleanValueV1 => basicObjectResponse
+            case _: GeonameValueV1 => basicObjectResponse
 
-            case uriValue: UriValueV1 => basicObjectResponse
+            case _: BooleanValueV1 => basicObjectResponse
+
+            case _: UriValueV1 => basicObjectResponse
 
             case other => throw new Exception(s"Resource creation response format not implemented for value type ${other.valueTypeIri}") // TODO: implement remaining types.
         }
@@ -521,7 +524,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * Converts a [[ValueProps]] into an [[IntervalValueV1]].
       *
       * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-      * @return a [[IntervalValueV1]].
+      * @return an [[IntervalValueV1]].
       */
     private def makeIntervalValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
         val predicates = valueProps.literalData
@@ -529,6 +532,21 @@ class ValueUtilV1(private val settings: SettingsImpl) {
         Future(IntervalValueV1(
             timeval1 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalStart).literals.head),
             timeval2 = BigDecimal(predicates(OntologyConstants.KnoraBase.ValueHasIntervalEnd).literals.head)
+        ))
+    }
+
+    /**
+     * Converts a [[ValueProps]] into a [[TimeValueV1]].
+     *
+     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+     * @return a [[TimeValueV1]].
+     */
+    private def makeTimeValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+        val predicates = valueProps.literalData
+        val timeStampStr = predicates(OntologyConstants.KnoraBase.ValueHasTimeStamp).literals.head
+
+        Future(TimeValueV1(
+            timeStamp = stringFormatter.xsdDateTimeStampToInstant(timeStampStr, throw InconsistentTriplestoreDataException(s"Can't parse timestamp: $timeStampStr"))
         ))
     }
 

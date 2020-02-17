@@ -75,14 +75,15 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val pathToBEOLLetterMapping = "_test_data/test_route/texts/beol/testLetter/beolMapping.xml"
     private val pathToBEOLBulkXML = "_test_data/test_route/texts/beol/testLetter/bulk.xml"
     private val letterIri = new MutableTestIri
+    private val gravsearchTemplateIri = new MutableTestIri
 
     /**
-      * Adds the IRI of a XSL transformation to the given mapping.
-      *
-      * @param mapping the mapping to be updated.
-      * @param xsltIri the Iri of the XSLT to be added.
-      * @return the updated mapping.
-      */
+     * Adds the IRI of a XSL transformation to the given mapping.
+     *
+     * @param mapping the mapping to be updated.
+     * @param xsltIri the Iri of the XSLT to be added.
+     * @return the updated mapping.
+     */
     private def addXSLTIriToMapping(mapping: String, xsltIri: String): String = {
 
         val mappingXML: Elem = XML.loadString(mapping)
@@ -114,12 +115,12 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     }
 
     /**
-      * Given the id originally provided by the client, gets the generated IRI from a bulk import response.
-      *
-      * @param bulkResponse the response from the bulk import route.
-      * @param clientID     the client id to look for.
-      * @return the Knora IRI of the resource.
-      */
+     * Given the id originally provided by the client, gets the generated IRI from a bulk import response.
+     *
+     * @param bulkResponse the response from the bulk import route.
+     * @param clientID     the client id to look for.
+     * @return the Knora IRI of the resource.
+     */
     private def getResourceIriFromBulkResponse(bulkResponse: JsObject, clientID: String): String = {
         val resIriOption: Option[JsValue] = bulkResponse.fields.get("createdResources") match {
             case Some(createdResources: JsArray) =>
@@ -290,12 +291,12 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // the file first to a place which is shared with sipi
             val dest = FileUtil.createTempFile(settings, Some("jpg"))
             new FileOutputStream(dest)
-              .getChannel
-              .transferFrom(
-                  new FileInputStream(fileToUpload).getChannel,
-                  0,
-                  Long.MaxValue
-              )
+                .getChannel
+                .transferFrom(
+                    new FileInputStream(fileToUpload).getChannel,
+                    0,
+                    Long.MaxValue
+                )
 
             val absoluteFilePath = dest.getAbsolutePath
 
@@ -580,12 +581,12 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val gravsearchTemplateJSON: JsObject = getResponseJson(gravsearchTemplateRequest)
 
-            val gravsearchTemplateIri: IRI = gravsearchTemplateJSON.fields.get("res_id") match {
+            gravsearchTemplateIri.set(gravsearchTemplateJSON.fields.get("res_id") match {
 
                 case Some(JsString(gravsearchIri)) => gravsearchIri
 
                 case _ => throw InvalidApiJsonException("expected IRI for Gravsearch template")
-            }
+            })
 
             // create an XSL transformation
             val headerParams = JsObject(
@@ -629,7 +630,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val letterTEIRequest: HttpRequest = Get(baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
                 "?textProperty=" + URLEncoder.encode("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText", "UTF-8") +
                 "&mappingIri=" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI", "UTF-8") +
-                "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri, "UTF-8") +
+                "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri.get, "UTF-8") +
                 "&teiHeaderXSLTIri=" + URLEncoder.encode(headerXSLTIri, "UTF-8")
             )
 
@@ -640,47 +641,47 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val xmlExpected =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                  |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
-                  |<teiHeader>
-                  |   <fileDesc>
-                  |      <titleStmt>
-                  |         <title>Testletter</title>
-                  |      </titleStmt>
-                  |      <publicationStmt>
-                  |         <p>This is the TEI/XML representation of the resource identified by the Iri
-                  |                        ${letterIri.get}.
-                  |                    </p>
-                  |      </publicationStmt>
-                  |      <sourceDesc>
-                  |         <p>Representation of the resource's text as TEI/XML</p>
-                  |      </sourceDesc>
-                  |   </fileDesc>
-                  |   <profileDesc>
-                  |      <correspDesc ref="${letterIri.get}">
-                  |         <correspAction type="sent">
-                  |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer,
-                  |                Johann Jacob</persName>
-                  |            <date when="1703-06-10"/>
-                  |         </correspAction>
-                  |         <correspAction type="received">
-                  |            <persName ref="http://d-nb.info/gnd/119112450">Hermann,
-                  |                Jacob</persName>
-                  |         </correspAction>
-                  |      </correspDesc>
-                  |   </profileDesc>
-                  |</teiHeader>
-                  |
-                  |<text><body>
-                  |                <p>[...] Viro Clarissimo.</p>
-                  |                <p>Dn. Jacobo Hermanno S. S. M. C. </p>
-                  |                <p>et Ph. M.</p>
-                  |                <p>S. P. D. </p>
-                  |                <p>J. J. Sch.</p>
-                  |                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>
-                  |                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>
-                  |                </p>
-                  |            </body></text>
-                  |</TEI>
+                   |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
+                   |<teiHeader>
+                   |   <fileDesc>
+                   |      <titleStmt>
+                   |         <title>Testletter</title>
+                   |      </titleStmt>
+                   |      <publicationStmt>
+                   |         <p>This is the TEI/XML representation of the resource identified by the Iri
+                   |                        ${letterIri.get}.
+                   |                    </p>
+                   |      </publicationStmt>
+                   |      <sourceDesc>
+                   |         <p>Representation of the resource's text as TEI/XML</p>
+                   |      </sourceDesc>
+                   |   </fileDesc>
+                   |   <profileDesc>
+                   |      <correspDesc ref="${letterIri.get}">
+                   |         <correspAction type="sent">
+                   |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer,
+                   |                Johann Jacob</persName>
+                   |            <date when="1703-06-10"/>
+                   |         </correspAction>
+                   |         <correspAction type="received">
+                   |            <persName ref="http://d-nb.info/gnd/119112450">Hermann,
+                   |                Jacob</persName>
+                   |         </correspAction>
+                   |      </correspDesc>
+                   |   </profileDesc>
+                   |</teiHeader>
+                   |
+                   |<text><body>
+                   |                <p>[...] Viro Clarissimo.</p>
+                   |                <p>Dn. Jacobo Hermanno S. S. M. C. </p>
+                   |                <p>et Ph. M.</p>
+                   |                <p>S. P. D. </p>
+                   |                <p>J. J. Sch.</p>
+                   |                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>
+                   |                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>
+                   |                </p>
+                   |            </body></text>
+                   |</TEI>
                 """.stripMargin
 
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(letterResponseBodyXML)).withTest(Input.fromString(xmlExpected)).build()
@@ -688,7 +689,23 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             xmlDiff.hasDifferences should be(false)
 
         }
+
+        "provide a helpful error message if an XSLT file is not found" in {
+            val missingHeaderXSLTIri = "http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg"
+
+            val letterTEIRequest: HttpRequest = Get(baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
+                "?textProperty=" + URLEncoder.encode("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText", "UTF-8") +
+                "&mappingIri=" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI", "UTF-8") +
+                "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri.get, "UTF-8") +
+                "&teiHeaderXSLTIri=" + URLEncoder.encode(missingHeaderXSLTIri, "UTF-8")
+            )
+
+            val response: HttpResponse = singleAwaitingRequest(letterTEIRequest)
+            assert(response.status.intValue == 500)
+            val responseBodyStr: String = Await.result(response.entity.toStrict(2.seconds).map(_.data.decodeString("UTF-8")), 2.seconds)
+            assert(responseBodyStr.contains("Unable to get file"))
+            assert(responseBodyStr.contains("as requested by org.knora.webapi.responders.v2.StandoffResponderV2"))
+            assert(responseBodyStr.contains("Sipi responded with HTTP status code 404"))
+        }
     }
 }
-
-

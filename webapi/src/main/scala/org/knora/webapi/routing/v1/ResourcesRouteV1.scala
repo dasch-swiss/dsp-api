@@ -196,6 +196,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                     if (timeVals.length != 2) throw BadRequestException("parameters for interval_value invalid")
                                     Future(CreateValueV1WithComment(IntervalValueV1(timeVals.head, timeVals(1)), givenValue.comment))
 
+                                case OntologyConstants.KnoraBase.TimeValue =>
+                                    val timeValStr: String = givenValue.time_value.get
+                                    val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(timeValStr, throw BadRequestException(s"Invalid timestamp: $timeValStr"))
+                                    Future(CreateValueV1WithComment(TimeValueV1(timeStamp), givenValue.comment))
+
                                 case OntologyConstants.KnoraBase.GeonameValue =>
                                     Future(CreateValueV1WithComment(GeonameValueV1(givenValue.geoname_value.get), givenValue.comment))
 
@@ -883,6 +888,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                             case Failure(_) =>
                                 throw BadRequestException(s"Invalid interval value in element '${node.label}: '$elementValue'")
                         }
+
+                    case "time_value" =>
+                        val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(elementValue, throw BadRequestException(s"Invalid timestamp in element '${node.label}': $elementValue"))
+                        CreateResourceValueV1(time_value = Some(timeStamp.toString))
 
                     case "geoname_value" =>
                         CreateResourceValueV1(geoname_value = Some(elementValue))

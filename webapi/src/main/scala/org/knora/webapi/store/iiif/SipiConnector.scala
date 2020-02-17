@@ -30,7 +30,6 @@ import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponseV2JsonProtocol._
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -44,8 +43,8 @@ import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 /**
-  * Makes requests to Sipi.
-  */
+ * Makes requests to Sipi.
+ */
 class SipiConnector extends Actor with ActorLogging {
 
     implicit val system: ActorSystem = context.system
@@ -71,7 +70,7 @@ class SipiConnector extends Actor with ActorLogging {
         case getFileMetadataRequest: GetFileMetadataRequest => try2Message(sender(), getFileMetadata(getFileMetadataRequest), log)
         case moveTemporaryFileToPermanentStorageRequest: MoveTemporaryFileToPermanentStorageRequest => try2Message(sender(), moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequest), log)
         case deleteTemporaryFileRequest: DeleteTemporaryFileRequest => try2Message(sender(), deleteTemporaryFile(deleteTemporaryFileRequest), log)
-        case SipiGetTextFileRequest(fileUrl, requestingUser) => try2Message(sender(), sipiGetXsltTransformationRequest(fileUrl, requestingUser), log)
+        case getTextFileRequest: SipiGetTextFileRequest => try2Message(sender(), sipiGetTextFileRequest(getTextFileRequest), log)
         case IIIFServiceGetStatus => try2Message(sender(), iiifGetStatus(), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -158,22 +157,26 @@ class SipiConnector extends Actor with ActorLogging {
     }
 
     /**
-      * Asks Sipi for a file.
-      * @param xsltFileUrl the file's URL.
-      * @param requestingUser the user making the request.
-      */
-    private def sipiGetXsltTransformationRequest(xsltFileUrl: String, requestingUser: UserADM): Try[SipiGetTextFileResponse] = {
-        // ask Sipi to return the XSL transformation
-        val request = new HttpGet(xsltFileUrl)
+     * Asks Sipi for a text file used internally by Knora.
+     *
+     * @param textFileRequest the request message.
+     */
+    private def sipiGetTextFileRequest(textFileRequest: SipiGetTextFileRequest): Try[SipiGetTextFileResponse] = {
+        val httpRequest = new HttpGet(textFileRequest.fileUrl)
 
-        for {
-            responseStr <- doSipiRequest(request)
+        val sipiResponseTry: Try[SipiGetTextFileResponse] = for {
+            responseStr <- doSipiRequest(httpRequest)
         } yield SipiGetTextFileResponse(responseStr)
+
+        sipiResponseTry.recover {
+            case badRequestException: BadRequestException => throw SipiException(s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${badRequestException.message}")
+            case sipiException: SipiException => throw SipiException(s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${sipiException.message}", sipiException.cause)
+        }
     }
 
     /**
-      * Tries to access the IIIF Service.
-      */
+     * Tries to access the IIIF Service.
+     */
     private def iiifGetStatus(): Try[IIIFServiceStatusResponse] = {
         val request = new HttpGet(settings.internalSipiBaseUrl + "/server/test.html")
 
@@ -186,11 +189,11 @@ class SipiConnector extends Actor with ActorLogging {
     }
 
     /**
-      * Makes an HTTP request to Sipi and returns the response.
-      *
-      * @param request the HTTP request.
-      * @return Sipi's response.
-      */
+     * Makes an HTTP request to Sipi and returns the response.
+     *
+     * @param request the HTTP request.
+     * @return Sipi's response.
+     */
     private def doSipiRequest(request: HttpRequest): Try[String] = {
         val httpContext: HttpClientContext = HttpClientContext.create
 

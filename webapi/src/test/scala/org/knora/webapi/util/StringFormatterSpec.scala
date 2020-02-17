@@ -1158,6 +1158,11 @@ class StringFormatterSpec extends CoreSpec() {
                 stringFormatter.validateAndEscapeUsername("a_2.3-4", throw AssertionException("not valid"))
             }
 
+            // not allow @
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateUsername("donald.duck@example.com", throw AssertionException("not valid"))
+            }
+
             // Underscore and dot can't be at the end or start of a username
             an[AssertionException] should be thrownBy {
                 stringFormatter.validateAndEscapeUsername("_username", throw AssertionException("not valid"))
@@ -1181,6 +1186,15 @@ class StringFormatterSpec extends CoreSpec() {
             }
 
 
+        }
+
+        "validate email" in {
+
+            stringFormatter.validateEmailAndThrow("donald.duck@example.com", throw AssertionException("not valid")) should be ("donald.duck@example.com")
+
+            an[AssertionException] should be thrownBy {
+                stringFormatter.validateEmailAndThrow("donald.duck", throw AssertionException("not valid"))
+            }
         }
 
         "convert a UUID to Base-64 encoding and back again" in {

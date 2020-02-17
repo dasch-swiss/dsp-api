@@ -77,6 +77,7 @@ object GravsearchTypeInspectionUtil {
         OntologyConstants.Xsd.Integer,
         OntologyConstants.Xsd.Decimal,
         OntologyConstants.Xsd.Uri,
+        OntologyConstants.Xsd.DateTimeStamp,
         OntologyConstants.KnoraApiV2Simple.Resource,
         OntologyConstants.KnoraApiV2Simple.Date,
         OntologyConstants.KnoraApiV2Simple.Geom,
@@ -99,6 +100,7 @@ object GravsearchTypeInspectionUtil {
         OntologyConstants.KnoraApiV2Complex.GeonameValue,
         OntologyConstants.KnoraApiV2Complex.ColorValue,
         OntologyConstants.KnoraApiV2Complex.IntervalValue,
+        OntologyConstants.KnoraApiV2Complex.TimeValue,
         OntologyConstants.KnoraApiV2Complex.FileValue,
         OntologyConstants.KnoraApiV2Complex.KnoraProject
     )

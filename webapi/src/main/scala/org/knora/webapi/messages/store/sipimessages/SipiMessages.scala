@@ -21,6 +21,7 @@ package org.knora.webapi.messages.store.sipimessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.SipiException
+import org.knora.webapi.messages.RequestWithSender
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.StoreRequest
 import spray.json._
@@ -102,7 +103,8 @@ case class DeleteTemporaryFileRequest(internalFilename: String,
   * @param requestingUser the user making the request.
   */
 case class SipiGetTextFileRequest(fileUrl: String,
-                                  requestingUser: UserADM) extends SipiRequest
+                                  requestingUser: UserADM,
+                                  senderName: String) extends SipiRequest with RequestWithSender
 
 /**
   * Represents a response for [[SipiGetTextFileRequest]].

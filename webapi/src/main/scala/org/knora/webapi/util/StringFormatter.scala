@@ -36,8 +36,6 @@ import akka.util.Timeout
 import com.google.gwt.safehtml.shared.UriUtils._
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
@@ -765,9 +763,6 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
         """(?!00)[0-9]{1,2}(""" + // month 2
         PrecisionSeparator +
         """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?)?$""").r // day 2
-
-    // The expected format of a datetime.
-    private val dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss"
 
     // Characters that are escaped in strings that will be used in SPARQL.
     private val SparqlEscapeInput = Array(
@@ -1660,25 +1655,6 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
             BigDecimal(s)
         } catch {
             case _: Exception => errorFun // value could not be converted to a decimal
-        }
-    }
-
-    /**
-      * Checks that a string represents a valid datetime.
-      *
-      * @param s        the string to be checked.
-      * @param errorFun a function that throws an exception. It will be called if the string does not represent
-      *                 a valid datetime.
-      * @return the same string.
-      */
-    def validateDateTime(s: String, errorFun: => Nothing): String = {
-        // check if a string corresponds to the expected format `dateTimeFormat`
-
-        try {
-            val formatter = DateTimeFormat.forPattern(dateTimeFormat)
-            DateTime.parse(s, formatter).toString(formatter)
-        } catch {
-            case _: Exception => errorFun // value could not be converted to a valid DateTime using the specified format
         }
     }
 
@@ -2682,12 +2658,27 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl] = None, ma
     }
 
     /**
-      * Check that the string represents a valid username.
+     * Check that the string represents a valid username.
+     *
+     * @param value    the string to be checked.
+     * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
+     *                 username.
+     * @return the same string.
+     */
+    def validateUsername(value: String, errorFun: => Nothing): String = {
+        UsernameRegex.findFirstIn(value) match {
+            case Some(username) => username
+            case None => errorFun
+        }
+    }
+
+    /**
+      * Check that the string represents a valid username and escape any special characters.
       *
       * @param value    the string to be checked.
       * @param errorFun a function that throws an exception. It will be called if the string does not represent a valid
       *                 username.
-      * @return the same string.
+      * @return the same string with escaped special characters.
       */
     def validateAndEscapeUsername(value: String, errorFun: => Nothing): String = {
         UsernameRegex.findFirstIn(value) match {

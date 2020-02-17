@@ -204,13 +204,23 @@ export module basicMessageComponents {
         /**
          * Begin of the interval in seconds
          */
-        timeval1: integer;
+        timeval1: number;
 
         /**
          * End ofg the interval in seconds
          */
-        timeval2: integer;
+        timeval2: number;
 
+    }
+    
+    /**
+     * Repesents a timestamp.
+     */
+    interface time {
+        /**
+         * An xsd:dateTimeStamp.
+         */
+        timestamp: string;
     }
 
     /**
@@ -369,7 +379,17 @@ export module basicMessageComponents {
         /**
          * An interval value consisting of two time values
          */
-        interval_value: Array<integer>;
+        interval_value: Array<number>;
+
+    }
+
+
+    export interface timeValue extends valueBase {
+
+        /**
+         * A timestamp
+         */
+        time_value: time;
 
     }
 

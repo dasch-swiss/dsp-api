@@ -19,6 +19,7 @@
 
 package org.knora.webapi.responders.v1
 
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
@@ -46,9 +47,6 @@ object ValuesResponderV1Spec {
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
-
-    private val incunabulaProjectIri = INCUNABULA_PROJECT_IRI
-    private val anythingProjectIri = ANYTHING_PROJECT_IRI
 
     private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
     private val miscResourceIri = "http://rdfh.ch/0803/miscResource"
@@ -87,6 +85,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     private val secondValueIriWithResourceRef = new MutableTestIri
     private val standoffLinkValueIri = new MutableTestIri
     private val currentSeqnumValueIri = new MutableTestIri
+    private val currentTimeValueIri = new MutableTestIri
     private val currentPubdateValueIri = new MutableTestIri
     private val linkObjLinkValueIri = new MutableTestIri
     private val currentColorValueIri = new MutableTestIri
@@ -1229,6 +1228,42 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             expectMsgPF(timeout) {
                 case ChangeValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _) =>
                     newValue should ===(IntegerValueV1(seqnum))
+            }
+        }
+
+        "add a new timestamp value" in {
+
+            val timeStamp = Instant.parse("2019-08-28T15:13:10.968318Z")
+
+            responderManager ! CreateValueRequestV1(
+                resourceIri = "http://rdfh.ch/0001/a-thing",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasTimeStamp",
+                value = TimeValueV1(timeStamp),
+                userProfile = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case CreateValueResponseV1(newValue: TimeValueV1, _, newValueIri: IRI, _) =>
+                    currentTimeValueIri.set(newValueIri)
+                    newValue should ===(TimeValueV1(timeStamp))
+            }
+        }
+
+        "change an existing timestamp value" in {
+
+            val timeStamp = Instant.parse("2019-08-28T15:55:22.213394Z")
+
+            responderManager ! ChangeValueRequestV1(
+                value = TimeValueV1(timeStamp),
+                userProfile = anythingUser,
+                valueIri = currentTimeValueIri.get,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case ChangeValueResponseV1(newValue: TimeValueV1, _, newValueIri: IRI, _) =>
+                    newValue should ===(TimeValueV1(timeStamp))
             }
         }
 
