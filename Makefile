@@ -35,7 +35,7 @@ build-knora-api-image: build-all-scala ## build and publish knora-api docker ima
 publish-knora-api-image: build-knora-api-image ## publish knora-api image to Dockerhub
 	docker push $(KNORA_API_IMAGE)
 
-# knora-graphdb-se
+## knora-graphdb-se
 .PHONY: build-knora-graphdb-se-image
 build-knora-graphdb-se-image: build-all-scala ## build and publish knora-graphdb-se docker image locally
 	@mkdir -p .docker
