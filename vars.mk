@@ -67,6 +67,8 @@ endif
 
 ifeq ($(GRAPHDB_HEAP_SIZE),)
   KNORA_GDB_HEAP_SIZE := $(_GRAPHDB_HEAP_SIZE)
+else
+  KNORA_GDB_HEAP_SIZE := $(GRAPHDB_HEAP_SIZE)
 endif
 
 UNAME := $(shell uname)

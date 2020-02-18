@@ -378,17 +378,8 @@ init-db-test-unit-free: ## initializes the knora-test-unit repository (for Graph
 	@$(MAKE) -C webapi/scripts graphdb-free-docker-init-knora-test-unit
 
 #################################
-# Github CI targets
+# Other
 #################################
-
-# use only on Github CI to decrypt the license, which is then backed into the Docker image
-.PHONY: ci-prepare-graphdb
-ci-prepare-graphdb:
-	@echo $@
-	@echo "CURRENT_DIR: $(CURRENT_DIR)"
-	echo $(LICENSE_ENCRYPTION_KEY) | gpg --quiet --batch --yes --decrypt --passphrase-fd 0 --output $(CURRENT_DIR)/ci/secrets.tar $(CURRENT_DIR)/ci/secrets.tar.gpg
-	tar -C $(CURRENT_DIR)/ci -xvf ci/secrets.tar
-	stat $(CURRENT_DIR)/ci/graphdb.license
 
 .PHONY: clean-local-tmp
 clean-local-tmp:
