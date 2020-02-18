@@ -690,7 +690,9 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
         }
 
-        "provide a helpful error message if an XSLT file is not found" in {
+        "provide a helpful error message if an XSLT file is not found" ignore {
+            // TODO: re-enables this with the preceding test, when we can upload non-image files to Sipi (PR #1206).
+
             val missingHeaderXSLTIri = "http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg"
 
             val letterTEIRequest: HttpRequest = Get(baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
