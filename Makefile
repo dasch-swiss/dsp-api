@@ -337,12 +337,14 @@ normal-tests: stack-without-api ## runs the normal tests (equivalent to 'sbt web
 
 .PHONY: test-js-lib-integration
 test-js-lib-integration: clean-local-tmp stack-without-api ## run knora-api-js-lib tests against the knora-stack
-	@sleep 10
+	$(MAKE) -f $(THIS_FILE) print-env-file
+	$(MAKE) -f $(THIS_FILE) stack-config
+	@sleep 15
 	@$(MAKE) -f $(THIS_FILE) init-db-test
-	@sleep 10
+	@sleep 15
 	@$(MAKE) -f $(THIS_FILE) stack-restart-api
+	sleep 15
 	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
-	@$(MAKE) -f $(THIS_FILE) stack-logs-sipi-no-follow
 	@git clone -b wip/add-integration-test-2 --single-branch --depth 1 https://github.com/dasch-swiss/knora-api-js-lib.git $(CURRENT_DIR)/.tmp/js-lib
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib npm-install
 	$(MAKE) -C $(CURRENT_DIR)/.tmp/js-lib test
