@@ -47,10 +47,7 @@ $(function() {
 			arkdiv = $('<div>');
 			propedit.append(arkdiv);
 			SALSAH.ApiGet('resourcesv2', resource.resdata.res_id, {resinfo: true, reqtype: 'context'}, function(datav2) {
-				if (datav2['knora-api:arkUrl'] && datav2['knora-api:arkUrl']['@value']) {
-					var now = new Date();
-					var nowstr = now.getFullYear().toString() + (now.getMonth() + 1).toString() + now.getDate().toString() + 'T' + now.getHours().toString() + now.getMinutes().toString() + now.getSeconds().toString() + "000Z";
-
+				if (datav2['knora-api:versionArkUrl'] && datav2['knora-api:versionArkUrl']['@value']) {
 					arkdiv.append(
 								$('<em>')
 									.addClass('propedit label')
@@ -62,10 +59,10 @@ $(function() {
 								$(this).next('.clipit').select();
 								document.execCommand('copy');
 							})
-							.dragndrop('makeDraggable', 'HANDLE_ID', {handle_id: datav2['knora-api:arkUrl']['@value'] + '.' + nowstr}))
+							.dragndrop('makeDraggable', 'HANDLE_ID', {handle_id: datav2['knora-api:versionArkUrl']['@value']}))
 							.append($('<input>')
 								.attr({type:'text', readOnly: true, size: '64'})
-								.addClass('clipit').val(datav2['knora-api:arkUrl']['@value'] + '.' + nowstr)));
+								.addClass('clipit').val(datav2['knora-api:versionArkUrl']['@value'])));
 				}
 			});
 

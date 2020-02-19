@@ -53,22 +53,22 @@ class StoreManager extends Actor with ActorLogging {
     /**
       * The Knora settings.
       */
-    protected val settings = Settings(system)
+    protected val settings: SettingsImpl = Settings(system)
 
     /**
       * Starts the Triplestore Manager Actor
       */
-    protected lazy val triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TriplestoreManagerActorName)
+    protected lazy val triplestoreManager: ActorRef = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TriplestoreManagerActorName)
 
     /**
       * Starts the IIIF Manager Actor
       */
-    protected lazy val iiifManager = makeActor(Props(new IIIFManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), IIIFManagerActorName)
+    protected lazy val iiifManager: ActorRef = makeActor(Props(new IIIFManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), IIIFManagerActorName)
 
     /**
       * Instantiates the Redis Manager
       */
-    protected lazy val redisManager = makeActor(Props(new CacheServiceManager).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), RedisManagerActorName)
+    protected lazy val redisManager: ActorRef = makeActor(Props(new CacheServiceManager).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), RedisManagerActorName)
 
     def receive = LoggingReceive {
         case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage

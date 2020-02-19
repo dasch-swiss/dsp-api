@@ -11,6 +11,7 @@ KNORA_SIPI_REPO := knora-sipi
 KNORA_ASSETS_REPO := knora-assets
 KNORA_UPGRADE_REPO := knora-upgrade
 KNORA_SALSAH1_REPO := knora-salsah1
+KNORA_WEBAPI_DB_CONNECTIONS := 2
 
 ifeq ($(BUILD_TAG),)
   BUILD_TAG := $(shell git describe --tag --dirty --abbrev=7)

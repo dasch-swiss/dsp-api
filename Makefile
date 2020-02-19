@@ -136,6 +136,7 @@ endif
 	@echo KNORA_SIPI_IMAGE=$(KNORA_SIPI_IMAGE) >> .env
 	@echo KNORA_API_IMAGE=$(KNORA_API_IMAGE) >> .env
 	@echo KNORA_SALSAH1_IMAGE=$(KNORA_SALSAH1_IMAGE) >> .env
+	@echo KNORA_WEBAPI_DB_CONNECTIONS=$(KNORA_WEBAPI_DB_CONNECTIONS) >> .env
 
 ## knora stack
 .PHONY: stack-up

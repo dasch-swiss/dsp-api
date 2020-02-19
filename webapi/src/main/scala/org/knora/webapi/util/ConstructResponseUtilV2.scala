@@ -1028,6 +1028,13 @@ object ConstructResponseUtilV2 {
                     comment = valueCommentOption
                 ))
 
+            case OntologyConstants.KnoraBase.TimeValue =>
+                FastFuture.successful(TimeValueContentV2(
+                    ontologySchema = InternalSchema,
+                    valueHasTimeStamp = valueObject.requireDateTimeObject(OntologyConstants.KnoraBase.ValueHasTimeStamp.toSmartIri),
+                    comment = valueCommentOption
+                ))
+
             case OntologyConstants.KnoraBase.LinkValue =>
                 makeLinkValueContentV2(
                     valueObject = valueObject,
