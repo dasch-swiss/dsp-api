@@ -177,6 +177,11 @@ object StringFormatter {
     val ClientCollectionEntityNameStart: String = "#" + ClientCollectionTypeKeyword
 
     /**
+      * The IRI of the singleton instance of `ForbiddenResource`.
+      */
+    val ForbiddenResourceIri: IRI = s"http://$IriDomain/0000/forbiddenResource"
+
+    /**
       * A container for an XML import namespace and its prefix label.
       *
       * @param namespace   the namespace.

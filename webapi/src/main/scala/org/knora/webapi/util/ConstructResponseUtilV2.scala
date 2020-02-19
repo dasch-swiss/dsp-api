@@ -327,6 +327,10 @@ object ConstructResponseUtilV2 {
             case (_: IRI, statements: RdfWithUserPermission) => statements.maybeUserPermission.nonEmpty
         }
 
+        // Collect the IRIs of the resources that were filtered out because the user does not have permission
+        // to see them.
+        val resourceIrisNotVisible: Set[IRI] = resourceStatements.keySet -- resourceStatementsVisible.keySet
+
         val flatResourcesWithValues: RdfResources = resourceStatementsVisible.map {
             case (resourceIri: IRI, resourceRdfWithUserPermission: RdfWithUserPermission) =>
                 val assertions: ConstructPredicateObjects = resourceRdfWithUserPermission.assertions
@@ -554,7 +558,7 @@ object ConstructResponseUtilV2 {
             val transformedValuePropertyAssertions: RdfPropertyValues = resource.valuePropertyAssertions.map {
                 case (propIri, values) =>
                     val transformedValues = values.map {
-                        value =>
+                        value: ValueRdfData =>
                             if (value.valueObjectClass.toString == OntologyConstants.KnoraBase.LinkValue) {
                                 val dependentResourceIri: IRI = value.requireIriObject(OntologyConstants.Rdf.Object.toSmartIri)
 
@@ -831,6 +835,7 @@ object ConstructResponseUtilV2 {
       * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
       * @param queryStandoff             if `true`, make separate queries to get the standoff for text values.
       * @param versionDate               if defined, represents the requested time in the the resources' version history.
+      * @param forbiddenResource  the ForbiddenResource.
       * @param responderManager          the Knora responder manager.
       * @param targetSchema              the schema of the response.
       * @param settings                  the application's settings.
@@ -843,6 +848,7 @@ object ConstructResponseUtilV2 {
                                        mappings: Map[IRI, MappingAndXSLTransformation],
                                        queryStandoff: Boolean,
                                        versionDate: Option[Instant],
+                                       forbiddenResource: ReadResourceV2,
                                        responderManager: ActorRef,
                                        targetSchema: ApiV2Schema,
                                        settings: SettingsImpl,
@@ -874,6 +880,7 @@ object ConstructResponseUtilV2 {
                         mappings = mappings,
                         queryStandoff = queryStandoff,
                         versionDate = versionDate,
+                        forbiddenResource = forbiddenResource,
                         responderManager = responderManager,
                         requestingUser = requestingUser,
                         targetSchema = targetSchema,
@@ -895,6 +902,7 @@ object ConstructResponseUtilV2 {
       * @param mappings         the mappings needed for standoff conversions and XSL transformations.
       * @param queryStandoff    if `true`, make separate queries to get the standoff for text values.
       * @param versionDate      if defined, represents the requested time in the the resources' version history.
+      * @param forbiddenResource  the ForbiddenResource.
       * @param responderManager the Knora responder manager.
       * @param targetSchema     the schema of the response.
       * @param settings         the application's settings.
@@ -906,6 +914,7 @@ object ConstructResponseUtilV2 {
                                                      mappings: Map[IRI, MappingAndXSLTransformation],
                                                      queryStandoff: Boolean,
                                                      versionDate: Option[Instant] = None,
+                                                     forbiddenResource: ReadResourceV2,
                                                      responderManager: ActorRef,
                                                      targetSchema: ApiV2Schema,
                                                      settings: SettingsImpl,
@@ -1036,6 +1045,7 @@ object ConstructResponseUtilV2 {
                     mappings = mappings,
                     queryStandoff = queryStandoff,
                     versionDate = versionDate,
+                    forbiddenResource = forbiddenResource,
                     responderManager = responderManager,
                     requestingUser = requestingUser,
                     targetSchema = targetSchema,
@@ -1066,6 +1076,7 @@ object ConstructResponseUtilV2 {
       * @param mappings                 the mappings needed for standoff conversions and XSL transformations.
       * @param queryStandoff            if `true`, make separate queries to get the standoff for text values.
       * @param versionDate              if defined, represents the requested time in the the resources' version history.
+      * @param forbiddenResource  the ForbiddenResource.
       * @param responderManager         the Knora responder manager.
       * @param targetSchema             the schema of the response.
       * @param settings                 the application's settings.
@@ -1077,6 +1088,7 @@ object ConstructResponseUtilV2 {
                                         mappings: Map[IRI, MappingAndXSLTransformation],
                                         queryStandoff: Boolean,
                                         versionDate: Option[Instant],
+                                        forbiddenResource: ReadResourceV2,
                                         responderManager: ActorRef,
                                         targetSchema: ApiV2Schema,
                                         settings: SettingsImpl,
@@ -1124,6 +1136,7 @@ object ConstructResponseUtilV2 {
                                 valueObject = valObj,
                                 mappings = mappings,
                                 queryStandoff = queryStandoff,
+                                forbiddenResource = forbiddenResource,
                                 responderManager = responderManager,
                                 requestingUser = requestingUser,
                                 targetSchema = targetSchema,
@@ -1215,6 +1228,7 @@ object ConstructResponseUtilV2 {
       * @param mappings         the mappings needed for standoff conversions and XSL transformations.
       * @param queryStandoff    if `true`, make separate queries to get the standoff for text values.
       * @param versionDate      if defined, represents the requested time in the the resources' version history.
+      * @param forbiddenResource  the ForbiddenResource.
       * @param responderManager the Knora responder manager.
       * @param targetSchema     the schema of response.
       * @param settings         the application's settings.
@@ -1226,6 +1240,7 @@ object ConstructResponseUtilV2 {
                                    mappings: Map[IRI, MappingAndXSLTransformation],
                                    queryStandoff: Boolean,
                                    versionDate: Option[Instant],
+                                   forbiddenResource: ReadResourceV2,
                                    responderManager: ActorRef,
                                    targetSchema: ApiV2Schema,
                                    settings: SettingsImpl,
@@ -1237,6 +1252,7 @@ object ConstructResponseUtilV2 {
             mappings = mappings,
             queryStandoff = queryStandoff,
             versionDate = versionDate,
+            forbiddenResource = forbiddenResource,
             responderManager = responderManager,
             requestingUser = requestingUser,
             targetSchema = targetSchema,
@@ -1251,7 +1267,7 @@ object ConstructResponseUtilV2 {
       * @param orderByResourceIri the order in which the resources should be returned.
       * @param mappings           the mappings to convert standoff to XML, if any.
       * @param queryStandoff      if `true`, make separate queries to get the standoff for text values.
-      * @param forbiddenResource  the ForbiddenResource, if any.
+      * @param forbiddenResource  the ForbiddenResource.
       * @param responderManager   the Knora responder manager.
       * @param targetSchema       the schema of response.
       * @param settings           the application's settings.
@@ -1262,13 +1278,11 @@ object ConstructResponseUtilV2 {
                              orderByResourceIri: Seq[IRI],
                              mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation],
                              queryStandoff: Boolean,
-                             forbiddenResource: Option[ReadResourceV2],
+                             forbiddenResource: ReadResourceV2,
                              responderManager: ActorRef,
                              targetSchema: ApiV2Schema,
                              settings: SettingsImpl,
                              requestingUser: UserADM)(implicit stringFormatter: StringFormatter, timeout: Timeout, executionContext: ExecutionContext): Future[Vector[ReadResourceV2]] = {
-
-        if (orderByResourceIri.toSet != searchResults.keySet && forbiddenResource.isEmpty) throw AssertionException(s"Not all resources are visible, but forbiddenResource is None")
 
         // iterate over orderByResourceIris and construct the response in the correct order
         val readResourceFutures: Vector[Future[ReadResourceV2]] = orderByResourceIri.map {
@@ -1286,6 +1300,7 @@ object ConstructResponseUtilV2 {
                             mappings = mappings,
                             queryStandoff = queryStandoff,
                             versionDate = None,
+                            forbiddenResource = forbiddenResource,
                             responderManager = responderManager,
                             targetSchema = targetSchema,
                             settings = settings,
@@ -1294,7 +1309,7 @@ object ConstructResponseUtilV2 {
 
                     case None =>
                         // include the forbidden resource instead of skipping (the amount of results should be constant -> limit)
-                        Future(forbiddenResource.getOrElse(throw AssertionException(s"Not all resources are visible, but forbiddenResource is None")))
+                        Future(forbiddenResource)
 
                 }
         }.toVector

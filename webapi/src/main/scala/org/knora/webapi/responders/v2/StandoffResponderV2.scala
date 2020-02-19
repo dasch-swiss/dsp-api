@@ -108,12 +108,15 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 throw NotFoundException(s"Resource <${getStandoffRequestV2.resourceIri}> was not found (maybe you do not have permission to see it, or it is marked as deleted)")
             }
 
+            forbiddenResource: ReadResourceV2 <- forbiddenResourceFuture
+
             readResourceV2: ReadResourceV2 <- ConstructResponseUtilV2.createFullResourceResponse(
                 resourceIri = getStandoffRequestV2.resourceIri,
                 resourceRdfData = queryResultsSeparated(getStandoffRequestV2.resourceIri),
                 mappings = Map.empty,
                 queryStandoff = false,
                 versionDate = None,
+                forbiddenResource = forbiddenResource,
                 responderManager = responderManager,
                 targetSchema = getStandoffRequestV2.targetSchema,
                 settings = settings,

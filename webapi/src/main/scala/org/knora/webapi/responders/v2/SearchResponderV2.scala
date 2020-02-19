@@ -41,14 +41,6 @@ import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
 import scala.concurrent.Future
 
-/**
-  * Constants used in [[SearchResponderV2]].
-  */
-object SearchResponderV2Constants {
-
-    val forbiddenResourceIri: IRI = s"http://${StringFormatter.IriDomain}/0000/forbiddenResource"
-}
-
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
     // A Gravsearch type inspection runner.
@@ -66,24 +58,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser) => searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, targetSchema, requestingUser)
         case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 => searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
-    }
-
-    /**
-      * Gets the forbidden resource.
-      *
-      * @param requestingUser the user making the request.
-      * @return the forbidden resource.
-      */
-    private def getForbiddenResource(requestingUser: UserADM): Future[Some[ReadResourceV2]] = {
-        import SearchResponderV2Constants.forbiddenResourceIri
-
-        for {
-            forbiddenResSeq: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
-                resourceIris = Seq(forbiddenResourceIri),
-                targetSchema = ApiV2Complex, // This has no effect, because ForbiddenResource has no values.
-                requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
-            forbiddenRes = forbiddenResSeq.resources.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"$forbiddenResourceIri was not returned"))
-        } yield Some(forbiddenRes)
     }
 
     /**
@@ -278,16 +252,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 Future(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData])
             }
 
-            // check if there are resources the user does not have sufficient permissions to see
-            forbiddenResourceOption: Option[ReadResourceV2] <- if (resourceIris.size > queryResultsSeparatedWithFullGraphPattern.size) {
-                // some of the main resources have been suppressed, represent them using the forbidden resource
-
-                getForbiddenResource(requestingUser)
-            } else {
-                // all resources visible, no need for the forbidden resource
-                Future(None)
-            }
-
             // Find out whether to query standoff along with text values. This boolean value will be passed to
             // ConstructResponseUtilV2.makeTextValueContentV2.
             queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
@@ -301,12 +265,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
             // _ = println(mappingsAsMap)
 
+            forbiddenResource: ReadResourceV2 <- forbiddenResourceFuture
+
             resources: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = resourceIris,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
-                forbiddenResource = forbiddenResourceOption,
+                forbiddenResource = forbiddenResource,
                 responderManager = responderManager,
                 settings = settings,
                 targetSchema = targetSchema,
@@ -558,16 +524,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 Future(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData])
             }
 
-            // check if there are resources the user does not have sufficient permissions to see
-            forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparatedWithFullGraphPattern.size) {
-                // some of the main resources have been suppressed, represent them using the forbidden resource
-
-                getForbiddenResource(requestingUser)
-            } else {
-                // all resources visible, no need for the forbidden resource
-                Future(None)
-            }
-
             // Find out whether to query standoff along with text values. This boolean value will be passed to
             // ConstructResponseUtilV2.makeTextValueContentV2.
             queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema = targetSchema, schemaOptions = schemaOptions)
@@ -579,12 +535,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
             }
 
+            forbiddenResource: ReadResourceV2 <- forbiddenResourceFuture
+
             resources <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = mainResourceIris,
                 mappings = mappingsAsMap,
                 queryStandoff = queryStandoff,
-                forbiddenResource = forbiddenResourceOption,
+                forbiddenResource = forbiddenResource,
                 responderManager = responderManager,
                 settings = settings,
                 targetSchema = targetSchema,
@@ -706,15 +664,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                     // separate resources and values
                     queryResultsSeparated: RdfResources = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = resourcesInProjectGetRequestV2.requestingUser)
 
-                    // check if there are resources the user does not have sufficient permissions to see
-                    forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparated.size) {
-                        // some of the main resources have been suppressed, represent them using the forbidden resource
-                        getForbiddenResource(resourcesInProjectGetRequestV2.requestingUser)
-                    } else {
-                        // all resources visible, no need for the forbidden resource
-                        Future(None)
-                    }
-
                     // If we're querying standoff, get XML-to standoff mappings.
                     mappings: Map[IRI, MappingAndXSLTransformation] <- if (queryStandoff) {
                         getMappingsFromQueryResultsSeparated(queryResultsSeparated, resourcesInProjectGetRequestV2.requestingUser)
@@ -722,13 +671,15 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                         FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
                     }
 
+                    forbiddenResource: ReadResourceV2 <- forbiddenResourceFuture
+
                     // Construct a ReadResourceV2 for each resource that the user has permission to see.
                     searchResponse <- ConstructResponseUtilV2.createSearchResponse(
                         searchResults = queryResultsSeparated,
                         orderByResourceIri = mainResourceIris,
                         mappings = mappings,
                         queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
-                        forbiddenResource = forbiddenResourceOption,
+                        forbiddenResource = forbiddenResource,
                         responderManager = responderManager,
                         targetSchema = resourcesInProjectGetRequestV2.targetSchema,
                         settings = settings,
@@ -850,22 +801,15 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             // separate resources and value objects
             queryResultsSeparated = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResourceByLabelResponse, requestingUser = requestingUser)
 
-            // check if there are resources the user does not have sufficient permissions to see
-            forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparated.size) {
-                // some of the main resources have been suppressed, represent them using the forbidden resource
-                getForbiddenResource(requestingUser)
-            } else {
-                // all resources visible, no need for the forbidden resource
-                Future(None)
-            }
-
             //_ = println(queryResultsSeparated)
+
+            forbiddenResource: ReadResourceV2 <- forbiddenResourceFuture
 
             resources <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparated,
                 orderByResourceIri = mainResourceIris.toSeq.sorted,
                 queryStandoff = false,
-                forbiddenResource = forbiddenResourceOption,
+                forbiddenResource = forbiddenResource,
                 responderManager = responderManager,
                 targetSchema = targetSchema,
                 settings = settings,
