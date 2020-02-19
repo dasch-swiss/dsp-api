@@ -1152,7 +1152,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                             Set.empty[SmartIri]
                         }
                 } + classInfo.entityInfoContent.classIri.getOntologyFromEntity
-        }.toSet
+        }.toSet.filter(_.isKnoraOntologyIri)
 
         // Get the ontologies of all Knora entities mentioned in property definitions.
 
@@ -1172,8 +1172,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                             Set.empty[SmartIri]
                         }
                 } + property.entityInfoContent.propertyIri.getOntologyFromEntity
-        }.toSet
-
+        }.toSet.filter(_.isKnoraOntologyIri)
 
         // Determine which ontology to use as the knora-api prefix expansion.
         val knoraApiPrefixExpansion = targetSchema match {
@@ -1191,7 +1190,9 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
 
         // Make a set of all other Knora ontologies used.
         val otherKnoraOntologiesUsed: Set[SmartIri] = (knoraOntologiesFromClasses ++ knoraOntologiesFromProperties).filterNot {
-            ontology => ontology.getOntologyName == OntologyConstants.KnoraApi.KnoraApiOntologyLabel || ontology.getOntologyName == OntologyConstants.SalsahGui.SalsahGuiOntologyLabel
+            ontology =>
+                ontology.getOntologyName == OntologyConstants.KnoraApi.KnoraApiOntologyLabel ||
+                    ontology.getOntologyName == OntologyConstants.SalsahGui.SalsahGuiOntologyLabel
         }
 
         // Make the JSON-LD context.
@@ -2241,20 +2242,24 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             resIcon => resourceIconPred -> JsonLDString(resIcon)
         }
 
-        val jsonRestriction: Option[JsonLDObject] = entityInfoContent.xsdStringRestrictionPattern.map {
-            pattern: String =>
-                JsonLDObject(Map(
-                    JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Rdfs.Datatype),
-                    OntologyConstants.Owl.OnDatatype -> JsonLDUtil.iriToJsonLDObject(OntologyConstants.Xsd.String),
-                    OntologyConstants.Owl.WithRestrictions -> JsonLDArray(Seq(
-                        JsonLDObject(Map(OntologyConstants.Xsd.Pattern -> JsonLDString(pattern))
-                        ))
-                    )))
+        val jsonRestriction: Map[IRI, JsonLDValue] = entityInfoContent.datatypeInfo match {
+            case Some(datatypeInfo: DatatypeInfoV2) =>
+                Map(
+                    OntologyConstants.Owl.OnDatatype -> JsonLDUtil.iriToJsonLDObject(datatypeInfo.onDatatype.toString)
+                ) ++ datatypeInfo.pattern.map {
+                    pattern => OntologyConstants.Owl.WithRestrictions -> JsonLDArray(
+                        Seq(
+                            JsonLDObject(Map(OntologyConstants.Xsd.Pattern -> JsonLDString(pattern)))
+                        )
+                    )
+                }
+
+            case None => Map.empty
         }
 
         val jsonSubClassOf = entityInfoContent.subClassOf.toArray.sorted.map {
             superClass => JsonLDUtil.iriToJsonLDObject(superClass.toString)
-        } ++ owlCardinalities ++ jsonRestriction
+        } ++ owlCardinalities
 
         val jsonSubClassOfStatement: Option[(IRI, JsonLDArray)] = if (jsonSubClassOf.nonEmpty) {
             Some(OntologyConstants.Rdfs.SubClassOf -> JsonLDArray(jsonSubClassOf))
@@ -2290,7 +2295,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             JsonLDConstants.ID -> JsonLDString(entityInfoContent.classIri.toString),
             JsonLDConstants.TYPE -> JsonLDArray(entityInfoContent.getRdfTypes.map(typeIri => JsonLDString(typeIri.toString)))
         ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ isKnoraResourceClassStatement ++
-            isStandoffClassStatement ++ canBeInstantiatedStatement ++ isValueClassStatement
+            isStandoffClassStatement ++ canBeInstantiatedStatement ++ isValueClassStatement ++ jsonRestriction
     }
 }
 
@@ -2441,23 +2446,29 @@ case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) exte
 }
 
 /**
+  * Represents a definition of an `rdfs:Datatype`.
+  *
+  * @param onDatatype                  the base datatype to be extended.
+  * @param pattern an optional `xsd:pattern` specifying the regular expression that restricts its values.
+  */
+case class DatatypeInfoV2(onDatatype: SmartIri, pattern: Option[String] = None)
+
+/**
   * Represents assertions about an OWL class.
   *
-  * @param classIri                    the IRI of the class.
-  * @param predicates                  a [[Map]] of predicate IRIs to [[PredicateInfoV2]] objects.
-  * @param directCardinalities         a [[Map]] of properties to [[Cardinality.Value]] objects representing the cardinalities
-  *                                    that are directly defined on the class (as opposed to inherited) on those properties.
-  * @param xsdStringRestrictionPattern if the class's rdf:type is rdfs:Datatype, an optional xsd:pattern specifying
-  *                                    the regular expression that restricts its values. This has the effect of making the
-  *                                    class a subclass of a blank node with owl:onDatatype xsd:string.
-  * @param subClassOf                  the classes that this class is a subclass of.
-  * @param ontologySchema              indicates whether this ontology entity belongs to an internal ontology (for use in the
-  *                                    triplestore) or an external one (for use in the Knora API).
+  * @param classIri            the IRI of the class.
+  * @param predicates          a [[Map]] of predicate IRIs to [[PredicateInfoV2]] objects.
+  * @param directCardinalities a [[Map]] of properties to [[Cardinality.Value]] objects representing the cardinalities
+  *                            that are directly defined on the class (as opposed to inherited) on those properties.
+  * @param datatypeInfo        if the class's `rdf:type` is `rdfs:Datatype`, a [[DatatypeInfoV2]] describing it.
+  * @param subClassOf          the classes that this class is a subclass of.
+  * @param ontologySchema      indicates whether this ontology entity belongs to an internal ontology (for use in the
+  *                            triplestore) or an external one (for use in the Knora API).
   */
 case class ClassInfoContentV2(classIri: SmartIri,
                               predicates: Map[SmartIri, PredicateInfoV2] = Map.empty[SmartIri, PredicateInfoV2],
                               directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map.empty[SmartIri, KnoraCardinalityInfo],
-                              xsdStringRestrictionPattern: Option[String] = None,
+                              datatypeInfo: Option[DatatypeInfoV2] = None,
                               subClassOf: Set[SmartIri] = Set.empty[SmartIri],
                               ontologySchema: OntologySchema) extends EntityInfoContentV2 with KnoraContentV2[ClassInfoContentV2] {
     override def toOntologySchema(targetSchema: OntologySchema): ClassInfoContentV2 = {
@@ -3032,10 +3043,11 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
 
         val lastModDateStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {
             lastModificationDate.map {
-                lastModDate => OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
-                    value = lastModDate.toString,
-                    datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
-                )
+                lastModDate =>
+                    OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                        value = lastModDate.toString,
+                        datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                    )
             }
         } else {
             None
