@@ -138,7 +138,18 @@ case class IriRef(iri: SmartIri, propertyPathOperator: Option[Char] = None) exte
  * @param datatype the value's XSD type IRI.
  */
 case class XsdLiteral(value: String, datatype: SmartIri) extends Entity {
-    override def toSparql: String = "\"" + value + "\"^^" + datatype.toSparql
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    override def toSparql: String = {
+        // We use xsd:dateTimeStamp in Gravsearch, but xsd:dateTime in the triplestore.
+        val transformedDatatype = if (datatype.toString == OntologyConstants.Xsd.DateTimeStamp) {
+            OntologyConstants.Xsd.DateTime.toSmartIri
+        } else {
+            datatype
+        }
+
+        "\"" + value + "\"^^" + transformedDatatype.toSparql
+    }
 }
 
 /**

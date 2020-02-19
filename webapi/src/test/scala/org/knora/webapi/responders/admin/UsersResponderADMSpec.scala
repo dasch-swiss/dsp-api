@@ -54,7 +54,7 @@ object UsersResponderADMSpec {
   */
 class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with ImplicitSender with Authenticator {
 
-    private val timeout = 5.seconds
+    private val timeout: FiniteDuration = 8.seconds
 
     private val rootUser = SharedTestDataADM.rootUser
     private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
@@ -86,7 +86,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return 'ForbiddenException' if asked by normal user'" in {
                 responderManager ! UsersGetRequestADM(requestingUser = normalUser)
-                expectMsg(Failure(ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")))
+                expectMsg(timeout, Failure(ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")))
             }
 
             "not return the system and anonymous users" in {
@@ -277,6 +277,61 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 )
                 expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
             }
+
+            "return a 'BadRequestException' if the supplied 'username' contains invalid characters (@)" in {
+                responderManager ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
+                        username = "donald.duck2@example.com",
+                        email = "donald.duck2@example.com",
+                        givenName = "Donal",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
+                        lang = "en",
+                        systemAdmin = false
+                    ),
+                    SharedTestDataADM.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"The username: 'donald.duck2@example.com' contains invalid characters")))
+            }
+
+            "return a 'BadRequestException' if the supplied 'username' contains invalid characters (-)" in {
+                responderManager ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
+                        username = "donald-duck",
+                        email = "donald.duck2@example.com",
+                        givenName = "Donal",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
+                        lang = "en",
+                        systemAdmin = false
+                    ),
+                    SharedTestDataADM.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"The username: 'donald-duck' contains invalid characters")))
+            }
+
+            "return a 'BadRequestException' if the supplied 'email' is invalid" in {
+                responderManager ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
+                        username = "root3",
+                        email = "root3",
+                        givenName = "Donal",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
+                        lang = "en",
+                        systemAdmin = false
+                    ),
+                    SharedTestDataADM.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(BadRequestException(s"The email: 'root3' is invalid")))
+            }
+
         }
 
         "asked to update a user" should {
@@ -332,6 +387,49 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 response3.user.givenName should equal (SharedTestDataADM.normalUser.givenName)
                 response3.user.familyName should equal (SharedTestDataADM.normalUser.familyName)
 
+            }
+
+            "return 'BadRequest' if the new 'username' contains invalid characters (@)" in {
+
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        username = Some("donald.duck2@example.com")
+                    ),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(timeout, Failure(BadRequestException(s"The username: 'donald.duck2@example.com' contains invalid characters")))
+            }
+
+            "return 'BadRequest' if the new 'username' contains invalid characters (-)" in {
+
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        username = Some("donald-duck")
+                    ),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(timeout, Failure(BadRequestException(s"The username: 'donald-duck' contains invalid characters")))
+            }
+
+
+            "return 'BadRequest' if the new 'email' is invalid" in {
+
+                responderManager ! UserChangeBasicUserInformationRequestADM(
+                    userIri = SharedTestDataADM.normalUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(
+                        email = Some("root3")
+                    ),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(timeout, Failure(BadRequestException(s"The email: 'root3' is invalid")))
             }
 
             "UPDATE the user's password (by himself)" in {
@@ -431,7 +529,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.normalUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
+                expectMsg(timeout, Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
                 /* Password is updated by other normal user */
                 responderManager ! UserChangePasswordRequestADM(
@@ -443,7 +541,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.normalUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(ForbiddenException("User's password can only be changed by the user itself or a system admin.")))
+                expectMsg(timeout, Failure(ForbiddenException("User's password can only be changed by the user itself or a system admin.")))
 
                 /* Status is updated by other normal user */
                 responderManager ! UserChangeStatusRequestADM(
@@ -452,7 +550,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.normalUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(ForbiddenException("User's status can only be changed by the user itself or a system administrator")))
+                expectMsg(timeout, Failure(ForbiddenException("User's status can only be changed by the user itself or a system administrator")))
 
                 /* System admin group membership */
                 responderManager ! UserChangeSystemAdminMembershipStatusRequestADM(
@@ -461,7 +559,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     requestingUser = SharedTestDataADM.normalUser,
                     UUID.randomUUID()
                 )
-                expectMsg(Failure(ForbiddenException("User's system admin membership can only be changed by a system administrator")))
+                expectMsg(timeout, Failure(ForbiddenException("User's system admin membership can only be changed by a system administrator")))
             }
 
             "return 'BadRequest' if system user is requested to change" in {
@@ -473,7 +571,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     UUID.randomUUID()
                 )
 
-                expectMsg(Failure(BadRequestException("Changes to built-in users are not allowed.")))
+                expectMsg(timeout, Failure(BadRequestException("Changes to built-in users are not allowed.")))
             }
 
             "return 'BadRequest' if anonymous user is requested to change" in {
@@ -485,7 +583,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     UUID.randomUUID()
                 )
 
-                expectMsg(Failure(BadRequestException("Changes to built-in users are not allowed.")))
+                expectMsg(timeout, Failure(BadRequestException("Changes to built-in users are not allowed.")))
             }
 
             "return 'BadRequest' if nothing would be changed during the update" in {
@@ -545,11 +643,11 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
                 /* User is added to a project by a normal user */
                 responderManager ! UserProjectMembershipAddRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
-                expectMsg(Failure(ForbiddenException("User's project membership can only be changed by a project or system administrator")))
+                expectMsg(timeout, Failure(ForbiddenException("User's project membership can only be changed by a project or system administrator")))
 
                 /* User is removed from a project by a normal user */
                 responderManager ! UserProjectMembershipRemoveRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
-                expectMsg(Failure(ForbiddenException("User's project membership can only be changed by a project or system administrator")))
+                expectMsg(timeout, Failure(ForbiddenException("User's project membership can only be changed by a project or system administrator")))
             }
 
         }
@@ -603,11 +701,11 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
                 /* User is added to a project by a normal user */
                 responderManager ! UserProjectAdminMembershipAddRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
-                expectMsg(Failure(ForbiddenException("User's project admin membership can only be changed by a project or system administrator")))
+                expectMsg(timeout, Failure(ForbiddenException("User's project admin membership can only be changed by a project or system administrator")))
 
                 /* User is removed from a project by a normal user */
                 responderManager ! UserProjectAdminMembershipRemoveRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
-                expectMsg(Failure(ForbiddenException("User's project admin membership can only be changed by a project or system administrator")))
+                expectMsg(timeout, Failure(ForbiddenException("User's project admin membership can only be changed by a project or system administrator")))
             }
 
         }
@@ -660,11 +758,11 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
                 /* User is added to a project by a normal user */
                 responderManager ! UserGroupMembershipAddRequestADM(normalUser.id, imagesReviewerGroup.id, normalUser, UUID.randomUUID())
-                expectMsg(Failure(ForbiddenException("User's group membership can only be changed by a project or system administrator")))
+                expectMsg(timeout, Failure(ForbiddenException("User's group membership can only be changed by a project or system administrator")))
 
                 /* User is removed from a project by a normal user */
                 responderManager ! UserGroupMembershipRemoveRequestADM(normalUser.id, imagesReviewerGroup.id, normalUser, UUID.randomUUID())
-                expectMsg(Failure(ForbiddenException("User's group membership can only be changed by a project or system administrator")))
+                expectMsg(timeout, Failure(ForbiddenException("User's group membership can only be changed by a project or system administrator")))
             }
 
         }

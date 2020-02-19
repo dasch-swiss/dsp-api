@@ -42,7 +42,10 @@ class InputOntologyV2Spec extends CoreSpec {
                   |{
                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                   |  "@type" : "owl:Ontology",
-                  |  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
+                  |  "knora-api:lastModificationDate" : {
+                  |    "@type" : "xsd:dateTimeStamp",
+                  |    "@value" : "2017-12-19T15:23:42.166Z"
+                  |  },
                   |  "@graph" : [ {
                   |    "@id" : "anything:hasName",
                   |    "@type" : "owl:ObjectProperty",
@@ -93,7 +96,10 @@ class InputOntologyV2Spec extends CoreSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "2017-12-19T15:23:42.166Z"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:WildThing",
                    |    "@type" : "owl:Class",
@@ -136,7 +142,10 @@ class InputOntologyV2Spec extends CoreSpec {
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/incunabula/v2",
                    |  "@type" : "owl:Ontology",
-                   |  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
+                   |  "knora-api:lastModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "2017-12-19T15:23:42.166Z"
+                   |  },
                    |  "@graph" : [ {
                    |    "@id" : "anything:WildThing",
                    |    "@type" : "owl:Class",

@@ -268,6 +268,17 @@
 							valfield.append($('<input>', {'type': 'text', name: 'searchval', size: 16, maxlength: 32}).addClass('propval').data('gui_element', 'text'));
 							break;
 						}
+						case VALTYPE_TIME: { // we use gui_element = "text"
+							compop.append($('<option>', {'value': 'EQ', 'title': 'equal'}).append('='));
+							compop.append($('<option>', {'value': 'GT', 'title': 'greater than'}).append('&gt;'));
+							compop.append($('<option>', {'value': 'GT_EQ', 'title': 'greater equal than'}).append('&ge;'));
+							compop.append($('<option>', {'value': 'LT', 'title': 'less than'}).append('&lt;'));
+							compop.append($('<option>', {'value': 'LT_EQ', 'title': 'less equal than'}).append('&le;'));
+							compop.append($('<option>', {'value': '!EQ', 'title': 'not equal'}).append('&ne;'));
+							compop.append($('<option>', {'value': 'EXISTS', 'title': 'exists'}).append('&exist;'));
+							valfield.append($('<input>', {'type': 'text', name: 'searchval', size: 16, maxlength: 32}).addClass('propval').data('gui_element', 'text'));
+							break;
+						}
 						case VALTYPE_DATE: { // we use gui_element = "date"
 							compop.append($('<option>', {'value': 'EQ', 'title': 'equal'}).append('='));
 							compop.append($('<option>', {'value': 'GT', 'title': 'greater than'}).append('&gt;'));
@@ -370,17 +381,6 @@
 								.appendTo(valfield);
 							break;
 						}*/
-						case VALTYPE_TIME: { // we use gui_element = "text"
-							compop.append($('<option>', {'value': 'EQ'}).append('='));
-							compop.append($('<option>', {'value': 'GT', 'title': 'greater than'}).append('&gt;'));
-							compop.append($('<option>', {'value': 'GT_EQ', 'title': 'greater equal than'}).append('&ge;'));
-							compop.append($('<option>', {'value': 'LT', 'title': 'less than'}).append('&lt;'));
-							compop.append($('<option>', {'value': 'LT_EQ', 'title': 'less equal than'}).append('&le;'));
-							compop.append($('<option>', {'value': 'IN'}).append('in'));
-							compop.append($('<option>', {'value': 'EXISTS', 'title': 'Exists'}).append('&exist;'));
-							valfield.append($('<input>', {'type': 'text', name: 'searchval'}).addClass('propval').data('gui_element', 'text'));
-							break;
-						}
 						case VALTYPE_INTERVAL: {
 							compop.append($('<option>', {'value': 'EXISTS', 'title': 'exists'}).append('&exist;'));
 							compop.append('NOT YET IMPLEMENTED!');

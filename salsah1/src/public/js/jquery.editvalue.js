@@ -101,6 +101,10 @@
 					ele.append(settings.property.values[value_index]);
 					break;
 				}
+				case VALTYPE_TIME: {
+					ele.append(settings.property.values[value_index]);
+					break;
+				}
 				case VALTYPE_DATE: {
 					ele.dateobj('init', settings.property.values[value_index]);
 					break;
@@ -187,11 +191,6 @@
 							break;
 						}
 					}
-					break;
-				}
-				case VALTYPE_TIME: {
-					ele.timeobj('init', settings.property.values[value_index]);
-					//ele.append(settings.property.values[value_index]);
 					break;
 				}
 				case VALTYPE_INTERVAL: {
@@ -510,6 +509,7 @@
 
 		postdata[VALTYPE_INTEGER] = postdata[VALTYPE_TEXT];
 		postdata[VALTYPE_FLOAT] = postdata[VALTYPE_TEXT];
+		postdata[VALTYPE_TIME] = postdata[VALTYPE_TEXT];
 
 		postdata[VALTYPE_RICHTEXT] = function(value, is_new_value) {
 			var data = {};

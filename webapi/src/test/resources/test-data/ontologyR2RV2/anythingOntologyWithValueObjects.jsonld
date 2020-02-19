@@ -266,6 +266,14 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
+      "salsah-gui:guiOrder" : 13,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "anything:hasTimeStamp"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
       "salsah-gui:guiOrder" : 15,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
@@ -703,6 +711,13 @@
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
         "@id" : "anything:hasThingPictureValue"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "salsah-gui:guiOrder" : 13,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "anything:hasTimeStamp"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1570,6 +1585,14 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
+      "salsah-gui:guiOrder" : 13,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "anything:hasTimeStamp"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
       "salsah-gui:guiOrder" : 15,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
@@ -2130,6 +2153,24 @@
       "@id" : "knora-api:hasRepresentationValue"
     }
   }, {
+    "@id" : "anything:hasTimeStamp",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:isEditable" : true,
+    "knora-api:isResourceProperty" : true,
+    "knora-api:objectType" : {
+      "@id" : "knora-api:TimeValue"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "anything:Thing"
+    },
+    "salsah-gui:guiElement" : {
+      "@id" : "salsah-gui:TimeStamp"
+    },
+    "rdfs:label" : "Timestamp",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:hasValue"
+    }
+  }, {
     "@id" : "anything:hasUri",
     "@type" : "owl:ObjectProperty",
     "knora-api:isEditable" : true,
@@ -2236,7 +2277,10 @@
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0001"
   },
-  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "2017-12-19T15:23:42.166Z"
+  },
   "rdfs:label" : "The anything ontology",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

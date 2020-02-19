@@ -20,7 +20,7 @@
 SALSAH.showval = function(value_container, prop, value_index, options)
 {
 
-	//console.log("in showval: valtype is " + prop.valuetype_id);
+	// console.log("in showval: valtype is " + prop.valuetype_id);
 	switch (prop.valuetype_id) {
 		// this value type is mot used anymore: every text is a richtext now
 		/*case VALTYPE_TEXT: {
@@ -38,6 +38,10 @@ SALSAH.showval = function(value_container, prop, value_index, options)
 			break;
 		}
 		case VALTYPE_FLOAT: {
+			value_container.append(prop.values[value_index]);
+			break;
+		}
+		case VALTYPE_TIME: {
 			value_container.append(prop.values[value_index]);
 			break;
 		}
@@ -164,11 +168,6 @@ SALSAH.showval = function(value_container, prop, value_index, options)
                     break;
                 }
 			}
-			break;
-		}
-		case VALTYPE_TIME: {
-			value_container.timeobj('init', prop.values[value_index]);
-			//value_container.append(prop.values[value_index]);
 			break;
 		}
 		case VALTYPE_INTERVAL: {

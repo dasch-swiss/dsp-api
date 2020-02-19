@@ -1345,7 +1345,7 @@ object InputOntologyV2 {
     def fromJsonLD(jsonLDDocument: JsonLDDocument, parsingMode: InputOntologyParsingModeV2 = ClientInputParsingModeV2): InputOntologyV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val ontologyObj = jsonLDDocument.body
+        val ontologyObj: JsonLDObject = jsonLDDocument.body
         val externalOntologyIri: SmartIri = ontologyObj.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
 
         if (!(externalOntologyIri.isKnoraApiV2DefinitionIri && externalOntologyIri.isKnoraOntologyIri)) {
@@ -1356,9 +1356,10 @@ object InputOntologyV2 {
 
         val ontologyLabel: Option[String] = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
-        val lastModificationDate: Option[Instant] = ontologyObj.maybeStringWithValidation(
-            OntologyConstants.KnoraApiV2Complex.LastModificationDate,
-            stringFormatter.xsdDateTimeStampToInstant
+        val lastModificationDate: Option[Instant] = ontologyObj.maybeDatatypeValueInObject(
+            key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+            validationFun = stringFormatter.xsdDateTimeStampToInstant
         )
 
         val ontologyMetadata = OntologyMetadataV2(
@@ -1453,6 +1454,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends K
 
         val context = JsonLDObject(Map(
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiOntologyPrefixExpansion),
+            "xsd" -> JsonLDString(OntologyConstants.Xsd.XsdPrefixExpansion),
             "rdfs" -> JsonLDString(OntologyConstants.Rdfs.RdfsPrefixExpansion),
             "owl" -> JsonLDString(OntologyConstants.Owl.OwlPrefixExpansion)
         ))
@@ -2973,9 +2975,9 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
                               label: Option[String] = None,
                               lastModificationDate: Option[Instant] = None,
                               ontologyVersion: Option[String] = None) extends KnoraContentV2[OntologyMetadataV2] {
-    override def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+    override def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 = {
         if (ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
             targetSchema match {
                 case InternalSchema => this
@@ -3028,9 +3030,12 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
             labelStr => OntologyConstants.Rdfs.Label -> JsonLDString(labelStr)
         }
 
-        val lastModDateStatement: Option[(IRI, JsonLDString)] = if (targetSchema == ApiV2Complex) {
+        val lastModDateStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {
             lastModificationDate.map {
-                lastModDate => OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDString(lastModDate.toString)
+                lastModDate => OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+                    value = lastModDate.toString,
+                    datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+                )
             }
         } else {
             None

@@ -22,7 +22,10 @@
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0001"
   },
-  "knora-api:lastModificationDate" : "2019-09-10T08:57:46.633162Z",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "2019-09-10T08:57:46.633162Z"
+  },
   "rdfs:label" : "A minimal ontology",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
