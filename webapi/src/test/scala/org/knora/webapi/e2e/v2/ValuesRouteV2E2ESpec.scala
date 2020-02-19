@@ -56,6 +56,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     private val booleanValueIri = new MutableTestIri
     private val geometryValueIri = new MutableTestIri
     private val intervalValueIri = new MutableTestIri
+    private val timeValueIri = new MutableTestIri
     private val listValueIri = new MutableTestIri
     private val colorValueIri = new MutableTestIri
     private val uriValueIri = new MutableTestIri
@@ -320,9 +321,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             hasPermissions should ===(customPermissions)
         }
 
-        "create a text value without standoff" in {
+        "create a text value without standoff and without a comment" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
-            val valueAsString: String = "Comment 1a"
+            val valueAsString: String = "text without standoff"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
@@ -351,6 +352,194 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
             val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
             savedValueAsString should ===(valueAsString)
+        }
+        
+        "not update a text value without a comment without changing it" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val valueAsString: String = "text without standoff"
+
+            val jsonLDEntity = SharedTestDataADM.updateTextValueWithoutStandoffRequest(
+                resourceIri = resourceIri,
+                valueIri = textValueWithoutStandoffIri.get,
+                valueAsString = valueAsString
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            assert(response.status == StatusCodes.BadRequest, response.toString)
+        }
+
+        "not update a text value so it's empty" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val valueAsString: String = ""
+
+            val jsonLDEntity = SharedTestDataADM.updateTextValueWithoutStandoffRequest(
+                resourceIri = resourceIri,
+                valueIri = textValueWithoutStandoffIri.get,
+                valueAsString = valueAsString
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.BadRequest, response.toString)
+        }
+
+        "update a text value without standoff" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val valueAsString: String = "text without standoff updated"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLDEntity = SharedTestDataADM.updateTextValueWithoutStandoffRequest(
+                resourceIri = resourceIri,
+                valueIri = textValueWithoutStandoffIri.get,
+                valueAsString = valueAsString
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            textValueWithoutStandoffIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = textValueWithoutStandoffIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+            savedValueAsString should ===(valueAsString)
+        }
+
+        "update a text value without standoff, adding a comment" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val valueAsString: String = "text without standoff updated"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLDEntity = SharedTestDataADM.updateTextValueWithCommentRequest(
+                resourceIri = resourceIri,
+                valueIri = textValueWithoutStandoffIri.get,
+                valueAsString = valueAsString,
+                valueHasComment = "Adding a comment"
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            textValueWithoutStandoffIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = textValueWithoutStandoffIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+            savedValueAsString should ===(valueAsString)
+        }
+
+        "not update a text value without standoff and with a comment without changing it" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val valueAsString: String = "text without standoff updated"
+
+            val jsonLDEntity = SharedTestDataADM.updateTextValueWithCommentRequest(
+                resourceIri = resourceIri,
+                valueIri = textValueWithoutStandoffIri.get,
+                valueAsString = valueAsString,
+                valueHasComment = "Adding a comment"
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.BadRequest, response.toString)
+        }
+
+        "update a text value without standoff, changing only the a comment" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val valueAsString: String = "text without standoff updated"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLDEntity = SharedTestDataADM.updateTextValueWithCommentRequest(
+                resourceIri = resourceIri,
+                valueIri = textValueWithoutStandoffIri.get,
+                valueAsString = valueAsString,
+                valueHasComment = "Updated comment"
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            textValueWithoutStandoffIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = textValueWithoutStandoffIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+            savedValueAsString should ===(valueAsString)
+        }
+
+        "create a text value without standoff and with a comment" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val valueAsString: String = "this is a text value that has a comment"
+            val valueHasComment: String = "this is a comment"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLDEntity = SharedTestDataADM.createTextValueWithCommentRequest(
+                resourceIri = resourceIri,
+                valueAsString = valueAsString,
+                valueHasComment = valueHasComment
+            )
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            textValueWithoutStandoffIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = textValueWithoutStandoffIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
+            savedValueAsString should ===(valueAsString)
+            val savedValueHasComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
+            savedValueHasComment should ===(valueHasComment)
         }
 
         "create a text value with standoff" in {
@@ -1006,43 +1195,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             assert(savedTextValueAsXml.contains(textValueAsXml))
         }
 
-        "create a text value with a comment" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
-            val valueAsString: String = "this is a text value that has a comment"
-            val valueHasComment: String = "this is a comment"
-            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-
-            val jsonLDEntity = SharedTestDataADM.createTextValueWithCommentRequest(
-                resourceIri = resourceIri,
-                valueAsString = valueAsString,
-                valueHasComment = valueHasComment
-            )
-
-            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            assert(response.status == StatusCodes.OK, response.toString)
-            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            textValueWithoutStandoffIri.set(valueIri)
-            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
-            valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
-
-            val savedValue: JsonLDObject = getValue(
-                resourceIri = resourceIri,
-                maybePreviousLastModDate = maybeResourceLastModDate,
-                propertyIriForGravsearch = propertyIri,
-                propertyIriInResult = propertyIri,
-                expectedValueIri = textValueWithoutStandoffIri.get,
-                userEmail = anythingUserEmail
-            )
-
-            val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
-            savedValueAsString should ===(valueAsString)
-            val savedValueHasComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
-            savedValueHasComment should ===(valueHasComment)
-        }
-
         "not create an empty text value" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val valueAsString: String = ""
@@ -1518,6 +1670,44 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedIntervalValueHasEnd should ===(intervalEnd)
         }
 
+        "create a time value" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
+            val timeStamp = Instant.parse("2019-08-28T15:59:12.725007Z")
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity = SharedTestDataADM.createTimeValueRequest(
+                resourceIri = resourceIri,
+                timeStamp = timeStamp
+            )
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            timeValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.TimeValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = timeValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+
+            savedTimeStamp should ===(timeStamp)
+        }
+
         "create a list value" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
@@ -1655,7 +1845,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedGeonameCode should ===(geonameCode)
         }
 
-        "create a link between two resources" in {
+        "create a link between two resources, without a comment" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
             val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
@@ -1860,40 +2050,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedDecimalValue should ===(decimalValue)
         }
 
-        "update a text value without standoff" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
-            val valueAsString: String = "Comment 1a updated"
-            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-
-            val jsonLDEntity = SharedTestDataADM.updateTextValueWithoutStandoffRequest(
-                resourceIri = resourceIri,
-                valueIri = textValueWithoutStandoffIri.get,
-                valueAsString = valueAsString
-            )
-
-            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            assert(response.status == StatusCodes.OK, response.toString)
-            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
-            textValueWithoutStandoffIri.set(valueIri)
-            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
-            valueType should ===(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)
-
-            val savedValue: JsonLDObject = getValue(
-                resourceIri = resourceIri,
-                maybePreviousLastModDate = maybeResourceLastModDate,
-                propertyIriForGravsearch = propertyIri,
-                propertyIriInResult = propertyIri,
-                expectedValueIri = textValueWithoutStandoffIri.get,
-                userEmail = anythingUserEmail
-            )
-
-            val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString)
-            savedValueAsString should ===(valueAsString)
-        }
-
         "update a text value with standoff" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
 
@@ -1997,21 +2153,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedValueAsString should ===(valueAsString)
             val savedValueHasComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
             savedValueHasComment should ===(valueHasComment)
-        }
-
-        "not update a text value so it's empty" in {
-            val resourceIri: IRI = SharedTestDataADM.AThing.iri
-            val valueAsString: String = ""
-
-            val jsonLDEntity = SharedTestDataADM.updateTextValueWithoutStandoffRequest(
-                resourceIri = resourceIri,
-                valueIri = textValueWithoutStandoffIri.get,
-                valueAsString = valueAsString
-            )
-
-            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            assert(response.status == StatusCodes.BadRequest, response.toString)
         }
 
         "update a date value representing a range with day precision" in {
@@ -2445,6 +2586,45 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedIntervalValueHasEnd should ===(intervalEnd)
         }
 
+        "update a time value" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp".toSmartIri
+            val timeStamp = Instant.parse("2019-12-16T09:14:56.409249Z")
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity = SharedTestDataADM.updateTimeValueRequest(
+                resourceIri = resourceIri,
+                valueIri = timeValueIri.get,
+                timeStamp = timeStamp
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            timeValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.TimeValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = timeValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedTimeStamp: Instant = savedValue.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2Complex.TimeValueAsTimeStamp,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.xsdDateTimeStampToInstant
+            )
+
+            savedTimeStamp should ===(timeStamp)
+        }
+
         "update a list value" in {
             val resourceIri: IRI = SharedTestDataADM.AThing.iri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
@@ -2621,6 +2801,158 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val savedTarget: JsonLDObject = savedValue.requireObject(OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget)
             val savedTargetIri: IRI = savedTarget.requireString(JsonLDConstants.ID)
             savedTargetIri should ===(linkTargetIri)
+        }
+
+        "not update a link without a comment without changing it" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
+            val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
+            val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity = SharedTestDataADM.updateLinkValueRequest(
+                resourceIri = resourceIri,
+                valueIri = linkValueIri.get,
+                targetResourceIri = linkTargetIri
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.BadRequest, response.toString)
+        }
+
+        "update a link between two resources, adding a comment" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
+            val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
+            val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+            val comment = "adding a comment"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity = SharedTestDataADM.updateLinkValueRequest(
+                resourceIri = resourceIri,
+                valueIri = linkValueIri.get,
+                targetResourceIri = linkTargetIri,
+                comment = Some(comment)
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            linkValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = linkPropertyIri,
+                propertyIriInResult = linkValuePropertyIri,
+                expectedValueIri = linkValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
+            savedComment should ===(comment)
+        }
+
+        "update a link between two resources, changing only the comment" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
+            val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
+            val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+            val comment = "changing only the comment"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity = SharedTestDataADM.updateLinkValueRequest(
+                resourceIri = resourceIri,
+                valueIri = linkValueIri.get,
+                targetResourceIri = linkTargetIri,
+                comment = Some(comment)
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            linkValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = linkPropertyIri,
+                propertyIriInResult = linkValuePropertyIri,
+                expectedValueIri = linkValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
+            savedComment should ===(comment)
+        }
+
+        "not update a link with a comment without changing it" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
+            val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+            val comment = "changing only the comment"
+
+            val jsonLdEntity = SharedTestDataADM.updateLinkValueRequest(
+                resourceIri = resourceIri,
+                valueIri = linkValueIri.get,
+                targetResourceIri = linkTargetIri,
+                comment = Some(comment)
+            )
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.BadRequest, response.toString)
+        }
+
+        "create a link between two resources, with a comment" in {
+            val resourceIri: IRI = SharedTestDataADM.AThing.iri
+            val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
+            val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+            val comment = "Initial comment"
+
+            val jsonLdEntity = SharedTestDataADM.createLinkValueRequest(
+                resourceIri = resourceIri,
+                targetResourceIri = SharedTestDataADM.TestDing.iri,
+                valueHasComment = Some(comment)
+            )
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            linkValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = linkPropertyIri,
+                propertyIriInResult = linkValuePropertyIri,
+                expectedValueIri = linkValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedTarget: JsonLDObject = savedValue.requireObject(OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget)
+            val savedTargetIri: IRI = savedTarget.requireString(JsonLDConstants.ID)
+            savedTargetIri should ===(SharedTestDataADM.TestDing.iri)
+
+            val savedComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasComment)
+            savedComment should ===(comment)
         }
 
         "delete an integer value" in {

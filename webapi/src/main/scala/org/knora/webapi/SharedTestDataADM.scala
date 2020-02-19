@@ -911,6 +911,26 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
+    def createTimeValueRequest(resourceIri: IRI,
+                               timeStamp: Instant): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasTimeStamp" : {
+           |    "@type" : "knora-api:TimeValue",
+           |    "knora-api:timeValueAsTimeStamp" : {
+           |      "@type" : "xsd:dateTimeStamp",
+           |      "@value" : "$timeStamp"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
     def createListValueRequest(resourceIri: IRI,
                                listNode: String): String = {
         s"""{
@@ -985,22 +1005,44 @@ object SharedTestDataADM {
     }
 
     def createLinkValueRequest(resourceIri: IRI,
-                               targetResourceIri: IRI): String = {
-        s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasOtherThingValue" : {
-           |    "@type" : "knora-api:LinkValue",
-           |    "knora-api:linkValueHasTargetIri" : {
-           |      "@id" : "$targetResourceIri"
-           |    }
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
+                               targetResourceIri: IRI,
+                               valueHasComment: Option[String] = None): String = {
+        valueHasComment match {
+            case Some(comment) =>
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasOtherThingValue" : {
+                   |    "@type" : "knora-api:LinkValue",
+                   |    "knora-api:linkValueHasTargetIri" : {
+                   |      "@id" : "$targetResourceIri"
+                   |    },
+                   |    "knora-api:valueHasComment" : "$comment"
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            case None =>
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasOtherThingValue" : {
+                   |    "@type" : "knora-api:LinkValue",
+                   |    "knora-api:linkValueHasTargetIri" : {
+                   |      "@id" : "$targetResourceIri"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+        }
     }
 
     def updateIntValueRequest(resourceIri: IRI,
@@ -1305,6 +1347,28 @@ object SharedTestDataADM {
            |}""".stripMargin
     }
 
+    def updateTimeValueRequest(resourceIri: IRI,
+                               valueIri: IRI,
+                               timeStamp: Instant): String = {
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasTimeStamp" : {
+           |    "@id" : "$valueIri",
+           |    "@type" : "knora-api:TimeValue",
+           |    "knora-api:timeValueAsTimeStamp" : {
+           |      "@type" : "xsd:dateTimeStamp",
+           |      "@value" : "$timeStamp"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
     def updateListValueRequest(resourceIri: IRI,
                                valueIri: IRI,
                                listNode: String): String = {
@@ -1388,23 +1452,46 @@ object SharedTestDataADM {
 
     def updateLinkValueRequest(resourceIri: IRI,
                                valueIri: IRI,
-                               targetResourceIri: IRI): String = {
-        s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasOtherThingValue" : {
-           |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:LinkValue",
-           |    "knora-api:linkValueHasTargetIri" : {
-           |      "@id" : "$targetResourceIri"
-           |    }
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
+                               targetResourceIri: IRI,
+                               comment: Option[String] = None): String = {
+        comment match {
+            case Some(definedComment) =>
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasOtherThingValue" : {
+                   |    "@id" : "$valueIri",
+                   |    "@type" : "knora-api:LinkValue",
+                   |    "knora-api:linkValueHasTargetIri" : {
+                   |      "@id" : "$targetResourceIri"
+                   |    },
+                   |    "knora-api:valueHasComment" : "$definedComment"
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            case None =>
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasOtherThingValue" : {
+                   |    "@id" : "$valueIri",
+                   |    "@type" : "knora-api:LinkValue",
+                   |    "knora-api:linkValueHasTargetIri" : {
+                   |      "@id" : "$targetResourceIri"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+        }
     }
 
     def updateStillImageFileValueRequest(resourceIri: IRI,
@@ -1562,6 +1649,13 @@ object SharedTestDataADM {
           |    "knora-api:intervalValueHasStart" : {
           |      "@type" : "xsd:decimal",
           |      "@value" : "1.2"
+          |    }
+          |  },
+          |  "anything:hasTimeStamp" : {
+          |    "@type" : "knora-api:TimeValue",
+          |    "knora-api:timeValueAsTimeStamp" : {
+          |      "@type" : "xsd:dateTimeStamp",
+          |      "@value" : "2020-01-24T08:47:10.307068Z"
           |    }
           |  },
           |  "anything:hasListItem" : {
@@ -1775,6 +1869,7 @@ object SharedTestDataADM {
         val booleanValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ"
         val uriValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uBAmWuRhR-eo1u1eP7qqNg"
         val intervalValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/RbDKPKHWTC-0lkRKae-E6A"
+        val timeValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/l6DhS5SCT9WhXSoYEZRTRw"
         val colorValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/TAziKNP8QxuyhC4Qf9-b6w"
         val geomValueIri: IRI = "http://rdfh.ch/0001/http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/we-ybmj-SRen-91n4RaDOQ"
         val geonameValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/hty-ONF8SwKN2RKU7rLKDg"
@@ -1789,6 +1884,7 @@ object SharedTestDataADM {
         val booleanValueUuid = "IN4R19yYR0ygi3K2VEHpUQ"
         val uriValueUuid = "uBAmWuRhR-eo1u1eP7qqNg"
         val intervalValueUuid = "RbDKPKHWTC-0lkRKae-E6A"
+        val timeValueUuid = "l6DhS5SCT9WhXSoYEZRTRw"
         val colorValueUuid = "TAziKNP8QxuyhC4Qf9-b6w"
         val geomValueUuid = "we-ybmj-SRen-91n4RaDOQ"
         val geonameValueUuid = "hty-ONF8SwKN2RKU7rLKDg"

@@ -23,6 +23,7 @@ import java.io.File
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
+import org.knora.webapi.messages.RequestWithSender
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
@@ -379,7 +380,8 @@ case class DeleteTemporaryFileRequestV2(internalFilename: String,
   * @param requestingUser the user making the request.
   */
 case class SipiGetTextFileRequest(fileUrl: String,
-                                  requestingUser: UserADM) extends SipiRequestV2
+                                  requestingUser: UserADM,
+                                  senderName: String) extends SipiRequestV2 with RequestWithSender
 
 /**
   * Represents a response for [[SipiGetTextFileRequest]].

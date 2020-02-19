@@ -44,7 +44,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 object UsersRouteADM {
-    val UsersBasePath = PathMatcher("admin" / "users")
+    val UsersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
     val UsersBasePathString: String = "/admin/users"
 }
 
@@ -85,7 +85,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     private val GroupsResponse = classRef(OntologyConstants.KnoraAdminV2.GroupsResponse.toSmartIri)
     private val User = classRef(OntologyConstants.KnoraAdminV2.UserClass.toSmartIri)
     private val UpdateUserRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateUserRequest.toSmartIri)
-    private val StoredUser = User.toStoredClassRef
 
     private val anythingUser1IriEnc = URLEncoder.encode(SharedTestDataADM.anythingUser1.id, "UTF-8")
     private val multiUserIriEnc = URLEncoder.encode(SharedTestDataADM.multiuserUser.id, "UTF-8")
@@ -554,11 +553,12 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     private val updateUserSystemAdminMembershipFunction: ClientFunction =
         "updateUserSystemAdminMembership" description "Updates a user's SystemAdmin membership." params (
-            "user" description "The user to be updated." paramType StoredUser
+            "iri" description "The IRI of the user to be updated." paramType UriDatatype,
+            "systemAdmin" description "True if the user should be a system admin" paramType BooleanDatatype
             ) doThis {
             httpPut(
-                path = str("iri") / argMember("user", "id") / str("SystemAdmin"),
-                body = Some(json("systemAdmin" -> argMember("user", "systemAdmin")))
+                path = str("iri") / arg("iri") / str("SystemAdmin"),
+                body = Some(json("systemAdmin" -> arg("systemAdmin")))
             )
         } returns UserResponse
 

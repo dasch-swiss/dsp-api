@@ -109,7 +109,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             assert(response.ontologies.size == 1)
             val metadata = response.ontologies.head
             assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
-            fooIri.set(metadata.ontologyIri.toOntologySchema(ApiV2Complex).toString)
+            fooIri.set(metadata.ontologyIri.toString)
             fooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
         }
 
@@ -117,7 +117,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val newLabel = "The modified foo ontology"
 
             responderManager ! ChangeOntologyMetadataRequestV2(
-                ontologyIri = fooIri.get.toSmartIri,
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
                 label = newLabel,
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -127,7 +127,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val response = expectMsgType[ReadOntologyMetadataV2](timeout)
             assert(response.ontologies.size == 1)
             val metadata = response.ontologies.head
-            assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/00FF/foo")
+            assert(metadata.ontologyIri == fooIri.get.toSmartIri)
             assert(metadata.label.contains(newLabel))
             val newFooLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
             assert(newFooLastModDate.isAfter(fooLastModDate))
@@ -167,7 +167,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not allow a user to delete an ontology if they are not a sysadmin or an admin in the ontology's project" in {
             responderManager ! DeleteOntologyRequestV2(
-                ontologyIri = fooIri.get.toSmartIri,
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
                 requestingUser = SharedTestDataADM.imagesUser02
@@ -182,7 +182,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "delete the 'foo' ontology" in {
             responderManager ! DeleteOntologyRequestV2(
-                ontologyIri = fooIri.get.toSmartIri,
+                ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
                 requestingUser = imagesUser
@@ -2071,30 +2071,31 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             val expectedProperties: Set[SmartIri] = Set(
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
-                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
-                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocument",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing"
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
             ).map(_.toSmartIri)
 
             val expectedAllBaseClasses: Set[SmartIri] = Set(

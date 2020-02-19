@@ -49,7 +49,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 object ProjectsRouteADM {
-    val ProjectsBasePath = PathMatcher("admin" / "projects")
+    val ProjectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
     val ProjectsBasePathString = "/admin/projects"
 }
 
@@ -82,7 +82,6 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     // Classes used in client function definitions.
 
     private val Project = classRef(OntologyConstants.KnoraAdminV2.ProjectClass.toSmartIri)
-    private val StoredProject = Project.toStoredClassRef
     private val ProjectsResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectsResponse.toSmartIri)
     private val ProjectResponse = classRef(OntologyConstants.KnoraAdminV2.ProjectResponse.toSmartIri)
     private val UpdateProjectRequest = classRef(OntologyConstants.KnoraAdminV2.UpdateProjectRequest.toSmartIri)
