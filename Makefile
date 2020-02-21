@@ -364,6 +364,11 @@ init-db-test-unit: ## initializes the knora-test-unit repository
 	@echo $@
 	@$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-unit
 
+.PHONY: init-db-test-unit-minimal
+init-db-test-unit-minimal: ## initializes the knora-test-unit repository with minimal data
+	@echo $@
+	@$(MAKE) -C webapi/scripts graphdb-se-docker-init-knora-test-unit-minimal
+
 .PHONY: init-db-test-free
 init-db-test-free: ## initializes the knora-test repository (for GraphDB-Free)
 	@echo $@
