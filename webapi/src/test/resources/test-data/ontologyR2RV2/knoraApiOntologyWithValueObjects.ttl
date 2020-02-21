@@ -263,6 +263,8 @@ knora-api:versionDate a owl:DatatypeProperty;
   rdfs:comment "Provides the date of a particular version of a resource.";
   rdfs:label "version date" .
 
+rdfs:label a owl:DatatypeProperty .
+
 knora-api:AudioFileValue a owl:Class;
   knora-api:isValueClass true;
   rdfs:comment "Represents an audio file";
