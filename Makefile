@@ -113,7 +113,7 @@ publish-all-images: publish-knora-api-image publish-knora-graphdb-se-image publi
 #################################
 
 .PHONY: print-env-file
-print-env-file: env-file ## prints the env file used by knora-stack
+print-env-file: ## prints the env file used by knora-stack
 	@cat .env
 
 .PHONY: env-file
@@ -206,7 +206,7 @@ stack-down: ## stops the knora-stack.
 	docker-compose -f docker/knora.docker-compose.yml down
 
 .PHONY: stack-config
-stack-config: env-file
+stack-config:
 	docker-compose -f docker/knora.docker-compose.yml config
 
 ## stack without api
