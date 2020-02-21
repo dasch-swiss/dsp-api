@@ -7,7 +7,6 @@ services:
     ports:
       - "7200:7200"
     volumes:
-      # - ${KNORA_GDB_LICENSE_FILE}:/graphdb/graphdb.license:delegated
       - ${KNORA_GDB_IMPORT_DIR}:/root/graphdb-import:delegated
       - ${KNORA_GDB_HOME_DIR}:/opt/graphdb/home:delegated
     networks:
