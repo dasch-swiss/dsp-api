@@ -93,6 +93,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val standoffLinkValueIri = new MutableTestIri
     private val stillImageFileValueIri = new MutableTestIri
 
+    private var integerValueUUID = UUID.randomUUID
+    private var linkValueUUID = UUID.randomUUID
+
     private val sampleStandoff: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
             standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
@@ -384,6 +387,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case createValueResponse: CreateValueResponseV2 =>
                     intValueIri.set(createValueResponse.valueIri)
                     firstIntValueVersionIri.set(createValueResponse.valueIri)
+                    integerValueUUID = createValueResponse.valueUUID
             }
 
             // Read the value back to check that it was added correctly.
@@ -464,7 +468,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case updateValueResponse: UpdateValueResponseV2 => intValueIri.set(updateValueResponse.valueIri)
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    intValueIri.set(updateValueResponse.valueIri)
+                    assert(updateValueResponse.valueUUID == integerValueUUID)
+                    integerValueUUID = updateValueResponse.valueUUID
             }
 
             // Read the value back to check that it was added correctly.
@@ -1736,7 +1743,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! createValueRequest
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => linkValueIri.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 =>
+                    linkValueIri.set(createValueResponse.valueIri)
+                    linkValueUUID = createValueResponse.valueUUID
             }
 
             val valueFromTriplestore = getValue(
@@ -3543,7 +3552,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! updateValueRequest
 
             expectMsgPF(timeout) {
-                case updateValueResponse: UpdateValueResponseV2 => linkValueIri.set(updateValueResponse.valueIri)
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    linkValueIri.set(updateValueResponse.valueIri)
+
+                    // When you change a link value's target, it gets a new UUID.
+                    assert(updateValueResponse.valueUUID != linkValueUUID)
+                    linkValueUUID = updateValueResponse.valueUUID
             }
 
             val valueFromTriplestore = getValue(
@@ -3616,7 +3630,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! updateValueRequest
 
             expectMsgPF(timeout) {
-                case updateValueResponse: UpdateValueResponseV2 => linkValueIri.set(updateValueResponse.valueIri)
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    linkValueIri.set(updateValueResponse.valueIri)
+
+                    // Since we only changed metadata, the link should have the same UUID.
+                    assert(updateValueResponse.valueUUID == linkValueUUID)
             }
 
             val valueFromTriplestore = getValue(
@@ -3692,7 +3710,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! updateValueRequest
 
             expectMsgPF(timeout) {
-                case updateValueResponse: UpdateValueResponseV2 => linkValueIri.set(updateValueResponse.valueIri)
+                case updateValueResponse: UpdateValueResponseV2 =>
+                    linkValueIri.set(updateValueResponse.valueIri)
+
+                    // Since we only changed metadata, the link should have the same UUID.
+                    assert(updateValueResponse.valueUUID == linkValueUUID)
             }
 
             val valueFromTriplestore = getValue(

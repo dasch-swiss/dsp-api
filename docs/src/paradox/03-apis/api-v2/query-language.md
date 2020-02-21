@@ -120,7 +120,7 @@ the query refers to, e.g.:
 
 ```
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/simple/v2#>
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/v2#>
 ```
 
 In the complex schema, Knora values are represented as objects belonging

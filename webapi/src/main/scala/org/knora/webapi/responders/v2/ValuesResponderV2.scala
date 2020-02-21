@@ -988,14 +988,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
                 // Create the new value version.
 
-                unverifiedValue: UnverifiedValueV2 <- (currentValue.valueContent, submittedInternalValueContent) match {
-                    case (currentLinkValue: LinkValueContentV2, newLinkValue: LinkValueContentV2) =>
+                unverifiedValue: UnverifiedValueV2 <- (currentValue, submittedInternalValueContent) match {
+                    case (currentLinkValue: ReadLinkValueV2, newLinkValue: LinkValueContentV2) =>
                         updateLinkValueV2AfterChecks(
                             dataNamedGraph = dataNamedGraph,
                             resourceInfo = resourceInfo,
                             linkPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
                             currentLinkValue = currentLinkValue,
-                            currentLinkValueUUID = currentValue.valueHasUUID,
                             newLinkValue = newLinkValue,
                             valueCreator = updateValueRequest.requestingUser.id,
                             valuePermissions = newValueVersionPermissionLiteral,
@@ -1172,8 +1171,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
      * @param dataNamedGraph       the IRI of the named graph to be updated.
      * @param resourceInfo         information about the resource containing the link.
      * @param linkPropertyIri      the IRI of the link property.
-     * @param currentLinkValue     a [[LinkValueContentV2]] representing the `knora-base:LinkValue` for the existing link.
-     * @param currentLinkValueUUID the UUID of the current link value.
+     * @param currentLinkValue     a [[ReadLinkValueV2]] representing the `knora-base:LinkValue` for the existing link.
      * @param newLinkValue         a [[LinkValueContentV2]] indicating the new target resource.
      * @param valueCreator         the IRI of the new link value's owner.
      * @param valuePermissions     the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
@@ -1183,20 +1181,19 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     private def updateLinkValueV2AfterChecks(dataNamedGraph: IRI,
                                              resourceInfo: ReadResourceV2,
                                              linkPropertyIri: SmartIri,
-                                             currentLinkValue: LinkValueContentV2,
-                                             currentLinkValueUUID: UUID,
+                                             currentLinkValue: ReadLinkValueV2,
                                              newLinkValue: LinkValueContentV2,
                                              valueCreator: IRI,
                                              valuePermissions: String,
                                              requestingUser: UserADM): Future[UnverifiedValueV2] = {
 
         // Are we changing the link target?
-        if (currentLinkValue.referredResourceIri != newLinkValue.referredResourceIri) {
+        if (currentLinkValue.valueContent.referredResourceIri != newLinkValue.referredResourceIri) {
             // Yes. Delete the existing link and decrement its LinkValue's reference count.
             val sparqlTemplateLinkUpdateForCurrentLink: SparqlTemplateLinkUpdate = decrementLinkValue(
                 sourceResourceInfo = resourceInfo,
                 linkPropertyIri = linkPropertyIri,
-                targetResourceIri = currentLinkValue.referredResourceIri,
+                targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 requestingUser = requestingUser
@@ -1253,7 +1250,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             val sparqlTemplateLinkUpdate: SparqlTemplateLinkUpdate = changeLinkValueMetadata(
                 sourceResourceInfo = resourceInfo,
                 linkPropertyIri = linkPropertyIri,
-                targetResourceIri = currentLinkValue.referredResourceIri,
+                targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 requestingUser = requestingUser
@@ -1276,7 +1273,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
             } yield UnverifiedValueV2(
                 newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
-                newValueUUID = currentLinkValueUUID,
+                newValueUUID = currentLinkValue.valueHasUUID,
                 valueContent = newLinkValue.unescape,
                 permissions = valuePermissions,
                 creationDate = currentTime
