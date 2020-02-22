@@ -35,7 +35,7 @@ fi
 
 printf "${GREEN}Loading Data${NO_COLOUR}\n\n"
 
-./graphdb-knora-test-data-minimal.expect $GRAPHDB
+./graphdb-knora-test-unit-data-minimal.expect $GRAPHDB
 
 printf "${GREEN}Data Loaded.\n\n${DELIMITER}Updating Lucene Index${NO_COLOUR}\n\n"
 
