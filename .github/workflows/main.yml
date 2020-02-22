@@ -74,7 +74,9 @@ jobs:
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
       - name: Print env file
-        run: make print-env-file
+        run: |
+          make env-file
+          make print-env-file
       - name: Run API unit tests
         run: make test-unit-ci
 
@@ -103,7 +105,9 @@ jobs:
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
       - name: print env file
-        run: make print-env-file
+        run: |
+          make env-file
+          make print-env-file
       - name: run API E2E tests
         run: make test-e2e-ci
 
@@ -132,7 +136,9 @@ jobs:
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
       - name: print env file
-        run: make print-env-file
+        run: |
+          make env-file
+          make print-env-file
       - name: run API integration tests
         run: make test-it-ci
 
@@ -163,7 +169,9 @@ jobs:
       - name: install requirements
         run: sudo apt-get install expect
       - name: print env file
-        run: make print-env-file
+        run: |
+          make env-file
+          make print-env-file
       - name: run JS lib tests
         run: make test-js-lib-integration
 
