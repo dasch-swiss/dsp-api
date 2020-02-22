@@ -39,6 +39,6 @@ printf "${GREEN}Loading Data${NO_COLOUR}\n\n"
 
 printf "${GREEN}Data Loaded.\n\n${DELIMITER}Updating Lucene Index${NO_COLOUR}\n\n"
 
-curl -X POST --data-urlencode 'update@./graphdb-knora-index-update.rq' $GRAPHDB/repositories/knora-test/statements
+curl -X POST --data-urlencode 'update@./graphdb-knora-index-update.rq' $GRAPHDB/repositories/knora-test-unit/statements
 
 printf "${GREEN}Lucene Index Updated.${NO_COLOUR}"
