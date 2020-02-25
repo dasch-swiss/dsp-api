@@ -75,7 +75,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
      */
     override def knoraApiPath: Route = createResource ~ updateResourceMetadata ~ getResourcesInProject ~
         getResourceHistory ~ getResources ~ getResourcesPreview ~ getResourcesTei ~
-        getResourcesGraph ~ deleteResource ~ eraseResource
+        getResourcesGraph ~ deleteResource ~ eraseResource ~ getIIIFManifest
 
     private def createResource: Route = path(ResourcesBasePath) {
         post {
@@ -385,6 +385,31 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     responderManager = responderManager,
                     log = log,
                     targetSchema = RouteUtilV2.getOntologySchema(requestContext),
+                    schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+                )
+            }
+        }
+    }
+
+    private def getIIIFManifest: Route = path("v2" / "iiifmanifest" / Segment) { resIri: String =>
+        get {
+            requestContext => {
+
+                val resourceIri: IRI = stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
+
+                val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+
+                val requestMessageFuture: Future[IIIFManifestGetRequestV2] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield IIIFManifestGetRequestV2(resourceIri = resourceIri, requestingUser = requestingUser)
+
+                RouteUtilV2.runRdfRouteWithFuture(
+                    requestMessageF = requestMessageFuture,
+                    requestContext = requestContext,
+                    settings = settings,
+                    responderManager = responderManager,
+                    log = log,
+                    targetSchema = targetSchema,
                     schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
                 )
             }
