@@ -25,7 +25,6 @@ import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.routing.admin.AdminClientApi
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{OntologyUtil, SmartIri, StringFormatter}
@@ -34,8 +33,8 @@ import spray.json._
 import scala.collection.mutable
 
 /**
-  * A factory that constructs [[InstanceChecker]] instances for different Knora response formats.
-  */
+ * A factory that constructs [[InstanceChecker]] instances for different Knora response formats.
+ */
 object InstanceChecker {
     // A cache of class definitions.
     private val classDefCache: mutable.Map[SmartIri, ClassInfoContentV2] = mutable.Map.empty
@@ -44,33 +43,33 @@ object InstanceChecker {
     private val propertyDefCache: mutable.Map[SmartIri, PropertyInfoContentV2] = mutable.Map.empty
 
     /**
-      * Returns an [[InstanceChecker]] for Knora responses in JSON format.
-      */
+     * Returns an [[InstanceChecker]] for Knora responses in JSON format.
+     */
     def getJsonChecker: InstanceChecker = new InstanceChecker(new JsonInstanceInspector)
 
     /**
-      * Returns an [[InstanceChecker]] for Knora responses in JSON-LD format.
-      */
+     * Returns an [[InstanceChecker]] for Knora responses in JSON-LD format.
+     */
     def getJsonLDChecker: InstanceChecker = new InstanceChecker(new JsonLDInstanceInspector)
 }
 
 /**
-  * A test utility for checking whether an instance of an RDF class returned in a Knora response corresponds to the
-  * the class definition.
-  *
-  * @param instanceInspector an [[InstanceInspector]] for working with instances in a particular format.
-  */
+ * A test utility for checking whether an instance of an RDF class returned in a Knora response corresponds to the
+ * the class definition.
+ *
+ * @param instanceInspector an [[InstanceInspector]] for working with instances in a particular format.
+ */
 class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging {
 
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
-      * Checks that an instance of an RDF class returned in a Knora response corresponds to the class definition.
-      *
-      * @param instanceResponse a Knora response containing the instance to be checked.
-      * @param expectedClassIri the IRI of the expected class.
-      * @param knoraRouteGet    a function that takes a Knora API URL path and returns a response from Knora.
-      */
+     * Checks that an instance of an RDF class returned in a Knora response corresponds to the class definition.
+     *
+     * @param instanceResponse a Knora response containing the instance to be checked.
+     * @param expectedClassIri the IRI of the expected class.
+     * @param knoraRouteGet    a function that takes a Knora API URL path and returns a response from Knora.
+     */
     def check(instanceResponse: String, expectedClassIri: SmartIri, knoraRouteGet: String => String): Unit = {
         val instanceElement: InstanceElement = instanceInspector.toElement(instanceResponse)
         val definitions: Definitions = getDefinitions(classIri = expectedClassIri, knoraRouteGet = knoraRouteGet)
@@ -92,22 +91,22 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
     }
 
     /**
-      * Logs an error message at DEBUG level and throws an [[AssertionException]] containing the message.
-      *
-      * @param msg the error message.
-      */
+     * Logs an error message at DEBUG level and throws an [[AssertionException]] containing the message.
+     *
+     * @param msg the error message.
+     */
     private def throwAndLogAssertionException(msg: String): Nothing = {
         logger.debug(msg)
         throw AssertionException(msg)
     }
 
     /**
-      * Recursively checks whether instance elements and their property objects correspond to their class definitions.
-      *
-      * @param instanceElement the instance to be checked.
-      * @param classIri        the class IRI.
-      * @param definitions     definitions of the class and any other relevant classes and properties.
-      */
+     * Recursively checks whether instance elements and their property objects correspond to their class definitions.
+     *
+     * @param instanceElement the instance to be checked.
+     * @param classIri        the class IRI.
+     * @param definitions     definitions of the class and any other relevant classes and properties.
+     */
     private def checkRec(instanceElement: InstanceElement, classIri: SmartIri, definitions: Definitions): Unit = {
         if (!instanceInspector.elementHasCompatibleType(element = instanceElement, expectedType = classIri, definitions = definitions)) {
             throwAndLogAssertionException(s"Instance type ${instanceElement.elementType} is not compatible with expected class IRI $classIri")
@@ -181,7 +180,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
                             // It's a class that Knora doesn't serve. Accept the object only if it's an IRI.
                             throwAndLogAssertionException(s"Property $propertyIri requires an IRI referring to an instance of $objectType, but object content was received instead")
                         }
-                    } else if (!objectType.isClientCollectionTypeIri) {
+                    } else {
                         // We're expecting a literal. Ask the element inspector if the object is compatible with
                         // the expected type.
                         if (!instanceInspector.elementHasCompatibleType(element = obj, expectedType = objectType, definitions = definitions)) {
@@ -193,24 +192,24 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
     }
 
     /**
-      * Gets all the definitions needed to check an instance of the specified class.
-      *
-      * @param classIri      the class IRI.
-      * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
-      * @return a [[Definitions]] instance containing the relevant definitions.
-      */
+     * Gets all the definitions needed to check an instance of the specified class.
+     *
+     * @param classIri      the class IRI.
+     * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
+     * @return a [[Definitions]] instance containing the relevant definitions.
+     */
     private def getDefinitions(classIri: SmartIri, knoraRouteGet: String => String): Definitions = {
         getDefinitionsRec(classIri = classIri, knoraRouteGet = knoraRouteGet, definitions = Definitions())
     }
 
     /**
-      * Recursively gets definitions that are needed to check an instance of the specified class.
-      *
-      * @param classIri      the class IRI.
-      * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
-      * @param definitions   the definitions collected so far.
-      * @return a [[Definitions]] instance containing the relevant definitions.
-      */
+     * Recursively gets definitions that are needed to check an instance of the specified class.
+     *
+     * @param classIri      the class IRI.
+     * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
+     * @param definitions   the definitions collected so far.
+     * @return a [[Definitions]] instance containing the relevant definitions.
+     */
     private def getDefinitionsRec(classIri: SmartIri, knoraRouteGet: String => String, definitions: Definitions): Definitions = {
         // Get the definition of classIri.
         val classDef: ClassInfoContentV2 = getClassDef(classIri = classIri, knoraRouteGet = knoraRouteGet)
@@ -254,36 +253,32 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         // Recursively add the definitions of base classes and classes that we identified as object types.
         classIrisForRecursion.foldLeft(updatedDefs) {
             case (acc, classIriFromObjectType) =>
-                if (classIriFromObjectType.isClientCollectionTypeIri) {
-                    acc
-                } else {
-                    val recDefinitions: Definitions = getDefinitionsRec(
-                        classIri = classIriFromObjectType,
-                        knoraRouteGet = knoraRouteGet,
-                        definitions = acc
-                    )
+                val recDefinitions: Definitions = getDefinitionsRec(
+                    classIri = classIriFromObjectType,
+                    knoraRouteGet = knoraRouteGet,
+                    definitions = acc
+                )
 
-                    acc.copy(
-                        classDefs = acc.classDefs ++ recDefinitions.classDefs,
-                        propertyDefs = acc.propertyDefs ++ recDefinitions.propertyDefs
-                    )
-                }
+                acc.copy(
+                    classDefs = acc.classDefs ++ recDefinitions.classDefs,
+                    propertyDefs = acc.propertyDefs ++ recDefinitions.propertyDefs
+                )
         }
     }
 
     /**
-      * Determines whether Knora should have the definition of a class.
-      *
-      * @param classIri the class IRI.
-      * @return `true` if Knora should have the definition of the class.
-      */
+     * Determines whether Knora should have the definition of a class.
+     *
+     * @param classIri the class IRI.
+     * @return `true` if Knora should have the definition of the class.
+     */
     private def isKnoraDefinedClass(classIri: SmartIri): Boolean = {
         // There are some Knora classes whose definitions we refer to but don't actually serve, e.g.
         // knora-api:XMLToStandoffMapping. The ontology transformation rules list the internal classes that
         // aren't available in each external schema. But these lists include knora-base classes
         // that are converted to custom datatypes in the simple schema, so we first need to check
         // if we're talking about one of those.
-        if (classIri.isKnoraApiV2EntityIri && !classIri.isClientCollectionTypeIri) {
+        if (classIri.isKnoraApiV2EntityIri) {
             val objectTypeInternal = classIri.toOntologySchema(InternalSchema)
 
             classIri.getOntologySchema.get match {
@@ -300,8 +295,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
                     }
 
                 case ApiV2Complex =>
-                    if (!(KnoraBaseToApiV2ComplexTransformationRules.internalClassesToRemove.contains(objectTypeInternal) ||
-                        KnoraAdminToApiV2ComplexTransformationRules.internalClassesToRemove.contains(objectTypeInternal))) {
+                    if (!KnoraBaseToApiV2ComplexTransformationRules.internalClassesToRemove.contains(objectTypeInternal)) {
                         // It isn't one of the classes removed from the schema.
                         true
                     } else {
@@ -317,12 +311,12 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
     }
 
     /**
-      * Gets a class definition from Knora.
-      *
-      * @param classIri      the class IRI.
-      * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
-      * @return the class definition.
-      */
+     * Gets a class definition from Knora.
+     *
+     * @param classIri      the class IRI.
+     * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
+     * @return the class definition.
+     */
     private def getClassDef(classIri: SmartIri, knoraRouteGet: String => String): ClassInfoContentV2 = {
         InstanceChecker.classDefCache.get(classIri) match {
             case Some(classDef) => classDef
@@ -345,12 +339,12 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
     }
 
     /**
-      * Gets a property definition from Knora.
-      *
-      * @param propertyIri   the property IRI.
-      * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
-      * @return the property definition.
-      */
+     * Gets a property definition from Knora.
+     *
+     * @param propertyIri   the property IRI.
+     * @param knoraRouteGet a function that takes a Knora API URL path and returns a response from Knora.
+     * @return the property definition.
+     */
     private def getPropertyDef(propertyIri: SmartIri, knoraRouteGet: String => String): PropertyInfoContentV2 = {
         InstanceChecker.propertyDefCache.get(propertyIri) match {
             case Some(propertyDef) => propertyDef
@@ -373,11 +367,11 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
     }
 
     /**
-      * Gets the `knora-api:objectType` from a property definition in an external schema.
-      *
-      * @param propertyDef the property definition.
-      * @return the property's `knora-api:objectType`, if it has one.
-      */
+     * Gets the `knora-api:objectType` from a property definition in an external schema.
+     *
+     * @param propertyDef the property definition.
+     * @return the property's `knora-api:objectType`, if it has one.
+     */
     private def getObjectType(propertyDef: PropertyInfoContentV2): Option[SmartIri] = {
         propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri).
             orElse(propertyDef.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri))
@@ -385,45 +379,45 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
 }
 
 /**
-  * Represents an instance of an RDF class, or an element of such an instance.
-  *
-  * @param elementType     the element type. This is an opaque string that only the [[InstanceInspector]] needs
-  *                        to understand.
-  * @param literalContent  the literal content of the element (if available), for debugging.
-  * @param propertyObjects a map of property names to their objects.
-  */
+ * Represents an instance of an RDF class, or an element of such an instance.
+ *
+ * @param elementType     the element type. This is an opaque string that only the [[InstanceInspector]] needs
+ *                        to understand.
+ * @param literalContent  the literal content of the element (if available), for debugging.
+ * @param propertyObjects a map of property names to their objects.
+ */
 case class InstanceElement(elementType: String, literalContent: Option[String] = None, propertyObjects: Map[String, Vector[InstanceElement]] = Map.empty)
 
 /**
-  * A trait for classes that help [[InstanceChecker]] check instances in different formats.
-  */
+ * A trait for classes that help [[InstanceChecker]] check instances in different formats.
+ */
 trait InstanceInspector {
 
     /**
-      * Converts a Knora response representing a class instance to an [[InstanceElement]].
-      */
+     * Converts a Knora response representing a class instance to an [[InstanceElement]].
+     */
     def toElement(instanceResponse: String): InstanceElement
 
     /**
-      * Converts an RDF property IRI to the property name used in instances.
-      */
+     * Converts an RDF property IRI to the property name used in instances.
+     */
     def propertyIriToInstancePropertyName(classIri: SmartIri, propertyIri: SmartIri): String
 
     /**
-      * Returns `true` if the specified instance element is an IRI pointing to an object, as opposed to
-      * the object itself.
-      */
+     * Returns `true` if the specified instance element is an IRI pointing to an object, as opposed to
+     * the object itself.
+     */
     def elementIsIri(element: InstanceElement): Boolean
 
     /**
-      * Checks, as far as possible, whether the type of an instance is compatible with the type IRI of its class.
-      */
+     * Checks, as far as possible, whether the type of an instance is compatible with the type IRI of its class.
+     */
     def elementHasCompatibleType(element: InstanceElement, expectedType: SmartIri, definitions: Definitions): Boolean
 }
 
 /**
-  * Constants for working with instances parsed from JSON.
-  */
+ * Constants for working with instances parsed from JSON.
+ */
 object JsonInstanceInspector {
     val STRING = "String"
     val IRI = "IRI"
@@ -453,15 +447,13 @@ object JsonInstanceInspector {
 }
 
 /**
-  * An [[InstanceInspector]] that works with Knora responses in JSON format.
-  */
+ * An [[InstanceInspector]] that works with Knora responses in JSON format.
+ */
 class JsonInstanceInspector extends InstanceInspector {
 
     import JsonInstanceInspector._
 
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    private val nonStandardJsonPropertyNames: Map[SmartIri, Map[SmartIri, String]] = AdminClientApi.propertyNames
 
     override def toElement(response: String): InstanceElement = {
         jsObjectToElement(JsonParser(response).asJsObject)
@@ -512,17 +504,7 @@ class JsonInstanceInspector extends InstanceInspector {
     }
 
     override def propertyIriToInstancePropertyName(classIri: SmartIri, propertyIri: SmartIri): String = {
-        // If this property IRI has a non-standard name in this class, return that name. Otherwise,
-        // just remove the namespace.
-        nonStandardJsonPropertyNames.get(classIri) match {
-            case Some(propertyMap) =>
-                propertyMap.get(propertyIri) match {
-                    case Some(propertyName) => propertyName
-                    case None => propertyIri.getEntityName
-                }
-
-            case None => propertyIri.getEntityName
-        }
+        propertyIri.getEntityName
     }
 
     override def elementIsIri(element: InstanceElement): Boolean = {
@@ -530,27 +512,22 @@ class JsonInstanceInspector extends InstanceInspector {
     }
 
     override def elementHasCompatibleType(element: InstanceElement, expectedType: SmartIri, definitions: Definitions): Boolean = {
-        // Don't try to check collection types.
-        if (expectedType.isClientCollectionTypeIri) {
-            true
-        } else {
-            // Is the element a literal?
-            LiteralTypeMap.get(element.elementType) match {
-                case Some(typeIris) =>
-                    // Yes. It's compatible if the the expected type is one of the types that it could represent.
-                    typeIris.contains(expectedType.toString)
+        // Is the element a literal?
+        LiteralTypeMap.get(element.elementType) match {
+            case Some(typeIris) =>
+                // Yes. It's compatible if the the expected type is one of the types that it could represent.
+                typeIris.contains(expectedType.toString)
 
-                case None =>
-                    // No. It's compatible if the expected type isn't a literal type.
-                    !LiteralTypeIris.contains(expectedType.toString)
-            }
+            case None =>
+                // No. It's compatible if the expected type isn't a literal type.
+                !LiteralTypeIris.contains(expectedType.toString)
         }
     }
 }
 
 /**
-  * An [[InstanceInspector]] that works with Knora responses in JSON-LD format.
-  */
+ * An [[InstanceInspector]] that works with Knora responses in JSON-LD format.
+ */
 class JsonLDInstanceInspector extends InstanceInspector {
     implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -618,33 +595,29 @@ class JsonLDInstanceInspector extends InstanceInspector {
     }
 
     override def elementHasCompatibleType(element: InstanceElement, expectedType: SmartIri, definitions: Definitions): Boolean = {
-        if (expectedType.isClientCollectionTypeIri) {
-            true
-        } else {
-            val expectedTypeStr: IRI = expectedType.toString
+        val expectedTypeStr: IRI = expectedType.toString
 
-            // Is the element's type a Knora class?
-            if (expectedType.isKnoraApiV2EntityIri) {
-                // Yes. It's compatible if its type is a subclass of the expected type.
-                definitions.getBaseClasses(element.elementType.toSmartIri).contains(expectedType)
-            } else {
-                // The element's type isn't a Knora class. It's compatible if it's the same as the expected type, or if
-                // we expected an xsd:integer and we got an xsd:nonNegativeInteger.
-                element.elementType == expectedTypeStr ||
-                    (element.elementType == OntologyConstants.Xsd.NonNegativeInteger && expectedTypeStr == OntologyConstants.Xsd.Integer)
-            }
+        // Is the element's type a Knora class?
+        if (expectedType.isKnoraApiV2EntityIri) {
+            // Yes. It's compatible if its type is a subclass of the expected type.
+            definitions.getBaseClasses(element.elementType.toSmartIri).contains(expectedType)
+        } else {
+            // The element's type isn't a Knora class. It's compatible if it's the same as the expected type, or if
+            // we expected an xsd:integer and we got an xsd:nonNegativeInteger.
+            element.elementType == expectedTypeStr ||
+                (element.elementType == OntologyConstants.Xsd.NonNegativeInteger && expectedTypeStr == OntologyConstants.Xsd.Integer)
         }
     }
 }
 
 /**
-  * Represents Knora ontology definitions used to check class instances against their definitions.
-  *
-  * @param classDefs    relevant class definitions.
-  * @param propertyDefs relevant property definitions.
-  * @param subClassOf   a map in which each class IRI points to the full set of its base classes. A class is also
-  *                     a subclass of itself.
-  */
+ * Represents Knora ontology definitions used to check class instances against their definitions.
+ *
+ * @param classDefs    relevant class definitions.
+ * @param propertyDefs relevant property definitions.
+ * @param subClassOf   a map in which each class IRI points to the full set of its base classes. A class is also
+ *                     a subclass of itself.
+ */
 case class Definitions(classDefs: Map[SmartIri, ClassInfoContentV2] = Map.empty,
                        propertyDefs: Map[SmartIri, PropertyInfoContentV2] = Map.empty,
                        subClassOf: Map[SmartIri, Set[SmartIri]] = Map.empty) {

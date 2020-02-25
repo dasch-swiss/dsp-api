@@ -17,24 +17,30 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Generating Client API Code
+# Generating Client Test Data
 
-The following route returns a Zip file containing generated client API
-code for the specified target:
+@@toc
+
+## Requirements
+
+Generate test requests and responses for Knora's routes, to be used in testing
+client code without the need for a running Knora instance.
+  
+## Implementation
+
+A class for each Knora API extends the `ClientApi` trait.
+A `ClientApi` contains one or more `KnoraRoute` implementations that extend
+`ClientEndpoint`. Each endpoint provides functions that return generated
+client test data.
+
+The route `ClientApiRoute` returns a Zip file containing generated test data.
+returning source code in a Zip file.
+
+## Usage
+
+The following route returns a Zip file containing generated client test
+data:
 
 ```
-HTTP GET to http://host/clientapi/TARGET
+HTTP GET to http://host/clientapitest
 ```
-
-Currently the only supported `TARGET` is `typescript`. For documentation
-on defining client APIs, see
-@ref:[Client API Code Generation Framework](../design/client-api/index.md).
-
-To check whether the generated TypeScript code compiles, without actually
-integrating it into `knora-api-js-lib`, use:
-
-```
-HTTP GET to http://host/clientapi/typescript?mock=true
-```
-
-This adds mock TypeScript library dependencies.

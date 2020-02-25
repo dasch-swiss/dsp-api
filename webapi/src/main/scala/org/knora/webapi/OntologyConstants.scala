@@ -638,8 +638,6 @@ object OntologyConstants {
         val PermissionsData: IRI = KnoraAdminPrefixExpansion + "PermissionsData"
         val GroupsPerProject: IRI = KnoraAdminPrefixExpansion + "groupsPerProject"
         val AdministrativePermissionsPerProject: IRI = KnoraAdminPrefixExpansion + "administrativePermissionsPerProject"
-        val AdministrativePermissionsPerProjectCollectionType: IRI = KnoraAdminPrefixExpansion + "collection: Map[URI, Array[Permission]]"
-        val GroupsPerProjectCollectionType: IRI = KnoraAdminPrefixExpansion + "collection: Map[URI, Array[URI]]"
     }
 
     object Standoff {
