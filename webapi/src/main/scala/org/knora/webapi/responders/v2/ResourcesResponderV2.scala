@@ -79,7 +79,43 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         case deleteResourceRequestV2: DeleteOrEraseResourceRequestV2 => deleteOrEraseResourceV2(deleteResourceRequestV2)
         case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
         case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 => getResourceHistoryV2(resourceHistoryRequest)
+        case iiifManifestGetRequestV2: IIIFManifestGetRequestV2 => getIIFManifest(iiifManifestGetRequestV2)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)
+    }
+
+    def getIIFManifest(iiifManifestGetRequestV2: IIIFManifestGetRequestV2): Future[IIIFManifestResponseV2] = {
+
+        val gravsearch: String =
+            s"""
+              |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+              |
+              |CONSTRUCT {
+              |    ?collection knora-api:isMainResource true .
+              |    ?item knora-api:isPartOf ?collection .
+              |    ?item knora-api:hasStillImageFileValue ?fileValue .
+              |} WHERE {
+              |    BIND(<${iiifManifestGetRequestV2.resourceIri}> as ?collection)
+              |    ?collection a knora-api:Resource .
+              |    ?item a knora-api:StillImageRepresentation .
+              |    ?item knora-api:isPartOf ?collection .
+              |    ?item knora-api:hasStillImageFileValue ?fileValue .
+              |}
+              |""".stripMargin
+
+        for {
+            gravsearchQuery: ConstructQuery <- Future(GravsearchParser.parseQuery(gravsearch))
+
+            // do a request to the SearchResponder
+            gravsearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(
+                constructQuery = gravsearchQuery,
+                targetSchema = ApiV2Complex,
+                schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                requestingUser = iiifManifestGetRequestV2.requestingUser)).mapTo[ReadResourcesSequenceV2]
+
+            resource: ReadResourceV2 = gravsearchResponse.toResource(iiifManifestGetRequestV2.resourceIri)
+
+            manifest <- Future(IIIFManifestResponseV2(resourceIri = iiifManifestGetRequestV2.resourceIri, iiifUrls = Seq.empty))
+        } yield manifest
     }
 
     /**
