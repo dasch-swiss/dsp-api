@@ -32,10 +32,15 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
 object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformationRules {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
-    override val ontologyMetadata = OntologyMetadataV2(
+    override val ontologyMetadata: OntologyMetadataV2 = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2Complex.KnoraApiOntologyIri.toSmartIri,
         projectIri = Some(OntologyConstants.KnoraAdmin.SystemProject.toSmartIri),
         label = Some("The knora-api ontology in the complex schema")
+    )
+
+    private val Label: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.Rdfs.Label,
+        propertyType = OntologyConstants.Owl.DatatypeProperty
     )
 
     private val Result: ReadPropertyInfoV2 = makeProperty(
@@ -1757,6 +1762,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
       * See also [[OntologyConstants.CorrespondingIris]].
       */
     override val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
+        Label,
         Result,
         Error,
         UserHasPermission,
