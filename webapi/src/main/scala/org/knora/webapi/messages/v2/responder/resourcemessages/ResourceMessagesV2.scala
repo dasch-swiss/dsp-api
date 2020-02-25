@@ -54,6 +54,22 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
     def requestingUser: UserADM
 }
 
+case class IIIFManifestGetRequestV2(resourceIri: IRI, requestingUser: UserADM) extends ResourcesResponderRequestV2
+
+case class IIIFManifestResponseV2(resourceIri: IRI, iiifUrls: Seq[String]) extends KnoraResponseV2 {
+    /**
+      * Converts the response to a data structure that can be used to generate JSON-LD.
+      *
+      * @param targetSchema the Knora API schema to be used in the JSON-LD document.
+      * @return a [[JsonLDDocument]] representing the response.
+      */
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl, schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+        // TODO: generate JSON-LD manifest
+
+        JsonLDDocument(body = JsonLDObject(Map.empty), context = JsonLDObject(Map.empty))
+    }
+}
+
 /**
  * Requests a description of a resource. A successful response will be a [[ReadResourcesSequenceV2]].
  *
