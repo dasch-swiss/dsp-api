@@ -5467,7 +5467,7 @@
     "@id" : "knora-api:attachedToProject",
     "@type" : "owl:ObjectProperty",
     "knora-api:objectType" : {
-      "@id" : "knora-admin:Project"
+      "@id" : "knora-admin:knoraProject"
     },
     "rdfs:comment" : "Connects something to a project",
     "rdfs:label" : "attached to project"

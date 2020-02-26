@@ -158,7 +158,7 @@ knora-api:arkUrl a owl:DatatypeProperty;
   rdfs:label "ARK URL" .
 
 knora-api:attachedToProject a owl:ObjectProperty;
-  knora-api:objectType knora-admin:Project;
+  knora-api:objectType knora-admin:knoraProject;
   rdfs:comment "Connects something to a project";
   rdfs:label "attached to project" .
 

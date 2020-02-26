@@ -28,7 +28,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{OntologyUtil, SmartIri, StringFormatter}
-import spray.json._
 
 import scala.collection.mutable
 
@@ -41,11 +40,6 @@ object InstanceChecker {
 
     // A cache of property definitions.
     private val propertyDefCache: mutable.Map[SmartIri, PropertyInfoContentV2] = mutable.Map.empty
-
-    /**
-     * Returns an [[InstanceChecker]] for Knora responses in JSON format.
-     */
-    def getJsonChecker: InstanceChecker = new InstanceChecker(new JsonInstanceInspector)
 
     /**
      * Returns an [[InstanceChecker]] for Knora responses in JSON-LD format.
@@ -413,116 +407,6 @@ trait InstanceInspector {
      * Checks, as far as possible, whether the type of an instance is compatible with the type IRI of its class.
      */
     def elementHasCompatibleType(element: InstanceElement, expectedType: SmartIri, definitions: Definitions): Boolean
-}
-
-/**
- * Constants for working with instances parsed from JSON.
- */
-object JsonInstanceInspector {
-    val STRING = "String"
-    val IRI = "IRI"
-    val INTEGER = "Integer"
-    val DECIMAL = "Decimal"
-    val BOOLEAN = "Boolean"
-    val OBJECT = "Object"
-
-    val LiteralTypeMap: Map[String, Set[IRI]] = Map(
-        STRING ->
-            Set(OntologyConstants.Xsd.String,
-                OntologyConstants.Xsd.DateTimeStamp,
-                OntologyConstants.KnoraApiV2Simple.Date,
-                OntologyConstants.KnoraApiV2Simple.Geom,
-                OntologyConstants.KnoraApiV2Simple.Color,
-                OntologyConstants.KnoraApiV2Simple.Interval,
-                OntologyConstants.KnoraApiV2Simple.Geoname,
-                OntologyConstants.KnoraApiV2Simple.ListNode),
-
-        IRI -> Set(OntologyConstants.Xsd.Uri, OntologyConstants.KnoraApiV2Simple.File),
-        INTEGER -> Set(OntologyConstants.Xsd.Integer, OntologyConstants.Xsd.NonNegativeInteger),
-        DECIMAL -> Set(OntologyConstants.Xsd.Decimal),
-        BOOLEAN -> Set(OntologyConstants.Xsd.Boolean)
-    )
-
-    val LiteralTypeIris: Set[IRI] = LiteralTypeMap.values.flatten.toSet
-}
-
-/**
- * An [[InstanceInspector]] that works with Knora responses in JSON format.
- */
-class JsonInstanceInspector extends InstanceInspector {
-
-    import JsonInstanceInspector._
-
-    implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    override def toElement(response: String): InstanceElement = {
-        jsObjectToElement(JsonParser(response).asJsObject)
-    }
-
-    private def jsValueToElements(jsValue: JsValue): Vector[InstanceElement] = {
-        jsValue match {
-            case jsObject: JsObject => Vector(jsObjectToElement(jsObject))
-            case jsArray: JsArray => jsArray.elements.flatMap(jsValue => jsValueToElements(jsValue))
-
-            case jsString: JsString =>
-                // Does this string represent an IRI?
-                val strType = if (stringFormatter.isIri(jsString.value)) {
-                    // Yes. Store its type as IRI.
-                    IRI
-                } else {
-                    // No. Store its type as STRING.
-                    STRING
-                }
-
-                Vector(InstanceElement(elementType = strType, literalContent = Some(jsString.value)))
-
-            case jsNumber: JsNumber =>
-                // Is this an integer?
-                val numericType = if (jsNumber.value.isWhole) {
-                    // Yes. Store its type as INTEGER.
-                    INTEGER
-                } else {
-                    // No. Store its type as DECIMAL.
-                    DECIMAL
-                }
-
-                Vector(InstanceElement(elementType = numericType, literalContent = Some(jsNumber.value.toString)))
-
-            case jsBoolean: JsBoolean =>
-                Vector(InstanceElement(elementType = BOOLEAN, literalContent = Some(jsBoolean.value.toString)))
-
-            case JsNull => Vector.empty
-        }
-    }
-
-    private def jsObjectToElement(jsObject: JsObject): InstanceElement = {
-        val propertyObjects = jsObject.fields.map {
-            case (key: String, jsValue: JsValue) => key -> jsValueToElements(jsValue)
-        }
-
-        InstanceElement(elementType = OBJECT, propertyObjects = propertyObjects)
-    }
-
-    override def propertyIriToInstancePropertyName(classIri: SmartIri, propertyIri: SmartIri): String = {
-        propertyIri.getEntityName
-    }
-
-    override def elementIsIri(element: InstanceElement): Boolean = {
-        element.elementType == IRI
-    }
-
-    override def elementHasCompatibleType(element: InstanceElement, expectedType: SmartIri, definitions: Definitions): Boolean = {
-        // Is the element a literal?
-        LiteralTypeMap.get(element.elementType) match {
-            case Some(typeIris) =>
-                // Yes. It's compatible if the the expected type is one of the types that it could represent.
-                typeIris.contains(expectedType.toString)
-
-            case None =>
-                // No. It's compatible if the expected type isn't a literal type.
-                !LiteralTypeIris.contains(expectedType.toString)
-        }
-    }
 }
 
 /**

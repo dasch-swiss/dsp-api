@@ -481,7 +481,7 @@ object SharedTestDataADM {
         shortcode = "0001",
         longname = Some("Anything Project"),
         description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
-        keywords = Seq.empty[String],
+        keywords = Seq("things", "arbitrary test data"),
         logo = None,
         ontologies = Seq("http://www.knora.org/ontology/0001/anything", "http://www.knora.org/ontology/0001/something"),
         status = true,

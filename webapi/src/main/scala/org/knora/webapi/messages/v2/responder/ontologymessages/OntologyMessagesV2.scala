@@ -1406,7 +1406,11 @@ object InputOntologyV2 {
                 val entityIris: Iterable[SmartIri] = classes.values.map(_.classIri) ++ properties.values.map(_.propertyIri) ++
                     individuals.values.map(_.individualIri)
 
-                val entityIrisInWrongOntology = entityIris.filter(_.getOntologyFromEntity != externalOntologyIri)
+                val entityIrisInWrongOntology = entityIris.filter {
+                    entityIri =>
+                        val ontologyIri = entityIri.getOntologyFromEntity
+                        ontologyIri.getOntologyName != OntologyConstants.KnoraAdmin.KnoraAdminOntologyLabel && ontologyIri != externalOntologyIri
+                }
 
                 if (entityIrisInWrongOntology.nonEmpty) {
                     throw BadRequestException(s"One or more entities are not in ontology $externalOntologyIri: ${entityIrisInWrongOntology.mkString(", ")}")
