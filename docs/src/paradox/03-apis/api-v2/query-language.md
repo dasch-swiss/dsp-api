@@ -635,7 +635,7 @@ In order to get all the components of a compound resource, the following
 Gravsearch query can be sent to the API.
 
 In this case, the compound resource is an `incunabula:book` identified
-by the IRI `http://rdfh.ch/c5058f3a` and the components are of
+by the IRI `http://rdfh.ch/0803/c5058f3a` and the components are of
 type `incunabula:page` (test data for the Incunabula project). Since
 inference is assumed, we can use `knora-api:StillImageRepresentation`
 (`incunabula:page` is one of its subclasses). This makes the query more
