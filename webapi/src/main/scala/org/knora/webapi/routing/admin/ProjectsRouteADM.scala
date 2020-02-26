@@ -63,7 +63,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     override val directoryName: String = "projects"
 
     private val imagesProjectIriEnc = URLEncoder.encode(SharedTestDataADM.imagesProject.id, "utf-8")
-    private val incunabulaIriEnc = URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
+    private val anythingProjectIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
 
     /**
      * Returns the route.
@@ -201,7 +201,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
     private def getProjectKeywordsTestResponse: Future[TestDataFileContent] = {
         for {
-            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$incunabulaIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
+            responseStr <- doTestDataRequest(Get(s"$baseApiUrl$ProjectsBasePathString/iri/$anythingProjectIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)))
         } yield TestDataFileContent(
             filePath = TestDataFilePath.makeJsonPath("get-project-keywords-response"),
             text = responseStr

@@ -338,7 +338,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     // Resources to return in test data.
     private val testResources: Map[String, IRI] = Map(
         "testding" -> SharedTestDataADM.TestDing.iri,
-        "page" -> "http://rdfh.ch/0803/7bbb8e59b703"
+        "thing-with-picture" -> "http://rdfh.ch/0001/a-thing-with-picture"
     )
 
     private def getResourceTestResponses: Future[Set[TestDataFileContent]] = {

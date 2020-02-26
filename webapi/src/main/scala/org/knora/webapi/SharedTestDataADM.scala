@@ -1597,6 +1597,18 @@ object SharedTestDataADM {
           |    ?region knora-api:hasColor ?color .
           |}""".stripMargin
 
+    val gravsearchThingLinks: String =
+        """PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |
+          |CONSTRUCT {
+          |    ?thing knora-api:isMainResource true .
+          |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
+          |} WHERE {
+          |    ?thing a anything:Thing .
+          |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
+          |}""".stripMargin
+
     val createResourceWithValues: String =
         """{
           |  "@type" : "anything:Thing",

@@ -46,7 +46,6 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
     )
@@ -71,8 +70,9 @@ class ClientApiRouteE2ESpec extends E2ESpec(ClientApiRouteE2ESpec.config) {
                 "test-data/v2/resources/resource-graph.json",
                 "test-data/v2/resources/resource-preview.json",
                 "test-data/v2/resources/testding.json",
-                "test-data/v2/search/regions.json",
+                "test-data/v2/resources/thing-with-picture.json",
                 "test-data/v2/search/things.json",
+                "test-data/v2/search/thing-links.json",
                 "test-data/v2/values/create-boolean-value-request.json",
                 "test-data/v2/values/get-boolean-value-response.json"
             )
