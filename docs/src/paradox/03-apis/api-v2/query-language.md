@@ -97,6 +97,8 @@ schema, with one exception (see @ref:[Date Comparisons](#date-comparisons)).
 Gravsearch query results can be requested in the simple or complex schema;
 see @ref:[API Schema](introduction.md#api-schema).
 
+All examples hereafter run with a Knora-Stack started locally as documented in the section [Getting Started with Knora](../../04-publishing-deployment/getting-started.html). If you access another Knora-Stack, you can check the IRI of the ontology you are targetting by requesting the [ontologies metadata](ontology-information.html#querying-ontology-metadata).
+
 ### Using the Simple Schema
 
 To write a query in the simple schema, use the `knora-api` ontology in
