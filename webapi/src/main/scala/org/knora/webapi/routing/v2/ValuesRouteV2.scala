@@ -358,6 +358,28 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         )
     }
 
+    private def createValueTestResponse: Future[SourceCodeFileContent] = {
+        val resourceIri: IRI = stringFormatter.makeRandomResourceIri("0001")
+
+        val createValueResponseV2: CreateValueResponseV2 = CreateValueResponseV2(
+            valueIri = stringFormatter.makeRandomValueIri(resourceIri),
+            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            valueUUID = UUID.randomUUID,
+            projectADM = SharedTestDataADM.anythingProject
+        )
+
+        Future {
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("create-value-response"),
+                text = createValueResponseV2.toJsonLDDocument(
+                    targetSchema = ApiV2Complex,
+                    settings = settings,
+                    schemaOptions = Set.empty
+                ).toPrettyString
+            )
+        }
+    }
+
     private def updateValue: Route = path(ValuesBasePath) {
         put {
             entity(as[String]) { jsonRequest =>
@@ -583,6 +605,28 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         )
     }
 
+    private def updateValueTestResponse: Future[SourceCodeFileContent] = {
+        val resourceIri: IRI = stringFormatter.makeRandomResourceIri("0001")
+
+        val createValueResponseV2: UpdateValueResponseV2 = UpdateValueResponseV2(
+            valueIri = stringFormatter.makeRandomValueIri(resourceIri),
+            valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+            valueUUID = UUID.randomUUID,
+            projectADM = SharedTestDataADM.anythingProject
+        )
+
+        Future {
+            SourceCodeFileContent(
+                filePath = SourceCodeFilePath.makeJsonPath("update-value-response"),
+                text = createValueResponseV2.toJsonLDDocument(
+                    targetSchema = ApiV2Complex,
+                    settings = settings,
+                    schemaOptions = Set.empty
+                ).toPrettyString
+            )
+        }
+    }
+
     private def deleteValue: Route = path(ValuesBasePath / "delete") {
         post {
             entity(as[String]) { jsonRequest =>
@@ -647,6 +691,8 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             createRequests: Set[SourceCodeFileContent] <- createValueTestRequests
             updateRequests: Set[SourceCodeFileContent] <- updateValueTestRequests
             deleteRequests: Set[SourceCodeFileContent] <- deleteValueTestRequests
-        } yield getResponses ++ createRequests ++ updateRequests ++ deleteRequests
+            createValueResponse: SourceCodeFileContent <- createValueTestResponse
+            updateValueResponse: SourceCodeFileContent <- updateValueTestResponse
+        } yield getResponses ++ createRequests ++ updateRequests ++ deleteRequests + createValueResponse + updateValueResponse
     }
 }
