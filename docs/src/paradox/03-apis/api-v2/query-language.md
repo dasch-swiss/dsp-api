@@ -663,7 +663,7 @@ ORDER BY ASC(?seqnum) # order by sequence number, ascending
 OFFSET 0 # get first page of results
 ```
 
-The `incunabula:book` with the IRI `http://rdfh.ch/c5058f3a` has
+The `incunabula:book` with the IRI `http://rdfh.ch/0803/c5058f3a` has
 402 pages. (This result can be obtained by doing a count query; see
 @ref:[Submitting Gravsearch Queries](#submitting-gravsearch-queries).)
 However, with `OFFSET 0`, only the first page of results is returned.
