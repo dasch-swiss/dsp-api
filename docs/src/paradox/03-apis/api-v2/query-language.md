@@ -90,12 +90,14 @@ The response to a count query request is an object with one predicate,
 A Gravsearch query can be written in either of the two
 @ref:[Knora API v2 schemas](introduction.md#api-schema). The simple schema
 is easier to work with, and is sufficient if you don't need to query
-anything below the level of a Knora value. If your query needs to refer to 
+anything below the level of a Knora value. If your query needs to refer to
 standoff markup, you must use the complex schema. Each query must use a single
 schema, with one exception (see @ref:[Date Comparisons](#date-comparisons)).
 
 Gravsearch query results can be requested in the simple or complex schema;
 see @ref:[API Schema](introduction.md#api-schema).
+
+All examples hereafter run with Knora started locally as documented in the section [Getting Started with Knora](../../04-publishing-deployment/getting-started.html). If you access another Knora-Stack, you can check the IRI of the ontology you are targeting by requesting the [ontologies metadata](ontology-information.md#querying-ontology-metadata).
 
 ### Using the Simple Schema
 
@@ -120,7 +122,7 @@ the query refers to, e.g.:
 
 ```
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/v2#>
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
 ```
 
 In the complex schema, Knora values are represented as objects belonging
@@ -141,7 +143,7 @@ as explained under @ref:[CONSTRUCT Clause](#construct-clause).
 ## Virtual incoming Links
 
 Depending on the ontology design, a resource A points to B or vice versa.
-For example, a page A is part of a book B using the property  `incunabula:partOf`.
+For example, a page A is part of a book B using the property `incunabula:partOf`.
 If A is marked as the main resource, then B is nested as a dependent resource
 in its link value `incunabula:partOfValue`. But in case B is marked as the main resource,
 B does not have a link value pointing to A because in fact B is pointed to by A.
@@ -167,8 +169,7 @@ Instead, B has a virtual property `knora-api:hasIncomingLink` containing A's lin
 
 Note that the virtually inserted link value inverts the relation by using `knora-api:linkValueHasSource`.
 The source of the link is A and its target B is only represented by an Iri (`knora-api:linkValueHasTargetIri`)
-since B is the main resource. 
-
+since B is the main resource.
 
 ## Graph Patterns and Result Graphs
 
@@ -215,25 +216,25 @@ is to be used for the main resource in each search result.
 The current version of Gravsearch accepts `CONSTRUCT` queries whose `WHERE`
 clauses use the following patterns, with the specified restrictions:
 
-  - `OPTIONAL`: cannot be nested in a `UNION`.
-  - `UNION`: cannot be nested in a `UNION`.
-  - `FILTER`: may contain a complex expression using the Boolean
-    operators AND and OR, as well as comparison operators. The left
-    argument of a comparison operator must be a query variable.
-    A Knora ontology entity IRI used in a `FILTER` must be a property IRI.
-  - `FILTER NOT EXISTS`
-  - `MINUS`
-  - `OFFSET`: the `OFFSET` is needed for paging. It does not actually
-    refer to the number of triples to be returned, but to the
-    requested page of results. The default value is 0, which refers
-    to the first page of results. The number of results per page is
-    defined in `app/v2` in `application.conf`.
-  - `ORDER BY`: In SPARQL, the result of a `CONSTRUCT` query is an
-    unordered set of triples. However, a Gravsearch query returns an
-    ordered list of resources, which can be ordered by the values of
-    specified properties. If the query is written in the complex schema,
-    items below the level of Knora values may not be used in `ORDER BY`.
-  - `BIND`: The value assigned must be a Knora resource IRI.
+- `OPTIONAL`: cannot be nested in a `UNION`.
+- `UNION`: cannot be nested in a `UNION`.
+- `FILTER`: may contain a complex expression using the Boolean
+  operators AND and OR, as well as comparison operators. The left
+  argument of a comparison operator must be a query variable.
+  A Knora ontology entity IRI used in a `FILTER` must be a property IRI.
+- `FILTER NOT EXISTS`
+- `MINUS`
+- `OFFSET`: the `OFFSET` is needed for paging. It does not actually
+  refer to the number of triples to be returned, but to the
+  requested page of results. The default value is 0, which refers
+  to the first page of results. The number of results per page is
+  defined in `app/v2` in `application.conf`.
+- `ORDER BY`: In SPARQL, the result of a `CONSTRUCT` query is an
+  unordered set of triples. However, a Gravsearch query returns an
+  ordered list of resources, which can be ordered by the values of
+  specified properties. If the query is written in the complex schema,
+  items below the level of Knora values may not be used in `ORDER BY`.
+- `BIND`: The value assigned must be a Knora resource IRI.
 
 ### Resources, Properties, and Values
 
@@ -277,10 +278,10 @@ expressions in the simple schema:
 - Date values (`knora-api:Date`)
 - List values (`knora-api:ListNode`)
 
-List values can only be searched for using the equal operator (`=`), 
+List values can only be searched for using the equal operator (`=`),
 performing an exact match on a list node's label. Labels can be given in different languages for a specific list node.
 If one of the given list node labels matches, it is considered a match.
-Note that in the simple schema, uniqueness is not guaranteed (as opposed to the complex schema). 
+Note that in the simple schema, uniqueness is not guaranteed (as opposed to the complex schema).
 
 A Knora value may not be represented as the literal object of a predicate;
 for example, this is not allowed:
@@ -356,7 +357,7 @@ text value, and is implemented using a full-text search index if available.
 The first argument must be a variable of type `xsd:string`, and the second
 argument is a string containing the words to be matched, separated by spaces.
 The words to be matched are separated by spaces in a string literal.
-The function supports the 
+The function supports the
 @ref:[Lucene Query Parser syntax](../../08-lucene/index.md).
 Note that Lucene's default operator is a logical OR when submitting several search terms.
 
@@ -429,9 +430,9 @@ The function `knora-api:matchInStandoff` searches for standoff tags containing c
 The implementation is optimised using the full-text search index if available. The
 function takes three arguments:
 
-  1. A variable representing the string literal value of a text value.
-  2. A variable representing a standoff tag.
-  3. A string literal containing space-separated search terms.
+1. A variable representing the string literal value of a text value.
+2. A variable representing a standoff tag.
+3. A string literal containing space-separated search terms.
 
 This function can only be used as the top-level expression in a `FILTER`.
 For example:
@@ -488,9 +489,9 @@ identifier, `(VIAF)271899510`.
 However, if you need to specify the context in which the link tag occurs, you must
 use the function `knora-api:standoffLink`. It takes three arguments:
 
-  1. A variable or IRI representing the resource that is the source of the link.
-  2. A variable representing the standoff link tag.
-  3. A variable or IRI representing the resource that is the target of the link.
+1. A variable or IRI representing the resource that is the source of the link.
+2. A variable representing the standoff link tag.
+3. A variable or IRI representing the resource that is the target of the link.
 
 This function can only be used as the top-level expression in a `FILTER`.
 For example:
@@ -634,7 +635,7 @@ In order to get all the components of a compound resource, the following
 Gravsearch query can be sent to the API.
 
 In this case, the compound resource is an `incunabula:book` identified
-by the IRI `http://rdfh.ch/c5058f3a` and the components are of
+by the IRI `http://rdfh.ch/0803/c5058f3a` and the components are of
 type `incunabula:page` (test data for the Incunabula project). Since
 inference is assumed, we can use `knora-api:StillImageRepresentation`
 (`incunabula:page` is one of its subclasses). This makes the query more
@@ -654,7 +655,7 @@ CONSTRUCT {
    ?component knora-api:hasStillImageFileValue ?file . # return the StillImageFile in the response
 } WHERE {
    ?component a knora-api:StillImageRepresentation . # restriction of the type of component
-   ?component knora-api:isPartOf <http://rdfh.ch/c5058f3a> . # component relates to a compound resource via this property
+   ?component knora-api:isPartOf <http://rdfh.ch/0803/c5058f3a> . # component relates to a compound resource via this property
    ?component knora-api:seqnum ?seqnum . # component must have a sequence number
    ?component knora-api:hasStillImageFileValue ?file . # component must have a StillImageFile
 }
@@ -662,7 +663,7 @@ ORDER BY ASC(?seqnum) # order by sequence number, ascending
 OFFSET 0 # get first page of results
 ```
 
-The `incunabula:book` with the IRI `http://rdfh.ch/c5058f3a` has
+The `incunabula:book` with the IRI `http://rdfh.ch/0803/c5058f3a` has
 402 pages. (This result can be obtained by doing a count query; see
 @ref:[Submitting Gravsearch Queries](#submitting-gravsearch-queries).)
 However, with `OFFSET 0`, only the first page of results is returned.
@@ -793,7 +794,7 @@ PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 
 ### Searching for a List Value Referring to a Particular List Node
 
-Since list nodes are represented by their Iri in the complex schema, 
+Since list nodes are represented by their Iri in the complex schema,
 uniqueness is guranteed (as opposed to the simple schema).
 Also all the subnodes of the given list node are considered a match.
 
@@ -817,8 +818,8 @@ query variables and IRIs refer to in the `WHERE` clause. In most cases, it can
 infer these from context and from the ontologies used. In particular, it needs to
 know:
 
-* The type of the subject and object of each statement.
-* The type that is expected as the object of each predicate.
+- The type of the subject and object of each statement.
+- The type that is expected as the object of each predicate.
 
 ### Type Annotations
 
