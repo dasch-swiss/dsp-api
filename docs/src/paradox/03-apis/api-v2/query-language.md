@@ -97,7 +97,7 @@ schema, with one exception (see @ref:[Date Comparisons](#date-comparisons)).
 Gravsearch query results can be requested in the simple or complex schema;
 see @ref:[API Schema](introduction.md#api-schema).
 
-All examples hereafter run with a Knora-Stack started locally as documented in the section [Getting Started with Knora](../../04-publishing-deployment/getting-started.html). If you access another Knora-Stack, you can check the IRI of the ontology you are targetting by requesting the [ontologies metadata](ontology-information.html#querying-ontology-metadata).
+All examples hereafter run with Knora started locally as documented in the section [Getting Started with Knora](../../04-publishing-deployment/getting-started.html). If you access another Knora-Stack, you can check the IRI of the ontology you are targeting by requesting the [ontologies metadata](ontology-information.md#querying-ontology-metadata).
 
 ### Using the Simple Schema
 
@@ -655,7 +655,7 @@ CONSTRUCT {
    ?component knora-api:hasStillImageFileValue ?file . # return the StillImageFile in the response
 } WHERE {
    ?component a knora-api:StillImageRepresentation . # restriction of the type of component
-   ?component knora-api:isPartOf <http://rdfh.ch/c5058f3a> . # component relates to a compound resource via this property
+   ?component knora-api:isPartOf <http://rdfh.ch/0803/c5058f3a> . # component relates to a compound resource via this property
    ?component knora-api:seqnum ?seqnum . # component must have a sequence number
    ?component knora-api:hasStillImageFileValue ?file . # component must have a StillImageFile
 }
