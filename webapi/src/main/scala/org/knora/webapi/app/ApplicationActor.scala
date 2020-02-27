@@ -142,7 +142,13 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
     def receive: PartialFunction[Any, Unit] = {
 
-        /* Entry point for startup sequence */
+        /* Called from main. Initiates application startup. */
+        case AppStart(withOntologies, requiresSipi) => appStart(withOntologies, requiresSipi)
+
+        /* Usually only called from tests */
+        case AppStop() => appStop()
+
+        /* Called from the "appStart" method. Entry point for startup sequence. */
         case InitStartUp(skipLoadingOfOntologies, requiresIIIFService) => {
             logger.info("Startup initiated, please wait ...")
 
@@ -316,8 +322,8 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
             logger.warn("Redis-Server not running. Please start the Redis-Server.")
             timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
 
-        case AppStart(withOntologies, requiresSipi) => appStart(withOntologies, requiresSipi)
-        case AppStop() => appStop()
+
+
 
         case responderMessage: KnoraRequestV1 => responderManager forward responderMessage
         case responderMessage: KnoraRequestV2 => responderManager forward responderMessage
@@ -330,6 +336,8 @@ class ApplicationActor extends Actor with LazyLogging with AroundDirectives with
 
     /**
       * All routes composed together and CORS activated.
+      * ALL requests go through each of the routes in ORDER.
+      * The FIRST matching route is used for handling a request.
       */
     private val apiRoutes: Route = logDuration {
         addServerHeader {
