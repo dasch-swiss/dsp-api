@@ -33,7 +33,7 @@
  * @param propertyIri the IRI of the property for which the value is being created.
  * @param value the value to insert.
  * @param newValueIri the IRI of the new value.
- * @param valueHasUUID the UUID shared by all versions of this value.
+ * @param newValueUUID the UUID to be attached to the value.
  * @param linkUpdates a list of [[SparqlTemplateLinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values. This list will be empty if the links and LinkValues
  *        are being created separately.
@@ -47,6 +47,7 @@
   propertyIri: SmartIri,
   value: ValueContentV2,
   newValueIri: IRI,
+  newValueUUID: UUID,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   valueCreator: IRI,
   valuePermissions: String,
@@ -61,7 +62,7 @@
         <@newValueIri> rdf:type <@value.valueType> ;
             knora-base:isDeleted false  ;
             knora-base:valueHasString """@value.valueHasString""" ;
-            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" .
+            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(newValueUUID)}" .
 
         @{
             queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,

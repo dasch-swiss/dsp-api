@@ -99,12 +99,11 @@ DELETE {
         @* If we're marking a text value as deleted, update LinkValues for resource references in standoff markup. *@
 
         @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
-            @* Insert a direct link for the resource reference if necessary. *@
             @if(linkUpdate.insertDirectLink) {
                 @{throw SparqlGenerationException(s"linkUpdate.insertDirectLink must be false in this SPARQL template"); ()}
             }
 
-            @* Insert a LinkValue for the resource reference. *@
+            @* Add a new LinkValue version for the resource reference. *@
             <@linkUpdate.newLinkValueIri> rdf:type knora-base:LinkValue ;
                 rdf:subject ?resource ;
                 rdf:predicate <@linkUpdate.linkPropertyIri> ;
@@ -123,17 +122,11 @@ DELETE {
             <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
                 knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
 
-            @*
-
-               If we're inserting a new version of an existing LinkValue, attach it to the previous version,
-               and use the previous version's UUID. Otherwise, make a random UUID.
-
-            *@
             @if(linkUpdate.linkValueExists) {
                 <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
                     knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
             } else {
-                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" .
+                @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be true in this SPARQL template"); ()}
             }
 
             @* Attach the new LinkValue to its containing resource. *@
