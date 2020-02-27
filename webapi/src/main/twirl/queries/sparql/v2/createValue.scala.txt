@@ -33,6 +33,7 @@
  * @param resourceIri the resource to update.
  * @param propertyIri the resource property to update.
  * @param newValueIri the new value IRI.
+ * @param newValueUUID the UUID to be attached to the value.
  * @param value the value to insert.
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
@@ -49,6 +50,7 @@
   resourceIri: IRI,
   propertyIri: SmartIri,
   newValueIri: IRI,
+  newValueUUID: UUID,
   value: ValueContentV2,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   valueCreator: IRI,
@@ -99,6 +101,7 @@ DELETE {
                                                                          propertyIri = propertyIri,
                                                                          value = value,
                                                                          newValueIri = newValueIri,
+                                                                         newValueUUID = newValueUUID,
                                                                          linkUpdates = linkUpdates,
                                                                          valueCreator = valueCreator,
                                                                          valuePermissions = valuePermissions,

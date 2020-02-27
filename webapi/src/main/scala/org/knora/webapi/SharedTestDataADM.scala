@@ -21,6 +21,7 @@ package org.knora.webapi
 
 import java.net.URLEncoder
 import java.time.Instant
+import java.util.UUID
 
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
@@ -1911,4 +1912,7 @@ object SharedTestDataADM {
     val treeListNode: IRI = "http://rdfh.ch/lists/0001/treeList01"
 
     val otherTreeList: IRI = "http://rdfh.ch/lists/0001/otherTreeList"
+
+    val testResponseValueIri: IRI = "http://rdfh.ch/0001/_GlNQXdYRTyQPhpdh76U1w/values/OGbYaSgNSUCKQtmn9suXlw"
+    val testResponseValueUUID: UUID = UUID.fromString("84a3af57-ee99-486f-aa9c-e4ca1d19a57d")
 }
