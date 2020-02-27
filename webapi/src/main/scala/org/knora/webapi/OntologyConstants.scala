@@ -1076,7 +1076,9 @@ object OntologyConstants {
             KnoraBase.ValueHasGeonameCode -> KnoraApiV2Complex.GeonameValueAsGeonameCode,
             KnoraBase.ValueHasColor -> KnoraApiV2Complex.ColorValueAsColor,
             KnoraBase.ValueHasStandoff -> KnoraApiV2Complex.TextValueHasStandoff,
-            KnoraBase.PageCount -> KnoraApiV2Complex.DocumentFileValueHasPageCount
+            KnoraBase.PageCount -> KnoraApiV2Complex.DocumentFileValueHasPageCount,
+            KnoraAdmin.KnoraProject -> Xsd.Uri,
+            KnoraAdmin.User -> Xsd.Uri
         ),
         (ApiV2Simple, InternalSchema) -> Map(
             // Not all types in ApiV2Simple can be converted here to types in KnoraBase. For example,
