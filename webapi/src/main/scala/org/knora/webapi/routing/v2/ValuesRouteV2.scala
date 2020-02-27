@@ -359,12 +359,10 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private def createValueTestResponse: Future[SourceCodeFileContent] = {
-        val resourceIri: IRI = stringFormatter.makeRandomResourceIri("0001")
-
         val createValueResponseV2: CreateValueResponseV2 = CreateValueResponseV2(
-            valueIri = stringFormatter.makeRandomValueIri(resourceIri),
+            valueIri = SharedTestDataADM.testResponseValueIri,
             valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            valueUUID = UUID.randomUUID,
+            valueUUID = SharedTestDataADM.testResponseValueUUID,
             projectADM = SharedTestDataADM.anythingProject
         )
 
@@ -606,12 +604,10 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
 
     private def updateValueTestResponse: Future[SourceCodeFileContent] = {
-        val resourceIri: IRI = stringFormatter.makeRandomResourceIri("0001")
-
         val createValueResponseV2: UpdateValueResponseV2 = UpdateValueResponseV2(
-            valueIri = stringFormatter.makeRandomValueIri(resourceIri),
+            valueIri = SharedTestDataADM.testResponseValueIri,
             valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-            valueUUID = UUID.randomUUID,
+            valueUUID = SharedTestDataADM.testResponseValueUUID,
             projectADM = SharedTestDataADM.anythingProject
         )
 
